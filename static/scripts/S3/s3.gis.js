@@ -2980,12 +2980,26 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });*/
         $.ajaxS3({
             url: url,
-            dataType: 'html',
             // gets moved to 'done' inside AjaxS3
             success: function(data) {
                 try {
                     // Load response into page
-                    $('#' + id).html(data);
+                     var html = "<h1>" + data.properties.title + "</h1>";
+                    html += "<ul>";
+                    html += "<li><b>Location: </b>" + data.properties.place + "</li>";
+                    html += "<li><b>Magnitude: </b>" + data.properties.mag + "</li>";
+                    html += "<li><b>Time: </b>" + new Date(data.properties.time) + "</li>";
+                    html += "<li><b>Tsunami: </b>";
+                
+                    if (null == data.properties.tsumani)
+                        html += "None</li>";
+                    else
+                        html += data.properties.tsumani + "</li>";
+                
+                    html += "</ul>";
+                    html += "<a href=\"" + data.properties.url + "\" target=\"_blank\">More Information</a?>"
+
+                    $('#' + id).html(html);
                     popup.updateSize();
                     // Resize when images are loaded
                     //popup.registerImageListeners();
@@ -3022,7 +3036,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // KML, WFS
             var titleField = layer.title;
         } else {
-            var titleField = 'name';
+            var titleField = 'title';
         }
         var contents, data_link, name, popup_url;
         if (feature.cluster) {
@@ -3041,8 +3055,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 } else {
                     name = attributes[titleField];
                 }
-                if (undefined != attributes.url) {
-                    contents += "<li><a href='javascript:S3.gis.loadClusterPopup(" + "\"" + map_id + "\", \"" + attributes.url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
+                if (undefined != attributes.detail) {
+                    contents += "<li><a href='javascript:S3.gis.loadClusterPopup(" + "\"" + map_id + "\", \"" + attributes.detail + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
                 } else {
                     // @ToDo: Provide a way to load non-URL based popups
                     contents += '<li>' + name + '</li>';
@@ -3129,9 +3143,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 });
             } else {
                 // @ToDo: disambiguate these by type
-                if (undefined != feature.attributes.url) {
+                if (undefined != feature.attributes.detail) {
                     // Popup contents are pulled via AJAX
-                    popup_url = feature.attributes.url;
+                    popup_url = feature.attributes.detail;
                     // Defaulted within addPopup()
                     //contents = i18n.gis_loading + "...<div class='throbber'></div>";
                 } else {
@@ -3214,29 +3228,52 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var selector = '#' + id + '_contentDiv';
         var div = $(selector);
         var contents = i18n.gis_loading + "...<div class='throbber'></div>";
+        
+        if (url.indexOf('http://') === 0) {
+            // Use Proxy for remote popups
+            url = OpenLayers.ProxyHost + encodeURIComponent(url);
+        }
+        
         div.html(contents);
         // Load data into Popup
         var map = S3.gis.maps[map_id];
-        $.getS3(
-            url,
-            function(data) {
-                div.html(data);
-                // @ToDo: Don't assume we're the only popup on this map
-                map.popups[0].updateSize();
-                var dropdowns = $(selector + ' .dropdown-toggle');
-                if (dropdowns.length) {
-                    // We have Bootstrap dropdowns
-                    // Modify Overflow of containers
-                    div.parent()
-                       .css('overflow', 'visible')
-                       .parent()
-                       .css('overflow', 'visible');
-                    // Enable the Bootstrap dropdowns in the popups
-                    dropdowns.dropdown();
-                }
-            },
-            'html'
-        );
+        $.ajax({
+            'url': url
+        }).done(function(data) {
+            // Load response into page
+            var html = "<h1>" + data.properties.title + "</h1>";
+            html += "<ul>";
+            html += "<li><b>Location: </b>" + data.properties.place + "</li>";
+            html += "<li><b>Magnitude: </b>" + data.properties.mag + "</li>";
+            html += "<li><b>Time: </b>" + new Date(data.properties.time) + "</li>";
+            html += "<li><b>Tsunami: </b>";
+            
+            if (null == data.properties.tsumani)
+                html += "None</li>";
+            else
+                html += data.properties.tsumani + "</li>";
+            
+            html += "</ul>";
+            html += "<a href=\"" + data.properties.url + "\" target=\"_blank\">More Information</a?>"
+            div.html(html);
+                
+            var dropdowns = $(selector + ' .dropdown-toggle');
+            if (dropdowns.length) {
+                // We have Bootstrap dropdowns
+                // Modify Overflow of containers
+                div.parent()
+                   .css('overflow', 'visible')
+                   .parent()
+                   .css('overflow', 'visible');
+                // Enable the Bootstrap dropdowns in the popups
+                dropdowns.dropdown();
+            }
+        }).always(function(){
+            for (var i = 0; i < map.popups.length; i++)
+            {
+                map.popups[i].updateSize();
+            }
+        });
     };
     // Pass to global scope to access from HTML
     S3.gis.loadClusterPopup = loadClusterPopup;
