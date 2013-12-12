@@ -575,7 +575,8 @@ class S3CRUD(S3Method):
 
                 # Link to Open record
                 popup_edit_url = _config("popup_edit_url", None)
-                if popup_edit_url:
+                if popup_edit_url and \
+                   current.auth.s3_has_permission("update", table, record_id):
                     # Open edit form in iframe
                     details_btn = A(T("Edit"),
                                     _href=popup_edit_url,
