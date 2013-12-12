@@ -1059,25 +1059,40 @@ def deploy_rheader(r, tabs=[], profile=False):
             record = r.record
             title = crud_string(r.tablename, "title_display")
             if record:
-                render = lambda *columns: \
-                         deploy_render_profile_data(record,
-                                                    table=r.table,
-                                                    prefix="header",
-                                                    columns=columns)
                 title = "%s: %s" % (title, record.name)
-                data = render("event_type_id",
-                              "location_id",
-                              "code",
-                              "created_on",
-                              "status")
                 if profile:
                     crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(T("Edit"),
                                            _href=r.url(method="update"))
-                    data.append(edit_btn)
+                else:
+                    edit_btn = ""
+
+                label = lambda f, table=table, record=record, **attr: \
+                               TH("%s: " % table[f].label, **attr)
+                value = lambda f, table=table, record=record, **attr: \
+                               TD(table[f].represent(record[f]), **attr)
                 rheader = DIV(H2(title),
-                              data,
-                              _class="profile-header")
+                              TABLE(TR(label("event_type_id"),
+                                       value("event_type_id"),
+                                       label("location_id"),
+                                       value("location_id"),
+                                       label("code"),
+                                       value("code"),
+                                       edit_btn,
+                                    ),
+                                    TR(label("created_on"),
+                                       value("created_on"),
+                                       label("status"),
+                                       value("status"),
+                                    ),
+                                    TR(label("comments"),
+                                       value("comments",
+                                             _class="mission-comments",
+                                             _colspan="6")
+                                    ),
+                            ),
+                            _class="mission-rheader"
+                          )
             else:
                 rheader = H2(title)
 
