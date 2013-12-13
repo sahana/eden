@@ -320,10 +320,11 @@ class S3PersonEntity(S3Model):
                   onvalidation=self.pr_role_onvalidation)
 
         # Reusable fields
+        pr_role_represent = pr_RoleRepresent()
         role_id = S3ReusableField("role_id", table,
                                   requires = IS_ONE_OF(db, "pr_role.id",
-                                                       self.pr_role_represent),
-                                  represent = self.pr_role_represent,
+                                                       pr_role_represent),
+                                  represent = pr_role_represent,
                                   label = T("Role"),
                                   ondelete = "CASCADE")
 
@@ -521,27 +522,41 @@ class S3PersonEntity(S3Model):
         output = json.dumps(items)
         response.headers["Content-Type"] = "application/json"
         return output
-
     # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_role_represent(role_id):
-        """
-            Represent an entity role
-
-            @param role_id: the pr_role record ID
-        """
-
-        db = current.db
-        table = db.pr_role
-        role = db(table.id == role_id).select(table.role,
-                                              table.pe_id,
-                                              limitby=(0, 1)).first()
-        try:
-            entity = current.s3db.pr_pentity_represent(role.pe_id)
-            return "%s: %s" % (entity, role.role)
-        except:
-            return current.messages.UNKNOWN_OPT
-
+    class pr_RoleRepresent(S3Represent):
+        
+        def __init__(self,
+                  show_label=True,  
+                  show_link=False,
+                  multiple=False,
+                  translate=True):
+            fields = ["pe_id"
+                      "role_type",
+                      "role",
+                      "path",
+                      "entity_type",
+                      "sub_type"]
+            super(pr_RoleRepresent,
+                  self).__init__(lookup="pr_role",
+                                 key="pe_id",
+                                 fields=fields,
+                                 show_link=show_link,
+                                 translate=translate,
+                                 multiple=multiple )
+        def represent_row(self,row):
+            """
+                Represent a Row
+                @param: the Row
+            """
+            show_label = self.show_label
+            entity = current.s3db.pr_pentity_represent(row.pe_id)
+            db = current.db
+            table = db.pr_role
+            role = db(table.id == role_id).select(table.role,
+                                                  table.pe_id,
+                                                  limitby=(0, 1)).first()
+            pr_str = "%s %s" % (entity,role.role)
+            return pr_str
     # -------------------------------------------------------------------------
     @staticmethod
     def pr_role_onvalidation(form):
