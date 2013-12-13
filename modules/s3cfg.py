@@ -1913,6 +1913,12 @@ class S3Config(Storage):
         """
         return self.project.get("community", False)
 
+    def get_project_hazards(self):
+        """
+            Use Hazards in 3W Projects
+        """
+        return self.project.get("hazards", False)
+
     #def get_project_locations_from_countries(self):
     #    """
     #        Create a project_location for each country that a Project is
@@ -1931,6 +1937,12 @@ class S3Config(Storage):
             Use Sectors in Projects
         """
         return self.project.get("sectors", True)
+
+    def get_project_themes(self):
+        """
+            Use Themes in 3W Projects
+        """
+        return self.project.get("themes", False)
 
     def get_project_theme_percentages(self):
         """

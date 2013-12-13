@@ -33,7 +33,7 @@ from gluon.http import redirect
 from gluon.storage import Storage
 
 from s3crud import S3CRUD
-from s3data import S3DataList
+from s3report2 import S3Report2
 from s3resource import S3FieldSelector
 
 # =============================================================================
@@ -167,6 +167,8 @@ class S3Profile(S3CRUD):
                         w = self._form(r, widget, **attr)
                     elif w_type == "map":
                         w = self._map(r, widget, **attr)
+                    elif w_type == "report":
+                        w = self._report(r, widget, **attr)
                     else:
                         if response.s3.debug:
                             raise SyntaxError("Unsupported widget type %s" %
@@ -265,12 +267,21 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
+        colspan = widget.get("colspan", 2)
+        if colspan == 1:
+            _class = "span6"
+        elif colspan == 2:
+            _class = "span12"
+        else:
+            # Unsupported
+            raise
+
         # Render the widget
         output = DIV(H4(icon,
                         label,
                         _class="profile-sub-header"),
                      DIV(_class="thumbnail"),
-                     _class="span12")
+                     _class=_class)
 
         return output
 
@@ -415,6 +426,15 @@ class S3Profile(S3CRUD):
                                           context,
                                           numrows)
 
+        colspan = widget.get("colspan", 1)
+        if colspan == 1:
+            _class = "span6"
+        elif colspan == 2:
+            _class = "span12"
+        else:
+            # Unsupported
+            raise
+
         # Render the widget
         output = DIV(create_popup,
                      H4(icon,
@@ -423,7 +443,7 @@ class S3Profile(S3CRUD):
                      DIV(data,
                          more,
                          _class="card-holder"),
-                     _class="span6")
+                     _class=_class)
 
         return output
 
@@ -438,8 +458,6 @@ class S3Profile(S3CRUD):
 
             @todo: fix export formats
         """
-
-        T = current.T
 
         # Parse context
         s3db = current.s3db
@@ -579,10 +597,19 @@ class S3Profile(S3CRUD):
             # Card holder label and icon
             label = widget.get("label", "")
             if label:
-                label = T(label)
+                label = current.T(label)
             icon = widget.get("icon", "")
             if icon:
                 icon = TAG[""](I(_class=icon), " ")
+
+            colspan = widget.get("colspan", 1)
+            if colspan == 1:
+                _class = "span6"
+            elif colspan == 2:
+                _class = "span12"
+            else:
+                # Unsupported
+                raise
 
             # Render the widget
             output = DIV(create_popup,
@@ -590,7 +617,7 @@ class S3Profile(S3CRUD):
                             _class="profile-sub-header"),
                          DIV(contents,
                              _class="card-holder"),
-                         _class="span6")
+                         _class=_class)
 
             return output
 
@@ -716,13 +743,22 @@ class S3Profile(S3CRUD):
                        onaccept = onaccept,
                        )
 
+        colspan = widget.get("colspan", 2)
+        if colspan == 1:
+            _class = "span6"
+        elif colspan == 2:
+            _class = "span12"
+        else:
+            # Unsupported
+            raise
+
         # Render the widget
         output = DIV(H4(icon,
                         label,
                         _class="profile-sub-header"),
                      DIV(form,
                          _class="form-container thumbnail"),
-                     _class="span12")
+                     _class=_class)
 
         return output
 
@@ -741,10 +777,8 @@ class S3Profile(S3CRUD):
         s3db = current.s3db
 
         label = widget.get("label", "")
-        lat = widget.get("lat", None)
-        lon = widget.get("lon", None)
         if label:
-            label = current.T(label)
+            label = T(label)
         icon = widget.get("icon", "")
         if icon:
             icon = TAG[""](I(_class=icon), " ")
@@ -770,7 +804,7 @@ class S3Profile(S3CRUD):
         widgets = s3db.get_config(tablename, "profile_widgets")
         s3dbresource = s3db.resource
         for widget in widgets:
-            if widget["type"] != "datalist":
+            if widget["type"] not in ("datalist", "datatable", "report"):
                 continue
             show_on_map = widget.get("show_on_map", True)
             if not show_on_map:
@@ -849,6 +883,10 @@ class S3Profile(S3CRUD):
             for layer in profile_layers:
                 fappend(layer)
 
+        # Default viewport
+        lat = widget.get("lat", None)
+        lon = widget.get("lon", None)
+
         map = current.gis.show_map(height=height,
                                    lat=lat,
                                    lon=lon,
@@ -873,6 +911,15 @@ class S3Profile(S3CRUD):
             script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % current.request.application
         s3.scripts.append(script)
 
+        colspan = widget.get("colspan", 1)
+        if colspan == 1:
+            _class = "span6"
+        elif colspan == 2:
+            _class = "span12"
+        else:
+            # Unsupported
+            raise
+
         # Render the widget
         output = DIV(fullscreen,
                      H4(icon,
@@ -880,7 +927,71 @@ class S3Profile(S3CRUD):
                         _class="profile-sub-header"),
                      DIV(map,
                          _class="card-holder"),
-                     _class="span6")
+                     _class=_class)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _report(self, r, widget, **attr):
+        """
+            Generate a Report widget
+
+            @param r: the S3Request instance
+            @param widget: the widget as a tuple: (label, type, icon)
+            @param attr: controller attributes for the request
+        """
+
+        # Parse context
+        s3db = current.s3db
+
+        context = widget.get("context", None)
+        tablename = widget.get("tablename", None)
+        resource, context = self._resolve_context(r, tablename, context)
+
+        # Define target resource
+        table = resource.table
+        get_config = resource.get_config
+
+        # Widget filter option
+        widget_filter = widget.get("filter", None)
+        if widget_filter:
+            resource.add_filter(widget_filter)
+
+        # Use the widget-index to create a unique ID
+        widget_id = "profile-report-%s-%s" % (tablename, widget["index"])
+
+        # Define the Pivot Table
+        report = S3Report2()
+        report.resource = resource
+        ajaxurl = widget.get("ajaxurl", None)
+        contents = report.widget(r,
+                                 widget_id=widget_id,
+                                 ajaxurl=ajaxurl,
+                                 **attr)
+
+        # Card holder label and icon
+        label = widget.get("label", "")
+        if label:
+            label = current.T(label)
+        icon = widget.get("icon", "")
+        if icon:
+            icon = TAG[""](I(_class=icon), " ")
+
+        colspan = widget.get("colspan", 1)
+        if colspan == 1:
+            _class = "span6"
+        elif colspan == 2:
+            _class = "span12"
+        else:
+            # Unsupported
+            raise
+
+        # Render the widget
+        output = DIV(H4(icon, label,
+                        _class="profile-sub-header"),
+                     DIV(contents,
+                         _class="card-holder"),
+                     _class=_class)
 
         return output
 

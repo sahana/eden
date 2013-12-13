@@ -126,6 +126,10 @@ settings.project.mode_3w = True
 settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
+# Uncomment this to enable Hazards in 3W projects
+#settings.project.hazards = True
+ Uncomment this to enable Themes in 3W projects
+settings.project.themes = True
 # Uncomment this to use multiple Budgets per project
 settings.project.multiple_budgets = True
 settings.project.theme_percentages = True
@@ -556,91 +560,6 @@ def customize_project_organisation(**attr):
     return attr
 
 settings.ui.customize_project_organisation = customize_project_organisation
-
-# -----------------------------------------------------------------------------
-def customize_project_beneficiary(**attr):
-    """
-        Customize project_beneficiary controller
-    """
-
-    s3 = current.response.s3
-
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        if r.interactive:
-            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
-            filter_widgets = [
-                S3TextFilter(["project_id$name",
-                              "project_id$code",
-                              "project_id$description",
-                              "project_id$organisation.name",
-                              "project_id$organisation.acronym",
-                              ],
-                             label=T("Name"),
-                             _class="filter-search",
-                             ),
-                S3OptionsFilter("parameter_id",
-                                label=T("Beneficiary Type"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
-                                ),
-                S3OptionsFilter("project_id$theme_project.theme_id",
-                                label=T("Theme"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
-                                ),
-                S3LocationFilter("project_location_id$location_id",
-                                 label=T("Location"),
-                                 levels=["L1", "L2"],
-                                 widget="multiselect",
-                                 cols=3,
-                                 #hidden=True,
-                                 ),
-                ]
-            report_fields = ["project_location_id",
-                             (T("Beneficiary Type"), "parameter_id"),
-                             "project_id",
-                             (T("Year"), "year"),
-                             #"project_id$hazard.name",
-                             "project_id$theme.name",
-                             #(current.messages.COUNTRY, "location_id$L0"),
-                             "location_id$L1",
-                             "location_id$L2",
-                             "location_id$L3",
-                             "location_id$L4",
-                             ]
-            report_options = Storage(
-                    rows=report_fields,
-                    cols=report_fields,
-                    fact=report_fields,
-                    defaults=Storage(rows="project_id",
-                                     cols="parameter_id",
-                                     fact="sum(value)",
-                                     totals=True
-                                     )
-                    )
-            current.s3db.configure("project_organisation",
-                                   filter_widgets = filter_widgets,
-                                   report_options = report_options,
-                                   )
-        return True
-    s3.prep = custom_prep
-
-    attr["hide_filter"] = False
-    return attr
-
-settings.ui.customize_project_beneficiary = customize_project_beneficiary
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

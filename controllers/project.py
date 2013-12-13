@@ -488,19 +488,35 @@ def beneficiary_type():
 def beneficiary():
     """ RESTful CRUD controller """
 
-    tablename = "project_beneficiary"
-
+    # Normally only used in Report
+    # - make changes as component of Project
     s3db.configure("project_beneficiary",
-                   insertable=False,
-                   editable=False,
-                   deletable=False)
+                   deletable = False,
+                   editable = False,
+                   insertable = False,
+                   )
 
     list_btn = A(T("Beneficiary Report"),
                  _href=URL(c="project", f="beneficiary",
-                           args="report", vars=request.get_vars),
+                           args="report2", vars=request.get_vars),
                  _class="action-btn")
 
-    return s3_rest_controller()
+    #def prep(r):
+    #    if r.method in ("create", "create.popup", "update", "update.popup"):
+    #        # Coming from Profile page?
+    #        location_id = r.get_vars.get("~.(location)", None)
+    #        if location_id:
+    #            field = r.table.location_id
+    #            field.default = location_id
+    #            field.readable = field.writable = False
+    #    if r.record:
+    #        field = r.table.location_id
+    #        field.comment = None
+    #        field.writable = False
+    #    return True
+    #s3.prep = prep
+
+    return s3_rest_controller(hide_filter=False)
 
 # =============================================================================
 def activity_type():

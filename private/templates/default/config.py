@@ -579,9 +579,13 @@ settings.L10n.decimal_separator = "."
 # Uncomment this to use Codes for projects
 #settings.project.codes = True
 # Uncomment this to use Milestones in project/task.
+# Uncomment this to enable Hazards in 3W projects
+#settings.project.hazards = True
 #settings.project.milestones = True
 # Uncomment this to disable Sectors in projects
 #settings.project.sectors = False
+# Uncomment this to enable Themes in 3W projects
+#settings.project.themes = True
 # Uncomment this to use Theme Percentages for projects
 #settings.project.theme_percentages = True
 # Uncomment this to use multiple Budgets per project

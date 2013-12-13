@@ -1882,7 +1882,8 @@ def customize_org_facility(**attr):
             # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
             levels = hierarchy.keys()
-            if len(current.deployment_settings.gis.countries) == 1:
+            if len(current.deployment_settings.gis.countries) == 1 or \
+               s3.gis.config.region_location_id:
                 levels.remove("L0")
 
             # Filter from a Profile page?
@@ -2594,7 +2595,8 @@ def customize_org_resource(**attr):
             # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
             levels = hierarchy.keys()
-            if len(current.deployment_settings.gis.countries) == 1:
+            if len(current.deployment_settings.gis.countries) == 1 or \
+               s3.gis.config.region_location_id:
                 levels.remove("L0")
 
             location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)

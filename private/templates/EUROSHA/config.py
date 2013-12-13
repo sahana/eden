@@ -248,6 +248,10 @@ settings.project.mode_3w = True
 settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
+# Uncomment this to enable Hazards in 3W projects
+settings.project.hazards = True
+# Uncomment this to enable Themes in 3W projects
+settings.project.themes = True
 # Uncomment this to use multiple Budgets per project
 settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project

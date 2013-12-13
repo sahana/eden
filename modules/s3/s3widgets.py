@@ -242,7 +242,7 @@ class S3AddObjectWidget(FormWidget):
             SCRIPT('''
 $(function () {
     var form_field = $('#%(form_field_name)s')
-    var throbber = $('<div id="%(form_field_name)s_ajax_throbber" class="ajax_throbber"/>')
+    var throbber = $('<div id="%(form_field_name)s_ajax_throbber" class="throbber"/>')
     throbber.hide()
     throbber.insertAfter(form_field)
 

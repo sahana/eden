@@ -26,7 +26,7 @@
  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" />
 <![endif]-->
 {{# Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references }}
-<link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/IFRC/favicon.ico" type="image/x-icon" />
 {{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
 {{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
@@ -58,7 +58,8 @@
  {{include "layout_iframe.html"}}
  {{include}}
 {{else:}}
-<body data-spy='scroll'>
+<body>
+{{if auth.is_logged_in():}}
 <div class='navbar navbar-fixed-top'>
  <div class='navbar-inner'>
   <div class='container'>
@@ -67,69 +68,29 @@
     <span class='icon-bar'></span>
     <span class='icon-bar'></span>
    </button>
-   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/S3menu_logo.png" style="width:29px;margin:0 0 -20px 0" alt=""/></a>
+   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/themes/Syria/img/IFRC.png" style="width:50px" alt="Logo"/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-     <li><a href='/{{=appname}}/default/index/newsfeed'> <i class='icon-news'></i> {{=T("News Feed")}}</a></li>
-     <li><a href='/{{=appname}}/gis/index'><i class='icon-map'></i> {{=T("Map")}}</a></li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='projects' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Projects")}}<b class='caret'></b></a>
+     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='projects' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Data Entry")}}<b class='caret'></b></a>
       <ul class='dropdown-menu' role='menu' aria-labelledby='projects'>
-       <li role='menuitem'><a href='/{{=appname}}/project/beneficiary/summary' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Beneficiaries")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/supply/distribution/summary' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Distributions")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/project/project' tabindex='-1' class='menu-item'><i class='icon-project'></i> {{=T("Projects")}}</a></li>
-      </ul>
-     </li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='profiles' data-toggle='dropdown'><i class='icon-folder-open-alt'></i> {{=T("Profiles")}}<b class='caret'></b></a>
-      <ul class='dropdown-menu' role='menu' aria-labelledby='profiles'>
-       <!--<li role='menuitem'><a href='/{{=appname}}/event/event/datalist' tabindex='-1' class='menu-item'><i class='icon-incident'></i> {{=T("Disasters")}}</a></li>-->
-       <li role='menuitem'><a href='/{{=appname}}/gis/location/datalist' tabindex='-1' class='menu-item'><i class='icon-map'></i> {{=T("Countries")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/org/organisation/datalist' tabindex='-1' class='menu-item'><i class='icon-sitemap'></i> {{=T("Organizations")}}</a></li>
-      </ul>
-     </li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='more' data-toggle='dropdown'><i class='icon-plus-sign'></i> {{=T("More")}}<b class='caret'></b></a>
-      <ul class='dropdown-menu' role='menu' aria-labelledby='more'>
-       <li role='menuitem'><a href='/{{=appname}}/cr/shelter' tabindex='-1' class='menu-item'><i class='icon-umbrella'></i> {{=T("Camps")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Contact Directory")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/stats/demographic' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Demographics")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/doc/document' tabindex='-1' class='menu-item'><i class='icon-file-alt'></i> {{=T("Documents")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/hms/hospital' tabindex='-1' class='menu-item'><i class='icon-h-sign'></i> {{=T("Health Facilities")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/org/organisation' tabindex='-1' class='menu-item'><i class='icon-sitemap'></i> {{=T("Organizations")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/project/beneficiary' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Beneficiaries")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/supply/distribution' tabindex='-1' class='menu-item'><i class='icon-truck'></i> {{=T("Distributions")}}</a></li>
+       <!--<li role='menuitem'><a href='/{{=appname}}/project/project' tabindex='-1' class='menu-item'><i class='icon-project'></i> {{=T("Projects")}}</a></li>-->
+       <!--<li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Contact People")}}</a></li>-->
       </ul>
      </li>
     </ul>
     <ul class='nav pull-right'>
-     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
-      <ul class='dropdown-menu'>
-       {{get_vars = request.get_vars}}
-       {{language = response.s3.language}}
-       {{icon = {"ar":"icon-check"}.get(language, "icon-check-empty")}}
-       {{lang_vars = dict(_language="ar")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
-       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> العربية</a></li>
-       {{icon = {"en":"icon-check"}.get(language, "icon-check-empty")}}
-       {{lang_vars = dict(_language="en")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
-       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> English</a></li>
-      </ul>
-     </li>
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
-      <ul class='dropdown-menu'>{{is_logged_in=auth.is_logged_in()}}
-      {{if is_logged_in and auth.s3_has_role("ADMIN"):}}
-       <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
+      <ul class='dropdown-menu'>
+      {{if auth.s3_has_role("ADMIN"):}}
+       <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Manage Users")}}</a></li>
       {{pass}}
-      {{if is_logged_in:}}
-       <li><a href='/{{=appname}}/pr/person'><i class='icon-list'></i> {{=T("Contact People")}}</a></li>
        <li class='divider'></li>
        <li><a href='/{{=appname}}/default/person'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
-      {{pass}}
-      {{if is_logged_in:}}
-       <!--
-       <li><a href='/{{=appname}}/default/index/subscriptions'><i class='icon-envelope'></i> {{=T("Notifications")}}</a></li>
-       <li><a href='/{{=appname}}/default/index/filters'><i class='icon-filter'></i> {{=T("Saved Filters")}}</a></li>
-       <li><a href='/{{=appname}}/gis/config'><i class='icon-globe'></i> {{=T("Saved Maps")}}</a></li>-->
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
        <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
-       <!--<li><a href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a></li>-->
-       {{else:}}
-       <li><a href='/{{=appname}}/default/user/login'><i class='icon-signin'></i> {{=T("Login")}}</a></li>
-       {{pass}}
       </ul>
      </li>
     </ul>
@@ -137,6 +98,7 @@
   </div>
  </div>
 </div>
+{{pass}}
 <div class='container main-container'>
  <div id='alert-space'>
   {{if response.error:}}<div class='alert alert-error'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.error}}</div>{{pass}}

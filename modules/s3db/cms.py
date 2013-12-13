@@ -1052,6 +1052,7 @@ def cms_customize_post_fields():
     """
 
     s3db = current.s3db
+    s3 = current.response.s3
     settings = current.deployment_settings
 
     # Hide Labels when just 1 column in inline form
@@ -1082,7 +1083,8 @@ def cms_customize_post_fields():
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
     levels = hierarchy.keys()
-    if len(current.deployment_settings.get_gis_countries()) == 1:
+    if len(current.deployment_settings.get_gis_countries()) == 1 or \
+       s3.gis.config.region_location_id:
         levels.remove("L0")
 
     from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -1110,7 +1112,6 @@ def cms_customize_post_fields():
 
     if settings.get_cms_show_tags():
         list_fields.append("tag.name")
-        s3 = current.response.s3
         if s3.debug:
             s3.scripts.append("/%s/static/scripts/tag-it.js" % current.request.application)
         else:

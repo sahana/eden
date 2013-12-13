@@ -44,6 +44,21 @@ def catalog_item():
 def distribution():
     """ RESTful CRUD controller """
 
+    #def prep(r):
+    #    if r.method in ("create", "create.popup", "update", "update.popup"):
+    #        # Coming from Profile page?
+    #        location_id = r.get_vars.get("~.(location)", None)
+    #        if location_id:
+    #            field = r.table.location_id
+    #            field.default = location_id
+    #            field.readable = field.writable = False
+    #    if r.record:
+    #        field = r.table.location_id
+    #        field.comment = None
+    #        field.writable = False
+    #    return True
+    #s3.prep = prep
+
     return s3_rest_controller(hide_filter=False)
 
 # -----------------------------------------------------------------------------

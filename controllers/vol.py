@@ -783,7 +783,7 @@ def person_search():
 def group():
     """
         Team controller
-        - uses the group table from PR
+        - uses the group table from PR, but filtered to just 'Relief Teams'
     """
 
     return s3db.hrm_group_controller()
@@ -1032,17 +1032,17 @@ def credential():
                  (s3db.hrm_credential.person_id == table.person_id))
 
     def prep(r):
-        table = r.table
         if r.method in ("create", "create.popup", "update", "update.popup"):
             # Coming from Profile page?
             person_id = r.get_vars.get("~.person_id", None)
             if person_id:
-                field = table.person_id
+                field = r.table.person_id
                 field.default = person_id
                 field.readable = field.writable = False
         if r.record:
-            table.person_id.comment = None
-            table.person_id.writable = False
+            field = r.table.person_id
+            field.comment = None
+            field.writable = False
         return True
     s3.prep = prep
 

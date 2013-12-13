@@ -1607,7 +1607,7 @@ class S3OptionsMenu(object):
             menu(
                  M("Reports", f="location", m="report")(
                     M("3W", f="location", m="report"),
-                    M("Beneficiaries", f="beneficiary", m="report",
+                    M("Beneficiaries", f="beneficiary", m="report2",
                       check = stats,
                       ),
                     M("Funding", f="organisation", m="report"),

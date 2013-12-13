@@ -112,6 +112,8 @@ settings.project.mode_drr = True
 settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
+# Uncomment this to enable Hazards in 3W projects
+settings.project.hazards = True
 # Uncomment this to create a project_location for each country which is a project is implemented in
 # - done via Custom Form instead
 #settings.project.locations_from_countries = True
@@ -121,6 +123,8 @@ settings.project.codes = True
 settings.project.multiple_organisations = True
 # Uncomment this to disable Sectors in projects
 settings.project.sectors = False
+# Uncomment this to enable Themes in 3W projects
+settings.project.themes = True
 # Uncomment this to customise
 # Links to Filtered Components for Donors & Partners
 settings.project.organisation_roles = {

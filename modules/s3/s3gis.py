@@ -1166,6 +1166,7 @@ class GIS(object):
         ltable = s3db.gis_layer_config
         fields = [ctable.id,
                   ctable.default_location_id,
+                  ctable.region_location_id,
                   ctable.geocoder,
                   ctable.lat_min,
                   ctable.lat_max,
@@ -1371,7 +1372,6 @@ class GIS(object):
             else:
                 return _levels
 
-        T = current.T
         COUNTRY = current.messages["COUNTRY"]
 
         if level == "L0":
@@ -1415,6 +1415,7 @@ class GIS(object):
                     levels[key] = key
             return levels
 
+        T = current.T
         row = rows.first()
         if level:
             try:

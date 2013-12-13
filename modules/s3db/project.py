@@ -1683,9 +1683,11 @@ class S3ProjectBeneficiaryModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
+        settings = current.deployment_settings
 
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -1765,12 +1767,12 @@ class S3ProjectBeneficiaryModel(S3Model):
                                     IS_INT_AMOUNT.represent(v)
                                    ),
                              s3_date("date",
-                                     label = T("Start Date"),
                                      #empty = False,
+                                     label = T("Start Date"),
                                      ),
                              s3_date("end_date",
-                                     label = T("End Date"),
                                      #empty = False,
+                                     label = T("End Date"),
                                      ),
                              #self.stats_source_id(),
                              s3_comments(),
@@ -1798,19 +1800,6 @@ class S3ProjectBeneficiaryModel(S3Model):
         )
 
         # Resource Configuration
-        report_fields = ["project_location_id",
-                         (T("Beneficiary Type"), "parameter_id"),
-                         "project_id",
-                         (T("Year"), "year"),
-                         "project_id$hazard.name",
-                         "project_id$theme.name",
-                         (current.messages.COUNTRY, "location_id$L0"),
-                         "location_id$L1",
-                         "location_id$L2",
-                         "location_id$L3",
-                         "location_id$L4",
-                         ]
-
         # ---------------------------------------------------------------------
         def year_options():
             """
@@ -1861,65 +1850,119 @@ class S3ProjectBeneficiaryModel(S3Model):
                 years[year] = year
             return years
 
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
+            levels.remove("L0")
+
+        # Normally only used in Report
+        filter_widgets = [
+            #S3TextFilter(["project_id$name",
+            #              "project_id$code",
+            #              "project_id$description",
+            #              "project_id$organisation.name",
+            #              "project_id$organisation.acronym",
+            #              ],
+            #             label=T("Search"),
+            #             _class="filter-search",
+            #             ),
+            #S3OptionsFilter("project_id",
+            #                label=T("Project"),
+            #                widget="multiselect",
+            #                hidden=True,
+            #                ),
+            S3OptionsFilter("parameter_id",
+                            label=T("Beneficiary Type"),
+                            widget="multiselect",
+                            #hidden=True,
+                            ),
+            # @ToDo: OptionsFilter working with Lazy VF
+            #S3OptionsFilter("year",
+            #                label=T("Year"),
+            #                widget="multiselect",
+            #                hidden=True,
+            #                ),
+            S3LocationFilter("location_id",
+                             levels=levels,
+                             widget="multiselect",
+                             #hidden=True,
+                             ),
+            ]
+
+        list_fields = ["project_id",
+                       (T("Beneficiary Type"), "parameter_id"),
+                       "value",
+                       "year",
+                       ]
+
+        report_fields = [(T("Beneficiary Type"), "parameter_id"),
+                         "project_id",
+                         #"project_location_id",
+                         (T("Year"), "year"),
+                         ]
+
+        if settings.get_project_hazards():
+            report_fields.append("project_id$hazard.name")
+
+        if settings.get_project_themes():
+            report_fields.append("project_id$theme.name")
+            filter_widgets.append(
+                S3OptionsFilter("project_id$theme_project.theme_id",
+                                label=T("Theme"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                #hidden=True,
+                                ))
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            list_fields.append(lfield)
+            report_fields.append(lfield)
+
+        if "L0" in levels:
+            default_row = "location_id$L0"
+        elif "L1" in levels:
+            default_row = "location_id$L1"
+        else:
+            default_row = "beneficiary.project_id"
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = ["value"],
+                                 methods = ["sum"],
+                                 defaults = Storage(rows=default_row,
+                                                    cols="beneficiary.parameter_id",
+                                                    fact="sum(beneficiary.value)",
+                                                    totals=True
+                                                    )
+                                 )
+
         configure(tablename,
+                  deduplicate = self.project_beneficiary_deduplicate,
+                  extra_fields = ["project_id", "date", "end_date"],
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  onaccept = self.project_beneficiary_onaccept,
+                  report_options = report_options,
                   super_entity = "stats_data",
-                  onaccept=self.project_beneficiary_onaccept,
-                  deduplicate=self.project_beneficiary_deduplicate,
-                  report_options=Storage(
-                    search=[
-                        S3SearchOptionsWidget(
-                            field="project_id",
-                            name="project",
-                            label=T("Project")
-                        ),
-                        S3SearchOptionsWidget(
-                            field="parameter_id",
-                            name="parameter_id",
-                            label=T("Beneficiary Type")
-                        ),
-                        # @ToDo: These do no work - no results are returned
-                        S3SearchOptionsWidget(
-                            field="year",
-                            name="year",
-                            label=T("Year"),
-                            options = year_options
-                        ),
-                        S3SearchOptionsWidget(
-                            name = "beneficiary_search_L1",
-                            field = "location_id$L1",
-                            location_level = "L1",
-                            cols = 3,
-                        ),
-                    ],
-                    rows=report_fields,
-                    cols=report_fields,
-                    fact=["value"],
-                    methods=["sum"],
-                    defaults=Storage(rows="beneficiary.project_id",
-                                     cols="beneficiary.parameter_id",
-                                     fact="beneficiary.value",
-                                     aggregate="sum",
-                                     totals=True
-                                     )
-                    ),
-                  extra_fields = ["project_id", "date", "end_date"]
                   )
 
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", table,
-                                         sortby="name",
-                                         requires = IS_NULL_OR(
-                                                        IS_ONE_OF(db, "project_beneficiary.id",
-                                                                  self.project_beneficiary_represent,
-                                                                  sort=True)),
-                                         represent = self.project_beneficiary_represent,
-                                         label = T("Beneficiaries"),
-                                         comment = S3AddResourceLink(c="project",
-                                                                     f="beneficiary",
-                                                                     title=ADD_BNF,
-                                                                     tooltip=\
-                                            T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
-                                         ondelete = "SET NULL")
+            sortby = "name",
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "project_beneficiary.id",
+                                  self.project_beneficiary_represent,
+                                  sort=True)),
+            represent = self.project_beneficiary_represent,
+            label = T("Beneficiaries"),
+            comment = S3AddResourceLink(c="project", f="beneficiary",
+                                        title=ADD_BNF,
+                                        tooltip=\
+                T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
+            ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
         # Beneficiary <> Activity Link Table
@@ -2828,25 +2871,27 @@ class S3ProjectLocationModel(S3Model):
             list_fields.append((T("Activity Types"), "activity_type.activity_type_id"))
         list_fields.append("comments")
 
+        report_options = Storage(search = advanced_search,
+                                 rows=report_fields,
+                                 cols=report_fields,
+                                 fact=report_fields,
+                                 defaults=Storage(rows="location.location_id$L1",
+                                                  cols="location.project_id",
+                                                  fact="activity_type.activity_type_id",
+                                                  aggregate="list",
+                                                  totals=True
+                                                  )
+                                 )
+
         configure(tablename,
-                  super_entity="doc_entity",
-                  create_next=URL(c="project", f="location",
-                                  args=["[id]", "beneficiary"]),
-                  deduplicate=self.project_location_deduplicate,
-                  onaccept=self.project_location_onaccept,
-                  search_method=search_method,
-                  report_options=Storage(search = advanced_search,
-                                         rows=report_fields,
-                                         cols=report_fields,
-                                         fact=report_fields,
-                                         defaults=Storage(rows="location.location_id$L1",
-                                                          cols="location.project_id",
-                                                          fact="activity_type.activity_type_id",
-                                                          aggregate="list",
-                                                          totals=True
-                                                          )
-                                         ),
+                  create_next = URL(c="project", f="location",
+                                    args=["[id]", "beneficiary"]),
+                  deduplicate = self.project_location_deduplicate,
                   list_fields = list_fields,
+                  onaccept = self.project_location_onaccept,
+                  report_options = report_options,
+                  search_method = search_method,
+                  super_entity="doc_entity",
                   )
 
         # Reusable Field

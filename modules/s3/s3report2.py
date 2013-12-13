@@ -32,6 +32,7 @@
 """
 
 import re
+import urllib
 
 try:
     import json # try stdlib (Python 2.6)
@@ -155,7 +156,6 @@ class S3Report2(S3Method):
 
         if r.representation in ("html", "iframe"):
 
-            response = current.response
             tablename = resource.tablename
             
             output["title"] = self.crud_string(tablename, "title_report")
@@ -199,7 +199,7 @@ class S3Report2(S3Method):
                                           widget_id = widget_id)
 
             # View
-            response.view = self._view(r, "report2.html")
+            current.response.view = self._view(r, "report2.html")
 
         elif r.representation == "json":
 
@@ -304,9 +304,16 @@ class S3Report2(S3Method):
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            ajaxurl = r.url(method="report2",
-                            representation="json",
-                            vars=ajax_vars)
+            ajaxurl = attr.get("ajaxurl", r.url(method="report2",
+                                                representation="json",
+                                                vars={}))
+            list_vars = []
+            for (key, vals) in sorted(ajax_vars.items()):
+                if not isinstance(vals, (list, tuple)):
+                    vals = [vals]
+                for val in vals:
+                    list_vars.append((key, val))
+            ajaxurl += "?%s" % urllib.urlencode(list_vars)
 
             output = S3ReportForm(resource).html(pivotdata,
                                                  get_vars = get_vars,
@@ -318,7 +325,7 @@ class S3Report2(S3Method):
             r.error(501, r.ERROR.BAD_FORMAT)
 
         return output
-        
+
 # =============================================================================
 class S3ReportForm(object):
     """ Helper class to render a report form """
@@ -342,6 +349,7 @@ class S3ReportForm(object):
         """
 
         T = current.T
+        appname = current.request.application
 
         # Report options
         report_options = self.report_options(get_vars = get_vars,
@@ -353,13 +361,12 @@ class S3ReportForm(object):
         else:
             labels = None
         hidden = {"pivotdata": json.dumps(pivotdata)}
-            
+
         empty = T("No report specified.")
         hide = T("Hide Table")
         show = T("Show Table")
-        
-        throbber = "/%s/static/img/indicator.gif" % current.request.application
 
+        throbber = "/%s/static/img/indicator.gif" % appname
 
         # Filter options
         if filter_widgets is not None:
@@ -467,15 +474,31 @@ class S3ReportForm(object):
             elif table_opt == "collapse":
                 opts["collapseTable"] = True
 
-        # jQuery-ready script
-        script = '''
-$("#%(widget_id)s").pivottable(%(opts)s)''' % {
-            "widget_id": widget_id,
-            "opts": json.dumps(opts)
-         }
-         
-        current.response.s3.jquery_ready.append(script)
-               
+        # Scripts
+        s3 = current.response.s3
+        scripts = s3.scripts
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+            script = "/%s/static/scripts/flot/jquery.flot.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+            script = "/%s/static/scripts/flot/jquery.flot.pie.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+        else:
+            script = "/%s/static/scripts/S3/s3.pivotTables.min.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+
+        script = '''$("#%(widget_id)s").pivottable(%(opts)s)''' % \
+                                                dict(widget_id = widget_id,
+                                                     opts = json.dumps(opts),
+                                                     )
+
+        s3.jquery_ready.append(script)
+
         return form
 
     # -------------------------------------------------------------------------

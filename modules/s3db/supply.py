@@ -1254,12 +1254,12 @@ class S3SupplyDistributionModel(S3Model):
                                    represent = lambda v: \
                                     IS_INT_AMOUNT.represent(v)),
                              s3_date("date",
-                                     label = T("Start Date"),
                                      #empty = False,
+                                     label = T("Start Date"),
                                      ),
                              s3_date("end_date",
-                                     label = T("End Date"),
                                      #empty = False,
+                                     label = T("End Date"),
                                      ),
                              #self.stats_source_id(),
                              s3_comments(),
@@ -1399,30 +1399,31 @@ class S3SupplyDistributionModel(S3Model):
                          #"location_id$L4",
                          ]
 
+        report_options = Storage(rows=report_fields,
+                                 cols=report_fields,
+                                 fact=report_fields + ["value"],
+                                 defaults=Storage(rows="location_id$L1",
+                                                  cols="parameter_id",
+                                                  # T("Projects")
+                                                  fact="sum(value)",
+                                                  totals=True
+                                                  ),
+                                 extra_fields = ["project_id",
+                                                 #"date",
+                                                 #"end_date"
+                                                 ]
+                                 )
+
         configure(tablename,
-                  super_entity = "stats_data",
-                  onaccept = self.supply_distribution_onaccept,
-                  deduplicate = self.supply_distribution_deduplicate,
                   context = {"location": "location_id",
                              "organisation": "project_id$organisation_id",
                              },
+                  deduplicate = self.supply_distribution_deduplicate,
                   filter_widgets = filter_widgets,
-                  report_options=Storage(
-                    rows=report_fields,
-                    cols=report_fields,
-                    fact=report_fields + ["value"],
-                    defaults=Storage(rows="location_id$L1",
-                                     cols="parameter_id",
-                                     # T("Projects")
-                                     fact="sum(value)",
-                                     totals=True
-                                     ),
-                    extra_fields = ["project_id",
-                                    #"date",
-                                    #"end_date"
-                                    ]
-                    )
-                 )
+                  onaccept = self.supply_distribution_onaccept,
+                  report_options = report_options,
+                  super_entity = "stats_data",
+                  )
 
         # Pass names back to global scope (s3.*)
         return dict()

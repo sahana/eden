@@ -51,6 +51,7 @@ class S3MembersModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -63,7 +64,7 @@ class S3MembersModel(S3Model):
 
         add_component = self.add_component
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
 
         root_org = auth.root_org()
@@ -243,7 +244,8 @@ class S3MembersModel(S3Model):
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1:
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
             levels.remove("L0")
 
         list_fields = ["person_id",

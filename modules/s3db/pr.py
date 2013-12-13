@@ -1862,6 +1862,7 @@ class S3AddressModel(S3Model):
 
         T = current.T
         messages = current.messages
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
@@ -1899,7 +1900,7 @@ class S3AddressModel(S3Model):
 
         # CRUD Strings
         ADD_ADDRESS = T("Add Address")
-        current.response.s3.crud_strings[tablename] = Storage(
+        s3.crud_strings[tablename] = Storage(
             title_create = ADD_ADDRESS,
             title_display = T("Address Details"),
             title_list = T("Addresses"),
@@ -1916,7 +1917,8 @@ class S3AddressModel(S3Model):
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1:
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
             levels.remove("L0")
         # Display in reverse order, like Addresses
         levels.reverse()

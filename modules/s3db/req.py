@@ -80,6 +80,7 @@ class S3RequestModel(S3Model):
         db = current.db
         auth = current.auth
         session = current.session
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -91,7 +92,7 @@ class S3RequestModel(S3Model):
         s3_string_represent = lambda str: str if str else NONE
 
         add_component = self.add_component
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         set_method = self.set_method
         super_link = self.super_link
 
@@ -370,7 +371,8 @@ class S3RequestModel(S3Model):
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1:
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
             levels.remove("L0")
 
         filter_widgets = [
@@ -2273,6 +2275,7 @@ class S3CommitModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
+        s3 = current.response.s3
 
         add_component = self.add_component
 
@@ -2367,7 +2370,8 @@ class S3CommitModel(S3Model):
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1:
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
             levels.remove("L0")
 
         filter_widgets = [
@@ -2409,7 +2413,7 @@ class S3CommitModel(S3Model):
 
         # CRUD strings
         ADD_COMMIT = T("Make Commitment")
-        current.response.s3.crud_strings[tablename] = Storage(
+        s3.crud_strings[tablename] = Storage(
             title_create = ADD_COMMIT,
             title_display = T("Commitment Details"),
             title_list = T("Commitments"),
@@ -3917,6 +3921,8 @@ def req_customize_req_fields():
     T = current.T
     db = current.db
     s3db = current.s3db
+    s3 = current.response.s3
+
     tablename = "req_req"
     table = s3db.req_req
 
@@ -3976,7 +3982,7 @@ $.when(S3.addPersonWidgetReady(fieldname)).then(
 function(status){real_input.data('lookup_contact')(fieldname,%s)},
 function(status){s3_debug(status)},
 function(status){s3_debug(status)})''' % site_id
-        current.response.s3.jquery_ready.append(script)
+        s3.jquery_ready.append(script)
     else:
         # If the Requester is blank, then lookup default Site Contact
         script = \
@@ -3988,7 +3994,7 @@ function(status){s3_debug(status)})''' % site_id
   if(!real_input.val()&&!$('#req_req_requester_id_full_name').val()){
    real_input.data('lookup_contact')(fieldname,site_id)
 }}})'''
-        current.response.s3.jquery_ready.append(script)
+        s3.jquery_ready.append(script)
 
         organisation_id = request.get_vars.get("~.(organisation)", None)
         if organisation_id:
@@ -4031,7 +4037,8 @@ function(status){s3_debug(status)})''' % site_id
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
     levels = hierarchy.keys()
-    if len(current.deployment_settings.get_gis_countries()) == 1:
+    if len(current.deployment_settings.get_gis_countries()) == 1 or \
+       s3.gis.config.region_location_id:
         levels.remove("L0")
 
     filter_widgets = [
@@ -4338,6 +4345,7 @@ def req_customize_commit_fields():
 
     T = current.T
     s3db = current.s3db
+    s3 = current.response.s3
     settings = current.deployment_settings
     tablename = "req_commit"
     table = s3db.req_commit
@@ -4373,7 +4381,7 @@ def req_customize_commit_fields():
     # CRUD strings
     #ADD_COMMIT = T("Make Donation")
     ADD_COMMIT = T("Add Donation")
-    current.response.s3.crud_strings[tablename] = Storage(
+    s3.crud_strings[tablename] = Storage(
         title_create = ADD_COMMIT,
         title_display = T("Donation Details"),
         title_list = T("Donations"),
@@ -4407,7 +4415,8 @@ def req_customize_commit_fields():
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
     levels = hierarchy.keys()
-    if len(current.deployment_settings.get_gis_countries()) == 1:
+    if len(current.deployment_settings.get_gis_countries()) == 1 or \
+       s3.gis.config.region_location_id:
         levels.remove("L0")
 
     #field = table.location_id

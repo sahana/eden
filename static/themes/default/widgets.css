@@ -1442,6 +1442,20 @@ button.toggle-text {
     text-decoration: none;
 }
 
+/* Req quantity */
+.ajax_more {
+	float: right;
+	width: 16px;
+	height: 16px;
+	margin: 0px 2px 2px 0px;
+}
+.ajax_more.collapsed {
+	background: url(../../img/icon_blue_plus15px.png) no-repeat left top; 
+}
+.ajax_more.expanded {
+	background: url(../../img/icon_blue_minus15px.png) no-repeat left top; 
+}
+
 /* Simile Timeline */
 .s3-timeline  {
     height: 400px;

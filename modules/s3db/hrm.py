@@ -1629,6 +1629,7 @@ class S3HRSkillModel(S3Model):
         db = current.db
         auth = current.auth
         request = current.request
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         job_title_id = self.hrm_job_title_id
@@ -1648,7 +1649,7 @@ class S3HRSkillModel(S3Model):
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -2207,7 +2208,8 @@ class S3HRSkillModel(S3Model):
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1:
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
             levels.remove("L0")
 
         filter_widgets = [
@@ -5484,7 +5486,8 @@ def hrm_human_resource_controller(extra_filter=None):
             # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
             levels = hierarchy.keys()
-            if len(settings.get_gis_countries()) == 1:
+            if len(settings.get_gis_countries()) == 1 or \
+               s3.gis.config.region_location_id:
                 levels.remove("L0")
 
             filter_widgets = [
