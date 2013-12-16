@@ -437,7 +437,8 @@ def customize_deploy_assignment(**attr):
     #table.end_date.label = T("EOM")
 
     # List fields
-    list_fields = [(T("Operation"), "mission_id$code"),
+    list_fields = [(T("Mission"), "mission_id$name"),
+                   (T("Appeal Code"), "mission_id$code"),
                    (T("Country"), "mission_id$location_id"),
                    (T("Disaster Type"), "mission_id$event_type_id"),
                    # @todo: replace by date of first alert?
@@ -455,7 +456,7 @@ def customize_deploy_assignment(**attr):
     report_fact = [(T("Number of Deployments"), "count(human_resource_id)"),
                    (T("Average Rating"), "avg(appraisal.rating)"),
                    ]
-    report_axis = [(T("Operation"), "mission_id$code"),
+    report_axis = [(T("Appeal Code"), "mission_id$code"),
                    (T("Country"), "mission_id$location_id"),
                    (T("Disaster Type"), "mission_id$event_type_id"),
                    (T("RDRT Type"), "job_title_id"),
@@ -495,6 +496,11 @@ def customize_deploy_assignment(**attr):
         msg_record_deleted = T("Deployment deleted"),
         msg_list_empty = T("No Deployments currently registered"))
 
+    # Restrict Location to just Countries
+    from s3.s3fields import S3Represent
+    field = s3db.deploy_mission.location_id
+    field.represent = S3Represent(lookup="gis_location", translate=True)
+    
     return attr
 
 settings.ui.customize_deploy_assignment = customize_deploy_assignment
@@ -517,7 +523,7 @@ def customize_deploy_mission(**attr):
                                 "a list of possible matches")))
 
     table = s3db.deploy_mission
-    table.code.label = T("Operation")
+    table.code.label = T("Appeal Code")
     table.event_type_id.label = T("Disaster Type")
     table.organisation_id.readable = table.organisation_id.writable = False
 
@@ -549,7 +555,6 @@ def customize_deploy_mission(**attr):
 
     # Report options
     report_fact = [(T("Number of Missions"), "count(id)"),
-                   (T("Number of Operations"), "count(code)"),
                    (T("Number of Countries"), "count(location_id)"),
                    (T("Number of Disaster Types"), "count(event_type_id)"),
                    (T("Number of Responses"), "sum(response_count)"),
