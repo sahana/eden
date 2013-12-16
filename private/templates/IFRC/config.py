@@ -423,6 +423,31 @@ def customize_deploy_application(**attr):
 settings.ui.customize_deploy_application = customize_deploy_application
 
 # -----------------------------------------------------------------------------
+def _customize_assignment_fields(**attr):
+
+    MEMBER = T("Member")
+    from gluon.html import DIV
+    hr_comment =  \
+        DIV(_class="tooltip",
+            _title="%s|%s" % (MEMBER,
+                              T("Enter some characters to bring up "
+                                "a list of possible matches")))
+
+    from s3.s3validators import IS_ONE_OF
+    atable = current.s3db.deploy_assignment
+    atable.human_resource_id.label = MEMBER
+    atable.human_resource_id.comment = hr_comment
+    field = atable.job_title_id
+    field.comment = None
+    field.label = T("Sector")
+    field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
+                               field.represent,
+                               filterby = "type",
+                               filter_opts = (4,),
+                               )
+    return
+
+# -----------------------------------------------------------------------------
 def customize_deploy_assignment(**attr):
     """
         Customize deploy_assignment controller
@@ -496,6 +521,8 @@ def customize_deploy_assignment(**attr):
         msg_record_deleted = T("Deployment deleted"),
         msg_list_empty = T("No Deployments currently registered"))
 
+    _customize_assignment_fields()
+    
     # Restrict Location to just Countries
     from s3.s3fields import S3Represent
     field = s3db.deploy_mission.location_id
@@ -540,18 +567,7 @@ def customize_deploy_mission(**attr):
     rtable.human_resource_id.label = MEMBER
     rtable.human_resource_id.comment = hr_comment
 
-    from s3.s3validators import IS_ONE_OF
-    atable = s3db.deploy_assignment
-    atable.human_resource_id.label = MEMBER
-    atable.human_resource_id.comment = hr_comment
-    field = atable.job_title_id
-    field.comment = None
-    field.label = T("Sector")
-    field.requires = IS_ONE_OF(db, "hrm_job_title.id",
-                               field.represent,
-                               filterby = "type",
-                               filter_opts = (4,),
-                               )
+    _customize_assignment_fields()
 
     # Report options
     report_fact = [(T("Number of Missions"), "count(id)"),
