@@ -494,9 +494,7 @@ def certificate_skill():
 def training():
     """ Training Controller - used for Searching for Participants """
 
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 1) & \
-                 (s3db.hrm_training.person_id == table.person_id))
+    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
     return s3db.hrm_training_controller()
 
 # -----------------------------------------------------------------------------
@@ -509,18 +507,14 @@ def training_event():
 def credential():
     """ Credentials Controller """
 
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 1) & \
-                 (s3db.hrm_credential.person_id == table.person_id))
+    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
     return s3db.hrm_credential_controller()
 
 # -----------------------------------------------------------------------------
 def experience():
     """ Experience Controller """
 
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 1) & \
-                 (s3db.hrm_experience.person_id == table.person_id))
+    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
     return s3db.hrm_experience_controller()
 
 # -----------------------------------------------------------------------------
@@ -529,9 +523,7 @@ def competency():
         RESTful CRUD controller used to allow searching for people by Skill
     """
 
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 1) & \
-                 (s3db.hrm_competency.person_id == table.person_id))
+    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
     return s3db.hrm_competency_controller()
 
 # =============================================================================
