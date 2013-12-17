@@ -96,7 +96,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Events", c="event", f="event"),
                 MM("Incident Reports", c="irs", f="ireport"),
             ),
-            homepage("deploy", name="RDRT")(
+            homepage("deploy", name="RDRT", f="mission", m="summary",
+                     vars={"~.status__belongs": "2"})(
                 MM("Missions", c="deploy", f="mission", m="summary"),
                 MM("Members", c="deploy", f="human_resource", m="summary"),
             ),
@@ -695,6 +696,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(M("Missions",
                      c="deploy", f="mission", m="summary")(
+                        M("Active Missions", m="summary",
+                          vars={"~.status__belongs": "2"}),
                         M("New", m="create"),
                    ),
                    M("Alerts",
