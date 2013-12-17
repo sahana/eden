@@ -2337,7 +2337,7 @@ class S3HRSkillModel(S3Model):
                              widget="multiselect",
                              ),
             S3OptionsFilter("course_id",
-                            lepresent="%(name)s",
+                            represent="%(name)s",
                             widget="multiselect",
                             ),
             S3OptionsFilter("training_event_id$site_id",
