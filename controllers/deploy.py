@@ -198,18 +198,102 @@ def assignment():
             table = r.resource.table
             table.mission_id.writable = False
             table.human_resource_id.writable = False
+
         if r.representation == "popup":
             r.resource.configure(insertable=False)
+
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.id and isinstance(output, dict):
+            # Add button to Upload Appraisal
+            record_id = r.id
+            atable = s3db.hrm_appraisal
+            ltable = s3db.deploy_assignment_appraisal
+            query = (ltable.assignment_id == record_id) & \
+                    (atable.id == ltable.appraisal_id) & \
+                    (atable.deleted != True)
+            appraisal = db(query).select(atable.id,
+                                         limitby=(0, 1)).first()
+            permit = auth.s3_has_permission
+            url = None
+            if appraisal and permit("update", atable, record_id=appraisal.id):
+                hrtable = db.hrm_human_resource
+                hr = db(hrtable.id == r.record.human_resource_id).select(hrtable.person_id,
+                                                                         limitby=(0, 1)
+                                                                         ).first()
+                if hr:
+                    get_vars = {}
+                    refresh = request.get_vars.get("refresh", None)
+                    if refresh:
+                        get_vars["refresh"] = refresh
+                    record = request.get_vars.get("record", None)
+                    if record:
+                        get_vars["record"] = record
+                    url = URL(c="deploy", f="person",
+                              args=[hr.person_id, "appraisal",
+                                    appraisal.id, "update.popup"],
+                              vars=get_vars,
+                              )
+            elif permit("update", r.table, record_id=record_id):
+                # Currently we assume that anyone who can edit the assignment can upload the appraisal
+                hrtable = db.hrm_human_resource
+                hr = db(hrtable.id == r.record.human_resource_id).select(hrtable.person_id,
+                                                                         limitby=(0, 1)
+                                                                         ).first()
+                if hr:
+                    get_vars = {"mission_id": r.record.mission_id,
+                                }
+                    refresh = request.get_vars.get("refresh", None)
+                    if refresh:
+                        get_vars["refresh"] = refresh
+                    record = request.get_vars.get("record", None)
+                    if record:
+                        get_vars["record"] = record
+                    url = URL(c="deploy", f="person",
+                              args=[hr.person_id, "appraisal", "create.popup"],
+                              vars=get_vars,
+                              )
+            if url:
+                output["items"] = s3base.S3CRUD.crud_button(T("Upload Appraisal"),
+                                                            _href=url,
+                                                            _class="action-btn",
+                                                            )
+        return output
+    s3.postp = postp
+
     return s3_rest_controller(hide_filter=False)
+
+# -----------------------------------------------------------------------------
+def competency():
+    """ RESTful CRUD controller - unfiltered version """
+
+    return s3db.hrm_competency_controller()
+
+# -----------------------------------------------------------------------------
+def credential():
+    """ RESTful CRUD controller - unfiltered version """
+
+    return s3db.hrm_credential_controller()
+
+# -----------------------------------------------------------------------------
+def experience():
+    """ Experience Controller - unfiltered version """
+
+    return s3db.hrm_experience_controller()
 
 # -----------------------------------------------------------------------------
 def job_title():
     """ RESTful CRUD Controller """
 
     return s3_rest_controller("hrm", "job_title")
+
+# -----------------------------------------------------------------------------
+def training():
+    """ Training Controller - unfiltered version """
+
+    return s3db.hrm_training_controller()
 
 # -----------------------------------------------------------------------------
 def person_search():
@@ -416,6 +500,13 @@ def email_inbox():
                                         args=["[id]", "select"])),
                            ]
 
+            if r.id:
+                s3.rfooter = s3base.S3CRUD.crud_button(T("Link to Mission"),
+                                                       _href=URL(f="email_inbox",
+                                                                 args=[r.id,
+                                                                       "select"]),
+                                                       _class="action-btn link",
+                                                       )
         return output
     s3.postp = postp
 

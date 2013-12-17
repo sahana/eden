@@ -1096,11 +1096,12 @@ def customize_pr_person(**attr):
 
         if r.component_name == "appraisal":
             atable = r.component.table
+            atable.organisation_id.readable = atable.organisation_id.writable = False
             # Organisation needs to be an NS
-            ns_only(atable.organisation_id,
-                    required=True,
-                    branches=False,
-                    )
+            #ns_only(atable.organisation_id,
+            #        required=True,
+            #        branches=False,
+            #        )
             field = atable.supervisor_id
             field.readable = field.writable = False
             field = atable.job_title_id
