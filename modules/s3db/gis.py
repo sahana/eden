@@ -1466,6 +1466,7 @@ class S3GISConfigModel(S3Model):
             msg_list_empty = T("No Markers currently available"))
 
         # Reusable field to include in other table definitions
+        gis_marker_represent = gis_MarkerRepresent()
         marker_id = S3ReusableField("marker_id", table,
                                     sortby="name",
                                     requires = IS_NULL_OR(
@@ -2082,30 +2083,22 @@ class S3GISConfigModel(S3Model):
                 s3.gis.config = None
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_marker_represent(id):
+    class gis_MarkerRepresent(S3Represent):
         """
             Represent a Marker by it's picture
         """
-
-        if not id:
-            return current.messages["NONE"]
-
-        if isinstance(id, Row):
-            record = id
-        else:
-            db = current.db
-            table = db.gis_marker
-            record = db(table.id == id).select(table.image,
-                                               limitby=(0, 1)).first()
-        try:
-            represent = DIV(IMG(_src=URL(c="static", f="img",
-                                         args=["markers", record.image]),
-                                _height=40))
-        except:
-            return current.messages.UNKNOWN_OPT
-
-        return represent
+        def __init__(self,
+                     show_link=False,
+                     multiple=False,
+                     translate=True):
+            self.fields = ["id",
+                           "image"]
+            super(gis_MarkerRepresent,
+                  self).__init__(lookup="gis_marker",
+                                 fields=self.fields,
+                                 show_link=show_link,
+                                 translate=translate,
+                                 multiple=multiple)
 
     # -------------------------------------------------------------------------
     @staticmethod
