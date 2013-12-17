@@ -2356,14 +2356,9 @@ def deploy_response_select_mission(r, **attr):
   $('.action-btn.link').each(function(){
    var url=this.href
    var posn=url.indexOf('&hr_id=')
-   if(posn>0){
-    url=url.split('&hr_id=')[0]+'&hr_id='+value
-   }else{
-    url+='&hr_id='+value
-   }
-   $(this).attr('href',url)
-   })}}
-'''
+   if(posn>0){url=url.split('&hr_id=')[0]+'&hr_id='+value
+   }else{url+='&hr_id='+value}
+   $(this).attr('href',url)})}}'''
             s3.js_global.append(script)
             post_process = '''S3.update_links()'''
             widget = S3HumanResourceAutocompleteWidget(post_process=post_process)
