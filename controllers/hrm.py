@@ -494,16 +494,9 @@ def certificate_skill():
 def training():
     """ Training Controller - used for Searching for Participants """
 
-    def prep(r):
-        if not r.id:
-            query = S3FieldSelector("person_id$type") == 1
-            r.resource.add_filter(query)
-        return True
-    s3.prep = prep
-    
-    #table = s3db.hrm_human_resource
-    #s3.filter = ((table.type == 1) & \
-                 #(s3db.hrm_training.person_id == table.person_id))
+    table = s3db.hrm_human_resource
+    s3.filter = ((table.type == 1) & \
+                 (s3db.hrm_training.person_id == table.person_id))
     return s3db.hrm_training_controller()
 
 # -----------------------------------------------------------------------------
