@@ -1,4 +1,4 @@
-# *- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ Sahana Eden Project Model
 
@@ -31,6 +31,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectActivityModel",
            "S3ProjectActivityTypeModel",
            "S3ProjectActivityOrganisationModel",
+           "S3ProjectActivitySectorModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectBeneficiaryModel",
            "S3ProjectCampaignModel",
@@ -40,6 +41,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectOrganisationModel",
            "S3ProjectOutputModel",
            "S3ProjectSectorModel",
+           "S3ProjectStatusModel",
            "S3ProjectThemeModel",
            "S3ProjectDRRModel",
            "S3ProjectDRRPPModel",
@@ -94,8 +96,7 @@ class S3ProjectModel(S3Model):
         There are additional tables in other Models
     """
 
-    names = ["project_status",
-             "project_project",
+    names = ["project_project",
              "project_project_id",
              "project_project_represent",
              "project_human_resource",
@@ -135,50 +136,6 @@ class S3ProjectModel(S3Model):
         set_method = self.set_method
 
         # ---------------------------------------------------------------------
-        # Project Statuses
-        #
-        tablename = "project_status"
-        table = define_table(tablename,
-                             Field("name", length=128,
-                                   notnull=True, unique=True,
-                                   label=T("Name")),
-                             s3_comments(),
-                             *s3_meta_fields())
-
-        # CRUD Strings
-        ADD_STATUS = T("Add Status")
-        crud_strings[tablename] = Storage(
-            title_create = ADD_STATUS,
-            title_display = T("Status Details"),
-            title_list = T("Statuses"),
-            title_update = T("Edit Status"),
-            #title_upload = T("Import Statuses"),
-            subtitle_create = T("Add New Status"),
-            label_list_button = T("List Statuses"),
-            label_create_button = ADD_STATUS,
-            label_delete_button = T("Delete Status"),
-            msg_record_created = T("Status added"),
-            msg_record_modified = T("Status updated"),
-            msg_record_deleted = T("Status deleted"),
-            msg_list_empty = T("No Statuses currently registered"))
-
-        # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
-                                #none = T("Unknown"))
-        status_id = S3ReusableField("status_id", table,
-                                    label = T("Status"),
-                                    sortby = "name",
-                                    requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "project_status.id",
-                                                          represent,
-                                                          sort=True)),
-                                    represent = represent,
-                                    comment = S3AddResourceLink(title=ADD_STATUS,
-                                                                c="project",
-                                                                f="status"),
-                                    ondelete = "SET NULL")
-
-        # ---------------------------------------------------------------------
         # Projects
         #
 
@@ -214,7 +171,7 @@ class S3ProjectModel(S3Model):
                                    ),
                              Field("description", "text",
                                    label = T("Description")),
-                             status_id(),
+                             self.project_status_id(),
                              # NB There is additional client-side validation for start/end date in the Controller
                              s3_date("start_date",
                                      label = T("Start Date")
@@ -478,16 +435,17 @@ class S3ProjectModel(S3Model):
         else:
             project_represent = S3Represent(lookup=tablename)
         project_id = S3ReusableField("project_id", table,
-            sortby="name",
-            requires = IS_NULL_OR(
-                        IS_ONE_OF(db(auth.s3_accessible_query("update",
-                                                              table)),
-                                  "project_project.id",
-                                  project_represent)),
+            label = T("Project"),
             represent = project_represent,
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "project_project.id",
+                                  project_represent,
+                                  updateable = True,
+                                  )
+                        ),
+            sortby = "name",
             comment = S3AddResourceLink(c="project", f="project",
                                         tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
-            label = T("Project"),
             ondelete = "CASCADE"
             )
 
@@ -616,18 +574,17 @@ class S3ProjectModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(
-            project_project_id = project_id,
-            project_project_represent = project_represent,
-            project_hfa_opts = self.project_hfa_opts,
-            project_jnap_opts = self.project_jnap_opts,
-            project_pifacc_opts = self.project_pifacc_opts,
-            project_rfa_opts = self.project_rfa_opts,
-            project_theme_opts = self.project_theme_opts,
-            project_theme_helps = self.project_theme_helps,
-            project_hazard_opts = self.project_hazard_opts,
-            project_hazard_helps = self.project_hazard_helps,
-        )
+        return dict(project_project_id = project_id,
+                    project_project_represent = project_represent,
+                    project_hfa_opts = self.project_hfa_opts,
+                    project_jnap_opts = self.project_jnap_opts,
+                    project_pifacc_opts = self.project_pifacc_opts,
+                    project_rfa_opts = self.project_rfa_opts,
+                    project_theme_opts = self.project_theme_opts,
+                    project_theme_helps = self.project_theme_helps,
+                    project_hazard_opts = self.project_hazard_opts,
+                    project_hazard_helps = self.project_hazard_helps,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -1120,9 +1077,10 @@ class S3ProjectActivityModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
 
         add_component = self.add_component
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
 
         settings = current.deployment_settings
@@ -1135,16 +1093,25 @@ class S3ProjectActivityModel(S3Model):
         table = define_table(tablename,
                              # Instance
                              self.super_link("doc_id", "doc_entity"),
-                             s3_datetime(),
+                             # Component (each Activity can link to a single Project)
                              self.project_project_id(),
                              Field("name",
-                                   label = T("Name"),
-                                   requires = IS_NOT_EMPTY()
+                                   label = T("Description"),
+                                   # Activity can simply be a Distribution
+                                   #requires = IS_NOT_EMPTY(),
                                    ),
-                             self.project_activity_type_id(),
+                             self.project_status_id(),
+                             # An Activity happens at a single Location
                              self.gis_location_id(
-                                widget = S3LocationSelectorWidget(hide_address=True)
+                                readable = not mode_task,
+                                writable = not mode_task,
                                 ),
+                             s3_date("date",
+                                     label = T("Start Date"),
+                                     ),
+                             s3_date("end_date",
+                                     label = T("End Date"),
+                                     ),
                              # Which contact is this?
                              # Implementing Org should be a human_resource_id
                              # Beneficiary could be a person_id
@@ -1165,6 +1132,7 @@ class S3ProjectActivityModel(S3Model):
                                    ),
                              s3_comments(),
                              *s3_meta_fields())
+
         # CRUD Strings
         ACTIVITY = T("Activity")
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
@@ -1187,58 +1155,98 @@ class S3ProjectActivityModel(S3Model):
         )
 
         # Search Method
-        filter_widgets = [S3OptionsFilter("activity_type_id",
-                                          label=T("Type"),
-                                          represent="%(name)s",
+        filter_widgets = [S3OptionsFilter("status_id",
+                                          label = T("Status"),
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
                                           widget="multiselect",
                                           ),
                           ]
 
         # Resource Configuration
-        report_fields = []
-        append = report_fields.append
-        append((T("Project"), "project_id"))
-        append((T("Activity"), "name"))
-        append((T("Activity Type"), "activity_type.name"))
-        if settings.get_project_sectors():
-            append((T("Sector"), "project_id$sector.name"))
-        append((T("Theme"), "project_id$theme.name"))
-        if settings.get_project_mode_drr():
-            append((T("Hazard"), "project_id$hazard.name"))
-            append((T("HFA"), "project_id$drr.hfa"))
         list_fields = ["name",
-                       "project_id",
-                       "activity_type.name",
-                       "comments"
+                       "comments",
                        ]
+        report_fields = [(T("Activity"), "name"),
+                         ]
+        rappend = report_fields.append
+        if settings.get_project_activity_types():
+            list_fields.insert(1, "activity_type.name")
+            rappend((T("Activity Type"), "activity_type.name"))
+            default_col = "activity_type.name"
+            filter_widgets.append(
+                S3OptionsFilter("activity_activity_type.activity_type_id",
+                                label = T("Type"),
+                                # Doesn't support translation
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                ))
+        if settings.get_project_projects():
+            list_fields.insert(0, "project_id")
+            rappend((T("Project"), "project_id"))
+            filter_widgets.insert(1,
+                S3OptionsFilter("project_id",
+                                widget="multiselect",
+                                ))
+        if settings.get_project_sectors():
+            rappend("sector_activity.sector_id")
+            default_col = "sector_activity.sector_id"
+            filter_widgets.append(
+                S3OptionsFilter("sector_activity.sector_id",
+                                # Doesn't support translation
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                ))
+        if settings.get_project_themes():
+            rappend((T("Theme"), "project_id$theme.name"))
+        if settings.get_project_mode_drr():
+            rappend((T("Hazard"), "project_id$hazard.name"))
+            rappend((T("HFA"), "project_id$drr.hfa"))
         if mode_task:
             list_fields.insert(3, "time_estimated")
             list_fields.insert(4, "time_actual")
-            append((T("Time Estimated"), "time_estimated"))
-            append((T("Time Actual"), "time_actual"))
+            rappend((T("Time Estimated"), "time_estimated"))
+            rappend((T("Time Actual"), "time_actual"))
+            default_row = "activity.project_id"
+            default_col = "activity.name"
+            default_fact = "sum(activity.time_actual)"
             #create_next = URL(c="project", f="activity",
             #                  args=["[id]", "task"])
-        #else:
-        #    create_next = URL(c="project", f="activity", args=["[id]"])
+        else:
+            #create_next = URL(c="project", f="activity", args=["[id]"])
+            list_fields.insert(2, "location_id")
+            # Which levels of Hierarchy are we using?
+            hierarchy = current.gis.get_location_hierarchy()
+            levels = hierarchy.keys()
+            if len(settings.get_gis_countries()) == 1 or \
+               s3.gis.config.region_location_id:
+                levels.remove("L0")
 
+            default_row = "activity.L1"
+            default_fact = "count(activity.name)"
+            filter_widgets.insert(0,
+                S3LocationFilter("location_id",
+                                 levels=levels,
+                                 widget="multiselect"
+                                 ))
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = report_fields,
+                                 defaults = Storage(rows = default_row,
+                                                    cols = default_col,
+                                                    fact = default_fact,
+                                                    totals = True,
+                                                    )
+                                 )
         self.configure(tablename,
-                       super_entity="doc_entity",
                        # Leave these workflows for Templates
-                       #create_next=create_next,
-                       deduplicate=self.project_activity_deduplicate,
+                       #create_next = create_next,
+                       deduplicate = self.project_activity_deduplicate,
                        filter_widgets = filter_widgets,
-                       report_options=Storage(
-                                rows=report_fields,
-                                cols=report_fields,
-                                fact=report_fields,
-                                defaults=Storage(
-                                    rows="activity.project_id",
-                                    cols="activity.name",
-                                    fact="sum(activity.time_actual)",
-                                    totals=True
-                                )
-                            ),
                        list_fields = list_fields,
+                       report_options = report_options,
+                       super_entity = "doc_entity",
                        )
 
         # Reusable Field
@@ -1265,6 +1273,9 @@ class S3ProjectActivityModel(S3Model):
                                             actuate="replace",
                                             autocomplete="name",
                                             autodelete=False))
+        # Format for InlineComponent/filter_widget
+        add_component("project_activity_activity_type",
+                      project_activity="activity_id")
 
         # Beneficiaries
         add_component("project_beneficiary",
@@ -1276,16 +1287,28 @@ class S3ProjectActivityModel(S3Model):
         add_component("project_beneficiary_activity",
                       project_activity="activity_id")
 
-        # Tasks
-        add_component("project_task",
-                      project_activity=dict(link="project_task_activity",
-                                            joinby="activity_id",
-                                            key="task_id",
-                                            actuate="replace",
-                                            autocomplete="name",
-                                            autodelete=False))
+        # Distributions
+        add_component("supply_distribution",
+                      project_activity="activity_id")
 
-        # Coalitions
+        # Events
+        add_component("event_event",
+                      project_activity=dict(link="event_activity",
+                                            joinby="activity_id",
+                                            key="event_id",
+                                            actuate="hide"))
+
+        # Organisations
+        add_component("org_organisation",
+                      project_activity=dict(link="project_activity_organisation",
+                                            joinby="activity_id",
+                                            key="organisation_id",
+                                            actuate="hide"))
+        # Format for InlineComponent/filter_widget
+        add_component("project_activity_organisation",
+                      project_activity="activity_id")
+
+        # Organisation Groups (Coalitions/Networks)
         add_component("org_group",
                       project_activity=dict(link="project_activity_group",
                                             joinby="activity_id",
@@ -1294,6 +1317,25 @@ class S3ProjectActivityModel(S3Model):
         # Format for InlineComponent/filter_widget
         add_component("project_activity_group",
                       project_activity="activity_id")
+
+        # Sectors
+        add_component("org_sector",
+                      project_activity=dict(link="project_sector_activity",
+                                            joinby="activity_id",
+                                            key="sector_id",
+                                            actuate="hide"))
+        # Format for InlineComponent/filter_widget
+        add_component("project_sector_activity",
+                      project_activity="activity_id")
+
+        # Tasks
+        add_component("project_task",
+                      project_activity=dict(link="project_task_activity",
+                                            joinby="activity_id",
+                                            key="task_id",
+                                            actuate="replace",
+                                            autocomplete="name",
+                                            autodelete=False))
 
         # ---------------------------------------------------------------------
         # Activity Type - Activity Link Table
@@ -1541,9 +1583,8 @@ class S3ProjectActivityOrganisationModel(S3Model):
     """
         Project Activity Organisation Model
 
-        This model holds the Activity Organisations for Projects
-        - it is useful where we don't have the details on the actual Activities,
-          but just this summary of Organisations
+        This model links Organisations with Activities
+        - useful when we don't have the details of the Projects
     """
 
     names = ["project_activity_organisation",
@@ -1594,6 +1635,61 @@ class S3ProjectActivityOrganisationModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+# =============================================================================
+class S3ProjectActivitySectorModel(S3Model):
+    """
+        Project Activity Sector Model
+
+        An Activity can be classified to 1 or more Sectors
+    """
+
+    names = ["project_sector_activity",
+             ]
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Project Activities <> Sectors Link Table
+        #
+        # @ToDo" When Activity is linked to a Project, ensure these stay in sync
+        #
+        tablename = "project_sector_activity"
+        table = self.define_table(tablename,
+                                  self.org_sector_id(empty=False),
+                                  self.project_activity_id(empty=False),
+                                  *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.project_sector_activity_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_sector_activity_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_sector_activity":
+            return
+
+        data = item.data
+        activity_id = data.get("activity_id", None)
+        sector_id = data.get("sector_id", None)
+        if activity_id and sector_id:
+            table = item.table
+            query = (table.activity_id == activity_id) & \
+                    (table.sector_id == sector_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
 
 # =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
@@ -1733,13 +1829,13 @@ class S3ProjectBeneficiaryModel(S3Model):
         #
         tablename = "project_beneficiary"
         table = define_table(tablename,
+                             # Instance
+                             super_link("data_id", "stats_data"),
                              # Link Fields
                              # populated automatically
                              self.project_project_id(readable=False,
                                                      writable=False),
                              self.project_location_id(comment=None),
-                             # Instance
-                             super_link("data_id", "stats_data"),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("parameter_id", "stats_parameter",
@@ -1869,7 +1965,6 @@ class S3ProjectBeneficiaryModel(S3Model):
             #             _class="filter-search",
             #             ),
             #S3OptionsFilter("project_id",
-            #                label=T("Project"),
             #                widget="multiselect",
             #                hidden=True,
             #                ),
@@ -1881,6 +1976,7 @@ class S3ProjectBeneficiaryModel(S3Model):
             # @ToDo: OptionsFilter working with Lazy VF
             #S3OptionsFilter("year",
             #                label=T("Year"),
+            #                options = year_options,
             #                widget="multiselect",
             #                hidden=True,
             #                ),
@@ -1894,7 +1990,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         list_fields = ["project_id",
                        (T("Beneficiary Type"), "parameter_id"),
                        "value",
-                       "year",
+                       (T("Year"), "year"),
                        ]
 
         report_fields = [(T("Beneficiary Type"), "parameter_id"),
@@ -1903,6 +1999,16 @@ class S3ProjectBeneficiaryModel(S3Model):
                          (T("Year"), "year"),
                          ]
 
+        if settings.get_project_sectors():
+            report_fields.append("project_id$sector.name")
+            filter_widgets.insert(0,
+                S3OptionsFilter("project_id$sector_project.sector_id",
+                                # Doesn't allow translation
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                #hidden=True,
+                                ))
+
         if settings.get_project_hazards():
             report_fields.append("project_id$hazard.name")
 
@@ -1910,8 +2016,8 @@ class S3ProjectBeneficiaryModel(S3Model):
             report_fields.append("project_id$theme.name")
             filter_widgets.append(
                 S3OptionsFilter("project_id$theme_project.theme_id",
-                                label=T("Theme"),
-                                represent="%(name)s",
+                                # Doesn't allow translation
+                                #represent="%(name)s",
                                 widget="multiselect",
                                 #hidden=True,
                                 ))
@@ -1930,18 +2036,22 @@ class S3ProjectBeneficiaryModel(S3Model):
 
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
-                                 fact = ["value"],
-                                 methods = ["sum"],
+                                 fact = [(T("Number of Beneficiaries"),
+                                          "sum(value)"),
+                                         ],
                                  defaults = Storage(rows=default_row,
                                                     cols="beneficiary.parameter_id",
                                                     fact="sum(beneficiary.value)",
                                                     totals=True
-                                                    )
+                                                    ),
+                                 extra_fields = ["project_id",
+                                                 #"date",
+                                                 #"end_date",
+                                                 ],
                                  )
 
         configure(tablename,
                   deduplicate = self.project_beneficiary_deduplicate,
-                  extra_fields = ["project_id", "date", "end_date"],
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.project_beneficiary_onaccept,
@@ -2074,11 +2184,13 @@ class S3ProjectBeneficiaryModel(S3Model):
             end_date = None
 
         if not date or not end_date:
-            table = current.s3db.project_project
-            project = current.db(table.id == project_id) \
-                             .select(table.start_date,
-                                     table.end_date,
-                                     limitby=(0, 1)).first()
+            s3db = current.s3db
+            table = s3db.project_project
+            project = current.db(table.id == project_id).select(table.start_date,
+                                                                table.end_date,
+                                                                cache=s3db.cache,
+                                                                limitby=(0, 1)
+                                                                ).first()
             if project:
                 if not date:
                     date = project.start_date
@@ -2640,10 +2752,9 @@ class S3ProjectHazardModel(S3Model):
             return
 
         data = item.data
-        if "project_id" in data and \
-           "hazard_id" in data:
-            project_id = data.project_id
-            hazard_id = data.hazard_id
+        project_id = data.get("project_id", None)
+        hazard_id = data.get("hazard_id", None)
+        if project_id and hazard_id:
             table = item.table
             query = (table.project_id == project_id) & \
                     (table.hazard_id == hazard_id)
@@ -2988,7 +3099,7 @@ class S3ProjectLocationModel(S3Model):
                         pkey="person_id",
                         filterby="contact_method",
                         filterfor=["EMAIL"],
-                      ))
+                        ))
         # Mobile Phone
         add_component("pr_contact",
                       project_location_contact=dict(
@@ -3000,7 +3111,7 @@ class S3ProjectLocationModel(S3Model):
                         pkey="person_id",
                         filterby="contact_method",
                         filterfor=["SMS"],
-                      ))
+                        ))
 
         contact_search_method = S3Search(
             advanced=(S3SearchSimpleWidget(
@@ -3010,7 +3121,7 @@ class S3ProjectLocationModel(S3Model):
                             field = ["person_id$first_name",
                                      "person_id$middle_name",
                                      "person_id$last_name"
-                                    ]
+                                     ]
                         ),
                         S3SearchOptionsWidget(
                             name="location_contact_search_L1",
@@ -3439,6 +3550,71 @@ class S3ProjectSectorModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+# =============================================================================
+class S3ProjectStatusModel(S3Model):
+    """
+        Project Status Model
+        - used by both Projects & Activities
+    """
+
+    names = ["project_status",
+             "project_status_id",
+             ]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Project Statuses
+        #
+        tablename = "project_status"
+        table = self.define_table(tablename,
+                                  Field("name", length=128,
+                                        notnull=True, unique=True,
+                                        label = T("Name"),
+                                        ),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_STATUS = T("Add Status")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = ADD_STATUS,
+            title_display = T("Status Details"),
+            title_list = T("Statuses"),
+            title_update = T("Edit Status"),
+            #title_upload = T("Import Statuses"),
+            subtitle_create = T("Add New Status"),
+            label_list_button = T("List Statuses"),
+            label_create_button = ADD_STATUS,
+            label_delete_button = T("Delete Status"),
+            msg_record_created = T("Status added"),
+            msg_record_modified = T("Status updated"),
+            msg_record_deleted = T("Status deleted"),
+            msg_list_empty = T("No Statuses currently registered"))
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, translate=True)
+                                #none = T("Unknown"))
+        status_id = S3ReusableField("status_id", table,
+                        comment = S3AddResourceLink(title=ADD_STATUS,
+                                                    c="project",
+                                                    f="status"),
+                        label = T("Status"),
+                        ondelete = "SET NULL",
+                        represent = represent,
+                        requires = IS_NULL_OR(
+                                    IS_ONE_OF(current.db, "project_status.id",
+                                              represent,
+                                              sort=True)),
+                        sortby = "name",
+                        )
+
+        # Pass names back to global scope (s3.*)
+        return dict(project_status_id = status_id,
+                    )
 
 # =============================================================================
 class S3ProjectThemeModel(S3Model):

@@ -1042,12 +1042,15 @@ class S3LocationFilter(S3FilterWidget):
         """
 
         prefix = self._prefix
-        label = None
+
+        rfield = S3ResourceField(resource, fields)
+        label = rfield.label
 
         if "levels" in self.opts:
             levels = self.opts.levels
         else:
             levels = current.gis.hierarchy_level_keys
+
         fields = ["%s$%s" % (fields, level) for level in levels]
         if resource:
             selectors = []
@@ -1056,8 +1059,6 @@ class S3LocationFilter(S3FilterWidget):
                     rfield = S3ResourceField(resource, field)
                 except (AttributeError, TypeError):
                     continue
-                if not label:
-                    label = rfield.label
                 selectors.append(prefix(rfield.selector))
         else:
             selectors = fields

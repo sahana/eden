@@ -580,9 +580,9 @@ def activity():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader=s3db.project_rheader,
-                              csv_template="activity",
-                              hide_filter=False,
+    return s3_rest_controller(csv_template = "activity",
+                              hide_filter = False,
+                              rheader = s3db.project_rheader,
                               )
 
 # -----------------------------------------------------------------------------

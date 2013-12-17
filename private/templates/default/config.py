@@ -572,16 +572,20 @@ settings.L10n.decimal_separator = "."
 #settings.project.mode_drr = True
 # Uncomment this to use settings suitable for detailed Task management
 #settings.project.mode_task = True
-# Uncomment this to call project locations 'Communities'
-#settings.project.community = True
 # Uncomment this to use Activities for projects
 #settings.project.activities = True
+# Uncomment this to use Activity Types for Activities/Projects
+#settings.project.activity_types = True
 # Uncomment this to use Codes for projects
 #settings.project.codes = True
-# Uncomment this to use Milestones in project/task.
+# Uncomment this to call project locations 'Communities'
+#settings.project.community = True
 # Uncomment this to enable Hazards in 3W projects
 #settings.project.hazards = True
+# Uncomment this to enable Milestones in projects
 #settings.project.milestones = True
+# Uncomment this to link Activities to Projects
+#settings.project.projects = True
 # Uncomment this to disable Sectors in projects
 #settings.project.sectors = False
 # Uncomment this to enable Themes in 3W projects

@@ -33,6 +33,7 @@ __all__ = ["S3EventModel",
            "S3IncidentGroupModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
+           "S3EventActivityModel",
            "S3EventAssetModel",
            "S3EventCMSModel",
            "S3EventHRModel",
@@ -264,6 +265,7 @@ class S3EventModel(S3Model):
         # - can be used to add extra attributes (e.g. Area, Population)
         # - can link Events to other Systems, such as:
         #   * GLIDE (http://glidenumber.net/glide/public/about.jsp)
+        #   * OCHA Financial Tracking System, for HXL (http://fts.unocha.org/api/v1/emergency/year/2013.xml)
         #   * Mayon
         #   * WebEOC
         # - can be a Triple Store for Semantic Web support
@@ -943,6 +945,28 @@ class S3IncidentTypeTagModel(S3Model):
                                   Field("tag", label=T("Key")),
                                   Field("value", label=T("Value")),
                                   s3_comments(),
+                                  *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
+class S3EventActivityModel(S3Model):
+    """
+        Link Activities to Events
+    """
+
+    names = ["event_activity"]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("project"):
+            return None
+
+        tablename = "event_activity"
+        table = self.define_table(tablename,
+                                  self.event_event_id(empty=False),
+                                  self.project_activity_id(empty=False),
                                   *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)

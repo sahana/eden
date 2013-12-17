@@ -1816,6 +1816,135 @@ def customize_pr_person(**attr):
 settings.ui.customize_pr_person = customize_pr_person
 
 # -----------------------------------------------------------------------------
+def customize_project_activity(**attr):
+    """
+        Customize project_activity controller
+    """
+
+    s3db = current.s3db
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        tablename = "project_activity"
+        table = s3db[tablename]
+
+        table.name.label = T("Activity")
+
+        list_fields = ["activity_organisation.organisation_id",
+                       "sector_activity.sector_id",
+                       "location_id",
+                       "name",
+                       (T("Distribution"), "distribution.parameter_id"),
+                       (T("Beneficiaries"), "beneficiary.value"),
+                       "status_id",
+                       "date",
+                       "end_date",
+                       #"comments",
+                       ]
+
+        # Custom Form (Read/Create/Update)
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        if r.method in ("create", "update"):
+            editable = True
+            # Custom Widgets/Validators
+            from s3.s3validators import IS_LOCATION_SELECTOR2
+            from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
+            field = table.location_id
+            field.label = "" # Gets replaced by widget
+            levels = ("L1", "L2", "L3")
+            field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+            field.widget = S3LocationSelectorWidget2(levels=levels)
+            s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
+
+            # Hide Labels when just 1 column in inline form
+            #s3db.doc_document.file.label = ""
+            s3db.project_activity_activity_type.activity_type_id.label = ""
+            s3db.project_activity_organisation.organisation_id.label = ""
+            s3db.project_beneficiary.value.label = ""
+        else:
+            editable = False
+
+        # Custom Crud Form
+        bttable = s3db.project_beneficiary_type
+        total = current.db(bttable.name == "Total").select(bttable.parameter_id,
+                                                           limitby=(0, 1)).first()
+        if total:
+            parameter_id = total.parameter_id
+        else:
+            parameter_id = None
+        crud_form = S3SQLCustomForm(
+            #S3SQLInlineComponent(
+            #    "activity_activity_type",
+            #    label = T("Activity Type"),
+            #    fields = ["activity_type_id"],
+            #    multiple = False,
+            #),
+            S3SQLInlineComponent(
+                "activity_organisation",
+                label = T("Organization"),
+                fields = ["organisation_id"],
+                #multiple = False,
+            ),
+            "location_id",
+            "name",
+            S3SQLInlineComponent(
+                "beneficiary",
+                label = T("Beneficiaries"),
+                link = False,
+                multiple = False,
+                fields = ["value"],
+                filterby = dict(field = "parameter_id",
+                                options = parameter_id
+                                ),
+            ),
+            S3SQLInlineComponent(
+                "distribution",
+                label = T("Distributions"),
+                link = False,
+                #multiple = False,
+                fields = ["parameter_id", "value"],
+            ),
+            #S3SQLInlineComponent(
+            #    "document",
+            #    name = "file",
+            #    label = T("Files"),
+            #    fields = ["file",
+            #              #"comments",
+            #              ],
+            #),
+            "status_id",
+            "date",
+            "end_date",
+            #"comments",
+            )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       # Hide Open & Delete dataTable action buttons
+                       deletable = editable,
+                       editable = editable,
+                       #filter_formstyle = filter_formstyle,
+                       listadd = False,
+                       list_fields = list_fields,
+                       )
+
+        return True
+    s3.prep = custom_prep
+
+    # Remove rheader
+    attr["rheader"] = None
+
+    return attr
+
+settings.ui.customize_project_activity = customize_project_activity
+
+# -----------------------------------------------------------------------------
 def customize_project_project_fields():
     """
         Customize project_project fields for Profile widgets and 'more' popups
@@ -2119,149 +2248,9 @@ def customize_project_beneficiary(**attr):
 
     s3 = current.response.s3
 
-    # Remove rheader
-    attr["rheader"] = None
-
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        s3db = current.s3db
-        table = s3db.project_beneficiary
-
-        from s3.s3filter import S3LocationFilter, S3OptionsFilter
-        filter_widgets = [
-            S3LocationFilter("location_id",
-                             levels=["L0", "L1", "L2", "L3"],
-                             widget="multiselect"),
-            S3OptionsFilter("project_id$sector_project.sector_id",
-                            label = T("Sector"),
-                            widget="multiselect"
-                            ),
-            S3OptionsFilter("parameter_id",
-                            label = T("Beneficiary Type"),
-                            widget="multiselect"
-                            ),
-            # @ToDo: Range Slider using start_date & end_date
-            #S3DateFilter("date",
-            #             )
-            #S3OptionsFilter("project_id$organisation_id",
-            #                label = T("Lead Organisation"),
-            #                widget="multiselect"
-            #                ),
-            ]
-
-        report_fields = [(T("Beneficiary Type"), "parameter_id"),
-                         "project_id$sector_project.sector_id",
-                         (T("Year"), "year"),
-                         (current.messages.COUNTRY, "location_id$L0"),
-                         "location_id$L1",
-                         "location_id$L2",
-                         "location_id$L3",
-                         ]
-
-        report_options = Storage(
-            rows=report_fields,
-            cols=report_fields,
-            fact=[(T("Number of Beneficiaries"), "sum(value)")],
-            defaults=Storage(rows="location_id$L1",
-                             cols="parameter_id",
-                             fact="sum(value)",
-                             totals=True,
-                             #chart = "barchart:rows",
-                             #table = "collapse",
-                             )
-            )
-
-        s3db.configure("project_beneficiary",
-                       #list_fields = list_fields,
-                       filter_widgets = filter_widgets,
-                       # For Summary View
-                       #filter_formstyle = filter_formstyle,
-                       report_options = report_options,
-                       )
-
-        # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
-        #s3.cancel = URL(c="project", f="beneficiary")
-
-        return True
-    s3.prep = custom_prep
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        if r.interactive:
-            actions = [dict(label=str(T("Open")),
-                            _class="action-btn",
-                            url=URL(c="project", f="beneficiary",
-                                    args=["[id]", "read"]))
-                       ]
-            # All users just get "Open"
-            #db = current.db
-            #auth = current.auth
-            #has_permission = auth.s3_has_permission
-            #ownership_required = auth.permission.ownership_required
-            #s3_accessible_query = auth.s3_accessible_query
-            #if has_permission("update", table):
-            #    action = dict(label=str(T("Edit")),
-            #                  _class="action-btn",
-            #                  url=URL(c="project", f="project",
-            #                          args=["[id]", "update"]),
-            #                  )
-            #    if ownership_required("update", table):
-            #        # Check which records can be updated
-            #        query = s3_accessible_query("update", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            #if has_permission("delete", table):
-            #    action = dict(label=str(T("Delete")),
-            #                  _class="action-btn",
-            #                  url=URL(c="project", f="project",
-            #                          args=["[id]", "delete"]),
-            #                  )
-            #    if ownership_required("delete", table):
-            #        # Check which records can be deleted
-            #        query = s3_accessible_query("delete", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            s3.actions = actions
-            if isinstance(output, dict):
-                if "form" in output:
-                    output["form"].add_class("project_beneficiary")
-                elif "item" in output and hasattr(output["item"], "add_class"):
-                    output["item"].add_class("project_beneficiary")
-
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        return output
-    s3.postp = custom_postp
-
-    attr["hide_filter"] = False
-
     return attr
 
-settings.ui.customize_project_beneficiary = customize_project_beneficiary
+#settings.ui.customize_project_beneficiary = customize_project_beneficiary
 
 # -----------------------------------------------------------------------------
 def customize_doc_document(**attr):

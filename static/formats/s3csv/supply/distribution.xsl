@@ -3,36 +3,29 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Project Locations - CSV Import Stylesheet
+         Distributions - CSV Import Stylesheet
+         
+         INCOMPLETE!!!
+         - use project_activity
 
          CSV column...........Format..........Content
 
-         Project Code.........string..........Project Code (need code or name)
-         Project Name.........string..........Project Name
-         Project Comments.....string..........Project comments
-         Status...............string..........Project status
-         Lead Organisation....string..........Organisation name
-         Donor Organisations..comma-sep list..Organisation name
-         Partner Organisations.comma-sep list.Organisation name
-         Start Date...........YYYY-MM-DD......Start date of the project
-         End Date.............YYYY-MM-DD......End date of the project
-         Budget...............integer.........Project Budget
-         Activity Types.......comma-sep list..List of Activity Types
-         Sectors..............;-sep list......List of Project Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
+         Status...............string..........Activity status
+         Organisation.........comma-sep list..Organisation name(s)
+         Start Date...........YYYY-MM-DD......Start date of the distribution
+         End Date.............YYYY-MM-DD......End date of the distribution
+         Sectors..............;-sep list......List of Activity Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
          Country..............string..........Country code/name (L0)
          L1...................string..........L1 location name (e.g. State/Province)
          L2...................string..........L2 location name (e.g. District/County)
          L3...................string..........L3 location name (e.g. City)
          L4...................string..........L4 location name
          L5...................string..........L5 location name
+         Location ............string..........Specific location name
          Lat..................float...........Latitude of the most local location
          Lon..................float...........Longitude of the most local location
          Comments.............string..........Comments
-         ContactPersonXX......comma-sep list..Contact Person (can be multiple columns)
-                                              as "FirstName,LastName,Email,MobilePhone",
-                                              where first name and email as well as the
-                                              three commas are mandatory
-         Beneficiaries:XXX....integer.........Number of Beneficiaries of type XXX (multiple allowed)
+         Item:XXX.............integer.........Number of Items of type XXX Distributed (multiple allowed)
 
     *********************************************************************** -->
 
@@ -41,33 +34,13 @@
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
-    <xsl:variable name="ActivityTypePrefix" select="'ActivityType: '"/>
     <xsl:variable name="SectorPrefix" select="'Sector:'"/>
 
-    <xsl:key name="orgs"
-             match="row"
-             use="col[@field='Lead Organisation']"/>
-
-    <xsl:key name="projects" match="row" use="concat(col[@field='Project Name'],
-                                                     col[@field='Project Code'])"/>
-    <xsl:key name="statuses"
-             match="row"
-             use="col[@field='Status']"/>
+    <xsl:key name="statuses" match="row" use="col[@field='Status']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Lead Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('orgs',
-                                                        col[@field='Lead Organisation'])[1])]">
-                <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName">
-                        <xsl:value-of select="col[@field='Lead Organisation']"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
-
             <!-- Statuses -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('statuses',
@@ -75,54 +48,28 @@
                 <xsl:call-template name="Status"/>
             </xsl:for-each>
 
-            <!-- Projects -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('projects',
-                                                                   concat(col[@field='Project Name'],
-                                                                          col[@field='Project Code']))[1])]">
-                <xsl:call-template name="Project"/>
+            <!-- Distribution Items -->
+            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Item')]">
+                <xsl:call-template name="DistributionItem"/>
             </xsl:for-each>
 
-            <!-- Beneficiary Types -->
-            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Beneficiaries')]">
-                <xsl:call-template name="BeneficiaryType"/>
-            </xsl:for-each>
-
-            <!-- Project Locations -->
+            <!-- Distributions -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <xsl:variable name="ProjectCode" select="col[@field='Project Code']/text()"/>
-        <xsl:variable name="ProjectName" select="col[@field='Project Name']/text()"/>
 
-        <resource name="project_location">
+        <resource name="supply_distribution">
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-
-            <!-- Link to Project -->
-            <reference field="project_id" resource="project_project">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Project:', $ProjectCode, $ProjectName)"/>
-                </xsl:attribute>
-            </reference>
 
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
 
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list">
-                    <xsl:value-of select="col[@field='Activity Types']"/>
-                </xsl:with-param>
-                <xsl:with-param name="arg">activity_type_ref</xsl:with-param>
-            </xsl:call-template>
-
-            <xsl:call-template name="ContactPersonReference"/>
-
-            <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
-                <xsl:call-template name="Beneficiaries"/>
+            <xsl:for-each select="col[starts-with(@field, 'Distribution')]">
+                <xsl:call-template name="Distribution"/>
             </xsl:for-each>
-
         </resource>
 
         <xsl:call-template name="splitList">
@@ -263,7 +210,7 @@
             </xsl:when>
             <!-- Sectors -->
             <xsl:when test="$arg='sector_ref'">
-                <resource name="project_sector_project">
+                <resource name="project_sector_activity">
                     <reference field="sector_id" resource="org_sector">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="concat($SectorPrefix, $item)"/>
@@ -360,6 +307,49 @@
                 <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$BeneficiaryType"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Distribution">
+        <xsl:variable name="DistributionItem" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="ItemNumber" select="text()"/>
+
+        <xsl:if test="$ItemNumber!=''">
+            <resource name="supply_distribution">
+                <reference field="parameter_id" resource="supply_distribution_item">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('DITEM:', $DistributionItem)"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="value"><xsl:value-of select="$ItemNumber"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="DistributionItem">
+        <xsl:variable name="DistributionItem" select="normalize-space(substring-after(@field, ':'))"/>
+
+        <resource name="supply_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('ITEM:', $DistributionItem)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$DistributionItem"/></data>
+        </resource>
+
+        <resource name="supply_distribution_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('DITEM:', $DistributionItem)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$DistributionItem"/></data>
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('ITEM:', $DistributionItem)"/>
+                </xsl:attribute>
+            </reference>
         </resource>
 
     </xsl:template>

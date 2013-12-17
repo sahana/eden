@@ -1,4 +1,4 @@
-Name,Project,Activity Type,Organisation Group,Country,State,District,City,Lat,Lon,ContactPerson,Comments,Beneficiaries:Total
+Activity,Project,Activity Type,Organisation Group,Country,L1,L2,L3,Lat,Lon,ContactPerson,Comments,Beneficiaries:Total
 First Aid Training,,Training,Acton & Agua Dulce,US,California,Los Angeles County,Los Angeles,34.04008962,-118.2615446,,,12
 Workshop,,Training,Acton & Agua Dulce,US,California,Los Angeles County,Los Angeles,34.04941097,-118.4610231,,,23
 Coalition Meeting,,Meetings,Culver City,US,California,Los Angeles County,Los Angeles,34.05235,-118.220466,,,40

@@ -3191,6 +3191,135 @@ def customize_req_commit(**attr):
 settings.ui.customize_req_commit = customize_req_commit
 
 # -----------------------------------------------------------------------------
+def customize_project_activity(**attr):
+    """
+        Customize project_activity controller
+    """
+
+    s3db = current.s3db
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        tablename = "project_activity"
+        table = s3db[tablename]
+
+        table.name.label = T("Activity")
+
+        list_fields = ["activity_organisation.organisation_id",
+                       "sector_activity.sector_id",
+                       "location_id",
+                       "name",
+                       (T("Distribution"), "distribution.parameter_id"),
+                       (T("Beneficiaries"), "beneficiary.value"),
+                       "status_id",
+                       "date",
+                       "end_date",
+                       #"comments",
+                       ]
+
+        # Custom Form (Read/Create/Update)
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        if r.method in ("create", "update"):
+            editable = True
+            # Custom Widgets/Validators
+            from s3.s3validators import IS_LOCATION_SELECTOR2
+            from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
+            field = table.location_id
+            field.label = "" # Gets replaced by widget
+            levels = ("L1", "L2", "L3", "L4")
+            field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+            field.widget = S3LocationSelectorWidget2(levels=levels)
+            s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
+
+            # Hide Labels when just 1 column in inline form
+            #s3db.doc_document.file.label = ""
+            s3db.project_activity_activity_type.activity_type_id.label = ""
+            s3db.project_activity_organisation.organisation_id.label = ""
+            s3db.project_beneficiary.value.label = ""
+        else:
+            editable = False
+
+        # Custom Crud Form
+        bttable = s3db.project_beneficiary_type
+        total = current.db(bttable.name == "Total").select(bttable.parameter_id,
+                                                           limitby=(0, 1)).first()
+        if total:
+            parameter_id = total.parameter_id
+        else:
+            parameter_id = None
+        crud_form = S3SQLCustomForm(
+            #S3SQLInlineComponent(
+            #    "activity_activity_type",
+            #    label = T("Activity Type"),
+            #    fields = ["activity_type_id"],
+            #    multiple = False,
+            #),
+            S3SQLInlineComponent(
+                "activity_organisation",
+                label = T("Organization"),
+                fields = ["organisation_id"],
+                #multiple = False,
+            ),
+            "location_id",
+            "name",
+            S3SQLInlineComponent(
+                "beneficiary",
+                label = T("Beneficiaries"),
+                link = False,
+                multiple = False,
+                fields = ["value"],
+                filterby = dict(field = "parameter_id",
+                                options = parameter_id
+                                ),
+            ),
+            S3SQLInlineComponent(
+                "distribution",
+                label = T("Distributions"),
+                link = False,
+                #multiple = False,
+                fields = ["parameter_id", "value"],
+            ),
+            #S3SQLInlineComponent(
+            #    "document",
+            #    name = "file",
+            #    label = T("Files"),
+            #    fields = ["file",
+            #              #"comments",
+            #              ],
+            #),
+            "status_id",
+            "date",
+            "end_date",
+            #"comments",
+            )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       # Hide Open & Delete dataTable action buttons
+                       deletable = editable,
+                       editable = editable,
+                       #filter_formstyle = filter_formstyle,
+                       listadd = False,
+                       list_fields = list_fields,
+                       )
+
+        return True
+    s3.prep = custom_prep
+
+    # Remove rheader
+    attr["rheader"] = None
+
+    return attr
+
+settings.ui.customize_project_activity = customize_project_activity
+
+# -----------------------------------------------------------------------------
 def customize_project_task(**attr):
     """
         Customize project_task controller

@@ -657,7 +657,7 @@ def customize_project_activity(**attr):
             # Modify list_fields
             list_fields = ["date",
                            "name",
-                           "activity_type_id",
+                           "activity_activity_type.activity_type_id",
                            "activity_group.group_id",
                            "location_id",
                            "person_id",
@@ -672,6 +672,7 @@ def customize_project_activity(**attr):
         if r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             s3.crud_strings[tablename].title_update = T("Update Activities")
+            table.date.label = T("Date")
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
@@ -682,9 +683,9 @@ def customize_project_activity(**attr):
                                                   widget="multiselect",
                                                   header=True,
                                                   ),
-                                  S3OptionsFilter("activity_type_id",
-                                                  label=T("Activity Type"),
-                                                  represent="%(name)s",
+                                  S3OptionsFilter("activity_activity_type.activity_type_id",
+                                                  # Doesn't allow Translation
+                                                  #represent="%(name)s",
                                                   widget="multiselect",
                                                   header=True,
                                                   ),
@@ -696,7 +697,7 @@ def customize_project_activity(**attr):
                                   ]
 
                 # @ToDo: Month/Year Lazy virtual fields (like in PM tool)
-                report_fields = ["activity_type_id",
+                report_fields = ["activity_activity_type.activity_type_id",
                                  "activity_group.group_id",
                                  "location_id$L3",
                                  ]
@@ -707,7 +708,7 @@ def customize_project_activity(**attr):
                     fact=[(T("Number of Activities"), "count(name)"),
                           (T("Number of People"), "sum(beneficiary.value)"),
                           ],
-                    defaults=Storage(rows="activity.activity_type_id",
+                    defaults=Storage(rows="activity_activity_type.activity_type_id",
                                      #cols="activity_group.group_id",
                                      fact="count(name)",
                                      totals=True,
@@ -754,6 +755,7 @@ def customize_project_activity(**attr):
                 
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
+                s3db.project_activity_activity_type.activity_type_id.label = ""
                 s3db.project_activity_group.group_id.label = ""
                 s3db.project_beneficiary.value.label = ""
 
@@ -768,7 +770,12 @@ def customize_project_activity(**attr):
                 crud_form = S3SQLCustomForm(
                     "date",
                     "name",
-                    "activity_type_id",
+                    S3SQLInlineComponent(
+                        "activity_activity_type",
+                        label = T("Activity Type"),
+                        fields = ["activity_type_id"],
+                        multiple = False,
+                    ),
                     S3SQLInlineComponent(
                         "activity_group",
                         label = T("Coalition"),
@@ -810,8 +817,6 @@ def customize_project_activity(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
-
     # Remove rheader
     attr["rheader"] = None
 
@@ -824,11 +829,10 @@ def customize_project_activity_type(**attr):
         Customize project_activity_type controller
     """
     from s3.s3forms import S3SQLCustomForm
-    s3db = current.s3db
-    s3db.configure("project_activity_type",
-                   crud_form = S3SQLCustomForm("name",
-                                               "comments")
-                   )
+    current.s3db.configure("project_activity_type",
+                           crud_form = S3SQLCustomForm("name",
+                                                       "comments"),
+                           )
 
     return attr
 
