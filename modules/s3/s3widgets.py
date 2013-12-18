@@ -5334,14 +5334,19 @@ class S3SliderWidget(FormWidget):
         field = str(field)
         fieldname = field.replace(".", "_")
         input = INPUT(_name = field.split(".")[1],
+                      _disabled = True,
                       _id = fieldname,
                       _style = "border:0",
                       _value = value)
         slider = DIV(_id="%s_slider" % fieldname, **attributes)
 
+        s3 = current.response.s3
         if value is None:
             # JSONify
             value = "null"
+            script = '''i18n.slider_help="%s"''' % \
+                current.T("Click on the slider to choose a value")
+            s3.js_global.append(script)
 
         if self.type == "int":
             script = '''S3.slider('%s',%i,%i,%i,%s)''' % (fieldname,
@@ -5356,7 +5361,7 @@ class S3SliderWidget(FormWidget):
                                                           self.max,
                                                           self.step,
                                                           value)
-        current.response.s3.jquery_ready.append(script)
+        s3.jquery_ready.append(script)
 
         return TAG[""](input, slider)
 

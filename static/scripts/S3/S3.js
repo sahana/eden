@@ -318,6 +318,51 @@ S3.trunk8 = function(selector, lines, more) {
 };
 
 // ============================================================================
+// Limit the size of a textbox dynamically
+S3.maxLength = {
+    init: function(id, maxLength) {
+        var apply = this.apply;
+        if (maxLength) {
+            var input = $('#' + id);
+            input.next('div.maxLength_status').remove();
+            input.after('<div class="maxLength_status"></div>');
+            // Apply current settings
+            apply(id, maxLength);
+            input.unbind('keyup.maxLength')
+                 .bind('keyup.maxLength', function(evt) {
+                // Apply new settings
+                apply(id, maxLength);
+            });
+        } else {
+            // Remove the limits & cleanup
+            $('#' + id).removeClass('maxLength')
+                       .unbind('keyup.maxLength')
+                       .next('div.maxLength_status').remove();
+        }
+    },
+
+    apply: function(id, maxLength) {
+        message = i18n.characters_left || 'characters left';
+        var input = $('#' + id);
+        var currentLength = input.val().length;
+        if (currentLength >= maxLength) {
+            // Add the notification class
+            input.addClass('maxLength');
+            // Cut down the string
+            input.val(input.val().substr(0, maxLength));
+        } else {
+            // Remove the notification class
+            input.removeClass('maxLength');
+        }
+        var remaining = maxLength - currentLength;
+        if (remaining < 0) {
+            remaining = 0;
+        }
+        input.next('div.maxLength_status').html(remaining + ' ' + message);
+    }
+};
+
+// ============================================================================
 // Code to warn on exit without saving
 var S3SetNavigateAwayConfirm = function() {
     window.onbeforeunload = function() {
@@ -331,17 +376,17 @@ var S3ClearNavigateAwayConfirm = function() {
 
 var S3EnableNavigateAwayConfirm = function() {
     $(document).ready(function() {
-        if ( $('[class=error]').length > 0 ) {
+        if ($('[class=error]').length > 0) {
             // If there are errors, ensure the unsaved form is still protected
             S3SetNavigateAwayConfirm();
         }
         var form = 'form:not(form.filter-form)',
             input = 'input:not(input[id=gis_location_advanced_checkbox])',
             select = 'select';
-        $(form + ' ' + input).keypress( S3SetNavigateAwayConfirm );
-        $(form + ' ' + input).change( S3SetNavigateAwayConfirm );
-        $(form + ' ' + select).change( S3SetNavigateAwayConfirm );
-        $('form').submit( S3ClearNavigateAwayConfirm );
+        $(form + ' ' + input).keypress(S3SetNavigateAwayConfirm);
+        $(form + ' ' + input).change(S3SetNavigateAwayConfirm);
+        $(form + ' ' + select).change(S3SetNavigateAwayConfirm);
+        $('form').submit(S3ClearNavigateAwayConfirm);
     });
 };
 
@@ -494,7 +539,7 @@ var s3_viewMap = function(feature_id) {
     var closelink = $('<a href=\"#\">' + i18n.close_map + '</a>');
 
     // @ToDo: Also make the represent link act as a close
-    closelink.bind( "click", function(evt) {
+    closelink.bind('click', function(evt) {
         $('#map').html(oldhtml);
         evt.preventDefault();
     });
@@ -510,7 +555,7 @@ var s3_viewMapMulti = function(module, resource, instance, jresource) {
     var closelink = $('<a href=\"#\">' + i18n.close_map + '</a>');
 
     // @ToDo: Also make the represent link act as a close
-    closelink.bind( 'click', function(evt) {
+    closelink.bind('click', function(evt) {
         $('#map').html(oldhtml);
         evt.preventDefault();
     });
@@ -550,11 +595,11 @@ var s3_showMap = function(feature_id) {
 
 // ============================================================================
 /**
- * Re-usable function to filter a select field based on a "filter field", eg:
- * Competency Ratings filtered by Skill Type
- * Item Packs filtered by Item
- * Rooms filtered by Site
- * Themes filtered by Sector
+ * Filter a select field based on a "filter field", eg:
+ * - Competency Ratings filtered by Skill Type
+ * - Item Packs filtered by Item
+ * - Rooms filtered by Site
+ * - Themes filtered by Sector
  **/
 
 var S3OptionsFilter = function(settings) {
@@ -902,7 +947,8 @@ var S3OptionsFilter = function(settings) {
  * Add a Slider to a field - used by S3SliderWidget
  */
 S3.slider = function(fieldname, min, max, step, value) {
-    var selector = '#' + fieldname + '_slider'
+    var real_input = $('#' + fieldname);
+    var selector = '#' + fieldname + '_slider';
     $(selector).slider({
         min: min,
         max: max,
@@ -910,7 +956,7 @@ S3.slider = function(fieldname, min, max, step, value) {
         value: value,
         slide: function (event, ui) {
             // Set the value of the real input
-            $('#' + fieldname).val(ui.value);
+            real_input.val(ui.value);
         },
         change: function(event, ui) {
             if (value == null) {
@@ -931,18 +977,30 @@ S3.slider = function(fieldname, min, max, step, value) {
                 $(selector).slider('option', 'value', value);
                 // Show the control
                 $(selector + ' .ui-slider-handle').show();
+                // Show the value
+                // Hide the help text
+                real_input.show().next().remove();
             }
         }
     });
     if (value == null) {
         // Don't show a value until Slider is touched
         $(selector + ' .ui-slider-handle').hide();
+        // Show help text
+        real_input.hide()
+                  .after('<p>' + i18n.slider_help + '</p>');
     }
+    // Enable the field before form is submitted
+    $('form').submit(function() {
+        real_input.prop('disabled', false);
+        // Normal Submit
+        return true;
+    });
 };
 
 // ============================================================================
 /**
- * Reusable function to add a querystring variable to an existing URL and redirect into it.
+ * Add a querystring variable to an existing URL and redirect into it.
  * It accounts for existing variables and will override an existing one.
  * Sample usage: _onchange="S3reloadWithQueryStringVars({'_language': $(this).val()});")
  */

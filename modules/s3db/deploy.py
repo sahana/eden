@@ -686,12 +686,20 @@ class S3DeploymentAlertModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        NONE = current.messages["NONE"]
 
         human_resource_id = self.hrm_human_resource_id
         message_id = self.msg_message_id
         mission_id = self.deploy_mission_id
 
         hr_label = current.deployment_settings.get_deploy_hr_label()
+
+        contact_method_opts = {1: T("Email"),
+                               2: T("SMS"),
+                               #3: T("Twitter"),
+                               #9: T("All"),
+                               9: T("Both"),
+                               }
 
         # ---------------------------------------------------------------------
         # Alert
@@ -707,14 +715,23 @@ class S3DeploymentAlertModel(S3Model):
                                     filterby="status",
                                     filter_opts=(2,),
                                     )),
+                             Field("contact_method", "integer",
+                                   default = 1,
+                                   label = T("Send By"),
+                                   represent = lambda opt: \
+                                    contact_method_opts.get(opt, NONE),
+                                   requires = IS_IN_SET(contact_method_opts),
+                                   ),
                              Field("subject", length=78,    # RFC 2822
                                    label = T("Subject"),
-                                   requires = IS_NOT_EMPTY(),
+                                   # Not used by SMS
+                                   #requires = IS_NOT_EMPTY(),
                                    ),
                              Field("body", "text",
                                    label = T("Message"),
+                                   requires = IS_NOT_EMPTY(),
                                    represent = lambda v: \
-                                    v or current.messages["NONE"],
+                                    v or NONE,
                                    ),
                              # Link to the Message once sent
                              message_id(readable=False),
@@ -739,6 +756,7 @@ class S3DeploymentAlertModel(S3Model):
 
         # CRUD Form
         crud_form = S3SQLCustomForm("mission_id",
+                                    "contact_method",
                                     "subject",
                                     "body",
                                     "modified_on",
@@ -789,7 +807,7 @@ class S3DeploymentAlertModel(S3Model):
         tablename = "deploy_alert_recipient"
         table = define_table(tablename,
                              alert_id(),
-                             human_resource_id(empty=False,
+                             human_resource_id(empty = False,
                                                label = T(hr_label)),
                              *s3_meta_fields())
 
@@ -822,14 +840,13 @@ class S3DeploymentAlertModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        crud_form = S3SQLCustomForm(
-                        "mission_id",
-                        "human_resource_id",
-                        "message_id",
-                        "comments",
-                        # @todo:
-                        #S3SQLInlineComponent("document"),
-                    )
+        crud_form = S3SQLCustomForm("mission_id",
+                                    "human_resource_id",
+                                    "message_id",
+                                    "comments",
+                                    # @todo:
+                                    #S3SQLInlineComponent("document"),
+                                    )
 
         # Table Configuration
         configure(tablename,
@@ -859,13 +876,6 @@ class S3DeploymentAlertModel(S3Model):
         return dict()
 
     # -------------------------------------------------------------------------
-    def defaults(self):
-        """
-            Safe defaults for model-global names in case module is disabled
-        """
-        return dict()
-
-    # -------------------------------------------------------------------------
     @staticmethod
     def deploy_alert_send(r, **attr):
         """
@@ -892,46 +902,97 @@ class S3DeploymentAlertModel(S3Model):
         s3db = current.s3db
         table = s3db.deploy_alert
 
+        contact_method = record.contact_method
+
         # Check whether there are recipients
         ltable = db.deploy_alert_recipient
         query = (ltable.alert_id == alert_id) & \
                 (ltable.deleted == False)
-        recipients = db(query).select(ltable.id,
-                                      limitby=(0, 1)).first()
+        if contact_method == 9:
+            # Save a subsequent query
+            recipients = db(query).select(ltable.human_resource_id)
+        else:
+            recipients = db(query).select(ltable.id,
+                                          limitby=(0, 1)).first()
         if not recipients:
             current.session.error = T("This Alert has no Recipients yet!")
             redirect(next_url)
 
         # Send Message
+        message = record.body
+        msg = current.msg
 
-        # Embed the mission_id to parse replies
-        # = @ToDo: Use a Message Template to add Footer (very simple one for RDRT)
-        message = "%s\n:mission_id:%s:" % (record.body, mission_id)
+        if contact_method == 2:
+            # Send SMS
+            message_id = msg.send_by_pe_id(record.pe_id,
+                                           contact_method = "SMS",
+                                           message=message,
+                                           )
 
-        # Lookup from_address
-        # @ToDo: Allow multiple channels to be defined &
-        #        select the appropriate one for this mission
-        ctable = s3db.msg_email_channel
-        channel = db(ctable.deleted == False).select(ctable.username,
-                                                     ctable.server,
-                                                     limitby = (0, 1)
-                                                     ).first()
-        if not channel:
-            current.session.error = T("Need to configure an Email Address!")
-            redirect(URL(f="email_channel"))
+        elif contact_method == 9:
+            # Send both
+            # Create separate alert for this
+            id = table.insert(body = message,
+                              contact_method = 2,
+                              mission_id = mission_id,
+                              created_by = record.created_by,
+                              created_on = record.created_on,
+                              )
+            new_alert = dict(id=id)
+            s3db.update_super(table, new_alert)
 
-        from_address = "%s@%s" % (channel.username, channel.server)
+            # Add Recipients
+            for row in recipients:
+                ltable.insert(alert_id = id,
+                              human_resource_id = row.human_resource_id,
+                              )
 
-        # @ToDo: Support alternate channels, like SMS
-        # if not body: body = subject
-        message_id = current.msg.send_by_pe_id(record.pe_id,
-                                               subject=record.subject,
-                                               message=message,
-                                               from_address=from_address
-                                               )
+            # Send SMS
+            message_id = msg.send_by_pe_id(new_alert["pe_id"],
+                                           contact_method = "SMS",
+                                           message=message,
+                                           )
+
+            # Update the Alert to show it's been Sent
+            db(table.id == id).update(message_id=message_id)
+
+        if contact_method in (1, 9):
+            # Send Email
+
+            # Embed the mission_id to parse replies
+            # = @ToDo: Use a Message Template to add Footer (very simple one for RDRT)
+            message = "%s\n:mission_id:%s:" % (message, mission_id)
+
+            # Lookup from_address
+            # @ToDo: Allow multiple channels to be defined &
+            #        select the appropriate one for this mission
+            ctable = s3db.msg_email_channel
+            channel = db(ctable.deleted == False).select(ctable.username,
+                                                         ctable.server,
+                                                         limitby = (0, 1)
+                                                         ).first()
+            if not channel:
+                current.session.error = T("Need to configure an Email Address!")
+                redirect(URL(f="email_channel"))
+
+            from_address = "%s@%s" % (channel.username, channel.server)
+
+            message_id = msg.send_by_pe_id(record.pe_id,
+                                           subject=record.subject,
+                                           message=message,
+                                           from_address=from_address,
+                                           )
 
         # Update the Alert to show it's been Sent
-        db(table.id == alert_id).update(message_id=message_id)
+        data = dict(message_id=message_id)
+        if contact_method == 2:
+            # Clear the Subject
+            data["subject"] = None
+        elif contact_method == 9:
+            # Also modify the contact_method to show that this is the email one
+            data["contact_method"] = 1
+
+        db(table.id == alert_id).update(**data)
 
         # Return to the Mission Profile
         current.session.confirmation = T("Alert Sent")

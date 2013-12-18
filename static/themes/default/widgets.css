@@ -1442,6 +1442,11 @@ button.toggle-text {
     text-decoration: none;
 }
 
+.maxLength {
+    background-color: #FFCDCD;
+    border: 3px solid #D55B5B;
+}
+
 /* Req quantity */
 .ajax_more {
 	float: right;

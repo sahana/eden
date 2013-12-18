@@ -336,16 +336,15 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def send_by_pe_id(pe_id,
-                      subject="",
-                      message="",
-                      pr_message_method = "EMAIL",
-                      sender="",
-                      from_address="",
+                      subject = "",
+                      message = "",
+                      contact_method = "EMAIL",
+                      from_address = None,
                       system_generated = False):
         """
             Send a single message to a Person Entity (or list thereof)
 
-            @ToDo: pr_message_method = ALL
+            @ToDo: contact_method = ALL
                 - look up the pr_contact options available for the pe & send via all
 
             @ToDo: This is not transaction safe
@@ -356,7 +355,7 @@ class S3Msg(object):
         s3db = current.s3db
 
         # Place the Message in the appropriate Log
-        if pr_message_method == "EMAIL":
+        if contact_method == "EMAIL":
             if not from_address:
                 from_address = current.deployment_settings.get_mail_sender()
 
@@ -370,7 +369,7 @@ class S3Msg(object):
             record = dict(id=id)
             s3db.update_super(table, record)
             message_id = record["message_id"]
-        elif pr_message_method == "SMS":
+        elif contact_method == "SMS":
             table = s3db.msg_sms
             id = table.insert(body=message,
                               from_address=from_address,
@@ -379,7 +378,7 @@ class S3Msg(object):
             record = dict(id=id)
             s3db.update_super(table, record)
             message_id = record["message_id"]
-        elif pr_message_method == "TWITTER":
+        elif contact_method == "TWITTER":
             table = s3db.msg_twitter
             id = table.insert(body=message,
                               from_address=from_address,
@@ -390,7 +389,7 @@ class S3Msg(object):
             message_id = record["message_id"]
         else:
             # @ToDo
-            pass
+            raise
 
         # Place the Message in the main OutBox
         table = s3db.msg_outbox
@@ -401,7 +400,7 @@ class S3Msg(object):
                 try:
                     table.insert(message_id = message_id,
                                  pe_id = id,
-                                 pr_message_method = pr_message_method,
+                                 contact_method = contact_method,
                                  system_generated = system_generated)
                     listindex = listindex + 1
                 except:
@@ -410,14 +409,14 @@ class S3Msg(object):
             try:
                 table.insert(message_id = message_id,
                              pe_id = pe_id,
-                             pr_message_method = pr_message_method,
+                             contact_method = contact_method,
                              system_generated = system_generated)
             except:
                 return False
 
         # Process OutBox async
         current.s3task.async("msg_process_outbox",
-                             args=[pr_message_method])
+                             args=[contact_method])
 
         return message_id
 
@@ -438,11 +437,12 @@ class S3Msg(object):
             table = s3db.msg_sms_outbound_gateway
             settings = db(table.id > 0).select(table.outgoing_sms_handler,
                                                limitby=(0, 1)).first()
-            if not settings:
+            try:
+                outgoing_sms_handler = settings.outgoing_sms_handler
+            except:
                 # Raise exception here to make the scheduler
                 # task fail permanently
                 raise ValueError("No SMS handler defined!")
-            outgoing_sms_handler = settings.outgoing_sms_handler
 
         def dispatch_to_pe_id(pe_id,
                               subject,
@@ -478,7 +478,9 @@ class S3Msg(object):
                                            message)
                 elif contact_method == "SMS":
                     if outgoing_sms_handler == "WEB_API":
-                        return self.send_sms_via_api(address, message)
+                        return self.send_sms_via_api(address,
+                                                     message,
+                                                     message_id)
                     elif outgoing_sms_handler == "SMTP":
                         return self.send_sms_via_smtp(address, message)
                     elif outgoing_sms_handler == "MODEM":
@@ -506,7 +508,7 @@ class S3Msg(object):
                   petable.instance_type,
                   ]
 
-        query = (outbox.pr_message_method == contact_method) & \
+        query = (outbox.contact_method == contact_method) & \
                 (outbox.status == 1) & \
                 (outbox.deleted == False)
 
@@ -524,7 +526,7 @@ class S3Msg(object):
             left.append(mailbox.on(mailbox.message_id == outbox.message_id))
         else:
             # @ToDo
-            return
+            raise
 
         rows = db(query).select(*fields,
                                 left=left,
@@ -576,10 +578,10 @@ class S3Msg(object):
                 subject = row["msg_email.subject"] or ""
                 message = row["msg_email.body"] or ""
             elif contact_method == "SMS":
-                subject = ""
+                subject = None
                 message = row["msg_sms.body"] or ""
             elif contact_method == "TWITTER":
-                subject = ""
+                subject = None
                 message = row["msg_twitter.body"] or ""
             else:
                 # @ToDo
@@ -604,7 +606,7 @@ class S3Msg(object):
                     for pe_id in pe_ids:
                         outbox.insert(message_id=message_id,
                                       pe_id=pe_id,
-                                      pr_message_method=contact_method,
+                                      contact_method=contact_method,
                                       system_generated=True)
                     chainrun = True
                 status = True
@@ -619,7 +621,7 @@ class S3Msg(object):
                     for pe_id in pe_ids:
                         outbox.insert(message_id=message_id,
                                       pe_id=pe_id,
-                                      pr_message_method=contact_method,
+                                      contact_method=contact_method,
                                       system_generated=True)
                     chainrun = True
                 status = True
@@ -634,7 +636,7 @@ class S3Msg(object):
                     for pe_id in pe_ids:
                         outbox.insert(message_id=message_id,
                                       pe_id=pe_id,
-                                      pr_message_method=contact_method,
+                                      contact_method=contact_method,
                                       system_generated=True)
                     chainrun = True
                 status = True
@@ -717,7 +719,7 @@ class S3Msg(object):
                                    cc=cc,
                                    bcc=bcc,
                                    reply_to=reply_to,
-                                   # @ToDo: Once more people have upgrade their web2py
+                                   # @ToDo: Once more people have upgraded their web2py
                                    #sender=sender,
                                    encoding=encoding
                                    )
@@ -733,8 +735,7 @@ class S3Msg(object):
                             pe_id,
                             subject="",
                             message="",
-                            sender="",
-                            from_address="",
+                            from_address=None,
                             system_generated=False):
         """
             API wrapper over send_by_pe_id
@@ -744,7 +745,6 @@ class S3Msg(object):
                                   subject,
                                   message,
                                   "EMAIL",
-                                  sender,
                                   from_address,
                                   system_generated)
 
@@ -836,6 +836,76 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     # Send SMS
     # -------------------------------------------------------------------------
+    def send_sms_via_api(self, mobile, text="", message_id=None):
+        """
+            Function to send SMS via Web API
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.msg_sms_webapi_channel
+
+        # Get Configuration
+        sms_api = db(table.enabled == True).select(limitby=(0, 1)).first()
+        if not sms_api:
+            return False
+
+        post_data = {}
+
+        parts = sms_api.parameters.split("&")
+        for p in parts:
+            post_data[p.split("=")[0]] = p.split("=")[1]
+
+        mobile = self.sanitise_phone(mobile)
+
+        post_data[sms_api.message_variable] = text
+        post_data[sms_api.to_variable] = str(mobile)
+
+        url = sms_api.url
+        clickatell = "clickatell" in url
+        if clickatell:
+            text_len = len(text)
+            if text_len > 480:
+                s3_debug("Clickatell messages cannot exceed 480 chars")
+                return False
+            elif text_len > 320:
+                post_data["concat"] = 3
+            elif text_len > 160:
+                post_data["concat"] = 2
+
+        request = urllib2.Request(url)
+        query = urllib.urlencode(post_data)
+        if sms_api.username and sms_api.password:
+            # e.g. Mobile Commons
+            base64string = base64.encodestring("%s:%s" % (sms_api.username, sms_api.password)).replace("\n", "")
+            request.add_header("Authorization", "Basic %s" % base64string)
+        try:
+            result = urllib2.urlopen(request, query)
+        except urllib2.HTTPError, e:
+            s3_debug("SMS message send failed: %s" % e)
+            return False
+        else:
+            # Parse result
+            output = result.read()
+            if clickatell:
+                if output.startswith("ERR"):
+                    s3_debug("Clickatell message send failed: %s" % output)
+                    return False
+                elif message_id and output.startswith("ID"):
+                    # Store ID from Clickatell to be able to followup
+                    remote_id = output[4:]
+                    db(s3db.msg_sms.message_id == message_id).update(remote_id=remote_id)
+            elif "mcommons" in url:
+                # http://www.mobilecommons.com/mobile-commons-api/rest/#errors
+                # Good = <response success="true"></response>
+                # Bad = <response success="false"><errror id="id" message="message"></response>
+                if "error" in output:
+                    s3_debug("Mobile Commons message send failed: %s" % output)
+                    return False
+
+            return True
+
+    # -------------------------------------------------------------------------
     def send_sms_via_modem(self, mobile, text=""):
         """
             Function to send SMS via locally-attached Modem
@@ -853,52 +923,6 @@ class S3Msg(object):
         except KeyError:
             s3_debug("s3msg", "Modem not available: need to have the cron/sms_handler_modem.py script running")
             return False
-
-    # -------------------------------------------------------------------------
-    def send_sms_via_api(self, mobile, text=""):
-        """
-            Function to send SMS via Web API
-        """
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.msg_sms_webapi_channel
-
-        # Get Configuration
-        query = (table.enabled == True)
-        sms_api = db(query).select(limitby=(0, 1)).first()
-        if not sms_api:
-            return False
-
-        sms_api_post_config = {}
-
-        tmp_parameters = sms_api.parameters.split("&")
-        for tmp_parameter in tmp_parameters:
-            sms_api_post_config[tmp_parameter.split("=")[0]] = \
-                                        tmp_parameter.split("=")[1]
-
-        mobile = self.sanitise_phone(mobile)
-
-        sms_api_post_config[sms_api.message_variable] = text
-        sms_api_post_config[sms_api.to_variable] = str(mobile)
-
-        request = urllib2.Request(sms_api.url)
-        query = urllib.urlencode(sms_api_post_config)
-        if sms_api.username and sms_api.password:
-            base64string = base64.encodestring("%s:%s" % (sms_api.username, sms_api.password)).replace("\n", "")
-            request.add_header("Authorization", "Basic %s" % base64string)
-        try:
-            result = urllib2.urlopen(request, query)
-            output = result.read()
-        except urllib2.HTTPError, e:
-            return False
-        else:
-            # @ToDo: parse result
-            # if service == MobileCommons:
-            # Good = <response success="true"></response>
-            # Bad = <response success="false"><errror id="id" message="message"></response>
-            # http://www.mobilecommons.com/mobile-commons-api/rest/#errors
-            return True
 
     # -------------------------------------------------------------------------
     def send_sms_via_smtp(self, mobile, text=""):
@@ -990,8 +1014,7 @@ class S3Msg(object):
     def send_sms_by_pe_id(self,
                           pe_id,
                           message="",
-                          sender="",
-                          from_address="",
+                          from_address=None,
                           system_generated=False):
         """
             API wrapper over send_by_pe_id
@@ -1000,7 +1023,6 @@ class S3Msg(object):
         return self.send_by_pe_id(pe_id,
                                   message,
                                   "SMS",
-                                  sender,
                                   from_address,
                                   system_generated,
                                   subject=""
@@ -1141,7 +1163,7 @@ class S3Msg(object):
                             otable.insert(message_id = message_id,
                                           address = rec,
                                           status = 2,
-                                          pr_message_method = "TWITTER",
+                                          contact_method = "TWITTER",
                                          )
 
                     except tweepy.TweepError:
@@ -2017,7 +2039,7 @@ class S3Compose(S3CRUD):
         if current.msg.send_by_pe_id(recipients,
                                      vars.subject,
                                      vars.body,
-                                     vars.pr_message_method):
+                                     vars.contact_method):
             current.session.confirmation = current.T("Check outbox for the message status")
             redirect(self.url)
         else:
@@ -2060,7 +2082,7 @@ class S3Compose(S3CRUD):
             # See if we have defined a custom default contact method for this table
             contact_method = self._config("msg_contact_method", "EMAIL")
 
-        otable.pr_message_method.default = contact_method
+        otable.contact_method.default = contact_method
 
         recipient = self.recipient # from msg.compose()
         if not recipient:
@@ -2144,10 +2166,10 @@ class S3Compose(S3CRUD):
                             # @ToDo: Lookup the type
                             url = URL(f="index")
                         redirect(url)
-                    otable.pr_message_method.requires = IS_IN_SET(contact_method_opts,
-                                                                  zero=None)
+                    otable.contact_method.requires = IS_IN_SET(contact_method_opts,
+                                                               zero=None)
                     if contact_method not in contact_method_opts:
-                        otable.pr_message_method.default = contact_method_opts.popitem()[0]
+                        otable.contact_method.default = contact_method_opts.popitem()[0]
                 #elif entity_type = "pr_group":
                     # @ToDo: Loop through members
             else:
@@ -2206,10 +2228,10 @@ class S3Compose(S3CRUD):
 
         # Build a custom form from the 2 source forms
         form = DIV(lcustom.begin,
-                   TABLE(TBODY(TR(TD(LABEL(ocustom.label.pr_message_method)),
-                                  TD(ocustom.widget.pr_message_method),
-                                  TD(ocustom.comment.pr_message_method),
-                                  _id="msg_outbox_pr_message_method__row"
+                   TABLE(TBODY(TR(TD(LABEL(ocustom.label.contact_method)),
+                                  TD(ocustom.widget.contact_method),
+                                  TD(ocustom.comment.contact_method),
+                                  _id="msg_outbox_contact_method__row"
                                   ),
                                pe_row,
                                TR(TD(LABEL(mcustom.label.subject)),
@@ -2242,6 +2264,9 @@ class S3Compose(S3CRUD):
             s3.scripts.append("/%s/static/scripts/S3/s3.msg.js" % request.application)
         else:
             s3.scripts.append("/%s/static/scripts/S3/s3.msg.min.js" % request.application)
+        script = '''i18n.none_of_the_above="%s"''' % T("None of the above")
+        s3.js_global.append(script)
+        # @ToDo: Port SMS maxLength from alert_create_script() in controllers/deploy.py
 
         return form
 

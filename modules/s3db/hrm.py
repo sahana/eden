@@ -53,8 +53,8 @@ __all__ = ["S3HRModel",
            "hrm_human_resource_onaccept",
            #"hrm_render_competency",
            #"hrm_render_credential",
-           #"hrm_render_training",
            #"hrm_render_experience",
+           #"hrm_render_training",
            ]
 
 import datetime
@@ -3174,14 +3174,15 @@ class S3HRAppraisalModel(S3Model):
                              self.org_organisation_id(widget = org_widget),
                              self.hrm_job_title_id(),
                              s3_date(),
-                             Field("rating", "integer",
+                             Field("rating", "float",
                                    label = T("Rating"),
                                    # @ToDo: make this configurable
                                    # 1 to 4
                                    requires = IS_NULL_OR(
                                                 IS_INT_IN_RANGE(1, 5)
                                                 ),
-                                   widget = S3SliderWidget(1, 4),
+                                   widget = S3SliderWidget(1, 4, step=0.1,
+                                                           type="float"),
                                    ),
                              person_id("supervisor_id",
                                        label = T("Supervisor"),
@@ -4314,7 +4315,7 @@ def hrm_compose():
                                                    orderby="priority",
                                                    limitby=(0, 1)).first()
         if contact:
-            s3db.msg_outbox.pr_message_method.default = contact.contact_method
+            s3db.msg_outbox.contact_method.default = contact.contact_method
         else:
             current.session.error = T("No contact method found")
             redirect(URL(f="index"))
@@ -6762,26 +6763,27 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
 
     raw = record._row
 
-    code = raw["hrm_experience.code"] or ""
-    if code:
+    mission = raw["hrm_experience.code"] or ""
+    if mission:
         # Lookup Mission
         # @ToDo: S3Represent to do this in bulk
         mtable = current.s3db.deploy_mission
-        mission = current.db(mtable.code == code).select(mtable.id,
-                                                         limitby=(0, 1)
-                                                         ).first()
+        mission = current.db(mtable.code == mission).select(mtable.id,
+                                                            mtable.name,
+                                                            limitby=(0, 1)
+                                                            ).first()
         if mission:
             mission_url = URL(c="deploy", f="mission",
                               args=[mission.id, "profile"])
-            code = A(code,
-                     _href=mission_url,
-                     _target="_blank")
-        code = P(I(_class="icon-tag"),
-                 " ",
-                 SPAN(code),
-                 " ",
-                 _class="card_1_line",
-                 )
+            mission = A(mission.name,
+                        _href=mission_url,
+                        _target="_blank")
+        mission = P(I(_class="icon-circle"),
+                    " ",
+                    SPAN(mission),
+                    " ",
+                    _class="card_1_line",
+                    )
 
     job_title = raw["hrm_experience.job_title_id"]
     if job_title:
@@ -6907,7 +6909,7 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(DIV(DIV(code,
+               DIV(DIV(DIV(mission,
                            organisation,
                            location,
                            date,
