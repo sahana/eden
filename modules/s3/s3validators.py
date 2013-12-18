@@ -677,68 +677,9 @@ class IS_ONE_OF_EMPTY(Validator):
             if db._dbname not in ("gql", "gae"):
                 orderby = self.orderby or reduce(lambda a, b: a|b, fields)
                 groupby = self.groupby
-                # Caching breaks Colorbox dropdown refreshes
-                #dd = dict(orderby=orderby, groupby=groupby, cache=(current.cache.ram, 60))
+                
                 dd = dict(orderby=orderby, groupby=groupby)
-
-                method = "update" if self.updateable else "read"
-                query, left = self.accessible_query(method, table,
-                                                    instance_types=self.instance_types)
-
-                if "deleted" in table:
-                    query &= (table["deleted"] != True)
-
-                # Realms filter?
-                if self.realms:
-                    auth = current.auth
-                    if auth.is_logged_in() and \
-                       auth.get_system_roles().ADMIN in auth.user.realms:
-                        # Admin doesn't filter
-                        pass
-                    else:
-                        query &= auth.permission.realm_query(table, self.realms)
-
-                all_fields = [str(f) for f in fields]
-
-                filterby = self.filterby
-                if filterby and filterby in table:
-                    filter_opts = self.filter_opts
-                    if filter_opts:
-                        if None in filter_opts:
-                            # Needs special handling (doesn't show up in 'belongs')
-                            _query = (table[filterby] == None)
-                            filter_opts = [f for f in filter_opts if f is not None]
-                            if filter_opts:
-                                _query = _query | (table[filterby].belongs(filter_opts))
-                            query &= _query
-                        else:
-                            query &= (table[filterby].belongs(filter_opts))
-                    if not self.orderby:
-                        filterby_field = table[filterby]
-                        dd.update(orderby=filterby_field)
-                        if str(filterby_field) not in all_fields:
-                            fields.append(filterby_field)
-                            all_fields.append(str(filterby_field))
-
-                not_filterby = self.not_filterby
-                if not_filterby and not_filterby in table:
-                    not_filter_opts = self.not_filter_opts
-                    if not_filter_opts:
-                        if None in not_filter_opts:
-                            # Needs special handling (doesn't show up in 'belongs')
-                            _query = (table[not_filterby] == None)
-                            not_filter_opts = [f for f in not_filter_opts if f is not None]
-                            if not_filter_opts:
-                                _query = _query | (table[not_filterby].belongs(not_filter_opts))
-                            query &= (~_query)
-                        else:
-                            query &= (~(table[not_filterby].belongs(not_filter_opts)))
-                    if not self.orderby:
-                        filterby_field = table[not_filterby]
-                        dd.update(orderby=filterby_field)
-                        if str(filterby_field) not in all_fields:
-                            fields.append(filterby_field)
-                            all_fields.append(str(filterby_field))
+                query, left = self.query(table, fields=fields, dd=dd)
 
                 if left is not None:
                     if self.left is not None:
@@ -825,6 +766,91 @@ class IS_ONE_OF_EMPTY(Validator):
             self.theset = None
             self.labels = None
 
+    # -------------------------------------------------------------------------
+    def query(self, table, fields=None, dd=None):
+        """
+            Construct the query to lookup the options (separated from
+            build_set so the query can be extracted and used in other
+            lookups, e.g. filter options).
+
+            @param table: the lookup table
+            @param fields: fields (updatable list)
+            @param dd: additional query options (updatable dict)
+        """
+
+        # Accessible-query
+        method = "update" if self.updateable else "read"
+        query, left = self.accessible_query(method, table,
+                                            instance_types=self.instance_types)
+
+        # Available-query
+        if "deleted" in table:
+            query &= (table["deleted"] != True)
+
+        # Realms filter?
+        if self.realms:
+            auth = current.auth
+            if auth.is_logged_in() and \
+               auth.get_system_roles().ADMIN in auth.user.realms:
+                # Admin doesn't filter
+                pass
+            else:
+                query &= auth.permission.realm_query(table, self.realms)
+
+        all_fields = [str(f) for f in fields] if fields is not None else []
+
+        filterby = self.filterby
+        if filterby and filterby in table:
+            
+            filter_opts = self.filter_opts
+            
+            if filter_opts:
+                if None in filter_opts:
+                    # Needs special handling (doesn't show up in 'belongs')
+                    _query = (table[filterby] == None)
+                    filter_opts = [f for f in filter_opts if f is not None]
+                    if filter_opts:
+                        _query = _query | (table[filterby].belongs(filter_opts))
+                    query &= _query
+                else:
+                    query &= (table[filterby].belongs(filter_opts))
+                    
+            if not self.orderby and \
+               fields is not None and dd is not None:
+                filterby_field = table[filterby]
+                if dd is not None:
+                    dd.update(orderby=filterby_field)
+                if str(filterby_field) not in all_fields:
+                    fields.append(filterby_field)
+                    all_fields.append(str(filterby_field))
+
+        not_filterby = self.not_filterby
+        if not_filterby and not_filterby in table:
+            
+            not_filter_opts = self.not_filter_opts
+            
+            if not_filter_opts:
+                if None in not_filter_opts:
+                    # Needs special handling (doesn't show up in 'belongs')
+                    _query = (table[not_filterby] == None)
+                    not_filter_opts = [f for f in not_filter_opts if f is not None]
+                    if not_filter_opts:
+                        _query = _query | (table[not_filterby].belongs(not_filter_opts))
+                    query &= (~_query)
+                else:
+                    query &= (~(table[not_filterby].belongs(not_filter_opts)))
+                    
+            if not self.orderby and \
+               fields is not None and dd is not None:
+                filterby_field = table[not_filterby]
+                if dd is not None:
+                    dd.update(orderby=filterby_field)
+                if str(filterby_field) not in all_fields:
+                    fields.append(filterby_field)
+                    all_fields.append(str(filterby_field))
+
+        return query, left
+        
     # -------------------------------------------------------------------------
     @classmethod
     def accessible_query(cls, method, table, instance_types=None):
