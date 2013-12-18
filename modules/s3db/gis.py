@@ -1465,14 +1465,14 @@ class S3GISConfigModel(S3Model):
             msg_list_empty = T("No Markers currently available"))
 
         # Reusable field to include in other table definitions
-        gis_marker_represent = gis_MarkerRepresent()
+        marker_represent = gis_MarkerRepresent()
         marker_id = S3ReusableField("marker_id", table,
                                     sortby="name",
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "gis_marker.id",
                                                           "%(name)s",
                                                           zero=T("Use default"))),
-                                    represent = self.gis_marker_represent,
+                                    represent = marker_represent,
                                     label = T("Marker"),
                                     comment=S3AddResourceLink(c="gis",
                                                               f="marker",
@@ -2209,24 +2209,24 @@ class S3GISConfigModel(S3Model):
         return
 
 # =============================================================================
-
 class gis_MarkerRepresent(S3Represent):
     """
         Represent a Marker by it's picture
     """
+
     def __init__(self):
         
-        super(gis_MarkerRepresent,
-              self).__init__(lookup="gis_marker",
-                             fields="image")
-    def represent_row(self,row):
+        super(gis_MarkerRepresent, self).__init__(lookup="gis_marker",
+                                                  fields="image")
+
+    def represent_row(self, row):
         """
             Represent a Row
             @param row: The Row
         """
         represent = DIV(IMG(_src=URL(c="static", f="img",
                                      args=["markers", row.image]),
-                                    _height=40))
+                                     _height=40))
         return represent
 
 # ==============================================================================
