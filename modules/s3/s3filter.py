@@ -1282,14 +1282,71 @@ class S3OptionsFilter(S3FilterWidget):
                 opt_keys = (True, False)
 
             elif field or rfield.virtual:
+                
                 groupby = field if field and not multiple else None
                 virtual = field is None
-                rows = resource.select([selector],
-                                       limit=None,
-                                       orderby=field,
-                                       groupby=groupby,
-                                       virtual=virtual,
-                                       as_rows=True)
+
+                # If the search field is a foreign key, then try to perform
+                # a reverse lookup of primary IDs in the lookup table which
+                # are linked to at least one record in the resource => better
+                # scalability.
+                rows = None
+                if field:
+                    ktablename, key, multiple = s3_get_foreign_key(field, m2m=False)
+                    if ktablename:
+
+                        ktable = current.s3db.table(ktablename)
+                        key_field = ktable[key]
+                        colname = str(key_field)
+                        left = None
+
+                        accessible_query = current.auth.s3_accessible_query
+
+                        # Respect the validator of the foreign key field.
+                        
+                        # Commented because questionable: We want a filter
+                        # option for every current field value, even if it
+                        # doesn't match the validator (don't we?)
+
+                        #requires = field.requires
+                        #if requires:
+                            #if not isinstance(requires, list):
+                                #requires = [requires]
+                            #requires = requires[0]
+                            #if isinstance(requires, IS_EMPTY_OR):
+                                #requires = requires.other
+                            #if isinstance(requires, IS_ONE_OF_EMPTY):
+                                #query, left = requires.query(ktable)
+                        #else:
+                            #query = accessible_query("read", ktable)
+                        #query &= (key_field == field)
+                        
+                        query = (key_field == field)
+                        joins = rfield.join
+                        for tname in joins:
+                            query &= joins[tname]
+
+                        # We do not allow the user to see values only used
+                        # in records he's not permitted to see:
+                        query &= accessible_query("read", resource.table)
+                        
+                        rows = current.db(query).select(key_field,
+                                                        resource._id.min(),
+                                                        groupby=key_field,
+                                                        left=left)
+
+                # If we can not perform a reverse lookup, then we need
+                # to do a forward lookup of all unique values of the
+                # search field from all records in the table :/ still ok,
+                # but not endlessly scalable:
+                if rows is None:
+                    rows = resource.select([selector],
+                                           limit=None,
+                                           orderby=field,
+                                           groupby=groupby,
+                                           virtual=virtual,
+                                           as_rows=True)
+                                           
                 opt_keys = []
                 if rows:
                     if multiple:
