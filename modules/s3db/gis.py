@@ -1385,7 +1385,6 @@ class S3LocationHierarchyModel(S3Model):
                 for gap in gaps:
                     form.errors[gap] = hierarchy_gap
 
-
 # =============================================================================
 class S3GISConfigModel(S3Model):
     """
@@ -1466,6 +1465,7 @@ class S3GISConfigModel(S3Model):
             msg_list_empty = T("No Markers currently available"))
 
         # Reusable field to include in other table definitions
+        gis_marker_represent = gis_MarkerRepresent()
         marker_id = S3ReusableField("marker_id", table,
                                     sortby="name",
                                     requires = IS_NULL_OR(
@@ -2079,34 +2079,7 @@ class S3GISConfigModel(S3Model):
         s3 = current.response.s3
         if s3.gis.config and \
            s3.gis.config.id == row.id:
-                s3.gis.config = None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_marker_represent(id):
-        """
-            Represent a Marker by it's picture
-        """
-
-        if not id:
-            return current.messages["NONE"]
-
-        if isinstance(id, Row):
-            record = id
-        else:
-            db = current.db
-            table = db.gis_marker
-            record = db(table.id == id).select(table.image,
-                                               limitby=(0, 1)).first()
-        try:
-            represent = DIV(IMG(_src=URL(c="static", f="img",
-                                         args=["markers", record.image]),
-                                _height=40))
-        except:
-            return current.messages.UNKNOWN_OPT
-
-        return represent
-
+                s3.gis.config = None  
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_marker_onvalidation(form):
@@ -2236,6 +2209,27 @@ class S3GISConfigModel(S3Model):
         return
 
 # =============================================================================
+
+class gis_MarkerRepresent(S3Represent):
+    """
+        Represent a Marker by it's picture
+    """
+    def __init__(self):
+        
+        super(gis_MarkerRepresent,
+              self).__init__(lookup="gis_marker",
+                             fields="image")
+    def represent_row(self,row):
+        """
+            Represent a Row
+            @param row: The Row
+        """
+        represent = DIV(IMG(_src=URL(c="static", f="img",
+                                     args=["markers", row.image]),
+                                    _height=40))
+        return represent
+
+# ==============================================================================
 class S3LayerEntityModel(S3Model):
     """
         Model for Layer SuperEntity
