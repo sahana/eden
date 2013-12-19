@@ -5794,10 +5794,17 @@ class MAP(DIV):
     def _setup(self):
         """
             Setup the Map
-            - not done during init() to hve as Lazy as possible
+            - not done during init() to be as Lazy as possible
             - separated from xml() in order to be able to read options to put
               into scripts (callback or otherwise)
         """
+
+        # Default configuration
+        config = GIS.get_config()
+        if not config:
+            # No prepop - Bail
+            current.session.error = current.T("Map cannot display without prepop data!")
+            redirect(URL(c="default", f="index"))
 
         opts = self.opts
 
@@ -5811,8 +5818,6 @@ class MAP(DIV):
         auth = current.auth
         settings = current.deployment_settings
         MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
-        # Default configuration
-        config = GIS.get_config()
 
         # Support bookmarks (such as from the control)
         # - these over-ride the arguments

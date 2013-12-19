@@ -1842,7 +1842,7 @@ def customize_project_activity(**attr):
                        "name",
                        (T("Distribution"), "distribution.parameter_id"),
                        (T("Beneficiaries"), "beneficiary.value"),
-                       "status_id",
+                       #"status_id",
                        "date",
                        "end_date",
                        #"comments",
@@ -1871,13 +1871,13 @@ def customize_project_activity(**attr):
             editable = False
 
         # Custom Crud Form
-        bttable = s3db.project_beneficiary_type
-        total = current.db(bttable.name == "Total").select(bttable.parameter_id,
-                                                           limitby=(0, 1)).first()
-        if total:
-            parameter_id = total.parameter_id
-        else:
-            parameter_id = None
+        #bttable = s3db.project_beneficiary_type
+        #total = current.db(bttable.name == "Total").select(bttable.parameter_id,
+        #                                                   limitby=(0, 1)).first()
+        #if total:
+        #    parameter_id = total.parameter_id
+        #else:
+        #    parameter_id = None
         crud_form = S3SQLCustomForm(
             #S3SQLInlineComponent(
             #    "activity_activity_type",
@@ -1897,11 +1897,13 @@ def customize_project_activity(**attr):
                 "beneficiary",
                 label = T("Beneficiaries"),
                 link = False,
-                multiple = False,
-                fields = ["value"],
-                filterby = dict(field = "parameter_id",
-                                options = parameter_id
-                                ),
+                #multiple = False,
+                fields = ["value",
+                          "parameter_id",
+                          ],
+                #filterby = dict(field = "parameter_id",
+                #                options = parameter_id
+                #                ),
             ),
             S3SQLInlineComponent(
                 "distribution",
@@ -1918,7 +1920,7 @@ def customize_project_activity(**attr):
             #              #"comments",
             #              ],
             #),
-            "status_id",
+            #"status_id",
             "date",
             "end_date",
             #"comments",

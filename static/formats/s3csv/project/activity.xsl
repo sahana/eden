@@ -7,8 +7,8 @@
 
          CSV column...........Format..........Content
 
-         Activity.............string..........Activity short description
          Project..............string..........Project Name (optional)
+         Activity.............string..........Activity short description
          Activity Type........;-sep list......List of Activity Types
          Sector...............;-sep list......List of Activity Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
          Organisation.........comma-sep list..project_activity_organisation.organisation_id  
@@ -373,15 +373,6 @@
     <!-- ****************************************************************** -->
     <xsl:template name="ContactPerson">
 
-        <xsl:variable name="Activity" select="col[@field='Activity']/text()"/>
-
-        <xsl:variable name="l0" select="col[@field='Country']/text()"/>
-        <xsl:variable name="l1" select="col[@field='State']/text()"/>
-        <xsl:variable name="l2" select="col[@field='District']/text()"/>
-        <xsl:variable name="l3" select="col[@field='City']/text()"/>
-
-        <xsl:variable name="l4id" select="concat('Location L4: ', $Activity)"/>
-
         <xsl:for-each select="col[starts-with(@field, 'ContactPerson')]">
             <xsl:variable name="PersonData" select="text()"/>
             <xsl:variable name="FirstName" select="substring-before($PersonData, ',')"/>
@@ -396,37 +387,6 @@
                     </xsl:attribute>
                     <data field="first_name"><xsl:value-of select="$FirstName"/></data>
                     <data field="last_name"><xsl:value-of select="$LastName"/></data>
-
-                    <!-- Address -->
-                    <resource name="pr_address">
-                        <!-- Link to Location (fails inside here)
-                        <xsl:call-template name="LocationReference"/> -->
-                        <reference field="location_id" resource="gis_location">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="$l4id"/>
-                            </xsl:attribute>
-                        </reference>
-
-                        <!-- Home address -->
-                        <data field="type">1</data>
-
-                        <!-- Populate the fields directly which are normally populated onvalidation -->
-                        <data field="address">
-                            <xsl:value-of select="$Activity"/>
-                        </data>
-                        <data field="L0">
-                            <xsl:value-of select="$l0"/>
-                        </data>
-                        <data field="L1">
-                            <xsl:value-of select="$l1"/>
-                        </data>
-                        <data field="L2">
-                            <xsl:value-of select="$l2"/>
-                        </data>
-                        <data field="L3">
-                            <xsl:value-of select="$l3"/>
-                        </data>
-                    </resource>
 
                     <!-- Contacts -->
                     <resource name="pr_contact">
@@ -919,6 +879,10 @@
                     <xsl:value-of select="concat($ProjectPrefix, $ProjectName)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$ProjectName"/></data>
+                <!-- Org is a required field, so either need to import Projects 1st or set Org here -->
+                <reference field="organisation_id" resource="org_organisation">
+                    <data field="name"><xsl:value-of select="col[@field='Organisation']"/></data>
+                </reference>
             </resource>
         </xsl:if>
     </xsl:template>
