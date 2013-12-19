@@ -2886,7 +2886,12 @@ def poi():
                 if lat is not None:
                     lon = get_vars.get("lon", None)
                     if lon is not None:
-                        id = s3db.gis_location.insert(lat=lat, lon=lon)
+                        form_vars = Storage(lat=float(lat),
+                                            lon=float(lon),
+                                            )
+                        form = Storage(vars=form_vars)
+                        s3db.gis_location_onvalidation(form)
+                        id = s3db.gis_location.insert(**form_vars)
                         field.default = id
 
             elif r.method in ("update", "update.popup"):

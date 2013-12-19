@@ -428,8 +428,8 @@ class S3LocationModel(S3Model):
 
         MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
-        vars = form.vars
-        vars_get = vars.get
+        form_vars = form.vars
+        vars_get = form_vars.get
         level = vars_get("level", None)
         parent = vars_get("parent", None)
         lat = vars_get("lat", None)
@@ -458,17 +458,16 @@ class S3LocationModel(S3Model):
                     form.errors["addr_street"] = results
                     return
                 else:
-                    vars.lon = lon = results["lon"]
-                    vars.lat = lat = results["lat"]
+                    form_vars.lon = lon = results["lon"]
+                    form_vars.lat = lat = results["lat"]
 
         if lon:
             if lon > 180:
                 # Map Selector wrapped
-                vars.lon = lon = lon - 360
+                form_vars.lon = lon = lon - 360
             elif lon < -180:
                 # Map Selector wrapped
-                vars.lon = lon = lon + 360
-        id = current.request.vars.get("id", None)
+                form_vars.lon = lon = lon + 360
 
         # 'MapAdmin' has permission to edit hierarchy locations, no matter what
         # 000_config or the ancestor country's gis_config has.
@@ -478,7 +477,7 @@ class S3LocationModel(S3Model):
                 if editable and level in gis.hierarchy_level_keys:
                     # Check whether the country config allows us to edit this location
                     # id doesn't exist for create forms and parent is a quicker check anyway when available
-                    child = parent or id
+                    child = parent or current.request.vars.get("id", None)
                     editable = gis_hierarchy_editable(level, child)
                 if not editable:
                     response.error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
@@ -532,10 +531,10 @@ class S3LocationModel(S3Model):
             # Check within permitted bounds
             # (avoid incorrect data entry)
             # Points only for now
-            if not "gis_feature_type" in vars or (vars.gis_feature_type == "1"):
+            if not "gis_feature_type" in form_vars or (form_vars.gis_feature_type == "1"):
                 #if lat not in (None, "") and lon not in (None, ""):
                 if lat and lon:
-                    name = vars.name
+                    name = form_vars.name
                     if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
                         # Check within Bounds of the Parent
                         # Rough (Bounding Box)
@@ -616,7 +615,7 @@ class S3LocationModel(S3Model):
             if inherited:
                 # Have we provided more accurate data?
                 if lat != form.record.lat or lon != form.record.lon:
-                    vars.inherited = False
+                    form_vars.inherited = False
         return
 
     # -------------------------------------------------------------------------

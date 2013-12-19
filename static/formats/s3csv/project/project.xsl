@@ -126,7 +126,7 @@
         <!-- Projects -->
         <resource name="project_project">
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Project']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <xsl:if test="col[@field='Start Date']!=''">
                 <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
