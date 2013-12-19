@@ -1043,8 +1043,11 @@ class S3LocationFilter(S3FilterWidget):
 
         prefix = self._prefix
 
-        rfield = S3ResourceField(resource, fields)
-        label = rfield.label
+        if resource:
+            rfield = S3ResourceField(resource, fields)
+            label = rfield.label
+        else:
+            label = None
 
         if "levels" in self.opts:
             levels = self.opts.levels
