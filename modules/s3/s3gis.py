@@ -5161,20 +5161,19 @@ class GIS(object):
                     # No action required
                     return path
                 else:
-                    # Do the Bounds/Centroid/WKT
-                    feature.update(gis_feature_type="1")
-                    bounds_centroid_wkt(feature)
-                    return path
+                    # Do the Bounds/Centroid/WKT (below)
+                    vars = dict()
+
             elif inherited or lat is None or lon is None:
                 vars = dict(inherited=True,
                             lat=Lx_lat,
                             lon=Lx_lon,
                             )
                 db(table.id == id).update(**vars)
-                # Also do the Bounds/Centroid/WKT
-                vars.update(gis_feature_type="1")
-                feature.update(**vars)
-                bounds_centroid_wkt(feature)
+            else:
+                # Do the Bounds/Centroid/WKT (below)
+                vars = dict()
+
         elif inherited and lat == Lx_lat and lon == Lx_lon:
             vars = dict(path=_path,
                         L0=L0_name,
@@ -5185,11 +5184,7 @@ class GIS(object):
                         L5=L5_name,
                         )
             db(table.id == id).update(**vars)
-            if not wkt:
-                # Do the Bounds/Centroid/WKT
-                vars.update(gis_feature_type="1")
-                feature.update(**vars)
-                bounds_centroid_wkt(feature)
+
         elif inherited or lat is None or lon is None:
             vars = dict(path=_path,
                         L0=L0_name,
@@ -5203,19 +5198,24 @@ class GIS(object):
                         lon=Lx_lon
                         )
             db(table.id == id).update(**vars)
-            # Also do the Bounds/Centroid/WKT
-            vars.update(gis_feature_type="1")
-            feature.update(**vars)
-            bounds_centroid_wkt(feature)
         else:
-            db(table.id == id).update(path=_path,
-                                      inherited=False,
-                                      L0=L0_name,
-                                      L1=L1_name,
-                                      L2=L2_name,
-                                      L3=L3_name,
-                                      L4=L4_name,
-                                      L5=L5_name)
+            # We have a Lat & Lon
+            vars = dict(path=_path,
+                        inherited=False,
+                        L0=L0_name,
+                        L1=L1_name,
+                        L2=L2_name,
+                        L3=L3_name,
+                        L4=L4_name,
+                        L5=L5_name,
+                        )
+            db(table.id == id).update(**vars)
+
+        # Also do the Bounds/Centroid/WKT
+        vars.update(gis_feature_type="1")
+        feature.update(**vars)
+        bounds_centroid_wkt(feature)
+
         return _path
 
     # -------------------------------------------------------------------------
