@@ -1414,17 +1414,17 @@ class S3SupplyDistributionModel(S3Model):
             list_fields.insert(0, "activity_id$project_id")
             report_fields.append("activity_id$project_id")
             filter_widgets.append(
-                S3OptionsFilter("activity.project_id",
+                S3OptionsFilter("activity_id$project_id",
                                 widget="multiselect"
                                 ),
-                #S3OptionsFilter("activity.project_id$organisation_id",
+                #S3OptionsFilter("activity_id$project_id$organisation_id",
                 #                label = T("Lead Organization"),
                 #                widget="multiselect"
                 #                ),
-                #S3OptionsFilter("activity.project_id$partner.organisation_id",
+                #S3OptionsFilter("activity_id$project_id$partner.organisation_id",
                 #                label = T("Partners"),
                 #                widget="multiselect"),
-                #S3OptionsFilter("activity.project_id$donor.organisation_id",
+                #S3OptionsFilter("activity_id$project_id$donor.organisation_id",
                 #                label = T("Donors"),
                 #                location_level="L1",
                 #                widget="multiselect")

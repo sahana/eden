@@ -12,11 +12,6 @@ class index(S3CustomController):
 
     def __call__(self):
 
-        gtable = current.s3db.gis_location
-        syria = current.db(gtable.name == "Syrian Arab Republic").select(gtable.id,
-                                                                         limitby=(0, 1)
-                                                                         ).first()
-
-        redirect(URL(c="gis", f="location", args=[syria.id, "profile"]))
+        redirect(URL(c="project", f="activity", args=["summary"]))
 
 # END =========================================================================

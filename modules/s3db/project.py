@@ -1159,11 +1159,14 @@ class S3ProjectActivityModel(S3Model):
                                           label = T("Status"),
                                           # Doesn't support translation
                                           #represent="%(name)s",
-                                          widget="multiselect",
+                                          # @ToDo: Introspect cols
+                                          cols = 3,
+                                          #widget="multiselect",
                                           ),
                           ]
 
         # Resource Configuration
+        use_projects = settings.get_project_projects()
         list_fields = ["name",
                        "comments",
                        ]
@@ -1181,7 +1184,7 @@ class S3ProjectActivityModel(S3Model):
                                 #represent="%(name)s",
                                 widget="multiselect",
                                 ))
-        if settings.get_project_projects():
+        if use_projects:
             list_fields.insert(0, "project_id")
             rappend((T("Project"), "project_id"))
             filter_widgets.insert(1,
@@ -1198,8 +1201,21 @@ class S3ProjectActivityModel(S3Model):
                                 widget="multiselect",
                                 ))
         if settings.get_project_themes():
-            rappend((T("Theme"), "project_id$theme.name"))
-        if settings.get_project_mode_drr():
+            rappend("theme_activity.theme_id")
+            filter_widgets.append(
+                S3OptionsFilter("theme_activity.theme_id",
+                                # Doesn't support translation
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                ))
+        # @ToDo: deployment_setting
+        filter_widgets.append(
+                S3OptionsFilter("beneficiary.parameter_id",
+                                # Doesn't support translation
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                ))
+        if use_projects and settings.get_project_mode_drr():
             rappend((T("Hazard"), "project_id$hazard.name"))
             rappend((T("HFA"), "project_id$drr.hfa"))
         if mode_task:
@@ -1245,6 +1261,7 @@ class S3ProjectActivityModel(S3Model):
                        deduplicate = self.project_activity_deduplicate,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       #onaccept = self.project_activity_onaccept,
                        report_options = report_options,
                        super_entity = "doc_entity",
                        )
@@ -1337,6 +1354,16 @@ class S3ProjectActivityModel(S3Model):
                                             autocomplete="name",
                                             autodelete=False))
 
+        # Themes
+        add_component("project_theme",
+                      project_activity=dict(link="project_theme_activity",
+                                            joinby="activity_id",
+                                            key="theme_id",
+                                            actuate="hide"))
+        # Format for InlineComponent/filter_widget
+        add_component("project_theme_activity",
+                      project_activity="activity_id")
+
         # ---------------------------------------------------------------------
         # Activity Type - Activity Link Table
         #
@@ -1383,6 +1410,27 @@ class S3ProjectActivityModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project_activity_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_activity":
+            return
+        data = item.data
+        project_id = data.get("project_id", None)
+        name = data.get("name", None)
+        # Match activity by project_id and name
+        if project_id and name:
+            table = item.table
+            query = (table.project_id == project_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def project_activity_represent(id, row=None):
         """
             Show activities with a prefix of the project code
@@ -1417,28 +1465,6 @@ class S3ProjectActivityModel(S3Model):
             return "%s > %s" % (project.code, activity.name)
         else:
             return activity.name
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_activity_deduplicate(item):
-        """ Import item de-duplication """
-
-        if item.tablename != "project_activity":
-            return
-        data = item.data
-        if "project_id" in data and \
-           "name" in data:
-            # Match activity by project_id and name
-            project_id = data.project_id
-            name = data.name
-            table = item.table
-            query = (table.project_id == project_id) & \
-                    (table.name == name)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectActivityTypeModel(S3Model):
@@ -1595,6 +1621,7 @@ class S3ProjectActivityOrganisationModel(S3Model):
 
         T = current.T
 
+        configure = self.configure
         define_table = self.define_table
         project_activity_id = self.project_activity_id
 
@@ -1624,6 +1651,10 @@ class S3ProjectActivityOrganisationModel(S3Model):
             msg_list_empty = T("No Activity Organisations Found")
         )
 
+        configure(tablename,
+                  deduplicate = self.project_activity_organisation_deduplicate,
+                  )
+
         # ---------------------------------------------------------------------
         # Activities <> Organisation Groups - Link table
         #
@@ -1633,8 +1664,60 @@ class S3ProjectActivityOrganisationModel(S3Model):
                              self.org_group_id(empty=False),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = self.project_activity_group_deduplicate,
+                  )
+
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_activity_organisation_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_activity_organisation":
+            return
+
+        data = item.data
+        activity_id = data.get("activity_id", None)
+        organisation_id = data.get("organisation_id", None)
+        if activity_id and organisation_id:
+            table = item.table
+            query = (table.activity_id == activity_id) & \
+                    (table.organisation_id == organisation_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_activity_group_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_activity_group":
+            return
+
+        data = item.data
+        activity_id = data.get("activity_id", None)
+        group_id = data.get("group_id", None)
+        if activity_id and group_id:
+            table = item.table
+            query = (table.activity_id == activity_id) & \
+                    (table.group_id == group_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
 
 # =============================================================================
 class S3ProjectActivitySectorModel(S3Model):
@@ -2084,6 +2167,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                              #s3_comments(),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = self.project_beneficiary_activity_deduplicate,
+                  )
+
         # Pass names back to global scope (s3.*)
         return dict()
 
@@ -2136,7 +2223,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                     project_id = project_location.project_id,
                     location_id = project_location.location_id
                 )
-        return
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2147,14 +2233,36 @@ class S3ProjectBeneficiaryModel(S3Model):
             return
 
         data = item.data
-        if "parameter_id" in data and \
-           "project_location_id" in data:
-            # Match beneficiary by type and project_location
+        parameter_id = data.get("parameter_id", None)
+        project_location_id = data.get("project_location_id", None)
+        # Match beneficiary by type and project_location
+        if parameter_id and project_location_id:
             table = item.table
-            parameter_id = data.parameter_id
-            project_location_id = data.project_location_id
             query = (table.parameter_id == parameter_id) & \
                     (table.project_location_id == project_location_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_beneficiary_activity_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_beneficiary_activity":
+            return
+
+        data = item.data
+        parameter_id = data.get("parameter_id", None)
+        activity_id = data.get("activity_id", None)
+        # Match beneficiary by type and project_location
+        if parameter_id and activity_id:
+            table = item.table
+            query = (table.parameter_id == parameter_id) & \
+                    (table.activity_id == activity_id)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
@@ -3626,6 +3734,7 @@ class S3ProjectThemeModel(S3Model):
              "project_theme_id",
              "project_theme_sector",
              "project_theme_project",
+             "project_theme_activity",
              "project_theme_location",
              ]
 
@@ -3723,7 +3832,7 @@ class S3ProjectThemeModel(S3Model):
                                ])
 
         # ---------------------------------------------------------------------
-        # Theme - Sector Link Table
+        # Theme <> Sector Link Table
         #
         tablename = "project_theme_sector"
         table = define_table(tablename,
@@ -3749,7 +3858,7 @@ class S3ProjectThemeModel(S3Model):
         )
 
         # ---------------------------------------------------------------------
-        # Theme - Project Link Table
+        # Theme <> Project Link Table
         #
         tablename = "project_theme_project"
         table = define_table(tablename,
@@ -3763,7 +3872,7 @@ class S3ProjectThemeModel(S3Model):
                                    readable = theme_percentages,
                                    writable = theme_percentages,
                                    ),
-                            *s3_meta_fields())
+                             *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("New Theme"),
@@ -3783,11 +3892,49 @@ class S3ProjectThemeModel(S3Model):
 
         configure(tablename,
                   deduplicate=self.project_theme_project_deduplicate,
-                  onaccept = self.project_theme_project_onaccept
+                  onaccept = self.project_theme_project_onaccept,
                   )
 
         # ---------------------------------------------------------------------
-        # Theme - Project Location Link Table
+        # Theme <> Activity Link Table
+        #
+        tablename = "project_theme_activity"
+        table = define_table(tablename,
+                             theme_id(empty=False),
+                             self.project_activity_id(empty=False),
+                             # % breakdown by theme (sector in IATI)
+                             #Field("percentage", "integer",
+                             #      label = T("Percentage"),
+                             #      default = 0,
+                             #      requires = IS_INT_IN_RANGE(0, 101),
+                             #      readable = theme_percentages,
+                             #      writable = theme_percentages,
+                             #      ),
+                             *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            title_create = T("New Theme"),
+            title_display = T("Theme"),
+            title_list = T("Themes"),
+            title_update = T("Edit Theme"),
+            title_search = T("Search Themes"),
+            #title_upload = T("Import Theme data"),
+            subtitle_create = T("Add New Theme"),
+            label_list_button = T("List Themes"),
+            label_create_button = T("Add Theme to Activity"),
+            msg_record_created = T("Theme added to Activity"),
+            msg_record_modified = T("Theme updated"),
+            msg_record_deleted = T("Theme removed from Activity"),
+            msg_list_empty = T("No Themes found for this Activity")
+        )
+
+        configure(tablename,
+                  deduplicate=self.project_theme_activity_deduplicate,
+                  #onaccept = self.project_theme_activity_onaccept,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Theme <> Project Location Link Table
         #
         tablename = "project_theme_location"
         table = define_table(tablename,
@@ -3873,10 +4020,9 @@ class S3ProjectThemeModel(S3Model):
             return
 
         data = item.data
-        if "project_id" in data and \
-           "theme_id" in data:
-            project_id = data.project_id
-            theme_id = data.theme_id
+        project_id = data.get("project_id", None)
+        theme_id = data.get("theme_id", None)
+        if project_id and theme_id:
             table = item.table
             query = (table.project_id == project_id) & \
                     (table.theme_id == theme_id)
@@ -3887,7 +4033,27 @@ class S3ProjectThemeModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
-        return
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_theme_activity_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_theme_activity":
+            return
+
+        data = item.data
+        activity_id = data.get("activity_id", None)
+        theme_id = data.get("theme_id", None)
+        if activity_id and theme_id:
+            table = item.table
+            query = (table.activity_id == activity_id) & \
+                    (table.theme_id == theme_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectDRRModel(S3Model):
