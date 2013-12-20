@@ -1230,7 +1230,6 @@ class S3ProjectActivityModel(S3Model):
             #                  args=["[id]", "task"])
         else:
             #create_next = URL(c="project", f="activity", args=["[id]"])
-            list_fields.insert(2, "location_id")
             # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
             levels = hierarchy.keys()
@@ -1238,13 +1237,24 @@ class S3ProjectActivityModel(S3Model):
                s3.gis.config.region_location_id:
                 levels.remove("L0")
 
-            default_row = "activity.L1"
-            default_fact = "count(activity.name)"
             filter_widgets.insert(0,
                 S3LocationFilter("location_id",
                                  levels=levels,
                                  widget="multiselect"
                                  ))
+
+            posn = 2
+            for level in levels:
+                lfield = "activity.location_id$%s" % level
+                list_fields.insert(posn, lfield)
+                report_fields.append(lfield)
+                posn += 1
+
+            if "L0" in levels:
+                default_row = "activity.location_id$L0"
+            else:
+                default_row = "activity.location_id$L1"
+            default_fact = "count(activity.name)"
 
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,

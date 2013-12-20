@@ -79,13 +79,13 @@ settings.base.system_name_short = T("IFRC MENA 4W")
 settings.base.theme = "Syria"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
-#settings.gis.map_height = 600
+settings.gis.map_height = 400
 #settings.gis.map_width = 854
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
-    ("ar", "العربية"), # Needed to import Arabic placenames
+    #("ar", "العربية"), # Needed to import Arabic placenames
     ("en", "English"),
 ])
 # Default Language
@@ -107,7 +107,7 @@ settings.L10n.thousands_separator = ","
 #settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["SY"]
+#settings.gis.countries = ["SY"]
 settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"] #, "EG", "DZ"
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
@@ -146,6 +146,12 @@ settings.ui.summary = [#{"common": True,
                        # "name": "cms",
                        # "widgets": [{"method": "cms"}]
                        # },
+                       #{"name": "map",
+                       # "label": "Map",
+                       # "widgets": [{"method": "map", "ajax_init": True},
+                       #             #{"method": "report2", "ajax_init": True},
+                       #             ],
+                       # },
                        {"name": "map",
                         "label": "Map",
                         "widgets": [{"method": "map", "ajax_init": True}],
@@ -154,10 +160,10 @@ settings.ui.summary = [#{"common": True,
                         "label": "Charts",
                         "widgets": [{"method": "report2", "ajax_init": True}]
                         },
-                       {"name": "table",
-                        "label": "Table",
-                        "widgets": [{"method": "datatable"}]
-                        },
+                       #{"name": "table",
+                       # "label": "Table",
+                       # "widgets": [{"method": "datatable"}]
+                       # },
                        ]
 
 settings.search.filter_manager = False
@@ -1864,16 +1870,22 @@ def customize_project_activity(**attr):
 
         table.name.label = T("Activity")
 
+        levels = ("L0", "L1", "L2", "L3")
         location_field = table.location_id
-        location_field.represent = s3db.gis_LocationRepresent(sep=" | ")
+        location_field.represent = s3db.gis_LocationRepresent(sep=", ")
 
         s3db.project_theme_activity.theme_id.label = T("Beneficiary Type")
+        s3db.project_beneficiary.parameter_id.label = T("Beneficiaries")
+        s3db.supply_distribution.parameter_id.label = T("Distribution")
 
         list_fields = ["activity_organisation.organisation_id",
+                       "location_id$L0",
+                       "location_id$L1",
+                       "location_id$L2",
+                       "location_id$L3",
                        "sector_activity.sector_id",
-                       "location_id",
                        "name",
-                       (T("Distribution"), "distribution.parameter_id"),
+                       "distribution.parameter_id",
                        (T("Beneficiaries"), "beneficiary.value"),
                        #"status_id",
                        "date",
@@ -1888,7 +1900,6 @@ def customize_project_activity(**attr):
             from s3.s3validators import IS_LOCATION_SELECTOR2
             from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
             location_field.label = "" # Gets replaced by widget
-            levels = ("L1", "L2", "L3")
             location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             location_field.widget = S3LocationSelectorWidget2(levels=levels)
             s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
@@ -1959,12 +1970,41 @@ def customize_project_activity(**attr):
             #"comments",
             )
 
+        from s3.s3filter import S3LocationFilter, S3OptionsFilter
+        filter_widgets = [
+            S3LocationFilter("location_id",
+                             levels=levels,
+                             widget="multiselect"
+                             ),
+            S3OptionsFilter("sector_activity.sector_id",
+                            # Doesn't support translation
+                            #represent="%(name)s",
+                            widget="multiselect",
+                            ),
+            S3OptionsFilter("distribution.parameter_id",
+                            # Doesn't support translation
+                            #represent="%(name)s",
+                            widget="multiselect",
+                            ),
+            S3OptionsFilter("theme_activity.theme_id",
+                            # Doesn't support translation
+                            #represent="%(name)s",
+                            widget="multiselect",
+                            ),
+            S3OptionsFilter("beneficiary.parameter_id",
+                            # Doesn't support translation
+                            #represent="%(name)s",
+                            widget="multiselect",
+                            ),
+            ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        # Hide Open & Delete dataTable action buttons
                        deletable = editable,
                        editable = editable,
-                       #filter_formstyle = filter_formstyle,
+                       filter_widgets = filter_widgets,
+                       filter_formstyle = filter_formstyle,
                        listadd = False,
                        list_fields = list_fields,
                        )
