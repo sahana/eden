@@ -819,23 +819,10 @@ class S3Config(Storage):
         return self.L10n.get("display_toolbar", True)
 
     def get_L10n_languages(self):
-        return self.L10n.get("languages", OrderedDict([("ar", "العربية"),
-                                                       ("zh-cn", "中文 (简体)"),
-                                                       ("zh-tw", "中文 (繁體)"),
+        return self.L10n.get("languages", OrderedDict([
                                                        ("en", "English"),
-                                                       ("fr", "Français"),
-                                                       ("de", "Deutsch"),
-                                                       ("el", "ελληνικά"),
                                                        ("es", "Español"),
-                                                       ("it", "Italiano"),
-                                                       ("ja", "日本語"),
-                                                       ("ko", "한국어"),
-                                                       ("pt", "Português"),
-                                                       ("pt-br", "Português (Brasil)"),
-                                                       ("ru", "русский"),
-                                                       ("tl", "Tagalog"),
-                                                       ("ur", "اردو"),
-                                                       ("vi", "Tiếng Việt"),
+                                                       
                                                        ]))
     def get_L10n_languages_readonly(self):
         return self.L10n.get("languages_readonly", True)
