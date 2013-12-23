@@ -1097,7 +1097,7 @@ class S3XML(S3Codec):
         ALIAS = ATTRIBUTE["alias"]
         FIELD = ATTRIBUTE["field"]
         VALUE = ATTRIBUTE["value"]
-        URL = ATTRIBUTE["url"]
+        FILEURL = ATTRIBUTE["url"]
 
         tablename = table._tablename
         deleted = False
@@ -1209,12 +1209,32 @@ class S3XML(S3Codec):
 
             elif fieldtype == "upload":
                 if v:
-                    fileurl = "%s/%s" % (download_url, v)
-                    filename = dbfield.retrieve_file_properties(v)["filename"]
+                    fileurl = None
+
+                    # Retrieve the file properties
+                    if dbfield.custom_retrieve_file_properties:
+                        prop = dbfield.custom_retrieve_file_properties(v)
+                    else:
+                        prop = dbfield.retrieve_file_properties(v)
+                    filename = prop["filename"]
+
+                    # File in static (e.g. GIS marker image)?
+                    folder = prop["path"]
+                    if folder:
+                        path = os.path.relpath(folder, current.request.folder) \
+                                      .split(os.sep)
+                        if path[0] == "static" and len(path) > 1:
+                            path.append(filename)
+                            fileurl = URL(c=path[0], f=path[1], args=path[2:])
+
+                    # If not static - construct default download URL
+                    if fileurl is None:
+                        fileurl = "%s/%s" % (download_url, v)
+                        
                     data = SubElement(elem, DATA)
                     attr = data.attrib
                     attr[FIELD] = f
-                    attr[URL] = fileurl
+                    attr[FILEURL] = fileurl
                     attr[ATTRIBUTE.filename] = filename
 
             elif fieldtype == "password":
@@ -1241,7 +1261,7 @@ class S3XML(S3Codec):
                     data.text = text
 
         if url and not deleted:
-            attrib[URL] = url
+            attrib[FILEURL] = url
 
         if postprocess:
             postprocess(elem, record)

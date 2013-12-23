@@ -25,7 +25,8 @@ def download():
 
     # Load the Model
     tablename = filename.split(".", 1)[0]
-    table = s3db[tablename]
+    if "_" in tablename:
+        table = s3db.table(tablename)
 
     return response.download(request, db)
 

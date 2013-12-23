@@ -1436,6 +1436,7 @@ class S3GISConfigModel(S3Model):
                                                                "img",
                                                                "markers"),
                                    custom_retrieve = self.gis_marker_retrieve,
+                                   custom_retrieve_file_properties = self.gis_marker_retrieve_file_properties,
                                    represent = lambda filename: \
                                       (filename and [DIV(IMG(_src=URL(c="static",
                                                                       f="img",
@@ -2156,6 +2157,29 @@ class S3GISConfigModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def gis_marker_retrieve_file_properties(filename, path=None):
+        """
+            Custom method to override web2py DAL's standard
+            retrieve_file_properties, as that checks filenames
+            for uuids, so doesn't work with pre-populated files
+            in static. This method is required for XML exports.
+        """
+
+        if not path:
+            path = current.db.gis_marker.image.uploadfolder
+
+        # @ToDo: should probably use os.sep here rather than "/"
+        if "/" in filename:
+            _path = filename.split("/", 1)
+            if len(_path) > 1:
+                _path, filename = _path
+            else:
+                _path, filename = "", filename
+            path = os.path.join(path, _path)
+        return {"path": path, "filename": filename}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def gis_projection_deduplicate(item):
         """
             This callback will be called when importing Projection records it
@@ -2216,7 +2240,7 @@ class gis_MarkerRepresent(S3Represent):
     def __init__(self):
         
         super(gis_MarkerRepresent, self).__init__(lookup="gis_marker",
-                                                  fields="image")
+                                                  fields=["image"])
 
     def represent_row(self, row):
         """
