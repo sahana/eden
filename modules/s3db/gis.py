@@ -2303,7 +2303,7 @@ class S3LayerEntityModel(S3Model):
             msg_record_deleted = T("Layer deleted"),
             msg_list_empty=T("No Layers currently defined")
             )
-
+        gis_layer_represent = gis_LayerRepresent()
         layer_id = self.super_link("layer_id", "gis_layer_entity",
                                    label = T("Layer"),
                                    represent = gis_layer_represent,
@@ -4976,47 +4976,40 @@ class gis_LocationRepresent(S3Represent):
         return s3_unicode(represent)
         
 # =============================================================================
-def gis_layer_represent(id, row=None, show_link=True):
+class gis_LayerRepresent(S3Represent):
+
     """ Represent a Layer  """
 
-    if row:
-        db = current.db
-        s3db = current.s3db
-        ltable = s3db.gis_layer_entity
-    elif not id:
-        return current.messages["NONE"]
-    else:
-        db = current.db
-        s3db = current.s3db
-        ltable = s3db.gis_layer_entity
-        row = db(ltable.layer_id == id).select(ltable.name,
-                                               ltable.layer_id,
-                                               ltable.instance_type,
-                                               limitby=(0, 1)).first()
+    def __init__(self,
+                 show_link=True):
+        fields = ["instance_type",
+                  "name"]
+        super(gis_LayerRepresent, self).__init__(lookup="gis_layer_entity",
+                                                 fields=fields,
+                                                 show_link=show_link,
+                                                 linkto=True)
 
-    try:
-        instance_type = row.instance_type
-    except:
-        return current.messages.UNKNOWN_OPT
 
-    instance_type_nice = ltable.instance_type.represent(instance_type)
+        def represent_row(self,row):
+            """
+                Represent a Row
+                @param row: The Row
+            """
 
-    represent = "%s (%s)" % (row.name, instance_type_nice)
-
-    if show_link:
-        table = s3db[instance_type]
-        query = (table.layer_id == row.layer_id)
-        id = db(query).select(table.id,
-                              limitby=(0, 1)).first().id
-        c, f = instance_type.split("_", 1)
-        represent = A(represent,
-                      _href=URL(c=c, f=f,
-                                args=[id],
-                                extension="" # removes the .aaData extension in paginated views!
-                                ))
-
-    return represent
-
+            instance_type = row.instance_type
+            instance_type_nice = s3db.gis_layer_entity.instance_type.represent(instance_type)
+            represent = "%s (%s)" % (row.name, instance_type_nice)           
+            return represent
+        
+        def link(self,layer_id,represent,row=None):
+            instance_type = row.instance_type
+            c, f = instance_type.split("_", 1)
+            represent = A(represent,
+                         _href=URL(c=c, f=f,
+                                  vars={"layer_entity":row.layer_id},
+                                  args=["update"]
+                                   extension="" # removes the .aaData extension in paginated views!
+                                  ))
 # =============================================================================
 def gis_rheader(r, tabs=[]):
     """ GIS page headers """
