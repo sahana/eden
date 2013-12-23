@@ -2223,8 +2223,12 @@ class gis_MarkerRepresent(S3Represent):
             Represent a Row
             @param row: The Row
         """
+        db = current.db
+        table = db.gis_marker
+        record = db(table.id == row.id).select(table.image,
+                                               limitby=(0, 1)).first()
         represent = DIV(IMG(_src=URL(c="static", f="img",
-                                     args=["markers", row.image]),
+                                     args=["markers", record.image]),
                                      _height=40))
         return represent
 
