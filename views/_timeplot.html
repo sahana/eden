@@ -4,6 +4,11 @@
 {{s3.scripts.append("/%s/static/scripts/flot/jquery.flot.time.js" % appname)}}
 {{s3.scripts.append("/%s/static/scripts/flot/jquery.flot.resize.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.timeplot.min.js" % appname)}}{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+<div id='rheader'>
+{{try:}}{{=XML(rheader)}}{{except:}}{{pass}}
+</div>
 <div id='table-container'>
 {{try:}}{{=form}}{{except:}}{{pass}}
 </div>
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}

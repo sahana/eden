@@ -45,63 +45,139 @@ from s3rest import S3Method
 
 # =============================================================================
 class S3TimePlot(S3Method):
+    """ RESTful method for time plot reports """
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
+        """
+            Page-render entry point for REST interface.
 
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+
+        if r.http == "GET":
+            output = self.timeplot(r, **attr)
+        else:
+            r.error(405, current.manager.ERROR.BAD_METHOD)
+        return output
+
+    # -------------------------------------------------------------------------
+    def timeplot(self, r, **attr):
+        """
+            Pivot table report page
+
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+        
         resource = self.resource
         table = resource.table
 
         method = "count"
 
-        pkey = resource._id.name
-        fields = [pkey]
+        # Extract the relevant GET vars
+        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
+                        if k in ("timestamp",))
 
-        start = end = None
-        for fname in ("date", "start_date", "created_on"):
-            if fname in table.fields:
-                start = fname
-                fields.append(start)
-                break
-        for fname in ("end_date",):
-            if fname in table.fields:
-                end = fname
+        # Fall back to report options defaults
+        if not any (k in get_vars for k in ("timestamp",)):
+            timeplot_options = resource.get_config("timeplot_options", {})
+            get_vars = timeplot_options.get("defaults", {})
+
+        # Parse timestamp option
+        timestamp = get_vars.get("timestamp", None)
+        if timestamp:
+            if "," in timestamp:
+                start, end = timestamp.split(",", 1)
+            else:
+                start, end = timestamp, None
+        else:
+            start, end = None, None
+
+        # Defaults
+        if not start:
+            for fname in ("date", "start_date", "created_on"):
+                if fname in table.fields:
+                    start = fname
+                    break
+            if not end:
+                for fname in ("end_date",):
+                    if fname in table.fields:
+                        end = fname
+                        break
+        if not start:
+            r.error(405, T("No time stamps found in this resource"))
+
+        # Get the fields
+        fields = [resource._id.name]
+        start_colname = end_colname = None
+        try:
+            start_rfield = resource.resolve_selector(start)
+        except AttributeError, SyntaxError:
+            r.error(405, T("Invalid start selector: %(selector)s" % {"selector": start}))
+        else:
+            fields.append(start)
+            start_colname = start_rfield.colname
+        if end:
+            try:
+                end_rfield = resource.resolve_selector(end)
+            except AttributeError, SyntaxError:
+                r.error(405, T("Invalid end selector: %(selector)s" % {"selector": end}))
+            else:
                 fields.append(end)
-                break
+                end_colname = end_rfield.colname
 
         data = resource.select(fields)
         rows = data["rows"]
 
         items = []
         for row in rows:
-            item = [row[pkey]]
-            if start:
-                item.append(str(row[str(table[start])]))
+            item = [row[str(resource._id)]]
+            if start_colname:
+                item.append(str(row[start_colname]))
             else:
                 item.append(None)
-            if end:
-                item.append(str(row[str(table[end])]))
+            if end_colname:
+                item.append(str(row[end_colname]))
             else:
                 item.append(None)
             item.append(None)
             items.append(item)
+        items = json.dumps(items)
 
         widget_id = "timeplot"
 
-        form = FORM(
-                    DIV(_class="tp-chart", _style="height: 300px;"),
-                    INPUT(_type="hidden",
-                          _class="tp-data",
-                          _value=json.dumps(items)),
-                    _class="tp-form",
-                    _id = widget_id
-               )
+        if r.representation in ("html", "iframe"):
+            
+            title = self.crud_string(resource.tablename, "title_report")
+            
+            output = {"title": title}
+            
+            form = FORM(DIV(_class="tp-chart", _style="height: 300px;"),
+                        INPUT(_type="hidden",
+                              _class="tp-data",
+                              _value=items),
+                        _class="tp-form",
+                        _id = widget_id)
 
-        # jQuery-ready script
-        script = """$("#%(widget_id)s").timeplot();""" % {"widget_id": widget_id}
+            output["form"] = form
 
-        current.response.s3.jquery_ready.append(script)
-        current.response.view = "timeplot.html"
+            # View
+            response = current.response
+            response.view = self._view(r, "timeplot.html")
+
+            # Script to attach the timeplot widget
+            script = """$("#%(widget_id)s").timeplot();""" % {"widget_id": widget_id}
+            response.s3.jquery_ready.append(script)
         
-        return {"form": form}
+        elif r.representation == "json":
+
+            output = items
+
+        else:
+            r.error(501, r.ERROR.BAD_FORMAT)
+
+        return output
 
 # END =========================================================================
