@@ -3635,18 +3635,18 @@ class hrm_training_eventRepresent(S3Represent):
                 represent = "%s (%s)" % (represent, event.hrm_course.code)
                 instructor = event.hrm_training_event.instructor
                 site = event.org_site.name
-                if instructor and site:
-                    represent = "%s (%s - %s)" % (represent, instructor, site)
-                elif instructor:
-                    represent = "%s (%s)" % (represent, instructor)
-                elif site:
-                    represent = "%s (%s)" % (represent, site)
+            if instructor and site:
+                represent = "%s (%s - %s)" % (represent, instructor, site)
+            elif instructor:
+                represent = "%s (%s)" % (represent, instructor)
+            elif site:
+                represent = "%s (%s)" % (represent, site)
                 start_date = event.hrm_training_event.start_date
-                if start_date:
-                    start_date = table.start_date.represent(start_date)
-                    represent = "%s [%s]" % (represent, start_date)
+            if start_date:
+                start_date = table.start_date.represent(start_date)
+                represent = "%s [%s]" % (represent, start_date)
 
-                return represent
+            return represent
 
 # =============================================================================
 #def hrm_position_represent(id, row=None):
