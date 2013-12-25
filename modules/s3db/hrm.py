@@ -3616,47 +3616,37 @@ def hrm_human_resource_represent(id, row=None, show_link=False):
     return representation
 
 # =============================================================================
-def hrm_training_event_represent(id, row=None):
-    """ Represent a Training Event """
+class hrm_training_eventRepresent(S3Represent):
+        def __init__(self,
+                     show_link=False,
+                     multiple=False,
+                     translate=True):
+            fields = ["name",
+                      "code",
+                      "start_date",
+                      "instructor"]
+            super(hrm_training_eventRepresent, self).__init__(lookup="hrm_training_event",
+                                                              fields=fields,
+                                                              show_link=show_link,
+                                                              translate=translate,
+                                                              multiple=multiple)
+        def __call__(self):
+            if event.hrm_course.code:
+                represent = "%s (%s)" % (represent, event.hrm_course.code)
+                instructor = event.hrm_training_event.instructor
+                site = event.org_site.name
+                if instructor and site:
+                    represent = "%s (%s - %s)" % (represent, instructor, site)
+                elif instructor:
+                    represent = "%s (%s)" % (represent, instructor)
+                elif site:
+                    represent = "%s (%s)" % (represent, site)
+                start_date = event.hrm_training_event.start_date
+                if start_date:
+                    start_date = table.start_date.represent(start_date)
+                    represent = "%s [%s]" % (represent, start_date)
 
-    if not id:
-        return current.messages["NONE"]
-
-    s3db = current.s3db
-    table = s3db.hrm_training_event
-    ctable = s3db.hrm_course
-    stable = s3db.org_site
-    query = (table.id == id) & \
-            (table.course_id == ctable.id)
-    left = table.on(table.site_id == stable.site_id)
-    event = current.db(query).select(ctable.name,
-                                     ctable.code,
-                                     stable.name,
-                                     table.start_date,
-                                     table.instructor,
-                                     left = left,
-                                     limitby = (0, 1)).first()
-    try:
-        represent = event.hrm_course.name
-    except:
-        return current.messages.UNKNOWN_OPT
-
-    if event.hrm_course.code:
-        represent = "%s (%s)" % (represent, event.hrm_course.code)
-    instructor = event.hrm_training_event.instructor
-    site = event.org_site.name
-    if instructor and site:
-        represent = "%s (%s - %s)" % (represent, instructor, site)
-    elif instructor:
-        represent = "%s (%s)" % (represent, instructor)
-    elif site:
-        represent = "%s (%s)" % (represent, site)
-    start_date = event.hrm_training_event.start_date
-    if start_date:
-        start_date = table.start_date.represent(start_date)
-        represent = "%s [%s]" % (represent, start_date)
-
-    return represent
+                return represent
 
 # =============================================================================
 #def hrm_position_represent(id, row=None):
