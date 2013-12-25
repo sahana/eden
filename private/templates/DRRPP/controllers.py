@@ -40,7 +40,7 @@ class index():
         else:
             grid = "grid_8"
 
-        latest_projects = DIV(_id="front-latest-body",
+        latest_projects = DIV(_id="front-latest",
                               _class="%s alpha" % grid)
         lappend = latest_projects.append
                               

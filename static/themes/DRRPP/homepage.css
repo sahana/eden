@@ -58,19 +58,23 @@
 .front-latest-item {
 	padding-top: 10px;
 	padding-bottom: 10px;
+	font-size:16px;
 }
 .front-latest-title {
 	color: #0a64a2;
-	font-size: 15px;
-	font-weight: bold;
+	font-size: 20px;
+	font-weight: bolder;
 }
 .front-latest-info-date {
 	margin-right: 15px;
+	font-size: 16px;
 }
 .front-latest-desc,
 .front-latest-info {
     font-family: Calibri, sans-serif;
+	font-size: 16px;
 }
+
 
 /* Login */
 .front-login-text {
