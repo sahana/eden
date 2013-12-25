@@ -46,5 +46,6 @@ current.selenium_tests = ["CreateOrganisation",
                           "ReportTestHelper",
                           "CreateFacility",
                           "CreateEvent",
-                          "CreateIncidentReport"
+                          "CreateIncidentReport",
+                          "SearchItems"
                           ]
