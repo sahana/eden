@@ -60,42 +60,49 @@
 	padding-bottom: 10px;
 }
 .front-latest-title {
-	color: #0a64a2;
-	font-size: 15px;
+	color: .0a64a2;
+	font-size: 16px;
 	font-weight: bold;
+	display: block;
 }
 .front-latest-info-date {
+	font-family: Calibri, sans-serif;
 	margin-right: 15px;
+	font-size: 14px;
+	display: block;
 }
-.front-latest-desc,
+.front-latest-desc ,
 .front-latest-info {
-    font-family: Calibri, sans-serif;
+	font-family: Calibri, sans-serif;
+ 	white-space: nowrap;
+  	overflow: hidden;
+	font-size: 14px;
+  	text-overflow: ellipsis;
 }
-
 /* Login */
 .front-login-text {
     background: transparent;
     width: 165px;
 }
-#front-login-form {
+.front-login-form {
     margin-top: 40px;
 }
-#front-login-form label {
+.front-login-form label {
 	width: 70px;
 	float: left;
 }
-#front-login-form .form-row {
+.front-login-form .form-row {
 	padding-left: 35px;
 }
-#front-login-form .form-controller {
+.front-login-form .form-controller {
 	margin-top: 40px;
 }
-#login-form-legend {
+.login-form-legend {
 	margin-top: 40px;
 }
 
 /* My Page Block */
-#front-middle-content {
+.front-middle-content {
 	margin-top: 20px;
 	margin-bottom: 20px;
 }
@@ -108,47 +115,47 @@
 .front-block-info {
 	margin: 30px 20px;
 }
-#front-vid-player {
+.front-vid-player {
 	margin-top: 10px;
 }
 
 /* Get started */
-#getstarted-getstarted-label {
+.getstarted-getstarted-label {
 	margin-bottom: 10px;
 }
-#getstarted-taglines {
+.getstarted-taglines {
 	margin: 40px 0;
 }
-#getstarted-taglines p {
+.getstarted-taglines p {
 	font-size: 24px;
 	font-weight: bold;
 	margin-bottom: 25px;
 	letter-spacing: -1px;
 	line-height: 26px;
 }
-#getstarted-video {
+.getstarted-video {
 	margin-top: 10px;
 }
-#getstarted-getstarted .block .icon {
+.getstarted-getstarted .block .icon {
 	margin: 0 auto;
 }
-#getstarted-getstarted .block h2 {
+.getstarted-getstarted .block h2 {
 	padding: 0 60px;
 	line-height: 22px;
 	min-height: 44px;
 	margin-bottom: 5px;
 }
-#getstarted-getstarted .block .block-info {
+.getstarted-getstarted .block .block-info {
 	padding: 0 25px;
 	line-height: 16px;
 }
-#getstarted-member-button {
+.getstarted-member-button {
 	margin-top: 50px;
 	margin-bottom: 40px;
 }
 
 /* Login */
-#login-form-legend {
+.login-form-legend {
 	margin-top: 40px;
 }
 .form-login-forgot {
@@ -156,11 +163,11 @@
 	margin-top: 5px;
 }
 /* Register */
-#register-form-legend {
+.register-form-legend {
 	margin-top: 30px;
 }
 /* Contact */
-#contact-tagline {
+.contact-tagline {
 	font-size: 24px;
 	font-weight: bold;
 	margin-top: 20px;
@@ -168,27 +175,27 @@
 	letter-spacing: 0px;
 	line-height: 26px;
 }
-#disclaimer-label {
+.disclaimer-label {
 	margin-top: 20px;
 	margin-bottom: 20px;
 }
 /* About */
-#about_logos li {
+.about_logos li {
     display: inline;
 }
 /* Project Analysis page */
-#page_project_analysis .page_column {
+.page_project_analysis .page_column {
     padding: 15px;
 	float: left;
 }
-#project_analysis_matrix {
+.project_analysis_matrix {
     width: 250px;
 }
-#project_analysis_graph {
+.project_analysis_graph {
     width: 260px;
     border-left: 1px solid #000000;
     border-right: 1px solid #000000;
 }
-#project_analysis_map {
+.project_analysis_map {
     width: 250px;
 }
