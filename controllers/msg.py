@@ -1302,7 +1302,11 @@ def twitter_search():
     # Tweak languages to those supported by Twitter
 
     S3Msg = s3base.S3Msg()
-    import tweepy
+    try:
+        import tweepy
+    except:
+        session.error = T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
+        redirect(URL(c="msg", f="index"))
 
     twitter_settings = S3Msg.get_twitter_api()
     supported_languages = ['fr', 'en', 'ar', 'ja', 'es', 'de', 'it', 'id', 'pt', 'ko', 'tr', 'ru', 'nl', 'fil',

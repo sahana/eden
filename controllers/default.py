@@ -211,7 +211,7 @@ def index():
         permission.function = "site"
         permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
         if permitted_facilities:
-            facilities = s3db.org_SiteRepresent().bulk(permitted_facilities)
+            facilities = s3db.org_SiteRepresent().bulk(permitted_facilities,include_blank=False)
             facility_list = [(fac, facilities[fac]) for fac in facilities]
             facility_list = sorted(facility_list, key=lambda fac: fac[1])
             facility_opts = [OPTION(fac[1], _value=fac[0])
