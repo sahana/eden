@@ -3,11 +3,12 @@
 /* Main Navigation (S3MainMenu or modules menu) */
 
 #menu_modules {
-    position: absolute;
+    
     /* top: 255px; */
     height: 36px;
     background: #CACACA  url(../../img/BFTBmenu_back.png) repeat-x;
     border-top: 1px solid #2a323f;
+    position: fixed;
     /* alternate gradient
     background-image: -webkit-gradient(
         linear,
