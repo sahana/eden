@@ -61,17 +61,22 @@
 }
 .front-latest-title {
 	color: #0a64a2;
-	font-size: 15px;
+	font-size: 18px;
 	font-weight: bold;
+	display: block;
 }
 .front-latest-info-date {
 	margin-right: 15px;
+	font-size: 15px;
+	display: block;
 }
-.front-latest-desc,
-.front-latest-info {
-    font-family: Calibri, sans-serif;
-}
+#front-latest-desc,
 
+# front-latest-info {
+ width: 100px
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
 /* Login */
 .front-login-text {
     background: transparent;
