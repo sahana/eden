@@ -83,5 +83,12 @@
  </div>
 {{pass}}
 {{include "scripts.html"}}
+<script>
+$(document).ready(function() {
+  if (( $("#menu_modules").height() + $("#menu_options").height() + 10) < $(window).height()) {
+    $(".aside").css("position","fixed");
+  }
+});
+</script>
 </body>
 </html>
