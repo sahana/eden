@@ -5,74 +5,74 @@
     /* Stops Flashing */
     display: none;
     overflow: hidden;
-	position: relative;
-	width: 960px;
+        position: relative;
+        width: 960px;
 }
 .slides_container div.slide {
-	width: 960px;
-	height: 310px;
-	display: block;
+        width: 960px;
+        height: 310px;
+        display: block;
 }
 .caption {
-	z-index: 500;
-	position: absolute;
-	bottom: -35px;
-	left: 0;
-	height: 290px;
-	/*padding: 5px 20px 0 20px;*/
+        z-index: 500;
+        position: absolute;
+        bottom: -35px;
+        left: 0;
+        height: 290px;
+        /*padding: 5px 20px 0 20px;*/
     padding: 20px 10px 0;
-	background: #000;
-	background: rgba(0,0,0,.5);
-	/*width: 540px;*/
-	font-size: 22px;
-	/*font-size: 1.3em;
-	line-height: 1.33;*/
-	color: #fff;
-	border-top: 1px solid #000;
-	text-shadow: none;
+        background: #000;
+        background: rgba(0,0,0,.5);
+        /*width: 540px;*/
+        font-size: 22px;
+        /*font-size: 1.3em;
+        line-height: 1.33;*/
+        color: #fff;
+        border-top: 1px solid #000;
+        text-shadow: none;
 }
 .pagination {
-	margin: 6px auto 0;
-	width: 100px;
+        margin: 6px auto 0;
+        width: 100px;
 }
 .pagination li {
-	float: left;
-	margin: 0 1px;
-	list-style: none;
+        float: left;
+        margin: 0 1px;
+        list-style: none;
 }
 .pagination li a {
-	display: block;
-	width: 12px;
-	height: 0;
-	padding-top: 12px;
-	background-image: url(img/pagination.png);
-	background-position: 0 0;
-	float: left;
-	overflow: hidden;
+        display: block;
+        width: 12px;
+        height: 0;
+        padding-top: 12px;
+        background-image: url(img/pagination.png);
+        background-position: 0 0;
+        float: left;
+        overflow: hidden;
 }
 .pagination li.current a {
-	background-position: 0 -12px;
+        background-position: 0 -12px;
 }
 
 /* Latest Project */
 .front-latest-item {
-	padding-top: 10px;
-	padding-bottom: 10px;
+        padding-top: 10px;
+        padding-bottom: 10px;
 }
 .front-latest-title {
-	color: #0a64a2;
+     	color: #0a64a2;
 	font-size: 18px;
 	font-weight: bold;
 	display: block;
 }
 .front-latest-info-date {
-	font-family: Calibri, sans-serif;
+    font-family: Calibri, sans-serif;
 	margin-right: 15px;
 	font-size: 15px;
 	display: block;
 }
-.front-latest-desc,
-.front-latest-info {
+#front-latest-desc,
+#front-latest-info {
    	font-family: Calibri, sans-serif;
    	font-style:italic;
 	white-space: nowrap;
@@ -84,118 +84,118 @@
     background: transparent;
     width: 165px;
 }
-.front-login-form {
+#front-login-form {
     margin-top: 40px;
 }
-.front-login-form label {
-	width: 70px;
-	float: left;
+#front-login-form label {
+        width: 70px;
+        float: left;
 }
-.front-login-form .form-row {
-	padding-left: 35px;
+#front-login-form .form-row {
+        padding-left: 35px;
 }
-.front-login-form .form-controller {
-	margin-top: 40px;
+#front-login-form .form-controller {
+        margin-top: 40px;
 }
-.login-form-legend {
-	margin-top: 40px;
+#login-form-legend {
+        margin-top: 40px;
 }
 
 /* My Page Block */
-.front-middle-content {
-	margin-top: 20px;
-	margin-bottom: 20px;
+#front-middle-content {
+        margin-top: 20px;
+        margin-bottom: 20px;
 }
 .front-block {
-	padding-top: 20px;
-	padding-bottom: 20px;
-	text-align: center;
-	background: #e4e4e4;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        text-align: center;
+        background: #e4e4e4;
 }
 .front-block-info {
-	margin: 30px 20px;
+        margin: 30px 20px;
 }
-.front-vid-player {
-	margin-top: 10px;
+#front-vid-player {
+        margin-top: 10px;
 }
 
 /* Get started */
-.getstarted-getstarted-label {
-	margin-bottom: 10px;
+#getstarted-getstarted-label {
+        margin-bottom: 10px;
 }
-.getstarted-taglines {
-	margin: 40px 0;
+#getstarted-taglines {
+        margin: 40px 0;
 }
-.getstarted-taglines p {
-	font-size: 24px;
-	font-weight: bold;
-	margin-bottom: 25px;
-	letter-spacing: -1px;
-	line-height: 26px;
+#getstarted-taglines p {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 25px;
+        letter-spacing: -1px;
+        line-height: 26px;
 }
-.getstarted-video {
-	margin-top: 10px;
+#getstarted-video {
+        margin-top: 10px;
 }
-.getstarted-getstarted .block .icon {
-	margin: 0 auto;
+#getstarted-getstarted .block .icon {
+        margin: 0 auto;
 }
-.getstarted-getstarted .block h2 {
-	padding: 0 60px;
-	line-height: 22px;
-	min-height: 44px;
-	margin-bottom: 5px;
+#getstarted-getstarted .block h2 {
+        padding: 0 60px;
+        line-height: 22px;
+        min-height: 44px;
+        margin-bottom: 5px;
 }
-.getstarted-getstarted .block .block-info {
-	padding: 0 25px;
-	line-height: 16px;
+#getstarted-getstarted .block .block-info {
+        padding: 0 25px;
+        line-height: 16px;
 }
-.getstarted-member-button {
-	margin-top: 50px;
-	margin-bottom: 40px;
+#getstarted-member-button {
+        margin-top: 50px;
+        margin-bottom: 40px;
 }
 
 /* Login */
-.login-form-legend {
-	margin-top: 40px;
+#login-form-legend {
+        margin-top: 40px;
 }
 .form-login-forgot {
-	text-align: center;
-	margin-top: 5px;
+        text-align: center;
+        margin-top: 5px;
 }
 /* Register */
-.register-form-legend {
-	margin-top: 30px;
+#register-form-legend {
+        margin-top: 30px;
 }
 /* Contact */
-.contact-tagline {
-	font-size: 24px;
-	font-weight: bold;
-	margin-top: 20px;
-	margin-bottom: 20px;
-	letter-spacing: 0px;
-	line-height: 26px;
+#contact-tagline {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        letter-spacing: 0px;
+        line-height: 26px;
 }
-.disclaimer-label {
-	margin-top: 20px;
-	margin-bottom: 20px;
+#disclaimer-label {
+        margin-top: 20px;
+        margin-bottom: 20px;
 }
 /* About */
-.about_logos li {
+#about_logos li {
     display: inline;
 }
 /* Project Analysis page */
-.page_project_analysis .page_column {
+#page_project_analysis .page_column {
     padding: 15px;
-	float: left;
+        float: left;
 }
-.project_analysis_matrix {
+#project_analysis_matrix {
     width: 250px;
 }
-.project_analysis_graph {
+#project_analysis_graph {
     width: 260px;
     border-left: 1px solid #000000;
     border-right: 1px solid #000000;
 }
-.project_analysis_map {
+#project_analysis_map {
     width: 250px;
 }
