@@ -21,14 +21,14 @@
 	height: 290px;
 	/*padding: 5px 20px 0 20px;*/
     padding: 20px 10px 0;
-	background: .000;
+	background: #000;
 	background: rgba(0,0,0,.5);
 	/*width: 540px;*/
 	font-size: 22px;
 	/*font-size: 1.3em;
 	line-height: 1.33;*/
-	color: .fff;
-	border-top: 1px solid .000;
+	color: #fff;
+	border-top: 1px solid #000;
 	text-shadow: none;
 }
 .pagination {
@@ -66,8 +66,9 @@
 	display: block;
 }
 .front-latest-info-date {
+	font-family: Calibri, sans-serif;
 	margin-right: 15px;
-	font-size: 15px;
+	font-size: 14px;
 	display: block;
 }
 .front-latest-desc ,
@@ -75,9 +76,9 @@
 	font-family: Calibri, sans-serif;
  	white-space: nowrap;
   	overflow: hidden;
+	font-size: 14px;
   	text-overflow: ellipsis;
 }
-
 /* Login */
 .front-login-text {
     background: transparent;
@@ -109,7 +110,7 @@
 	padding-top: 20px;
 	padding-bottom: 20px;
 	text-align: center;
-	background: .e4e4e4;
+	background: #e4e4e4;
 }
 .front-block-info {
 	margin: 30px 20px;
@@ -192,8 +193,8 @@
 }
 .project_analysis_graph {
     width: 260px;
-    border-left: 1px solid .000000;
-    border-right: 1px solid .000000;
+    border-left: 1px solid #000000;
+    border-right: 1px solid #000000;
 }
 .project_analysis_map {
     width: 250px;
