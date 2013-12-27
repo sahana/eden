@@ -657,18 +657,26 @@ def portable():
         else:
             session.flash = T("Web2py executable zip file found - Upload to replace the existing file")
 
-    generator_form = SQLFORM.factory(
-            Field("copy_database", "boolean"),
-            Field("copy_uploads", "boolean"),
-            )
+    # Since the 2nd form depends on having uploaded the zip
+    # in order to work we only show it if the upload was successfully
+    # completed.
 
-    if generator_form.accepts(request.vars, keepvalues=True, session=None):
-        if web2py_source_exists:
-            create_portable_app(web2py_source=web2py_source,\
-                    copy_database = request.vars.copy_database,\
-                    copy_uploads = request.vars.copy_uploads)
-        else:
-            session.error = T("Web2py executable zip file needs to be uploaded to use this function.")
+    if web2py_source_exists:
+        generator_form = SQLFORM.factory(
+                Field("copy_database", "boolean"),
+                Field("copy_uploads", "boolean"),
+                )
+
+        if generator_form.accepts(request.vars, keepvalues=True, session=None):
+            if web2py_source_exists:
+                create_portable_app(web2py_source=web2py_source,\
+                        copy_database = request.vars.copy_database,\
+                        copy_uploads = request.vars.copy_uploads)
+            else:
+                session.error = T("Web2py executable zip file needs to be uploaded first to use this function.")
+    else:
+        generator_form = None
+
     if last_build_exists:
         download_last_form = SQLFORM.factory()
         if download_last_form.accepts(request.vars, keepvalues=True, session=None):

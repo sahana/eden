@@ -4,8 +4,10 @@
 <h3>{{=T('Upload Web2py portable build as a zip file')}}</h3>
 {{=web2py_form}}
 
+{{if generator_form:}}
 <h3>{{=T('Generate portable application')}}</h3>
-{{=generator_form}}
+    {{=generator_form}}
+{{pass}}
 
 {{if download_last_form:}}
 <h3>{{=T('Download last build')}}</h3>
