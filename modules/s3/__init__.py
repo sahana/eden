@@ -93,7 +93,6 @@ from s3filter import *
 # Reporting
 from s3report import *
 from s3report2 import *
-from s3timeplot import *
 
 # Profiles
 from s3profile import *

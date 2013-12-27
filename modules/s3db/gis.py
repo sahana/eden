@@ -428,8 +428,8 @@ class S3LocationModel(S3Model):
 
         MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
-        form_vars = form.vars
-        vars_get = form_vars.get
+        vars = form.vars
+        vars_get = vars.get
         level = vars_get("level", None)
         parent = vars_get("parent", None)
         lat = vars_get("lat", None)
@@ -458,16 +458,17 @@ class S3LocationModel(S3Model):
                     form.errors["addr_street"] = results
                     return
                 else:
-                    form_vars.lon = lon = results["lon"]
-                    form_vars.lat = lat = results["lat"]
+                    vars.lon = lon = results["lon"]
+                    vars.lat = lat = results["lat"]
 
         if lon:
             if lon > 180:
                 # Map Selector wrapped
-                form_vars.lon = lon = lon - 360
+                vars.lon = lon = lon - 360
             elif lon < -180:
                 # Map Selector wrapped
-                form_vars.lon = lon = lon + 360
+                vars.lon = lon = lon + 360
+        id = current.request.vars.get("id", None)
 
         # 'MapAdmin' has permission to edit hierarchy locations, no matter what
         # 000_config or the ancestor country's gis_config has.
@@ -477,7 +478,7 @@ class S3LocationModel(S3Model):
                 if editable and level in gis.hierarchy_level_keys:
                     # Check whether the country config allows us to edit this location
                     # id doesn't exist for create forms and parent is a quicker check anyway when available
-                    child = parent or current.request.vars.get("id", None)
+                    child = parent or id
                     editable = gis_hierarchy_editable(level, child)
                 if not editable:
                     response.error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
@@ -531,10 +532,10 @@ class S3LocationModel(S3Model):
             # Check within permitted bounds
             # (avoid incorrect data entry)
             # Points only for now
-            if not "gis_feature_type" in form_vars or (form_vars.gis_feature_type == "1"):
+            if not "gis_feature_type" in vars or (vars.gis_feature_type == "1"):
                 #if lat not in (None, "") and lon not in (None, ""):
                 if lat and lon:
-                    name = form_vars.name
+                    name = vars.name
                     if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
                         # Check within Bounds of the Parent
                         # Rough (Bounding Box)
@@ -615,7 +616,7 @@ class S3LocationModel(S3Model):
             if inherited:
                 # Have we provided more accurate data?
                 if lat != form.record.lat or lon != form.record.lon:
-                    form_vars.inherited = False
+                    vars.inherited = False
         return
 
     # -------------------------------------------------------------------------
@@ -1436,7 +1437,6 @@ class S3GISConfigModel(S3Model):
                                                                "img",
                                                                "markers"),
                                    custom_retrieve = self.gis_marker_retrieve,
-                                   custom_retrieve_file_properties = self.gis_marker_retrieve_file_properties,
                                    represent = lambda filename: \
                                       (filename and [DIV(IMG(_src=URL(c="static",
                                                                       f="img",
@@ -2157,29 +2157,6 @@ class S3GISConfigModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_marker_retrieve_file_properties(filename, path=None):
-        """
-            Custom method to override web2py DAL's standard
-            retrieve_file_properties, as that checks filenames
-            for uuids, so doesn't work with pre-populated files
-            in static. This method is required for XML exports.
-        """
-
-        if not path:
-            path = current.db.gis_marker.image.uploadfolder
-
-        # @ToDo: should probably use os.sep here rather than "/"
-        if "/" in filename:
-            _path = filename.split("/", 1)
-            if len(_path) > 1:
-                _path, filename = _path
-            else:
-                _path, filename = "", filename
-            path = os.path.join(path, _path)
-        return {"path": path, "filename": filename}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def gis_projection_deduplicate(item):
         """
             This callback will be called when importing Projection records it
@@ -2240,7 +2217,7 @@ class gis_MarkerRepresent(S3Represent):
     def __init__(self):
         
         super(gis_MarkerRepresent, self).__init__(lookup="gis_marker",
-                                                  fields=["image"])
+                                                  fields="image")
 
     def represent_row(self, row):
         """

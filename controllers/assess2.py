@@ -2544,7 +2544,7 @@ def custom_assess(custom_assess_fields, location_id=None):
         # Hard coded notification message for Demo
         #msg.send_by_pe_id(3,
         #                  message=message,
-        #                  contact_method = 2)
+        #                  pr_message_method = 2)
 
     return form, form_accepted, assess_id
 

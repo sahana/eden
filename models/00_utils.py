@@ -313,7 +313,6 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report)
     set_handler("report2", s3base.S3Report2) # temporary setting for testing
-    set_handler("timeplot", s3base.S3TimePlot) # temporary setting for testing
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
     

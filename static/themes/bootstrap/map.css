@@ -60,7 +60,7 @@
 }
 
 .olFramedCloudPopupContent .throbber {
-    background-image: url(../../img/bootstrap/ajax-loader.gif);
+    background-image: url(../../img/bootstrap/img/ajax-loader.gif);
     height: 48px;
     width: 48px;
 }
