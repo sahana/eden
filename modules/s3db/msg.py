@@ -445,7 +445,7 @@ class S3MessageModel(S3Model):
                              self.super_link("pe_id", "pr_pentity"),
                              # If set used instead of picking up from pe_id:
                              Field("address"),
-                             Field("contact_method", length=32,
+                             Field("pr_message_method", length=32,
                                    requires = IS_IN_SET(MSG_CONTACT_OPTS,
                                                         zero=None),
                                    default = "EMAIL",
@@ -1129,8 +1129,6 @@ class S3SMSModel(S3Model):
                                   self.super_link("message_id", "msg_message"),
                                   self.msg_channel_id(),
                                   Field("body", "text",
-                                        # Allow multi-part SMS
-                                        #length = 160,
                                         #label = T("Message"),
                                         ),
                                   Field("from_address",
@@ -1145,10 +1143,6 @@ class S3SMSModel(S3Model):
                                         # (direction and [T("In")] or \
                                         #                [T("Out")])[0],
                                         #label = T("Direction")),
-                                        ),
-                                  # Used e.g. for Clickatell
-                                  Field("remote_id",
-                                        #label = T("Remote ID"),
                                         ),
                                   *s3_meta_fields())
 
@@ -1218,9 +1212,8 @@ class S3SMSOutboundModel(S3Model):
                              Field("enabled", "boolean",
                                    default = True,
                                    ),
-                             Field("max_length", "integer",
-                                   default = 160,
-                                   ),
+                             # To be used later
+                             #Field("preference", "integer", default = 5),
                              *s3_meta_fields())
 
         configure(tablename,
@@ -1257,14 +1250,13 @@ class S3SMSOutboundModel(S3Model):
                                    default = "to" # Clickatell
                                    #default = "phone_number" # Mobile Commons
                                    ),
-                             Field("max_length", "integer",
-                                   default = 480, # Clickatell concat 3
-                                   ),
                              # If using HTTP Auth (e.g. Mobile Commons)
                              Field("username"),
                              Field("password"),
                              Field("enabled", "boolean",
                                    default = True),
+                             # To be used later
+                             #Field("preference", "integer", default = 5),
                              *s3_meta_fields())
 
         configure(tablename,
@@ -1284,9 +1276,8 @@ class S3SMSOutboundModel(S3Model):
                              Field("subject", length=64),
                              Field("enabled", "boolean",
                                    default = True),
-                             Field("max_length", "integer",
-                                   default = 160,
-                                   ),
+                             # To be used later
+                             #Field("preference", "integer", default = 5),
                              *s3_meta_fields())
 
         configure(tablename,

@@ -907,12 +907,8 @@ span.tab_next_inactive a {
     float: left;
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -64px -16px;
-    white-space: nowrap;
 }
 .expanded {
-    height: 16px;
-    width: 16px;
-    float: left;
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -32px -16px;
     white-space: nowrap;
@@ -1444,11 +1440,6 @@ button.toggle-text {
 .action-bar a:visited:hover {
     color: #ffa500;
     text-decoration: none;
-}
-
-.maxLength {
-    background-color: #FFCDCD;
-    border: 3px solid #D55B5B;
 }
 
 /* Req quantity */

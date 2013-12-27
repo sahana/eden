@@ -36,19 +36,17 @@ def mission():
             tablename = r.tablename if not r.component else r.component.tablename
             next_url = r.url(component="", method="profile", vars={})
             if r.component_name == "alert":
-                alert_create_script()
                 s3db.configure(tablename,
-                               create_next = URL(f="alert",
-                                                 args=["[id]", "select"]),
-                               delete_next = next_url,
-                               update_next = next_url,
+                               create_next=URL(f="alert",
+                                               args=["[id]", "select"]),
+                               update_next=next_url,
+                               delete_next=next_url,
                                )
             else:
                 s3db.configure(tablename,
-                               create_next = next_url,
-                               delete_next = next_url,
-                               update_next = next_url,
-                               )
+                               create_next=next_url,
+                               update_next=next_url,
+                               delete_next=next_url)
             s3.cancel = next_url
             if r.component_name == "assignment":
                 member_id = r.get_vars.get("member_id", None)
@@ -85,8 +83,8 @@ def mission():
         if not r.component:
             # Override mission open actions to go to the profile page
             s3_action_buttons(r,
-                              deletable=True,
                               editable=True,
+                              deletable=True,
                               read_url=r.url(method="profile", id="[id]"),
                               update_url=r.url(method="profile", id="[id]"),
                               delete_url=r.url(method="delete", id="[id]"),
@@ -210,7 +208,6 @@ def assignment():
     def postp(r, output):
         if r.id and isinstance(output, dict):
             # Add button to Upload Appraisal
-            popup = r.representation == "popup"
             record_id = r.id
             atable = s3db.hrm_appraisal
             ltable = s3db.deploy_assignment_appraisal
@@ -228,19 +225,15 @@ def assignment():
                                                                          ).first()
                 if hr:
                     get_vars = {}
-                    if popup:
-                        method = "update.popup"
-                        refresh = request.get_vars.get("refresh", None)
-                        if refresh:
-                            get_vars["refresh"] = refresh
-                        record = request.get_vars.get("record", None)
-                        if record:
-                            get_vars["record"] = record
-                    else:
-                        method = "update"
+                    refresh = request.get_vars.get("refresh", None)
+                    if refresh:
+                        get_vars["refresh"] = refresh
+                    record = request.get_vars.get("record", None)
+                    if record:
+                        get_vars["record"] = record
                     url = URL(c="deploy", f="person",
                               args=[hr.person_id, "appraisal",
-                                    appraisal.id, method],
+                                    appraisal.id, "update.popup"],
                               vars=get_vars,
                               )
             elif permit("update", r.table, record_id=record_id):
@@ -252,30 +245,21 @@ def assignment():
                 if hr:
                     get_vars = {"mission_id": r.record.mission_id,
                                 }
-                    
-                    if popup:
-                        method = "create.popup"
-                        refresh = request.get_vars.get("refresh", None)
-                        if refresh:
-                            get_vars["refresh"] = refresh
-                        record = request.get_vars.get("record", None)
-                        if record:
-                            get_vars["record"] = record
-                    else:
-                        method = "create"
+                    refresh = request.get_vars.get("refresh", None)
+                    if refresh:
+                        get_vars["refresh"] = refresh
+                    record = request.get_vars.get("record", None)
+                    if record:
+                        get_vars["record"] = record
                     url = URL(c="deploy", f="person",
-                              args=[hr.person_id, "appraisal", method],
+                              args=[hr.person_id, "appraisal", "create.popup"],
                               vars=get_vars,
                               )
             if url:
-                button = s3base.S3CRUD.crud_button(T("Upload Appraisal"),
-                                                   _href=url,
-                                                   _class="action-btn",
-                                                   )
-                if popup:
-                    output["items"] = button
-                else:
-                    s3.rfooter = button
+                output["items"] = s3base.S3CRUD.crud_button(T("Upload Appraisal"),
+                                                            _href=url,
+                                                            _class="action-btn",
+                                                            )
         return output
     s3.postp = postp
 
@@ -326,47 +310,6 @@ def person_search():
     return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
-def alert_create_script():
-    """
-        Inject JS to help the Alert creation form
-    """
-
-    # @ToDo: Generalise for alternate gateways
-    # @ToDo: Port to _compose_form
-    table = s3db.msg_sms_webapi_channel
-    gateway = db(table.enabled == True).select(table.max_length,
-                                               limitby=(0, 1)
-                                               ).first()
-    if gateway:
-        max_length = gateway.max_length
-        if max_length is None:
-            # Single SMS
-            max_length = 160
-    else:
-        # Single SMS
-        max_length = 160
-
-    script = \
-'''$('#deploy_alert_contact_method').change(function(){
- var v=$(this).val()
- if(v==1){$('#deploy_alert_subject__row,#deploy_alert_subject__row1').show()
-  $('#deploy_alert_subject__row1 label').html(i18n.subject+':')
-  S3.maxLength.init('deploy_alert_body',0)
- }else if(v==2){$('#deploy_alert_subject__row,#deploy_alert_subject__row1').hide()
-  S3.maxLength.init('deploy_alert_body',%(max_length)s)
- }else if(v==9){$('#deploy_alert_subject__row,#deploy_alert_subject__row1').show()
-  $('#deploy_alert_subject__row1 label').html(i18n.subject+': <span class="red">'+i18n.only_visible+'</span>')
-  S3.maxLength.init('deploy_alert_body',%(max_length)s)
-}})''' % dict(max_length = max_length)
-    s3.jquery_ready.append(script)
-    i18n = \
-'''i18n.characters_left="%s"
-i18n.subject="%s"
-i18n.only_visible="%s"''' % (T("characters left"),
-                             T("Subject"),
-                             T("Only visible to Email recipients"))
-    s3.js_global.append(i18n)
-
 def alert():
     """ RESTful CRUD Controller """
 
@@ -430,15 +373,16 @@ def alert():
                                    editable = False,
                                    )
             else:
-                alert_create_script()
                 s3db.configure(r.tablename,
-                               create_next = URL(f="alert",
-                                                 args=["[id]", "select"]),
+                               create_next=URL(f="alert",
+                                               args=["[id]", "select"]),
                                deletable = False,
                                # @ToDo: restrict in postp to change this action button
                                #editable = False,
                                )
 
+            # Hide label for single field in InlineComponent
+            #s3db.deploy_alert_recipient.human_resource_id.label = ""
             created_on = r.table.modified_on
             created_on.readable = True
             created_on.label = T("Date")

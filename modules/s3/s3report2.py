@@ -205,6 +205,9 @@ class S3Report2(S3Method):
 
             output = json.dumps(pivotdata)
 
+        elif r.representation == "aadata":
+            r.error(501, r.ERROR.BAD_FORMAT)
+            
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
             

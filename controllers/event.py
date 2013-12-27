@@ -260,7 +260,7 @@ def compose():
                                               orderby="priority",
                                               limitby=(0, 1)).first()
     if contact:
-        s3db.msg_outbox.contact_method.default = contact.contact_method
+        s3db.msg_outbox.pr_message_method.default = contact.contact_method
     else:
         session.error = T("No contact method found")
         redirect(URL(f="index"))

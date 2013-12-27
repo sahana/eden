@@ -422,7 +422,7 @@ class S3Notifications(object):
                 sent = send(pe_id,
                             subject=s3_truncate(subject, 78),
                             message=message,
-                            contact_method=method,
+                            pr_message_method=method,
                             system_generated=True)
             except:
                 exc_info = sys.exc_info()[:2]

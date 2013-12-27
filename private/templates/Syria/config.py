@@ -12,11 +12,14 @@ from datetime import timedelta
 from gluon import current, Field, URL
 from gluon.html import *
 from gluon.storage import Storage
+from gluon.validators import IS_NULL_OR, IS_NOT_EMPTY
 
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_INT_AMOUNT, IS_ONE_OF
+from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2, IS_ONE_OF
+from s3.s3widgets import S3LocationSelectorWidget2
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
 T = current.T
 s3 = current.response.s3
@@ -71,21 +74,21 @@ settings.auth.person_realm_human_resource_site_then_org = False
 # Pre-Populate
 settings.base.prepopulate = ["Syria"]
 
-settings.base.system_name = T("IFRC MENA 4W Portal")
-settings.base.system_name_short = T("IFRC MENA 4W")
+settings.base.system_name = T("IFRC Syria 4W Portal")
+settings.base.system_name_short = T("IFRC Syria 4W")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "Syria"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
-settings.gis.map_height = 400
+#settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
-    #("ar", "العربية"), # Needed to import Arabic placenames
+    ("ar", "العربية"), # Needed to import Arabic placenames
     ("en", "English"),
 ])
 # Default Language
@@ -104,11 +107,11 @@ settings.L10n.thousands_separator = ","
 # - we want this on when running s3translate but off in normal usage as we use the English names to lookup icons in render_posts
 #settings.L10n.translate_cms_series = True
 # Uncomment this to Translate Location Names
-#settings.L10n.translate_gis_location = True
+settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
-#settings.gis.countries = ["SY"]
-settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"] #, "EG", "DZ"
+#settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO", "EG", "DZ"]
+settings.gis.countries = ["SY"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -146,12 +149,6 @@ settings.ui.summary = [#{"common": True,
                        # "name": "cms",
                        # "widgets": [{"method": "cms"}]
                        # },
-                       #{"name": "map",
-                       # "label": "Map",
-                       # "widgets": [{"method": "map", "ajax_init": True},
-                       #             #{"method": "report2", "ajax_init": True},
-                       #             ],
-                       # },
                        {"name": "map",
                         "label": "Map",
                         "widgets": [{"method": "map", "ajax_init": True}],
@@ -160,10 +157,10 @@ settings.ui.summary = [#{"common": True,
                         "label": "Charts",
                         "widgets": [{"method": "report2", "ajax_init": True}]
                         },
-                       #{"name": "table",
-                       # "label": "Table",
-                       # "widgets": [{"method": "datatable"}]
-                       # },
+                       {"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
+                        },
                        ]
 
 settings.search.filter_manager = False
@@ -199,12 +196,6 @@ settings.org.site_label = "Office"
 # Project
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
-
-# Uncomment this to link Activities to Projects
-settings.project.projects = True
-
-# Uncomment this to use Project Themes
-settings.project.themes = True
 
 # Links to Filtered Components for Donors & Partners
 #settings.project.organisation_roles = {
@@ -918,68 +909,6 @@ def render_projects(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def customize_doc_document(**attr):
-    """
-        Customize doc_document controller
-    """
-
-    s3 = current.response.s3
-    s3db = current.s3db
-    tablename = "doc_document"
-    table = s3db.doc_document
-
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-
-        # Filter Out Docs from Newsfeed
-        current.response.s3.filter = (table.name != None)
-
-        if r.interactive:
-            s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Document"),
-                title_display = T("Document"),
-                title_list = T("Documents"),
-                title_update = T("Edit Document"),
-                title_search = T("Search Documents"),
-                subtitle_create = T("Add Document"),
-                label_list_button = T("List New Documents"),
-                label_create_button = T("Add Documents"),
-                label_delete_button = T("Remove Documents"),
-                msg_record_created = T("Documents added"),
-                msg_record_modified = T("Documents updated"),
-                msg_record_deleted = T("Documents removed"),
-                msg_list_empty = T("No Documents currently recorded"))
-
-            # Force added docs to have a name
-            from gluon.validators import IS_NOT_EMPTY
-            table.name.requires = IS_NOT_EMPTY()
-
-            list_fields = ["name",
-                           "file",
-                           "url",
-                           "organisation_id",
-                           "comments",
-                           ]
-
-            from s3.s3forms import S3SQLCustomForm
-            crud_form = S3SQLCustomForm(*list_fields)
-
-            s3db.configure(tablename,
-                           list_fields = list_fields,
-                           crud_form = crud_form,
-                           )
-        return True
-    s3.prep = custom_prep
-
-    return attr
-
-settings.ui.customize_doc_document = customize_doc_document
-
-# -----------------------------------------------------------------------------
 def customize_gis_location(**attr):
     """
         Customize gis_location controller
@@ -1344,14 +1273,11 @@ def customize_org_office(**attr):
                 location_field.default = location_id
                 location_field.readable = location_field.writable = False
             else:
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2
                 # Don't add new Locations here
                 location_field.comment = None
                 # L1s only
-                levels = ("L0", "L1")
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                location_field.widget = S3LocationSelectorWidget2(levels=levels,
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=("L0", "L1"))
+                location_field.widget = S3LocationSelectorWidget2(levels=("L0", "L1"),
                                                                   show_address=True,
                                                                   show_map=False)
             # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
@@ -1447,6 +1373,22 @@ def customize_org_organisation(**attr):
                 return False
 
         if r.interactive:
+            # ADD_ORGANISATION = T("New Stakeholder")
+            # s3.crud_strings["org_organisation"] = Storage(
+                # title_create = ADD_ORGANISATION,
+                # title_display = T("Stakeholder Details"),
+                # title_list = T("Stakeholders"),
+                # title_update = T("Edit Stakeholder"),
+                # title_search = T("Search Stakeholders"),
+                # subtitle_create = T("Add New Stakeholder"),
+                # label_list_button = T("List Stakeholders"),
+                # label_create_button = ADD_ORGANISATION,
+                # label_delete_button = T("Delete Stakeholder"),
+                # msg_record_created = T("Stakeholder added"),
+                # msg_record_modified = T("Stakeholder updated"),
+                # msg_record_deleted = T("Stakeholder deleted"),
+                # msg_list_empty = T("No Stakeholders currently registered"))
+
             list_fields = ["id",
                            "name",
                            "logo",
@@ -1590,17 +1532,43 @@ def customize_org_organisation(**attr):
             table.year.readable = table.year.writable = False
             
             # Return to List view after create/update/delete (unless done via Modal)
-            #url_next = URL(c="org", f="organisation", args="datalist")
+            url_next = URL(c="org", f="organisation", args="datalist")
 
             s3db.configure("org_organisation",
-                           #create_next = url_next,
-                           #delete_next = url_next,
-                           #update_next = url_next,
+                           create_next = url_next,
+                           delete_next = url_next,
+                           update_next = url_next,
+                           # We want the Create form to be in a modal, not inline, for consistency
+                           listadd = False,
                            list_fields = list_fields,
+                           list_layout = render_organisations,
                            )
 
         return True
     s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive and \
+           isinstance(output, dict) and \
+           current.auth.s3_has_permission("create", r.table):
+            # Insert a Button to Create New in Modal
+            output["showadd_btn"] = A(I(_class="icon icon-plus-sign big-add"),
+                                      _href=URL(c="org", f="organisation",
+                                                args=["create.popup"],
+                                                vars={"refresh": "datalist"}),
+                                      _class="btn btn-primary s3_modal",
+                                      _role="button",
+                                      _title=T("Add New Organization"),
+                                      )
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
 
     return attr
 
@@ -1851,75 +1819,65 @@ settings.ui.customize_pr_person = customize_pr_person
 def customize_project_activity(**attr):
     """
         Customize project_activity controller
-
-        This is the main page for this Template
     """
 
-    s3 = current.response.s3
+    s3db = current.s3db
 
     # Custom PreP
+    s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
 
-        s3db = current.s3db
         tablename = "project_activity"
         table = s3db[tablename]
 
         table.name.label = T("Activity")
 
-        levels = ("L0", "L1", "L2", "L3")
-        location_field = table.location_id
-        location_field.represent = s3db.gis_LocationRepresent(sep=", ")
-
-        s3db.project_theme_activity.theme_id.label = T("Beneficiary Type")
-        s3db.project_beneficiary.parameter_id.label = T("Beneficiaries")
-        s3db.supply_distribution.parameter_id.label = T("Distribution")
-
         list_fields = ["activity_organisation.organisation_id",
-                       "location_id$L0",
-                       "location_id$L1",
-                       "location_id$L2",
-                       "location_id$L3",
                        "sector_activity.sector_id",
+                       "location_id",
                        "name",
-                       "distribution.parameter_id",
+                       (T("Distribution"), "distribution.parameter_id"),
                        (T("Beneficiaries"), "beneficiary.value"),
-                       #"status_id",
+                       "status_id",
                        "date",
                        "end_date",
                        #"comments",
                        ]
 
         # Custom Form (Read/Create/Update)
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
         if r.method in ("create", "update"):
             editable = True
             # Custom Widgets/Validators
             from s3.s3validators import IS_LOCATION_SELECTOR2
             from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
-            location_field.label = "" # Gets replaced by widget
-            location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-            location_field.widget = S3LocationSelectorWidget2(levels=levels)
+            field = table.location_id
+            field.label = "" # Gets replaced by widget
+            levels = ("L1", "L2", "L3")
+            field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+            field.widget = S3LocationSelectorWidget2(levels=levels)
             s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
+
+            # Hide Labels when just 1 column in inline form
+            #s3db.doc_document.file.label = ""
+            s3db.project_activity_activity_type.activity_type_id.label = ""
+            s3db.project_activity_organisation.organisation_id.label = ""
+            s3db.project_beneficiary.value.label = ""
         else:
             editable = False
 
-        # Hide Labels when just 1 column in inline form
-        #s3db.doc_document.file.label = ""
-        #s3db.project_activity_activity_type.activity_type_id.label = ""
-        s3db.project_activity_organisation.organisation_id.label = ""
-
         # Custom Crud Form
-        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-        #bttable = s3db.project_beneficiary_type
-        #total = current.db(bttable.name == "Total").select(bttable.parameter_id,
-        #                                                   limitby=(0, 1)).first()
-        #if total:
-        #    parameter_id = total.parameter_id
-        #else:
-        #    parameter_id = None
+        bttable = s3db.project_beneficiary_type
+        total = current.db(bttable.name == "Total").select(bttable.parameter_id,
+                                                           limitby=(0, 1)).first()
+        if total:
+            parameter_id = total.parameter_id
+        else:
+            parameter_id = None
         crud_form = S3SQLCustomForm(
             #S3SQLInlineComponent(
             #    "activity_activity_type",
@@ -1939,22 +1897,18 @@ def customize_project_activity(**attr):
                 "beneficiary",
                 label = T("Beneficiaries"),
                 link = False,
-                #multiple = False,
-                fields = ["value",
-                          "parameter_id",
-                          ],
-                #filterby = dict(field = "parameter_id",
-                #                options = parameter_id
-                #                ),
+                multiple = False,
+                fields = ["value"],
+                filterby = dict(field = "parameter_id",
+                                options = parameter_id
+                                ),
             ),
             S3SQLInlineComponent(
                 "distribution",
                 label = T("Distributions"),
                 link = False,
                 #multiple = False,
-                fields = ["value",
-                          "parameter_id",
-                          ],
+                fields = ["parameter_id", "value"],
             ),
             #S3SQLInlineComponent(
             #    "document",
@@ -1964,66 +1918,24 @@ def customize_project_activity(**attr):
             #              #"comments",
             #              ],
             #),
-            #"status_id",
+            "status_id",
             "date",
             "end_date",
             #"comments",
             )
-
-        from s3.s3filter import S3LocationFilter, S3OptionsFilter
-        filter_widgets = [
-            S3LocationFilter("location_id",
-                             levels=levels,
-                             widget="multiselect"
-                             ),
-            S3OptionsFilter("sector_activity.sector_id",
-                            # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
-                            ),
-            S3OptionsFilter("distribution.parameter_id",
-                            # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
-                            ),
-            S3OptionsFilter("theme_activity.theme_id",
-                            # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
-                            ),
-            S3OptionsFilter("beneficiary.parameter_id",
-                            # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
-                            ),
-            ]
 
         s3db.configure(tablename,
                        crud_form = crud_form,
                        # Hide Open & Delete dataTable action buttons
                        deletable = editable,
                        editable = editable,
-                       filter_widgets = filter_widgets,
-                       filter_formstyle = filter_formstyle,
+                       #filter_formstyle = filter_formstyle,
                        listadd = False,
                        list_fields = list_fields,
                        )
 
         return True
     s3.prep = custom_prep
-
-    # Custom PostP
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        if r.method == "summary" and r.interactive and isinstance(output, dict):
-            output["title"] = ""
-
-        return output
-    s3.postp = custom_postp
 
     # Remove rheader
     attr["rheader"] = None
@@ -2123,7 +2035,6 @@ def customize_project_project(**attr):
 
             s3db.doc_document.file.label = ""
 
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
             crud_form_fields = [
                     "name",
                     S3SQLInlineComponentCheckbox(
@@ -2342,12 +2253,15 @@ def customize_project_beneficiary(**attr):
 #settings.ui.customize_project_beneficiary = customize_project_beneficiary
 
 # -----------------------------------------------------------------------------
-def customize_supply_distribution(**attr):
+def customize_doc_document(**attr):
     """
-        Customize supply_distribution controller
+        Customize doc_document controller
     """
 
     s3 = current.response.s3
+    s3db = current.s3db
+    tablename = "doc_document"
+    table = s3db.doc_document
 
     # Custom PreP
     standard_prep = s3.prep
@@ -2355,23 +2269,48 @@ def customize_supply_distribution(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
-            if not result:
-                return False
+
+        # Filter Out Docs from Newsfeed
+        current.response.s3.filter = (table.name != None)
 
         if r.interactive:
-            from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2
-            location_field = r.table.location_id
-            levels = ("L0", "L1", "L2", "L3")
-            location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-            location_field.widget = S3LocationSelectorWidget2(levels=levels)
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Document"),
+                title_display = T("Document"),
+                title_list = T("Documents"),
+                title_update = T("Edit Document"),
+                title_search = T("Search Documents"),
+                subtitle_create = T("Add Document"),
+                label_list_button = T("List New Documents"),
+                label_create_button = T("Add Documents"),
+                label_delete_button = T("Remove Documents"),
+                msg_record_created = T("Documents added"),
+                msg_record_modified = T("Documents updated"),
+                msg_record_deleted = T("Documents removed"),
+                msg_list_empty = T("No Documents currently recorded"))
 
+            # Force added docs to have a name
+            table.name.requires = IS_NOT_EMPTY()
+
+            list_fields = ["name",
+                           "file",
+                           "url",
+                           "organisation_id",
+                           "comments",
+                           ]
+
+            crud_form = S3SQLCustomForm(*list_fields)
+
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           crud_form = crud_form,
+                           )
         return True
     s3.prep = custom_prep
 
     return attr
 
-settings.ui.customize_supply_distribution = customize_supply_distribution
+settings.ui.customize_doc_document = customize_doc_document
 
 # -----------------------------------------------------------------------------
 # Filter forms - style for Summary pages

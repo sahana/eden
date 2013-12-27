@@ -5161,19 +5161,20 @@ class GIS(object):
                     # No action required
                     return path
                 else:
-                    # Do the Bounds/Centroid/WKT (below)
-                    vars = dict()
-
+                    # Do the Bounds/Centroid/WKT
+                    feature.update(gis_feature_type="1")
+                    bounds_centroid_wkt(feature)
+                    return path
             elif inherited or lat is None or lon is None:
                 vars = dict(inherited=True,
                             lat=Lx_lat,
                             lon=Lx_lon,
                             )
                 db(table.id == id).update(**vars)
-            else:
-                # Do the Bounds/Centroid/WKT (below)
-                vars = dict()
-
+                # Also do the Bounds/Centroid/WKT
+                vars.update(gis_feature_type="1")
+                feature.update(**vars)
+                bounds_centroid_wkt(feature)
         elif inherited and lat == Lx_lat and lon == Lx_lon:
             vars = dict(path=_path,
                         L0=L0_name,
@@ -5184,7 +5185,11 @@ class GIS(object):
                         L5=L5_name,
                         )
             db(table.id == id).update(**vars)
-
+            if not wkt:
+                # Do the Bounds/Centroid/WKT
+                vars.update(gis_feature_type="1")
+                feature.update(**vars)
+                bounds_centroid_wkt(feature)
         elif inherited or lat is None or lon is None:
             vars = dict(path=_path,
                         L0=L0_name,
@@ -5198,24 +5203,19 @@ class GIS(object):
                         lon=Lx_lon
                         )
             db(table.id == id).update(**vars)
+            # Also do the Bounds/Centroid/WKT
+            vars.update(gis_feature_type="1")
+            feature.update(**vars)
+            bounds_centroid_wkt(feature)
         else:
-            # We have a Lat & Lon
-            vars = dict(path=_path,
-                        inherited=False,
-                        L0=L0_name,
-                        L1=L1_name,
-                        L2=L2_name,
-                        L3=L3_name,
-                        L4=L4_name,
-                        L5=L5_name,
-                        )
-            db(table.id == id).update(**vars)
-
-        # Also do the Bounds/Centroid/WKT
-        vars.update(gis_feature_type="1")
-        feature.update(**vars)
-        bounds_centroid_wkt(feature)
-
+            db(table.id == id).update(path=_path,
+                                      inherited=False,
+                                      L0=L0_name,
+                                      L1=L1_name,
+                                      L2=L2_name,
+                                      L3=L3_name,
+                                      L4=L4_name,
+                                      L5=L5_name)
         return _path
 
     # -------------------------------------------------------------------------
@@ -5794,17 +5794,10 @@ class MAP(DIV):
     def _setup(self):
         """
             Setup the Map
-            - not done during init() to be as Lazy as possible
+            - not done during init() to hve as Lazy as possible
             - separated from xml() in order to be able to read options to put
               into scripts (callback or otherwise)
         """
-
-        # Default configuration
-        config = GIS.get_config()
-        if not config:
-            # No prepop - Bail
-            current.session.error = current.T("Map cannot display without prepop data!")
-            redirect(URL(c="default", f="index"))
 
         opts = self.opts
 
@@ -5818,6 +5811,8 @@ class MAP(DIV):
         auth = current.auth
         settings = current.deployment_settings
         MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
+        # Default configuration
+        config = GIS.get_config()
 
         # Support bookmarks (such as from the control)
         # - these over-ride the arguments
