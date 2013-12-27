@@ -1170,9 +1170,14 @@ class S3ProjectActivityModel(S3Model):
         list_fields = ["name",
                        "comments",
                        ]
+
+        default_row = "project_id"
+        default_col = "name"
+        default_fact = "count(id)"
         report_fields = [(T("Activity"), "name"),
                          ]
         rappend = report_fields.append
+        
         if settings.get_project_activity_types():
             list_fields.insert(1, "activity_type.name")
             rappend((T("Activity Type"), "activity_type.name"))
@@ -1223,9 +1228,7 @@ class S3ProjectActivityModel(S3Model):
             list_fields.insert(4, "time_actual")
             rappend((T("Time Estimated"), "time_estimated"))
             rappend((T("Time Actual"), "time_actual"))
-            default_row = "activity.project_id"
-            default_col = "activity.name"
-            default_fact = "sum(activity.time_actual)"
+            default_fact = "sum(time_actual)"
             #create_next = URL(c="project", f="activity",
             #                  args=["[id]", "task"])
         else:
@@ -1245,16 +1248,15 @@ class S3ProjectActivityModel(S3Model):
 
             posn = 2
             for level in levels:
-                lfield = "activity.location_id$%s" % level
+                lfield = "location_id$%s" % level
                 list_fields.insert(posn, lfield)
                 report_fields.append(lfield)
                 posn += 1
 
             if "L0" in levels:
-                default_row = "activity.location_id$L0"
+                default_row = "location_id$L0"
             else:
-                default_row = "activity.location_id$L1"
-            default_fact = "count(activity.name)"
+                default_row = "location_id$L1"
 
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
