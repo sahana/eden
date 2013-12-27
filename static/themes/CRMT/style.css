@@ -164,7 +164,8 @@ h2.summary {
 }
 
 #summary-tabs #table,
-#summary-tabs #charts {
+#summary-tabs #charts,
+#summary-tabs #report {
     padding: 92px 20px 20px 20px;
 }
 

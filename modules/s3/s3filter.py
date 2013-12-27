@@ -1464,6 +1464,32 @@ class S3OptionsFilter(S3FilterWidget):
         # Sort the options
         return (ftype, options, None)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _values(get_vars, variable):
+        """
+            Helper method to get all values of a URL query variable
+
+            @param get_vars: the GET vars (a dict)
+            @param variable: the name of the query variable
+
+            @return: a list of values
+        """
+
+        if not variable:
+            return []
+
+        # Match __eq before checking any other operator
+        selector = variable.split("__", 1)[0]
+        for key in ("%s__eq" % selector, selector, variable):
+            if key in get_vars:
+                values = S3URLQuery.parse_value(get_vars[key])
+                if not isinstance(values, (list, tuple)):
+                    values = [values]
+                return values
+
+        return []
+
 # =============================================================================
 class S3HierarchyFilter(S3FilterWidget):
     """

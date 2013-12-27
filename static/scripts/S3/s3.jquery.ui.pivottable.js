@@ -32,7 +32,12 @@
             collapseChart: true,
             collapseTable: false,
 
-            exploreChart: false,
+            exploreChart: false,        // Activate/deactivate chart-explore function
+            filterURL: null,            // URL to forward to upon plot-click
+            filterForm: null,           // ID of the filter form to update
+                                        // (default: #filter-form)
+            filterTab: null,            // ID of the summary tab to activate upon
+                                        // plot-click (default: first tab)
 
             autoSubmit: 1000
         },
@@ -485,21 +490,21 @@
                 cols_title = labels.layer + ' ' + per + ' ' + labels.cols;
 
             var filter = data.filter;
-            var filter_url = filter[0],
-                rows_selector = filter[1],
-                cols_selector = filter[2];
+            var filter_url = this.options.filterURL,
+                rows_selector = filter[0],
+                cols_selector = filter[1];
 
             if (chart_type == 'piechart') {
                 if (chart_axis == 'rows') {
-                    this._renderPieChart(data.rows, rows_title, filter_url, rows_selector);
+                    this._renderPieChart(data.rows, rows_title, rows_selector);
                 } else {
-                    this._renderPieChart(data.cols, cols_title, filter_url, cols_selector);
+                    this._renderPieChart(data.cols, cols_title, cols_selector);
                 }
             } else if (chart_type == 'barchart') {
                 if (chart_axis == 'rows') {
-                    this._renderBarChart(data.rows, rows_title, filter_url, rows_selector);
+                    this._renderBarChart(data.rows, rows_title, rows_selector);
                 } else {
-                    this._renderBarChart(data.cols, cols_title, filter_url, cols_selector);
+                    this._renderBarChart(data.cols, cols_title, cols_selector);
                 }
             } else if (chart_type == 'breakdown') {
                 if (chart_axis == 'rows') {
@@ -510,7 +515,7 @@
             }
         },
 
-        _renderPieChart: function(data, title, filter_url, selector) {
+        _renderPieChart: function(data, title, selector) {
             // Render a pie chart
 
             var chart = this.chart;
@@ -581,7 +586,7 @@
 
             // Click-link to filtered URL
             if (this.options.exploreChart) {
-                if (filter_url && selector) {
+                if (selector) {
                     $(chart).bind('plotclick', function(event, pos, item) {
                         if (item) {
                             try {
@@ -590,15 +595,14 @@
                             catch(e) {
                                 return;
                             }
-                            var page = pt._updateURL(filter_url, filter);
-                            window.open(page, '_blank');
+                            pt._chartExplore(filter);
                         }
                     });
                 }
             }
         },
 
-        _renderBarChart: function(data, title, filter_url, selector) {
+        _renderBarChart: function(data, title, selector) {
             // Render a (vertical) bar chart
 
             var chart = this.chart,
@@ -684,7 +688,7 @@
             
             // Click-link to filtered URL
             if (this.options.exploreChart) {
-                if (filter_url && selector) {
+                if (selector) {
                     $(chart).bind('plotclick', function(event, pos, item) {
                         if (item) {
                             try {
@@ -693,8 +697,7 @@
                             catch(e) {
                                 return;
                             }
-                            var page = pt._updateURL(filter_url, filter);
-                            window.open(page, '_blank');
+                            pt._chartExplore(filter);
                         }
                     });
                 }
@@ -710,7 +713,8 @@
             }
             $(chart).closest('.pt-chart-contents').show().css({width: '96%'});
 
-            var filter_url = filter[0], rows_selector, cols_selector;
+            var rows_selector,
+                cols_selector;
 
             var cells = data.cells, rdim, cdim, get_data, ridx = [], cidx = [];
             if (dim === 0) {
@@ -720,8 +724,8 @@
                     var ri = ridx[i], ci = cidx[j];
                     return cells[ri][ci]['value'];
                 };
-                rows_selector = filter[1];
-                cols_selector = filter[2];
+                rows_selector = filter[0];
+                cols_selector = filter[1];
             } else {
                 rdim = data.cols;
                 cdim = data.rows;
@@ -729,8 +733,8 @@
                     var ri = ridx[i], ci = cidx[j];
                     return cells[ci][ri]['value'];
                 };
-                rows_selector = filter[2];
-                cols_selector = filter[1];
+                rows_selector = filter[1];
+                cols_selector = filter[0];
             }
 
             var i, rows = [], cols = [];
@@ -844,22 +848,51 @@
 
             // Click-link to filtered URL
             if (this.options.exploreChart) {
-                if (filter_url && rows_selector && cols_selector) {
+                if (rows_selector && cols_selector) {
                     $(chart).bind('plotclick', function(event, pos, item) {
                         if (item) {
                             try {
                                 var filter = [[rows_selector, rows[item.dataIndex][3]],
-                                            [cols_selector, cols[item.seriesIndex][3]]];
+                                              [cols_selector, cols[item.seriesIndex][3]]];
                             }
                             catch(e) {
                                 return;
                             }
-                            var page = pt._updateURL(filter_url, filter);
-                            window.open(page, '_blank');
+                            pt._chartExplore(filter);
                         }
                     });
                 }
             }
+        },
+
+        _chartExplore: function(filter) {
+
+            var opts = this.options,
+                summaryTabs = $(this.element).closest('.ui-tabs');
+                
+            var tab = opts.filterTab;
+            if (summaryTabs.length && tab !== false) {
+                // We're inside a summary
+                var filterForm = opts.filterForm;
+
+                // Update the filter form (default: first filter form)
+                var $filterForm = filterForm ? $('#' + filterForm) : undefined;
+                S3.search.setCurrentFilters($filterForm, filter);
+
+                // Switch to the specified tab (default: first tab)
+                var index = tab ? $('#' + tab).index() : 0;
+                summaryTabs.tabs('option', 'active', index);
+                
+            } else {
+                
+                // Forward to a filtered page
+                filterURL = opts.filterURL;
+                if (filterURL) {
+                    var page = this._updateURL(filterURL, filter);
+                    window.open(page, '_blank');
+                }
+            }
+            return;
         },
 
         _renderChartTooltip: function(x, y, contents) {

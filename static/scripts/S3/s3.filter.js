@@ -432,12 +432,17 @@ S3.search = {};
             var operator = $('input:radio[name="' + id + '_filter"]:checked').val();
             if (this.tagName && this.tagName.toLowerCase() == 'select') {
                 var refresh = false;
-                if (q.hasOwnProperty(expression)) {
+                var selector = expression.split('__')[0];
+                if (q.hasOwnProperty(selector + '__eq')) {
+                    values = q[selector + '__eq'];
+                    refresh = true;
+                } else if (q.hasOwnProperty(selector)) {
+                    values = q[selector];
+                    refresh = true;
+                } else if (q.hasOwnProperty(expression)) {
                     values = q[expression];
                     refresh = true;
-                } else
-                if (operator == 'any' || operator == 'all') {
-                    var selector = expression.split('__')[0];
+                } else if (operator == 'any' || operator == 'all') {
                     if (q.hasOwnProperty(selector + '__anyof')) {
                         values = q[selector + '__anyof'];
                         refresh = true;

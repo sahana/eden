@@ -93,12 +93,9 @@ class S3Report2(S3Method):
         maxcols = 10
 
         # Extract the relevant GET vars
+        report_vars = ("rows", "cols", "fact", "aggregate", "totals")
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in ("rows",
-                                 "cols",
-                                 "fact",
-                                 "aggregate",
-                                 "totals"))
+                        if k in report_vars)
 
         # Fall back to report options defaults
         report_options = get_config("report_options", {})
@@ -146,11 +143,7 @@ class S3Report2(S3Method):
 
         # Render as JSON-serializable dict
         if pivottable is not None:
-            pivotdata = pivottable.json(maxrows=maxrows,
-                                        maxcols=maxcols,
-                                        url=r.url(method="",
-                                                  representation="",
-                                                  vars={}))
+            pivotdata = pivottable.json(maxrows=maxrows, maxcols=maxcols)
         else:
             pivotdata = None
 
@@ -189,13 +182,20 @@ class S3Report2(S3Method):
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            ajaxurl = r.url(representation="json", vars=ajax_vars)
-
+            filter_url = url=r.url(method="",
+                                   representation="",
+                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                            if k not in report_vars)))
+            ajaxurl = attr.get("ajaxurl", r.url(method="report2",
+                                                representation="json",
+                                                vars=ajax_vars))
+                                                
             output["form"] = S3ReportForm(resource) \
                                     .html(pivotdata,
                                           get_vars = get_vars,
                                           filter_widgets = filter_widgets,
                                           ajaxurl = ajaxurl,
+                                          filter_url = filter_url,
                                           widget_id = widget_id)
 
             # View
@@ -232,12 +232,9 @@ class S3Report2(S3Method):
         maxcols = 20
 
         # Extract the relevant GET vars
+        report_vars = ("rows", "cols", "fact", "aggregate", "totals")
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in ("rows",
-                                 "cols",
-                                 "fact",
-                                 "aggregate",
-                                 "totals"))
+                        if k in report_vars)
 
         # Fall back to report options defaults
         report_options = get_config("report_options", {})
@@ -288,11 +285,7 @@ class S3Report2(S3Method):
 
         # Render as JSON-serializable dict
         if pivottable is not None:
-            pivotdata = pivottable.json(maxrows=maxrows,
-                                        maxcols=maxcols,
-                                        url=r.url(method="",
-                                                  representation="",
-                                                  vars={}))
+            pivotdata = pivottable.json(maxrows=maxrows, maxcols=maxcols)
         else:
             pivotdata = None
 
@@ -301,21 +294,22 @@ class S3Report2(S3Method):
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
+            filter_form = attr.get("filter_form", None)
+            filter_tab = attr.get("filter_tab", None)
+            filter_url = url=r.url(method="",
+                                   representation="",
+                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                            if k not in report_vars)))
             ajaxurl = attr.get("ajaxurl", r.url(method="report2",
                                                 representation="json",
-                                                vars={}))
-            list_vars = []
-            for (key, vals) in sorted(ajax_vars.items()):
-                if not isinstance(vals, (list, tuple)):
-                    vals = [vals]
-                for val in vals:
-                    list_vars.append((key, val))
-            ajaxurl += "?%s" % urllib.urlencode(list_vars)
-
+                                                vars=ajax_vars))
             output = S3ReportForm(resource).html(pivotdata,
                                                  get_vars = get_vars,
                                                  filter_widgets = None,
                                                  ajaxurl = ajaxurl,
+                                                 filter_url = filter_url,
+                                                 filter_form = filter_form,
+                                                 filter_tab = filter_tab,
                                                  widget_id = widget_id)
 
         else:
@@ -337,6 +331,9 @@ class S3ReportForm(object):
              filter_widgets=None,
              get_vars=None,
              ajaxurl=None,
+             filter_url=None,
+             filter_form=None,
+             filter_tab=None,
              widget_id=None):
         """
             Render the form for the report 
@@ -450,6 +447,11 @@ class S3ReportForm(object):
             "renderChart": True,
             "collapseChart": True,
             "defaultChart": None,
+            
+            "exploreChart": True,
+            "filterURL": filter_url,
+            "filterTab": filter_tab,
+            "filterForm": filter_form,
 
             "autoSubmit": settings.get_ui_report_auto_submit(),
         }

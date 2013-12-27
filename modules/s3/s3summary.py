@@ -98,6 +98,10 @@ class S3Summary(S3Method):
         widget_idx = 0
         targets = []
         pending = []
+
+        # Dynamic filtering (e.g. plot-click in report widget)
+        attr["filter_form"] = form_id = "summary-filter-form"
+        
         for section in config:
 
             common = section.get("common")
@@ -207,7 +211,6 @@ class S3Summary(S3Method):
 
         # Filter form
         filter_ajax = True
-        form_id = "summary-filter-form"
         filter_widgets = get_config("filter_widgets")
         if filter_widgets and not self.hide_filter:
 
