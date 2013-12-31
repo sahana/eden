@@ -963,11 +963,11 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 1
         )),
-    # Stats required for beneficiary model
-    ("stats", Storage(
-           name_nice = T("Statistics"),
-           #description = "Manages statistics",
-           restricted = True,
-           module_type = None,
-       )),
+    # Stats required if using beneficiary model
+    #("stats", Storage(
+    #       name_nice = T("Statistics"),
+    #       #description = "Manages statistics",
+    #       restricted = True,
+    #       module_type = None,
+    #   )),
 ])

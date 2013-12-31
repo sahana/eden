@@ -1214,12 +1214,13 @@ class S3ProjectActivityModel(S3Model):
                                 widget="multiselect",
                                 ))
         # @ToDo: deployment_setting
-        filter_widgets.append(
-                S3OptionsFilter("beneficiary.parameter_id",
-                                # Doesn't support translation
-                                #represent="%(name)s",
-                                widget="multiselect",
-                                ))
+        if settings.has_module("stats"):
+            filter_widgets.append(
+                    S3OptionsFilter("beneficiary.parameter_id",
+                                    # Doesn't support translation
+                                    #represent="%(name)s",
+                                    widget="multiselect",
+                                    ))
         if use_projects and settings.get_project_mode_drr():
             rappend((T("Hazard"), "project_id$hazard.name"))
             rappend((T("HFA"), "project_id$drr.hfa"))
