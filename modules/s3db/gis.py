@@ -2248,9 +2248,8 @@ class gis_MarkerRepresent(S3Represent):
             @param row: The Row
         """
         represent = DIV(IMG(_src=URL(c="static", f="img",
-                                     args=["markers", row.image]
-                                    ),
-                                     _height=40))
+                                     args=["markers", row.image]),
+                            _height=40))
         return represent
 
 # ==============================================================================

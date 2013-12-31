@@ -283,7 +283,7 @@ class SeleniumUnitTest(Web2UnitTest):
             Get a copy of all the records that match the data passed in
             this can be modified by the callback function
         """
-        def add_componet_to_query(self, table, query, details, components):
+        def add_component_to_query(self, table, query, details, components):
             """
                 If possible add the component to the query. This uses the
                 parameter components which is a map keyed on the name of the
@@ -317,7 +317,7 @@ class SeleniumUnitTest(Web2UnitTest):
         query = (table.deleted != True)
         for details in data:
             if details[0][0:3] == "sub":
-                query = add_componet_to_query(self, table, query, details, components)
+                query = add_component_to_query(self, table, query, details, components)
             else:
                 query = query & (table[details[0]] == details[1])
         rows = current.db(query).select(orderby=~table.id)

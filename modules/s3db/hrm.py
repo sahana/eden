@@ -3551,8 +3551,9 @@ class S3HRProgrammeModel(S3Model):
         tablename = "hrm_programme_hours"
         table = define_table(tablename,
                              self.pr_person_id(
+                                ondelete = "CASCADE",
                                 represent = self.pr_PersonRepresent(show_link=True)
-                               ),
+                                ),
                              programme_id(),
                              self.hrm_job_title_id(),
                              s3_date(future=0),

@@ -203,8 +203,7 @@ def index():
     if AUTHENTICATED in roles and \
        has_permission("read", table):
         org_items = organisation()
-        datatable_ajax_source = "/%s/default/organisation.aadata" % \
-                                appname
+        datatable_ajax_source = "/%s/default/organisation.aadata" % appname
         s3.actions = None
         response.view = "default/index.html"
         permission = auth.permission
@@ -212,14 +211,15 @@ def index():
         permission.function = "site"
         permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
         if permitted_facilities:
-            facilities = s3db.org_SiteRepresent().bulk(permitted_facilities,include_blank=False)
+            facilities = s3db.org_SiteRepresent().bulk(permitted_facilities,
+                                                       include_blank=False)
             facility_list = [(fac, facilities[fac]) for fac in facilities]
             facility_list = sorted(facility_list, key=lambda fac: fac[1])
             facility_opts = [OPTION(fac[1], _value=fac[0])
                              for fac in facility_list]
             manage_facility_box = DIV(H3(T("Manage Your Facilities")),
                                       SELECT(_id = "manage_facility_select",
-                                             _style = "max-width:400px;",
+                                             _style = "max-width:400px",
                                              *facility_opts
                                              ),
                                       A(T("Go"),
