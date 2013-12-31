@@ -2602,7 +2602,7 @@ class GIS(object):
             for point in points:
                 File.write("\t%s\t%s\n" % (point[0], point[1]))
             File.write("END\n")
-            ++count
+            count += 1
         File.write("END\n")
         File.close()
 

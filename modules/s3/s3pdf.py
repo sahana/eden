@@ -322,7 +322,8 @@ class S3PDF(S3Method):
                 if it's not here then try self._config()
             """
             value = attr.get(key)
-            if value != None: return value
+            if value != None:
+                return value
             return self._config(key)
 
         T = current.T

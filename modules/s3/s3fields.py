@@ -130,7 +130,7 @@ class QueryS3(Query):
 
     def __init__(self, left, op=None, right=None):
 
-        if op <> "join_via":
+        if op != "join_via":
             Query.__init__(self, left, op, right)
         else:
             self.sql = "CAST(TRIM(%s,"|") AS INTEGER)=%s" % (left, right)

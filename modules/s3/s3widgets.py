@@ -2660,7 +2660,8 @@ class S3KeyValueWidget(ListWidget):
 '''jQuery(document).ready(function(){jQuery('#%s').kv_pairs('%s','%s')})''' % \
     (_id, self.key_label, self.value_label))
 
-        if not value: value = "[]"
+        if not value:
+            value = "[]"
         if not isinstance(value, str):
             try:
                 value = json.dumps(value)
