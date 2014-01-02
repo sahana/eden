@@ -1102,11 +1102,12 @@ class S3DataList(object):
 class S3DataListLayout(object):
     """ DataList default layout """
 
+    item_class = "thumbnail"
+
     # ---------------------------------------------------------------------
     def __call__(self, list_id, item_id, resource, rfields, record):
         """
-            Default item renderer (not normally used, instead a custom
-            renderer is normally defined).
+            Wrapper for render_item.
 
             @param list_id: the HTML ID of the list
             @param item_id: the HTML ID of the item
@@ -1116,16 +1117,18 @@ class S3DataListLayout(object):
         """
 
         # Render the item
-        item = DIV(_id=item_id)
+        item = DIV(_id=item_id, _class=self.item_class)
 
-        header = self.render_header(item_id,
+        header = self.render_header(list_id,
+                                    item_id,
                                     resource,
                                     rfields,
                                     record)
         if header is not None:
             item.append(header)
-            
-        body = self.render_body(item_id,
+
+        body = self.render_body(list_id,
+                                item_id,
                                 resource,
                                 rfields,
                                 record)
@@ -1135,14 +1138,15 @@ class S3DataListLayout(object):
         return item
         
     # ---------------------------------------------------------------------
-    def render_header(self, item_id, resource, rfields, record):
+    def render_header(self, list_id, item_id, resource, rfields, record):
         """
             @todo: Render the card header
 
-            @param item_id: the HTML element ID of the item
-            @param resource: the S3Resource
-            @param rfields: the S3ResourceFields for the columns
-            @param record: the record (from S3Resource.select)
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
         """
         
         #DIV(
@@ -1154,22 +1158,15 @@ class S3DataListLayout(object):
         return None
     
     # ---------------------------------------------------------------------
-    def render_toolbox(self):
-        """
-            @todo: Render the toolbox
-        """
-
-        pass
-
-    # ---------------------------------------------------------------------
-    def render_body(self, item_id, resource, rfields, record):
+    def render_body(self, list_id, item_id, resource, rfields, record):
         """
             Render the card body
             
-            @param item_id: the HTML element ID of the item
-            @param resource: the S3Resource
-            @param rfields: the S3ResourceFields for the columns
-            @param record: the record (from S3Resource.select)
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
         """
         
         pkey = str(resource._id)
@@ -1191,6 +1188,29 @@ class S3DataListLayout(object):
 
         return DIV(body, _class="media")
     
+    # ---------------------------------------------------------------------
+    def render_icon(self, list_id, resource):
+        """
+            @todo: Render a body icon
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+        """
+
+        return None
+
+    # ---------------------------------------------------------------------
+    def render_toolbox(self, list_id, resource, record):
+        """
+            @todo: Render the toolbox
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+            @param record: the record as dict
+        """
+
+        return None
+
     # ---------------------------------------------------------------------
     def render_column(self, item_id, rfield, record):
         """

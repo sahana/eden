@@ -160,6 +160,7 @@ class S3DeploymentModel(S3Model):
                                     )
 
         # Profile
+        list_layout = deploy_MissionProfileLayout()
         alert_widget = dict(label="Alerts",
                             insert=lambda r, list_id, title, url: \
                                    A(title,
@@ -176,7 +177,7 @@ class S3DeploymentModel(S3Model):
                                            ],
                             tablename = "deploy_alert",
                             context = "mission",
-                            list_layout = deploy_render_alert,
+                            list_layout = list_layout,
                             pagesize = 10,
                             )
 
@@ -196,7 +197,7 @@ class S3DeploymentModel(S3Model):
                                tablename = "deploy_response",
                                list_fields = list_fields,
                                context = "mission",
-                               list_layout = deploy_render_response,
+                               list_layout = list_layout,
                                pagesize = 10,
                                )
 
@@ -233,7 +234,7 @@ class S3DeploymentModel(S3Model):
                                      "mission_id",
                                  ],
                                  context = "mission",
-                                 list_layout = deploy_render_assignment,
+                                 list_layout = list_layout,
                                  pagesize = None, # all records
                                  )
 
@@ -1200,579 +1201,6 @@ def deploy_mission_response_count(row):
         return 0
 
 # =============================================================================
-def deploy_render_profile_data(record,
-                               table=None,
-                               record_id=None,
-                               prefix="data",
-                               fields=None,
-                               columns=None):
-    """
-        DRY Helper method to render record data with labels, used
-        in deploy_mission profile header and cards.
-
-        @param record: the record, either a Row (raw values, also specify
-                       table) or a Storage {colname: value} (represented
-                       data, also specify fields)
-        @param record_id: the record ID (to be added to the element ID)
-        @param prefix: the element ID prefix
-        @param fields: the S3ResourceFields as dict {colname: rfield}
-                       to lookup labels
-        @param table: the Table to lookup labels and represent function
-        @param columns: the columns (field names with table, column
-                        names with fields)
-                        to render
-
-        @return: a DIV with LABEL,SPAN pairs for each column
-    """
-
-    items = DIV()
-    append = items.append
-
-    for column in columns:
-        if fields:
-            rfield = fields[column]
-            fname = rfield.fname
-            label = "%s:" % rfield.label
-            value = record[column]
-        else:
-            field = table[column]
-            fname = column
-            label = "%s:" % field.label
-            represent = field.represent or s3_unicode
-            value = represent(record[fname])
-        if record_id:
-            item_id = "profile-%s-%s-%s" % (prefix, fname, record_id)
-        else:
-            item_id = "profile-%s-%s" % (prefix, fname)
-        append(LABEL(label,
-                     _for=item_id,
-                     _class="profile-%s-label" % prefix))
-        append(SPAN(value,
-                    _id=item_id,
-                    _class="profile-%s-value" % prefix))
-
-    return items
-
-# =============================================================================
-def deploy_render_profile_toolbox(resource,
-                                  record_id,
-                                  update_url=None,
-                                  open_url=None):
-    """
-        DRY Helper method to render a toolbox with Edit/Delete action
-        buttons in datalist cards.
-
-        @param resource: the S3Resource
-        @param record_id: the record ID
-        @param update_url: the update URL (for edit in popup)
-        @param open_url: alternatively, an open URL (for edit in new page)
-    """
-
-    has_permission = current.auth.s3_has_permission
-    table = resource.table
-    tablename = resource.tablename
-
-    crud_string = S3Method.crud_string
-
-    toolbox = DIV(_class="edit-bar fright")
-
-    if update_url and \
-       has_permission("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=update_url,
-                     _class="s3_modal",
-                     _title=crud_string(tablename, "title_update"))
-        toolbox.append(edit_btn)
-    elif open_url:
-        open_btn = A(I(" ", _class="icon icon-file-alt"),
-                     _href=open_url,
-                     _title=crud_string(tablename, "title_display"))
-        toolbox.append(open_btn)
-
-    if has_permission("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                       _title=crud_string(tablename, "label_delete_button"))
-        toolbox.append(delete_btn)
-
-    return toolbox
-
-# =============================================================================
-def deploy_render_alert(list_id, item_id, resource, rfields, record):
-    """
-        Item renderer for data list of alerts
-
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-    """
-    
-    record_id = record["deploy_alert.id"]
-    item_class = "thumbnail"
-
-    T = current.T
-    hr_label = current.deployment_settings.get_deploy_hr_label()
-    HR_LABEL = T(hr_label)
-    if hr_label == "Member":
-        HRS_LABEL = T("Members")
-    elif hr_label == "Staff":
-        HRS_LABEL = HR_LABEL
-    elif hr_label == "Volunteer":
-        HRS_LABEL = T("Volunteers")
-
-    row = record["_row"]
-    sent = True if row["deploy_alert.message_id"] else False
-
-    # Recipients, aggregated by region
-    s3db = current.s3db
-    rtable = s3db.deploy_alert_recipient
-    htable = s3db.hrm_human_resource
-    otable = s3db.org_organisation
-    left = [htable.on(htable.id==rtable.human_resource_id),
-            otable.on(otable.id==htable.organisation_id)]
-    query = (rtable.alert_id == record_id) & \
-            (rtable.deleted != True)
-    region = otable.region_id
-    rcount = htable.id.count()
-    rows = current.db(query).select(region, rcount, left=left, groupby=region)
-
-    recips = 0
-    if rows:
-        represent = otable.region_id.represent
-        regions = represent.bulk([row[region] for row in rows])
-        none = None
-        recipients = []
-        for row in rows:
-            region_id = row[region]
-            num = row[rcount]
-            recips += num
-            if region_id:
-                region_name = regions.get(region_id)
-            else:
-                region_name = T("No Region")
-            region_filter = {
-                "recipient.human_resource_id$" \
-                "organisation_id$region_id__belongs": region_id
-            }
-            link = URL(f = "alert",
-                       args = [record_id, "recipient"],
-                       vars = region_filter)
-            recipient = SPAN("%s (" % region_name,
-                             A("%s %s" % (num,
-                                          HR_LABEL if num == 1 else HRS_LABEL),
-                               _href=URL(f = "alert",
-                                         args = [record_id, "recipient"],
-                                         vars = region_filter),
-                             ), ")")
-            if region_id:
-                recipients.extend([recipient, ", "])
-            else:
-                none = [recipient, ", "]
-        if none:
-            recipients.extend(none)
-        recipients = TAG[""](recipients[:-1])
-    else:
-        recipients = T("No Recipients Selected")
-
-    modified_on = record["deploy_alert.modified_on"]
-    if sent:
-        status = SPAN(I(_class="icon icon-sent"),
-                      T("sent"), _class="alert-status")
-    else:
-        status = SPAN(I(_class="icon icon-unsent"),
-                      T("not sent"), _class="red alert-status")
-    subject = record["deploy_alert.subject"]
-    body = record["deploy_alert.body"]
-
-    # Toolbox
-    open_url = URL(f="alert", args=[record_id])
-    toolbox = deploy_render_profile_toolbox(resource, record_id,
-                                            open_url=open_url)
-
-    # Workflow actions
-    if not sent and recips and \
-       current.auth.s3_has_permission("update", resource.table,
-                                      record_id=record_id):
-        send_btn = A(I(" ", _class="icon icon-envelope-alt"),
-                     SPAN(T("Send this Alert"), _class="card-action"),
-                     _onclick="window.location.href='%s'" %
-                        URL(c="deploy", f="alert", args=[record_id, "send"]),
-                     _class="action-lnk")
-        #toolbox.insert(0, send_btn)
-    else:
-        send_btn = ""
-    toolbox.insert(0, DIV(send_btn, _class="card-actions"))
-                                            
-    # Render the item
-    item = DIV(DIV(A(IMG(_class="media-object",
-                         _src=URL(c="static", f="themes",
-                                  args=["IFRC", "img", "alert.png"]),
-                         ),
-                         _class="pull-left",
-                   ),
-                   toolbox,
-                   DIV(DIV(DIV(subject,
-                               _class="card-title"),
-                           DIV(recipients,
-                               _class="card-category"),
-                           _class="media-heading"),
-                       DIV(modified_on, status, _class="card-subtitle"),
-                       DIV(body, _class="message-body s3-truncate"),
-                       _class="media-body",
-                   ),
-                   _class="media",
-               ),
-               _class=item_class,
-               _id=item_id,
-           )
-
-    return item
-
-# =============================================================================
-def deploy_render_response(list_id, item_id, resource, rfields, record):
-    """
-        Item renderer for data list of responses
-
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-    """
-
-    record_id = record["deploy_response.id"]
-    item_class = "thumbnail"
-
-    T = current.T
-    
-    raw = record._row
-    human_resource_id = raw["hrm_human_resource.id"]
-    mission_id = raw["deploy_response.mission_id"]
-
-    db = current.db
-
-    # Number of previous deployments and average rating
-    # @todo: bulk lookups instead of per-card
-    if human_resource_id:
-        s3db = current.s3db
-        table = s3db.deploy_assignment
-        query = (table.human_resource_id == human_resource_id) & \
-                (table.deleted != True)
-        dcount = db(query).count()
-
-        table = s3db.hrm_appraisal
-        htable = s3db.hrm_human_resource
-        query = (htable.id == human_resource_id) & \
-                (htable.person_id == table.person_id) & \
-                (table.deleted != True) & \
-                (table.rating != None) & \
-                (table.rating > 0)
-        avgrat = table.rating.avg()
-        row = db(query).select(avgrat).first()
-        if row:
-            avgrat = row[avgrat]
-        else:
-            avgrat = None
-    else:
-        dcount = avgrat = "?"
-
-    dcount_id = "profile-data-dcount-%s" % record_id
-    avgrat_id = "profile-data-avgrat-%s" % record_id
-    dinfo = DIV(LABEL("%s:" % T("Previous Deployments"),
-                      _for=dcount_id,
-                      _class="profile-data-label"),
-                SPAN(dcount,
-                     _id=dcount_id,
-                     _class="profile-data-value"),
-                LABEL("%s:" % T("Average Rating"),
-                      _for=avgrat_id,
-                      _class="profile-data-label"),
-                SPAN(avgrat,
-                     _id=avgrat_id,
-                     _class="profile-data-value"),
-                _class="profile-data",
-                )
-
-    if human_resource_id:
-        person_id = record["hrm_human_resource.person_id"]
-        profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
-        profile_title = T("Open Member Profile (in a new tab)")
-        person = A(person_id,
-                   _href=profile_url,
-                   _target="_blank",
-                   _title=profile_title)
-    else:
-        person_id = "%s (%s)" % \
-                    (T("Unknown"), record["msg_message.from_address"])
-        person = person_id
-
-    organisation = record["hrm_human_resource.organisation_id"]
-
-    created_on = record["deploy_response.created_on"]
-    message = record["msg_message.body"]
-    
-    #fields = dict((rfield.colname, rfield) for rfield in rfields)
-    #render = lambda *columns: deploy_render_profile_data(record,
-                                                         #fields=fields,
-                                                         #columns=columns)
-
-    # Dropdown of available documents
-    documents = raw["doc_document.file"]
-    if documents:
-        if not isinstance(documents, list):
-            documents = [documents]
-        bootstrap = current.response.s3.formstyle == "bootstrap"
-        if bootstrap:
-            docs = UL(_class="dropdown-menu",
-                      _role="menu",
-                      )
-        else:
-            docs = SPAN(_id="attachments",
-                        _class="profile-data-value",
-                        )
-        retrieve = db.doc_document.file.retrieve
-        for doc in documents:
-            try:
-                doc_name = retrieve(doc)[0]
-            except (IOError, TypeError):
-                doc_name = current.messages["NONE"]
-            doc_url = URL(c="default", f="download",
-                          args=[doc])
-            if bootstrap:
-                doc_item = LI(A(I(_class="icon-file"),
-                                " ",
-                                doc_name,
-                                _href=doc_url,
-                                ),
-                              _role="menuitem",
-                              )
-            else:
-                doc_item = A(I(_class="icon-file"),
-                             " ",
-                             doc_name,
-                             _href=doc_url,
-                             )
-            docs.append(doc_item)
-            docs.append(", ")
-        if bootstrap:
-            docs = DIV(A(I(_class="icon-paper-clip"),
-                         SPAN(_class="caret"),
-                         _class="btn dropdown-toggle",
-                         _href="#",
-                         **{"_data-toggle": "dropdown"}
-                         ),
-                       doc_list,
-                       _class="btn-group attachments dropdown pull-right",
-                       )
-        else:
-            # Remove final comma
-            docs.components.pop()
-            docs = DIV(LABEL("%s:" % T("Attachments"),
-                             _class = "profile-data-label",
-                             _for="attachments",
-                             ),
-                       docs,
-                       _class = "profile-data",
-                       )
-    else:
-        docs = ""
-
-    # Comments
-    comments_id = "profile-data-comments-%s" % record_id
-    comments = DIV(LABEL("%s:" % T("Comments"),
-                         _for=comments_id,
-                         _class="profile-data-label"),
-                   SPAN(record["deploy_response.comments"],
-                        _id=comments_id,
-                        _class="profile-data-value s3-truncate"),
-                   _class="profile-data",
-                  )
-
-    # Toolbox
-    update_url = URL(f="response_message",
-                     args=[record_id, "update.popup"],
-                     vars={"refresh": list_id, "record": record_id})
-    toolbox = deploy_render_profile_toolbox(resource, record_id,
-                                            update_url=update_url)
-
-    # Workflow actions
-    # @todo: bulk lookup instead of per-card
-    if human_resource_id:
-        table = current.s3db.deploy_assignment
-        query = (table.mission_id == mission_id) & \
-                (table.human_resource_id == human_resource_id) & \
-                (table.deleted != True)
-        row = db(query).select(table.id, limitby=(0, 1)).first()
-        if row:
-            deploy_action = A(I(" ", _class="icon icon-deployed"),
-                              SPAN(T("Member Deployed"),
-                                   _class="card-action"),
-                              _class="action-lnk"
-                             )
-        else:
-            deploy_action = A(I(" ", _class="icon icon-deploy"),
-                              SPAN(T("Deploy this Member"),
-                                   _class="card-action"),
-                              _href=URL(f="mission",
-                                        args=[mission_id,
-                                              "assignment",
-                                              "create"
-                                              ],
-                                        vars={"member_id": human_resource_id}),
-                              _class="action-lnk"
-                              )
-    else:
-        deploy_action = ""
-    toolbox.insert(0, DIV(deploy_action, _class="card-actions"))
-
-    # Render the item
-    item = DIV(DIV(A(IMG(_class="media-object",
-                         _src=URL(c="static", f="themes",
-                                  args=["IFRC", "img", "email.png"]),
-                         ),
-                         _class="pull-left",
-                         ),
-                   toolbox,
-                   DIV(DIV(DIV(person,
-                               _class="card-title"),
-                           DIV(organisation,
-                               _class="card-category"),
-                           _class="media-heading",
-                           ),
-                       DIV(created_on, _class="card-subtitle"),
-                       DIV(message, _class="message-body s3-truncate"),
-                       docs,
-                       dinfo,
-                       comments,
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-
-# =============================================================================
-def deploy_render_assignment(list_id, item_id, resource, rfields, record):
-    """
-        Item renderer for data list of deployed human resources
-
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-    """
-
-    record_id = record["deploy_assignment.id"]
-    item_class = "thumbnail"
-
-    T = current.T
-    raw = record["_row"]
-    human_resource_id = raw["hrm_human_resource.id"]
-
-    profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
-    profile_title = T("Open Member Profile (in a new tab)")
-
-    person_id = raw["hrm_human_resource.person_id"]
-    person = A(record["hrm_human_resource.person_id"],
-               _href=profile_url,
-               _target="_blank",
-               _title=profile_title)
-    organisation = record["hrm_human_resource.organisation_id"]
-
-    fields = dict((rfield.colname, rfield) for rfield in rfields)
-    render = lambda *columns: deploy_render_profile_data(record,
-                                                         fields=fields,
-                                                         columns=columns)
-
-    # Toolbox
-    update_url = URL(c="deploy", f="assignment",
-                     args=[record_id, "update.popup"],
-                     vars={"refresh": list_id, "record": record_id})
-    toolbox = deploy_render_profile_toolbox(resource, record_id,
-                                            update_url=update_url)
-
-    # Workflow actions
-    s3db = current.s3db
-    atable = s3db.hrm_appraisal
-    ltable = s3db.deploy_assignment_appraisal
-    query = (ltable.assignment_id == record_id) & \
-            (atable.id == ltable.appraisal_id) & \
-            (atable.deleted != True)
-    appraisal = current.db(query).select(atable.id,
-                                         limitby=(0, 1)).first()
-    permit = current.auth.s3_has_permission
-    if appraisal and permit("update", atable, record_id=appraisal.id):
-        _class = "action-lnk"
-        EDIT_APPRAISAL = T("Open Appraisal")
-        upload_btn = A(I(" ", _class="icon icon-paperclip"),
-                       SPAN(EDIT_APPRAISAL, _class="card-action"),
-                       _href=URL(c="deploy", f="person",
-                                 args=[person_id, "appraisal",
-                                       appraisal.id, "update.popup"],
-                                 vars={"refresh": list_id,
-                                       "record": record_id,
-                                       },
-                                 ),
-                       _class="s3_modal %s" % _class,
-                       _title=EDIT_APPRAISAL,
-                       )
-    elif permit("update", resource.table, record_id=record_id):
-        # Currently we assume that anyone who can edit the assignment can upload the appraisal
-        _class = "action-lnk"
-        UPLOAD_APPRAISAL = T("Upload Appraisal")
-        upload_btn = A(I(" ", _class="icon icon-paperclip"),
-                       SPAN(UPLOAD_APPRAISAL, _class="card-action"),
-                       _href=URL(c="deploy", f="person",
-                                 args=[person_id, "appraisal", "create.popup"],
-                                 vars={"mission_id": raw["deploy_assignment.mission_id"],
-                                       "refresh": list_id,
-                                       "record": record_id,
-                                       },
-                                 ),
-                       _class="s3_modal %s" % _class,
-                       _title=UPLOAD_APPRAISAL,
-                       )
-    else:
-        upload_btn = ""
-    toolbox.insert(0, DIV(upload_btn, _class="card-actions"))
-
-    # Render the item
-    item = DIV(DIV(A(IMG(_class="media-object",
-                         _src=URL(c="static", f="themes",
-                                  args=["IFRC", "img", "member.png"]),
-                         ),
-                     _class="pull-left",
-                     #_href=profile_url,
-                     #_title=profile_title,
-                     ),
-                   toolbox,
-                   DIV(DIV(DIV(person,
-                               _class="card-title"),
-                           DIV(organisation,
-                               _class="card-category"),
-                           _class="media-heading"),
-                       render("deploy_assignment.start_date",
-                              "deploy_assignment.end_date",
-                              "deploy_assignment.job_title_id",
-                              "hrm_appraisal.rating",
-                              ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-
-# =============================================================================
 def deploy_member_filter():
     """
         Filter widgets for members (hrm_human_resource), used in
@@ -2454,5 +1882,569 @@ def deploy_response_select_mission(r, **attr):
 
     else:
         r.error(501, resource.ERROR.BAD_FORMAT)
+
+# =============================================================================
+class deploy_MissionProfileLayout(S3DataListLayout):
+    """ DataList layout for Mission Profile """
+
+    # -------------------------------------------------------------------------
+    def render_header(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card header
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        # No card header in this layout
+        return None
+
+    # -------------------------------------------------------------------------
+    def render_body(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card body
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = resource.table
+        tablename = resource.tablename
+
+        T = current.T
+        pkey = str(resource._id)
+        record_id = record[pkey]
+        raw = record["_row"]
+
+        # Specific contents and workflow
+        contents = workflow = None
+
+        if tablename == "deploy_alert":
+
+            # Message subject as title
+            subject = record["deploy_alert.subject"]
+
+            # Recipients, aggregated by region
+            rtable = s3db.deploy_alert_recipient
+            htable = s3db.hrm_human_resource
+            otable = s3db.org_organisation
+            left = [htable.on(htable.id==rtable.human_resource_id),
+                    otable.on(otable.id==htable.organisation_id)]
+            query = (rtable.alert_id == record_id) & \
+                    (rtable.deleted != True)
+            region = otable.region_id
+            rcount = htable.id.count()
+            rows = current.db(query).select(region,
+                                            rcount,
+                                            left=left,
+                                            groupby=region)
+
+            total_recipients = 0
+            if rows:
+                # Labels
+                hr_label = current.deployment_settings.get_deploy_hr_label()
+                HR_LABEL = T(hr_label)
+                if hr_label == "Member":
+                    HRS_LABEL = T("Members")
+                elif hr_label == "Staff":
+                    HRS_LABEL = HR_LABEL
+                elif hr_label == "Volunteer":
+                    HRS_LABEL = T("Volunteers")
+                represent = otable.region_id.represent
+                regions = represent.bulk([row[region] for row in rows])
+                no_region = None
+                recipients = []
+                for row in rows:
+                    # Region
+                    region_id = row[region]
+                    if region_id:
+                        region_name = regions.get(region_id)
+                    else:
+                        region_name = T("No Region")
+                    region_filter = {
+                        "recipient.human_resource_id$" \
+                        "organisation_id$region_id__belongs": region_id
+                    }
+                    # Number of recipients
+                    num = row[rcount]
+                    total_recipients += num
+                    label = HR_LABEL if num == 1 else HRS_LABEL
+                    # Link
+                    link = URL(f = "alert",
+                               args = [record_id, "recipient"],
+                               vars = region_filter)
+                    # Recipient list item
+                    recipient = SPAN("%s (" % region_name,
+                                     A("%s %s" % (num, label),
+                                       _href=URL(f = "alert",
+                                                 args = [record_id, "recipient"],
+                                                 vars = region_filter),
+                                       ),
+                                     ")"
+                                )
+                    if region_id:
+                        recipients.extend([recipient, ", "])
+                    else:
+                        no_region = [recipient, ", "]
+                # Append "no region" at the end of the list
+                if no_region:
+                    recipients.extend(no_region)
+                recipients = TAG[""](recipients[:-1])
+            else:
+                recipients = T("No Recipients Selected")
+
+            # Modified-date corresponds to sent-date
+            modified_on = record["deploy_alert.modified_on"]
+
+            # Has this alert been sent?
+            sent = True if raw["deploy_alert.message_id"] else False
+            if sent:
+                status = SPAN(I(_class="icon icon-sent"),
+                              T("sent"), _class="alert-status")
+            else:
+                status = SPAN(I(_class="icon icon-unsent"),
+                              T("not sent"), _class="red alert-status")
+
+            # Message
+            message = record["deploy_alert.body"]
+
+            # Contents
+            contents = DIV(
+                           DIV(
+                               DIV(subject,
+                                   _class="card-title"),
+                               DIV(recipients,
+                                   _class="card-category"),
+                               _class="media-heading"
+                            ),
+                            DIV(modified_on, status, _class="card-subtitle"),
+                            DIV(message, _class="message-body s3-truncate"),
+                            _class="media-body",
+                       )
+
+            # Workflow
+            if not sent and total_recipients and \
+               current.auth.s3_has_permission("update", table,
+                                              record_id=record_id):
+                send = A(I(" ", _class="icon icon-envelope-alt"),
+                         SPAN(T("Send this Alert"),
+                              _class="card-action"),
+                         _onclick="window.location.href='%s'" %
+                                  URL(c="deploy", f="alert",
+                                      args=[record_id, "send"]),
+                         _class="action-lnk",
+                       )
+                workflow = [send]
+
+        elif tablename == "deploy_response":
+
+            human_resource_id = raw["hrm_human_resource.id"]
+
+            # Title linked to member profile
+            if human_resource_id:
+                person_id = record["hrm_human_resource.person_id"]
+                profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
+                profile_title = T("Open Member Profile (in a new tab)")
+                person = A(person_id,
+                        _href=profile_url,
+                        _target="_blank",
+                        _title=profile_title)
+            else:
+                person_id = "%s (%s)" % \
+                            (T("Unknown"), record["msg_message.from_address"])
+                person = person_id
+
+            # Organisation
+            organisation = record["hrm_human_resource.organisation_id"]
+
+            # Created_on corresponds to received-date
+            created_on = record["deploy_response.created_on"]
+
+            # Message Data
+            message = record["msg_message.body"]
+
+            # Dropdown of available documents
+            documents = raw["doc_document.file"]
+            if documents:
+                if not isinstance(documents, list):
+                    documents = [documents]
+                bootstrap = current.response.s3.formstyle == "bootstrap"
+                if bootstrap:
+                    docs = UL(_class="dropdown-menu",
+                            _role="menu",
+                            )
+                else:
+                    docs = SPAN(_id="attachments",
+                                _class="profile-data-value",
+                                )
+                retrieve = db.doc_document.file.retrieve
+                for doc in documents:
+                    try:
+                        doc_name = retrieve(doc)[0]
+                    except (IOError, TypeError):
+                        doc_name = current.messages["NONE"]
+                    doc_url = URL(c="default", f="download",
+                                args=[doc])
+                    if bootstrap:
+                        doc_item = LI(A(I(_class="icon-file"),
+                                        " ",
+                                        doc_name,
+                                        _href=doc_url,
+                                        ),
+                                    _role="menuitem",
+                                    )
+                    else:
+                        doc_item = A(I(_class="icon-file"),
+                                    " ",
+                                    doc_name,
+                                    _href=doc_url,
+                                    )
+                    docs.append(doc_item)
+                    docs.append(", ")
+                if bootstrap:
+                    docs = DIV(A(I(_class="icon-paper-clip"),
+                                SPAN(_class="caret"),
+                                _class="btn dropdown-toggle",
+                                _href="#",
+                                **{"_data-toggle": "dropdown"}
+                                ),
+                            doc_list,
+                            _class="btn-group attachments dropdown pull-right",
+                            )
+                else:
+                    # Remove final comma
+                    docs.components.pop()
+                    docs = DIV(LABEL("%s:" % T("Attachments"),
+                                    _class = "profile-data-label",
+                                    _for="attachments",
+                                    ),
+                            docs,
+                            _class = "profile-data",
+                            )
+            else:
+                docs = ""
+
+            # Number of previous deployments and average rating
+            # @todo: bulk lookups instead of per-card
+            if human_resource_id:
+                s3db = current.s3db
+                table = s3db.deploy_assignment
+                query = (table.human_resource_id == human_resource_id) & \
+                        (table.deleted != True)
+                dcount = db(query).count()
+
+                table = s3db.hrm_appraisal
+                htable = s3db.hrm_human_resource
+                query = (htable.id == human_resource_id) & \
+                        (htable.person_id == table.person_id) & \
+                        (table.deleted != True) & \
+                        (table.rating != None) & \
+                        (table.rating > 0)
+                avgrat = table.rating.avg()
+                row = db(query).select(avgrat).first()
+                if row:
+                    avgrat = row[avgrat]
+                else:
+                    avgrat = None
+            else:
+                dcount = avgrat = "?"
+            dcount_id = "profile-data-dcount-%s" % record_id
+            avgrat_id = "profile-data-avgrat-%s" % record_id
+            dinfo = DIV(LABEL("%s:" % T("Previous Deployments"),
+                              _for=dcount_id,
+                              _class="profile-data-label"),
+                        SPAN(dcount,
+                             _id=dcount_id,
+                             _class="profile-data-value"),
+                        LABEL("%s:" % T("Average Rating"),
+                              _for=avgrat_id,
+                              _class="profile-data-label"),
+                        SPAN(avgrat,
+                             _id=avgrat_id,
+                             _class="profile-data-value"),
+                        _class="profile-data",
+                    )
+
+            # Comments
+            comments_id = "profile-data-comments-%s" % record_id
+            comments = DIV(LABEL("%s:" % T("Comments"),
+                                _for=comments_id,
+                                _class="profile-data-label"),
+                        SPAN(record["deploy_response.comments"],
+                                _id=comments_id,
+                                _class="profile-data-value s3-truncate"),
+                        _class="profile-data",
+                        )
+
+            # Contents
+            contents = DIV(
+                            DIV(
+                                DIV(person,
+                                    _class="card-title"),
+                                DIV(organisation,
+                                    _class="card-category"),
+                                _class="media-heading",
+                            ),
+                            DIV(created_on, _class="card-subtitle"),
+                            DIV(message, _class="message-body s3-truncate"),
+                            docs,
+                            dinfo,
+                            comments,
+                            _class="media-body",
+                        )
+
+            # Workflow
+            # @todo: bulk lookup instead of per-card
+            if human_resource_id:
+                mission_id = raw["deploy_response.mission_id"]
+                table = current.s3db.deploy_assignment
+                query = (table.mission_id == mission_id) & \
+                        (table.human_resource_id == human_resource_id) & \
+                        (table.deleted != True)
+                row = db(query).select(table.id, limitby=(0, 1)).first()
+                if row:
+                    deploy = A(I(" ", _class="icon icon-deployed"),
+                               SPAN(T("Member Deployed"),
+                                    _class="card-action"),
+                               _class="action-lnk"
+                             )
+                else:
+                    url = URL(f="mission",
+                              args=[mission_id, "assignment", "create"],
+                              vars={"member_id": human_resource_id})
+                    deploy = A(I(" ", _class="icon icon-deploy"),
+                               SPAN(T("Deploy this Member"),
+                                    _class="card-action"),
+                               _href=url,
+                               _class="action-lnk"
+                             )
+                workflow = [deploy]
+
+        elif tablename == "deploy_assignment":
+
+            human_resource_id = raw["hrm_human_resource.id"]
+
+            # Title linked to member profile
+            profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
+            profile_title = T("Open Member Profile (in a new tab)")
+            person = A(record["hrm_human_resource.person_id"],
+                       _href=profile_url,
+                       _target="_blank",
+                       _title=profile_title)
+
+            # Organisation
+            organisation = record["hrm_human_resource.organisation_id"]
+
+            fields = dict((rfield.colname, rfield) for rfield in rfields)
+            render = lambda colname: self.render_column(item_id,
+                                                        fields[colname],
+                                                        record)
+
+            # Contents
+            contents = DIV(
+                            DIV(
+                                DIV(person,
+                                    _class="card-title"),
+                                DIV(organisation,
+                                    _class="card-category"),
+                                _class="media-heading"),
+                            render("deploy_assignment.start_date"),
+                            render("deploy_assignment.end_date"),
+                            render("deploy_assignment.job_title_id"),
+                            render("hrm_appraisal.rating"),
+                            _class="media-body",
+                       )
+
+            # Workflow actions
+            atable = s3db.hrm_appraisal
+            ltable = s3db.deploy_assignment_appraisal
+            query = (ltable.assignment_id == record_id) & \
+                    (atable.id == ltable.appraisal_id) & \
+                    (atable.deleted != True)
+            appraisal = current.db(query).select(atable.id,
+                                                 limitby=(0, 1)).first()
+            has_permission = current.auth.s3_has_permission
+            person_id = raw["hrm_human_resource.person_id"]
+            if appraisal and \
+               has_permission("update", atable, record_id=appraisal.id):
+                # Appraisal already uploaded => edit
+                EDIT_APPRAISAL = T("Open Appraisal")
+                url = URL(c="deploy", f="person",
+                          args=[person_id,
+                                "appraisal",
+                                appraisal.id,
+                                "update.popup"
+                               ],
+                          vars={"refresh": list_id,
+                                "record": record_id
+                               })
+                edit = A(I(" ", _class="icon icon-paperclip"),
+                         SPAN(EDIT_APPRAISAL, _class="card-action"),
+                         _href=url,
+                         _class="s3_modal action-lnk",
+                         _title=EDIT_APPRAISAL,
+                       )
+                workflow = [edit]
+
+            elif has_permission("update", table, record_id=record_id):
+                # No appraisal uploaded yet => upload
+                # Currently we assume that anyone who can edit the
+                # assignment can upload the appraisal
+                _class = "action-lnk"
+                UPLOAD_APPRAISAL = T("Upload Appraisal")
+                mission_id = raw["deploy_assignment.mission_id"]
+                url = URL(c="deploy", f="person",
+                          args=[person_id,
+                                "appraisal",
+                                "create.popup"
+                               ],
+                          vars={"mission_id": mission_id,
+                                "refresh": list_id,
+                                "record": record_id,
+                               })
+                upload = A(I(" ", _class="icon icon-paperclip"),
+                           SPAN(UPLOAD_APPRAISAL, _class="card-action"),
+                           _href=url,
+                           _class="s3_modal action-lnk",
+                           _title=UPLOAD_APPRAISAL,
+                         )
+                workflow = [upload]
+
+        body = DIV(_class="media")
+
+        # Body icon
+        icon = self.render_icon(list_id, resource)
+        if icon:
+            body.append(icon)
+
+        # Toolbox and workflow actions
+        toolbox = self.render_toolbox(list_id, resource, record)
+        if toolbox:
+            if workflow:
+                toolbox.insert(0, DIV(workflow, _class="card-actions"))
+            body.append(toolbox)
+
+        # Contents
+        if contents:
+            body.append(contents)
+
+        return body
+
+    # -------------------------------------------------------------------------
+    def render_icon(self, list_id, resource):
+        """
+            Render the body icon
+
+            @param list_id: the list ID
+            @param resource: the S3Resource
+        """
+
+        tablename = resource.tablename
+
+        if tablename == "deploy_alert":
+            icon = "alert.png"
+        elif tablename == "deploy_response":
+            icon = "email.png"
+        elif tablename == "deploy_assignment":
+            icon = "member.png"
+        else:
+            return None
+
+        return A(IMG(_src=URL(c="static", f="themes",
+                              args=["IFRC", "img", icon]),
+                     _class="media-object",
+                 ),
+                 _class="pull-left",
+               )
+
+    # -------------------------------------------------------------------------
+    def render_toolbox(self, list_id, resource, record):
+        """
+            Render the toolbox
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+            @param record: the record as dict
+        """
+
+        table = resource.table
+        tablename = resource.tablename
+        record_id = record[str(resource._id)]
+
+        open_url = update_url = None
+        if tablename == "deploy_alert":
+            open_url = URL(f="alert", args=[record_id])
+
+        elif tablename == "deploy_response":
+            update_url = URL(f="response_message",
+                            args=[record_id, "update.popup"],
+                            vars={"refresh": list_id, "record": record_id})
+
+        elif tablename == "deploy_assignment":
+            update_url = URL(c="deploy", f="assignment",
+                            args=[record_id, "update.popup"],
+                            vars={"refresh": list_id, "record": record_id})
+
+        has_permission = current.auth.s3_has_permission
+        crud_string = S3Method.crud_string
+
+        toolbox = DIV(_class="edit-bar fright")
+
+        if update_url and \
+           has_permission("update", table, record_id=record_id):
+            btn = A(I(" ", _class="icon icon-edit"),
+                    _href=update_url,
+                    _class="s3_modal",
+                    _title=crud_string(tablename, "title_update"))
+            toolbox.append(btn)
+        elif open_url:
+            btn = A(I(" ", _class="icon icon-file-alt"),
+                    _href=open_url,
+                    _title=crud_string(tablename, "title_display"))
+            toolbox.append(btn)
+
+        if has_permission("delete", table, record_id=record_id):
+            btn = A(I(" ", _class="icon icon-trash"),
+                    _class="dl-item-delete",
+                    _title=crud_string(tablename, "label_delete_button"))
+            toolbox.append(btn)
+
+        return toolbox
+
+    # -------------------------------------------------------------------------
+    def render_column(self, item_id, rfield, record):
+        """
+            Render a data column.
+
+            @param item_id: the HTML element ID of the item
+            @param rfield: the S3ResourceField for the column
+            @param record: the record (from S3Resource.select)
+        """
+
+        colname = rfield.colname
+        if colname not in record:
+            return None
+
+        value = record[colname]
+        value_id = "%s-%s" % (item_id, rfield.colname.replace(".", "_"))
+
+        label = LABEL("%s:" % rfield.label,
+                      _for = value_id,
+                      _class = "profile-data-label")
+
+        value = SPAN(value,
+                     _id = value_id,
+                     _class = "profile-data-value")
+
+        return TAG[""](label, value)
 
 # END =========================================================================
