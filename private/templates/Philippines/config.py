@@ -255,27 +255,18 @@ def currency_represent(v):
         return v
 
 # -----------------------------------------------------------------------------
-def render_contacts(listid, resource, rfields, record, **attr):
+def render_contacts(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Contacts on the Profile pages
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "hrm_human_resource.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["hrm_human_resource.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -322,7 +313,7 @@ def render_contacts(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = db.pr_person
     if permit("update", table, record_id=person_id):
-        vars = {"refresh": listid,
+        vars = {"refresh": list_id,
                 "record": record_id,
                 }
         f = current.request.function
@@ -433,27 +424,18 @@ def quote_unicode(s):
     return "".join(chars)
 
 # -----------------------------------------------------------------------------
-def render_locations(listid, resource, rfields, record, **attr):
+def render_locations(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Locations on the Selection Page
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
-
-    pkey = "gis_location.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    
+    record_id = record["gis_location.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -485,7 +467,7 @@ def render_locations(listid, resource, rfields, record, **attr):
         # edit_btn = A(I(" ", _class="icon icon-edit"),
                      # _href=URL(c="gis", f="location",
                                # args=[record_id, "update.popup"],
-                               # vars={"refresh": listid,
+                               # vars={"refresh": list_id,
                                      # "record": record_id}),
                      # _class="s3_modal",
                      # _title=current.response.s3.crud_strings.gis_location.title_update,
@@ -638,28 +620,19 @@ def render_locations(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_locations_profile(listid, resource, rfields, record, **attr):
+def render_locations_profile(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Locations on the Profile Page
         - UNUSED
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "gis_location.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["gis_location.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -676,7 +649,7 @@ def render_locations_profile(listid, resource, rfields, record, **attr):
     # permit = current.auth.s3_has_permission
     # table = current.db.gis_location
     # if permit("update", table, record_id=record_id):
-        # vars = {"refresh": listid,
+        # vars = {"refresh": list_id,
                 # "record": record_id,
                 # }
         # f = current.request.function
@@ -721,27 +694,18 @@ def render_locations_profile(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_sites(listid, resource, rfields, record, **attr):
+def render_sites(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Facilities on the Profile pages
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "org_facility.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["org_facility.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -827,7 +791,7 @@ def render_sites(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = current.db.org_facility
     if permit("update", table, record_id=record_id):
-        vars = {"refresh": listid,
+        vars = {"refresh": list_id,
                 "record": record_id,
                 }
         f = current.request.function
@@ -924,27 +888,18 @@ def render_sites(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_organisations(listid, resource, rfields, record, **attr):
+def render_organisations(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Organisations on the Stakeholder Selection Page
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "org_organisation.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["org_organisation.id"]
     item_class = "thumbnail span6" # span6 for 2 cols
 
     raw = record._row
@@ -1000,7 +955,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="org", f="organisation",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings.org_organisation.title_update,
@@ -1085,28 +1040,19 @@ def render_organisations(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_org_needs(listid, resource, rfields, record, **attr):
+def render_org_needs(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Needs
         - UNUSED
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "req_organisation_needs.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["req_organisation_needs.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -1157,7 +1103,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="req", f="organisation_needs",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings.req_organisation_needs.title_update,
@@ -1214,28 +1160,19 @@ def render_org_needs(listid, resource, rfields, record, **attr):
 s3.render_org_needs = render_org_needs
 
 # -----------------------------------------------------------------------------
-def render_site_needs(listid, resource, rfields, record, **attr):
+def render_site_needs(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Needs
         - UNUSED
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "req_site_needs.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["req_site_needs.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -1295,7 +1232,7 @@ def render_site_needs(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="req", f="site_needs",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings.req_site_needs.title_update,

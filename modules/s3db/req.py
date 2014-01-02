@@ -4114,27 +4114,18 @@ function(status){s3_debug(status)})''' % site_id
     return table
     
 # =============================================================================
-def req_render_reqs(listid, resource, rfields, record, **attr):
+def req_render_reqs(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Requests on the Home page & dataList view
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "req_req.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["req_req.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -4201,7 +4192,7 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="req", f="req",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=T("Edit Request"),
@@ -4262,7 +4253,7 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
         commit_url = URL(c="req", f="commit",
                          args=["create.popup"],
                          vars={"req_id": record_id,
-                               "refresh": listid,
+                               "refresh": list_id,
                                "record": record_id,
                                },
                          )
@@ -4509,27 +4500,18 @@ def req_customize_commit_fields():
     return table
     
 # =============================================================================
-def req_render_commits(listid, resource, rfields, record, **attr):
+def req_render_commits(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Commits on the Home page & dataList view
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "req_commit.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["req_commit.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -4597,7 +4579,7 @@ def req_render_commits(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="req", f="commit",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.T("Edit Donation"),

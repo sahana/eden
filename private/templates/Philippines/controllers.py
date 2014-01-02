@@ -25,7 +25,7 @@ class index(S3CustomController):
 
         # Latest 4 Requests
         s3db = current.s3db
-        listid = "latest_reqs"
+        list_id = "latest_reqs"
         layout = s3db.req_render_reqs
         limit = 4
         resource = s3db.resource("req_req")
@@ -35,10 +35,10 @@ class index(S3CustomController):
         resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent first
         orderby = "date desc"
-        output["latest_reqs"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
+        output["latest_reqs"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         # Latest 4 Offers
-        listid = "latest_offers"
+        list_id = "latest_offers"
         layout = s3db.req_render_commits
         #limit = 4
 
@@ -48,7 +48,7 @@ class index(S3CustomController):
         resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent first
         #orderby = "date desc"
-        output["latest_offers"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
+        output["latest_offers"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         # What We Do
         table = s3db.cms_post
@@ -95,7 +95,7 @@ class index(S3CustomController):
         return output
 
 # =============================================================================
-def latest_records(resource, layout, listid, limit, list_fields, orderby):
+def latest_records(resource, layout, list_id, limit, list_fields, orderby):
     """
         Display a dataList of the latest records for a resource
     """
@@ -104,7 +104,7 @@ def latest_records(resource, layout, listid, limit, list_fields, orderby):
     datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                start=None,
                                                limit=limit,
-                                               listid=listid,
+                                               list_id=list_id,
                                                orderby=orderby,
                                                layout=layout)
     if numrows == 0:

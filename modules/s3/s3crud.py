@@ -153,7 +153,7 @@ class S3CRUD(S3Method):
         """
 
         _attr = Storage(attr)
-        _attr["listid"] = widget_id
+        _attr["list_id"] = widget_id
 
         if method == "datatable":
             output = self._datatable(r, **_attr)
@@ -1154,7 +1154,7 @@ class S3CRUD(S3Method):
         linkto = get_config("linkto", None)
 
         # List ID
-        listid = attr.get("listid", "datatable")
+        list_id = attr.get("list_id", "datatable")
         
         # List fields
         list_fields = resource.list_fields()
@@ -1276,7 +1276,7 @@ class S3CRUD(S3Method):
                 dtargs["dt_base_url"] = r.url(method="", vars={})
                 datatable = dt.html(totalrows,
                                     displayrows,
-                                    id=listid,
+                                    id=list_id,
                                     **dtargs)
 
             # View + data
@@ -1321,7 +1321,7 @@ class S3CRUD(S3Method):
             if dt is not None:
                 output = dt.json(totalrows,
                                  displayrows,
-                                 listid,
+                                 list_id,
                                  sEcho,
                                  **dtargs)
             else:
@@ -1329,7 +1329,7 @@ class S3CRUD(S3Method):
                          '"iTotalDisplayRecords":0,' \
                          '"dataTable_id":"%s",' \
                          '"sEcho":%s,' \
-                         '"aaData":[]}' % (totalrows, listid, sEcho)
+                         '"aaData":[]}' % (totalrows, list_id, sEcho)
 
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
@@ -1359,7 +1359,7 @@ class S3CRUD(S3Method):
         layout = get_config("list_layout", None)
 
         # List ID
-        listid = attr.get("listid", "datalist")
+        list_id = attr.get("list_id", "datalist")
 
         # List fields
         list_fields = resource.list_fields()
@@ -1462,7 +1462,7 @@ class S3CRUD(S3Method):
                                                        start=start,
                                                        limit=initial_limit,
                                                        orderby=orderby,
-                                                       listid=listid,
+                                                       list_id=list_id,
                                                        layout=layout)
 
             if numrows == 0:
@@ -1580,7 +1580,7 @@ class S3CRUD(S3Method):
         report_filename = _config("report_filename")
         report_formname = _config("report_formname")
 
-        listid = "datatable"
+        list_id = "datatable"
 
         # Check permission to read in this table
         authorised = self._permitted()
@@ -1689,7 +1689,7 @@ class S3CRUD(S3Method):
                 datatable = current.T("No records to review")
             else:
                 dt_sDom = s3.get("dataTable_sDom", 'fril<"dataTable_table"t>pi')
-                datatable = dt.html(totalrows, displayrows, listid,
+                datatable = dt.html(totalrows, displayrows, list_id,
                                     dt_pagination=dt_pagination,
                                     dt_displayLength=display_length,
                                     dt_sDom = dt_sDom)
@@ -1738,14 +1738,14 @@ class S3CRUD(S3Method):
             if dt is not None:
                 output = dt.json(totalrows,
                                  displayrows,
-                                 listid,
+                                 list_id,
                                  sEcho)
             else:
                 output = '{"iTotalRecords": %s, ' \
                          '"iTotalDisplayRecords": 0,' \
                          '"dataTable_id": "%s", ' \
                          '"sEcho": %s, ' \
-                         '"aaData": []}' % (totalrows, listid, sEcho)
+                         '"aaData": []}' % (totalrows, list_id, sEcho)
 
         else:
             r.error(501, r.ERROR.BAD_FORMAT)

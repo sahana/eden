@@ -1794,7 +1794,7 @@ class S3Resource(object):
                  orderby=None,
                  distinct=False,
                  getids=False,
-                 listid=None,
+                 list_id=None,
                  layout=None):
         """
             Generate a data list of this resource
@@ -1807,7 +1807,7 @@ class S3Resource(object):
             @param distinct: distinct-flag for DB query
             @param getids: return the record IDs of all records matching the
                            query (used in search to create a filter)
-            @param listid: the list identifier
+            @param list_id: the list identifier
             @param layout: custom renderer function (see S3DataList.render)
 
             @return: tuple (S3DataList, numrows, ids), where numrows represents
@@ -1843,7 +1843,7 @@ class S3Resource(object):
         dl = S3DataList(self,
                         fields,
                         data["rows"],
-                        listid=listid,
+                        list_id=list_id,
                         start=start,
                         limit=limit,
                         total=numrows,

@@ -53,7 +53,7 @@ class index():
             datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                        start=None,
                                                        limit=4,
-                                                       listid="event_datalist",
+                                                       list_id="event_datalist",
                                                        orderby=orderby,
                                                        layout=render_cms_events)
             if numrows == 0:
@@ -95,7 +95,7 @@ class index():
             datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                        start=None,
                                                        limit=4,
-                                                       listid="news_datalist",
+                                                       list_id="news_datalist",
                                                        orderby=orderby,
                                                        layout=s3.render_posts)
             if numrows == 0:
@@ -308,7 +308,7 @@ def _updates():
         datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                    start=None,
                                                    limit=5,
-                                                   listid="event_datalist",
+                                                   list_id="event_datalist",
                                                    orderby=orderby,
                                                    layout=render_events)
         # Render the list
@@ -357,27 +357,18 @@ def filter_formstyle(row_id, label, widget, comment, hidden=False):
         return DIV(widget, _id=row_id, _class=_class)
 
 # -----------------------------------------------------------------------------
-def render_events(listid, resource, rfields, record, **attr):
+def render_events(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for 'Disasters' on the Updates page
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "event_event.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["event_event.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -397,7 +388,7 @@ def render_events(listid, resource, rfields, record, **attr):
             edit_btn = A(I(" ", _class="icon icon-edit"),
                          _href=URL(c="event", f="event",
                                    args=[record_id, "update.popup"],
-                                   vars={"refresh": listid,
+                                   vars={"refresh": list_id,
                                          "record": record_id}),
                          _class="s3_modal",
                          _title=current.response.s3.crud_strings.event_event.title_update,
@@ -444,30 +435,22 @@ def render_events(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_cms_events(listid, resource, rfields, record, **attr):
+def render_cms_events(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for 'Events' on the Home page
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    T = current.T
-    pkey = "cms_post.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["cms_post.id"]
     item_class = "thumbnail"
 
+    T = current.T
+    
     raw = record._row
     series = "Event"
     date = record["cms_post.date"]
@@ -511,7 +494,7 @@ def render_cms_events(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="cms", f="post",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=T("Edit Event"),

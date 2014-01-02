@@ -5345,27 +5345,18 @@ def org_customize_org_resource_fields(method):
                    )
 
 # =============================================================================
-def org_render_org_resources(listid, resource, rfields, record, **attr):
+def org_render_org_resources(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Resources on the Profile pages
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "org_resource.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["org_resource.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -5399,7 +5390,7 @@ def org_render_org_resources(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = current.db.org_resource
     if permit("update", table, record_id=record_id):
-        vars = {"refresh": listid,
+        vars = {"refresh": list_id,
                 "record": record_id,
                 }
         f = current.request.function

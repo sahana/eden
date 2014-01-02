@@ -5898,29 +5898,18 @@ def pr_image_format(image_file,
                            to_format = to_format)
 
 # =============================================================================
-def pr_render_address(listid, resource, rfields, record, 
-                      type = None,
-                      **attr):
+def pr_render_address(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Addresses on the HRM Profile
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "pr_address.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["pr_address.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -5967,7 +5956,7 @@ def pr_render_address(listid, resource, rfields, record,
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="pr", f="address",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.T("Edit Address"),
@@ -6012,29 +6001,18 @@ def pr_render_address(listid, resource, rfields, record,
     return item
 
 # =============================================================================
-def pr_render_contact(listid, resource, rfields, record, 
-                      type = None,
-                      **attr):
+def pr_render_contact(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Contacts on the HRM Profile
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "pr_contact.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["pr_contact.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -6050,7 +6028,7 @@ def pr_render_contact(listid, resource, rfields, record,
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="pr", f="contact",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.T("Edit Contact"),
@@ -6114,30 +6092,18 @@ def pr_render_contact(listid, resource, rfields, record,
     return item
 
 # =============================================================================
-def pr_render_filter(listid, resource, rfields, record,
-                     type = None,
-                     **attr):
+def pr_render_filter(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Saved Filters
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "pr_filter.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        record_id = None
-        item_id = "%s-[id]" % listid
-
+    record_id = record["pr_filter.id"]
     item_class = "thumbnail"
 
     raw = record._row

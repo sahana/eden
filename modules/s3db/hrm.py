@@ -6223,12 +6223,12 @@ def hrm_cv(r, **attr):
             vol = False
 
         def dt_row_actions(component):
-            return lambda r, listid: [
+            return lambda r, list_id: [
                 {"label": T("Open"),
                  "url": r.url(component=component,
                               component_id="[id]",
                               method="update.popup",
-                              vars={"refresh": listid}),
+                              vars={"refresh": list_id}),
                  "_class": "action-btn edit s3_modal",
                 },
                 {"label": T("Delete"),
@@ -6359,12 +6359,12 @@ def hrm_record(r, **attr):
             controller = "hrm"
 
         def dt_row_actions(component):
-            return lambda r, listid: [
+            return lambda r, list_id: [
                 {"label": T("Open"),
                  "url": r.url(component=component,
                               component_id="[id]",
                               method="update.popup",
-                              vars={"refresh": listid}),
+                              vars={"refresh": list_id}),
                  "_class": "action-btn edit s3_modal",
                 },
                 {"label": T("Delete"),
@@ -6543,27 +6543,18 @@ def hrm_configure_pr_group_membership():
                    orderby=orderby)
 
 # =============================================================================
-def hrm_render_competency(listid, resource, rfields, record, **attr):
+def hrm_render_competency(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Skills on the HRM Profile
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "hrm_competency.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["hrm_competency.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -6600,7 +6591,7 @@ def hrm_render_competency(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c=controller, f="competency",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.T("Edit Skill"),
@@ -6644,28 +6635,18 @@ def hrm_render_competency(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def hrm_render_credential(listid, resource, rfields, record, **attr):
+def hrm_render_credential(list_id, item_id, resource, rfields, record):
     """
         Item renderer for data list of credentials for an HR
 
-        @param listid: the list ID
-        @param resource: the S3Resource
-        @param rfields: the list fields resolved as S3ResourceFields
-        @param record: the record
-        @param attr: additional attributes
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
     """
 
-    pkey = "hrm_credential.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        record_id = None
-        item_id = "%s-[id]" % listid
-
+    record_id = record["hrm_credential.id"]
     item_class = "thumbnail"
 
     raw = record["_row"]
@@ -6700,7 +6681,7 @@ def hrm_render_credential(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c=controller, f="credential",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings["hrm_credential"].title_update,
@@ -6739,27 +6720,18 @@ def hrm_render_credential(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def hrm_render_experience(listid, resource, rfields, record, **attr):
+def hrm_render_experience(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Experience on the HRM Profile
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "hrm_experience.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["hrm_experience.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -6885,7 +6857,7 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c=controller, f="experience",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.T("Edit Experience"),
@@ -6933,27 +6905,18 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def hrm_render_training(listid, resource, rfields, record, **attr):
+def hrm_render_training(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Trainings on the HRM Profile
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "hrm_training.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["hrm_training.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -7024,7 +6987,7 @@ def hrm_render_training(listid, resource, rfields, record, **attr):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c=controller, f="training",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.T("Edit Training"),

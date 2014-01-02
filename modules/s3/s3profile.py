@@ -320,7 +320,7 @@ class S3Profile(S3CRUD):
             resource.add_filter(filter)
 
         # Use the widget-index to create a unique ID
-        listid = "profile-list-%s-%s" % (tablename, widget["index"])
+        list_id = "profile-list-%s-%s" % (tablename, widget["index"])
 
         # Page size
         pagesize = widget.get("pagesize", 4)
@@ -360,7 +360,7 @@ class S3Profile(S3CRUD):
         datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                    start=start,
                                                    limit=limit,
-                                                   listid=listid,
+                                                   list_id=list_id,
                                                    orderby=orderby,
                                                    layout=list_layout)
         # Render the list
@@ -421,7 +421,7 @@ class S3Profile(S3CRUD):
         # Link for create-popup
         create_popup = self._create_popup(r,
                                           widget,
-                                          listid,
+                                          list_id,
                                           resource,
                                           context,
                                           numrows)
@@ -484,7 +484,7 @@ class S3Profile(S3CRUD):
             resource.add_filter(widget_filter)
 
         # Use the widget-index to create a unique ID
-        listid = "profile-list-%s-%s" % (tablename, widget["index"])
+        list_id = "profile-list-%s-%s" % (tablename, widget["index"])
 
         # Default ORDERBY
         # - first field actually in this table
@@ -572,12 +572,12 @@ class S3Profile(S3CRUD):
                                             representation="aadata")
             actions = widget.get("actions")
             if callable(actions):
-                actions = actions(r, listid)
+                actions = actions(r, list_id)
             if actions:
                 dtargs["dt_row_actions"] = actions
             datatable = dt.html(totalrows,
                                 displayrows,
-                                id=listid,
+                                id=list_id,
                                 **dtargs)
 
             if dt.data:
@@ -589,7 +589,7 @@ class S3Profile(S3CRUD):
             # Link for create-popup
             create_popup = self._create_popup(r,
                                               widget,
-                                              listid,
+                                              list_id,
                                               resource,
                                               context,
                                               totalrows)
@@ -663,7 +663,7 @@ class S3Profile(S3CRUD):
             if dt is not None:
                 data = dt.json(totalrows,
                                displayrows,
-                               listid,
+                               list_id,
                                sEcho,
                                **dtargs)
             else:
@@ -671,7 +671,7 @@ class S3Profile(S3CRUD):
                        '"iTotalDisplayRecords":0,' \
                        '"dataTable_id":"%s",' \
                        '"sEcho":%s,' \
-                       '"aaData":[]}' % (totalrows, listid, sEcho)
+                       '"aaData":[]}' % (totalrows, list_id, sEcho)
 
             return data
             
@@ -811,9 +811,9 @@ class S3Profile(S3CRUD):
                 continue
             # @ToDo: Check permission to access layer (both controller/function & also within Map Config)
             tablename = widget["tablename"]
-            listid = "profile-list-%s-%s" % (tablename, widget["index"])
+            list_id = "profile-list-%s-%s" % (tablename, widget["index"])
             layer = dict(name = T(widget["label"]),
-                         id = listid,
+                         id = list_id,
                          active = True,
                          )
             filter = widget.get("filter", None)
@@ -996,14 +996,14 @@ class S3Profile(S3CRUD):
         return output
 
     # -------------------------------------------------------------------------
-    def _create_popup(self, r, widget, listid, resource, context, numrows):
+    def _create_popup(self, r, widget, list_id, resource, context, numrows):
         """
             Render an action link for a create-popup (used in data lists
             and data tables).
 
             @param r: the S3Request instance
             @param widget: the widget definition as dict
-            @param listid: the list ID
+            @param list_id: the list ID
             @param resource: the target resource
             @param context: the context filter
             @param numrows: the total number of rows in the list/table
@@ -1041,7 +1041,7 @@ class S3Profile(S3CRUD):
                 vars[k] = v
 
             # URL-serialize the list ID (refresh-target of the popup)
-            vars.refresh = listid
+            vars.refresh = list_id
 
             # CRUD string
             title_create = widget.get("title_create", None)
@@ -1064,7 +1064,7 @@ class S3Profile(S3CRUD):
 
             if callable(insert):
                 # Custom widget
-                create = insert(r, listid, title_create, add_url)
+                create = insert(r, list_id, title_create, add_url)
                 
             elif s3.crud.formstyle == "bootstrap":
                 # Bootstrap-style action icon
@@ -1094,12 +1094,12 @@ class S3Profile(S3CRUD):
                     # list updates
                     createid = create["_id"]
                     if not createid:
-                        createid = "%s-add-button" % listid
+                        createid = "%s-add-button" % list_id
                         create.update(_id=createid)
                     script = \
-'''$('#%(listid)s').on('listUpdate',function(){
+'''$('#%(list_id)s').on('listUpdate',function(){
 $('#%(createid)s').css({display:$(this).datalist('getTotalItems')?'none':'block'})
-})''' % dict(listid=listid, createid=createid)
+})''' % dict(list_id=list_id, createid=createid)
                     s3.jquery_ready.append(script)
 
         return create

@@ -96,7 +96,7 @@ $('#login-btn').click(function(){
         # Latest 4 Events and Requests
         s3db = current.s3db
         layout = s3db.cms_render_posts
-        listid = "latest_events"
+        list_id = "latest_events"
         limit = 4
         list_fields = ["series_id",
                        "location_id",
@@ -114,9 +114,9 @@ $('#login-btn').click(function(){
         resource.add_filter(resource.table.date >= request.now)
         # Order with next Event first
         orderby = "date"
-        output["latest_events"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
+        output["latest_events"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
-        listid = "latest_reqs"
+        list_id = "latest_reqs"
         resource = s3db.resource("req_req")
         s3db.req_customize_req_fields()
         list_fields = s3db.get_config("req_req", "list_fields")
@@ -124,7 +124,7 @@ $('#login-btn').click(function(){
         resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent Request first
         orderby = "date desc"
-        output["latest_reqs"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
+        output["latest_reqs"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         # Site Activity Log
         resource = s3db.resource("s3_audit")
@@ -139,11 +139,11 @@ $('#login-btn').click(function(){
         #current.deployment_settings.ui.customize_s3_audit()
         db = current.db
         db.s3_audit.user_id.represent = s3_auth_user_represent_name
-        listid = "log"
+        list_id = "log"
         datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                    start=None,
                                                    limit=4,
-                                                   listid=listid,
+                                                   list_id=list_id,
                                                    orderby=orderby,
                                                    layout=s3.render_log)
 
@@ -201,11 +201,11 @@ $('#login-btn').click(function(){
                                            url = filter_submit_url,
                                            ajaxurl = filter_ajax_url,
                                            _class = "filter-form",
-                                           _id = "%s-filter-form" % listid
+                                           _id = "%s-filter-form" % list_id
                                            )
                 filter_form = filter_form.html(resource,
                                                request.get_vars,
-                                               target=listid,
+                                               target=list_id,
                                                )
 
         output["updates"] = data
@@ -227,7 +227,7 @@ $('#login-btn').click(function(){
         return output
 
 # =============================================================================
-def latest_records(resource, layout, listid, limit, list_fields, orderby):
+def latest_records(resource, layout, list_id, limit, list_fields, orderby):
     """
         Display a dataList of the latest records for a resource
     """
@@ -236,7 +236,7 @@ def latest_records(resource, layout, listid, limit, list_fields, orderby):
     datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                start=None,
                                                limit=limit,
-                                               listid=listid,
+                                               list_id=list_id,
                                                orderby=orderby,
                                                layout=layout)
     if numrows == 0:

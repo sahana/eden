@@ -1144,29 +1144,19 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
     return table
     
 # =============================================================================
-def cms_render_posts(listid, resource, rfields, record, 
-                     type = None,
-                     **attr):
+def cms_render_posts(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for CMS Posts on the Home & News Feed pages
+        Custom dataList item renderer for CMS Posts on the
+        Home & News Feed pages.
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "cms_post.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["cms_post.id"]
     item_class = "thumbnail"
 
     # @ToDo: deployment_setting or introspect based on list_fields
@@ -1297,7 +1287,7 @@ def cms_render_posts(listid, resource, rfields, record,
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="cms", f="newsfeed",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=T("Edit %(type)s") % dict(type=title),
@@ -1323,7 +1313,7 @@ def cms_render_posts(listid, resource, rfields, record,
                              _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
                                 (URL(c="cms", f="post",
                                      args=[record_id, "remove_bookmark"]),
-                                 listid,
+                                 list_id,
                                  record_id),
                              _title=T("Remove Bookmark"),
                              )
@@ -1332,7 +1322,7 @@ def cms_render_posts(listid, resource, rfields, record,
                              _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
                                 (URL(c="cms", f="post",
                                      args=[record_id, "add_bookmark"]),
-                                 listid,
+                                 list_id,
                                  record_id),
                              _title=T("Add Bookmark"),
                              )

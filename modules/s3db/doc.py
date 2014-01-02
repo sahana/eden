@@ -526,29 +526,18 @@ def doc_checksum(docstr):
     return converted
 
 # =============================================================================
-def doc_render_document(listid, resource, rfields, record, 
-                         type = None,
-                         **attr):
+def doc_render_document(list_id, item_id, resource, rfields, record):
     """
         Custom dataList item renderer for Documents, e.g. on the HRM Profile
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
 
-    pkey = "doc_document.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
+    record_id = record["doc_document.id"]
     item_class = "thumbnail"
 
     raw = record._row
@@ -594,7 +583,7 @@ def doc_render_document(listid, resource, rfields, record,
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="doc", f="document",
                                args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
+                               vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
                      _title=current.T("Edit Document"),

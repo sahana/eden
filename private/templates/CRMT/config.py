@@ -2074,26 +2074,17 @@ settings.ui.customize_gis_config = customize_gis_config
 # -----------------------------------------------------------------------------
 # Site Activity Log
 #
-def render_log(listid, resource, rfields, record, **attr):
+def render_log(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for 'Site Activity Logs' on the Home page
+        Custom dataList item renderer for 'Site Activity Logs' on
+        the Home page.
 
-        @param listid: the HTML ID for this list
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
         @param resource: the S3Resource to render
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
-        @param attr: additional HTML attributes for the item
     """
-
-    pkey = "s3_audit.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
 
     #item_class = "thumbnail"
     item_class = ""

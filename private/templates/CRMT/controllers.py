@@ -96,11 +96,11 @@ for(var i=0,len=layers.length;i<len;i++){
                        ]
         #current.deployment_settings.ui.customize_s3_audit()
         db.s3_audit.user_id.represent = s3_auth_user_represent_name
-        listid = "log"
+        list_id = "log"
         datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                    start=None,
                                                    limit=4,
-                                                   listid=listid,
+                                                   list_id=list_id,
                                                    orderby=orderby,
                                                    layout=s3.render_log)
 
@@ -158,11 +158,11 @@ for(var i=0,len=layers.length;i<len;i++){
                                            url = filter_submit_url,
                                            ajaxurl = filter_ajax_url,
                                            _class = "filter-form",
-                                           _id = "%s-filter-form" % listid
+                                           _id = "%s-filter-form" % list_id
                                            )
                 filter_form = filter_form.html(resource,
                                                request.get_vars,
-                                               target=listid,
+                                               target=list_id,
                                                )
 
         output["updates"] = data
@@ -264,28 +264,19 @@ class filters(S3CustomController):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def render_filter(cls, listid, resource, rfields, record, **attr):
+    def render_filter(cls, list_id, item_id, resource, rfields, record):
         """
             Custom dataList item renderer for 'Saved Filters'
 
-            @param listid: the HTML ID for this list
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
             @param resource: the S3Resource to render
             @param rfields: the S3ResourceFields to render
             @param record: the record as dict
-            @param attr: additional HTML attributes for the item
         """
 
+        record_id = record["pr_filter.id"]
         item_class = "thumbnail"
-
-        # Construct the item ID
-        pkey = "pr_filter.id"
-        if pkey in record:
-            record_id = record[pkey]
-            item_id = "%s-%s" % (listid, record_id)
-        else:
-            # template
-            record_id = None
-            item_id = "%s-[id]" % listid
 
         raw = record._row
         resource_name = raw["pr_filter.resource"]

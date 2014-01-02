@@ -161,7 +161,7 @@ class S3DeploymentModel(S3Model):
 
         # Profile
         alert_widget = dict(label="Alerts",
-                            insert=lambda r, listid, title, url: \
+                            insert=lambda r, list_id, title, url: \
                                    A(title,
                                      _href=r.url(component="alert",
                                                  method="create"),
@@ -212,7 +212,7 @@ class S3DeploymentModel(S3Model):
             title_create = "Deploy New Volunteer"
 
         assignment_widget = dict(label = label,
-                                 insert=lambda r, listid, title, url: \
+                                 insert=lambda r, list_id, title, url: \
                                         A(title,
                                           _href=r.url(component="assignment",
                                                       method="create"),
@@ -1298,17 +1298,20 @@ def deploy_render_profile_toolbox(resource,
     return toolbox
 
 # =============================================================================
-def deploy_render_alert(listid, resource, rfields, record, **attr):
+def deploy_render_alert(list_id, item_id, resource, rfields, record):
     """
         Item renderer for data list of alerts
 
-        @param listid: the list ID
-        @param resource: the S3Resource
-        @param rfields: the list fields resolved as S3ResourceFields
-        @param record: the record
-        @param attr: additional attributes
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
     """
     
+    record_id = record["deploy_alert.id"]
+    item_class = "thumbnail"
+
     T = current.T
     hr_label = current.deployment_settings.get_deploy_hr_label()
     HR_LABEL = T(hr_label)
@@ -1318,17 +1321,6 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
         HRS_LABEL = HR_LABEL
     elif hr_label == "Volunteer":
         HRS_LABEL = T("Volunteers")
-
-    pkey = "deploy_alert.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        record_id = None
-        item_id = "%s-[id]" % listid
 
     row = record["_row"]
     sent = True if row["deploy_alert.message_id"] else False
@@ -1383,8 +1375,6 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
         recipients = TAG[""](recipients[:-1])
     else:
         recipients = T("No Recipients Selected")
-
-    item_class = "thumbnail"
 
     modified_on = record["deploy_alert.modified_on"]
     if sent:
@@ -1441,31 +1431,22 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def deploy_render_response(listid, resource, rfields, record, **attr):
+def deploy_render_response(list_id, item_id, resource, rfields, record):
     """
         Item renderer for data list of responses
 
-        @param listid: the list ID
-        @param resource: the S3Resource
-        @param rfields: the list fields resolved as S3ResourceFields
-        @param record: the record
-        @param attr: additional attributes
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
     """
 
-    T = current.T
-    pkey = "deploy_response.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        record_id = None
-        item_id = "%s-[id]" % listid
-
+    record_id = record["deploy_response.id"]
     item_class = "thumbnail"
 
+    T = current.T
+    
     raw = record._row
     human_resource_id = raw["hrm_human_resource.id"]
     mission_id = raw["deploy_response.mission_id"]
@@ -1612,7 +1593,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     # Toolbox
     update_url = URL(f="response_message",
                      args=[record_id, "update.popup"],
-                     vars={"refresh": listid, "record": record_id})
+                     vars={"refresh": list_id, "record": record_id})
     toolbox = deploy_render_profile_toolbox(resource, record_id,
                                             update_url=update_url)
 
@@ -1676,29 +1657,18 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def deploy_render_assignment(listid, resource, rfields, record, 
-                             **attr):
+def deploy_render_assignment(list_id, item_id, resource, rfields, record):
     """
         Item renderer for data list of deployed human resources
 
-        @param listid: the list ID
-        @param resource: the S3Resource
-        @param rfields: the list fields resolved as S3ResourceFields
-        @param record: the record
-        @param attr: additional attributes
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
     """
 
-    pkey = "deploy_assignment.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        record_id = None
-        item_id = "%s-[id]" % listid
-
+    record_id = record["deploy_assignment.id"]
     item_class = "thumbnail"
 
     T = current.T
@@ -1723,7 +1693,7 @@ def deploy_render_assignment(listid, resource, rfields, record,
     # Toolbox
     update_url = URL(c="deploy", f="assignment",
                      args=[record_id, "update.popup"],
-                     vars={"refresh": listid, "record": record_id})
+                     vars={"refresh": list_id, "record": record_id})
     toolbox = deploy_render_profile_toolbox(resource, record_id,
                                             update_url=update_url)
 
@@ -1745,7 +1715,7 @@ def deploy_render_assignment(listid, resource, rfields, record,
                        _href=URL(c="deploy", f="person",
                                  args=[person_id, "appraisal",
                                        appraisal.id, "update.popup"],
-                                 vars={"refresh": listid,
+                                 vars={"refresh": list_id,
                                        "record": record_id,
                                        },
                                  ),
@@ -1761,7 +1731,7 @@ def deploy_render_assignment(listid, resource, rfields, record,
                        _href=URL(c="deploy", f="person",
                                  args=[person_id, "appraisal", "create.popup"],
                                  vars={"mission_id": raw["deploy_assignment.mission_id"],
-                                       "refresh": listid,
+                                       "refresh": list_id,
                                        "record": record_id,
                                        },
                                  ),
