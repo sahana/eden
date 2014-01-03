@@ -10,6 +10,7 @@ import unittest
 from gluon import *
 from gluon.storage import Storage
 from s3.s3aaa import S3EntityRoleManager, S3Permission
+from s3.s3fields import s3_meta_fields
 
 # =============================================================================
 class AuthUtilsTests(unittest.TestCase):
@@ -484,135 +485,221 @@ class RecordOwnershipTests(unittest.TestCase):
     """ Test record ownership """
 
     # -------------------------------------------------------------------------
-    def testOwnershipRequired(self):
-        """ Test ownership_required for all policies """
+    @classmethod
+    def setUpClass(cls):
+        
+        tablename = "ownership_test_table"
+        table = current.db.define_table(tablename,
+                                        Field("name"),
+                                        *s3_meta_fields())
 
-        from s3.s3aaa import S3Permission
+    @classmethod
+    def tearDownClass(cls):
+
+        table = current.db.ownership_test_table
+        table.drop()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        auth = current.auth
+
+        # Create Test Role
+        ROLE = "OWNERSHIPTESTROLE"
+        self.role_id = auth.s3_create_role(ROLE, uid=ROLE)
+
+        # Create a record which is not owned by any user, role or entity
+        auth.s3_impersonate(None)
+        self.table = current.db.ownership_test_table
+        self.table.owned_by_user.default = None
+        self.record_id = self.table.insert(name="Test")
+
+    def tearDown(self):
+
+        auth = current.auth
+
+        # Delete test record
+        current.db(self.table.id == self.record_id).delete()
+        
+        # Remove Test Role
+        auth.s3_delete_role(self.role_id)
+
+        # Logout
+        auth.s3_impersonate(None)
+        
+    # -------------------------------------------------------------------------
+    def testOwnershipRequiredController(self):
+        """ Test ownership required for controller """
 
         auth = current.auth
         permission = auth.permission
+
         deployment_settings = current.deployment_settings
 
-        policy = deployment_settings.get_security_policy()
+        policies = {
+            1: False,
+            2: False,
+            3: True,
+            4: True,
+            5: True,
+            6: True,
+            7: True,
+            8: True,
+            0: True,
+        }
+
+        current_policy = deployment_settings.get_security_policy()
+
+        # Controller ACL
+        auth.permission.update_acl(self.role_id,
+                                   c="pr", f="person",
+                                   uacl=auth.permission.NONE,
+                                   oacl=auth.permission.ALL)
+
+        # Assign Test Role to normaluser@example.com
+        auth.s3_impersonate("normaluser@example.com")
+        auth.s3_assign_role(auth.user.id, self.role_id)
 
         try:
-            deployment_settings.security.policy = 1
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertFalse(o)
-
-            deployment_settings.security.policy = 2
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertFalse(o)
-
-            deployment_settings.security.policy = 3
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertTrue(o)
-
-            deployment_settings.security.policy = 4
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertTrue(o)
-
-            deployment_settings.security.policy = 5
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertTrue(o)
-
-            deployment_settings.security.policy = 6
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertTrue(o)
-
-            deployment_settings.security.policy = 7
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertTrue(o)
-
-            deployment_settings.security.policy = 8
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertTrue(o)
-
-            deployment_settings.security.policy = 0
-            permission = S3Permission(auth)
-            ownership_required = permission.ownership_required
-            o = ownership_required("update", "dvi_body", c="dvi", f="body")
-            self.assertTrue(o)
+            for policy in policies:
+                deployment_settings.security.policy = policy
+                permission = S3Permission(auth)
+                ownership_required = permission.ownership_required
+                o = ownership_required("update",
+                                       "ownership_test_table",
+                                       c="pr",
+                                       f="person")
+                required = policies[policy]
+                msg = "ownership_required failed " \
+                      "in policy %s (%s instead of %s)" % \
+                      (policy, not required, required)
+                if policies[policy]:
+                    self.assertTrue(o, msg=msg)
+                else:
+                    self.assertFalse(o, msg=msg)
         finally:
-            deployment_settings.security.policy = policy
+            deployment_settings.security.policy = current_policy
+            auth.permission.delete_acl(self.role_id, c="pr", f="person")
+
+    # -------------------------------------------------------------------------
+    def testOwnershipRequiredTable(self):
+        """ Test ownership required for table """
+
+        auth = current.auth
+        permission = auth.permission
+
+        deployment_settings = current.deployment_settings
+
+        policies = {
+            1: False,
+            2: False,
+            3: False, # doesn't use table ACLs
+            4: False, # doesn't use table ACLs
+            5: True,
+            6: True,
+            7: True,
+            8: True,
+            0: True,
+        }
+
+        current_policy = deployment_settings.get_security_policy()
+
+        # Table ACL
+        auth.permission.update_acl(self.role_id,
+                                   t="ownership_test_table",
+                                   uacl=auth.permission.NONE,
+                                   oacl=auth.permission.ALL)
+
+        # Assign Test Role to normaluser@example.com
+        auth.s3_impersonate("normaluser@example.com")
+        auth.s3_assign_role(auth.user.id, self.role_id)
+
+        try:
+            for policy in policies:
+                deployment_settings.security.policy = policy
+                permission = S3Permission(auth)
+                ownership_required = permission.ownership_required
+                o = ownership_required("update", "ownership_test_table")
+                required = policies[policy]
+                msg = "ownership_required failed " \
+                      "in policy %s (%s instead of %s)" % \
+                      (policy, not required, required)
+                if policies[policy]:
+                    self.assertTrue(o, msg=msg)
+                else:
+                    self.assertFalse(o, msg=msg)
+        finally:
+            deployment_settings.security.policy = current_policy
+            auth.permission.delete_acl(self.role_id, t="ownership_test_table")
 
     # -------------------------------------------------------------------------
     def testSessionOwnership(self):
         """ Test session ownership methods """
 
         db = current.db
-        s3db = current.s3db
         auth = current.auth
 
-        table = s3db.pr_person
-        table2 = "dvi_body"
+        # Pick two tables
+        # (no real DB access here, so records don't need to exist)
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        otable = s3db.org_organisation
+
+        # Logout + clear_session_ownership before testing
         auth.s3_impersonate(None)
         auth.s3_clear_session_ownership()
-        auth.s3_make_session_owner(table, 1)
 
+        # Check general session ownership rules
+        auth.s3_make_session_owner(ptable, 1)
         # No record ID should always return False
-        self.assertFalse(auth.s3_session_owns(table, None))
+        self.assertFalse(auth.s3_session_owns(ptable, None))
         # Check for non-owned record
-        self.assertFalse(auth.s3_session_owns(table, 2))
+        self.assertFalse(auth.s3_session_owns(ptable, 2))
         # Check for owned record
-        self.assertTrue(auth.s3_session_owns(table, 1))
-
+        self.assertTrue(auth.s3_session_owns(ptable, 1))
         # If user is logged-in, session ownership is always False
         auth.s3_impersonate("normaluser@example.com")
-        self.assertFalse(auth.s3_session_owns(table, 1))
+        self.assertFalse(auth.s3_session_owns(ptable, 1))
 
+        # Check record-wise clear_session_ownership
         auth.s3_impersonate(None)
-        auth.s3_make_session_owner(table, 1)
-        auth.s3_make_session_owner(table, 2)
-        self.assertTrue(auth.s3_session_owns(table, 1))
-        self.assertTrue(auth.s3_session_owns(table, 2))
-        auth.s3_clear_session_ownership(table, 1)
-        self.assertFalse(auth.s3_session_owns(table, 1))
-        self.assertTrue(auth.s3_session_owns(table, 2))
+        auth.s3_make_session_owner(ptable, 1)
+        auth.s3_make_session_owner(ptable, 2)
+        self.assertTrue(auth.s3_session_owns(ptable, 1))
+        self.assertTrue(auth.s3_session_owns(ptable, 2))
+        auth.s3_clear_session_ownership(ptable, 1)
+        self.assertFalse(auth.s3_session_owns(ptable, 1))
+        self.assertTrue(auth.s3_session_owns(ptable, 2))
 
-        auth.s3_make_session_owner(table, 1)
-        auth.s3_make_session_owner(table, 2)
-        auth.s3_make_session_owner(table2, 1)
-        auth.s3_make_session_owner(table2, 2)
-        self.assertTrue(auth.s3_session_owns(table, 1))
-        self.assertTrue(auth.s3_session_owns(table, 2))
-        self.assertTrue(auth.s3_session_owns(table2, 1))
-        self.assertTrue(auth.s3_session_owns(table2, 2))
-        auth.s3_clear_session_ownership(table)
-        self.assertFalse(auth.s3_session_owns(table, 1))
-        self.assertFalse(auth.s3_session_owns(table, 2))
-        self.assertTrue(auth.s3_session_owns(table2, 1))
-        self.assertTrue(auth.s3_session_owns(table2, 2))
+        # Check table-wise clear_session_ownership
+        auth.s3_make_session_owner(ptable, 1)
+        auth.s3_make_session_owner(ptable, 2)
+        auth.s3_make_session_owner(otable, 1)
+        auth.s3_make_session_owner(otable, 2)
+        self.assertTrue(auth.s3_session_owns(ptable, 1))
+        self.assertTrue(auth.s3_session_owns(ptable, 2))
+        self.assertTrue(auth.s3_session_owns(otable, 1))
+        self.assertTrue(auth.s3_session_owns(otable, 2))
+        auth.s3_clear_session_ownership(ptable)
+        self.assertFalse(auth.s3_session_owns(ptable, 1))
+        self.assertFalse(auth.s3_session_owns(ptable, 2))
+        self.assertTrue(auth.s3_session_owns(otable, 1))
+        self.assertTrue(auth.s3_session_owns(otable, 2))
 
-        auth.s3_make_session_owner(table, 1)
-        auth.s3_make_session_owner(table, 2)
-        auth.s3_make_session_owner(table2, 1)
-        auth.s3_make_session_owner(table2, 2)
-        self.assertTrue(auth.s3_session_owns(table, 1))
-        self.assertTrue(auth.s3_session_owns(table, 2))
-        self.assertTrue(auth.s3_session_owns(table2, 1))
-        self.assertTrue(auth.s3_session_owns(table2, 2))
+        # Check global clear_session_ownership
+        auth.s3_make_session_owner(ptable, 1)
+        auth.s3_make_session_owner(ptable, 2)
+        auth.s3_make_session_owner(otable, 1)
+        auth.s3_make_session_owner(otable, 2)
+        self.assertTrue(auth.s3_session_owns(ptable, 1))
+        self.assertTrue(auth.s3_session_owns(ptable, 2))
+        self.assertTrue(auth.s3_session_owns(otable, 1))
+        self.assertTrue(auth.s3_session_owns(otable, 2))
         auth.s3_clear_session_ownership()
-        self.assertFalse(auth.s3_session_owns(table, 1))
-        self.assertFalse(auth.s3_session_owns(table, 2))
-        self.assertFalse(auth.s3_session_owns(table2, 1))
-        self.assertFalse(auth.s3_session_owns(table2, 2))
+        self.assertFalse(auth.s3_session_owns(ptable, 1))
+        self.assertFalse(auth.s3_session_owns(ptable, 2))
+        self.assertFalse(auth.s3_session_owns(otable, 1))
+        self.assertFalse(auth.s3_session_owns(otable, 2))
 
     # -------------------------------------------------------------------------
     def testOwnershipPublicRecord(self):
@@ -622,302 +709,272 @@ class RecordOwnershipTests(unittest.TestCase):
         s3_impersonate = auth.s3_impersonate
         is_owner = auth.permission.is_owner
         assertTrue = self.assertTrue
-        table, record_id = self.create_test_record()
+        assertFalse = self.assertFalse
+        
         auth.s3_clear_session_ownership()
 
-        try:
-            # Admin owns all records
-            s3_impersonate("admin@example.com")
-            assertTrue(is_owner(table, record_id))
+        table = self.table
+        record_id = self.record_id
 
-            # Normal owns all public records
-            s3_impersonate("normaluser@example.com")
-            assertTrue(is_owner(table, record_id))
+        # Admin owns all records
+        s3_impersonate("admin@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # Unauthenticated users never own a record
-            s3_impersonate(None)
-            self.assertFalse(is_owner(table, record_id))
+        # Normal owns all public records
+        s3_impersonate("normaluser@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # ...unless the session owns the record
-            auth.s3_make_session_owner(table, record_id)
-            assertTrue(is_owner(table, record_id))
+        # Unauthenticated users never own a record
+        s3_impersonate(None)
+        assertFalse(is_owner(table, record_id))
 
-        finally:
-            self.remove_test_record()
+        # ...unless the session owns the record
+        auth.s3_make_session_owner(table, record_id)
+        assertTrue(is_owner(table, record_id))
 
     # -------------------------------------------------------------------------
     def testOwnershipAdminOwnedRecord(self):
         """ Test ownership for an Admin-owned record """
 
         auth = current.auth
-        is_owner = auth.permission.is_owner
         s3_impersonate = auth.s3_impersonate
+        is_owner = auth.permission.is_owner
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
 
-        table, record_id = self.create_test_record()
         auth.s3_clear_session_ownership()
 
-        try:
-            user_id = auth.s3_get_user_id("admin@example.com")
-            current.db(table.id == record_id).update(owned_by_user=user_id)
+        table = self.table
+        record_id = self.record_id
 
-            # Admin owns all records
-            s3_impersonate("admin@example.com")
-            self.assertTrue(is_owner(table, record_id))
+        # Make Admin owner of the record
+        user_id = auth.s3_get_user_id("admin@example.com")
+        current.db(table.id == record_id).update(owned_by_user=user_id)
 
-            # Normal does not own this record
-            s3_impersonate("normaluser@example.com")
-            self.assertFalse(is_owner(table, record_id))
+        # Admin owns all records
+        s3_impersonate("admin@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # Unauthenticated does not own this record
-            s3_impersonate(None)
-            self.assertFalse(is_owner(table, record_id))
+        # Normal does not own this record
+        s3_impersonate("normaluser@example.com")
+        assertFalse(is_owner(table, record_id))
 
-            # ...unless the session owns the record
-            auth.s3_make_session_owner(table, record_id)
-            self.assertTrue(is_owner(table, record_id))
+        # Unauthenticated does not own this record
+        s3_impersonate(None)
+        assertFalse(is_owner(table, record_id))
 
-        finally:
-            self.remove_test_record()
+        # ...unless the session owns the record
+        auth.s3_make_session_owner(table, record_id)
+        assertTrue(is_owner(table, record_id))
 
     # -------------------------------------------------------------------------
     def testOwnershipUserOwnedRecord(self):
         """ Test ownership for a user-owned record """
 
         auth = current.auth
-        is_owner = auth.permission.is_owner
         s3_impersonate = auth.s3_impersonate
+        is_owner = auth.permission.is_owner
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
 
-        table, record_id = self.create_test_record()
         auth.s3_clear_session_ownership()
 
-        try:
-            # Change the record owner to admin
-            user_id = auth.s3_get_user_id("normaluser@example.com")
-            current.db(table.id == record_id).update(owned_by_user=user_id)
+        table = self.table
+        record_id = self.record_id
 
-            # Admin owns all records
-            s3_impersonate("admin@example.com")
-            self.assertTrue(is_owner(table, record_id))
+        # Change the record owner to admin
+        user_id = auth.s3_get_user_id("normaluser@example.com")
+        current.db(table.id == record_id).update(owned_by_user=user_id)
 
-            # Normal owns this record
-            s3_impersonate("normaluser@example.com")
-            self.assertTrue(is_owner(table, record_id))
+        # Admin owns all records
+        s3_impersonate("admin@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # Unauthenticated does not own a record
-            s3_impersonate(None)
-            self.assertFalse(is_owner(table, record_id))
+        # Normal owns this record
+        s3_impersonate("normaluser@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # ...unless the session owns the record
-            auth.s3_make_session_owner(table, record_id)
-            self.assertTrue(is_owner(table, record_id))
+        # Unauthenticated does not own a record
+        s3_impersonate(None)
+        assertFalse(is_owner(table, record_id))
 
-        finally:
-            self.remove_test_record()
+        # ...unless the session owns the record
+        auth.s3_make_session_owner(table, record_id)
+        assertTrue(is_owner(table, record_id))
 
     # -------------------------------------------------------------------------
     def testOwnershipGroupOwnedRecord(self):
         """ Test ownership for a collectively owned record """
 
         auth = current.auth
-        is_owner = auth.permission.is_owner
         s3_impersonate = auth.s3_impersonate
+        is_owner = auth.permission.is_owner
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
 
-        table, record_id = self.create_test_record()
         auth.s3_clear_session_ownership()
 
-        try:
-            sr = auth.get_system_roles()
-            user_id = auth.s3_get_user_id("admin@example.com")
-            current.db(table.id == record_id).update(owned_by_user=user_id,
-                                                     owned_by_group=sr.AUTHENTICATED)
+        table = self.table
+        record_id = self.record_id
 
-            # Admin owns all records
-            s3_impersonate("admin@example.com")
-            self.assertTrue(is_owner(table, record_id))
+        sr = auth.get_system_roles()
+        user_id = auth.s3_get_user_id("admin@example.com")
+        current.db(table.id == record_id).update(owned_by_user=user_id,
+                                                 owned_by_group=sr.AUTHENTICATED)
 
-            # Normal owns this record as member of AUTHENTICATED
-            s3_impersonate("normaluser@example.com")
-            self.assertTrue(is_owner(table, record_id))
+        # Admin owns all records
+        s3_impersonate("admin@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # Unauthenticated does not own this record
-            s3_impersonate(None)
-            self.assertFalse(is_owner(table, record_id))
+        # Normal owns this record as member of AUTHENTICATED
+        s3_impersonate("normaluser@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # ...unless the session owns the record
-            auth.s3_make_session_owner(table, record_id)
-            self.assertTrue(is_owner(table, record_id))
+        # Unauthenticated does not own this record
+        s3_impersonate(None)
+        assertFalse(is_owner(table, record_id))
 
-        finally:
-            self.remove_test_record()
+        # ...unless the session owns the record
+        auth.s3_make_session_owner(table, record_id)
+        assertTrue(is_owner(table, record_id))
 
     # -------------------------------------------------------------------------
     def testOwnershipOrganisationOwnedRecord(self):
         """ Test group-ownership for an entity-owned record """
 
         auth = current.auth
-        is_owner = auth.permission.is_owner
         s3_impersonate = auth.s3_impersonate
+        is_owner = auth.permission.is_owner
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
 
-        table, record_id = self.create_test_record()
         auth.s3_clear_session_ownership()
 
-        try:
-            org = current.s3db.pr_get_pe_id("org_organisation", 1)
-            role = auth.s3_create_role("Example Role", uid="TESTROLE")
+        table = self.table
+        record_id = self.record_id
 
-            user_id = auth.s3_get_user_id("admin@example.com")
-            current.db(table.id == record_id).update(owned_by_user=user_id,
-                                                     owned_by_group=role,
-                                                     realm_entity=org)
+        # Assume we have at least one org
+        org = current.s3db.pr_get_pe_id("org_organisation", 1)
+        
+        role = self.role_id
 
-            # Admin owns all records
-            s3_impersonate("admin@example.com")
-            self.assertTrue(is_owner(table, record_id))
+        # Make test role owner of the record and add to org's realm
+        user_id = auth.s3_get_user_id("admin@example.com")
+        current.db(table.id == record_id).update(owned_by_user=user_id,
+                                                 owned_by_group=role,
+                                                 realm_entity=org)
 
-            # Normal user does not own the record
-            s3_impersonate("normaluser@example.com")
-            user_id = auth.user.id
-            self.assertFalse(is_owner(table, record_id))
+        # Admin owns all records
+        s3_impersonate("admin@example.com")
+        assertTrue(is_owner(table, record_id))
 
-            # ...unless they have the role for this org
-            auth.s3_assign_role(user_id, role, for_pe=org)
-            self.assertTrue(is_owner(table, record_id))
-            auth.s3_retract_role(user_id, role, for_pe=org)
-            self.assertFalse(is_owner(table, record_id))
+        # Normal user does not own the record
+        s3_impersonate("normaluser@example.com")
+        user_id = auth.user.id
+        assertFalse(is_owner(table, record_id))
 
-            # ....or have the role without limitation (any org)
-            auth.s3_assign_role(user_id, role, for_pe=0)
-            self.assertTrue(is_owner(table, record_id))
-            auth.s3_retract_role(user_id, role, for_pe=[])
-            self.assertFalse(is_owner(table, record_id))
+        # ...unless they have the role for this org
+        auth.s3_assign_role(user_id, role, for_pe=org)
+        assertTrue(is_owner(table, record_id))
+        auth.s3_retract_role(user_id, role, for_pe=[])
+        assertFalse(is_owner(table, record_id))
 
-            # Unauthenticated does not own this record
-            s3_impersonate(None)
-            self.assertFalse(is_owner(table, record_id))
+        # ....or have the role without limitation (any org)
+        auth.s3_assign_role(user_id, role, for_pe=0)
+        assertTrue(is_owner(table, record_id))
+        auth.s3_retract_role(user_id, role, for_pe=[])
+        assertFalse(is_owner(table, record_id))
 
-            # ...unless the session owns the record
-            auth.s3_make_session_owner(table, record_id)
-            self.assertTrue(is_owner(table, record_id))
+        # Unauthenticated does not own this record
+        s3_impersonate(None)
+        assertFalse(is_owner(table, record_id))
 
-        finally:
-            self.remove_test_record()
-            auth.s3_delete_role("TESTROLE")
+        # ...unless the session owns the record
+        auth.s3_make_session_owner(table, record_id)
+        assertTrue(is_owner(table, record_id))
 
     # -------------------------------------------------------------------------
     def testOwnershipOverride(self):
         """ Test override of owners in is_owner """
 
         auth = current.auth
+        s3_impersonate = auth.s3_impersonate
+        is_owner = auth.permission.is_owner
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
 
-        table, record_id = self.create_test_record()
         auth.s3_clear_session_ownership()
 
-        try:
-            org = current.s3db.pr_get_pe_id("org_organisation", 1)
-            role = auth.s3_create_role("Example Role", uid="TESTROLE")
+        table = self.table
+        record_id = self.record_id
 
-            user_id = auth.s3_get_user_id("admin@example.com")
-            current.db(table.id == record_id).update(realm_entity=org,
-                                                     owned_by_group=role,
-                                                     owned_by_user=user_id)
+        org = current.s3db.pr_get_pe_id("org_organisation", 1)
+        role = self.role_id
 
-            # Normal user does not own the record
-            auth.s3_impersonate("normaluser@example.com")
-            self.assertFalse(auth.permission.is_owner(table, record_id))
+        user_id = auth.s3_get_user_id("admin@example.com")
+        current.db(table.id == record_id).update(realm_entity=org,
+                                                 owned_by_group=role,
+                                                 owned_by_user=user_id)
 
-            # ...unless we override the record's owner stamp
-            owners_override = (None, None, None)
-            self.assertTrue(auth.permission.is_owner(table, record_id,
-                                                     owners=owners_override))
-        finally:
-            self.remove_test_record()
-            auth.s3_delete_role("TESTROLE")
+        # Normal user does not own the record
+        auth.s3_impersonate("normaluser@example.com")
+        assertFalse(auth.permission.is_owner(table, record_id))
+
+        # ...unless we override the record's owner stamp
+        owners_override = (None, None, None)
+        assertTrue(is_owner(table, record_id, owners=owners_override))
 
     # -------------------------------------------------------------------------
     def testGetOwners(self):
         """ Test lookup of record owners """
 
         auth = current.auth
-
-        table, record_id = self.create_test_record()
-        auth.s3_clear_session_ownership()
-
+        s3_impersonate = auth.s3_impersonate
+        is_owner = auth.permission.is_owner
         assertEqual = self.assertEqual
 
-        try:
-            user = auth.s3_get_user_id("admin@example.com")
-            role = auth.s3_create_role("Example Role", uid="TESTROLE")
-            org = current.s3db.pr_get_pe_id("org_organisation", 1)
+        auth.s3_clear_session_ownership()
 
-            e, r, u = auth.permission.get_owners(table, None)
-            assertEqual(e, None)
-            assertEqual(r, None)
-            assertEqual(u, None)
+        table = self.table
+        record_id = self.record_id
 
-            e, r, u = auth.permission.get_owners(None, record_id)
-            assertEqual(e, None)
-            assertEqual(r, None)
-            assertEqual(u, None)
+        user = auth.s3_get_user_id("admin@example.com")
+        role = self.role_id
+        org = current.s3db.pr_get_pe_id("org_organisation", 1)
 
-            e, r, u = auth.permission.get_owners(None, None)
-            assertEqual(e, None)
-            assertEqual(r, None)
-            assertEqual(u, None)
+        e, r, u = auth.permission.get_owners(table, None)
+        assertEqual(e, None)
+        assertEqual(r, None)
+        assertEqual(u, None)
 
-            e, r, u = auth.permission.get_owners(table, record_id)
-            assertEqual(e, None)
-            assertEqual(r, None)
-            assertEqual(u, None)
+        e, r, u = auth.permission.get_owners(None, record_id)
+        assertEqual(e, None)
+        assertEqual(r, None)
+        assertEqual(u, None)
 
-            current.db(table.id == record_id).update(owned_by_user=user,
-                                                     owned_by_group=role,
-                                                     realm_entity=org)
+        e, r, u = auth.permission.get_owners(None, None)
+        assertEqual(e, None)
+        assertEqual(r, None)
+        assertEqual(u, None)
 
-            e, r, u = auth.permission.get_owners(table, record_id)
-            assertEqual(e, org)
-            assertEqual(r, role)
-            assertEqual(u, user)
+        e, r, u = auth.permission.get_owners(table, record_id)
+        assertEqual(e, None)
+        assertEqual(r, None)
+        assertEqual(u, None)
 
-            e, r, u = auth.permission.get_owners(table._tablename, record_id)
-            assertEqual(e, org)
-            assertEqual(r, role)
-            assertEqual(u, user)
+        current.db(table.id == record_id).update(owned_by_user=user,
+                                                 owned_by_group=role,
+                                                 realm_entity=org)
 
-        finally:
-            self.remove_test_record()
-            auth.s3_delete_role("TESTROLE")
+        e, r, u = auth.permission.get_owners(table, record_id)
+        assertEqual(e, org)
+        assertEqual(r, role)
+        assertEqual(u, user)
 
-    # -------------------------------------------------------------------------
-    def tearDown(self):
-
-        current.auth.s3_impersonate(None)
-        current.db.rollback()
-
-    # -------------------------------------------------------------------------
-    # Helpers
-    #
-    def create_test_record(self):
-
-        auth = current.auth
-
-        # Create a record
-        auth.s3_impersonate(None)
-        table = current.s3db.org_office
-        table.owned_by_user.default=None
-
-        auth.override = True
-        record_id = table.insert(name="Ownership Test Office")
-        auth.override = False
-
-        self.table = table
-        self.record_id = record_id
-        return table, record_id
-
-    # -------------------------------------------------------------------------
-    def remove_test_record(self):
-
-        current.db(self.table.id == self.record_id).delete()
-        return
+        e, r, u = auth.permission.get_owners(table._tablename, record_id)
+        assertEqual(e, org)
+        assertEqual(r, role)
+        assertEqual(u, user)
 
 # =============================================================================
 class ACLManagementTests(unittest.TestCase):
