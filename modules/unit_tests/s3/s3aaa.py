@@ -2560,94 +2560,77 @@ class DelegationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        auth = current.auth
         # Create test roles
-        acl = auth.permission
+        s3_create_role = current.auth.s3_create_role
+        TESTREADER = "TESTREADER"
+        s3_create_role(TESTREADER, None, uid=TESTREADER)
+        TESTEDITOR = "TESTEDITOR"
+        s3_create_role(TESTEDITOR, None, uid=TESTEDITOR)
+        TESTADMIN = "TESTADMIN"
+        s3_create_role(TESTADMIN, None, uid=TESTADMIN)
+        current.db.commit()
 
-        auth.s3_create_role("DVI Reader", None,
-                            dict(c="dvi",
-                                 uacl=acl.READ, oacl=acl.READ|acl.UPDATE),
-                            dict(c="dvi", f="body",
-                                 uacl=acl.READ|acl.CREATE, oacl=acl.READ|acl.UPDATE),
-                            dict(t="dvi_body",
-                                 uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=acl.READ|acl.UPDATE),
-                            uid="TESTDVIREADER")
+    @classmethod
+    def tearDownClass(cls):
 
-        auth.s3_create_role("DVI Editor", None,
-                            dict(c="dvi",
-                                 uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=acl.READ|acl.UPDATE),
-                            dict(c="dvi", f="body",
-                                 uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=acl.READ|acl.UPDATE),
-                            dict(t="dvi_body",
-                                 uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=acl.READ|acl.UPDATE),
-                            uid="TESTDVIEDITOR")
-
-        auth.s3_create_role("DVI Admin", None,
-                            dict(c="dvi",
-                                 uacl=acl.ALL, oacl=acl.ALL),
-                            dict(c="dvi", f="body",
-                                 uacl=acl.ALL, oacl=acl.ALL),
-                            dict(t="dvi_body",
-                                 uacl=acl.ALL, oacl=acl.ALL),
-                            uid="TESTDVIADMIN")
+        # Remove test roles
+        s3_delete_role = current.auth.s3_delete_role
+        s3_delete_role("TESTREADER")
+        s3_delete_role("TESTEDITOR")
+        s3_delete_role("TESTADMIN")
+        current.db.commit()
 
     # -------------------------------------------------------------------------
     def setUp(self):
 
         db = current.db
-        s3db = current.s3db
         auth = current.auth
+        s3db = current.s3db
 
-        self.policy = current.deployment_settings.get_security_policy()
+        # Store current security policy
+        settings = current.deployment_settings
+        self.policy = settings.get_security_policy()
 
         # Get the role IDs
         gtable = auth.settings.table_group
-        row = db(gtable.uuid=="TESTDVIREADER").select(limitby=(0, 1)).first()
-        self.dvi_reader = row.id
-        row = db(gtable.uuid=="TESTDVIEDITOR").select(limitby=(0, 1)).first()
-        self.dvi_editor = row.id
-        row = db(gtable.uuid=="TESTDVIADMIN").select(limitby=(0, 1)).first()
-        self.dvi_admin = row.id
+        row = db(gtable.uuid=="TESTREADER").select(limitby=(0, 1)).first()
+        self.reader = row.id
+        row = db(gtable.uuid=="TESTEDITOR").select(limitby=(0, 1)).first()
+        self.editor = row.id
+        row = db(gtable.uuid=="TESTADMIN").select(limitby=(0, 1)).first()
+        self.admin = row.id
 
+        # Impersonate Admin
         auth.s3_impersonate("admin@example.com")
 
-        # Create test organisations
+        # Create test entities
         table = s3db.org_organisation
-        record_id = table.insert(name="TestOrganisation1")
-        s3db.update_super(table, Storage(id=record_id))
-        self.org1 = s3db.pr_get_pe_id(table, record_id)
-
-        record_id = table.insert(name="TestOrganisation2")
-        s3db.update_super(table, Storage(id=record_id))
-        self.org2 = s3db.pr_get_pe_id(table, record_id)
-
-        record_id = table.insert(name="TestOrganisation3")
-        s3db.update_super(table, Storage(id=record_id))
-        self.org3 = s3db.pr_get_pe_id(table, record_id)
-
-        # Create test records
-        table = s3db.dvi_body
-        record_id = table.insert(pe_label="TestRecord1",
-                                 owned_by_user=auth.user.id,
-                                 realm_entity=self.org1)
-        s3db.update_super(table, Storage(id=record_id))
-        self.record1 = record_id
-
-        record_id = table.insert(pe_label="TestRecord2",
-                                 owned_by_user=auth.user.id,
-                                 realm_entity=self.org2)
-        s3db.update_super(table, Storage(id=record_id))
-        self.record2 = record_id
-
-        record_id = table.insert(pe_label="TestRecord3",
-                                 owned_by_user=auth.user.id,
-                                 realm_entity=self.org3)
-        s3db.update_super(table, Storage(id=record_id))
-        self.record3 = record_id
+        self.org = []
+        for i in xrange(3):
+            record_id = table.insert(name="PermissionTestOrganisation%s" % i)
+            record =  Storage(id=record_id)
+            s3db.update_super(table, record)
+            self.org.append(record.pe_id)
 
         # Remove session ownership
         auth.s3_clear_session_ownership()
+
+        # Logout + turn override off
         auth.s3_impersonate(None)
+        auth.override = False
+
+    def tearDown(self):
+
+        # Rollback
+        current.db.rollback()
+
+        # Restore security policy
+        current.deployment_settings.security.policy = self.policy
+
+        # Logout + turn override off
+        auth = current.auth
+        auth.s3_impersonate(None)
+        auth.override = False
 
     # -------------------------------------------------------------------------
     def testRoleDelegation(self):
@@ -2662,104 +2645,99 @@ class DelegationTests(unittest.TestCase):
         auth.s3_impersonate("normaluser@example.com")
         user = auth.user.pe_id
 
-        try:
+        org1 = self.org[0]
+        org2 = self.org[1]
+        org3 = self.org[2]
 
-            # Add the user as OU descendant of org3 and assign dvi_reader
-            s3db.pr_add_affiliation(self.org3, user, role="TestStaff")
-            auth.s3_assign_role(auth.user.id, self.dvi_editor, for_pe=self.org3)
+        pr_add_affiliation = s3db.pr_add_affiliation
+        pr_remove_affiliation = s3db.pr_remove_affiliation
+        s3_delegate_role = auth.s3_delegate_role
+        s3_remove_delegation = auth.s3_remove_delegation
 
-            # Make org3 an OU descendant of org2
-            s3db.pr_add_affiliation(self.org2, self.org3, role="TestOrgUnit")
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
 
-            # Delegate the dvi_reader role for org1 to org2
-            auth.s3_delegate_role(self.dvi_reader, self.org1, receiver=self.org2)
+        READER = self.reader
+        EDITOR = self.editor
 
-            # Check the delegations
-            delegations = auth.user.delegations
-            self.assertTrue(self.dvi_reader in delegations)
-            self.assertTrue(self.org3 in delegations[self.dvi_reader])
-            self.assertTrue(self.org1 in delegations[self.dvi_reader][self.org3])
+        # Add the user as staff member (=OU) of org3 and assign TESTEDITOR
+        pr_add_affiliation(org3, user, role="TestStaff")
+        auth.s3_assign_role(auth.user.id, EDITOR, for_pe=org3)
 
-            auth.s3_remove_delegation(self.dvi_reader, self.org1, receiver=self.org2)
+        # Make org3 an OU descendant of org2
+        pr_add_affiliation(org2, org3, role="TestOrgUnit")
 
-            # Check the delegations
-            delegations = auth.user.delegations
-            self.assertEqual(delegations.keys(), [])
+        # Delegate the TESTREADER role for org1 to org2
+        s3_delegate_role(READER, org1, receiver=org2)
 
-            # Delegate the dvi_reader role for org1 to org2
-            auth.s3_delegate_role([self.dvi_reader, self.dvi_editor], self.org1, receiver=self.org2)
+        # Check the delegations
+        delegations = auth.user.delegations
+        assertTrue(READER in delegations)
+        assertTrue(org3 in delegations[READER])
+        assertTrue(org1 in delegations[READER][org3])
 
-            delegations = auth.s3_get_delegations(self.org1)
-            self.assertNotEqual(delegations, None)
-            self.assertTrue(isinstance(delegations, Storage))
-            self.assertTrue(self.org2 in delegations)
-            self.assertTrue(isinstance(delegations[self.org2], list))
-            self.assertEqual(len(delegations[self.org2]), 2)
-            self.assertTrue(self.dvi_reader in delegations[self.org2])
-            self.assertTrue(self.dvi_editor in delegations[self.org2])
+        s3_remove_delegation(READER, org1, receiver=org2)
 
-            # Check the delegations
-            delegations = auth.user.delegations
-            self.assertTrue(self.dvi_reader in delegations)
-            self.assertTrue(self.dvi_editor in delegations)
-            self.assertTrue(self.org3 in delegations[self.dvi_reader])
-            self.assertTrue(self.org1 in delegations[self.dvi_reader][self.org3])
-            self.assertTrue(self.org3 in delegations[self.dvi_editor])
-            self.assertTrue(self.org1 in delegations[self.dvi_editor][self.org3])
+        # Check the delegations
+        delegations = auth.user.delegations
+        assertEqual(delegations.keys(), [])
 
-            auth.s3_remove_delegation(self.dvi_editor, self.org1, receiver=self.org2)
+        # Delegate the TESTREADER and TESTEDITOR roles for org1 to org2
+        s3_delegate_role([READER, EDITOR], org1, receiver=org2)
 
-            delegations = auth.s3_get_delegations(self.org1)
-            self.assertNotEqual(delegations, None)
-            self.assertTrue(isinstance(delegations, Storage))
-            self.assertTrue(self.org2 in delegations)
-            self.assertTrue(isinstance(delegations[self.org2], list))
-            self.assertEqual(len(delegations[self.org2]), 1)
-            self.assertTrue(self.dvi_reader in delegations[self.org2])
+        delegations = auth.s3_get_delegations(org1)
+        assertNotEqual(delegations, None)
+        assertTrue(isinstance(delegations, Storage))
+        assertTrue(org2 in delegations)
+        assertTrue(isinstance(delegations[org2], list))
+        assertEqual(len(delegations[org2]), 2)
+        assertTrue(READER in delegations[org2])
+        assertTrue(EDITOR in delegations[org2])
 
-            # Check the delegations
-            delegations = auth.user.delegations
-            self.assertTrue(self.dvi_reader in delegations)
-            self.assertFalse(self.dvi_editor in delegations)
-            self.assertTrue(self.org3 in delegations[self.dvi_reader])
-            self.assertTrue(self.org1 in delegations[self.dvi_reader][self.org3])
+        # Check the delegations
+        delegations = auth.user.delegations
+        assertTrue(READER in delegations)
+        assertTrue(EDITOR in delegations)
+        assertTrue(org3 in delegations[READER])
+        assertTrue(org1 in delegations[READER][org3])
+        assertTrue(org3 in delegations[EDITOR])
+        assertTrue(org1 in delegations[EDITOR][org3])
 
-            auth.s3_remove_delegation(self.dvi_reader, self.org1, receiver=self.org2)
+        s3_remove_delegation(EDITOR, org1, receiver=org2)
 
-            delegations = auth.s3_get_delegations(self.org1)
-            self.assertNotEqual(delegations, None)
-            self.assertTrue(isinstance(delegations, Storage))
-            self.assertEqual(delegations.keys(), [])
+        delegations = auth.s3_get_delegations(org1)
+        assertNotEqual(delegations, None)
+        assertTrue(isinstance(delegations, Storage))
+        assertTrue(org2 in delegations)
+        assertTrue(isinstance(delegations[org2], list))
+        assertEqual(len(delegations[org2]), 1)
+        assertTrue(READER in delegations[org2])
 
-            # Check the delegations
-            delegations = auth.user.delegations
-            self.assertEqual(delegations.keys(), [])
+        # Check the delegations
+        delegations = auth.user.delegations
+        assertTrue(READER in delegations)
+        assertFalse(EDITOR in delegations)
+        assertTrue(org3 in delegations[READER])
+        assertTrue(org1 in delegations[READER][org3])
 
-        finally:
+        s3_remove_delegation(READER, org1, receiver=org2)
 
-            # Remove delegation, affiliation and role
-            s3db.pr_remove_affiliation(self.org3, user, role="TestStaff")
-            s3db.pr_remove_affiliation(self.org2, self.org3, role="TestOrgUnit")
-            auth.s3_withdraw_role(user, self.dvi_reader, for_pe=self.org3)
-            current.db.rollback()
+        delegations = auth.s3_get_delegations(org1)
+        assertNotEqual(delegations, None)
+        assertTrue(isinstance(delegations, Storage))
+        assertEqual(delegations.keys(), [])
 
-    # -------------------------------------------------------------------------
-    def tearDown(self):
+        # Check the delegations
+        delegations = auth.user.delegations
+        assertEqual(delegations.keys(), [])
 
-        self.role = None
-
-        current.deployment_settings.security.policy = self.policy
-        current.auth.s3_impersonate(None)
-        current.db.rollback()
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def tearDownClass(cls):
-        auth = current.auth
-        auth.s3_delete_role("TESTDVIREADER")
-        auth.s3_delete_role("TESTDVIEDITOR")
-        auth.s3_delete_role("TESTDVIADMIN")
-
+        # Remove delegation, affiliation and role
+        pr_remove_affiliation(org3, user, role="TestStaff")
+        pr_remove_affiliation(org2, org3, role="TestOrgUnit")
+        auth.s3_withdraw_role(user, READER, for_pe=org3)
+            
 # =============================================================================
 class RecordApprovalTests(unittest.TestCase):
     """ Tests for the record approval framework """
