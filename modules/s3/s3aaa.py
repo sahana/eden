@@ -126,7 +126,7 @@ class AuthS3(Auth):
             - s3_create_role
             - s3_delete_role
             - s3_assign_role
-            - s3_retract_role
+            - s3_withdraw_role
             - s3_has_role
             - s3_group_members
 
@@ -3028,7 +3028,7 @@ S3OptionsFilter({
         return
 
     # -------------------------------------------------------------------------
-    def s3_retract_role(self, user_id, group_id, for_pe=None):
+    def s3_withdraw_role(self, user_id, group_id, for_pe=None):
         """
             Removes a role assignment from a user account
 
@@ -7258,9 +7258,9 @@ class S3RoleManager(S3Method):
                                     pe_id = row.pe_id
                                 else:
                                     pe_id = []
-                                auth.s3_retract_role(row.user_id,
-                                                     row.group_id,
-                                                     for_pe=pe_id)
+                                auth.s3_withdraw_role(row.user_id,
+                                                      row.group_id,
+                                                      for_pe=pe_id)
                                 removed += 1
                     if removed:
                         session.confirmation = T("%(count)s Roles of the user removed") % \
@@ -7504,9 +7504,9 @@ class S3RoleManager(S3Method):
                                                    mtable.pe_id,
                                                    limitby=(0, 1)).first()
                             if row:
-                                auth.s3_retract_role(row.user_id,
-                                                     row.group_id,
-                                                     for_pe=row.pe_id)
+                                auth.s3_withdraw_role(row.user_id,
+                                                      row.group_id,
+                                                      for_pe=row.pe_id)
                                 removed += 1
                     if removed:
                         session.confirmation = T("%(count)s Users removed from Role") % \
@@ -8087,13 +8087,13 @@ class S3EntityRoleManager(S3Method):
 
         auth = current.auth
         assign_role = auth.s3_assign_role
-        retract_role = auth.s3_retract_role
+        withdraw_role = auth.s3_withdraw_role
 
         for role_uid in before:
             # If role_uid is not in after,
             # the access level has changed.
             if role_uid not in after:
-                retract_role(user_id, role_uid, entity_id)
+                withdraw_role(user_id, role_uid, entity_id)
 
         for role_uid in after:
             # If the role_uid is not in before,
