@@ -54,6 +54,8 @@
     width: 99%;         /* page width minus left and right padding */
     left: 0.5%;         /* page left padding */
     min-width: 0px;
+	float:none;
+	overflow:visible;
 }
 
 .aside {
