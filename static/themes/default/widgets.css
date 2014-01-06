@@ -3,8 +3,8 @@
 body.ltr {
     direction: ltr;
 }
-body.rtl div {
-    direction: rtl;
+body.ltr div {
+    direction: ltr;
 }
 
 /* Form Layout Styles */
@@ -820,6 +820,7 @@ span.tab_next_inactive a {
 #rfooter {
 	padding: 15px 0;
 	clear: both;
+	
 }
 
 /* Last Update Meta-data */

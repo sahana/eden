@@ -1,66 +1,57 @@
+
 @charset "UTF-8";
-
-/* Width of page */
 .swidth {
-	width: 640px;
+    width: 100%;
 }
-
-/* Column container */
 .colmask {
-    position: relative;  /* This fixes the IE7 overflow hidden bug */
     clear: both;
     float: left;
-    width: 100%;         /* width of whole page */
-    overflow: hidden;    /* This chops off any overhanging divs */
-    z-index: 0;          /* This keeps drop down menus visible on maps */
     margin-top: 42px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    z-index: 0;
 }
-
-/* common column settings */
 .col3left {
     float: left;
-    width: 33%;
     position: relative;
+    width: 33%;
 }
 .col3mid, .col3right {
     float: right;
-    width: 33%;
     position: relative;
+    width: 33%;
 }
 .col2left {
     float: left;
-    width: 49%;
     position: relative;
+    width: 49%;
 }
 .col2right {
     float: right;
-    width: 49%;
     position: relative;
+    width: 49%;
 }
 .col1, .col2, .col3 {
-    float: left;
-    position: relative;
-    padding: 0 0 3px 0;
     overflow: hidden;
+    width: 80%;
+    padding-left: 20px;
+    padding-right: 20px;
+	padding-top:10px;
 }
-
-/* Full page settings */
 .fullpage {
-    background: #fff;    /* page background colour */
-    padding-top: 1px;
+    background: none repeat 0 0 rgb(255, 255, 255);
     overflow: visible;
+    padding-top: 1px;
 }
 .fullpage .col1 {
-    width: 99%;         /* page width minus left and right padding */
-    left: 0.5%;         /* page left padding */
-    min-width: 800px;
+    min-width: auto%;
+    width: 99%;
 }
-
 .aside {
     float: left;
     width: 200px;
-    /*margin-left: 100%;*/
 }
 .rightside {
-    margin-left: 200px;
+	width:auto;
 }
