@@ -42,6 +42,8 @@ class Warehouses(SeleniumUnitTest):
         
         import datetime
         from dateutil.relativedelta import relativedelta
+        base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
+        file_path = os.path.join(base_dir, "modules", "tests","staff","staff.csv")
 
         #@ToDo: Move these into we2unittest
         today = datetime.date.today().strftime("%Y-%m-%d")
@@ -49,14 +51,20 @@ class Warehouses(SeleniumUnitTest):
         now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
         now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
         
-        # Login, if not-already done so
-        self.login(account="normal", nexturl="hrm/person/import?group=staff")
-        
         # HRM004
-		# Import Staff from File
-		self.browser.find_element_by_id("s3_import_upload_file").click()
-		
-		* Select file/Insert file name of csv
-		* Submit
+        # Login, if not-already done so
+        self.login(account="admin", nexturl="hrm/person/import?group=staff")
+        self.browser.find_element_by_id("s3_import_upload_file").click()
+        self.browser.find_element_by_css_selector('input[type="file"]').clear()
+        self.browser.find_element_by_css_selector('input[type="file"]').send_keys(file_path)
+        #uncoment the line below to remove existing data before import
+        self.browser.find_element_by_id("s3_import_upload_replace_option").click()
+
+        #Submiting the form
+        self.browser.find_element_by_class("submit").click()
+
+        #Importing
+        self.browser.find_element_by_id("Import-selected-action").click()
+
 		
 		
