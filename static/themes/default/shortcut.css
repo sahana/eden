@@ -38,7 +38,7 @@
     font-size: 80%;
 }
 .wide {
-    width: 100%;
+    width: 780px;
 }
 
 /* CSS floats */
@@ -94,7 +94,4 @@
 .ltr {
     direction: ltr;
 }
-/* A section which isn't translated so should always appear RTL (e.g. Local Names) */
-.rtl {
-    direction: rtl;
-}
+
