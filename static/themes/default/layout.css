@@ -39,14 +39,17 @@
 }
 .col1, .col2, .col3 {
     float: left;
-    position: relative;
-    padding: 0 0 3px 0;
+    position: static;
+    padding-left: 20px;
+    padding-right: 20px;
+	padding-top:10px;
     overflow: hidden;
+	width: auto;
 }
 
 /* Full page settings */
 .fullpage {
-    background: #fff;    /* page background colour */
+    background: none repeat 0 0 rgb(255, 255, 255);    /* page background colour */
     padding-top: 1px;
     overflow: visible;
 }
