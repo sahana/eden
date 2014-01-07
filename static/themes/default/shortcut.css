@@ -43,10 +43,10 @@
 
 /* CSS floats */
 .fleft {
-    float: left !important;
+    float: right !important;
 }
 .fright {
-    float: right !important;
+    float: left !important;
 }
 /* Clears - unused currently
 .cboth {
