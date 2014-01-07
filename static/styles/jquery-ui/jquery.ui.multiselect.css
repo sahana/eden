@@ -19,8 +19,8 @@
 .ui-multiselect-checkboxes li.ui-multiselect-optgroup-label { text-align:center; font-weight:bold; border-bottom:1px solid }
 .ui-multiselect-checkboxes li.ui-multiselect-optgroup-label a { display:block; padding:3px; margin:1px 0; text-decoration:none }
 
-/* remove label borders in IE6 because IE6 does not support transparency */
-* html .ui-multiselect-checkboxes label { border:none }
+/* remove label borders in IE6 because IE6 does not support transparency
+* html .ui-multiselect-checkboxes label { border:none } */
 
 /* For filter plugin,        ** REMOVABLE if filter plugin unused **               */
 .ui-multiselect-hasfilter ul { position:relative; top:2px }

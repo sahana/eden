@@ -100,33 +100,7 @@ def vehicle():
         msg_record_deleted = T("Vehicle deleted"),
         msg_list_empty = T("No Vehicles currently registered"))
 
-    # Tweak the search method labels
-    vehicle_search = s3base.S3Search(
-        # Advanced Search only
-        advanced=(s3base.S3SearchSimpleWidget(
-                    name="vehicle_search_text",
-                    label=T("Search"),
-                    comment=T("Search for a vehicle by text."),
-                    field=[
-                            "number",
-                            "item_id$name",
-                            #"item_id$category_id$name",
-                            "comments"
-                        ]
-                  ),
-                s3base.S3SearchOptionsWidget(
-                    name="vehicle_search_location",
-                    field="location_id$L1",
-                    location_level="L1",
-                    cols = 3
-                ),
-                s3base.S3SearchLocationWidget(
-                    name="vehicle_search_map",
-                    label=T("Map"),
-                ),
-        ))
-    s3db.configure(tablename,
-                    search_method = vehicle_search)
+    # @ToDo: Tweak the search comment
 
     # Defined in Model
     return s3db.asset_controller()

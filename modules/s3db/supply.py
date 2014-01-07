@@ -362,11 +362,10 @@ S3OptionsFilter({
                                    ),
                              brand_id(),
                              Field("kit", "boolean",
-                                   default=False,
-                                   represent=lambda bool: \
-                                    (bool and [T("Yes")] or
-                                    [NONE])[0],
-                                   label=T("Kit?")
+                                   default = False,
+                                   label = T("Kit?"),
+                                   represent = lambda bool: \
+                                    (bool and [T("Yes")] or [NONE])[0],
                                    ),
                              Field("model", length=128,
                                    represent = lambda v: v or NONE,
@@ -450,51 +449,44 @@ S3OptionsFilter({
             )
 
         # ---------------------------------------------------------------------
-        # Item Search Method
-        #
-        search_widgets = [
-            S3SearchSimpleWidget(
-                name="item_search_text",
-                label=T("Search"),
-                comment=T("Search for an item by its code, name, model and/or comment."),
-                field=["code",
-                       "name",
-                       "model",
-                       #"item_category_id$name",
-                       "comments" ]
-              ),
-            S3SearchOptionsWidget(
-                name="item_search_brand",
-                label=T("Brand"),
-                comment=T("Search for an item by brand."),
-                field="brand_id",
-                represent ="%(name)s",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="item_search_year",
-                label=T("Year"),
-                comment=T("Search for an item by Year of Manufacture."),
-                field="year",
-                cols = 1
-            ),
+        filter_widgets = [
+            S3TextFilter(["code",
+                          "name",
+                          "model",
+                          #"item_category_id$name",
+                          "comments",
+                          ],
+                         label = T("Search"),
+                         comment = T("Search for an item by its code, name, model and/or comment."),
+                         #_class = "filter-search",
+                         ),
+            S3OptionsFilter("brand_id",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            #label = T("Brand"),
+                            represent = "%(name)s",
+                            widget = "multiselect",
+                            ),
+            S3OptionsFilter("year",
+                            comment = T("Search for an item by Year of Manufacture."),
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            label = T("Year"),
+                            widget = "multiselect",
+                            ),
             ]
-        report_options = Storage(
-            search=search_widgets,
-            defaults=Storage(rows="item.name",
-                             cols="item.item_category_id",
-                             fact="count:item.brand_id",
-                             ),
-            hide_comments=True,
-        )
-        search_method = S3Search(simple=(),
-                                 advanced=search_widgets)
+
+        report_options = Storage(defaults=Storage(rows="name",
+                                                  cols="item_category_id",
+                                                  fact="count(brand_id)",
+                                                  ),
+                                 )
 
         configure(tablename,
                   deduplicate = self.supply_item_duplicate,
+                  filter_widgets = filter_widgets,
                   onaccept = self.supply_item_onaccept,
                   orderby = table.name,
-                  search_method = search_method,
                   report_options = report_options,
                   )
 
@@ -768,7 +760,9 @@ S3OptionsFilter({
         # This super entity provides a common way to provide a foreign key to supply_item
         # - it allows searching/reporting across Item types easily.
         #
-        item_types = Storage(inv_inv_item = T("Warehouse Stock"),
+        item_types = Storage(asset_asset = T("Asset"),
+                             asset_item = T("Asset Item"),
+                             inv_inv_item = T("Warehouse Stock"),
                              inv_track_item = T("Order Item"),
                              proc_plan_item = T("Planned Procurement Item"),
                              )
@@ -2311,7 +2305,9 @@ def supply_item_controller():
     s3.prep = prep
 
     return current.rest_controller("supply", "item",
-                                   rheader=s3db.supply_item_rheader)
+                                   hide_filter = False,
+                                   rheader = supply_item_rheader,
+                                   )
 
 # =============================================================================
 def supply_item_entity_controller():

@@ -558,12 +558,6 @@ label.ui-corner-all span {
     top: 5px;
     font-size: 12px;
 }
-body.ltr label.ui-corner-all span {
-    left: 10px;
-}
-body.rtl label.ui-corner-all span {
-    right: 10px;
-}
 
 .ui-widget-header {
     border-color: #BBBBBB;

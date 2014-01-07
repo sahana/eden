@@ -28,7 +28,7 @@
 """
 
 __all__ = ["S3AssetModel",
-           "asset_rheader",
+           #"asset_rheader",
            "asset_types",
            "asset_log_status",
            "asset_controller",
@@ -89,9 +89,8 @@ class S3AssetModel(S3Model):
     """
 
     names = ["asset_asset",
-             #"asset_sub_asset",
+             "asset_item",
              "asset_log",
-             "asset_log_prep",
              "asset_asset_id",
              ]
 
@@ -102,11 +101,15 @@ class S3AssetModel(S3Model):
         auth = current.auth
         s3 = current.response.s3
 
-        person_id = self.pr_person_id
+        item_id = self.supply_item_id
+        item_entity_id = self.supply_item_entity_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
+        person_id = self.pr_person_id
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        NONE = messages["NONE"]
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
@@ -125,39 +128,49 @@ class S3AssetModel(S3Model):
         asset_type_opts = {ASSET_TYPE_VEHICLE     : T("Vehicle"),
                            #ASSET_TYPE_RADIO      : T("Radio"),
                            #ASSET_TYPE_TELEPHONE  : T("Telephone"),
-                           ASSET_TYPE_OTHER       : T("Other")
+                           ASSET_TYPE_OTHER       : T("Other"),
                            }
 
         ctable = self.supply_item_category
         itable = self.supply_item
         supply_item_represent = self.supply_item_represent
+        asset_items_set = db((ctable.can_be_asset == True) & \
+                             (itable.item_category_id == ctable.id))
 
         tablename = "asset_asset"
         table = define_table(tablename,
+                             # Instances
                              super_link("track_id", "sit_trackable"),
                              super_link("doc_id", "doc_entity"),
+                             item_entity_id,
                              Field("number",
-                                   label = T("Asset Number")),
-                             self.supply_item_entity_id,
-                             # @ToDo: Can we set this automatically based on Item Category?
+                                   label = T("Asset Number"),
+                                   ),
+                             # @ToDo: We could set this automatically based on Item Category
                              Field("type", "integer",
+                                   label = T("Type"),
                                    readable = vehicle,
                                    writable = vehicle,
                                    requires = IS_IN_SET(asset_type_opts),
                                    default = ASSET_TYPE_OTHER,
                                    represent = lambda opt: \
                                        asset_type_opts.get(opt, UNKNOWN_OPT),
-                                   label = T("Type")),
-                             self.supply_item_id(represent = supply_item_represent,
-                                                 requires = IS_ONE_OF(db((ctable.can_be_asset == True) & \
-                                                                         (itable.item_category_id == ctable.id)),
-                                                                      "supply_item.id",
-                                                                      supply_item_represent,
-                                                                      sort=True,
-                                                                      ),
-                                                 widget = None,
-                                                 script = None, # No Item Pack Filter
-                                                 ),
+                                   ),
+                             item_id(represent = supply_item_represent,
+                                     requires = IS_ONE_OF(asset_items_set,
+                                                          "supply_item.id",
+                                                          supply_item_represent,
+                                                          sort = True,
+                                                          ),
+                                     script = None, # No Item Pack Filter
+                                     widget = None,
+                                     ),
+                             Field("kit", "boolean",
+                                   default = False,
+                                   label = T("Kit?"),
+                                   represent = lambda bool: \
+                                    (bool and [T("Yes")] or [NONE])[0],
+                                   ),
                              organisation_id(#requires=self.org_organisation_requires(
                                              #           updateable=True,
                                              #           required=True),
@@ -170,7 +183,8 @@ S3OptionsFilter({
  'lookupPrefix':'org',
  'lookupField':'site_id',
  'lookupURL':S3.Ap.concat('/org/sites_for_org/'),
-})'''),
+})''',
+                                             ),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
@@ -188,20 +202,25 @@ S3OptionsFilter({
                                         #                                T("Enter some characters to bring up a list of possible matches"))),
                                         ),
                              Field("sn",
-                                   label = T("Serial Number")),
+                                   label = T("Serial Number"),
+                                   ),
                              organisation_id("supply_org_id",
                                              label = T("Supplier/Donor"),
-                                             ondelete = "SET NULL"),
+                                             ondelete = "SET NULL",
+                                             ),
                              s3_date("purchase_date",
-                                     label = T("Purchase Date")),
+                                     label = T("Purchase Date"),
+                                     ),
                              Field("purchase_price", "double",
                                    #default=0.00,
                                    represent=lambda v, row=None: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                   ),
                              s3_currency("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
                              location_id(readable=False,
-                                         writable=False),
+                                         writable=False,
+                                         ),
                              # Populated onaccept of the log to make a component tab
                              person_id("assigned_to_id",
                                        readable=False,
@@ -253,7 +272,7 @@ S3OptionsFilter({
                        "item_id$item_category_id",
                        "item_id",
                        "number",
-                       "type",
+                       #"type",
                        #"purchase_date",
                        (T("Assigned To"), "assigned_to_id"),
                        "organisation_id",
@@ -312,34 +331,50 @@ S3OptionsFilter({
         report_options = Storage(
             rows = report_fields,
             cols = report_fields,
-            fact = [(T("Number of items"), "count(id)")],
+            fact = [(T("Number of items"), "count(number)")],
             defaults=Storage(cols = "location_id$%s" % levels[0], # Highest-level of hierarchy
-                             fact = "count(id)",
+                             fact = "count(number)",
                              rows = "item_id$item_category_id",
-                             #totals = True,
+                             totals = True,
                              )
             )
 
-        # Work-in-progress
-        #crud_form = S3SQLCustomForm("number",
-        #                            S3SQLInlineComponent(
-        #                                "sub",
-        #                                label = T("Component Assets"),
-        #                                link = True,
-        #                                #comment = "Bob",
-        #                                fields = ["number",
-        #                                          "type",
-        #                                          "item_id",
-        #                                          ],
-        #                                ),
-        #                            )
+        # Custom CRUD Form to allow ad-hoc Kits
+        crud_form = S3SQLCustomForm("number",
+                                    "type",
+                                    "item_id",
+                                    "organisation_id",
+                                    "site_id",
+                                    "kit",
+                                    # If not ad-hoc Kit
+                                    "sn",
+                                    "supply_org_id",
+                                    "purchase_date",
+                                    "purchase_price",
+                                    "purchase_currency",
+                                    # If ad-hoc Kit
+                                    S3SQLInlineComponent(
+                                        "item",
+                                        label = T("Items"),
+                                        fields = ["item_id",
+                                                  "sn",
+                                                  # These are too wide for the screen & hence hide the AddResourceLinks
+                                                  #"supply_org_id",
+                                                  #"purchase_date",
+                                                  #"purchase_price",
+                                                  #"purchase_currency",
+                                                  "comments",
+                                                  ],
+                                        ),
+                                    "comments",
+                                    )
 
         # Resource Configuration
         configure(tablename,
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
-                  #crud_form = crud_form,
+                  crud_form = crud_form,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   mark_required = ["organisation_id"],
@@ -361,37 +396,44 @@ S3OptionsFilter({
         # GPS as a component of Assets
         add_component("vehicle_gps", asset_asset="asset_id")
 
-        # Sub Assets
-        #add_component("asset_asset",
-        #              asset_asset=dict(name="sub",
-        #                               link="asset_sub_asset",
-        #                               joinby="organisation_id",
-        #                               key="sub_id",
-        #                               #actuate="embed",
-        #                               #autocomplete="number",
-        #                               autodelete=True))
+        # Asset Items
+        add_component("asset_item",
+                      asset_asset="asset_id")
 
-        # For imports
-        #add_component("asset_asset",
-        #              asset_asset=dict(name="parent",
-        #                               link="asset_sub_asset",
-        #                               joinby="sub_id",
-        #                               key="organisation_id",
-        #                               #actuate="embed",
-        #                               #autocomplete="number",
-        #                               autodelete=False))
-
-        # ---------------------------------------------------------------------
-        # Sub Assets
+        # =====================================================================
+        # Asset Items
+        # - to allow building ad-hoc Kits
         #
-        #tablename = "asset_sub_asset"
-        #table = define_table(tablename,
-        #                     asset_id(ondelete="CASCADE"),
-        #                     asset_id("sub_id",
-        #                              label=T("Component Asset"),
-        #                              default=None,
-        #                              ondelete="CASCADE"),
-        #                     *s3_meta_fields())
+        tablename = "asset_item"
+        table = define_table(tablename,
+                             item_entity_id,
+                             asset_id(ondelete="CASCADE"),
+                             item_id(represent = supply_item_represent,
+                                     requires = IS_ONE_OF(asset_items_set,
+                                                          "supply_item.id",
+                                                          supply_item_represent,
+                                                          sort = True,
+                                                          ),
+                                     script = None, # No Item Pack Filter
+                                     widget = None,
+                                     ),
+                             Field("sn",
+                                   label = T("Serial Number")),
+                             organisation_id("supply_org_id",
+                                             label = T("Supplier/Donor"),
+                                             ondelete = "SET NULL"),
+                             s3_date("purchase_date",
+                                     label = T("Purchase Date")),
+                             Field("purchase_price", "double",
+                                   #default=0.00,
+                                   represent=lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                             s3_currency("purchase_currency"),
+                             # Base Location, which should always be a Site & set via Log
+                             location_id(readable=False,
+                                         writable=False),
+                             s3_comments(comment=None),
+                             *s3_meta_fields())
 
         # =====================================================================
         # Asset Log
@@ -530,11 +572,10 @@ S3OptionsFilter({
 
         # Resource configuration
         configure(tablename,
-                  onaccept = self.asset_log_onaccept,
                   listadd = False,
                   list_fields = ["id",
-                                 "status",
                                  "datetime",
+                                 "status",
                                  "datetime_until",
                                  "organisation_id",
                                  "site_id",
@@ -542,16 +583,16 @@ S3OptionsFilter({
                                  #"location_id",
                                  "cancel",
                                  "cond",
-                                 "comments"]
-                   )
+                                 "comments",
+                                 ],
+                  onaccept = self.asset_log_onaccept,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(asset_asset_id = asset_id,
-                    asset_rheader = asset_rheader,
                     asset_represent = self.asset_represent,
-                    asset_log_prep = self.asset_log_prep,
                     )
 
     # -------------------------------------------------------------------------
@@ -603,34 +644,48 @@ S3OptionsFilter({
     @staticmethod
     def asset_onaccept(form):
         """
+            After DB I/O
         """
 
-        vars = form.vars
-        site_id = vars.get("site_id", None)
+        form_vars = form.vars
+        kit = form_vars.get("kit", None)
+        site_id = form_vars.get("site_id", None)
         if site_id:
             db = current.db
             atable = db.asset_asset
             stable = db.org_site
-            asset_id = vars.id
+            asset_id = form_vars.id
             # Set the Base Location
             tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
-            asset_tracker.set_base_location(tracker(stable, site_id))
+            location_id = asset_tracker.set_base_location(tracker(stable, site_id))
+            if kit:
+                # Also populate location_id field in component items
+                aitable = db.asset_item
+                db(aitable.asset_id == asset_id).update(location_id = location_id)
             # Add a log entry for this
             ltable = db.asset_log
             ltable.insert(asset_id = asset_id,
                           status = ASSET_LOG_SET_BASE,
-                          organisation_id = vars.get("organisation_id", None),
+                          organisation_id = form_vars.get("organisation_id", None),
                           site_id = site_id,
                           cond = 1,
                           )
-            # Populate location_id field
-            row = db(stable.id == site_id).select(stable.location_id,
-                                                  limitby=(0, 1)).first()
-            try:
-                db(atable.id == asset_id).update(location_id = row.location_id)
-            except:
-                pass
+
+        if kit:
+            # Empty any inappropriate fields
+            db(atable.id == asset_id).update(supplier_org_id = None,
+                                             purchase_date = None,
+                                             purchase_price = None,
+                                             purchase_currency = None,
+                                             )
+        else:
+            # Delete any component items
+            aitable = db.asset_item
+            ids = db(aitable.asset_id == asset_id).select(aitable.id).as_list()
+            if ids:
+                resource = current.s3db.resource("asset_item", ids)
+                resource.delete()
 
         return
 
@@ -638,6 +693,7 @@ S3OptionsFilter({
     @staticmethod
     def asset_log_onaccept(form):
         """
+            After DB I/O
         """
 
         request = current.request
@@ -646,182 +702,95 @@ S3OptionsFilter({
             # e.g. Import or Record merger
             return
 
-        vars = form.vars
-        status = int(vars.status or status)
+        form_vars = form.vars
+        status = int(form_vars.status or status)
 
         db = current.db
-        s3db = current.s3db
-        ltable = s3db.asset_log
-        asset = db(ltable.id == vars.id).select(ltable.asset_id,
-                                                limitby=(0, 1)).first()
-        if asset:
-            asset_id = asset.asset_id
-        else:
+        ltable = db.asset_log
+        row = db(ltable.id == form_vars.id).select(ltable.asset_id,
+                                                   limitby=(0, 1)
+                                                   ).first()
+        try:
+            asset_id = row.asset_id
+        except:
             return
+
         current_log = asset_get_current_log(asset_id)
 
         type = request.get_vars.pop("type", None)
         log_time = current_log.datetime
-        current_time = vars.get("datetime", None).replace(tzinfo=None)
+        current_time = form_vars.get("datetime", None).replace(tzinfo=None)
         if log_time <= current_time:
             # This is a current assignment
-            atable = s3db.asset_asset
+            atable = db.asset_asset
+            aitable = db.asset_item
             tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
 
             if status == ASSET_LOG_SET_BASE:
                 # Set Base Location
-                asset_tracker.set_base_location(tracker(s3db.org_site,
-                                                        vars.site_id))
+                location_id = asset_tracker.set_base_location(tracker(db.org_site,
+                                                                      form_vars.site_id))
+                # Also do component items
+                db(aitable.asset_id == asset_id).update(location_id = location_id)
+
             elif status == ASSET_LOG_ASSIGN:
                 if type == "person":#
-                    if vars.check_in_to_person:
-                        asset_tracker.check_in(s3db.pr_person, vars.person_id,
+                    if form_vars.check_in_to_person:
+                        asset_tracker.check_in(db.pr_person, form_vars.person_id,
                                                timestmp = request.utcnow)
+                        # Also do component items
+                        # @ToDo: Have these move when the person moves
+                        locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                        try:
+                            db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
+                        except:
+                            pass
                     else:
-                        asset_tracker.set_location(vars.person_id,
-                                                   timestmp = request.utcnow)
+                        location_id = asset_tracker.set_location(form_vars.person_id,
+                                                                 timestmp = request.utcnow)
+                        # Also do component items
+                        db(aitable.asset_id == asset_id).update(location_id = location_id)
                     # Update main record for component
-                    db(atable.id == asset_id).update(
-                                                assigned_to_id=vars.person_id
-                                            )
+                    db(atable.id == asset_id).update(assigned_to_id=form_vars.person_id)
 
                 elif type == "site":
-                    asset_tracker.check_in(s3db.org_site, vars.site_id,
+                    asset_tracker.check_in(db.org_site, form_vars.site_id,
                                            timestmp = request.utcnow)
+                    # Also do component items
+                    locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                    try:
+                        db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
+                    except:
+                        pass
+
                 elif type == "organisation":
-                    if vars.site_id:
-                        asset_tracker.check_in(s3db.org_site, vars.site_id,
+                    if form_vars.site_id:
+                        asset_tracker.check_in(db.org_site, form_vars.site_id,
                                                timestmp = request.utcnow)
+                        # Also do component items
+                        locations = asset_tracker.get_location(_fields=[db.gis_location.id])
+                        try:
+                            db(aitable.asset_id == asset_id).update(location_id = locations[0].id)
+                        except:
+                            pass
                     else:
                         # We can no longer track location
                         asset_tracker.check_out()
 
             elif status == ASSET_LOG_RETURN:
                 # Set location to base location
-                asset_tracker.set_location(asset_tracker,
-                                           timestmp = request.utcnow)
+                location_id = asset_tracker.set_location(asset_tracker,
+                                                         timestmp = request.utcnow)
+                # Also do component items
+                db(aitable.asset_id == asset_id).update(location_id = location_id)
+
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def asset_log_prep(r):
-        """
-            Called by Controller
-        """
-
-        T = current.T
-        db = current.db
-        request = current.request
-
-        table = db.asset_log
-
-        if r.record:
-            asset = Storage(r.record)
-        else:
-            # This is a new record
-            asset = Storage()
-            table.cancel.readable = False
-            table.cancel.writable = False
-
-        # This causes an error with the dataTables paginate
-        # if used only in r.interactive & not also r.representation=="aadata"
-        if r.method != "read" and r.method != "update":
-            table.cancel.readable = False
-            table.cancel.writable = False
-        current_log = asset_get_current_log(asset.id)
-        if request.vars.status:
-            status = int(request.vars.status)
-        else:
-            status = 0
-
-        if status and status != "None":
-            field = table.status
-            field.default = status
-            field.readable = False
-            field.writable = False
-        elif current_log:
-            table.status.default = current_log.status
-
-        if current_log.organisation_id:
-            table.organisation_id.default = current_log.organisation_id
-            table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
-                                               table.site_id.represent,
-                                               filterby = "organisation_id",
-                                               filter_opts = [current_log.organisation_id])
-
-        crud_strings = current.response.s3.crud_strings.asset_log
-        if status == ASSET_LOG_SET_BASE:
-            crud_strings.subtitle_create = T("Set Base Facility/Site")
-            crud_strings.msg_record_created = T("Base Facility/Site Set")
-            table.by_person_id.label = T("Set By")
-            table.site_id.writable = True
-            table.datetime_until.readable = False
-            table.datetime_until.writable = False
-            table.person_id.readable = False
-            table.person_id.writable = False
-            table.organisation_id.readable = True
-            table.organisation_id.writable = True
-            table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
-                                               table.site_id.represent)
-
-        elif status == ASSET_LOG_RETURN:
-            crud_strings.subtitle_create = T("Return")
-            crud_strings.msg_record_created = T("Returned")
-            table.person_id.label = T("Returned From")
-            table.person_id.default = current_log.person_id
-            table.site_id.readable = False
-            table.site_id.writable = False
-
-        elif status == ASSET_LOG_ASSIGN:
-            type = request.vars.type
-            # table["%s_id" % type].required = True
-            if type == "person":
-                crud_strings.subtitle_create = T("Assign to Person")
-                crud_strings.msg_record_created = T("Assigned to Person")
-                table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
-                                                        table.person_id.represent,
-                                                        orderby="pr_person.first_name",
-                                                        sort=True,
-                                                        error_message="Person must be specified!")
-                table.check_in_to_person.readable = True
-                table.check_in_to_person.writable = True
-                table.site_id.requires = IS_NULL_OR(
-                                            IS_ONE_OF(db, "org_site.site_id",
-                                                      table.site_id.represent))
-            elif type == "site":
-                crud_strings.subtitle_create = T("Assign to Facility/Site")
-                crud_strings.msg_record_created = T("Assigned to Facility/Site")
-            elif type == "organisation":
-                crud_strings.subtitle_create = T("Assign to Organization")
-                crud_strings.msg_record_created = T("Assigned to Organization")
-                table.organisation_id.readable = True
-                table.organisation_id.writable = True
-                table.organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
-                                                           table.organisation_id.represent,
-                                                           orderby="org_organisation.name",
-                                                           sort=True)
-                table.site_id.requires = IS_NULL_OR(
-                                            IS_ONE_OF(db, "org_site.site_id",
-                                                      table.site_id.represent))
-        elif "status" in request.get_vars:
-            crud_strings.subtitle_create = T("Update Status")
-            crud_strings.msg_record_created = T("Status Updated")
-            table.person_id.label = T("Updated By")
-            field = table.status
-            field.readable = True
-            field.writable = True
-            field.requires = IS_IN_SET({ASSET_LOG_CHECK    : T("Check"),
-                                        ASSET_LOG_REPAIR   : T("Repair"),
-                                        ASSET_LOG_DONATED  : T("Donated"),
-                                        ASSET_LOG_LOST     : T("Lost"),
-                                        ASSET_LOG_STOLEN   : T("Stolen"),
-                                        ASSET_LOG_DESTROY  : T("Destroyed"),
-                                        })
 
 # =============================================================================
 def asset_get_current_log(asset_id):
     """
+        Get the current log entry for this asset
     """
 
     table = current.s3db.asset_log
@@ -850,6 +819,121 @@ def asset_get_current_log(asset_id):
                        )
     else:
         return Storage()
+
+# =============================================================================
+def asset_log_prep(r):
+    """
+        Called by Controller
+    """
+
+    T = current.T
+    db = current.db
+    request = current.request
+
+    table = db.asset_log
+
+    if r.record:
+        asset = Storage(r.record)
+    else:
+        # This is a new record
+        asset = Storage()
+        table.cancel.readable = False
+        table.cancel.writable = False
+
+    # This causes an error with the dataTables paginate
+    # if used only in r.interactive & not also r.representation=="aadata"
+    if r.method != "read" and r.method != "update":
+        table.cancel.readable = False
+        table.cancel.writable = False
+    current_log = asset_get_current_log(asset.id)
+    if request.vars.status:
+        status = int(request.vars.status)
+    else:
+        status = 0
+
+    if status and status != "None":
+        field = table.status
+        field.default = status
+        field.readable = False
+        field.writable = False
+    elif current_log:
+        table.status.default = current_log.status
+
+    if current_log.organisation_id:
+        table.organisation_id.default = current_log.organisation_id
+        table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
+                                           table.site_id.represent,
+                                           filterby = "organisation_id",
+                                           filter_opts = [current_log.organisation_id])
+
+    crud_strings = current.response.s3.crud_strings.asset_log
+    if status == ASSET_LOG_SET_BASE:
+        crud_strings.subtitle_create = T("Set Base Facility/Site")
+        crud_strings.msg_record_created = T("Base Facility/Site Set")
+        table.by_person_id.label = T("Set By")
+        table.site_id.writable = True
+        table.datetime_until.readable = False
+        table.datetime_until.writable = False
+        table.person_id.readable = False
+        table.person_id.writable = False
+        table.organisation_id.readable = True
+        table.organisation_id.writable = True
+        table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
+                                           table.site_id.represent)
+
+    elif status == ASSET_LOG_RETURN:
+        crud_strings.subtitle_create = T("Return")
+        crud_strings.msg_record_created = T("Returned")
+        table.person_id.label = T("Returned From")
+        table.person_id.default = current_log.person_id
+        table.site_id.readable = False
+        table.site_id.writable = False
+
+    elif status == ASSET_LOG_ASSIGN:
+        type = request.vars.type
+        # table["%s_id" % type].required = True
+        if type == "person":
+            crud_strings.subtitle_create = T("Assign to Person")
+            crud_strings.msg_record_created = T("Assigned to Person")
+            table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
+                                                    table.person_id.represent,
+                                                    orderby="pr_person.first_name",
+                                                    sort=True,
+                                                    error_message="Person must be specified!")
+            table.check_in_to_person.readable = True
+            table.check_in_to_person.writable = True
+            table.site_id.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "org_site.site_id",
+                                                  table.site_id.represent))
+        elif type == "site":
+            crud_strings.subtitle_create = T("Assign to Facility/Site")
+            crud_strings.msg_record_created = T("Assigned to Facility/Site")
+        elif type == "organisation":
+            crud_strings.subtitle_create = T("Assign to Organization")
+            crud_strings.msg_record_created = T("Assigned to Organization")
+            table.organisation_id.readable = True
+            table.organisation_id.writable = True
+            table.organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
+                                                       table.organisation_id.represent,
+                                                       orderby="org_organisation.name",
+                                                       sort=True)
+            table.site_id.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "org_site.site_id",
+                                                  table.site_id.represent))
+    elif "status" in request.get_vars:
+        crud_strings.subtitle_create = T("Update Status")
+        crud_strings.msg_record_created = T("Status Updated")
+        table.person_id.label = T("Updated By")
+        field = table.status
+        field.readable = True
+        field.writable = True
+        field.requires = IS_IN_SET({ASSET_LOG_CHECK    : T("Check"),
+                                    ASSET_LOG_REPAIR   : T("Repair"),
+                                    ASSET_LOG_DONATED  : T("Donated"),
+                                    ASSET_LOG_LOST     : T("Lost"),
+                                    ASSET_LOG_STOLEN   : T("Stolen"),
+                                    ASSET_LOG_DESTROY  : T("Destroyed"),
+                                    })
 
 # =============================================================================
 def asset_rheader(r):
@@ -982,38 +1066,24 @@ def asset_controller():
     """ RESTful CRUD controller """
 
     s3 = current.response.s3
-    s3db = current.s3db
 
     # Pre-process
     def prep(r):
         # Location Filter
-        s3db.gis_location_filter(r)
+        current.s3db.gis_location_filter(r)
 
         if r.component_name == "log":
-            s3db.asset_log_prep(r)
-            #if r.method == "update":
-                # We don't want to exclude fields in update forms
-                #pass
-            #elif r.method != "read":
-                # Don't want to see in Create forms
-                # inc list_create (list_fields over-rides)
-                #table = r.component.table
-                #table.returned.readable = table.returned.writable = False
-                #table.returned_status.readable = table.returned_status.writable = False
-                # Process Base Site
-                #s3db.configure(table._tablename,
-                #                onaccept=asset_transfer_onaccept)
-        #else:
-            # @ToDo: Add Virtual Fields to the List view for 'Currently assigned to' & 'Current Location'
+            asset_log_prep(r)
 
         return True
     s3.prep = prep
 
     # Post-processor
     def postp(r, output):
-        if r.method != "import":
-            S3CRUD.action_buttons(r, deletable=False
-                                  )
+        if r.interactive and r.method != "import":
+            script = "/%s/static/scripts/S3/s3.asset.js" % r.application
+            s3.scripts.append(script)
+            S3CRUD.action_buttons(r, deletable=False)
             #if not r.component:
                 #s3.actions.append({"url" : URL(c="asset", f="asset",
                 #                               args = ["[id]", "log", "create"],
@@ -1026,7 +1096,7 @@ def asset_controller():
 
     output = current.rest_controller("asset", "asset",
                                      hide_filter = False,
-                                     rheader = s3db.asset_rheader,
+                                     rheader = asset_rheader,
                                      )
     return output
 

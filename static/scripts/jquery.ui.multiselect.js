@@ -41,7 +41,8 @@
       hide: null,
       autoOpen: false,
       multiple: true,
-      position: {}
+      position: {},
+      appendTo: "body"
     },
 
     _create: function() {
@@ -69,7 +70,7 @@
         menu = (this.menu = $('<div />'))
           .addClass('ui-multiselect-menu ui-widget ui-widget-content ui-corner-all')
           .addClass(o.classes)
-          .appendTo(document.body),
+          .appendTo($(o.appendTo)),
 
         header = (this.header = $('<div />'))
           .addClass('ui-widget-header ui-corner-all ui-multiselect-header ui-helper-clearfix')
@@ -136,8 +137,8 @@
       el.find('option').each(function(i) {
         var $this = $(this);
         var parent = this.parentNode;
-        var title = this.innerHTML;
-        var description = this.title;
+        var description = this.innerHTML;
+        var title = this.title;
         var value = this.value;
         var inputID = 'ui-multiselect-' + (this.id || id + '-option-' + i);
         var isDisabled = this.disabled;
@@ -170,7 +171,7 @@
         html += '<li class="' + liClasses + '">';
 
         // create the label
-        html += '<label for="' + inputID + '" title="' + description + '" class="' + labelClasses.join(' ') + '">';
+        html += '<label for="' + inputID + '" title="' + title + '" class="' + labelClasses.join(' ') + '">';
         html += '<input id="' + inputID + '" name="multiselect_' + id + '" type="' + (o.multiple ? "checkbox" : "radio") + '" value="' + value + '" title="' + title + '"';
 
         // pre-selected?
@@ -185,8 +186,8 @@
           html += ' aria-disabled="true"';
         }
 
-        // add the title and close everything off
-        html += ' /><span>' + title + '</span></label></li>';
+        // add the description and close everything off
+        html += ' /><span>' + description + '</span></label></li>';
       });
 
       // insert into the DOM
@@ -408,11 +409,11 @@
         var target = event.target;
 
         if(self._isOpen
+            && target !== self.button[0]
+            && target !== self.menu[0]
             && !$.contains(self.menu[0], target)
             && !$.contains(self.button[0], target)
-            && target !== self.button[0]
-            && target !== self.menu[0])
-        {
+          ) {
           self.close();
         }
       });
@@ -451,7 +452,7 @@
       var moveToLast = which === 38 || which === 37;
 
       // select the first li that isn't an optgroup label / disabled
-      $next = $start.parent()[moveToLast ? 'prevAll' : 'nextAll']('li:not(.ui-multiselect-disabled, .ui-multiselect-optgroup-label)')[ moveToLast ? 'last' : 'first']();
+      var $next = $start.parent()[moveToLast ? 'prevAll' : 'nextAll']('li:not(.ui-multiselect-disabled, .ui-multiselect-optgroup-label)').first();
 
       // if at the first/last element
       if(!$next.length) {

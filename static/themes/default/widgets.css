@@ -53,6 +53,9 @@ p.legend em {
 .form-container form textarea  {
     width: 500px;
 }
+.form-container form input.date {
+    width: auto;
+}
 #login_form form table,
 #register_form form table {
     width: 95%;
@@ -1413,6 +1416,14 @@ div.fm-cancel {
 }
 .datetimepicker.hide-time {
     width: 75px;
+}
+
+/* UI Multiselect */
+body.ltr label.ui-corner-all span {
+    left: 10px;
+}
+body.rtl label.ui-corner-all span {
+    right: 10px;
 }
 
 /* Saved Filters Page - Inline Editor for Filter Titles */

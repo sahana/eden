@@ -590,8 +590,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
-                        M("Report", m="report"),
+                        M("Report", m="report2"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories

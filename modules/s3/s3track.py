@@ -357,6 +357,8 @@ class S3Trackable(object):
                 ptable.insert(**data)
                 self.__update_timestamp(r[TRACK_ID], timestmp)
 
+        return location
+
     # -------------------------------------------------------------------------
     def check_in(self, table, record, timestmp=None):
         """
@@ -622,6 +624,8 @@ class S3Trackable(object):
         for r in self.records:
             if LOCATION_ID in r:
                 r[LOCATION_ID] = location
+
+        return location
 
     # -------------------------------------------------------------------------
     def __update_timestamp(self, track_id, timestamp):
