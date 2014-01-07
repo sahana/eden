@@ -541,12 +541,27 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        current.s3db.inv_recv_crud_strings()
+        s3db = current.s3db
+        s3db.inv_recv_crud_strings()
         crud_strings = current.response.s3.crud_strings
         inv_recv_list = crud_strings.inv_recv.title_list
         inv_recv_search = crud_strings.inv_recv.title_search
 
-        use_commit = lambda i: current.deployment_settings.get_req_use_commit()
+        settings = current.deployment_settings
+        #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
+        def use_adjust(i):
+            db = current.db
+            otable = s3db.org_organisation
+            ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
+                                                                     limitby=(0, 1)
+                                                                     ).first().id
+            if current.auth.user.organisation_id == ausrc:
+                # AusRC use proper Logistics workflow
+                return True
+            else:
+                # Others use simplified version
+                return False
+        use_commit = lambda i: settings.get_req_use_commit()
 
         return M()(
                     #M("Home", f="index"),
@@ -559,7 +574,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Warehouse Stock", c="inv", f="inv_item")(
                         M("Search", f="inv_item", m="search"),
                         M("Search Shipped Items", f="track_item", m="search"),
-                        M("Adjust Stock Levels", f="adj"),
+                        M("Adjust Stock Levels", f="adj", check=use_adjust),
                         #M("Kitting", f="kit"),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),

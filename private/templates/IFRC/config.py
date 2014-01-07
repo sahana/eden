@@ -879,6 +879,26 @@ def customize_hrm_programme(**attr):
 settings.ui.customize_hrm_programme = customize_hrm_programme
 
 # -----------------------------------------------------------------------------
+def customize_inv_warehouse(**attr):
+    """
+        Customize inv_warehouse controller
+    """
+
+    # AusRC use proper Logistics workflow
+    db = current.db
+    s3db = current.s3db
+    otable = s3db.org_organisation
+    ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
+                                                             limitby=(0, 1)
+                                                             ).first().id
+    if current.auth.user.organisation_id == ausrc:
+        settings.inv.direct_stock_edits = False
+
+    return attr
+
+settings.ui.customize_inv_warehouse = customize_inv_warehouse
+
+# -----------------------------------------------------------------------------
 def customize_member_membership(**attr):
     """
         Customize member_membership controller
@@ -1420,6 +1440,9 @@ settings.ui.crud_form_project_location = S3SQLCustomForm(
 # Inventory Management
 settings.inv.show_mode_of_transport = True
 settings.inv.send_show_time_in = True
+#settings.inv.collapse_tabs = True
+# Uncomment if you need a simpler (but less accountable) process for managing stock levels
+settings.inv.direct_stock_edits = True
 
 # -----------------------------------------------------------------------------
 # Request Management
@@ -1427,7 +1450,6 @@ settings.inv.send_show_time_in = True
 settings.req.inline_forms = False
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
-#settings.inv.collapse_tabs = True
 # Should Requests ask whether Transportation is required?
 settings.req.ask_transport = True
 

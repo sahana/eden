@@ -2909,6 +2909,7 @@ class S3ProjectLocationModel(S3Model):
 
         settings = current.deployment_settings
         community = settings.get_project_community()
+        mode_3w = settings.get_project_mode_3w()
 
         messages = current.messages
         NONE = messages["NONE"]
@@ -2941,9 +2942,12 @@ class S3ProjectLocationModel(S3Model):
                                 ),
                              # % breakdown by location
                              Field("percentage", "decimal(3,2)",
-                                   label = T("Percentage"),
+                                   comment = T("Amount of the Project Budget spent at this location"), 
                                    default = 0,
+                                   label = T("Percentage"),
+                                   readable = mode_3w,
                                    requires = IS_DECIMAL_IN_RANGE(0, 1),
+                                   writable = mode_3w,
                                    ),
                              s3_comments(),
                              *s3_meta_fields())

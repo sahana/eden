@@ -1152,7 +1152,9 @@ class S3OptionsMenu(object):
         inv_recv_list = crud_strings.inv_recv.title_list
         inv_recv_search = crud_strings.inv_recv.title_search
 
-        use_commit = lambda i: current.deployment_settings.get_req_use_commit()
+        settings = current.deployment_settings
+        use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
+        use_commit = lambda i: settings.get_req_use_commit()
 
         return M()(
                     #M("Home", f="index"),
@@ -1165,7 +1167,7 @@ class S3OptionsMenu(object):
                     M("Warehouse Stock", c="inv", f="inv_item")(
                         M("Search", f="inv_item", m="search"),
                         M("Search Shipped Items", f="track_item", m="search"),
-                        M("Adjust Stock Levels", f="adj"),
+                        M("Adjust Stock Levels", f="adj", check=use_adjust),
                         M("Kitting", f="kit"),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),

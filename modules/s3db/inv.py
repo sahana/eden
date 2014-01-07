@@ -3424,27 +3424,28 @@ def inv_rfooter(r, record):
     if (r.component and r.component.name == "inv_item"):
         T = current.T
         rfooter = TAG[""]()
-        if r.component_id:
-            asi_btn = A(T("Adjust Stock Item"),
-                        _href = URL(c = "inv",
-                                    f = "adj",
-                                    args = ["create"],
-                                    vars = {"site": record.site_id,
-                                            "item": r.component_id},
-                                    ),
-                        _class = "action-btn"
-                        )
-            rfooter.append(asi_btn)
-        else:
-            as_btn = A(T("Adjust Stock"),
-                       _href = URL(c = "inv",
-                                   f = "adj",
-                                   args = ["create"],
-                                   vars = {"site": record.site_id},
-                                   ),
-                       _class = "action-btn"
-                       )
-            rfooter.append(as_btn)
+        if not current.deployment_settings.get_inv_direct_stock_edits():
+            if r.component_id:
+                asi_btn = A(T("Adjust Stock Item"),
+                            _href = URL(c = "inv",
+                                        f = "adj",
+                                        args = ["create"],
+                                        vars = {"site": record.site_id,
+                                                "item": r.component_id},
+                                        ),
+                            _class = "action-btn"
+                            )
+                rfooter.append(asi_btn)
+            else:
+                as_btn = A(T("Adjust Stock"),
+                           _href = URL(c = "inv",
+                                       f = "adj",
+                                       args = ["create"],
+                                       vars = {"site": record.site_id},
+                                       ),
+                           _class = "action-btn"
+                           )
+                rfooter.append(as_btn)
         ts_btn = A(T("Track Shipment"),
                    _href = URL(c = "inv",
                                f = "track_movement",
