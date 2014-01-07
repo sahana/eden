@@ -471,8 +471,7 @@ class S3OptionsMenu(object):
                     M("Assets", f="asset")(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
-                        M("Report", m="report"),
+                        M("Report", m="report2"),
                         M("Import", m="import", p="create"),
                     ),
                     #M("Brands", f="brand",

@@ -100,6 +100,7 @@ class S3AssetModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
+        s3 = current.response.s3
 
         person_id = self.pr_person_id
         location_id = self.gis_location_id
@@ -114,7 +115,7 @@ class S3AssetModel(S3Model):
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -205,7 +206,8 @@ S3OptionsFilter({
                              person_id("assigned_to_id",
                                        readable=False,
                                        writable=False,
-                                       comment=self.pr_person_comment(child="assigned_to_id")),
+                                       comment=self.pr_person_comment(child="assigned_to_id"),
+                                       ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -240,78 +242,83 @@ S3OptionsFilter({
                                     tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Add Asset'.")),
                                    ondelete = "CASCADE")
 
-        # Search Method
-        # @ToDo: Replace with S3Filter
-        report_search = [
-            S3SearchSimpleWidget(
-                name="asset_search_text",
-                label=T("Search"),
-                comment=T("You can search by asset number, item description or comments. You may use % as wildcard. Press 'Search' without input to list all assets."),
-                field=["number",
-                       "item_id$name",
-                       #"item_id$category_id$name",
-                       "comments",
-                       ]
-            ),
-            S3SearchOptionsWidget(
-                name="asset_search_item_category",
-                field="item_id$item_category_id",
-                label=T("Category"),
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="asset_search_organisation_id",
-                label=T("Organization"),
-                field="organisation_id",
-                represent ="%(name)s",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="asset_search_L0",
-                field="location_id$L0",
-                location_level="L0",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="asset_search_L1",
-                field="location_id$L1",
-                location_level="L1",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="asset_search_L2",
-                field="location_id$L2",
-                location_level="L2",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name="asset_search_L3",
-                field="location_id$L3",
-                location_level="L3",
-                cols = 3
-            )]
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
+            levels.remove("L0")
 
-        # Map Search widget doesn't currently work with Report method as no Map in page
-        advanced_search = report_search + [S3SearchLocationWidget(
-                                            name="asset_search_map",
-                                            label=T("Map"),
-                                            )]
-        
-        search_method = S3Search(
-            # Advanced Search only
-            simple=(),
-            advanced = advanced_search
-            )
+        list_fields = ["id",
+                       "item_id$item_category_id",
+                       "item_id",
+                       "number",
+                       "type",
+                       #"purchase_date",
+                       (T("Assigned To"), "assigned_to_id"),
+                       "organisation_id",
+                       "site_id",
+                       ]
 
         report_fields = ["number",
                          (T("Category"), "item_id$item_category_id"),
                          (T("Item"), "item_id"),
                          "organisation_id",
                          "site_id",
-                         (T("Country"),"location_id$L0"),
-                         "location_id$L1",
-                         "location_id$L2",
                          ]
+
+        text_fields = ["number",
+                       "item_id$name",
+                       #"item_id$category_id$name",
+                       "comments",
+                       ]
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            report_fields.append(lfield)
+            text_fields.append(lfield)
+            list_fields.append(lfield)
+
+        list_fields.append("comments")
+
+        filter_widgets = [
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         comment = T("You can search by asset number, item description or comments. You may use % as wildcard. Press 'Search' without input to list all assets."),
+                         #_class = "filter-search",
+                         ),
+            S3OptionsFilter("item_id$item_category_id",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            #label = T("Category"),
+                            represent = "%(name)s",
+                            widget = "multiselect",
+                            ),
+            S3OptionsFilter("organisation_id",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            #label = T("Organization"),
+                            represent = "%(name)s",
+                            widget = "multiselect",
+                            ),
+            S3LocationFilter("location_id",
+                             #hidden = True,
+                             #label = T("Location"),
+                             levels = levels,
+                             widget = "multiselect",
+                             ),
+            ]
+
+        report_options = Storage(
+            rows = report_fields,
+            cols = report_fields,
+            fact = [(T("Number of items"), "count(id)")],
+            defaults=Storage(cols = "location_id$%s" % levels[0], # Highest-level of hierarchy
+                             fact = "count(id)",
+                             rows = "item_id$item_category_id",
+                             #totals = True,
+                             )
+            )
 
         # Work-in-progress
         #crud_form = S3SQLCustomForm("number",
@@ -329,41 +336,17 @@ S3OptionsFilter({
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = ("supply_item_entity", "sit_trackable"),
-                  mark_required = ["organisation_id"],
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
-                  onaccept=self.asset_onaccept,
                   #crud_form = crud_form,
-                  search_method=search_method,
-                  report_options=Storage(
-                        search=report_search,
-                        rows=report_fields,
-                        cols=report_fields,
-                        fact=[("number", "count", T("Number of items"))],
-                        defaults=Storage(
-                            cols="asset.location_id$L1",
-                            fact="count:asset.number",
-                            rows="asset.item_id$item_category_id"
-                            )
-                        ),
-                  list_fields=["id",
-                               "item_id$item_category_id",
-                               "item_id",
-                               "number",
-                               "type",
-                               #"purchase_date",
-                               (T("Assigned To"), "assigned_to_id"),
-                               "organisation_id",
-                               "site_id",
-                               (current.messages.COUNTRY, "location_id$L0"),
-                               "location_id$L1",
-                               #"location_id$L2",
-                               #"location_id$L3",
-                               "comments",
-                               ],
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  mark_required = ["organisation_id"],
+                  onaccept = self.asset_onaccept,
                   realm_components = ["log", "presence"],
+                  report_options = report_options,
+                  super_entity = ("supply_item_entity", "sit_trackable"),
                   update_realm = True,
                   )
 
@@ -834,7 +817,7 @@ S3OptionsFilter({
                                         ASSET_LOG_LOST     : T("Lost"),
                                         ASSET_LOG_STOLEN   : T("Stolen"),
                                         ASSET_LOG_DESTROY  : T("Destroyed"),
-                                       })
+                                        })
 
 # =============================================================================
 def asset_get_current_log(asset_id):
@@ -1042,7 +1025,9 @@ def asset_controller():
     s3.postp = postp
 
     output = current.rest_controller("asset", "asset",
-                                     rheader=s3db.asset_rheader)
+                                     hide_filter = False,
+                                     rheader = s3db.asset_rheader,
+                                     )
     return output
 
 # END =========================================================================
