@@ -6122,7 +6122,7 @@ def project_rheader(r):
             append((T("Organizations"), "organisation"))
         if settings.get_project_community():
             append((T("Communities"), "location"))
-        else if not mode_task:
+        elif not mode_task:
             append((T("Locations"), "location"))
         if settings.get_project_theme_percentages():
             append((T("Themes"), "theme"))
