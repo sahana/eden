@@ -6120,13 +6120,13 @@ def project_rheader(r):
         append = tabs.append
         if settings.get_project_multiple_organisations():
             append((T("Organizations"), "organisation"))
+        if settings.get_project_community():
+            append((T("Communities"), "location"))
+        else if not mode_task:
+            append((T("Locations"), "location"))
         if settings.get_project_theme_percentages():
             append((T("Themes"), "theme"))
         if mode_3w:
-            if settings.get_project_community():
-                append((T("Communities"), "location"))
-            else:
-                append((T("Locations"), "location"))
             append((T("Beneficiaries"), "beneficiary"))
         if settings.get_project_milestones():
             append((T("Milestones"), "milestone"))
