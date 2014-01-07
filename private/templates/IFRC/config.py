@@ -891,7 +891,7 @@ def customize_inv_warehouse(**attr):
     ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
                                                              limitby=(0, 1)
                                                              ).first().id
-    if current.auth.user.organisation_id == ausrc:
+    if current.auth.root_org() == ausrc:
         settings.inv.direct_stock_edits = False
 
     return attr
@@ -1049,7 +1049,7 @@ def customize_pr_contact(**attr):
     vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
                                                           limitby=(0, 1)
                                                           ).first().id
-    if current.auth.user.organisation_id == vnrc:
+    if current.auth.root_org() == vnrc:
         # Hard to translate in Vietnamese
         s3db.pr_contact.value.label = ""
 
@@ -1086,7 +1086,7 @@ def customize_pr_person(**attr):
     vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
                                                           limitby=(0, 1)
                                                           ).first().id
-    if current.auth.user.organisation_id == vnrc:
+    if current.auth.root_org() == vnrc:
         vnrc = True
         settings.hrm.use_skills = True
         settings.hrm.vol_experience = "both"

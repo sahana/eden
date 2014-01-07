@@ -555,7 +555,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
             ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
                                                                      limitby=(0, 1)
                                                                      ).first().id
-            if current.auth.user.organisation_id == ausrc:
+            if current.auth.root_org() == ausrc:
                 # AusRC use proper Logistics workflow
                 return True
             else:
