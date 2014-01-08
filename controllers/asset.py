@@ -139,6 +139,13 @@ def supplier():
         msg_list_empty=T("No Suppliers currently registered")
         )
 
+    # Modify filter_widgets
+    filter_widgets = s3db.get_config("org_organisation", "filter_widgets")
+    # Remove type (always 'Supplier')
+    filter_widgets.pop(1)
+    # Remove sector (not relevant)
+    filter_widgets.pop(1)
+
     return s3db.org_organisation_controller()
 
 # END =========================================================================

@@ -981,6 +981,13 @@ def customize_org_organisation(**attr):
                         list_fields.remove("organisation_type_id")
 
                     if type_filter == "Red Cross / Red Crescent":
+                        # Modify filter_widgets
+                        filter_widgets = s3db.get_config("org_organisation", "filter_widgets")
+                        # Remove type (always 'RC')
+                        filter_widgets.pop(1)
+                        # Remove sector (not relevant)
+                        filter_widgets.pop(1)
+
                         # Modify CRUD Strings
                         ADD_NS = T("Add National Society")
                         s3.crud_strings.org_organisation = Storage(

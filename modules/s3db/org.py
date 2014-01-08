@@ -59,6 +59,7 @@ __all__ = ["S3OrganisationModel",
            "org_SiteRepresent",
            "org_customize_org_resource_fields",
            "org_render_org_resources",
+           "org_sector_opts",
            ]
 
 try:
@@ -105,9 +106,6 @@ class S3OrganisationModel(S3Model):
         define_table = self.define_table
         NONE = messages["NONE"]
         ORGANISATION = messages.ORGANISATION
-
-        use_branches = settings.get_org_branches()
-        use_regions = settings.get_org_regions()
 
         # ---------------------------------------------------------------------
         # Organisation Types
@@ -162,7 +160,7 @@ class S3OrganisationModel(S3Model):
                       org_organisation_type=dict(joinby="organisation_type_id",
                                                  name="tag"))
 
-        if use_regions:
+        if settings.get_org_regions():
             # ---------------------------------------------------------------------
             # Organisation Regions
             #
@@ -361,21 +359,64 @@ class S3OrganisationModel(S3Model):
                                           widget = org_widget,
                                           )
 
+        text_fields = ["name",
+                       "acronym",
+                       "comments",
+                       ]
+        if settings.get_org_branches():
+            text_fields += ["parent.name",
+                            "parent.acronym",
+                            ]
+            text_comment = T("You can search by name, acronym, comments or parent name or acronym.")
+        else:
+            text_comment = T("You can search by name, acronym or comments")
+
+        filter_widgets = [
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         comment = text_comment,
+                         #_class = "filter-search",
+                         ),
+            # NB Order is important here - gets popped in asset & inv controllers & IFRC template
+            S3OptionsFilter("organisation_type_id",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            label = T("Type"),
+                            widget = "multiselect",
+                            ),
+            # NB Order is important here - gets popped in asset & inv controllers & IFRC template
+            S3OptionsFilter("sector_organisation.sector_id",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            #label = T("Sector"),
+                            options = org_sector_opts,
+                            widget = "multiselect",
+                            ),
+            S3OptionsFilter("country",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            #label = T("Home Country"),
+                            widget = "multiselect",
+                            ),
+            ]
+
         utablename = auth.settings.table_user_name
         configure(tablename,
-                  super_entity="pr_pentity",
-                  deduplicate=self.organisation_duplicate,
-                  onaccept=self.org_organisation_onaccept,
-                  ondelete=self.org_organisation_ondelete,
-                  referenced_by=[(utablename, "organisation_id")],
-                  xml_post_parse=self.org_organisation_xml_post_parse,
-                  list_orderby=table.name,
-                  list_fields=["id",
-                               "name",
-                               "acronym",
-                               "organisation_type_id",
-                               "website"
-                               ])
+                  deduplicate = self.organisation_duplicate,
+                  filter_widgets = filter_widgets,
+                  list_fields = ["id",
+                                 "name",
+                                 "acronym",
+                                 "organisation_type_id",
+                                 "website"
+                                 ],
+                  list_orderby = table.name,
+                  onaccept = self.org_organisation_onaccept,
+                  ondelete = self.org_organisation_ondelete,
+                  referenced_by = [(utablename, "organisation_id")],
+                  super_entity = "pr_pentity",
+                  xml_post_parse = self.org_organisation_xml_post_parse,
+                  )
 
         # Custom Method for S3SiteAddressAutocompleteWidget
         self.set_method("org", "organisation",
@@ -1365,7 +1406,6 @@ class S3OrganisationSectorModel(S3Model):
 
     names = ["org_sector",
              "org_sector_id",
-             "org_sector_opts",
              #"org_subsector",
              "org_sector_organisation",
              ]
@@ -1591,34 +1631,8 @@ class S3OrganisationSectorModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict(org_sector_id=sector_id,
-                    org_sector_opts=self.org_sector_opts,
+        return dict(org_sector_id = sector_id,
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_sector_opts():
-        """
-            Provide the options for Sector search filters
-        """
-
-        db = current.db
-        table = db.org_sector
-        location = current.session.s3.location_filter
-        if location:
-            query = (table.deleted == False) & \
-                    (table.location_id == location)
-        else:
-            query = (table.deleted == False)
-
-        opts = db(query).select(table.id,
-                                table.name,
-                                orderby=table.name)
-        od = OrderedDict()
-        for opt in opts:
-            od[opt.id] = current.T(opt.name)
-        od[None] = current.messages["NONE"]
-        return od
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4432,61 +4446,6 @@ def org_organisation_controller():
                     if use_branches:
                         r.resource.add_filter(branch_filter)
 
-                    if method == "search":
-                        # @ToDo: Deprecate S3Search & replace with S3Filter
-                        if settings.get_ui_label_cluster():
-                            SECTOR = T("Cluster")
-                        else:
-                            SECTOR = T("Sector")
-                        if use_branches:
-                            search_fields = ["name",
-                                             "acronym",
-                                             "parent.name",
-                                             "parent.acronym",
-                                             ]
-                        else:
-                            search_fields = ["name", "acronym"]
-                        search_method = S3Search(
-                            # simple = (S3SearchSimpleWidget(
-                                # name="org_search_text_simple",
-                                # label = T("Search"),
-                                # comment = T("Search for an Organization by name or acronym."),
-                                # field = search_fields
-                                # )
-                            # ),
-                            simple=(),
-                            advanced=(
-                                S3SearchSimpleWidget(
-                                    name="org_search_text_advanced",
-                                    label=T("Search"),
-                                    comment=T("Search for an Organization by name or acronym"),
-                                    field=search_fields
-                                    ),
-                                S3SearchOptionsWidget(
-                                    name="org_search_type",
-                                    label=T("Type"),
-                                    field="organisation_type_id",
-                                    cols=2
-                                    ),
-                                S3SearchOptionsWidget(
-                                    name="org_search_sector",
-                                    label=SECTOR,
-                                    field="sector_organisation.sector_id",
-                                    options=s3db.org_sector_opts,
-                                    cols=3
-                                    ),
-                                # Doesn't work on all versions of gluon/sqlhtml.py
-                                S3SearchOptionsWidget(
-                                    name="org_search_home_country",
-                                    label=T("Home Country"),
-                                    field="country",
-                                    cols=3
-                                    ),
-                                )
-                            )
-                        s3db.configure("org_organisation",
-                                       search_method=search_method)
-
             if not r.component or r.component_name == "branch":
                 type_filter = request.get_vars.get("organisation.organisation_type_id$name", None)
                 if type_filter:
@@ -4666,13 +4625,13 @@ def org_organisation_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "organisation",
-                                     #hide_filter = {None: False},
-                                     # Don't allow components with components (such as document) to breakout from tabs
-                                     native=False,
-                                     rheader=org_rheader,
                                      # Need to be explicit since can also come from Project controller
-                                     csv_template=("org", "organisation"),
-                                     csv_stylesheet=("org", "organisation.xsl"),
+                                     csv_stylesheet = ("org", "organisation.xsl"),
+                                     csv_template = ("org", "organisation"),
+                                     hide_filter = False,
+                                     # Don't allow components with components (such as document) to breakout from tabs
+                                     native = False,
+                                     rheader = org_rheader,
                                      )
     return output
 
@@ -5456,5 +5415,28 @@ def org_render_org_resources(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
+# =============================================================================
+def org_sector_opts():
+    """
+        Provide the options for Sector search filters
+    """
+
+    table = current.s3db.org_sector
+    location = current.session.s3.location_filter
+    if location:
+        query = (table.deleted == False) & \
+                (table.location_id == location)
+    else:
+        query = (table.deleted == False)
+
+    opts = current.db(query).select(table.id,
+                                    table.name,
+                                    orderby=table.name)
+    od = OrderedDict()
+    for opt in opts:
+        od[opt.id] = current.T(opt.name)
+    od[None] = current.messages["NONE"]
+    return od
 
 # END =========================================================================

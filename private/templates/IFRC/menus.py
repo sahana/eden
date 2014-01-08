@@ -305,9 +305,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("List All",
                           vars=red_cross_filter
                           ),
-                        M("Search", m="search",
-                          vars=red_cross_filter
-                          ),
                         M("Import", m="import", p="create", check=is_org_admin)
                     ),
                     M("Offices", c="org", f="office",
@@ -632,7 +629,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Suppliers", c="inv", f="supplier")(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Facilities", c="inv", f="facility")(

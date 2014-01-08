@@ -2334,7 +2334,7 @@ class S3HRSkillModel(S3Model):
                          _class="filter-search",
                          ),
             S3LocationFilter("person_id$location_id",
-                             levels=["L1", "L2"],
+                             levels=levels,
                              widget="multiselect",
                              ),
             S3OptionsFilter("course_id",
