@@ -754,6 +754,10 @@ def person():
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+            if r.component_name == "identity":
+                # Set the minimum valid_until to the same as the valid_from
+                s3.jquery_ready.append(
+'''S3.start_end_date('pr_identity_valid_from','pr_identity_valid_until')''')
             if r.component_name == "experience":
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
