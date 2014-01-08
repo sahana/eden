@@ -3,7 +3,7 @@
 /* Main Navigation (S3MainMenu or modules menu) */
 
 #menu_modules {
-    position: absolute;
+    position: fixed;
     /* top: 255px; */
     height: 36px;
     background: #CACACA  url(../../img/BFTBmenu_back.png) repeat-x;
