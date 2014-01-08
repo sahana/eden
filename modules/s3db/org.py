@@ -105,7 +105,6 @@ class S3OrganisationModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         NONE = messages["NONE"]
-        ORGANISATION = messages.ORGANISATION
 
         # ---------------------------------------------------------------------
         # Organisation Types
@@ -334,7 +333,7 @@ class S3OrganisationModel(S3Model):
 
         organisation_comment = S3AddResourceLink(c="org", f="organisation",
                                                  label=ADD_ORGANIZATION,
-                                                 title=ORGANISATION,
+                                                 title=ADD_ORGANIZATION,
                                                  tooltip=help)
 
         org_organisation_represent = org_OrganisationRepresent()
@@ -343,7 +342,7 @@ class S3OrganisationModel(S3Model):
                                                       f="organisation",
                                                       vars=dict(child="from_organisation_id"),
                                                       label=ADD_ORGANIZATION,
-                                                      title=ORGANISATION,
+                                                      title=ADD_ORGANIZATION,
                                                       tooltip=help)
 
         auth = current.auth
@@ -353,7 +352,7 @@ class S3OrganisationModel(S3Model):
                                                                               else None,
                                           requires=org_organisation_requires(),
                                           represent=org_organisation_represent,
-                                          label=ORGANISATION,
+                                          label=messages.ORGANISATION,
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
                                           widget = org_widget,

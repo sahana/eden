@@ -14,10 +14,7 @@ from gluon import *
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3crud import S3CRUD
-from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
-from s3.s3resource import S3FieldSelector
-from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, S3CustomController
+from s3.s3utils import S3CustomController
 
 THEME = "NYC"
 
@@ -52,7 +49,7 @@ class index(S3CustomController):
                 # This browser has logged-in before
                 registered = True
 
-            if self_registration:
+            if self_registration is True:
                 # Provide a Registration box on front page
                 register_form = auth.s3_registration_form()
                 register_div = DIV(H3(T("Register")),
@@ -94,6 +91,7 @@ $('#login-btn').click(function(){
         output["register_form"] = register_form
 
         # Latest 4 Events and Requests
+        from s3.s3resource import S3FieldSelector
         s3db = current.s3db
         layout = s3db.cms_render_posts
         list_id = "latest_events"
@@ -127,6 +125,7 @@ $('#login-btn').click(function(){
         output["latest_reqs"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         # Site Activity Log
+        from s3.s3utils import s3_auth_user_represent_name
         resource = s3db.resource("s3_audit")
         resource.add_filter(S3FieldSelector("~.method") != "delete")
         orderby = "s3_audit.timestmp desc"
@@ -180,6 +179,7 @@ $('#login-btn').click(function(){
 
             if is_logged_in and org_group_id:
                 # Add a Filter
+                from s3.s3filter import S3OptionsFilter, S3FilterForm
                 filter_widgets = [S3OptionsFilter("user_id$org_group_id",
                                                   label = "",
                                                   # Can't just use "" as this is then omitted from rendering
@@ -246,6 +246,7 @@ def latest_records(resource, layout, list_id, limit, list_fields, orderby):
             available_records = current.db(table.deleted != True)
         else:
             available_records = current.db(table._id > 0)
+        from s3.s3crud import S3CRUD
         if available_records.select(table._id,
                                     limitby=(0, 1)).first():
             msg = DIV(S3CRUD.crud_string(resource.tablename,
@@ -310,6 +311,7 @@ class subscriptions(S3CustomController):
         # @note: subscription manager has no resource context, so
         #        must configure fixed options or lookup resources
         #        for filter widgets which need it.
+        from s3.s3filter import S3LocationFilter, S3OptionsFilter
         filters = [S3OptionsFilter("series_id",
                                    label=T("Subscribe to"),
                                    represent="%(name)s",
@@ -698,22 +700,13 @@ $('#subscription-form').submit(function() {
         return subscription
         
 # =============================================================================
-class contact():
+class contact(S3CustomController):
     """ Contact Form """
 
     def __call__(self):
 
         request = current.request
         response = current.response
-
-        view = path.join(request.folder, "private", "templates",
-                         THEME, "views", "contact.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         if request.env.request_method == "POST":
             # Processs Form
@@ -834,6 +827,19 @@ class contact():
 });''')
 
         response.title = "Contact | NYC Prepared"
+        self._view(THEME, "contact.html")
+        return dict(form=form)
+
+# =============================================================================
+class register(S3CustomController):
+    """ Registration Form """
+
+    def __call__(self):
+
+        form = current.auth.s3_registration_form()
+
+        current.response.title = "Register | NYC Prepared"
+        self._view(THEME, "register.html")
         return dict(form=form)
 
 # END =========================================================================

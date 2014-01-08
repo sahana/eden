@@ -19,6 +19,8 @@ ANONYMOUS,Anonymous,,gis,"layer_wfs",,READ,,any,
 ANONYMOUS,Anonymous,,gis,"layer_wms",,READ,,any,
 ANONYMOUS,Anonymous,,gis,"layer_xyz",,READ,,any,
 ANONYMOUS,Anonymous,,org,,,READ,,any,
+ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE|UPDATE,,Allow new users to create orgs during registration 
+ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,Allow new users to create orgs during registration 
 "AUTHENTICATED","Authenticated",,pr,"pentity",,READ,,any,
 "AUTHENTICATED","Authenticated",,pr,"person_search",,READ,,any,"Custom Controller to allow access to PR via JSON for AutoComplete"
 "AUTHENTICATED","Authenticated",,supply,,,READ,,any,

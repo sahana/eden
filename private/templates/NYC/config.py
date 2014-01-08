@@ -74,24 +74,27 @@ settings.L10n.languages = OrderedDict([
 # These settings should be changed _after_ the 1st (admin) user is
 # registered in order to secure the deployment
 # Should users be allowed to register themselves?
-#settings.security.self_registration = False
+settings.security.self_registration = "index"
 # Do new users need to verify their email address?
 settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
 settings.auth.registration_requires_approval = True
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 #settings.auth.always_notify_approver = False
+# Uncomment this to request the Mobile Phone when a user registers
+settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to request the Organisation when a user registers
-#settings.auth.registration_requests_organisation = True
+settings.auth.registration_requests_organisation = True
 # Uncomment this to request the Site when a user registers
-settings.auth.registration_requests_site = True
+#settings.auth.registration_requests_site = True
 
 # Roles that newly-registered users get automatically
-settings.auth.registration_roles = { 0: ["comms_dispatch"]}
+#settings.auth.registration_roles = { 0: ["comms_dispatch"]}
 
-settings.auth.registration_link_user_to = {"staff":T("Staff"),
-                                           #"volunteer":T("Volunteer")
-                                           }
+#settings.auth.registration_link_user_to = {"staff":T("Staff"),
+#                                           #"volunteer":T("Volunteer")
+#                                           }
+settings.auth.registration_link_user_to_default = "staff"
 
 settings.security.policy = 5 # Controller, Function & Table ACLs
 
@@ -106,6 +109,11 @@ settings.ui.label_attachments = "Media"
 
 # Uncomment to show created_by/modified_by using Names not Emails
 settings.ui.auth_user_represent = "name"
+
+# Record Approval
+settings.auth.record_approval = True
+settings.auth.record_approval_required_for = ["org_organisation",
+                                              ]
 
 # -----------------------------------------------------------------------------
 # Audit

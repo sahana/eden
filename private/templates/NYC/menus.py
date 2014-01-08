@@ -173,7 +173,7 @@ class S3MainMenu(default.S3MainMenu):
                            vars=dict(_next=login_next), **attr)(
                             MM("Login", m="login",
                                vars=dict(_next=login_next)),
-                            MM("Register", m="register",
+                            MM("Register", f="index", m="register",
                                vars=dict(_next=login_next),
                                check=self_registration),
                             MM("Lost Password", m="retrieve_password")

@@ -850,27 +850,31 @@ Thank you
                        delete_label = messages.delete_label,
                        #formstyle = formstyle
                        )
+
+        # Insert a Password-confirmation field
         for i, row in enumerate(form[0].components):
             item = row.element("input", _name=passfield)
             if item:
                 field_id = "%s_password_two" % utable._tablename
                 #row = formstyle(...)
                 form[0].insert(i + 1,
-                    TR( TD( LABEL("%s:" % messages.verify_password,
-                                  _for="password_two",
-                                  _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                            SPAN("*", _class="req"),
-                            _class="w2p_fl"),
-                        INPUT( _name="password_two",
-                               _id=field_id,
-                               _type="password",
-                               requires=IS_EXPR("value==%s" % \
-                               repr(request.vars.get(passfield, None)),
-                               error_message=messages.mismatched_password)
-                              ),
-                        "",
+                    TR(TD(LABEL("%s:" % messages.verify_password,
+                                _for="password_two",
+                                _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                          SPAN("*", _class="req"),
+                          _class="w2p_fl"),
+                       TD(INPUT(_name="password_two",
+                                _id=field_id,
+                                _type="password",
+                                requires=IS_EXPR("value==%s" % \
+                                repr(request.vars.get(passfield, None)),
+                                error_message=messages.mismatched_password)
+                                ),
+                          _class="w2p_fw"),
+                        TD("",
+                           _class="w2p_fc"),
                         _id=field_id + SQLFORM.ID_ROW_SUFFIX))
-                #form[0].insert(i + 1, row)
+
         # Add an opt in clause to receive emails depending on the deployment settings
         if deployment_settings.get_auth_opt_in_to_email():
             field_id = "%s_opt_in" % utable._tablename
@@ -883,29 +887,34 @@ Thank you
                                        _for="opt_in",
                                        _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
                                  _class="w2p_fl"),
-                                 INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
+                              TD(INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
+                                 _class="w2p_fw"),
                               TD(comment,
                                  _class="w2p_fc"),
                            _id=field_id + SQLFORM.ID_ROW_SUFFIX))
 
         # S3: Insert Mobile phone field into form
         if deployment_settings.get_auth_registration_requests_mobile_phone():
-            field_id = "%s_mobile" % utable._tablename
-            if deployment_settings.get_auth_registration_mobile_phone_mandatory():
-                comment = SPAN("*", _class="req")
-            else:
-                comment = DIV(_class="tooltip",
-                              _title="%s|%s" % (deployment_settings.get_ui_label_mobile_phone(),
-                                                messages.help_mobile_phone))
-            form[0].insert(-1,
-                           TR(TD(LABEL("%s:" % deployment_settings.get_ui_label_mobile_phone(),
-                                       _for="mobile",
-                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                                 _class="w2p_fl"),
-                                 INPUT(_name="mobile", _id=field_id),
-                              TD(comment,
-                                 _class="w2p_fc"),
-                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+            for i, row in enumerate(form[0].components):
+                item = row.element("input", _name="email")
+                if item:
+                    field_id = "%s_mobile" % utable._tablename
+                    if deployment_settings.get_auth_registration_mobile_phone_mandatory():
+                        comment = SPAN("*", _class="req")
+                    else:
+                        comment = DIV(_class="tooltip",
+                                      _title="%s|%s" % (deployment_settings.get_ui_label_mobile_phone(),
+                                                        messages.help_mobile_phone))
+                    form[0].insert(i + 1,
+                                   TR(TD(LABEL("%s:" % deployment_settings.get_ui_label_mobile_phone(),
+                                               _for="mobile",
+                                               _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                         _class="w2p_fl"),
+                                      TD(INPUT(_name="mobile", _id=field_id),
+                                         _class="w2p_fw"),
+                                      TD(comment,
+                                         _class="w2p_fc"),
+                                   _id=field_id + SQLFORM.ID_ROW_SUFFIX))
 
         # S3: Insert Photo widget into form
         if deployment_settings.get_auth_registration_requests_image():
@@ -923,7 +932,8 @@ Thank you
                                        _for="image",
                                        _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
                                  _class="w2p_fl"),
-                                 widget,
+                              TD(widget,
+                                 _class="w2p_fw"),
                               TD(comment,
                                  _class="w2p_fc"),
                            _id=field_id + SQLFORM.ID_ROW_SUFFIX))

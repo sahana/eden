@@ -198,6 +198,13 @@ class S3Config(Storage):
         return self.auth.get("openid", False)
 
     def get_security_self_registration(self):
+        """
+            Whether Users can register themselves
+            - False to disable self-registration
+            - True to use the default registration page at default/user/register
+            - "index" to use a cyustom registration page defined in private/templates/<template>/controllers.py
+            
+        """
         return self.security.get("self_registration", True)
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)

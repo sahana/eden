@@ -604,6 +604,7 @@ label.ui-corner-all span {
 		overflow: hidden;
 	}
 	#auth_user_email,
+	#auth_user_mobile,
 	#auth_user_language,
 	#auth_user_password,
 	#auth_user_password_two {
@@ -611,6 +612,7 @@ label.ui-corner-all span {
 	    width: auto;
 	}
 	#auth_user_email__label,
+	#auth_user_mobile__label,
 	#auth_user_password__label	{
 		font-size: 11px;
 	}
@@ -775,7 +777,6 @@ label.ui-corner-all span {
 
 /* Login page */
 #auth_user_email,
-#auth_user_language,
 #auth_user_password,
 #auth_user_password_two {
     /*width: 100%;*/
@@ -843,6 +844,8 @@ a#register-btn.action-lnk {
 
 #auth_user_first_name,
 #auth_user_last_name,
+#auth_user_mobile,
+#auth_user_language,
 #auth_user_utc_offset {
     /*width: 100%;*/
     width: 300px;
