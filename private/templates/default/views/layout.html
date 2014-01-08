@@ -83,19 +83,5 @@
  </div>
 {{pass}}
 {{include "scripts.html"}}
-<script type="text/javascript">
-  (function() {
-    onResize = function() {
-       if (( $("#menu_modules").height() + $("#menu_options").height() + 10) < $(window).height()) {
-         $(".aside").css("position","fixed");
-       } else {
-         $(".aside").css("position","absolute");
-       }
-    }
-
-    $(document).ready(onResize);
-
-    $(window).bind('resize', onResize);
-  })();
 </body>
 </html>

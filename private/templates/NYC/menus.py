@@ -72,7 +72,7 @@ class S3MainMenu(default.S3MainMenu):
             MM("Map", c="gis", f="index",
                icon="icon-map"),
             MM("Projects", c="project", f="project"),
-            MM("Requests", c="req", f="req", m="search")(
+            MM("Requests", c="req", f="req")(
                 MM("Fulfill Requests", f="req"),
                 MM("Request Supplies", f="req", m="create", vars={"type": 1}),
                 MM("Request People", f="req", m="create", vars={"type": 3})

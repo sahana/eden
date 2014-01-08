@@ -207,81 +207,6 @@ S3.getClientLocation = function(targetfield) {
 };
 
 // ============================================================================
-S3.deduplication = function() {
-    // Deduplication event handlers
-    $('.mark-deduplicate').click(function() {
-        var url = $('#markDuplicateURL').attr('href');
-        if (url) {
-            $.ajaxS3({
-                type: 'POST',
-                url: url,
-                data: {},
-                dataType: 'JSON',
-                // gets moved to .done() inside .ajaxS3
-                success: function(data) {
-                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                }
-            });
-        }
-    });
-    $('.unmark-deduplicate').click(function() {
-        var url = $('#markDuplicateURL').attr('href');
-        if (url) {
-            $.ajaxS3({
-                type: 'POST',
-                url: url + '?remove=1',
-                data: {},
-                dataType: 'JSON',
-                // gets moved to .done() inside .ajaxS3
-                success: function(data) {
-                    $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                }
-            });
-        }
-    });
-    $('.swap-button').click(function() {
-        // Swap widgets between original and duplicate side
-        var id = this.id;
-        var name = id.slice(5);
-
-        var original = $('#original_' + name);
-        var original_id = original.attr('id');
-        var original_name = original.attr('name');
-        var original_parent = original.parent().closest('td.mwidget');
-        var duplicate = $('#duplicate_' + name);
-        var duplicate_id = duplicate.attr('id');
-        var duplicate_name = duplicate.attr('name');
-        var duplicate_parent = duplicate.parent().closest('td.mwidget');
-
-        // Rename with placeholder names
-        original.attr('id', 'swap_original_id');
-        original.attr('name', 'swap_original_name');
-        $('#dummy' + original_id).attr('id', 'dummy_swap_original_id');
-        duplicate.attr('id', 'swap_duplicate_id');
-        duplicate.attr('name', 'swap_duplicate_name');
-        $('#dummy' + duplicate_id).attr('id', 'dummy_swap_duplicate_id');
-
-        // Swap elements
-        original_parent.before('<td id="swap_original_placeholder"></td>');
-        var o = original_parent.detach();
-        duplicate_parent.before('<td id="swap_duplicate_placeholder"></td>');
-        var d = duplicate_parent.detach();
-        $('#swap_original_placeholder').after(d);
-        $('#swap_original_placeholder').remove();
-        $('#swap_duplicate_placeholder').after(o);
-        $('#swap_duplicate_placeholder').remove();
-
-        // Rename to original names
-        original.attr('id', duplicate_id);
-        original.attr('name', duplicate_name);
-        $('#dummy_swap_original_id').attr('id', 'dummy' + duplicate_id);
-        duplicate.attr('id', original_id);
-        duplicate.attr('name', original_name);
-        $('#dummy_swap_duplicate').attr('id', 'dummy' + original_id);
-    });
-};
-
-// ============================================================================
 S3.confirmClick = function(ElementID, Message) {
 	// @param ElementID: the ID of the element which will be clicked
 	// @param Message: the Message displayed in the confirm dialog
@@ -1002,10 +927,11 @@ S3.slider = function(fieldname, min, max, step, value) {
 /**
  * Add a querystring variable to an existing URL and redirect into it.
  * It accounts for existing variables and will override an existing one.
- * Sample usage: _onchange="S3reloadWithQueryStringVars({'_language': $(this).val()});")
+ * Sample usage: _onchange="S3.reloadWithQueryStringVars({'_language': $(this).val()});")
+ * used by IFRC layouts.py
  */
 
-var S3reloadWithQueryStringVars = function(queryStringVars) {
+S3.reloadWithQueryStringVars = function(queryStringVars) {
     var existingQueryVars = location.search ? location.search.substring(1).split('&') : [],
         currentUrl = location.search ? location.href.replace(location.search, '') : location.href,
         newQueryVars = {},
@@ -1032,172 +958,296 @@ var S3reloadWithQueryStringVars = function(queryStringVars) {
     }
 };
 
-// ============================================================================
+// Module pattern to hide internal vars
+(function () {
+    // ========================================================================
+    var deduplication = function() {
+        // Deduplication event handlers
+        $('.mark-deduplicate').click(function() {
+            var url = $('#markDuplicateURL').attr('href');
+            if (url) {
+                $.ajaxS3({
+                    type: 'POST',
+                    url: url,
+                    data: {},
+                    dataType: 'JSON',
+                    // gets moved to .done() inside .ajaxS3
+                    success: function(data) {
+                        $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
+                    }
+                });
+            }
+        });
+        $('.unmark-deduplicate').click(function() {
+            var url = $('#markDuplicateURL').attr('href');
+            if (url) {
+                $.ajaxS3({
+                    type: 'POST',
+                    url: url + '?remove=1',
+                    data: {},
+                    dataType: 'JSON',
+                    // gets moved to .done() inside .ajaxS3
+                    success: function(data) {
+                        $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
+                    }
+                });
+            }
+        });
+        $('.swap-button').click(function() {
+            // Swap widgets between original and duplicate side
+            var id = this.id;
+            var name = id.slice(5);
 
-$(document).ready(function() {
-    // Web2Py Layer
-    $('.alert-error').hide().slideDown('slow');
-    $('.alert-error').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $('.alert-warning').hide().slideDown('slow');
-    $('.alert-warning').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $('.alert-info').hide().slideDown('slow');
-    $('.alert-info').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $('.alert-success').hide().slideDown('slow');
-    $('.alert-success').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $("input[type='checkbox'].delete").click(function() {
-        if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
-                this.checked = false;
-        }
-    });
+            var original = $('#original_' + name);
+            var original_id = original.attr('id');
+            var original_name = original.attr('name');
+            var original_parent = original.parent().closest('td.mwidget');
+            var duplicate = $('#duplicate_' + name);
+            var duplicate_id = duplicate.attr('id');
+            var duplicate_name = duplicate.attr('name');
+            var duplicate_parent = duplicate.parent().closest('td.mwidget');
 
-    // If a form is submitted with errors, this will scroll
-    // the window to the first form error message
-    var inputErrorId = $('form .error[id]').eq(0).attr('id');
-    if (inputErrorId != undefined) {
-        inputName = inputErrorId.replace('__error', '');
-        inputId = $('[name=' + inputName + ']').attr('id');
-        inputLabel = $('[for=' + inputId + ']');
-        window.scrollTo(0, inputLabel.offset().top);
-    }
+            // Rename with placeholder names
+            original.attr('id', 'swap_original_id');
+            original.attr('name', 'swap_original_name');
+            $('#dummy' + original_id).attr('id', 'dummy_swap_original_id');
+            duplicate.attr('id', 'swap_duplicate_id');
+            duplicate.attr('name', 'swap_duplicate_name');
+            $('#dummy' + duplicate_id).attr('id', 'dummy_swap_duplicate_id');
 
-    // T2 Layer
-    //try { $('.zoom').fancyZoom( {
-    //    scaleImg: true,
-    //    closeOnClick: true,
-    //    directory: S3.Ap.concat('/static/media')
-    //}); } catch(e) {}
+            // Swap elements
+            original_parent.before('<td id="swap_original_placeholder"></td>');
+            var o = original_parent.detach();
+            duplicate_parent.before('<td id="swap_duplicate_placeholder"></td>');
+            var d = duplicate_parent.detach();
+            $('#swap_original_placeholder').after(d);
+            $('#swap_original_placeholder').remove();
+            $('#swap_duplicate_placeholder').after(o);
+            $('#swap_duplicate_placeholder').remove();
 
-    // S3 Layer
-    // dataTables' delete button
-    // (can't use S3.confirmClick as the buttons haven't yet rendered)
-    if (S3.interactive) {
-        $(document).on('click', 'a.delete-btn', function(event) {
-            if (confirm(i18n.delete_confirmation)) {
-                return true;
+            // Rename to original names
+            original.attr('id', duplicate_id);
+            original.attr('name', duplicate_name);
+            $('#dummy_swap_original_id').attr('id', 'dummy' + duplicate_id);
+            duplicate.attr('id', original_id);
+            duplicate.attr('name', original_name);
+            $('#dummy_swap_duplicate').attr('id', 'dummy' + original_id);
+        });
+};
+
+    /**
+     * Used by Themes with a Side-menu
+     * - for long pages with small side menus, we want the side-menu to always be visible
+     * BUT
+     * - for short pages with large side-menus, we don't want the side-menu to scroll
+     */
+    var onResize = function() {
+        // Default Theme
+        var side_menu_holder = $('.aside');
+        /* Doesn't work on IFRC
+        if (!side_menu_holder.length) {
+            // IFRC?
+            side_menu_holder = $('#left-col');
+        } */
+        if (side_menu_holder.length) {
+            // Default Theme
+            var header = $('#menu_modules');
+            if (!header.length) {
+                // Bootstrap?
+                header = $('#navbar-inner');
+                if (!header.length) {
+                    // IFRC?
+                    header = $('#header');
+                }
+            }
+            // Default Theme
+            var side_menu = $('#menu_options');
+            /* Doesn't work on IFRC
+            if (!side_menu.length) {
+                // IFRC?
+                side_menu = $('#main-sub-menu');
+            } */
+            //var footer = $('#footer');
+            //if ((header.height() + footer.height() + side_menu.height()) < $(window).height()) {
+            if ((header.height() + side_menu.height() + 10) < $(window).height()) {
+                side_menu_holder.css('position', 'fixed');
+                $('#content').css('min-height', side_menu.height());
             } else {
-                event.preventDefault();
-                return false;
+                side_menu_holder.css('position', 'static');
+            }
+        }
+    };
+
+    // ========================================================================
+    $(document).ready(function() {
+        // Web2Py Layer
+        $('.alert-error').hide().slideDown('slow');
+        $('.alert-error').click(function() {
+            $(this).fadeOut('slow');
+            return false;
+        });
+        $('.alert-warning').hide().slideDown('slow');
+        $('.alert-warning').click(function() {
+            $(this).fadeOut('slow');
+            return false;
+        });
+        $('.alert-info').hide().slideDown('slow');
+        $('.alert-info').click(function() {
+            $(this).fadeOut('slow');
+            return false;
+        });
+        $('.alert-success').hide().slideDown('slow');
+        $('.alert-success').click(function() {
+            $(this).fadeOut('slow');
+            return false;
+        });
+        $("input[type='checkbox'].delete").click(function() {
+            if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
+                    this.checked = false;
             }
         });
 
-        if (S3.FocusOnFirstField != false) {
-            // Focus On First Field
-            $('input:text:visible:first').focus();
-        };
-    }
+        // If a form is submitted with errors, this will scroll
+        // the window to the first form error message
+        var inputErrorId = $('form .error[id]').eq(0).attr('id');
+        if (inputErrorId != undefined) {
+            inputName = inputErrorId.replace('__error', '');
+            inputId = $('[name=' + inputName + ']').attr('id');
+            inputLabel = $('[for=' + inputId + ']');
+            window.scrollTo(0, inputLabel.offset().top);
+        }
 
-    // Accept comma as thousands separator
-    $('input.int_amount').keyup(function() {
-        this.value = this.value.reverse()
-                               .replace(/[^0-9\-,]|\-(?=.)/g, '')
-                               .reverse();
-    });
-    $('input.float_amount').keyup(function() {
-        this.value = this.value.reverse()
-                               .replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '')
-                               .reverse();
-    });
-    // Auto-capitalize first names
-    $('input[name="first_name"]').focusout(function() {
-        this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
-    });
+        // T2 Layer
+        //try { $('.zoom').fancyZoom( {
+        //    scaleImg: true,
+        //    closeOnClick: true,
+        //    directory: S3.Ap.concat('/static/media')
+        //}); } catch(e) {}
 
-    // Resizable textareas
-    $('textarea.resizable:not(.textarea-processed)').each(function() {
-        var that = $(this);
-        // Avoid non-processed teasers.
-        if (that.is(('textarea.teaser:not(.teaser-processed)'))) {
-            return false;
-        }
-        var textarea = that.addClass('textarea-processed');
-        var staticOffset = null;
-        // When wrapping the text area, work around an IE margin bug. See:
-        // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
-        that.wrap('<div class="resizable-textarea"><span></span></div>')
-        .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
-        var grippie = $('div.grippie', that.parent())[0];
-        grippie.style.marginRight = (grippie.offsetWidth - that[0].offsetWidth) + 'px';
-        function startDrag(e) {
-            staticOffset = textarea.height() - e.pageY;
-            textarea.css('opacity', 0.25);
-            $(document).mousemove(performDrag).mouseup(endDrag);
-            return false;
-        }
-        function performDrag(e) {
-            textarea.height(Math.max(32, staticOffset + e.pageY) + 'px');
-            return false;
-        }
-        function endDrag(e) {
-            $(document).unbind('mousemove', performDrag).unbind('mouseup', endDrag);
-            textarea.css('opacity', 1);
-        }
-        return true;
-    });
-
-    // IE6 non anchor hover hack
-    $('#modulenav .hoverable').hover(
-        function() {
-            $(this).addClass('hovered');
-        },
-        function() {
-            $(this).removeClass('hovered');
-        }
-    );
-
-    // Menu popups (works in IE6)
-    $('#modulenav li').hover(
-        function() {
-                var header_width = $(this).width();
-                var popup_width = $('ul', this).width();
-                if (popup_width !== null){
-                  if (popup_width < header_width){
-                    $('ul', this).css({
-                        'width': header_width.toString() + 'px'
-                    });
-                  }
+        // S3 Layer
+        // dataTables' delete button
+        // (can't use S3.confirmClick as the buttons haven't yet rendered)
+        if (S3.interactive) {
+            $(document).on('click', 'a.delete-btn', function(event) {
+                if (confirm(i18n.delete_confirmation)) {
+                    return true;
+                } else {
+                    event.preventDefault();
+                    return false;
                 }
-                $('ul', this).css('display', 'block');
-            },
-        function() {
-            $('ul', this).css('display', 'none');
+            });
+
+            if (S3.FocusOnFirstField != false) {
+                // Focus On First Field
+                $('input:text:visible:first').focus();
+            };
         }
-    );
 
-    // Event Handlers for the page
-    S3.redraw();
+        // Accept comma as thousands separator
+        $('input.int_amount').keyup(function() {
+            this.value = this.value.reverse()
+                                   .replace(/[^0-9\-,]|\-(?=.)/g, '')
+                                   .reverse();
+        });
+        $('input.float_amount').keyup(function() {
+            this.value = this.value.reverse()
+                                   .replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '')
+                                   .reverse();
+        });
+        // Auto-capitalize first names
+        $('input[name="first_name"]').focusout(function() {
+            this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
+        });
 
-    // De-duplication Event Handlers
-    S3.deduplication();
+        // Resizable textareas
+        $('textarea.resizable:not(.textarea-processed)').each(function() {
+            var that = $(this);
+            // Avoid non-processed teasers.
+            if (that.is(('textarea.teaser:not(.teaser-processed)'))) {
+                return false;
+            }
+            var textarea = that.addClass('textarea-processed');
+            var staticOffset = null;
+            // When wrapping the text area, work around an IE margin bug. See:
+            // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
+            that.wrap('<div class="resizable-textarea"><span></span></div>')
+            .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
+            var grippie = $('div.grippie', that.parent())[0];
+            grippie.style.marginRight = (grippie.offsetWidth - that[0].offsetWidth) + 'px';
+            function startDrag(e) {
+                staticOffset = textarea.height() - e.pageY;
+                textarea.css('opacity', 0.25);
+                $(document).mousemove(performDrag).mouseup(endDrag);
+                return false;
+            }
+            function performDrag(e) {
+                textarea.height(Math.max(32, staticOffset + e.pageY) + 'px');
+                return false;
+            }
+            function endDrag(e) {
+                $(document).unbind('mousemove', performDrag).unbind('mouseup', endDrag);
+                textarea.css('opacity', 1);
+            }
+            return true;
+        });
 
-    // UTC Offset
-    now = new Date();
-    $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
+        // IE6 non anchor hover hack
+        $('#modulenav .hoverable').hover(
+            function() {
+                $(this).addClass('hovered');
+            },
+            function() {
+                $(this).removeClass('hovered');
+            }
+        );
 
-    // Social Media 'share' buttons
-    if ($('#socialmedia_share').length > 0) {
-        // DIV exists (deployment_setting on)
-        var currenturl = document.location.href;
-        var currenttitle = document.title;
-        // Linked-In
-        $('#socialmedia_share').append("<div class='socialmedia_element'><script src='//platform.linkedin.com/in.js'></script><script type='IN/Share' data-counter='right'></script></div>");
-        // Twitter
-        $('#socialmedia_share').append("<div class='socialmedia_element'><a href='https://twitter.com/share' class='twitter-share-button' data-count='none' data-hashtags='sahana-eden'>Tweet</a><script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='//platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','twitter-wjs');</script></div>");
-        // Facebook
-        $('#socialmedia_share').append("<div class='socialmedia_element'><div id='fb-root'></div><script>(function(d, s, id) { var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = '//connect.facebook.net/en_US/all.js#xfbml=1'; fjs.parentNode.insertBefore(js, fjs); }(document, 'script', 'facebook-jssdk'));</script> <div class='fb-like' data-send='false' data-layout='button_count' data-show-faces='true' data-href='" + currenturl + "'></div></div>");
-    }
+        // Menu popups (works in IE6)
+        $('#modulenav li').hover(
+            function() {
+                    var header_width = $(this).width();
+                    var popup_width = $('ul', this).width();
+                    if (popup_width !== null){
+                      if (popup_width < header_width){
+                        $('ul', this).css({
+                            'width': header_width.toString() + 'px'
+                        });
+                      }
+                    }
+                    $('ul', this).css('display', 'block');
+                },
+            function() {
+                $('ul', this).css('display', 'none');
+            }
+        );
 
-});
+        // Event Handlers for the page
+        S3.redraw();
 
+        // Handle Page Resizes
+        onResize();
+        $(window).bind('resize', onResize);
+
+        // De-duplication Event Handlers
+        deduplication();
+
+        // UTC Offset
+        now = new Date();
+        $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
+
+        // Social Media 'share' buttons
+        if ($('#socialmedia_share').length > 0) {
+            // DIV exists (deployment_setting on)
+            var currenturl = document.location.href;
+            var currenttitle = document.title;
+            // Linked-In
+            $('#socialmedia_share').append("<div class='socialmedia_element'><script src='//platform.linkedin.com/in.js'></script><script type='IN/Share' data-counter='right'></script></div>");
+            // Twitter
+            $('#socialmedia_share').append("<div class='socialmedia_element'><a href='https://twitter.com/share' class='twitter-share-button' data-count='none' data-hashtags='sahana-eden'>Tweet</a><script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='//platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','twitter-wjs');</script></div>");
+            // Facebook
+            $('#socialmedia_share').append("<div class='socialmedia_element'><div id='fb-root'></div><script>(function(d, s, id) { var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = '//connect.facebook.net/en_US/all.js#xfbml=1'; fjs.parentNode.insertBefore(js, fjs); }(document, 'script', 'facebook-jssdk'));</script> <div class='fb-like' data-send='false' data-layout='button_count' data-show-faces='true' data-href='" + currenturl + "'></div></div>");
+        }
+
+    });
+
+}());
 // ============================================================================
