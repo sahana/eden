@@ -76,6 +76,7 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3layouts import S3AddResourceLink
+from s3.s3widgets import set_match_strings
 
 # =============================================================================
 class S3OrganisationModel(S3Model):
@@ -2264,6 +2265,7 @@ class S3SiteModel(S3Model):
 
         response = current.response
         resource = r.resource
+        settings = current.deployment_settings
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -2284,10 +2286,15 @@ class S3SiteModel(S3Model):
                             "Missing option! Require value")
             raise HTTP(400, body=output)
 
+        # Construct query
         query = (S3FieldSelector("name").lower().like(value + "%"))
+
+        # Add template specific search criteria
+        for field in settings.get_org_site_autocomplete_fields():
+            query |= (S3FieldSelector(field).lower().like(value + "%"))
+
         resource.add_filter(query)
 
-        settings = current.deployment_settings
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
@@ -2297,11 +2304,12 @@ class S3SiteModel(S3Model):
         else:
             s3db = current.s3db
 
-            # Fields to return
-            fields = ["site_id",
-                      "name",
-                      ]
+            # default fields to return 
+            fields = ["name",
+                      "site_id",
+                     ]
 
+            # Add template specific fields to return
             fields += settings.get_org_site_autocomplete_fields()
 
             rows = resource.select(fields,
@@ -2312,19 +2320,23 @@ class S3SiteModel(S3Model):
             output = []
             append = output.append
             for row in rows:
-                instance_type = row.get("org_site.instance_type", None)
-                location = row.get("gis_location", None)
-                org = row.get("org_organisation.name", None)
-                row = row.org_site
-                record = dict(id = row.site_id,
-                              name = row.name,
-                              )
-                if instance_type:
-                    record["instance_type"] = instance_type
-                if location:
-                    record["location"] = location.as_dict()
-                if org:
-                    record["org"] = org
+                # Populate record
+                record = {"id":row.org_site.site_id,
+                          "name":row.org_site.name,
+                          }
+
+                # Populate fields only if present
+                if row["gis_location.L1"]:
+                    record["L1"] = row["gis_location.L1"]
+                if row["gis_location.L2"]:
+                    record["L2"] = row["gis_location.L2"]
+                if row["gis_location.L3"]:
+                    record["L3"] = row["gis_location.L4"]
+                if row["gis_location.L4"]:
+                    record["L4"] = row["gis_location.L4"]
+
+                # Populate match information (if applicable)
+                set_match_strings(record, value)
                 append(record)
             output = json.dumps(output)
 

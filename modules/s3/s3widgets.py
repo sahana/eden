@@ -5888,6 +5888,17 @@ def s3_richtext_widget(field, value):
                     requires=field.requires)
 
 # =============================================================================
+def set_match_strings(matchDict, value):
+    for key in matchDict:
+        if not isinstance(matchDict[key], str):
+            continue
+        if matchDict[key][:len(value)].lower() == value:
+            matchDict["match_type"] = key
+            matchDict["match_string"] = value
+            matchDict["next_string"] = matchDict[key][len(value):]
+            break
+
+# =============================================================================
 def search_ac(r, **attr):
     """
         JSON search method for S3AutocompleteWidget
