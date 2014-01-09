@@ -165,12 +165,15 @@ class S3RequestModel(S3Model):
                 site_widget = S3SiteAddressAutocompleteWidget()
             else:
                 site_widget = S3SiteAutocompleteWidget()
-            site_comment = DIV(_class="tooltip",
-                               _title="%s|%s" % (T("Requested By Facility"),
-                                                 T("Enter some characters to bring up a list of possible matches")))
+            site_comment = S3AddResourceLink(c="org", f="facility",
+                                             vars = dict(child="site_id"),
+                                             title=T("Add New Facility"),
+                                             tooltip=T("Enter some characters to bring up a list of possible matches"))
         else:
             site_widget = None
-            site_comment = None
+            site_comment = S3AddResourceLink(c="org", f="facility",
+                                             vars = dict(child="site_id"),
+                                             title=T("Add New Facility"))
 
         # ---------------------------------------------------------------------
         # Requests
@@ -211,19 +214,18 @@ class S3RequestModel(S3Model):
                                   # This is a component, so needs to be a super_link
                                   # - can't override field name, ondelete or requires
                                   super_link("site_id", "org_site",
-                                             label = T("Requested For Facility"),
+                                             comment = site_comment,
                                              default = site_default,
-                                             readable = True,
-                                             writable = True,
                                              empty = False,
-                                             #required = True,
                                              filterby = "obsolete",
                                              filter_opts = [False],
                                              instance_types = auth.org_site_types,
+                                             label = T("Requested For Facility"),
+                                             readable = True,
+                                             represent = self.org_site_represent,
                                              updateable = True,
                                              widget = site_widget,
-                                             comment = site_comment,
-                                             represent = self.org_site_represent
+                                             writable = True,
                                              ),
                                   #Field("location",
                                   #      label = T("Neighborhood")),
@@ -630,7 +632,6 @@ class S3RequestModel(S3Model):
         table.date_recv.readable = table.date_recv.writable = False
         table.recv_by_id.readable = table.recv_by_id.writable = False
 
-        # @ToDo: Fix for human_resource_id -> person_id
         if settings.get_req_requester_from_site():
             # Filter the list of Contacts to those for the site
             table.requester_id.widget = None
@@ -638,18 +639,17 @@ class S3RequestModel(S3Model):
 S3OptionsFilter({
  'triggerName':'site_id',
  'targetName':'requester_id',
- 'lookupPrefix':'hrm',
  'lookupResource':'staff',
  'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
-            table.site_id.comment = A(T("Set as default Site"),
-                                      _id="req_req_site_id_link",
-                                      _target="_blank",
-                                      _href=URL(c="default",
-                                                f="user",
-                                                args=["profile"]))
+            #table.site_id.comment = A(T("Set as default Site"),
+            #                          _id="req_req_site_id_link",
+            #                          _target="_blank",
+            #                          _href=URL(c="default",
+            #                                    f="user",
+            #                                    args=["profile"]))
 
         req_types = settings.get_req_req_type()
         if "People" in req_types:
@@ -746,7 +746,6 @@ S3OptionsFilter({
                         fields.insert(7, "commit_status")
                 fields.insert(7, "date_recv")
 
-                # @ToDo: Fix for human_resource_id -> person_id
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
@@ -754,7 +753,6 @@ S3OptionsFilter({
 S3OptionsFilter({
  'triggerName':'site_id',
  'targetName':'requester_id',
- 'lookupPrefix':'hrm',
  'lookupResource':'staff',
  'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
  'msgNoRecords':'%s',
@@ -809,7 +807,6 @@ S3OptionsFilter({
                         fields.insert(8, "commit_status")
                 fields.insert(8, "date_recv")
 
-                # @ToDo: Fix for human_resource_id -> person_id
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
@@ -817,7 +814,6 @@ S3OptionsFilter({
 S3OptionsFilter({
  'triggerName':'site_id',
  'targetName':'requester_id',
- 'lookupPrefix':'hrm',
  'lookupResource':'staff',
  'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
  'msgNoRecords':'%s',

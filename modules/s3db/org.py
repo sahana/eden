@@ -76,7 +76,6 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3layouts import S3AddResourceLink
-from s3.s3widgets import set_match_strings
 
 # =============================================================================
 class S3OrganisationModel(S3Model):
@@ -2302,6 +2301,7 @@ class S3SiteModel(S3Model):
                                       name="Search results are over %d. Please input more characters." \
                                           % MAX_SEARCH_RESULTS)])
         else:
+            from s3.s3widgets import set_match_strings
             s3db = current.s3db
 
             # default fields to return 
@@ -2321,8 +2321,9 @@ class S3SiteModel(S3Model):
             append = output.append
             for row in rows:
                 # Populate record
-                record = {"id": row.org_site.site_id,
-                          "name": row.org_site.name,
+                _row = row.get("org_site", row)
+                record = {"id": _row.site_id,
+                          "name": _row.name,
                           }
 
                 # Populate fields only if present

@@ -7,7 +7,7 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from gluon import current, TR, TD, DIV
+from gluon import current
 from gluon.storage import Storage
 
 T = current.T
@@ -171,26 +171,6 @@ settings.inv.item_status = {
    }
 
 # -----------------------------------------------------------------------------
-# Requests Management
-settings.req.req_type = ["People", "Stock"]#, "Summary"]
-settings.req.prompt_match = False
-#settings.req.use_commit = False
-settings.req.requester_optional = True
-settings.req.date_writable = False
-settings.req.item_quantities_writable = True
-settings.req.skill_quantities_writable = True
-settings.req.items_ask_purpose = False
-#settings.req.use_req_number = False
-# Label for Requester
-settings.req.requester_label = "Site Contact"
-# Filter Requester as being from the Site 
-settings.req.requester_from_site = True
-# Label for Inventory Requests
-settings.req.type_inv_label = "Supplies"
-# Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
-settings.req.summary = True
-
-# -----------------------------------------------------------------------------
 # Organisations
 #
 # Enable the use of Organisation Groups
@@ -283,8 +263,53 @@ def facility_marker_fn(record):
     return marker
 
 def customize_org_facility(**attr):
+
+    s3db = current.s3db
+    s3 = current.response.s3
+
     # Tell the client to request per-feature markers
-    current.s3db.configure("org_facility", marker_fn=facility_marker_fn)
+    s3db.configure("org_facility", marker_fn=facility_marker_fn)
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        tablename = "org_facility"
+        table = s3db[tablename]
+
+        if r.interactive:
+            from gluon.validators import IS_EMPTY_OR
+            from s3.s3validators import IS_LOCATION_SELECTOR2
+            from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
+            field = table.location_id
+            field.label = "" # Gets replaced by widget
+            field.requires = IS_EMPTY_OR(IS_LOCATION_SELECTOR2(levels=("L2","L3")))
+            field.widget = S3LocationSelectorWidget2(levels=("L2","L3"),
+                                                     hide_lx=False,
+                                                     reverse_lx=True,
+                                                     show_address=True,
+                                                     show_postcode=True,
+                                                     )
+            # element.style is being set to width: 0 for some reason, so not working
+            #table.organisation_id.widget = S3SelectChosenWidget()
+
+            if r.get_vars.get("format", None) == "popup":
+                # Coming from req/create form, so assume this is just a Home Address
+                # Hide all Fields other than location_id
+                from s3.s3forms import S3SQLCustomForm
+                crud_form = S3SQLCustomForm("location_id")
+                # Default the Name (Mandatory field)
+                table.name.default = "Home Address"
+                # @ToDo: Default the Type (To be able to Hide from Filters)
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
+
+        return True
+    s3.prep = custom_prep
 
     return attr
 
@@ -837,6 +862,60 @@ def customize_project_project(**attr):
     return attr
 
 settings.ui.customize_project_project = customize_project_project
+
+# -----------------------------------------------------------------------------
+# Requests Management
+settings.req.req_type = ["People", "Stock"]#, "Summary"]
+settings.req.prompt_match = False
+#settings.req.use_commit = False
+settings.req.requester_optional = True
+settings.req.date_writable = False
+settings.req.item_quantities_writable = True
+settings.req.skill_quantities_writable = True
+settings.req.items_ask_purpose = False
+#settings.req.use_req_number = False
+# Label for Requester
+settings.req.requester_label = "Site Contact"
+# Filter Requester as being from the Site 
+settings.req.requester_from_site = True
+# Label for Inventory Requests
+settings.req.type_inv_label = "Supplies"
+# Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
+settings.req.summary = True
+
+# -----------------------------------------------------------------------------
+def customize_req_req(**attr):
+    """
+        Customize req_req controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        s3db = current.s3db
+        table = s3db.req_req
+        table.site_id.represent = s3db.org_SiteRepresent(show_type=False)
+        if r.interactive:
+            from s3layouts import S3AddResourceLink
+            table.site_id.comment = S3AddResourceLink(c="org", f="facility",
+                                                      vars = dict(child="site_id"),
+                                                      title=T("Add Address"),
+                                                      tooltip=T("Enter some characters to bring up a list of possible matches"))
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_req_req = customize_req_req
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

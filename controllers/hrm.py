@@ -567,6 +567,7 @@ def staff_org_site_json():
 def staff_for_site():
     """
         Used by the Req/Req/Create page
+        - note that this returns Person IDs
     """
 
     try:
@@ -582,7 +583,7 @@ def staff_for_site():
                 ((table.end_date == None) | \
                  (table.end_date > request.utcnow)) & \
                 (ptable.id == table.person_id)
-        rows = db(query).select(table.id,
+        rows = db(query).select(ptable.id,
                                 ptable.first_name,
                                 ptable.middle_name,
                                 ptable.last_name,
@@ -590,9 +591,8 @@ def staff_for_site():
         result = []
         append = result.append
         for row in rows:
-            id = row.hrm_human_resource.id
-            append({"id"   : id,
-                    "name" : s3_fullname(row.pr_person)
+            append({"id"   : row.id,
+                    "name" : s3_fullname(row)
                     })
         result = json.dumps(result)
 
