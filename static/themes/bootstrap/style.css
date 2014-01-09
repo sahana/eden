@@ -746,11 +746,11 @@ label.ui-corner-all span {
     margin-bottom: 15px;
 }
 
-/* Login & Registration Screens */
+/* Login, Registration & Profile screens */
 #home div.form-container form {
     margin-left: auto;
     margin-right: auto;
-    width: 450px;
+    width: 470px;
     padding: 20px;
     background-color: #fff;
     margin-bottom: 20px;

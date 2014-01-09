@@ -188,6 +188,10 @@ button:hover,
     padding: 0;
     margin: 0;
 }
+b.red {
+    /* If form is margin 0 then this needs to be too */
+    margin: 0;
+}
 .ui-widget-content {
     background: #ffffff !important;
     border:0!important;

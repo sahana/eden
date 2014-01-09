@@ -2321,19 +2321,23 @@ class S3SiteModel(S3Model):
             append = output.append
             for row in rows:
                 # Populate record
-                record = {"id":row.org_site.site_id,
-                          "name":row.org_site.name,
+                record = {"id": row.org_site.site_id,
+                          "name": row.org_site.name,
                           }
 
                 # Populate fields only if present
-                if row["gis_location.L1"]:
-                    record["L1"] = row["gis_location.L1"]
-                if row["gis_location.L2"]:
-                    record["L2"] = row["gis_location.L2"]
-                if row["gis_location.L3"]:
-                    record["L3"] = row["gis_location.L4"]
-                if row["gis_location.L4"]:
-                    record["L4"] = row["gis_location.L4"]
+                L1 = row.get("gis_location.L1", None)
+                if L1:
+                    record["L1"] = L1
+                L2 = row.get("gis_location.L2", None)
+                if L2:
+                    record["L2"] = L2
+                L3 = row.get("gis_location.L3", None)
+                if L3:
+                    record["L3"] = L3
+                L4 = row.get("gis_location.L4", None)
+                if L4:
+                    record["L4"] = L4
 
                 # Populate match information (if applicable)
                 set_match_strings(record, value)
@@ -2410,8 +2414,8 @@ class S3SiteModel(S3Model):
             output = []
             append = output.append
             for row in rows:
-                address = row.gis_location.address
-                row = row.org_site
+                address = row.get("gis_location.address", None)
+                row = row.get("org_site", row)
                 record = dict(id = row.site_id,
                               name = row.name,
                               )
