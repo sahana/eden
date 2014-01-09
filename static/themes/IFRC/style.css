@@ -370,6 +370,7 @@ span.tab_next_active {
     width: auto;
 }
 
+/* RDRT: Deployment Module */
 .message-body {
     padding: 2px;
     border: 1px dotted #afafaf;
@@ -390,4 +391,9 @@ button.alert-send-btn:enabled {
 .mission-rheader th {
     padding-top: 0;
     vertical-align: top;
+}
+
+/* Field tweaks */
+#asset_asset_sub_defaultitem__row #sub_defaultitem_defaultitem_i_quantity_edit_none {
+    width: 35px;
 }

@@ -53,10 +53,10 @@ class S3MainMenu(object):
             # Service menus, align-right
             # Note: always define right-hand items in reverse order!
             cls.menu_help(right=True),
-            cls.menu_auth(right=True),
             cls.menu_lang(right=True),
+            cls.menu_gis(right=True),
+            cls.menu_auth(right=True),
             cls.menu_admin(right=True),
-            cls.menu_gis(right=True)
         )
         return main_menu
 

@@ -357,6 +357,7 @@ S3OptionsFilter({
                                         "item",
                                         label = T("Items"),
                                         fields = ["item_id",
+                                                  "quantity",
                                                   "sn",
                                                   # These are too wide for the screen & hence hide the AddResourceLinks
                                                   #"supply_org_id",
@@ -417,6 +418,11 @@ S3OptionsFilter({
                                      script = None, # No Item Pack Filter
                                      widget = None,
                                      ),
+                             Field("quantity", "integer", notnull=True,
+                                   default = 1,
+                                   label = T("Quantity"),
+                                   requires = IS_INT_IN_RANGE(1, 1000),
+                                   ),
                              Field("sn",
                                    label = T("Serial Number")),
                              organisation_id("supply_org_id",
