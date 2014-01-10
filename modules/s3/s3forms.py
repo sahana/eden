@@ -1587,6 +1587,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         fname = self._formname(separator = "_")
         field = Field(fname, "text",
+                      comment = options.get("comment", None),
                       label = label,
                       widget = self,
                       default = self.extract(resource, None),

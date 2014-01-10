@@ -1247,6 +1247,9 @@ def cms_render_posts(list_id, item_id, resource, rfields, record):
         card_person = DIV(organisation,
                           _class="card-person",
                           )
+    else:
+        card_person = DIV(_class="card-person",
+                          )
 
     permit = current.auth.s3_has_permission
     settings = current.deployment_settings

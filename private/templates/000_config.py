@@ -112,9 +112,11 @@ settings.frontpage.rss = [
     },
     {"title": "Twitter",
      # @SahanaFOSS
-     "url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS"
+     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
      # Hashtag
-     #url: "http://search.twitter.com/search.atom?q=%23eqnz"
+     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
     }
 ]
 

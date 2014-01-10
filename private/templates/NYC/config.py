@@ -344,9 +344,12 @@ def customize_org_organisation(**attr):
                            (T("Services"), "service.name"),
                            (T("Neighborhoods Served"), "location.name"),
                            ]
-            s3db.configure("org_organisation", list_fields=list_fields)
+
+            s3db.configure("org_organisation",
+                           list_fields = list_fields)
             
         if r.interactive:
+            from gluon.html import DIV, INPUT
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
             s3db.pr_address.comments.label = ""
             s3db.pr_contact.value.label = ""
@@ -412,6 +415,9 @@ def customize_org_organisation(**attr):
                 "website",
                 S3SQLInlineComponent(
                     "contact",
+                    comment = DIV(INPUT(_type="checkbox",
+                                        _name="rss_no_import"),
+                                  T("Don't Import Feed")),
                     name = "rss",
                     label = T("RSS"),
                     multiple = False,
@@ -502,8 +508,12 @@ def customize_org_organisation(**attr):
                 ]
 
             s3db.configure("org_organisation",
-                           crud_form=crud_form,
+                           crud_form = crud_form,
                            filter_widgets = filter_widgets,
+                           )
+
+            s3db.configure("pr_contact",
+                           onaccept = pr_contact_onaccept,
                            )
 
         return result
@@ -721,6 +731,47 @@ def customize_pr_group(**attr):
     return attr
 
 settings.ui.customize_pr_group = customize_pr_group
+
+# -----------------------------------------------------------------------------
+def pr_contact_onaccept(form):
+    """
+        Import Organisation RSS Feeds
+    """
+
+    form_vars = form.vars
+    contact_method = form_vars.contact_method
+    if not contact_method or contact_method != "RSS":
+        return
+    no_import = current.request.post_vars.get("rss_no_import", None)
+    if no_import:
+        return
+    url = form_vars.value
+    db = current.db
+    s3db = current.s3db
+    table = s3db.msg_rss_channel
+    exists  = db(table.url == url).select(table.id, limitby=(0, 1))
+    if exists:
+        return
+    # Lookup org name
+    otable = db.org_organisation
+    name = db(otable.pe_id == form_vars.pe_id).select(otable.name,
+                                                      limitby=(0, 1)
+                                                      ).first().name
+    # Add RSS Channel
+    id = table.insert(name=name, enabled=True, url=url)
+    record = dict(id=id)
+    s3db.update_super(table, record)
+    # Enable
+    channel_id = record["channel_id"]
+    s3db.msg_channel_enable("msg_rss_channel", channel_id)
+    # Setup Parser
+    table = s3db.msg_parser
+    id = table.insert(channel_id=channel_id, function_name="parse_rss", enabled=True)
+    s3db.msg_parser_enable(id)
+    # Check Now
+    async = current.s3task.async
+    async("msg_poll", args=["msg_rss_channel", channel_id])
+    async("msg_parse", args=[channel_id, "parse_rss"])
 
 # -----------------------------------------------------------------------------
 # Human Resource Management

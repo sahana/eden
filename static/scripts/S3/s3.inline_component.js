@@ -181,15 +181,6 @@ $(function() {
             row[fieldname] = value;
         }
 
-        // Add the defaults
-        var defaults = data['defaults'];
-        for (fieldname in defaults) {
-            if (!row.hasOwnProperty(fieldname)) {
-                value = defaults[fieldname]['value'];
-                row[fieldname] = value;
-            }
-        }
-
         var single = $('#read-row-' + formname + '-' + rowindex).hasClass('single');
         if (single) {
             // A multiple=False form
@@ -202,6 +193,15 @@ $(function() {
             }
             if (del) {
                 row['_delete'] = true;
+            }
+        }
+
+        // Add the defaults
+        var defaults = data['defaults'];
+        for (fieldname in defaults) {
+            if (!row.hasOwnProperty(fieldname)) {
+                value = defaults[fieldname]['value'];
+                row[fieldname] = value;
             }
         }
 

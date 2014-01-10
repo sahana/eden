@@ -1750,16 +1750,16 @@ class S3ContactModel(S3Model):
             msg_list_empty = T("No contact information available"))
 
         configure(tablename,
-                  onvalidation=self.pr_contact_onvalidation,
-                  deduplicate=self.pr_contact_deduplicate,
-                  list_fields=["id",
-                               "contact_method",
-                               "value",
-                               "priority",
-                               # Used by list_layout & anyway it's useful
-                               "comments",
-                               ],
+                  deduplicate = self.pr_contact_deduplicate,
+                  list_fields = ["id",
+                                 "contact_method",
+                                 "value",
+                                 "priority",
+                                 # Used by list_layout & anyway it's useful
+                                 "comments",
+                                 ],
                   list_layout = pr_render_contact,
+                  onvalidation = self.pr_contact_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
