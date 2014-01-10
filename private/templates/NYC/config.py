@@ -263,6 +263,9 @@ def facility_marker_fn(record):
     return marker
 
 def customize_org_facility(**attr):
+    """
+        Customize org_facility controller
+    """
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -317,6 +320,9 @@ settings.ui.customize_org_facility = customize_org_facility
 
 # -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
+    """
+        Customize org_organisation controller
+    """
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -529,6 +535,41 @@ def customize_org_organisation(**attr):
 settings.ui.customize_org_organisation = customize_org_organisation
 
 # -----------------------------------------------------------------------------
+def customize_org_group(**attr):
+    """
+        Customize org_group controller
+    """
+
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive:
+            from s3.s3validators import IS_LOCATION_SELECTOR2
+            from s3.s3widgets import S3LocationSelectorWidget2
+            field = s3db.org_group.location_id
+            field.label = "" # Gets replaced by widget
+            field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
+            field.widget = S3LocationSelectorWidget2(levels=("L2",),
+                                                     polygons=True,
+                                                     )
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_org_group = customize_org_group
+
+# -----------------------------------------------------------------------------
 # Persons
 # Uncomment to hide fields in S3AddPersonWidget
 settings.pr.request_dob = False
@@ -554,8 +595,42 @@ def customize_pr_person(**attr):
         else:
             result = True
 
-        if r.interactive and r.component_name == "membership":
-            current.s3db.pr_group_membership.group_head = T("Group Chairperson")
+        if r.interactive:
+            if r.component_name == "human_resource":
+                s3db = current.s3db
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                s3db.org_group_person.group_id.label = ""
+                crud_form = S3SQLCustomForm("organisation_id",
+                                            "site_id",
+                                            S3SQLInlineComponent(
+                                                "group_person",
+                                                label = T("Network"),
+                                                link = False,
+                                                fields = ["group_id"],
+                                                multiple = False,
+                                                ),
+                                            "job_title_id",
+                                            "start_date",
+                                            )
+
+                list_fields = ["id",
+                               "job_title_id",
+                               "organisation_id",
+                               (T("Network"), "group_person.group_id"),
+                               (T("Groups"), "person_id$group_membership.group_id"),
+                               "site_id",
+                               #"site_contact",
+                               (T("Email"), "email.value"),
+                               (settings.get_ui_label_mobile_phone(), "phone.value"),
+                               ]
+
+                s3db.configure("hrm_human_resource",
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
+
+            elif r.component_name == "group_membership":
+                current.s3db.pr_group_membership.group_head.label = T("Group Chairperson")
 
         return result
     s3.prep = custom_prep
@@ -582,8 +657,63 @@ def customize_pr_group(**attr):
         else:
             result = True
 
-        if r.interactive and r.component_name == "membership":
-            current.s3db.pr_group_membership.group_head = T("Group Chairperson")
+        s3db = current.s3db
+        tablename = "pr_group"
+
+        # Format for filter_widgets & imports
+        s3db.add_component("org_group_team",
+                           pr_group="group_id")
+
+        from gluon import URL
+        from s3.s3filter import S3TextFilter, S3OptionsFilter
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        s3db.org_group_team.org_group_id.label = ""
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    S3SQLInlineComponent("group_team",
+                                                         label = T("Network"),
+                                                         fields = ["org_group_id"],
+                                                         # @ToDo: Make this optional?
+                                                         multiple = False,
+                                                         ),
+                                    "comments",
+                                    )
+
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "description",
+                          "comments",
+                          "group_team.org_group_id$name",
+                          ],
+                         label = T("Search"),
+                         comment = T("You can search by by group name, description or comments and by network name. You may use % as wildcard. Press 'Search' without input to list all."),
+                         #_class="filter-search",
+                         ),
+            S3OptionsFilter("group_team.org_group_id",
+                            label=T("Network"),
+                            widget="multiselect",
+                            #hidden=True,
+                            ),
+            ]
+
+        list_fields = ["id",
+                       "group_team.org_group_id",
+                       "name",
+                       "description",
+                       "comments",
+                       ]
+
+        s3db.configure(tablename,
+                       # Redirect to member list when a new group has been created
+                       create_next = URL(f="group",
+                                         args=["[id]", "group_membership"]),
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+        if r.component_name == "group_membership":
+            s3db.pr_group_membership.group_head.label = T("Group Chairperson")
 
         return result
     s3.prep = custom_prep
@@ -622,7 +752,11 @@ settings.hrm.teams = "Groups"
 #settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.organisation_label = "Organization"
 
+# -----------------------------------------------------------------------------
 def customize_hrm_human_resource(**attr):
+    """
+        Customize hrm_human_resource controller
+    """
 
     s3 = current.response.s3
 
@@ -639,12 +773,18 @@ def customize_hrm_human_resource(**attr):
             if not r.component:
                 s3db = current.s3db
                 table = r.table
-                table.department_id.readable = table.department_id.writable = False
-                table.end_date.readable = table.end_date.writable = False
+                #table.department_id.readable = table.department_id.writable = False
+                #table.end_date.readable = table.end_date.writable = False
+                from s3.s3validators import IS_ADD_PERSON_WIDGET2
+                from s3.s3widgets import S3AddPersonWidget2
+                pfield = table.person_id
+                pfield.requires = IS_ADD_PERSON_WIDGET2()
+                pfield.widget = S3AddPersonWidget2(controller="pr")
                 list_fields = ["id",
                                "person_id",
                                "job_title_id",
                                "organisation_id",
+                               (T("Network"), "group_person.group_id"),
                                (T("Groups"), "person_id$group_membership.group_id"),
                                "site_id",
                                #"site_contact",
@@ -666,6 +806,13 @@ def customize_hrm_human_resource(**attr):
                                     header="",
                                     hidden=True,
                                     ),
+                    S3OptionsFilter("group_person.group_id",
+                                    label = T("Network"),
+                                    widget="multiselect",
+                                    #filter=True,
+                                    #header="",
+                                    hidden=True,
+                                    ),
                     S3LocationFilter("location_id",
                                      label = T("Location"),
                                      widget="multiselect",
@@ -684,13 +831,32 @@ def customize_hrm_human_resource(**attr):
                     S3OptionsFilter("group_membership.group_id",
                                     label = T("Team"),
                                     widget="multiselect",
+                                    filter=True,
+                                    header="",
                                     hidden=True,
                                     ),
                     ]
 
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                s3db.org_group_person.group_id.label = ""
+                crud_form = S3SQLCustomForm("person_id",
+                                            "organisation_id",
+                                            "site_id",
+                                            S3SQLInlineComponent(
+                                                "group_person",
+                                                label = T("Network"),
+                                                link = False,
+                                                fields = ["group_id"],
+                                                multiple = False,
+                                                ),
+                                            "job_title_id",
+                                            "start_date",
+                                            )
+
                 s3db.configure("hrm_human_resource",
-                               list_fields=list_fields,
-                               filter_widgets=filter_widgets,
+                               crud_form = crud_form,
+                               filter_widgets = filter_widgets,
+                               list_fields = list_fields,
                                )
 
         return result
@@ -700,6 +866,35 @@ def customize_hrm_human_resource(**attr):
     return attr
 
 settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+
+# -----------------------------------------------------------------------------
+def customize_hrm_job_title(**attr):
+    """
+        Customize hrm_job_title controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive or r.representation == "aadata":
+            table = current.s3db.hrm_job_title
+            table.organisation_id.readable = table.organisation_id.writable = False
+            table.type.readable = table.type.writable = False
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_hrm_job_title = customize_hrm_job_title
 
 # -----------------------------------------------------------------------------
 # Projects

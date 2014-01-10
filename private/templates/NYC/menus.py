@@ -82,7 +82,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Create a Facility", c="org", f="facility", m="create")
             ),
             MM("Contacts", c="hrm", f="staff")(
-                MM("Staff", c="hrm", f="staff"),
+                MM("People", c="hrm", f="staff"),
                 MM("Groups", c="hrm", f="group"),
                 MM("Organizations", c="org", f="organisation"),
                 MM("Networks", c="org", f="group"),
@@ -271,42 +271,72 @@ class S3OptionsMenu(default.S3OptionsMenu):
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
 
-        return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff",
+        return M()(
+                    M(settings.get_hrm_staff_label(), c="hrm", f="staff",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
-                    M(teams, f="group",
+                    M(teams, c="hrm", f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Department Catalog", f="department",
+                    M("Facilities", c="org", f="facility", m="summary")(
+                        M("New", m="create"),
+                        M("List All", m="summary"),
+                        #M("Review/Approve New", m="review"),
+                        M("Import", m="import")
+                    ),
+                    M("Facility Types", c="org", f="facility_type",
+                      restrict=[ADMIN]
+                      )(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Organizations", c="org", f="organisation")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Review/Approve New", m="review"),
+                        M("Import", m="import")
+                    ),
+                    M("Organization Types", c="org", f="organisation_type",
+                      restrict=[ADMIN]
+                      )(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Networks", c="org", f="group",
+                      #restrict=[ADMIN]
+                      )(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    #M("Department Catalog", c="hrm", f="department",
+                    #  check=manager_mode)(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #),
+                    M("Job Title Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Job Title Catalog", f="job_title",
-                      check=manager_mode)(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M("Skill Catalog", f="skill",
+                    M("Skill Catalog", c="hrm", f="skill",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
-                    M("Personal Profile", f="person",
+                    M("Personal Profile", c="hrm", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
                     # This provides the link to switch to the manager mode:
-                    M("Staff Management", f="index",
+                    M("Staff Management", c="hrm", f="index",
                       check=[personal_mode, is_org_admin]),
                     # This provides the link to switch to the personal mode:
-                    M("Personal Profile", f="person",
+                    M("Personal Profile", c="hrm", f="person",
                       check=manager_mode, vars=dict(mode="personal"))
                 )
 
@@ -375,39 +405,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org(self):
         """ ORG / Organization Registry """
 
-        #ADMIN = current.session.s3.system_roles.ADMIN
-
-        return M(c="org")(
-                    M("Facilities", f="facility", m="summary")(
-                        M("New", m="create"),
-                        M("List All", m="summary"),
-                        #M("Review/Approve New", m="review"),
-                        M("Import", m="import")
-                    ),
-                    M("Organizations", f="organisation")(
-                        M("New", m="create"),
-                        M("List All"),
-                        M("Import", m="import")
-                    ),
-                    M("Facility Types", f="facility_type",
-                      #restrict=[ADMIN]
-                      )(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M("Networks", f="group",
-                      #restrict=[ADMIN]
-                      )(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M("Organization Types", f="organisation_type",
-                      #restrict=[ADMIN]
-                      )(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                )
+        # Same as Human Resources
+        return self.hrm()
 
     # -------------------------------------------------------------------------
     def project(self):

@@ -420,6 +420,7 @@ def customize_pr_person(**attr):
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
             site_field = htable.site_id
+            site_field.label = T("Place")
             represent = S3Represent(lookup="org_site")
             site_field.represent = represent
             if widgets:
@@ -468,7 +469,7 @@ def customize_pr_person(**attr):
                     S3SQLInlineComponent(
                         "human_resource",
                         name = "human_resource",
-                        label = "" if widgets else T("Organization"),
+                        label = "",
                         multiple = False,
                         fields = hr_fields,
                         filterby = dict(field = "contact_method",
@@ -528,17 +529,6 @@ def customize_pr_person(**attr):
                            #listadd = False if r.method=="datalist" else True,
                            )
 
-            # Move fields to their desired Locations
-            # Disabled as breaks submission of inline_component
-            #i18n = []
-            #iappend = i18n.append
-            #iappend('''i18n.office="%s"''' % T("Place"))
-            #iappend('''i18n.organisation="%s"''' % T("Organization"))
-            #iappend('''i18n.job_title="%s"''' % T("Job Title"))
-            #i18n = '''\n'''.join(i18n)
-            #s3.js_global.append(i18n)
-            #s3.scripts.append('/%s/static/themes/DRMP/js/contacts.js' % current.request.application)
-
         return True
     s3.prep = custom_prep
 
@@ -551,54 +541,12 @@ def customize_pr_person(**attr):
 
         if r.interactive and isinstance(output, dict):
             output["rheader"] = ""
+            # All users just get "Open"
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
                             url=URL(c="pr", f="person",
                                     args=["[id]", "read"]))
                        ]
-            # All users just get "Open"
-            #db = current.db
-            #auth = current.auth
-            #has_permission = auth.s3_has_permission
-            #ownership_required = auth.permission.ownership_required
-            #s3_accessible_query = auth.s3_accessible_query
-            #table = s3db.pr_person
-            #if has_permission("update", table):
-            #    action = dict(label=str(T("Update")),
-            #                  _class="action-btn",
-            #                  url=URL(c="pr", f="person",
-            #                          args=["[id]", "update"]),
-            #                  )
-            #    if ownership_required("update", table):
-            #        # Check which records can be updated
-            #        query = s3_accessible_query("update", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            #if has_permission("delete", table):
-            #    action = dict(label=str(T("Delete")),
-            #                  _class="action-btn",
-            #                  url=URL(c="pr", f="person",
-            #                          args=["[id]", "delete"]),
-            #                  )
-            #    if ownership_required("delete", table):
-            #        # Check which records can be deleted
-            #        query = s3_accessible_query("delete", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
             s3.actions = actions
             if "form" in output:
                 output["form"].add_class("pr_person")
@@ -1118,6 +1066,44 @@ def customize_org_organisation(**attr):
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
+# Coalitions (org_group)
+#
+def customize_org_group(**attr):
+    """
+        Customize org_group controller
+    """
+
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive:
+            from s3.s3validators import IS_LOCATION_SELECTOR2
+            from s3.s3widgets import S3LocationSelectorWidget2
+            field = s3db.org_group.location_id
+            field.label = "" # Gets replaced by widget
+            field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
+            field.widget = S3LocationSelectorWidget2(levels=("L2",),
+                                                     polygons=True,
+                                                     )
+
+        return result
+    s3.prep = custom_prep
+
+    attr["rheader"] = None
+    return attr
+
+settings.ui.customize_org_group = customize_org_group
 
 #-----------------------------------------------------------------------------
 # Places (org_facility)

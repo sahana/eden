@@ -641,6 +641,15 @@ class S3HRModel(S3Model):
                                                   pkey="person_id",
                                                   ))
 
+        # Organisation Groups
+        add_component("org_group_person",
+                      hrm_human_resource=dict(link="pr_person",
+                                              joinby="id",
+                                              key="id",
+                                              fkey="person_id",
+                                              pkey="person_id",
+                                              ))
+
         if group == "volunteer":
             # Programmes
             add_component("hrm_programme_hours",
@@ -4715,10 +4724,11 @@ def hrm_rheader(r, tabs=[],
             else:
                 group = "staff"
         use_cv = settings.get_hrm_cv_tab()
+        use_record = settings.get_hrm_record_tab()
         experience_tab = None
         service_record = ""
         tbl = TABLE(TR(TH(name,
-                          _style="padding-top:15px;")
+                          _style="padding-top:15px")
                        ))
         experience_tab2 = None
         if group == "volunteer":
@@ -4786,13 +4796,13 @@ def hrm_rheader(r, tabs=[],
                                                                         limitby=(0, 1)).first()
                         if row and row.active:
                             active = TD(DIV(T("Yes"),
-                                            _style="color:green;"))
+                                            _style="color:green"))
                         else:
                             active = TD(DIV(T("No"),
-                                            _style="color:red;"))
+                                            _style="color:red"))
                     else:
                         active = TD(DIV(T("No"),
-                                        _style="color:red;"))
+                                        _style="color:red"))
                     tooltip = SPAN(_class="tooltip",
                                    _title="%s|%s" % \
                         (T("Active"),
@@ -4832,7 +4842,7 @@ def hrm_rheader(r, tabs=[],
                                        _id = "service_record",
                                        _class = "action-btn"
                                       ),
-                                    _style="margin-bottom:10px;"
+                                    _style="margin-bottom:10px"
                                     )
                 if vol_experience == "both" and not use_cv:
                     experience_tab2 = (T("Experience"), "experience")
@@ -4871,12 +4881,14 @@ def hrm_rheader(r, tabs=[],
         else:
             skills_tab = None
 
-        # Integrated into Record tab
-        #teams = settings.get_hrm_teams()
-        #if teams:
-        #    teams_tab = (T(teams), "group_membership")
-        #else:
-        #    teams_tab = None
+        if not use_record:
+            teams = settings.get_hrm_teams()
+            if teams:
+                teams_tab = (T(teams), "group_membership")
+            else:
+                teams_tab = None
+        else:
+            teams_tab = None
 
         if settings.get_hrm_use_trainings() and not use_cv:
             trainings_tab = (T("Trainings"), "training")
@@ -4886,12 +4898,16 @@ def hrm_rheader(r, tabs=[],
         if use_cv:
             trainings_tab = (T("CV"), "cv")
 
+        if use_record:
+            record_method = "record"
+        else:
+            record_method = "human_resource"
+
         if profile:
             # Configure for personal mode
             tabs = [(T("Person Details"), None),
                     (T("User Account"), "user"),
-                    #(T("Staff/Volunteer Record"), "human_resource"),
-                    (T("Staff/Volunteer Record"), "record"),
+                    (T("Staff/Volunteer Record"), record_method),
                     id_tab,
                     description_tab,
                     (T("Address"), "address"),
@@ -4903,7 +4919,7 @@ def hrm_rheader(r, tabs=[],
                     credentials_tab,
                     experience_tab,
                     experience_tab2,
-                    #teams_tab,
+                    teams_tab,
                     #(T("Assets"), "asset"),
                    ]
         elif current.session.s3.hrm.mode is not None:
@@ -4920,7 +4936,7 @@ def hrm_rheader(r, tabs=[],
                     experience_tab,
                     experience_tab2,
                     (T("Positions"), "human_resource"),
-                    #teams_tab,
+                    teams_tab,
                     (T("Assets"), "asset"),
                     ]
         else:
@@ -4935,8 +4951,7 @@ def hrm_rheader(r, tabs=[],
                 else:
                     awards_tab = None
             tabs = [(T("Person Details"), None),
-                    #(hr_record, "human_resource"),
-                    (hr_record, "record"),
+                    (hr_record, record_method),
                     id_tab,
                     description_tab,
                     (T("Address"), "address"),
@@ -4949,7 +4964,7 @@ def hrm_rheader(r, tabs=[],
                     experience_tab,
                     experience_tab2,
                     awards_tab,
-                    #teams_tab,
+                    teams_tab,
                     (T("Assets"), "asset"),
                     ]
             # Add role manager tab if a user record exists
@@ -5245,6 +5260,7 @@ def hrm_group_controller():
     s3db.add_component("org_organisation_team",
                        pr_group="group_id")
 
+    s3db.org_organisation_team.organisation_id.label = ""
     crud_form = S3SQLCustomForm("name",
                                 "description",
                                 S3SQLInlineComponent("organisation_team",
@@ -5256,22 +5272,23 @@ def hrm_group_controller():
                                 "comments",
                                 )
 
-    filter_widgets = [S3TextFilter(["name",
-                                    "description",
-                                    "comments",
-                                    "organisation_team.organisation_id$name",
-                                    "organisation_team.organisation_id$acronym",
-                                    ],
-                                   label = T("Search"),
-                                   comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all trainees."),
-                                   _class="filter-search",
-                                   ),
-                      S3OptionsFilter("organisation_team.organisation_id",
-                                      label=T("Organization"),
-                                      widget="multiselect",
-                                      #hidden=True,
-                                      ),
-                      ]
+    filter_widgets = [
+        S3TextFilter(["name",
+                      "description",
+                      "comments",
+                      "organisation_team.organisation_id$name",
+                      "organisation_team.organisation_id$acronym",
+                      ],
+                     label = T("Search"),
+                     comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all."),
+                     #_class="filter-search",
+                     ),
+        S3OptionsFilter("organisation_team.organisation_id",
+                        label=T("Organization"),
+                        widget="multiselect",
+                        #hidden=True,
+                        ),
+        ]
 
     list_fields = ["id",
                    "organisation_team.organisation_id",
@@ -5281,12 +5298,12 @@ def hrm_group_controller():
                    ]
 
     s3db.configure(tablename,
+                   # Redirect to member list when a new group has been created
+                   create_next = URL(f="group",
+                                     args=["[id]", "group_membership"]),
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
                    list_fields = list_fields,
-                   # Redirect to member list when a new group has been created
-                   create_next = URL(f="group",
-                                     args=["[id]", "group_membership"])
                    )
 
     # Pre-process
@@ -5332,14 +5349,16 @@ def hrm_group_controller():
             # simply by sending a message to the group as a whole.
             #(T("Contact Data"), "contact"),
             (T("Members"), "group_membership"),
+            (T("Documents"), "document"),
             ]
 
     output = current.rest_controller("pr", "group",
-                                     hide_filter=False,
-                                     csv_template="group",
-                                     csv_stylesheet=("hrm", "group.xsl"),
-                                     rheader=lambda r: \
-                                        s3db.pr_rheader(r, tabs=tabs))
+                                     csv_stylesheet = ("hrm", "group.xsl"),
+                                     csv_template = "group",
+                                     hide_filter = False,
+                                     rheader = lambda r: \
+                                        s3db.pr_rheader(r, tabs=tabs)
+                                     )
 
     return output
 
@@ -5853,11 +5872,18 @@ def hrm_person_controller(**attr):
                   deletable = False)
     else:
         # Configure for HR manager mode
-        s3.crud_strings[tablename].update(
-                title_upload = T("Import Staff"),
-                title_display = T("Staff Member Details"),
-                title_update = T("Staff Member Details")
-                )
+        if settings.get_hrm_staff_label() == T("Contacts"):
+            s3.crud_strings[tablename].update(
+                    title_upload = T("Import Contacts"),
+                    title_display = T("Contact Details"),
+                    title_update = T("Contact Details")
+                    )
+        else:
+            s3.crud_strings[tablename].update(
+                    title_upload = T("Import Staff"),
+                    title_display = T("Staff Member Details"),
+                    title_update = T("Staff Member Details")
+                    )
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 

@@ -307,17 +307,18 @@ def contact_emergency():
 
     # CRUD pre-process
     def prep(r):
-        controller = request.get_vars.get("controller", "pr")
-        person_id = request.get_vars.get("person", None)
+        get_vars = request.get_vars
+        controller = get_vars.get("controller", "pr")
+        person_id = get_vars.get("person", None)
         if person_id:
             s3db.configure("pr_contact_emergency",
-                            create_next=URL(c=controller,
-                                            f="person",
-                                            args=[person_id, "contacts"]),
-                            update_next=URL(c=controller,
-                                            f="person",
-                                            args=[person_id, "contacts"])
-                            )
+                           create_next=URL(c=controller,
+                                           f="person",
+                                           args=[person_id, "contacts"]),
+                           update_next=URL(c=controller,
+                                           f="person",
+                                           args=[person_id, "contacts"])
+                           )
             if r.method == "create":
                 table = s3db.pr_person
                 query = (table.id == person_id)
@@ -351,17 +352,19 @@ def group():
     s3.filter = (table.system == False) # do not show system groups
 
     s3db.configure("pr_group_membership",
-                    list_fields=["id",
-                                 "person_id",
-                                 "group_head",
-                                 "comments"
-                                 ])
+                   list_fields = ["id",
+                                  "person_id",
+                                  "group_head",
+                                  "comments"
+                                  ],
+                   )
 
-    rheader = lambda r: s3db.pr_rheader(r, tabs = [(T("Group Details"), None),
-                                                   (T("Address"), "address"),
-                                                   (T("Contact Data"), "contact"),
-                                                   (T("Members"), "group_membership")
-                                                  ])
+    rheader = lambda r: \
+        s3db.pr_rheader(r, tabs = [(T("Group Details"), None),
+                                   (T("Address"), "address"),
+                                   (T("Contact Data"), "contact"),
+                                   (T("Members"), "group_membership")
+                                   ])
 
     output = s3_rest_controller(rheader=rheader)
 

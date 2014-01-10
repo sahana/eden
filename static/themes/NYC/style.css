@@ -176,6 +176,11 @@ button:hover,
     color: #ffffff;
 }
 
+#list-add h3 {
+    background: none;
+    border: none;
+}
+
 /* News Feed */
 .span6 .export_xls {
     margin-top: -5px;

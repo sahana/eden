@@ -1417,6 +1417,7 @@ class S3GroupModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Group
@@ -1431,7 +1432,8 @@ class S3GroupModel(S3Model):
 
         tablename = "pr_group"
         table = define_table(tablename,
-                             self.super_link("pe_id", "pr_pentity"),
+                             super_link("doc_id", "doc_entity"),
+                             super_link("pe_id", "pr_pentity"),
                              Field("group_type", "integer",
                                    requires = IS_IN_SET(pr_group_types, zero=None),
                                    default = 4,
@@ -1491,37 +1493,41 @@ class S3GroupModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  super_entity="pr_pentity",
-                  deduplicate=self.group_deduplicate,
-                  main="name",
-                  extra="description",
+                  deduplicate = self.group_deduplicate,
+                  extra = "description",
+                  main = "name",
+                  super_entity = ("doc_entity", "pr_pentity"),
                   )
 
         # Reusable field
         if current.request.controller in ("hrm", "vol") and \
            current.deployment_settings.get_hrm_teams() == "Teams":
-            label = T("Add Team")
+            label = T("Team")
+            add_label = T("Add Team")
             title = T("Create Team")
             tooltip = T("Create a new Team.")
         else:
-            label = crud_strings.pr_group.label_create_button
+            label = T("Group")
+            add_label = crud_strings.pr_group.label_create_button
             title = T("Create Group")
             tooltip = T("Create a new Group.")
         represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", table,
-                                   sortby="name",
+                                   sortby = "name",
+                                   comment = S3AddResourceLink(#c="pr",
+                                                               f="group",
+                                                               label=add_label,
+                                                               title=title,
+                                                               tooltip=tooltip),
+                                   label = label,
+                                   ondelete = "RESTRICT",
+                                   represent = represent,
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "pr_group.id",
                                                           represent,
                                                           filterby="system",
                                                           filter_opts=(False,))),
-                                   represent = represent,
-                                   comment=S3AddResourceLink(#c="pr",
-                                                             f="group",
-                                                             label=label,
-                                                             title=title,
-                                                             tooltip=tooltip),
-                                   ondelete = "RESTRICT")
+                                   )
 
         # Components
         self.add_component("pr_group_membership", pr_group="group_id")
@@ -1588,7 +1594,8 @@ class S3GroupModel(S3Model):
                           label = T("Name"),
                           comment = T("To search for a member, enter any portion of the name of the person or group. You may use % as wildcard. Press 'Search' without input to list all members."),
                           _class="filter-search",
-                          )]
+                          ),
+            ]
 
         configure(tablename,
                   context = {"person": "person_id",
