@@ -263,9 +263,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
-        manager_mode = lambda i: s3.hrm.mode is None
-        personal_mode = lambda i: s3.hrm.mode is not None
-        is_org_admin = lambda i: s3.hrm.orgs and True or \
+        def hrm_vars():
+            if not s3.hrm:
+                current.s3db.hrm_vars()
+            return True
+        manager_mode = lambda i: hrm_vars() and s3.hrm.mode is None
+        personal_mode = lambda i: hrm_vars() and s3.hrm.mode is not None
+        is_org_admin = lambda i: hrm_vars() and s3.hrm.orgs or \
                                  ADMIN in s3.roles
         settings = current.deployment_settings
         teams = settings.get_hrm_teams()
