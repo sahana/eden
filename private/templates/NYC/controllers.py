@@ -177,7 +177,7 @@ $('#login-btn').click(function(){
                                )
             data = dl
 
-            if auth.s3_logged_in() and org_group_id:
+            if auth.s3_logged_in() and auth.user.org_group_id:
                 # Add a Filter
                 from s3.s3filter import S3OptionsFilter, S3FilterForm
                 filter_widgets = [S3OptionsFilter("user_id$org_group_id",
