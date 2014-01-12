@@ -93,7 +93,7 @@ settings.L10n.default_language = "en"
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0200"
 # Unsortable 'pretty' date format
-settings.L10n.date_format = "%d %b %y"
+settings.L10n.date_format = "%d %b %Y"
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 settings.L10n.decimal_separator = "."

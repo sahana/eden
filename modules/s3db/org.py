@@ -3308,11 +3308,12 @@ class S3OfficeModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
         messages = current.messages
         settings = current.deployment_settings
         add_component = self.add_component
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 

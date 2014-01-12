@@ -31,8 +31,8 @@ settings.base.theme = "CERT"
 settings.L10n.display_toolbar = False
 # Default timezone for users
 settings.L10n.utc_offset = "UTC -0600"
-# Uncomment these to use US-style dates in English (localisations can still convert to local format)
-settings.L10n.date_format = T("%m-%d-%Y")
+# Uncomment these to use US-style dates in English
+settings.L10n.date_format = "%m-%d-%Y"
 # Start week on Sunday
 settings.L10n.firstDOW = 0
 # Number formats (defaults to ISO 31-0)
