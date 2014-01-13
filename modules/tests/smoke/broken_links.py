@@ -268,14 +268,14 @@ class BrokenLinkTest(Web2UnitTest):
     
     def report(self):
         self.reporter("%d URLs visited" % self.totalLinks)
-        self.brokenReport()
         self.timeReport()
         if self.config.record_timings:
             if not self.reportOnly:
                 self.record_timings()
             self.scatterplot()
         self.depthReport()
-
+        self.brokenReport()
+        
     def record_timings(self):
         import_error = ""
         try:
