@@ -283,6 +283,11 @@ def customize_org_facility(**attr):
         tablename = "org_facility"
         table = s3db[tablename]
 
+        if r.method not in ("read", "update"):
+            # Hide Private Residences
+            from s3.s3resource import S3FieldSelector
+            s3.filter = S3FieldSelector("site_facility_type.facility_type_id$name") != "Private Residence"
+
         if r.interactive:
             from gluon.validators import IS_EMPTY_OR
             from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -300,13 +305,20 @@ def customize_org_facility(**attr):
             #table.organisation_id.widget = S3SelectChosenWidget()
 
             if r.get_vars.get("format", None) == "popup":
-                # Coming from req/create form, so assume this is just a Home Address
-                # Hide all Fields other than location_id
-                from s3.s3forms import S3SQLCustomForm
-                crud_form = S3SQLCustomForm("location_id")
-                # Default the Name (Mandatory field)
-                table.name.default = "Home Address"
-                # @ToDo: Default the Type (To be able to Hide from Filters)
+                # Coming from req/create form
+                # Hide most Fields
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                s3db.org_site_facility_type.facility_type_id.label = ""
+                crud_form = S3SQLCustomForm(S3SQLInlineComponent(
+                                                "site_facility_type",
+                                                label = T("Facility Type"),
+                                                fields = ["facility_type_id"],
+                                                multiple = False,
+                                                required = True,
+                                            ),
+                                            "name",
+                                            "location_id",
+                                            )
                 s3db.configure(tablename,
                                crud_form = crud_form,
                                )
@@ -1153,7 +1165,7 @@ def customize_req_req(**attr):
             from s3layouts import S3AddResourceLink
             table.site_id.comment = S3AddResourceLink(c="org", f="facility",
                                                       vars = dict(child="site_id"),
-                                                      title=T("Add Address"),
+                                                      title=T("Add Facility"),
                                                       tooltip=T("Enter some characters to bring up a list of possible matches"))
 
         return result

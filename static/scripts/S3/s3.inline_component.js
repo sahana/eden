@@ -51,7 +51,7 @@ $(function() {
             } else {
                 field_id = '#edit-row-' + formname;
             }
-            l = $(field_id + '> td').length;
+            var l = $(field_id + '> td').length;
             msg = '<tr class="' + formname + '_error">' +
                     '<td colspan="' + l + '">' +
                       '<div class="error">' +
@@ -71,7 +71,7 @@ $(function() {
 
     // Display all errors
     var inline_display_errors = function(formname) {
-        $('.' + formname + '_error').slideDown();
+        $('.' + formname + '_error').show();
     };
 
     // Remove all error messages from the form
@@ -155,8 +155,7 @@ $(function() {
                         // IE, etc: Remove 'fakepath' from filename
                         value = value.replace(/(c:\\)*fakepath\\/i, '');
                     }
-                } else
-                if (input.attr('type') == 'checkbox') {
+                } else if (input.attr('type') == 'checkbox') {
                     value = input.prop('checked');
                 } else {
                     cssclass = input.attr('class');
@@ -183,7 +182,7 @@ $(function() {
 
         var single = $('#read-row-' + formname + '-' + rowindex).hasClass('single');
         if (single) {
-            // A multiple=False form
+            // A multiple=False subform being edited
             // setting all fields to '' => delete
             var del = true;
             for (fieldname in row) {
@@ -192,7 +191,70 @@ $(function() {
                 }
             }
             if (del) {
-                row['_delete'] = true;
+                var required = $('#edit-row-' + formname).hasClass('required');
+                if (required) {
+                    // Cannot delete
+                    inline_append_error(formname, rowindex, fieldname, i18n.enter_value);
+                    row['_error'] = true;
+                } else {
+                    // Delete
+                    row['_delete'] = true;
+                }
+            } else {
+                delete row['_error'];
+            }
+        } else {
+            // Check if subform is required
+            var add_required = $('#add-row-' + formname).hasClass('required');
+            if (add_required) {
+                delete row['_error'];
+                var empty = true;
+                for (fieldname in row) {
+                    if ((fieldname != '_id') && (row[fieldname] != '')) {
+                        empty = false;
+                    }
+                }
+                if (empty) {
+                    // Check if we have other rows
+                    if ($('#add-' + formname + '-' + rowindex).length) {
+                        // multiple=true, can have other rows
+                        if (!$('#read-row-' + formname + '-0').length) {
+                            // No rows present
+                            inline_append_error(formname, rowindex, fieldname, i18n.enter_value);
+                            row['_error'] = true;
+                        }
+                    } else {
+                        // multiple=false, no other rows
+                        inline_append_error(formname, rowindex, fieldname, i18n.enter_value);
+                        row['_error'] = true;
+                    }
+                }
+            } else {
+                var edit_required = $('#edit-row-' + formname).hasClass('required');
+                if (edit_required) {
+                    delete row['_error'];
+                    var empty = true;
+                    for (fieldname in row) {
+                        if ((fieldname != '_id') && (row[fieldname] != '')) {
+                            empty = false;
+                        }
+                    }
+                    if (empty) {
+                        // Check if we have other rows
+                        if ($('#add-' + formname + '-' + rowindex).length) {
+                            // multiple=true, can have other rows
+                            if (!$('#read-row-' + formname + '-0').length) {
+                                // No rows present
+                                inline_append_error(formname, rowindex, fieldname, i18n.enter_value);
+                                row['_error'] = true;
+                            }
+                        } else {
+                            // multiple=false, no other rows
+                            inline_append_error(formname, rowindex, fieldname, i18n.enter_value);
+                            row['_error'] = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -211,6 +273,12 @@ $(function() {
 
     // Validate a new/updated row
     var inline_validate = function(formname, rowindex, data, row) {
+
+        if (row['_error']) {
+            // Required row which has already been validated as bad
+            inline_display_errors(formname);
+            return null;
+        }
 
         // Construct the URL
         var c = data['controller'];
@@ -336,8 +404,7 @@ $(function() {
                               .attr('name', name)
                               .css({display: ''});
                     }
-                } else
-                if (input.attr('type') == 'checkbox') {
+                } else if (input.attr('type') == 'checkbox') {
                     input.prop('checked', value);
                 } else {
                     input.val(value);
@@ -410,6 +477,30 @@ $(function() {
         var data = inline_deserialize(formname);
         var row_data = inline_collect_data(formname, data, 'none');
 
+        // If this is an empty required=true row in a multiple=true with existing rows, then don't validate
+        var add_required = $('#add-row-' + formname).hasClass('required');
+        if (add_required) {
+            var empty = true;
+            for (fieldname in row_data) {
+                if ((fieldname != '_id') && (row_data[fieldname] != '')) {
+                    empty = false;
+                }
+            }
+            if (empty) {
+                // Check if we have other rows
+                if ($('#add-' + formname + '-' + rowindex).length) {
+                    // multiple=true, can have other rows
+                    if ($('#read-row-' + formname + '-0').length) {
+                        // Rows present, so skip validation
+                        // Hide throbber, show add-button
+                        throbber.addClass('hide');
+                        add_button.removeClass('hide');
+                        return true;
+                    }
+                }
+            }
+        }
+
         // Validate the data
         var new_row = inline_validate(formname, rowindex, data, row_data);
 
@@ -448,7 +539,7 @@ $(function() {
                              // Set event onto new input to Mark row changed when new files uploaded
                              .change(function() {
                             inline_mark_changed(this);
-                            inline_catch_submit(true, this);
+                            inline_catch_submit(this);
                         });
                         f.replaceWith(empty);
                     } else {
@@ -489,7 +580,7 @@ $(function() {
             add_button.removeClass('hide');
         }
 
-        return (success);
+        return success;
     };
 
     // Update row
@@ -558,7 +649,7 @@ $(function() {
                                  // Set event onto new input to Mark row changed when new files uploaded
                                  .change(function() {
                                 inline_mark_changed(this);
-                                inline_catch_submit(true, this);
+                                inline_catch_submit(this);
                             });
                             f.replaceWith(empty);
                         } else {
@@ -632,8 +723,16 @@ $(function() {
         // Remove all uploads for this item
         $('input[name^="' + 'upload_' + formname + '_"][name$="_' + rowindex + '"]').remove();
 
-        // Display the add-row (in case hidden because we're multiple=False)
-        //$('#add-row-' + formname).show();
+        var edit_row = $('#edit-row-' + formname);
+        if (edit_row.hasClass('required')) {
+            if (!$('#read-row-' + formname + '-0').length) {
+                // No more rows present - set the add row as required
+                $('#add-row-' + formname).addClass('required')
+                edit_row.removeClass('required')
+                // Ensure we validate this if not changed
+                inline_catch_submit(edit_row);
+            }
+        }
 
         return true;
     };
@@ -644,38 +743,36 @@ $(function() {
     var inline_submit_all = function(event) {
         event.preventDefault();
         var $form = $(this),
-            success = false;
-            
-        var changed = $form.find('tr.inline-form.changed');
+            _success,
+            success = true;
+
+        var changed = $form.find('tr.inline-form.changed, tr.inline-form.required');
         if (changed.length) {
             changed.each(function() {
                 var $this = $(this);
                 var formname = $this.attr('id').split('-').pop();
                 if ($this.hasClass('add-row')) {
-                    success = inline_add(formname);
+                    _success = inline_add(formname);
                 } else {
                     var rowindex = $this.data('rowindex');
-                    success = inline_update(formname, rowindex);
+                    _success = inline_update(formname, rowindex);
+                }
+                if (!_success) {
+                    success = false;
                 }
             });
-        } else {
-            success = true;
         }
+
         if (success) {
             $('form').unbind('submit', inline_submit_all);
             $form.submit();
         }
     }
 
-    // Catch form-submit if any inline-row has been changed
-    var inline_catch_submit = function(toggle, element) {
-        var form = $(element).closest('form');
-        if (toggle) {
-            $('form').unbind('submit', inline_submit_all)
-                     .bind('submit', inline_submit_all);
-        } else {
-            $('form').unbind('submit', inline_submit_all);
-        }
+    // Ensure that all inline forms are checked upon submission of main form
+    var inline_catch_submit = function(element) {
+        $(element).closest('form').unbind('submit', inline_submit_all)
+                                  .bind('submit', inline_submit_all);
     }
 
     // Events -----------------------------------------------------------------
@@ -685,28 +782,28 @@ $(function() {
         // Change-events
         $('.edit-row input[type="text"], .edit-row textarea').bind('input', function() {
             inline_mark_changed(this);
-            inline_catch_submit(true, this);
+            inline_catch_submit(this);
         });
         $('.edit-row input[type!="text"], .edit-row select').bind('focusin', function() {
             $('.edit-row input[type!="text"], .edit-row select').one('change', function() {
                 inline_mark_changed(this);
-                inline_catch_submit(true, this);
+                inline_catch_submit(this);
             });
         });
         $('.add-row input[type="text"], .add-row textarea').bind('input', function() {
             inline_mark_changed(this);
-            inline_catch_submit(true, this);
+            inline_catch_submit(this);
         });
         $('.add-row input[type!="text"], .add-row select').bind('focusin', function() {
             $('.add-row input[type!="text"], .add-row select').one('change', function() {
                 inline_mark_changed(this);
-                inline_catch_submit(true, this);
+                inline_catch_submit(this);
             });
         });
         // Chrome doesn't mark row as changed when just file input added
         $('.add-row input[type="file"]').change(function() {
             inline_mark_changed(this);
-            inline_catch_submit(true, this);
+            inline_catch_submit(this);
         });
 
         // Submit the inline-row instead of the main form if pressing Enter
@@ -911,13 +1008,19 @@ $(function() {
             }
         }
 
-        // Check for multiple=False forms
+        // Check for multiple=False subforms
         $('.inline-form.read-row.single').each(function() {
             // Open Edit Row by default
             var names = $(this).attr('id').split('-');
             var rowindex = names.pop(); // Will always be 0
             var formname = names.pop();
             inline_edit(formname, rowindex);
+        });
+
+        // Check for required subforms
+        $('.add-row.inline-form.required').each(function() {
+            // Ensure these get validated whether or not they are changed
+            inline_catch_submit(this);
         });
 
         // Listen to Events

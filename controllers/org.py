@@ -212,7 +212,7 @@ def mailing_list():
     table = s3db[tablename]
 
     # Only groups with a group_type of 5
-    response.s3.filter = (table.group_type == 5)
+    s3.filter = (table.group_type == 5)
     table.group_type.writable = False
     table.group_type.readable = False
     table.name.label = T("Mailing List Name")
@@ -220,15 +220,15 @@ def mailing_list():
 
     # define the list_fields
     list_fields = s3db.configure(tablename,
-                                        list_fields = ["id",
-                                                       "name",
-                                                       "description",
-                                                      ])
+                                 list_fields = ["id",
+                                                "name",
+                                                "description",
+                                                ])
     # Components
     _rheader = s3db.pr_rheader
     _tabs = [(T("Organization"), "organisation/"),
-            (T("Mailing List Details"), None),
-           ]
+             (T("Mailing List Details"), None),
+             ]
     if len(request.args) > 0:
         _tabs.append((T("Members"), "group_membership"))
     if "viewing" in request.vars:
