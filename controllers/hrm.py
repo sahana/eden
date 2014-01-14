@@ -287,11 +287,12 @@ def person_search():
     # Filter
     group = request.get_vars.get("group", None)
     if group == "staff":
-        s3.filter = (s3db.hrm_human_resource.type == 1)
+        s3.filter = s3base.S3FieldSelector("human_resource.type") == 1
     elif group == "volunteer":
-        s3.filter = (s3db.hrm_human_resource.type == 2)
+        s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
 
     s3.prep = lambda r: r.method == "search_ac"
+
     return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
@@ -374,11 +375,10 @@ def job_title():
         return True
     s3.prep = prep
 
-    table = s3db.hrm_job_title
-    s3.filter = (table.type.belongs([1, 3]))
+    s3.filter = s3base.S3FieldSelector("human_resource.type").belongs((1, 3))
 
     if not auth.s3_has_role(ADMIN):
-        s3.filter &= auth.filter_by_root_org(table)
+        s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
     output = s3_rest_controller()
     return output

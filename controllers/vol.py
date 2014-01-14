@@ -397,21 +397,32 @@ def volunteer():
                     widget = field.widget or SQLFORM.widgets.options.widget(field, default)
                     field_id = "%s_%s" % (table._tablename, field.name)
                     label = field.label
-                    label = LABEL(label, label and sep, _for=field_id,
-                                  _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                    # @ToDo: Bootstrap support
-                    programme = s3_formstyle(row_id, label, widget,
-                                             field.comment)
-                    try:
-                        output["form"][0].insert(4, programme[1])
-                    except:
-                        # A non-standard formstyle with just a single row
-                        pass
-                    try:
-                        output["form"][0].insert(4, programme[0])
-                    except:
-                        pass
+                    if s3_formstyle == "bootstrap":
+                        label = LABEL(label, label and sep, _class="control-label", _for=field_id)
+                        _controls = DIV(widget, _class="controls")
+                        row = DIV(label, _controls,
+                                  _class="control-group",
+                                  _id=row_id,
+                                  )
+                        output["form"][0].insert(4, row)
+                    elif callable(s3_formstyle):
+                        label = LABEL(label, label and sep, _for=field_id,
+                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                        programme = s3_formstyle(row_id, label, widget,
+                                                 field.comment)
+                        try:
+                            output["form"][0].insert(4, programme[1])
+                        except:
+                            # A non-standard formstyle with just a single row
+                            pass
+                        try:
+                            output["form"][0].insert(4, programme[0])
+                        except:
+                            pass
+                    else:
+                        # Unsupported
+                        raise
 
         elif r.representation == "plain" and \
              r.method !="search":
@@ -770,7 +781,7 @@ def person_search():
     """
 
     # Filter to just Volunteers
-    s3.filter = (s3db.hrm_human_resource.type == 2)
+    s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
 
     # Only allow use in the search_ac method
     s3.prep = lambda r: r.method == "search_ac"
@@ -870,11 +881,10 @@ def job_title():
         return True
     s3.prep = prep
 
-    table = s3db.hrm_job_title
-    s3.filter = (table.type.belongs([2, 3]))
+    s3.filter = s3base.S3FieldSelector("human_resource.type").belongs((2, 3))
 
     if not auth.s3_has_role(ADMIN):
-        s3.filter &= auth.filter_by_root_org(table)
+        s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
     output = s3_rest_controller("hrm", resourcename,
                                 csv_template=("hrm", "job_title"),
@@ -1008,9 +1018,7 @@ def training():
     """ Training Controller - used for Searching for Participants """
 
     # Filter to just Volunteers
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 2) & \
-                 (s3db.hrm_training.person_id == table.person_id))
+    s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
 
     return s3db.hrm_training_controller()
 
@@ -1027,45 +1035,28 @@ def training_event():
 def competency():
     """ RESTful CRUD controller used to allow searching for people by Skill"""
 
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 2) & \
-                 (s3db.hrm_competency.person_id == table.person_id))
+    # Filter to just Volunteers
+    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 2
+
     return s3db.hrm_competency_controller()
 
 # -----------------------------------------------------------------------------
 def credential():
     """ Credentials Controller """
 
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 2) & \
-                 (s3db.hrm_credential.person_id == table.person_id))
+    # Filter to just Volunteers
+    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 2
+
     return s3db.hrm_credential_controller()
 
 # -----------------------------------------------------------------------------
 def experience():
     """ Experience Controller """
 
-    table = s3db.hrm_human_resource
-    s3.filter = ((table.type == 2) & \
-                 (s3db.hrm_experience.person_id == table.person_id))
+    # Filter to just Volunteers
+    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 2
+
     return s3db.hrm_experience_controller()
-
-# -----------------------------------------------------------------------------
-def person_search():
-    """
-        Search for persons who are registered as volunteers, for
-        S3PersonAutocompleteWidgets which need to be filtered.
-    """
-
-    htable = s3db.hrm_human_resource
-    ptable = s3db.pr_person
-
-    s3.filter = ((htable.type == 2) & (htable.person_id == ptable.id))
-
-    s3.prep = lambda r: r.representation == "json" and \
-                        r.method == "search"
-
-    return s3_rest_controller("pr", "person")
 
 # =============================================================================
 def skill_competencies():

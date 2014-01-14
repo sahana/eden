@@ -323,6 +323,7 @@ def person_search():
     s3.filter = s3base.S3FieldSelector("application.active") == True
 
     s3.prep = lambda r: r.method == "search_ac"
+
     return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
