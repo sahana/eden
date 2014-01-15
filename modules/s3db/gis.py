@@ -4938,7 +4938,11 @@ class gis_LocationRepresent(S3Represent):
                         if loc:
                             L0 = loc["name_l10n"]
                     lappend(L0)
-            represent = sep.join(locations)
+            if locations:
+                represent = sep.join(locations)
+            else:
+                # Fallback to name even if show_name is False
+                represent = name
         else:
             # @ToDo: Support translate=True
             if level == "L0":

@@ -26,7 +26,7 @@ def index_alt():
     template = settings.get_template()
     if template == "SandyRelief":
         # Just redirect to the Facilities
-        redirect(URL(f="facility", args=["search"]))
+        redirect(URL(f="facility"))
     else:
         # Just redirect to the list of Organisations
         redirect(URL(f="organisation"))

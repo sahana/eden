@@ -987,7 +987,7 @@ def customize_project_project(**attr):
         else:
             result = True
 
-        if r.interactive or r.representation == "aadata":
+        if not r.component and (r.interactive or r.representation == "aadata"):
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
             s3db = current.s3db
 
@@ -1246,12 +1246,12 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 3,
         )),
-    ("vol", Storage(
-            name_nice = T("Volunteers"),
-            #description = "Human Resources Management",
-            restricted = True,
-            module_type = 2,
-        )),
+    #("vol", Storage(
+    #        name_nice = T("Volunteers"),
+    #        #description = "Human Resources Management",
+    #        restricted = True,
+    #        module_type = 2,
+    #    )),
     ("cms", Storage(
           name_nice = T("Content Management"),
           #description = "Content Management System",

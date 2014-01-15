@@ -6147,7 +6147,7 @@ def project_rheader(r):
         else:
             append((attachments_label, "document"))
         if settings.get_hrm_show_staff():
-            append((T("Staff"), "human_resource", dict(group="staff")))
+            append((settings.get_hrm_staff_label(), "human_resource", dict(group="staff")))
         if settings.has_module("vol"):
             append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 

@@ -99,6 +99,7 @@ S3.search = {};
         form.find('.hierarchy-filter').each(function() {
             $(this).hierarchicalopts('reset');
         });
+
         // Other widgets go here
 
         // Clear filter manager
@@ -115,7 +116,7 @@ S3.search = {};
         // Fire optionChanged event
         form.trigger('optionChanged');
     };
-    
+
     /**
      * getCurrentFilters: retrieve all current filters
      *
@@ -349,11 +350,11 @@ S3.search = {};
         });
 
         // Other widgets go here...
-        
+
         // return queries to caller
         return queries;
     };
-    
+
     // Pass to global scope to be called by s3.jquery.ui.pivottable.js
     S3.search.getCurrentFilters = getCurrentFilters;
 
@@ -390,7 +391,7 @@ S3.search = {};
                 q[expression] = values;
             }
         }
-        
+
         // Text widgets
         form.find('.text-filter').each(function() {
             $this = $(this);
@@ -471,7 +472,7 @@ S3.search = {};
                 }
             }
         });
-        
+
         // Numerical range widgets
         form.find('.range-filter-input:visible').each(function() {
             $this = $(this);
@@ -577,7 +578,7 @@ S3.search = {};
                 $this.hierarchicalopts('set', values);
             }
         });
-        
+
         // Re-enable auto-submit
         form.data('noAutoSubmit', 0);
 
@@ -591,22 +592,22 @@ S3.search = {};
      * Update a variable in the query part of the filter-submit URL
      */
     var updateFilterSubmitURL = function(form, name, value) {
-        
+
         var submit_url = $('#' + form).find('input.filter-submit-url[type="hidden"]');
 
         if (submit_url.length) {
-            
+
             submit_url = submit_url.first();
-            
+
             var url = $(submit_url).val();
-            
+
             var url_parts = url.split('?'),
                 update_url,
                 query,
                 vars = [];
 
             if (url_parts.length > 1) {
-                
+
                 var qstr = url_parts[1];
                 var a = qstr.split('&'), b, c;
                 for (i=0; i<a.length; i++) {
@@ -619,7 +620,7 @@ S3.search = {};
                     }
                 }
                 vars.push(name + '=' + value);
-                
+
                 query = vars.join('&');
                 update_url = url_parts[0];
                 if (query) {
@@ -649,7 +650,7 @@ S3.search = {};
         if (undefined === queries) {
             queries = getCurrentFilters();
         }
-        
+
         var url_parts = url.split('?'),
             update = {},
             reset = {},
@@ -672,12 +673,12 @@ S3.search = {};
         }
 
         var query = [];
-        
+
         if (url_parts.length > 1) {
-            
+
             var qstr = url_parts[1];
             var url_vars = qstr.split('&');
-            
+
             for (i=0, len=url_vars.length; i < len; i++) {
                 q = url_vars[i].split('=');
                 if (q.length > 1) {
@@ -690,7 +691,7 @@ S3.search = {};
                 }
             }
         }
-        
+
         for (i=0, len=queries.length; i < len; i++) {
             q = queries[i];
             k = q[0];
@@ -699,7 +700,7 @@ S3.search = {};
                 query.push(k + '=' + v);
             }
         }
-            
+
         var url_query = query.join('&'),
             filtered_url = url_parts[0];
         if (url_query) {
@@ -707,7 +708,7 @@ S3.search = {};
         }
         return filtered_url;
     };
-    
+
     // Pass to global scope to be called by S3.gis.refreshLayer()
     S3.search.filterURL = filterURL;
 
@@ -815,8 +816,10 @@ S3.search = {};
             'url': ajaxurl,
             'dataType': 'json'
         }).done(function(data) {
+            // Temporarily disable auto-submit
             $form.data('noAutoSubmit', 1);
             updateOptions(data);
+            // Re-enable
             $form.data('noAutoSubmit', 0);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (errorThrown == 'UNAUTHORIZED') {
@@ -1507,9 +1510,6 @@ S3.search = {};
      */
     $(document).ready(function() {
 
-        // Mark visible widgets as active, otherwise submit won't use them
-        $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
-
         // Activate MultiSelect Widgets
         /*
         $('.multiselect-filter-widget').each(function() {
@@ -1528,6 +1528,26 @@ S3.search = {};
             $('.multiselect-filter-bootstrap:visible').addClass('active');
             $('.multiselect-filter-bootstrap').multiselect_bs();
         }*/
+
+        // Clear all filters
+        $('.filter-clear').click(function() {
+            var form = $(this).closest('form.filter-form');
+            clearFilters(form);
+        });
+
+        // Show Filter Manager
+        $('.show-filter-manager').click(function() {
+            $('.filter-manager-row').removeClass('hide').show();
+            $('.show-filter-manager').hide();
+        });
+
+        // Filter-form submission
+        $('.filter-submit').click(function() {
+            filterSubmit($(this).closest('form.filter-form'));
+        });
+
+        // Mark visible widgets as active, otherwise submit won't use them
+        $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
 
         // Advanced button
         $('.filter-advanced').on('click', function() {
@@ -1550,23 +1570,14 @@ S3.search = {};
             $(this).closest('form').trigger('optionChanged');
         });
 
-        // Clear all filters
-        $('.filter-clear').click(function() {
-            var form = $(this).closest('form.filter-form');
-            clearFilters(form);
+        // Don't submit if pressing Enter
+        $('.text-filter').keypress(function(e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                return false;
+            }
+            return true;
         });
-
-        // Show Filter Manager
-        $('.show-filter-manager').click(function() {
-            $('.filter-manager-row').removeClass('hide').show();
-            $('.show-filter-manager').hide();
-        });
-
-        // Filter-form submission
-        $('.filter-submit').click(function() {
-            filterSubmit($(this).closest('form.filter-form'));
-        });
-
     });
 
 }());
