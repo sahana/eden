@@ -392,13 +392,17 @@ def req_controller():
             table.site_id.requires = IS_IN_SET(site_opts)
             if (commit_status == 2) and settings.get_req_restrict_on_complete():
                 # Restrict from committing to completed requests                
-                s3db.configure(table,
-                               listadd=False)
+                listadd = False
             else:    
                 # Allow commitments to be added when doing so as a component
-                s3db.configure(table,
-                               listadd = True)
+                listadd = True
                 
+            s3db.configure(table,
+                           # Don't want filter_widgets in the component view
+                           filter_widgets = None,
+                           listadd = listadd,
+                           )
+
             if type == 1: # Items
                 # Limit site_id to facilities the user has permissions for
                 auth.permitted_facilities(table=r.table,
@@ -449,7 +453,7 @@ S3OptionsFilter({
                             "comments",
                         )
                     s3db.configure("req_commit",
-                                   crud_form=crud_form)
+                                   crud_form = crud_form)
                     # Redirect to the Items tab after creation
                     #s3db.configure(table,
                     #               create_next = URL(c="req", f="commit",
@@ -485,7 +489,8 @@ S3OptionsFilter({
                             ),
                             "comments",
                         )
-                    s3db.configure("req_commit", crud_form=crud_form)
+                    s3db.configure("req_commit",
+                                   crud_form = crud_form)
                     # Redirect to the Skills tab after creation
                     #s3db.configure(table,
                     #               create_next = URL(c="req", f="commit",
@@ -613,10 +618,11 @@ S3OptionsFilter({
                                 (ctable.req_id == id)
                         exists = current.db(query).select(ctable.id, limitby=(0, 1))
                         if not exists:
-                            output["form"] = A(T("Commit All"),
-                                               _href=URL(args=[id, "commit_all"]),
-                                               _class="action-btn",
-                                               _id="commit-btn")
+                            s3.rfooter = A(T("Commit All"),
+                                           _href=URL(args=[id, "commit_all"]),
+                                           _class="action-btn",
+                                           _id="commit-btn",
+                                           )
                             s3.jquery_ready.append('''
 S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
                         else:
@@ -649,8 +655,8 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
     s3.postp = postp
 
     output = s3_rest_controller("req", "req",
-                                hide_filter=False,
-                                rheader=s3db.req_rheader,
+                                hide_filter = False,
+                                rheader = s3db.req_rheader,
                                 )
 
     return output

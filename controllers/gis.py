@@ -398,7 +398,7 @@ def location():
                 else:
                     if r.method == "update":
                         if s3.debug:
-                        script = "/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname
+                            script = "/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname
                         else:
                             script = "/%s/static/scripts/S3/s3.gis.feature_crud.min.js" % appname
                         s3.scripts.append(script)

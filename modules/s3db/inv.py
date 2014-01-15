@@ -580,6 +580,8 @@ S3OptionsFilter({
             rows = ["item_id", "item_id$item_category_id"]
             cols = ["site_id", "owner_org_id", "supply_org_id"]
             fact = ["quantity"]
+
+        # @ToDo: Deprecate
         search_widgets = [
                 S3SearchSimpleWidget(
                     name="inv_item_search_text",
@@ -688,13 +690,13 @@ S3OptionsFilter({
         self.configure(tablename,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
-                       create=direct_stock_edits,
-                       listadd=direct_stock_edits,
-                       editable=direct_stock_edits,
-                       deletable=direct_stock_edits,
-                       super_entity = "supply_item_entity",
-                       # Experimental: filter form (used by S3CRUD.datalist)
-                       filter_widgets=[
+                       create = direct_stock_edits,
+                       deletable = direct_stock_edits,
+                       editable = direct_stock_edits,
+                       listadd = direct_stock_edits,
+                       deduplicate = self.inv_item_duplicate,
+                       extra_fields = ["quantity", "pack_value", "item_pack_id"],
+                       filter_widgets = [
                           S3TextFilter(["item_id$name", "item_pack_id$name"],
                                        label=T("Item name"),
                                        comment=T("Search for items with this text in the name.")),
@@ -716,11 +718,11 @@ S3OptionsFilter({
                        ],
                        list_fields = list_fields,
                        onvalidation = self.inv_inv_item_onvalidate,
-                       search_method = search_method,
                        report_options = report_options,
-                       deduplicate = self.inv_item_duplicate,
-                       extra_fields = ["quantity", "pack_value", "item_pack_id"],
-                      )
+                       # @ToDo: Deprecate
+                       search_method = search_method,
+                       super_entity = "supply_item_entity",
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1173,8 +1175,8 @@ class S3TrackingModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-
         # Search Method
+        # @ToDo: Deprecate
         search_method = S3Search(
                 simple=(S3SearchSimpleWidget(
                           name="send_search_text_simple",
@@ -1241,7 +1243,7 @@ class S3TrackingModel(S3Model):
                            field="delivery_date"
                    )
            ))
-                           
+
         # CRUD strings
         ADD_SEND = T("Send New Shipment")
         crud_strings[tablename] = Storage(
@@ -2355,15 +2357,16 @@ S3OptionsFilter({
                     editable = True
                 # remove CRUD generated buttons in the tabs
                 s3db.configure("inv_track_item",
-                               create=False,
-                               listadd=False,
-                               editable=editable,
-                               deletable=False,
+                               create = False,
+                               deletable = False,
+                               editable = editable,
+                               listadd = False,
                                )
 
         s3.prep = prep
         output = current.rest_controller("inv", "send",
-                                         rheader=inv_send_rheader)
+                                         rheader = inv_send_rheader,
+                                         )
         return output
 
     # ---------------------------------------------------------------------
@@ -2490,7 +2493,8 @@ S3OptionsFilter({
         tracktable = db.inv_track_item
         table.date.readable = True
 
-        record = db(table.id == r.id).select(limitby=(0, 1)).first()
+        record = db(table.id == r.id).select(table.send_ref,
+                                             limitby=(0, 1)).first()
         send_ref = record.send_ref
         # hide the inv_item field
         tracktable.send_inv_item_id.readable = False
@@ -2511,11 +2515,12 @@ S3OptionsFilter({
             # - show the req_item comments
             list_fields.append("req_item_id$comments")
         if settings.get_inv_track_pack_values():
-            list_fields.append("currency")
-            list_fields.append("pack_value")
+            list_fields + ["currency",
+                           "pack_value",
+                           ]
         exporter = S3Exporter().pdf
         return exporter(r.resource,
-                        request=r,
+                        request = r,
                         method = "list",
                         pdf_componentname = "track_item",
                         pdf_title = settings.get_inv_send_form_name(),
@@ -2655,7 +2660,7 @@ S3OptionsFilter({
                        ]
         exporter = S3Exporter().pdf
         return exporter(r.resource,
-                        request=r,
+                        request = r,
                         method = "list",
                         pdf_title = T(current.deployment_settings.get_inv_recv_form_name()),
                         pdf_filename = recv_ref,
@@ -2667,7 +2672,7 @@ S3OptionsFilter({
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         **attr
-                       )
+                        )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3511,8 +3516,6 @@ def inv_send_rheader(r):
             db = current.db
             s3db = current.s3db
             s3 = current.response.s3
-            jappend = s3.jquery_ready.append
-            s3_has_permission = current.auth.s3_has_permission
 
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "track_item"),
@@ -3524,14 +3527,18 @@ def inv_send_rheader(r):
             tracktable = s3db.inv_track_item
 
             send_id = record.id
+            status = record.status
             site_id = record.site_id
-            stable = s3db.org_site
             if site_id:
-                site = db(stable.site_id == site_id).select(stable.organisation_id,
+                stable = s3db.org_site
+                site = db(stable.site_id == site_id).select(stable.location_id,
+                                                            stable.organisation_id,
                                                             stable.instance_type,
                                                             limitby=(0, 1)
                                                             ).first()
+                address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
                 org_id = site.organisation_id
+                logo = s3db.org_organisation_logo(org_id) or ""
                 instance_table = s3db[site.instance_type]
                 if "phone1" in instance_table.fields:
                     site = db(instance_table.site_id == site_id).select(instance_table.phone1,
@@ -3544,20 +3551,11 @@ def inv_send_rheader(r):
                     phone1 = None
                     phone2 = None
             else:
+                address = current.messages["NONE"]
                 org_id = None
+                logo = ""
                 phone1 = None
                 phone2 = None
-            logo = s3db.org_organisation_logo(org_id) or ""
-            status = record.status
-            gtable = s3db.gis_location
-            query = (stable.site_id == record.to_site_id) & \
-                    (gtable.id == stable.location_id)
-            address = db(query).select(gtable.addr_street,
-                                       limitby=(0, 1)).first()
-            if address:
-                address = address.addr_street
-            else:
-                address = current.messages["NONE"]
             rData = TABLE(TR(TD(T(settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
@@ -3580,8 +3578,8 @@ def inv_send_rheader(r):
                              TH("%s: " % table.site_id.label),
                              table.site_id.represent(record.site_id),
                              ),
-                          TR(TH("%s: " % gtable.addr_street.label),
-                             address,
+                          TR(TH("%s: " % T("Address")),
+                             TD(address, _colspan=3),
                              ),
                           TR(TH("%s: " % table.transported_by.label),
                              table.transported_by.represent(record.transported_by),
@@ -3614,13 +3612,13 @@ def inv_send_rheader(r):
                 cnt = 0
 
             action = DIV()
-            rSubdata = TABLE()
+            #rSubdata = TABLE()
             rfooter = TAG[""]()
 
             if status == SHIP_STATUS_IN_PROCESS:
-                if s3_has_permission("update",
-                                     "inv_send",
-                                     record_id=record.id):
+                if current.auth.s3_has_permission("update",
+                                                  "inv_send",
+                                                  record_id=record.id):
 
                     if cnt > 0:
                         action.append(A(T("Send Shipment"),
@@ -3632,7 +3630,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3.confirmClick("#send_process","%s")''' \
+                        s3.jquery_ready.append('''S3.confirmClick("#send_process","%s")''' \
                                    % T("Do you want to send this shipment?"))
                     #if not r.component and not r.method == "form":
                     #    ritable = s3db.req_req_item
@@ -3660,7 +3658,7 @@ def inv_send_rheader(r):
                                         _class = "action-btn"
                                         )
                                       )
-                        jappend('''S3.confirmClick("#return_process","%s")''' \
+                        s3.jquery_ready.append('''S3.confirmClick("#return_process","%s")''' \
                             % T("Do you want to complete the return process?") )
                     else:
                         msg = T("You need to check all item quantities before you can complete the return process")
@@ -3668,6 +3666,8 @@ def inv_send_rheader(r):
             elif status != SHIP_STATUS_CANCEL:
                 if status == SHIP_STATUS_SENT:
                     vars = current.request.vars
+                    jappend = s3.jquery_ready.append
+                    s3_has_permission = current.auth.s3_has_permission
                     if s3_has_permission("update",
                                          "inv_send",
                                          record_id=record.id):
@@ -3726,7 +3726,7 @@ def inv_send_rheader(r):
             s3.rfooter = rfooter
             rheader = DIV(rData,
                           rheader_tabs,
-                          rSubdata
+                          #rSubdata
                           )
             return rheader
     return None

@@ -632,8 +632,7 @@
                 }
                 return false;
             }
-        })
-        .data('ui-autocomplete')._renderItem = function(ul, item) {
+        }).data('ui-autocomplete')._renderItem = function(ul, item) {
             var label = represent(item);
             return $('<li>').data('item.autocomplete', item)
                             .append('<a>' + label + '</a>')

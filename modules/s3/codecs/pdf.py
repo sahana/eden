@@ -1164,7 +1164,7 @@ class S3html2pdf():
             return S3html2pdf.parse_img(html)
         elif isinstance(html, DIV):
             return self.parse_div(html)
-        elif (isinstance(html, str) or isinstance(html, lazyT)):
+        elif (isinstance(html, basestring) or isinstance(html, lazyT)):
             if title:
                 para = [Paragraph(html, self.boldstyle)]
             else:
@@ -1353,9 +1353,7 @@ class S3html2pdf():
             if isinstance(component, (TH, TD)):
                 if exclude_tag(component):
                     continue
-                colspan = 1
-                if "_colspan" in component.attributes:
-                    colspan = component.attributes["_colspan"]
+                colspan = component.attributes.get("_colspan", 1)
                 if component.components == []:
                     rappend("")
                 else:

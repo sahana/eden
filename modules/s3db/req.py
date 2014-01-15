@@ -2343,7 +2343,8 @@ class S3CommitModel(S3Model):
                                   self.pr_person_id("committer_id",
                                     default = committer_default,
                                     label = T("Committed By"),
-                                    comment = self.pr_person_comment(child="committer_id")),
+                                    comment = self.pr_person_comment(child="committer_id"),
+                                    ),
                                   # @ToDo: Calculate this from line items in Item Commits
                                   Field("value", "double",
                                         label = T("Estimated Value"),

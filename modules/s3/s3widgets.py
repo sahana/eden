@@ -975,10 +975,35 @@ class S3AutocompleteWidget(FormWidget):
             real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
 
-        # Script defined in static/scripts/S3/S3.js
-        js_autocomplete = '''S3.autocomplete.normal('%s','%s','%s','%s','%s','%s',\"%s\",%s,%s)''' % \
-            (self.fieldname, self.module, self.resourcename, real_input, self.filter,
-             self.link_filter, self.post_process, self.delay, self.min_length)
+        # JS Function defined in static/scripts/S3/S3.js
+        script = '''S3.autocomplete.normal('%s','%s','%s','%s','%s',"%s"''' % \
+            (self.fieldname,
+             self.module,
+             self.resourcename,
+             real_input,
+             self.filter,
+             self.link_filter,
+             )
+
+        options = ""
+        post_process = self.post_process
+        delay = self.delay
+        min_length = self.min_length
+        if min_length != 2:
+            options = ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \
+                dict(postprocess = post_process,
+                     delay = delay,
+                     min_length = min_length)
+        elif delay != 450:
+            options = ''',"%(postprocess)s",%(delay)s''' % \
+                dict(postprocess = post_process,
+                     delay = delay)
+        elif post_process:
+            options = ''',"%(postprocess)s"''' % \
+                dict(postprocess = post_process)
+
+        script = '''%s%s)''' % (script, options)
+        current.response.s3.jquery_ready.append(script)
 
         if value:
             try:
@@ -992,7 +1017,6 @@ class S3AutocompleteWidget(FormWidget):
         else:
             represent = ""
 
-        current.response.s3.jquery_ready.append(js_autocomplete)
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent.encode("utf-8")),
@@ -4970,8 +4994,8 @@ class S3PersonAutocompleteWidget(FormWidget):
                  function = "person_search",
                  post_process = "",
                  hideerror = False,
-                 delay = 450,   # milliseconds
-                 min_length=2): # Increase this for large deployments
+                 delay = 450,     # milliseconds
+                 min_length = 2): # Increase this for large deployments
 
         self.post_process = post_process
         self.delay = delay
@@ -5011,14 +5035,29 @@ class S3PersonAutocompleteWidget(FormWidget):
         else:
             represent = ""
 
-        script = '''S3.autocomplete.person('%(controller)s','%(fn)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
+        script = '''S3.autocomplete.person('%(controller)s','%(fn)s',"%(input)s"''' % \
             dict(controller = self.c,
                  fn = self.f,
                  input = real_input,
-                 postprocess = self.post_process,
-                 delay = self.delay,
-                 min_length = self.min_length,
                  )
+        options = ""
+        post_process = self.post_process
+        delay = self.delay
+        min_length = self.min_length
+        if min_length != 2:
+            options = ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \
+                dict(postprocess = post_process,
+                     delay = delay,
+                     min_length = min_length)
+        elif delay != 450:
+            options = ''',"%(postprocess)s",%(delay)s''' % \
+                dict(postprocess = post_process,
+                     delay = delay)
+        elif post_process:
+            options = ''',"%(postprocess)s"''' % \
+                dict(postprocess = post_process)
+
+        script = '''%s%s)''' % (script, options)
         current.response.s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
@@ -5043,8 +5082,8 @@ class S3PentityAutocompleteWidget(FormWidget):
                  types = None,
                  post_process = "",
                  hideerror = False,
-                 delay = 450,   # milliseconds
-                 min_length=2): # Increase this for large deployments
+                 delay = 450,     # milliseconds
+                 min_length = 2): # Increase this for large deployments
 
         self.post_process = post_process
         self.delay = delay
@@ -5096,18 +5135,37 @@ class S3PentityAutocompleteWidget(FormWidget):
             # Something other than default: ("pr_person", "pr_group")
             types = json.dumps(self.types)
         else:
-            types = "''"
+            types = ""
 
-        script = '''S3.autocomplete.pentity('%(controller)s','%(fn)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s,%(types)s)''' % \
+        script = '''S3.autocomplete.pentity('%(controller)s','%(fn)s',"%(input)s"''' % \
             dict(controller = self.c,
                  fn = self.f,
-                 input = real_input,
-                 postprocess = self.post_process,
-                 delay = self.delay,
-                 min_length = self.min_length,
-                 types = types,
-                 )
+                 input = real_input)
         
+        options = ""
+        post_process = self.post_process
+        delay = self.delay
+        min_length = self.min_length
+        if types:
+            options = ''',"%(postprocess)s",%(delay)s,%(min_length)s,%(types)s''' % \
+                dict(postprocess = post_process,
+                     delay = delay,
+                     min_length = min_length,
+                     types = types)
+        elif min_length != 2:
+            options = ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \
+                dict(postprocess = post_process,
+                     delay = delay,
+                     min_length = min_length)
+        elif delay != 450:
+            options = ''',"%(postprocess)s",%(delay)s''' % \
+                dict(postprocess = post_process,
+                     delay = delay)
+        elif post_process:
+            options = ''',"%(postprocess)s"''' % \
+                dict(postprocess = post_process)
+
+        script = '''%s%s)''' % (script, options)
         s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
