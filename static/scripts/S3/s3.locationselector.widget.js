@@ -142,7 +142,6 @@ function s3_gis_locationselector_onReady() {
         }
         /**
          * Check that Map JS is Loaded
-         * - used if a tab containing a Map is unhidden
          */
         var jsLoaded = function() {
             var dfd = new jQuery.Deferred();
@@ -178,7 +177,7 @@ function s3_gis_locationselector_onReady() {
                     $('#gis_location_lon').val(centerPoint.lon);
                     $('#gis_location_lat').val(centerPoint.lat);
                     $('#gis_location_wkt').val('');
-                }
+                };
 
                 mapButton.click(function() {
                     map.s3.mapWin.show();

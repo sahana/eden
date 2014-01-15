@@ -329,6 +329,7 @@ def dojs(dogis = False, warnings = True):
                      "contacts",
                      "embed_component",
                      "gis",
+                     "gis.feature_crud",
                      "gis.fullscreen",
                      "gis.latlon",
                      "gis.pois",

@@ -257,7 +257,7 @@ def location():
 
     s3db.configure(tablename,
                    # Don't include Bulky Location Selector in List Views
-                   listadd=False,
+                   listadd = False,
                    )
 
     # Pre-processor
@@ -284,7 +284,7 @@ def location():
                 S3TextFilter(search_fields,
                              label = T("Search"),
                              comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-                             _class = "filter-search",
+                             #_class = "filter-search",
                              ),
                 S3OptionsFilter("level",
                                 label=T("Level"),
@@ -386,13 +386,22 @@ def location():
                 feature_queries = []
 
                 if r.method == "create":
-                    s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
+                    # @ToDo: Support Polygons here
+                    if s3.debug:
+                        script = "/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname
+                    else:
+                        script = "/%s/static/scripts/S3/s3.gis.feature_crud.min.js" % appname
+                    s3.scripts.append(script)
                     add_feature = True
                     add_feature_active = True
                     table.inherited.readable = False
                 else:
                     if r.method == "update":
-                        s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
+                        if s3.debug:
+                        script = "/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname
+                        else:
+                            script = "/%s/static/scripts/S3/s3.gis.feature_crud.min.js" % appname
+                        s3.scripts.append(script)
                         add_feature = True
                         add_feature_active = False
                     else:
