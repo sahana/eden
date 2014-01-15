@@ -1418,6 +1418,12 @@ div.fm-cancel {
     width: 75px;
 }
 
+/* UI Dialog */
+.ui-dialog .ui-dialog-content {
+    /* Ensure maximal space for iframe within Dialog */
+    padding: 0 !important;
+}
+
 /* UI Multiselect */
 body.ltr label.ui-corner-all span {
     left: 10px;

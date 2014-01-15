@@ -5,19 +5,19 @@
 {{if AUTHENTICATED not in session.s3.roles:}}
  <div class='home-register'>
   <div class='login-box'>
-  {{if not self_registration or registered:}}
+  {{if not (self_registration is True) or registered:}}
    <div id='login_form'>
     {{=login_div}}
     {{include "auth/_login.html"}}
    </div>
   {{pass}}
-  {{if self_registration:}}
+  {{if self_registration is True:}}
    <div id='register_form' {{if registered:}}class='hide'{{pass}}>
     {{=register_div}}
     {{include "auth/_register.html"}}
    </div>
   {{pass}}
-  {{if self_registration and not registered:}}
+  {{if self_registration is True and not registered:}}
    <div id='login_form' class='hide'>
     {{=login_div}}
     {{include "auth/_login.html"}}

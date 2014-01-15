@@ -144,11 +144,20 @@ S3.addModals = function() {
         var url = this.href;
         var id = S3.uid();
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0" style="width:740px"></iframe>')
+        var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0" style="width:750px"></iframe>')
                       .appendTo('body');
         dialog.dialog({
             // add a close listener to prevent adding multiple divs to the document
             close: function(event, ui) {
+                if (self.parent) {
+                    // There is a parent modal: refresh it to fix layout
+                    var iframe = self.parent.$('iframe.ui-dialog-content');
+                    var width = iframe.width();
+                    iframe.width(0);
+                    window.setTimeout(function() {
+                        iframe.width(width);
+                    }, 300);
+                }
                 // remove div with all data and events
                 dialog.remove();
             },
@@ -169,8 +178,11 @@ S3.addModals = function() {
 };
 S3.popup_loaded = function(id) {
     // Resize the iframe to fit the Dialog
-    var width = $('.ui-dialog').width() - 10;
-    $('#' + id).css({width: width})
+    // If we need to support multiple per-frame, can identify uniquely via:
+    //var width = $(".ui-dialog[aria-describedby='" + id + "']").width() - 10;
+    //var width = $('.ui-dialog').width() - 10;
+    var width = $('.ui-dialog').width();
+    $('#' + id).width(width)
                // Display the hidden form
                .contents().find('#popup form').show();
 };
@@ -470,7 +482,7 @@ var s3_viewMap = function(feature_id) {
     });
 
     $('#map').html(iframe);
-    $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
+    $('#map').append($("<div style='margin-bottom:10px' />").append(closelink));
 };
 var s3_viewMapMulti = function(module, resource, instance, jresource) {
     // Display a set of Features on a BaseMap within an iframe
@@ -486,7 +498,7 @@ var s3_viewMapMulti = function(module, resource, instance, jresource) {
     });
 
     $('#map').html(iframe);
-    $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
+    $('#map').append($("<div style='margin-bottom:10px' />").append(closelink));
 };
 S3.popupWin = null;
 S3.openPopup = function(url, center) {
