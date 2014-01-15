@@ -4757,6 +4757,7 @@ class gis_LocationRepresent(S3Represent):
                       "L4",
                       "L5",
                       "addr_street",
+                      "addr_postcode",
                       ]
         else:
             fields = ["id",
@@ -4771,6 +4772,7 @@ class gis_LocationRepresent(S3Represent):
                       "L4",
                       "L5",
                       "addr_street",
+                      "addr_postcode",
                       "inherited",
                       "lat",
                       "lon",
@@ -4977,6 +4979,8 @@ class gis_LocationRepresent(S3Represent):
                 if row.addr_street:
                     # Get the 1st line of the street address.
                     represent = row.addr_street.splitlines()[0]
+                if row.addr_postcode:
+                    represent = "%s, %s" % (represent, row.addr_postcode)
                 if (not represent) and \
                    (not self.address_only) and \
                    (row.inherited == False) and \

@@ -1105,7 +1105,8 @@ def s3_comments(name="comments", **attr):
     if "label" not in attr:
         attr["label"] = T("Comments")
     if "represent" not in attr:
-        attr["represent"] = lambda comments: comments or current.messages["NONE"]
+        # Support HTML markup
+        attr["represent"] = lambda comments: XML(comments) or current.messages["NONE"]
     if "widget" not in attr:
         attr["widget"] = s3_comments_widget
     if "comment" not in attr:

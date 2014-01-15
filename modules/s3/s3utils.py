@@ -462,10 +462,10 @@ def s3_comments_represent(text, show_link=True):
                         DIV(text,
                             _id=unique,
                             _class="hide showall",
-                            _onmouseout="$('#%s').hide();" % unique
+                            _onmouseout="$('#%s').hide()" % unique
                            ),
                         A("%s..." % text[:76],
-                          _onmouseover="$('#%s').removeClass('hide').show();" % unique,
+                          _onmouseover="$('#%s').removeClass('hide').show()" % unique,
                          ),
                        )
         return represent

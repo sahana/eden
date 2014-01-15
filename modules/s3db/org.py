@@ -1117,6 +1117,9 @@ class S3OrganisationGroupModel(S3Model):
             label = "Group"
 
         configure(tablename,
+                  list_fields = ["name",
+                                 "comments",
+                                 ],
                   super_entity = ("doc_entity", "pr_pentity"),
                   )
 
@@ -1139,7 +1142,7 @@ class S3OrganisationGroupModel(S3Model):
                                      joinby="group_id"))
 
         add_component("pr_group",
-                      org_group=dict(name="group",
+                      org_group=dict(name="pr_group",
                                      joinby="org_group_id",
                                      key="group_id",
                                      link="org_group_team",
@@ -2918,6 +2921,20 @@ class S3FacilityModel(S3Model):
                                     "comments",
                                     )
 
+        list_fields = ["name",
+                       "code",
+                       "site_facility_type.facility_type_id",
+                       "organisation_id",
+                       "location_id",
+                       "opening_times",
+                       "contact",
+                       "phone1",
+                       "phone2",
+                       "email",
+                       "website",
+                       "comments",
+                       ]
+
         configure(tablename,
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
@@ -2927,6 +2944,7 @@ class S3FacilityModel(S3Model):
                   crud_form = crud_form,
                   deduplicate = self.org_facility_duplicate,
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   onaccept = self.org_facility_onaccept,
                   realm_components = ["contact_emergency",
                                       "physical_description",
@@ -4425,7 +4443,7 @@ def org_rheader(r, tabs=[]):
     elif tablename == "org_group":
         tabs = [(T("Basic Details"), None),
                 (T("Member Organizations"), "membership"),
-                (T("Groups"), "group"),
+                (T("Groups"), "pr_group"),
                 (T("Attachments"), "document"),
                 ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -4993,6 +5011,7 @@ def org_facility_controller():
             T = current.T
             output = TABLE()
             append = output.append
+            record = r.record
             # Edit button
             append(TR(TD(A(T("Edit"),
                            _target="_blank",
@@ -5001,35 +5020,36 @@ def org_facility_controller():
 
             # Name
             append(TR(TD(B("%s:" % T("Name"))),
-                      TD(r.record.name)))
+                      TD(record.name)))
+
+            site_id = record.site_id
 
             # Type(s)
             ttable = db.org_facility_type
             ltable = db.org_site_facility_type
-            query = (ltable.site_id == r.record.site_id) & \
+            query = (ltable.site_id == site_id) & \
                     (ltable.facility_type_id == ttable.id)
             rows = db(query).select(ttable.name)
             if rows:
                 append(TR(TD(B("%s:" % ltable.facility_type_id.label)),
                           TD(", ".join([row.name for row in rows]))))
 
+            ftable = r.table
             # Comments
-            if r.record.comments:
-                append(TR(TD(B("%s:" % r.table.comments.label)),
-                          TD(r.record.comments)))
+            if record.comments:
+                append(TR(TD(B("%s:" % ftable.comments.label)),
+                          TD(ftable.comments.represent(record.comments))))
 
             # Organisation (better with just name rather than Represent)
             # @ToDo: Make this configurable - some users will only see
             #        their staff so this is a meaningless field for them
             table = db.org_organisation
-            org = db(table.id == r.record.organisation_id).select(table.name,
-                                                                  limitby=(0, 1)
-                                                                  ).first()
+            org = db(table.id == record.organisation_id).select(table.name,
+                                                                limitby=(0, 1)
+                                                                ).first()
             if org:
-                append(TR(TD(B("%s:" % r.table.organisation_id.label)),
+                append(TR(TD(B("%s:" % ftable.organisation_id.label)),
                           TD(org.name)))
-
-            site_id = r.record.site_id
 
             if current.deployment_settings.has_module("req"):
                 # Open High/Medium priority Requests
@@ -5066,33 +5086,33 @@ def org_facility_controller():
                           TD(location.addr_street)))
 
             # Opening Times
-            opens = r.record.opening_times
+            opens = record.opening_times
             if opens:
-                append(TR(TD(B("%s:" % r.table.opening_times.label)),
+                append(TR(TD(B("%s:" % ftable.opening_times.label)),
                           TD(opens)))
 
             # Phone number
-            contact = r.record.contact
+            contact = record.contact
             if contact:
-                append(TR(TD(B("%s:" % r.table.contact.label)),
+                append(TR(TD(B("%s:" % ftable.contact.label)),
                           TD(contact)))
 
             # Phone number
-            phone1 = r.record.phone1
+            phone1 = record.phone1
             if phone1:
-                append(TR(TD(B("%s:" % r.table.phone1.label)),
+                append(TR(TD(B("%s:" % ftable.phone1.label)),
                           TD(phone1)))
 
             # Email address (as hyperlink)
-            email = r.record.email
+            email = record.email
             if email:
-                append(TR(TD(B("%s:" % r.table.email.label)),
+                append(TR(TD(B("%s:" % ftable.email.label)),
                           TD(A(email, _href="mailto:%s" % email))))
 
             # Website (as hyperlink)
-            website = r.record.website
+            website = record.website
             if website:
-                append(TR(TD(B("%s:" % r.table.website.label)),
+                append(TR(TD(B("%s:" % ftable.website.label)),
                           TD(A(website, _href=website))))
 
         return output

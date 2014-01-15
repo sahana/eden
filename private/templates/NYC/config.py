@@ -262,6 +262,24 @@ def facility_marker_fn(record):
                                                     ).first()
     return marker
 
+# -----------------------------------------------------------------------------
+def org_facility_onvalidation(form):
+    """
+        Default the name to the Street Address
+    """
+
+    form_vars = form.vars
+    name = form_vars.get("name", None)
+    if name:
+        return
+    address = form_vars.get("address", None)
+    if address:
+        form_vars.name = address
+    else:
+        # We need a default
+        form_vars.name = current.db.org_facility.location_id.represent(form_vars.location_id)
+
+# -----------------------------------------------------------------------------
 def customize_org_facility(**attr):
     """
         Customize org_facility controller
@@ -280,34 +298,40 @@ def customize_org_facility(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        tablename = "org_facility"
-        table = s3db[tablename]
-
         if r.method not in ("read", "update"):
-            # Hide Private Residences
-            from s3.s3resource import S3FieldSelector
-            s3.filter = S3FieldSelector("site_facility_type.facility_type_id$name") != "Private Residence"
+            types = r.get_vars.get("site_facility_type.facility_type_id__belongs", None)
+            if not types:
+                # Hide Private Residences
+                from s3.s3resource import S3FieldSelector
+                s3.filter = S3FieldSelector("site_facility_type.facility_type_id$name") != "Private Residence"
 
         if r.interactive:
-            from gluon.validators import IS_EMPTY_OR
-            from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
-            field = table.location_id
-            field.label = "" # Gets replaced by widget
-            field.requires = IS_EMPTY_OR(IS_LOCATION_SELECTOR2(levels=("L2","L3")))
-            field.widget = S3LocationSelectorWidget2(levels=("L2","L3"),
-                                                     hide_lx=False,
-                                                     reverse_lx=True,
-                                                     show_address=True,
-                                                     show_postcode=True,
-                                                     )
-            # element.style is being set to width: 0 for some reason, so not working
-            #table.organisation_id.widget = S3SelectChosenWidget()
+            tablename = "org_facility"
+            table = s3db[tablename]
+
+            if r.method in ("create", "update"):
+                from s3.s3validators import IS_LOCATION_SELECTOR2
+                from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
+                field = table.location_id
+                field.label = "" # Gets replaced by widget
+                levels = ("L2", "L3")
+                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+                field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
+                # element.style is being set to width: 0 for some reason, so not working
+                #table.organisation_id.widget = S3SelectChosenWidget()
 
             if r.get_vars.get("format", None) == "popup":
                 # Coming from req/create form
                 # Hide most Fields
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                # We default this onvalidation
+                table.name.notnull = False
+                table.name.requires = None
                 s3db.org_site_facility_type.facility_type_id.label = ""
                 crud_form = S3SQLCustomForm(S3SQLInlineComponent(
                                                 "site_facility_type",
@@ -321,6 +345,7 @@ def customize_org_facility(**attr):
                                             )
                 s3db.configure(tablename,
                                crud_form = crud_form,
+                               onvalidation = org_facility_onvalidation,
                                )
 
         return True
@@ -719,7 +744,7 @@ def customize_pr_group(**attr):
             ]
 
         list_fields = ["id",
-                       "group_team.org_group_id",
+                       (T("Network"), "group_team.org_group_id"),
                        "name",
                        "description",
                        "comments",
@@ -1160,11 +1185,10 @@ def customize_req_req(**attr):
         else:
             result = True
 
-        s3db = current.s3db
-        table = s3db.req_req
-        table.site_id.represent = s3db.org_SiteRepresent(show_type=False)
         if r.interactive:
             from s3layouts import S3AddResourceLink
+            s3db = current.s3db
+            table = s3db.req_req
             table.site_id.comment = S3AddResourceLink(c="org", f="facility",
                                                       vars = dict(child="site_id"),
                                                       title=T("Add Facility"),
