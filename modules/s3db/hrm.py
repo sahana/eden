@@ -1104,16 +1104,24 @@ class S3HRModel(S3Model):
                                    limit=limit,
                                    orderby="pr_person.first_name")["rows"]
 
-            if rows:
-                items = [{"id"     : row["hrm_human_resource.id"],
-                          "first"  : row["pr_person.first_name"],
-                          "middle" : row["pr_person.middle_name"] or "",
-                          "last"   : row["pr_person.last_name"] or "",
-                          "org"    : row["org_organisation.name"] if show_orgs else "",
-                          "job"    : row["hrm_job_title.name"] or "",
-                          } for row in rows ]
-            else:
-                items = []
+            items = []
+            iappend = items.append
+            for row in rows:
+                item = {"id"     : row["hrm_human_resource.id"],
+                        "first"  : row["pr_person.first_name"],
+                        }
+                middle_name = row.get("pr_person.middle_name", None)
+                if middle_name:
+                    item["middle"] = middle_name
+                last_name = row.get("pr_person.last_name", None)
+                if last_name:
+                    item["last"] = last_name
+                if show_orgs:
+                    item["org"] = row["org_organisation.name"]
+                job_title = row.get("hrm_job_title.name", None)
+                if job_title:
+                    item["job"] = job_title
+                iappend(item)
             output = json.dumps(items)
 
         response.headers["Content-Type"] = "application/json"
