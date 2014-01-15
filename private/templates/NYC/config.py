@@ -600,14 +600,19 @@ def customize_org_group(**attr):
             result = True
 
         if r.interactive:
-            from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2
-            field = s3db.org_group.location_id
-            field.label = "" # Gets replaced by widget
-            field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
-            field.widget = S3LocationSelectorWidget2(levels=("L2",),
-                                                     polygons=True,
-                                                     )
+            if not r.component:
+                from s3.s3validators import IS_LOCATION_SELECTOR2
+                from s3.s3widgets import S3LocationSelectorWidget2
+                field = s3db.org_group.location_id
+                field.label = "" # Gets replaced by widget
+                field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
+                field.widget = S3LocationSelectorWidget2(levels=("L2",),
+                                                         polygons=True,
+                                                         )
+            elif r.component_name == "pr_group":
+                field = s3db.pr_group.group_type
+                field.default = 3 # Relief Team, to show up in hrm/group
+                field.readable = field.writable = False
 
         return result
     s3.prep = custom_prep

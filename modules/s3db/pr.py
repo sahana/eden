@@ -1422,13 +1422,12 @@ class S3GroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Group
         #
-        pr_group_types = {
-            1:T("Family"),
-            2:T("Tourist Group"),
-            3:T("Relief Team"),
-            4:T("other"),
-            5:T("Mailing Lists"),
-        }
+        pr_group_types = {1 : T("Family"),
+                          2 : T("Tourist Group"),
+                          3 : T("Relief Team"),
+                          4 : T("other"),
+                          5 : T("Mailing Lists"),
+                          }
 
         tablename = "pr_group"
         table = define_table(tablename,
