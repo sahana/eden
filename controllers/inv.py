@@ -1454,7 +1454,9 @@ def adj():
                         aitable = s3db.inv_adj_item
                         if r.record.status == 0:
                             aitable.reason.writable = True
-                        record = aitable[r.component_id]
+                        record = db(aitable.id == r.component_id).select(aitable.inv_item_id,
+                                                                         limitby=(0, 1)
+                                                                         ).first()
                         if record.inv_item_id:
                             aitable.item_id.writable = False
                             aitable.item_id.comment = None
@@ -1520,17 +1522,18 @@ def adj():
         return output
     s3.postp = postp
 
-    if len(request.args) > 1 and request.args[1] == "adj_item" and \
-       table[request.args[0]].status:
+    args = request.args
+    if len(args) > 1 and args[1] == "adj_item" and \
+       table[args[0]].status:
         # remove CRUD generated buttons in the tabs
         s3db.configure("inv_adj_item",
-                       create=False,
-                       listadd=False,
-                       editable=False,
-                       deletable=False,
+                       create = False,
+                       deletable = False,
+                       editable = False,
+                       listadd = False,
                        )
 
-    output = s3_rest_controller(rheader=s3db.inv_adj_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_adj_rheader)
     return output
 
 # -----------------------------------------------------------------------------

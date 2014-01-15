@@ -21,7 +21,7 @@ S3.gis = Object();
 S3.gis.options = Object();
 S3.timeline = Object();
 S3.JSONRequest = Object(); // Used to store and abort JSON requests
-S3.TimeoutVar = Object(); // Used to store and abort JSON requests
+//S3.TimeoutVar = Object(); // Used to store and abort JSON requests
 
 S3.uid = function() {
     // Generate a random uid
@@ -579,29 +579,29 @@ var S3OptionsFilter = function(settings) {
     // Flag to show whether this is the first run
     var first = true;
 
-    triggerField.change(function() {
-        var triggerField = $(this);
-        var triggerSelector = triggerField.attr('name');
+    var triggerFieldName = triggerField.attr('name');
+
+    // Function to call when trigger field is changed
+    var triggerFieldChange = function() {
 
         // Find the target field
-        var targetSelector, targetField;
-        if (triggerSelector == triggerName) {
+        if (triggerFieldName == triggerName) {
             // Regular form field
-            targetField = $('[name="' + targetName + '"]');
+            var targetField = $('[name="' + targetName + '"]');
             if (targetField.length === 0) {
                 return;
             }
-            targetSelector = targetField.attr('name');
+            var targetSelector = targetField.attr('name');
         } else {
             // Inline field
-            var names = triggerSelector.split('_');
+            var names = triggerFieldName.split('_');
             var prefix = names[0];
             var rowindex = names.pop();
-            targetField = $('[name*="' + prefix + '_"][name*="_i_' + targetName + '_edit_' + rowindex + '"]');
+            var targetField = $('[name*="' + prefix + '_"][name*="_i_' + targetName + '_edit_' + rowindex + '"]');
             if (targetField.length === 0) {
                 return;
             }
-            targetSelector = targetField.attr('name');
+            var targetSelector = targetField.attr('name');
         }
 
         // Cancel previous Ajax request
@@ -695,188 +695,146 @@ var S3OptionsFilter = function(settings) {
             }
         }
 
-        // Construct the Ajax context
-        var context = {
-            triggerSelector: triggerSelector,
-            targetSelector: targetSelector,
-            currentValue: currentValue,
-            lookupResource: lookupResource,
-            triggerName: triggerName
-        };
-        // Field to look up
-        if (settings.lookupField) {
-            context['lookupField'] = settings.lookupField;
-        } else {
-            context['lookupField'] = 'id';
-        }
-        // Show an empty select?
-        if (settings.optional) {
-            context['optional'] = settings.optional;
-        } else {
-            context['optional'] = false;
-        }
-        if (settings.showEmptyField) {
-            context['showEmptyField'] = settings.showEmptyField;
-        } else {
-            context['showEmptyField'] = true;
-        }
-        // Message for no records
-        if (settings.msgNoRecords) {
-            context['msgNoRecords'] = settings.msgNoRecords;
-        } else {
-            context['msgNoRecords'] = '-';
-        }
-        // Representation of the target options
-        if (settings.fncPrep) {
-            context['fncPrep'] = settings.fncPrep;
-        } else {
-            context['fncPrep'] = function(data) { return null; };
-        }
-        if (settings.fncRepresent) {
-            context['fncRepresent'] = settings.fncRepresent;
-        } else {
-            context['fncRepresent'] = function(record) { return record.name; };
-        }
-
         // Find the target widget and replace it by a throbber
-        var targetWidget;
-        if (settings.targetWidget != undefined) {
-            targetWidget = settings.targetWidget;
-        } else {
-            targetWidget = targetSelector;
-        }
-        context['targetWidget'] = targetWidget;
+        var targetWidget = settings.targetWidget || targetSelector;
         var widget = $('[name = "' + targetWidget + '"]');
         widget.hide();
-        if ($('#' + lookupResource + '_ajax_throbber').length === 0 ) {
-            widget.after('<div id="' + lookupResource + '_ajax_throbber" class="ajax_throbber"/>');
+        if ($('#' + lookupResource + '_throbber').length === 0 ) {
+            widget.after('<div id="' + lookupResource + '_throbber" class="throbber"/>');
         }
 
         if (!settings.getWidgetHTML) {
             // URL returns the widget options as JSON
-            S3.JSONRequest[targetField.attr('id')] = $.ajax({
+
+            // Read relevant options
+            if (settings.showEmptyField === 'undefined') {
+                var showEmptyField = true;
+            } else {
+                var showEmptyField = settings.showEmptyField;   
+            }
+            var fncPrep = settings.fncPrep || function(data) { return null; };
+            var fncRepresent = settings.fncRepresent || function(record) { return record.name; };
+            var lookupField = settings.lookupField || 'id';
+            var newValue;
+            var options = '';
+            var prepResult;
+
+            S3.JSONRequest[targetField.attr('id')] = $.ajaxS3({
                 url: url,
                 dataType: 'json',
-                context: context
-            }).done(function(data) {
-                // Pre-process the data
-                var fncPrep = this.fncPrep;
-                var prepResult;
-                try {
-                    prepResult = fncPrep(data);
-                } catch (e) {
-                    prepResult = null;
-                }
-
-                // Render options list
-                var fncRepresent = this.fncRepresent;
-                var FilterField = this.FilterField;
-                var FieldResource = this.FieldResource;
-                var triggerField = $('[name = "' + FilterField + '"]');
-                var options = '';
-                var currentValue;
-                if (data.length === 0) {
-                    // No options available
-                    if (this.showEmptyField) {
-                        currentValue = 0;
-                        options += '<option value="">' + this.msgNoRecords + '</options>';
-                    }
-                } else {
-                    // Render the options
-                    var lookupField = this.lookupField;
-                    for (var i = 0; i < data.length; i++) {
-                        if (i === 0) {
-                            currentValue = data[i][lookupField];
+                // gets moved to .done() inside .ajaxS3
+                success: function(data) {
+                    // Render options list
+                    if (data.length === 0) {
+                        // No options available
+                        if (showEmptyField) {
+                            newValue = 0;
+                            var msgNoRecords = settings.msgNoRecords || '-';
+                            options = '<option value="">' + msgNoRecords + '</options>';
                         }
-                        options += '<option value="' + data[i][lookupField] + '">';
-                        options += fncRepresent(data[i], prepResult);
-                        options += '</option>';
-                    }
-                    if (this.optional) {
-                        currentValue = 0;
-                        options = '<option value=""></option>' + options;
-                    }
-                    if (this.currentValue) {
-                        currentValue = this.currentValue;
-                    }
-                }
-
-                var targetField = $('[name = "' + this.targetSelector + '"]');
-                // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
-                var html = targetField.parent().html().replace('<input', '<select');
-                targetField.parent().html(html);
-                // reselect since it may have changed
-                targetField = $('[name = "' + this.targetSelector + '"]');
-                if (options !== '') {
-                    targetField.html(options)
-                               // Set the current field value
-                               .val(currentValue)
-                               .change()
-                               .prop('disabled', false)
-                               .show();
-                } else {
-                    // No options available => disable the target field
-                    targetField.prop('disabled', true)
-                               .show();
-                }
-
-                // Modify URL for Add-link and show the Add-link
-                var lookupResource = this.lookupResource;
-                var targetFieldAdd = $('#' + lookupResource + '_add');
-                if (targetFieldAdd.length !== 0) {
-                    var href = targetFieldAdd.attr('href');
-                    triggerField = $('[name = "' + this.triggerSelector + '"]');
-                    var triggerName = this.triggerName;
-                    if (href.indexOf(triggerName) == -1) {
-                        // Add to URL
-                        href += '&' + triggerName + '=' + triggerField.val();
                     } else {
-                        // Update URL
-                        var re = new RegExp(triggerName + '=.*', 'g');
-                        href = href.replace(re, triggerName + '=' + triggerField.val());
+                        // Render the options
+                        // Pre-process the data
+                        try {
+                            prepResult = fncPrep(data);
+                        } catch (e) {
+                            prepResult = null;
+                        }
+                        options = '';
+                        for (var i = 0; i < data.length; i++) {
+                            if (i === 0) {
+                                newValue = data[i][lookupField];
+                            }
+                            options += '<option value="' + data[i][lookupField] + '">';
+                            options += fncRepresent(data[i], prepResult);
+                            options += '</option>';
+                        }
+                        if (settings.optional) {
+                            newValue = 0;
+                            options = '<option value=""></option>' + options;
+                        }
+                        if (currentValue) {
+                            newValue = currentValue;
+                        }
                     }
-                    targetFieldAdd.attr('href', href).show();
-                }
 
-                // Remove the throbber
-                $('#' + lookupResource + '_ajax_throbber').remove();
-                if (first) {
-                    // Don't include this change in the deliberate changes
-                    S3ClearNavigateAwayConfirm();
-                    first = false;
+                    // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
+                    var html = targetField.parent().html().replace('<input', '<select');
+                    targetField.parent().html(html);
+                    // reselect since it may have changed
+                    targetField = $('[name = "' + targetSelector + '"]');
+                    if (options !== '') {
+                        targetField.html(options)
+                                   // Set the current field value
+                                   .val(newValue)
+                                   .change()
+                                   .prop('disabled', false)
+                                   .show();
+                    } else {
+                        // No options available => disable the target field
+                        targetField.prop('disabled', true)
+                                   .show();
+                    }
+
+                    // Modify URL for Add-link and show the Add-link
+                    var targetFieldAdd = $('#' + lookupResource + '_add');
+                    if (targetFieldAdd.length !== 0) {
+                        var href = targetFieldAdd.attr('href');
+                        if (href.indexOf(triggerName) == -1) {
+                            // Add to URL
+                            href += '&' + triggerName + '=' + triggerField.val();
+                        } else {
+                            // Update URL
+                            var re = new RegExp(triggerName + '=.*', 'g');
+                            href = href.replace(re, triggerName + '=' + triggerField.val());
+                        }
+                        targetFieldAdd.attr('href', href)
+                                      .show();
+                    }
+
+                    // Remove the throbber
+                    $('#' + lookupResource + '_throbber').remove();
+                    if (first) {
+                        // Don't include this change in the deliberate changes
+                        S3ClearNavigateAwayConfirm();
+                        first = false;
+                    }
                 }
             });
         } else {
             // URL returns the widget as HTML
-            S3.JSONRequest[targetField.attr('id')] = $.ajax({
+            S3.JSONRequest[targetField.attr('id')] = $.ajaxS3({
                 url: url,
                 dataType: 'html',
-                context: context
-            }).done(function(data) {
-                var targetWidget = $('[name = "' + this.targetWidget + '"]');
-                if (data !== '') {
-                    // Replace the target field with the HTML returned
-                    targetWidget.html(data)
-                                .change()
-                                .prop('disabled', false)
-                                .show();
-                } else {
-                    // Disable the target field
-                    targetWidget.prop('disabled', true);
-                }
-                // Remove Throbber
-                $('#' + this.lookupResource + '_ajax_throbber').remove();
-                if (first) {
-                    // Don't include this change in the deliberate changes
-                    S3ClearNavigateAwayConfirm();
-                    first = false;
+                // gets moved to .done() inside .ajaxS3
+                success: function(data) {
+                    if (data !== '') {
+                        // Replace the target field with the HTML returned
+                        widget.html(data)
+                              .change()
+                              .prop('disabled', false)
+                              .show();
+                    } else {
+                        // Disable the target field
+                        widget.prop('disabled', true);
+                    }
+                    // Remove Throbber
+                    $('#' + lookupResource + '_throbber').remove();
+                    if (first) {
+                        // Don't include this change in the deliberate changes
+                        S3ClearNavigateAwayConfirm();
+                        first = false;
+                    }
                 }
             });
         }
-    });
+    };
+
+    // Call function when trigger field changed
+    triggerField.change(triggerFieldChange);
 
     // If the field value is empty - disable - but keep initial value
-    triggerField.change();
+    triggerFieldChange();
 };
 
 // ============================================================================

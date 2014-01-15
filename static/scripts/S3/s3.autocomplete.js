@@ -29,7 +29,7 @@
         if (value) {
             // Store existing data in case of cancel
             var existing = {value: value,
-                            name: dummy_input.val()
+                            label: dummy_input.val()
                             };
         } else {
             var existing;

@@ -33,22 +33,21 @@ $(document).ready(function() {
         $('#TotalQuantity').remove();   
         if ($('[name="inv_item_id"]').length > 0) {
             id = $('[name="inv_item_id"]').val();
-        }
-        else if  ($('[name="send_inv_item_id"]').length > 0) {
+        } else if  ($('[name="send_inv_item_id"]').length > 0) {
             id = $('[name="send_inv_item_id"]').val();
-        }
+        //}
         // Following condition removed since it doesn't appear to be correct
         // the ajax call is looking for the number of items in stock, but
         // this is the supply catalogue id - not an id related to an inventory
         //else if  ($('[name = "item_id"]').length > 0) {
         //    id = $('[name = "item_id"]').val();
-        //}
-        else
+        } else {
             return;
+        }
 
         var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
-        if ($('#inv_quantity_ajax_throbber').length === 0) {
-            $('[name="quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
+        if ($('#inv_quantity_throbber').length === 0) {
+            $('[name="quantity"]').after('<div id="inv_quantity_throbber" class="throbber"/>'); 
         }
         
         // Save JSON Request by element id
@@ -70,7 +69,7 @@ $(document).ready(function() {
             var Quantity = (InvQuantity * InvPackQuantity) / PackQuantity;
 
             TotalQuantity = '<span id="TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + i18n.in_inv + ')</span>';
-            $('#inv_quantity_ajax_throbber').remove();
+            $('#inv_quantity_throbber').remove();
             $('[name="quantity"]').after(TotalQuantity);
         });
     }
