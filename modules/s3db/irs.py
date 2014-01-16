@@ -59,12 +59,13 @@ class S3IRSModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
         settings = current.deployment_settings
 
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         set_method = self.set_method
         super_link = self.super_link
@@ -209,7 +210,8 @@ class S3IRSModel(S3Model):
         # This Table defines which Categories are visible to end-users
         tablename = "irs_icategory"
         table = define_table(tablename,
-                             Field("code", label = T("Category"),
+                             Field("code",
+                                   label = T("Category"),
                                    requires = IS_IN_SET_LAZY(lambda: \
                                         sort_dict_by_values(irs_incident_type_opts)),
                                    represent = lambda opt: \
@@ -217,8 +219,9 @@ class S3IRSModel(S3Model):
                              *s3_meta_fields())
 
         configure(tablename,
-                  onvalidation=self.irs_icategory_onvalidation,
-                  list_fields=[ "code" ])
+                  list_fields = ["code"],
+                  onvalidation = self.irs_icategory_onvalidation,
+                  )
 
         # ---------------------------------------------------------------------
         # Reports
@@ -351,6 +354,13 @@ class S3IRSModel(S3Model):
             msg_record_deleted = T("Incident Report deleted"),
             msg_list_empty = T("No Incident Reports currently registered"))
 
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
+            levels.remove("L0")
+
         filter_widgets = [
             S3TextFilter(["name",
                           "message",
@@ -361,14 +371,14 @@ class S3IRSModel(S3Model):
                         _class="filter-search",
                          ),
             S3LocationFilter("location_id",
-                             label=T("Location"),
-                             levels=["L1", "L2"],
+                             #label=T("Location"),
+                             levels=levels,
                              widget="multiselect",
                              cols=3,
                              #hidden=True,
                              ),
             S3OptionsFilter("category",
-                            label=T("Category"),
+                            #label=T("Category"),
                             widget="multiselect",
                             #hidden=True,
                             ),
@@ -381,23 +391,14 @@ class S3IRSModel(S3Model):
 
         report_fields = ["category",
                          "datetime",
-                         "location_id$L1",
-                         "location_id$L2",
                          ]
+
+        for level in levels:
+            report_fields.append("location_id$%s" % level)
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = ("sit_situation", "doc_entity"),
                   filter_widgets = filter_widgets,
-                  report_options=Storage(rows=report_fields,
-                                         cols=report_fields,
-                                         fact=report_fields,
-                                         defaults = dict(rows="location_id$L1",
-                                                         cols="category",
-                                                         fact="count(datetime)",
-                                                         totals=True
-                                                         )
-                  ),
                   list_fields = ["id",
                                  "name",
                                  "category",
@@ -409,7 +410,22 @@ class S3IRSModel(S3Model):
                                  "injured",
                                  "verified",
                                  "message",
-                                ])
+                                ],
+                 report_options = Storage(rows = report_fields,
+                                          cols = report_fields,
+                                          fact = [(T("Number of Incidents"), "count(id)"),
+                                                  (T("Total Affected"), "sum(affected)"),
+                                                  (T("Total Dead"), "sum(dead)"),
+                                                  (T("Total Injured"), "sum(injured)"),
+                                                  ],
+                                          defaults = dict(rows = "location_id$%s" % levels[0], # Highest-level of hierarchy
+                                                          cols = "category",
+                                                          fact = "count(id)",
+                                                          totals = True,
+                                                          )
+                                          ),
+                 super_entity = ("sit_situation", "doc_entity"),
+                 )
 
         # Components
         # Tasks
@@ -439,29 +455,25 @@ class S3IRSModel(S3Model):
         else:
             link_table = "irs_ireport_human_resource"
         add_component("hrm_human_resource",
-                      irs_ireport=Storage(
-                                    link=link_table,
-                                    joinby="ireport_id",
-                                    key="human_resource_id",
-                                    # Dispatcher doesn't need to Add/Edit HRs, just Link
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False
-                                )
-                            )
+                      irs_ireport=dict(link=link_table,
+                                       joinby="ireport_id",
+                                       key="human_resource_id",
+                                       # Dispatcher doesn't need to Add/Edit HRs, just Link
+                                       actuate="hide",
+                                       autocomplete="name",
+                                       autodelete=False,
+                                       ))
 
         # Affected Persons
         add_component("pr_person",
-                      irs_ireport=Storage(
-                                    link="irs_ireport_person",
-                                    joinby="ireport_id",
-                                    key="person_id",
-                                    actuate="link",
-                                    #actuate="embed",
-                                    #widget=S3AddPersonWidget(),
-                                    autodelete=False
-                                )
-                            )
+                      irs_ireport=dict(link="irs_ireport_person",
+                                       joinby="ireport_id",
+                                       key="person_id",
+                                       actuate="link",
+                                       #actuate="embed",
+                                       #widget=S3AddPersonWidget(),
+                                       autodelete=False,
+                                       ))
 
         ireport_id = S3ReusableField("ireport_id", table,
                                      requires = IS_NULL_OR(
@@ -492,9 +504,9 @@ class S3IRSModel(S3Model):
             create_next = URL(args=["[id]", "image"])
 
         configure("irs_ireport",
-                  create_onaccept=self.ireport_onaccept,
-                  create_next=create_next,
-                  update_next=URL(args=["[id]", "update"])
+                  create_next = create_next,
+                  create_onaccept = self.ireport_onaccept,
+                  update_next = URL(args=["[id]", "update"])
                   )
 
         # -----------------------------------------------------------
@@ -509,10 +521,9 @@ class S3IRSModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return Storage(
-            irs_ireport_id = ireport_id,
-            irs_incident_type_opts = irs_incident_type_opts
-            )
+        return dict(irs_ireport_id = ireport_id,
+                    irs_incident_type_opts = irs_incident_type_opts,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
