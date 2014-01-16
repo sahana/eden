@@ -2931,6 +2931,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         //popup.keepInMap = false; // Not working
         feature.popup = popup;
         popup.feature = feature;
+        // @ToDo: deployment_setting (default OL is 1200 x 660)
+        popup.maxSize = new OpenLayers.Size(750, 660);
         feature.layer.map.addPopup(popup);
         if (!iframe && undefined != url) {
             // use AJAX to get the contentHTML

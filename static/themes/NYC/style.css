@@ -241,6 +241,14 @@ b.red {
     height: 31px;
 }
 
+/* Needs to be done via popup.maxWidth
+.olPopup {
+    max-width: 750px;
+}
+.olFramedCloudPopupContent {
+    max-width: 730px;
+} */
+
 .pt-table {
     overflow: auto;
 }
