@@ -17,7 +17,7 @@
 
         // Default options
         options: {
-            
+            method: 'count'
         },
 
         _create: function() {
@@ -45,10 +45,10 @@
 
             this._unbindEvents();
 
-            var data = JSON.parse($(this.element).find('.tp-data').first().val());
+            var opts = this.options,
+                data = JSON.parse($(this.element).find('.tp-data').first().val());
 
-            this._renderChart(data, 'count');
-
+            this._renderChart(data, opts.method);
             this._bindEvents();
         },
 
@@ -105,7 +105,9 @@
             // start/end are timestamps
             // value is a numeric value
 
-            var series = [];
+            var series = [], result = [], item, value, i, dt;
+
+            var start, end;
             for (i=0; i<data.length; i++) {
                 item = data[i];
 
@@ -116,27 +118,31 @@
                     series.push([0, value]);
                 } else {
                     start = start.split(' ').join('T');
-                    d = new Date(start).getTime();
-                    series.push([d, value]);
+                    dt = new Date(start).getTime();
+                    series.push([dt, value]);
                 }
                 end = item[2];
                 if (end) {
                     end = end.split(' ').join('T');
-                    d = new Date(end).getTime();
-                    series.push([d, -value]);
+                    dt = new Date(end).getTime();
+                    series.push([dt, -value]);
                 }
             }
+            
             var order = function(x, y) {
                 return x[0] - y[0];
             };
             series.sort(order);
-            var current = 0,
-                timestamp = 0,
-                result = [];
-            for (i=0; i<series.length; i++) {
-                item = series[i];
 
-                current += item[1];
+            var current = 0.0;
+            for (i=0; i<series.length; i++) {
+                
+                item = series[i];
+                value = Number(item[1]);
+                if (value == Number.NaN) {
+                    continue;
+                }
+                current += value;
 
                 if (result.length) {
                     last = result.slice(-1)[0];
@@ -150,6 +156,7 @@
                     result.push([item[0], current]);
                 }
             }
+            
             if (result[0][0] == 0 && result.length > 1) {
                 result = result.slice(1);
             }

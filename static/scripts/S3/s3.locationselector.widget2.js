@@ -569,7 +569,7 @@
         // Submit to Geocoder
         var url = S3.Ap.concat('/gis/geocode');
         $.ajaxS3({
-            async: false,
+            //async: false,
             url: url,
             type: 'POST',
             data: post_data,
@@ -593,6 +593,8 @@
                             geometry.transform(gis.proj4326, map.getProjectionObject());
                             var feature = new OpenLayers.Feature.Vector(geometry);
                             draftLayer.addFeatures([feature]);
+                            // Move viewport to this feature
+                            zoomMap(fieldname);
                         }
                     }
                     // Notify results
@@ -875,26 +877,45 @@
             var map_id = 'location_selector_' + fieldname;
             var map = gis.maps[map_id];
             if (map) {
-                // Zoom to extent of the Lx, if we have it
-                var bounds = l[id].b;
-                if (!bounds) {
-                    // Try the parent
-                    var parent = l[id].f;
-                    parent = l[parent];
-                    if (parent) {
-                        bounds = parent.b;
-                        if (!bounds) {
-                            // Try the grandparent
-                            var grandparent = parent.f;
-                            grandparent = l[grandparent];
-                            if (grandparent) {
-                                bounds = grandparent.b;
-                                if (!bounds) {
-                                    // Try the greatgrandparent
-                                    var greatgrandparent = grandparent.f;
-                                    greatgrandparent = l[greatgrandparent];
-                                    if (greatgrandparent) {
-                                        bounds = greatgrandparent.b;
+                // Zoom to point, if we have it
+                var selector = '#' + fieldname;
+                var latfield = $(selector + '_lat');
+                var lonfield = $(selector + '_lon');
+                var lat = latfield.val();
+                var lon = lonfield.val();
+                if (lat && lon) {
+                    // Ensure a minimal BBOX in case we just have a single data point
+                    var min_size = 0.05;
+                    // Add an Inset in order to not have points right at the edges of the map
+                    var inset = 0.007;
+                    var delta = (min_size / 2) + inset;
+                    var lon_min = lon - delta,
+                        lat_min = lat - delta,
+                        lon_max = lon + delta,
+                        lat_max = lat + delta;
+                    var bounds = [lon_min, lat_min, lon_max, lat_max];
+                } else {
+                    // Zoom to extent of the Lx, if we have it
+                    var bounds = l[id].b;
+                    if (!bounds) {
+                        // Try the parent
+                        var parent = l[id].f;
+                        parent = l[parent];
+                        if (parent) {
+                            bounds = parent.b;
+                            if (!bounds) {
+                                // Try the grandparent
+                                var grandparent = parent.f;
+                                grandparent = l[grandparent];
+                                if (grandparent) {
+                                    bounds = grandparent.b;
+                                    if (!bounds) {
+                                        // Try the greatgrandparent
+                                        var greatgrandparent = grandparent.f;
+                                        greatgrandparent = l[greatgrandparent];
+                                        if (greatgrandparent) {
+                                            bounds = greatgrandparent.b;
+                                        }
                                     }
                                 }
                             }

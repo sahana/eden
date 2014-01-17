@@ -579,10 +579,16 @@ var S3OptionsFilter = function(settings) {
     // Flag to show whether this is the first run
     var first = true;
 
-    var triggerFieldName = triggerField.attr('name');
-
     // Function to call when trigger field is changed
-    var triggerFieldChange = function() {
+    var triggerFieldChange = function(event) {
+
+        if (first) {
+            var $triggerField = triggerField;
+        } else {
+            // Select the specific triggerField (inline form can contain multiple)
+            var $triggerField = $(this);
+        }
+        var triggerFieldName = $triggerField.attr('name');
 
         // Find the target field
         if (triggerFieldName == triggerName) {
@@ -611,24 +617,24 @@ var S3OptionsFilter = function(settings) {
 
         // Get the lookup value from the trigger field
         var lookupValue = '';
-        if (triggerField.attr('type') == 'checkbox') {
-            checkboxesWidget = triggerField.closest('.checkboxes-widget-s3');
+        if ($triggerField.attr('type') == 'checkbox') {
+            checkboxesWidget = $triggerField.closest('.checkboxes-widget-s3');
             if (checkboxesWidget) {
-                triggerField = checkboxesWidget;
+                $triggerField = checkboxesWidget;
             }
         }
-        if (triggerField.length == 1 && !triggerField.hasClass('checkboxes-widget-s3')) {
+        if ($triggerField.length == 1 && !$triggerField.hasClass('checkboxes-widget-s3')) {
             // SELECT
-            lookupValue = triggerField.val();
-        } else if (triggerField.length > 1) {
+            lookupValue = $triggerField.val();
+        } else if ($triggerField.length > 1) {
             // Checkboxes
             lookupValue = new Array();
-            triggerField.filter('input:checked').each(function() {
+            $triggerField.filter('input:checked').each(function() {
                 lookupValue.push($(this).val());
             });
-        } else if (triggerField.hasClass('checkboxes-widget-s3')) {
+        } else if ($triggerField.hasClass('checkboxes-widget-s3')) {
             lookupValue = new Array();
-            triggerField.find('input:checked').each(function() {
+            $triggerField.find('input:checked').each(function() {
                 lookupValue.push($(this).val());
             });
         }
@@ -782,11 +788,11 @@ var S3OptionsFilter = function(settings) {
                         var href = targetFieldAdd.attr('href');
                         if (href.indexOf(triggerName) == -1) {
                             // Add to URL
-                            href += '&' + triggerName + '=' + triggerField.val();
+                            href += '&' + triggerName + '=' + $triggerField.val();
                         } else {
                             // Update URL
                             var re = new RegExp(triggerName + '=.*', 'g');
-                            href = href.replace(re, triggerName + '=' + triggerField.val());
+                            href = href.replace(re, triggerName + '=' + $triggerField.val());
                         }
                         targetFieldAdd.attr('href', href)
                                       .show();
