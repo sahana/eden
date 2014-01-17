@@ -86,6 +86,14 @@
         // Store whether we hide_lx
         real_input.data('hide_lx', hide_lx);
 
+        var lat = $(selector + '_lat').val();
+        var lon = $(selector + '_lon').val();
+        var wkt = $(selector + '_wkt').val();
+        if (lat || lon || wkt) {
+            // Don't do a Geocode when reading the data
+            real_input.data('manually_geocoded', true);
+        }
+
         // Initial population of dropdown(s)
         if (L0) {
             lx_select(fieldname, 0, L0);
@@ -131,9 +139,6 @@
         // Show Map icon
         map_icon_row.removeClass('hide').show();
 
-        var lat = $(selector + '_lat').val();
-        var lon = $(selector + '_lon').val();
-        var wkt = $(selector + '_wkt').val();
         if (lat || lon || wkt) {
             showMap(fieldname);
         } else {
@@ -212,10 +217,9 @@
                             msg = request.responseText;
                         }
                         s3_debug(msg);
-                        // Ugly, but better than hiding completely
-                        //alert(msg);
                         // Revert state of widget to allow user to retry without reloading page
                         // - not necessary since this is just labels & we already have fallback
+                        //S3.showAlert(msg, 'error');
                     }
                 });
             }
@@ -391,8 +395,7 @@
                     msg = request.responseText;
                 }
                 s3_debug(msg);
-                // Ugly, but better than hiding completely
-                alert(msg);
+                S3.showAlert(msg, 'error');
                 // Revert state of widget to allow user to retry without reloading page
                 // Hide Throbber
                 throbber.hide();

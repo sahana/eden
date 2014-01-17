@@ -3524,19 +3524,16 @@ def inv_send_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
-            tracktable = s3db.inv_track_item
+            stable = s3db.org_site
 
             send_id = record.id
             status = record.status
             site_id = record.site_id
             if site_id:
-                stable = s3db.org_site
-                site = db(stable.site_id == site_id).select(stable.location_id,
-                                                            stable.organisation_id,
+                site = db(stable.site_id == site_id).select(stable.organisation_id,
                                                             stable.instance_type,
                                                             limitby=(0, 1)
                                                             ).first()
-                address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
                 org_id = site.organisation_id
                 logo = s3db.org_organisation_logo(org_id) or ""
                 instance_table = s3db[site.instance_type]
@@ -3551,11 +3548,18 @@ def inv_send_rheader(r):
                     phone1 = None
                     phone2 = None
             else:
-                address = current.messages["NONE"]
                 org_id = None
                 logo = ""
                 phone1 = None
                 phone2 = None
+            to_site_id = record.to_site_id
+            if to_site_id:
+                site = db(stable.site_id == to_site_id).select(stable.location_id,
+                                                               limitby=(0, 1)
+                                                               ).first()
+                address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
+            else:
+                address = current.messages["NONE"]
             rData = TABLE(TR(TD(T(settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
@@ -3602,6 +3606,7 @@ def inv_send_rheader(r):
                           )
 
             # Find out how many inv_track_items we have for this send record
+            tracktable = s3db.inv_track_item
             query = (tracktable.send_id == send_id) & \
                     (tracktable.deleted == False)
             #cnt = db(query).count()
