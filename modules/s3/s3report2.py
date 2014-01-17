@@ -86,6 +86,12 @@ class S3Report2(S3Method):
         resource = self.resource
         get_config = resource.get_config
 
+        # Filter
+        response = current.response
+        s3_filter = response.s3.filter
+        if s3_filter is not None:
+            resource.add_filter(s3_filter)
+
         widget_id = "pivottable"
 
         # @todo: make configurable:
@@ -199,7 +205,7 @@ class S3Report2(S3Method):
                                           widget_id = widget_id)
 
             # View
-            current.response.view = self._view(r, "report2.html")
+            response.view = self._view(r, "report2.html")
 
         elif r.representation == "json":
 
@@ -226,6 +232,11 @@ class S3Report2(S3Method):
 
         resource = self.resource
         get_config = resource.get_config
+
+        # Filter
+        s3_filter = current.response.s3.filter
+        if s3_filter is not None:
+            resource.add_filter(s3_filter)
 
         # @todo: make configurable:
         maxrows = 20
