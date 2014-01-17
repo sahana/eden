@@ -202,7 +202,7 @@ S3.redraw_fns = [// jQueryUI Dialog Modal Popups
 S3.redraw = function() {
     var redraw_fns = S3.redraw_fns;
     var len = redraw_fns.length;
-    for (var i=0; i< len; i++) {
+    for (var i=0; i < len; i++) {
         S3[redraw_fns[i]]();
     }
 }
@@ -764,11 +764,18 @@ var S3OptionsFilter = function(settings) {
                         }
                     }
 
-                    // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
-                    var html = targetField.parent().html().replace('<input', '<select');
-                    targetField.parent().html(html);
-                    // reselect since it may have changed
-                    targetField = $('[name = "' + targetSelector + '"]');
+                    // Convert IS_ONE_OF_EMPTY INPUT to a SELECT (better to do this server-side where-possible)
+                    var html = targetField.parent().html();
+                    if (html.slice(1, 6) == 'input') {
+                        html.replace('<input', '<select');
+                        targetField.parent().html(html);
+
+                        // Re-apply event handlers (tooltips & modals)
+                        S3.redraw();
+
+                        // reselect since changed
+                        targetField = $('[name = "' + targetSelector + '"]');
+                    }
                     if (options !== '') {
                         targetField.html(options)
                                    // Set the current field value

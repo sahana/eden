@@ -303,12 +303,12 @@ class S3SupplyModel(S3Model):
         table.parent_item_category_id.requires = item_category_requires
 
         item_category_id = S3ReusableField("item_category_id", table,
-                                           sortby="name",
-                                           requires=item_category_requires,
-                                           represent=item_category_represent,
-                                           label = T("Category"),
                                            comment = item_category_comment,
-                                           ondelete = "RESTRICT"
+                                           label = T("Category"),
+                                           ondelete = "RESTRICT",
+                                           represent = item_category_represent,
+                                           requires = item_category_requires,
+                                           sortby = "name",
                                            )
         item_category_script = '''
 S3OptionsFilter({
