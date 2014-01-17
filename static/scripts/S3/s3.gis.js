@@ -29,7 +29,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     format_geojson.ignoreExtraDims = true;
     var marker_url_path = S3.Ap.concat('/static/img/markers/');
     var proj4326 = S3.gis.proj4326;
-    var DEFAULT_FILL = '#f5902e'; // colour for unclustered Point
 
     // Default values if not set by the layer
     // Also in modules/s3/s3gis.py
@@ -37,6 +36,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     //var cluster_attribute_default = 'colour';
     var cluster_distance_default = 20;   // pixels
     var cluster_threshold_default = 2;   // minimum # of features to form a cluster
+    // Default values if not set by the map
+    // Also in modules/s3/s3gis.py
+    var fill_default = '#f5902e';           // fill colour for unclustered Point
+    var cluster_fill_default = '8087ff';   // fill colour for clustered Point
+    var cluster_stroke_default = '2b2f76'; // stroke colour for clustered Point
+    var select_fill_default = 'ffdc33';    // fill colour for selected Point
+    var select_stroke_default = 'ff9933';  // stroke colour for selected Point
 
     /**
      * Main Start Function
@@ -4946,7 +4952,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             color = feature.cluster[0].attributes.colour;
                         } else {
                             // default fillColor for Clustered Point
-                            color = '#8087ff';
+                            color = '#' + (options.cluster_fill || cluster_fill_default);
                         }
                     } else if (feature.attributes.colour) {
                         // Feature Query: Use colour from feature (e.g. FeatureQuery)
@@ -4967,7 +4973,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         }
                     } else {
                         // default fillColor for Unclustered Point
-                        color = DEFAULT_FILL;
+                        color = fill_default;
                     }
                     return color;
                 },
@@ -5004,7 +5010,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             color = feature.cluster[0].attributes.colour;
                         } else {
                             // default strokeColor for Clustered Point
-                            color = '#2b2f76';
+                            color = '#' + (options.cluster_stroke || cluster_stroke_default);
                         }
                     } else if (feature.attributes.colour) {
                         // Use colour from feature (e.g. FeatureQuery)
@@ -5025,7 +5031,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         }
                     } else {
                         // default strokeColor for Unclustered Point
-                        color = DEFAULT_FILL;
+                        color = fill_default;
                     }
                     return color;
                 },
@@ -5242,8 +5248,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             // Change colour onSelect
             var selectStyle = {
-                fillColor: '#ffdc33',
-                strokeColor: '#ff9933'
+                fillColor: '#' + (options.select_fill || select_fill_default),
+                strokeColor: '#' + (options.select_stroke || select_stroke_default)
             };
         }
         var featureStyleMap = new OpenLayers.StyleMap({

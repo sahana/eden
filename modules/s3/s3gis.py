@@ -5966,6 +5966,24 @@ class MAP(DIV):
         if marker_max_width != 30:
             options["max_w"] = marker_max_width
 
+        #########
+        # Colours
+        #########
+
+        # Keep these in sync with s3.gis.js
+        cluster_fill = settings.get_gis_cluster_fill() 
+        if cluster_fill and cluster_fill != '8087ff':
+            options["cluster_fill"] = cluster_fill
+        cluster_stroke = settings.get_gis_cluster_stroke() 
+        if cluster_stroke and cluster_stroke != '2b2f76':
+            options["cluster_stroke"] = cluster_stroke
+        select_fill = settings.get_gis_select_fill() 
+        if select_fill and select_fill != 'ffdc33':
+            options["select_fill"] = select_fill
+        select_stroke = settings.get_gis_select_stroke() 
+        if select_stroke and select_stroke != 'ff9933':
+            options["select_stroke"] = select_stroke
+
         ########
         # Layout
         ########

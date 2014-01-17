@@ -15,8 +15,8 @@ from gluon.storage import Storage
 
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
-from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_INT_AMOUNT, IS_ONE_OF
+from s3.s3utils import S3DateTime, s3_avatar_represent
+from s3.s3validators import IS_INT_AMOUNT
 
 T = current.T
 s3 = current.response.s3
@@ -81,6 +81,14 @@ settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 settings.gis.map_height = 400
 #settings.gis.map_width = 854
+# Use a non-default fillColor for Clustered points
+settings.gis.cluster_fill = "ee3224"
+# Use a non-default strokeColor for Clustered points
+settings.gis.cluster_stroke = "7a1600"
+# Use a non-default fillColor for Selected points
+settings.gis.select_fill = "ddbe7e"
+# Use a non-default strokeColor for Selected points
+settings.gis.select_stroke = "e5b53b"
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
@@ -1097,6 +1105,7 @@ def customize_hrm_human_resource_fields():
     table = s3db.hrm_human_resource
     table.site_id.represent = S3Represent(lookup="org_site")
     s3db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
+    #from s3.s3utils import s3_auth_user_represent_name
     #table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -1241,6 +1250,7 @@ def customize_org_office_fields():
     s3db = current.s3db
     table = s3db.org_office
     table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
+    from s3.s3utils import s3_auth_user_represent_name
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -1619,6 +1629,8 @@ def customize_pr_person(**attr):
             MOBILE = settings.get_ui_label_mobile_phone()
             EMAIL = T("Email")
 
+            from s3.s3validators import IS_INT_AMOUNT, IS_ONE_OF
+
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
             site_field = htable.site_id
@@ -1627,6 +1639,7 @@ def customize_pr_person(**attr):
             site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                             represent,
                                             orderby = "org_site.name")
+
             from s3layouts import S3AddResourceLink
             site_field.comment = S3AddResourceLink(c="org", f="office",
                                                    vars={"child": "site_id"},
@@ -1934,32 +1947,55 @@ def customize_project_activity(**attr):
             #"comments",
             )
 
-        from s3.s3filter import S3LocationFilter, S3OptionsFilter
+        from s3.s3filter import S3LocationFilter, S3OptionsFilter#, S3DateFilter
         filter_widgets = [
             S3LocationFilter("location_id",
-                             levels=levels,
-                             widget="multiselect"
+                             #levels = levels,
+                             level = ("L0", "L1"),
+                             widget = "multiselect"
                              ),
             S3OptionsFilter("sector_activity.sector_id",
                             # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
+                            #represent = "%(name)s",
+                            widget = "multiselect",
                             ),
-            S3OptionsFilter("distribution.parameter_id",
-                            # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
+            #S3OptionsFilter("distribution.parameter_id",
+            #                # Doesn't support translation
+            #                #represent = "%(name)s",
+            #                widget = "multiselect",
+            #                ),
+            #S3OptionsFilter("theme_activity.theme_id",
+            #                # Doesn't support translation
+            #                #represent = "%(name)s",
+            #                widget = "multiselect",
+            #                ),
+            #S3OptionsFilter("beneficiary.parameter_id",
+            #                # Doesn't support translation
+            #                #represent = "%(name)s",
+            #                widget = "multiselect",
+            #                ),
+            S3OptionsFilter("activity_organisation.organisation_id",
+                            label = T("National Society"),
+                            widget = "multiselect",
                             ),
-            S3OptionsFilter("theme_activity.theme_id",
-                            # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
-                            ),
-            S3OptionsFilter("beneficiary.parameter_id",
-                            # Doesn't support translation
-                            #represent="%(name)s",
-                            widget="multiselect",
-                            ),
+            # @ToDo: Widget to handle Start & End in 1!
+            #S3DateFilter("date",
+            #             label=T("Start Date"),
+            #             hide_time=True,
+            #             #hidden=True,
+            #             ),
+            #S3DateFilter("end_date",
+            #             label=T("End Date"),
+            #             hide_time=True,
+            #             #hidden=True,
+            #             ),
+            # MemoryError without options
+            #S3OptionsFilter("year",
+            #                label=T("Year"),
+            #                options = s3db.project_activity_year_options,
+            #                widget="multiselect",
+            #                #hidden=True,
+            #                ),
             ]
 
         s3db.configure(tablename,
@@ -2011,6 +2047,7 @@ def customize_project_project_fields():
     table = s3db.project_project
     table.start_date.represent = date_represent
     table.end_date.represent = date_represent
+    from s3.s3utils import s3_auth_user_represent_name
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -2155,6 +2192,8 @@ def customize_project_project(**attr):
                 location_field.label = ""
                 location_field.represent = S3Represent(lookup="gis_location")
                 # Project Locations must be districts
+                from s3.s3validators import IS_ONE_OF
+
                 location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
                                                     S3Represent(lookup="gis_location"),
                                                     sort = True,

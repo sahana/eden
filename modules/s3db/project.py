@@ -1133,6 +1133,9 @@ class S3ProjectActivityModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
+        # Virtual fields
+        table.year = Field.Lazy(self.project_activity_year)
+
         # CRUD Strings
         ACTIVITY = T("Activity")
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
@@ -1175,9 +1178,13 @@ class S3ProjectActivityModel(S3Model):
         default_col = "name"
         default_fact = "count(id)"
         report_fields = [(T("Activity"), "name"),
+                         (T("Year"), "year"),
                          ]
         rappend = report_fields.append
         
+        fact_fields = [(T("Number of Activities"), "count(id)"),
+                       ]
+
         if settings.get_project_activity_types():
             list_fields.insert(1, "activity_type.name")
             rappend((T("Activity Type"), "activity_type.name"))
@@ -1221,6 +1228,16 @@ class S3ProjectActivityModel(S3Model):
                                     #represent="%(name)s",
                                     widget="multiselect",
                                     ))
+        #filter_widgets.append(
+            # @ToDo: OptionsFilter working with Lazy VF
+            #S3OptionsFilter("year",
+            #                label=T("Year"),
+            #                #options = year_options,
+            #                widget="multiselect",
+            #                #hidden=True,
+            #                ),
+            #)
+            
         if use_projects and settings.get_project_mode_drr():
             rappend((T("Hazard"), "project_id$hazard.name"))
             rappend((T("HFA"), "project_id$drr.hfa"))
@@ -1254,14 +1271,12 @@ class S3ProjectActivityModel(S3Model):
                 report_fields.append(lfield)
                 posn += 1
 
-            if "L0" in levels:
-                default_row = "location_id$L0"
-            else:
-                default_row = "location_id$L1"
+            # Highest-level of Hierarchy
+            default_row = "location_id$%s" % levels[0]
 
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
-                                 fact = report_fields,
+                                 fact = fact_fields,
                                  defaults = Storage(rows = default_row,
                                                     cols = default_col,
                                                     fact = default_fact,
@@ -1280,18 +1295,20 @@ class S3ProjectActivityModel(S3Model):
                        )
 
         # Reusable Field
+        represent = self.project_activity_represent
         activity_id = S3ReusableField("activity_id", table,
-                                      sortby="name",
-                                      requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db, "project_activity.id",
-                                                              self.project_activity_represent,
-                                                              sort=True)),
-                                      represent = self.project_activity_represent,
-                                      label = ACTIVITY,
-                                      comment = S3AddResourceLink(ADD_ACTIVITY,
-                                                                  c="project", f="activity",
-                                                                  tooltip=ACTIVITY_TOOLTIP),
-                                      ondelete = "CASCADE")
+                        comment = S3AddResourceLink(ADD_ACTIVITY,
+                                                    c="project", f="activity",
+                                                    tooltip=ACTIVITY_TOOLTIP),
+                        label = ACTIVITY,
+                        ondelete = "CASCADE",
+                        represent = represent,
+                        requires = IS_NULL_OR(
+                                    IS_ONE_OF(db, "project_activity.id",
+                                              represent,
+                                              sort=True)),
+                        sortby="name",
+                        )
 
         # Components
 
@@ -1478,6 +1495,49 @@ class S3ProjectActivityModel(S3Model):
             return "%s > %s" % (project.code, activity.name)
         else:
             return activity.name
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_activity_year(row):
+        """ Virtual field for the project_activity table """
+
+        if hasattr(row, "project_activity"):
+            row = row.project_activity
+
+        try:
+            activity_id = row.id
+        except AttributeError:
+            return []
+
+        if hasattr(row, "date"):
+            start_date = row.date
+        else:
+            start_date = False
+        if hasattr(row, "end_date"):
+            end_date = row.end_date
+        else:
+            end_date = False
+
+        if start_date is False or end_date is False:
+            s3db = current.s3db
+            table = s3db.project_activity
+            activity = current.db(table.id == activity_id).select(table.date,
+                                                                  table.end_date,
+                                                                  cache=s3db.cache,
+                                                                  limitby=(0, 1)
+                                                                  ).first()
+            if activity:
+                start_date = activity.date
+                end_date = activity.end_date
+
+        if not start_date and not end_date:
+            return []
+        elif not end_date:
+            return [start_date.year]
+        elif not start_date:
+            return [end_date.year]
+        else:
+            return list(xrange(start_date.year, end_date.year + 1))
 
 # =============================================================================
 class S3ProjectActivityTypeModel(S3Model):
@@ -2296,15 +2356,15 @@ class S3ProjectBeneficiaryModel(S3Model):
         except AttributeError:
             return []
         try:
-            date = row.date
+            start_date = row.date
         except AttributeError:
-            date = None
+            start_date = None
         try:
             end_date = row.end_date
         except AttributeError:
             end_date = None
 
-        if not date or not end_date:
+        if not start_date or not end_date:
             s3db = current.s3db
             table = s3db.project_project
             project = current.db(table.id == project_id).select(table.start_date,
@@ -2313,19 +2373,19 @@ class S3ProjectBeneficiaryModel(S3Model):
                                                                 limitby=(0, 1)
                                                                 ).first()
             if project:
-                if not date:
-                    date = project.start_date
+                if not start_date:
+                    start_date = project.start_date
                 if not end_date:
                     end_date = project.end_date
 
-        if not date and not end_date:
+        if not start_date and not end_date:
             return []
         elif not end_date:
-            return [date.year]
-        elif not date:
+            return [start_date.year]
+        elif not start_date:
             return [end_date.year]
         else:
-            return list(xrange(date.year, end_date.year + 1))
+            return list(xrange(start_date.year, end_date.year + 1))
 
 # =============================================================================
 class S3ProjectCampaignModel(S3Model):

@@ -204,6 +204,14 @@ settings.L10n.decimal_separator = "."
 #settings.gis.latlon_selector = False
 # Use Building Names as a separate field in Street Addresses?
 #settings.gis.building_name = False
+# Use a non-default fillColor for Clustered points
+#settings.gis.cluster_fill = "8087ff"
+# Use a non-default strokeColor for Clustered points
+#settings.gis.cluster_stroke = "2b2f76"
+# Use a non-default fillColor for Selected points
+#settings.gis.select_fill = "ffdc33"
+# Use a non-default strokeColor for Selected points
+#settings.gis.select_stroke = "ff9933"
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?
 # Uncomment to fall back to country LatLon to show resources, if nothing better available
