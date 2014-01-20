@@ -1990,12 +1990,12 @@ def customize_project_activity(**attr):
             #             #hidden=True,
             #             ),
             # MemoryError without options
-            #S3OptionsFilter("year",
-            #                label=T("Year"),
-            #                options = s3db.project_activity_year_options,
-            #                widget="multiselect",
-            #                #hidden=True,
-            #                ),
+            S3OptionsFilter("year",
+                            label=T("Year"),
+                            options = s3db.project_activity_year_options,
+                            widget="multiselect",
+                            #hidden=True,
+                            ),
             ]
 
         s3db.configure(tablename,

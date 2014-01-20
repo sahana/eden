@@ -1,5 +1,6 @@
 /**
  * S3 Reporting Framework, Static JavaScript
+ * - this is for S3Report, which is being deprecated in favour of S3Report2
  *
  * copyright: 2012-13 (c) Sahana Software Foundation
  * license: MIT

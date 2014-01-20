@@ -48,6 +48,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
+           "project_activity_year_options",
            "project_rheader",
            "project_task_form_inject",
            "project_task_controller",
@@ -1228,15 +1229,14 @@ class S3ProjectActivityModel(S3Model):
                                     #represent="%(name)s",
                                     widget="multiselect",
                                     ))
-        #filter_widgets.append(
-            # @ToDo: OptionsFilter working with Lazy VF
-            #S3OptionsFilter("year",
-            #                label=T("Year"),
-            #                #options = year_options,
-            #                widget="multiselect",
-            #                #hidden=True,
-            #                ),
-            #)
+        # @ToDo: deployment_setting
+        filter_widgets.append(
+            S3OptionsFilter("year",
+                            label=T("Year"),
+                            options = project_activity_year_options,
+                            widget="multiselect",
+                            ),
+            )
             
         if use_projects and settings.get_project_mode_drr():
             rappend((T("Hazard"), "project_id$hazard.name"))
@@ -6021,6 +6021,39 @@ def task_notify(form):
                  vars.description or "")
             current.msg.send_by_pe_id(pe_id, subject, message)
     return
+
+# =============================================================================
+def project_activity_year_options():
+    """
+        returns a dict of the options for the year virtual field
+        used by the search widget
+
+        orderby needed for postgres
+    """
+
+    db = current.db
+    table = current.s3db.project_activity
+    query = (table.deleted == False)
+    min_field = table.date.min()
+    start_date_min = db(query).select(min_field,
+                                      orderby=min_field,
+                                      limitby=(0, 1)
+                                      ).first()[min_field]
+    start_year = start_date_min.year
+
+    max_field = table.end_date.max()
+    end_date_max = db(query).select(max_field,
+                                    orderby=max_field,
+                                    limitby=(0, 1)
+                                    ).first()[max_field]
+    end_year = end_date_max.year
+
+    if not start_year or not end_year:
+        return {start_year:start_year} or {end_year:end_year}
+    years = {}
+    for year in xrange(start_year, end_year + 1):
+        years[year] = year
+    return years
 
 # =============================================================================
 class S3ProjectThemeVirtualFields:

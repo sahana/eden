@@ -40,8 +40,9 @@
     <!-- Need to be able to filter &/or style records -->
     <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
     <s3:fields tables="deploy_application" select="human_resource_id"/>
-    <s3:fields tables="project_activity_group" select="activity_id"/>
     <s3:fields tables="project_activity_activity_type" select="activity_id"/>
+    <s3:fields tables="project_activity_group" select="activity_id"/>
+    <s3:fields tables="project_activity_organisation" select="activity_id"/>
     <s3:fields tables="project_beneficiary_activity" select="activity_id"/>
     <s3:fields tables="project_sector_activity" select="activity_id"/>
     <s3:fields tables="stats_people_group" select="people_id"/>

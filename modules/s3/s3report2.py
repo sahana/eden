@@ -408,12 +408,12 @@ class S3ReportForm(object):
                             hidden = hidden,
                             _class = "pt-form"
                         ),
+                        IMG(_src=throbber,
+                            _alt=current.T("Processing"),
+                            _class="pt-throbber"),
                         _class="pt-form-container form-container"
                    ),
-                   DIV(IMG(_src=throbber,
-                           _alt=current.T("Processing"),
-                           _class="pt-throbber"),
-                       DIV(DIV(_class="pt-chart-controls"),
+                   DIV(DIV(DIV(_class="pt-chart-controls"),
                            DIV(DIV(_class="pt-hide-chart"),
                                DIV(_class="pt-chart-title"),
                                DIV(_class="pt-chart"),
