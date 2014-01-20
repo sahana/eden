@@ -212,7 +212,7 @@ settings.project.multiple_organisations = True
 settings.project.projects = True
 
 # Uncomment this to use Project Themes
-settings.project.themes = True
+settings.project.themes = False
 
 # Links to Filtered Components for Donors & Partners
 #settings.project.organisation_roles = {
@@ -1851,8 +1851,8 @@ def customize_project_activity(**attr):
         location_field = table.location_id
         location_field.represent = s3db.gis_LocationRepresent(sep=", ")
 
-        s3db.project_theme_activity.theme_id.label = T("Beneficiary Type")
-        s3db.project_beneficiary.parameter_id.label = T("Beneficiaries")
+        #s3db.project_theme_activity.theme_id.label = T("Beneficiary Type")
+        #s3db.project_beneficiary.parameter_id.label = T("Beneficiaries")
         s3db.supply_distribution.parameter_id.label = T("Distribution")
 
         list_fields = ["activity_organisation.organisation_id",
@@ -1982,19 +1982,15 @@ def customize_project_activity(**attr):
             #S3DateFilter("date",
             #             label=T("Start Date"),
             #             hide_time=True,
-            #             #hidden=True,
             #             ),
             #S3DateFilter("end_date",
             #             label=T("End Date"),
             #             hide_time=True,
-            #             #hidden=True,
             #             ),
-            # MemoryError without options
             S3OptionsFilter("year",
                             label=T("Year"),
                             options = s3db.project_activity_year_options,
                             widget="multiselect",
-                            #hidden=True,
                             ),
             ]
 

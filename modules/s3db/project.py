@@ -48,6 +48,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
+           "project_ActivityRepresent",
            "project_activity_year_options",
            "project_rheader",
            "project_task_form_inject",
@@ -1184,6 +1185,7 @@ class S3ProjectActivityModel(S3Model):
         rappend = report_fields.append
         
         fact_fields = [(T("Number of Activities"), "count(id)"),
+                       (T("Number of Beneficiaries"), "sum(beneficiary.value)"),
                        ]
 
         if settings.get_project_activity_types():
@@ -1223,6 +1225,7 @@ class S3ProjectActivityModel(S3Model):
                                 ))
         # @ToDo: deployment_setting
         if settings.has_module("stats"):
+            rappend("beneficiary.parameter_id")
             filter_widgets.append(
                     S3OptionsFilter("beneficiary.parameter_id",
                                     # Doesn't support translation
@@ -1295,7 +1298,7 @@ class S3ProjectActivityModel(S3Model):
                        )
 
         # Reusable Field
-        represent = self.project_activity_represent
+        represent = project_ActivityRepresent()
         activity_id = S3ReusableField("activity_id", table,
                         comment = S3AddResourceLink(ADD_ACTIVITY,
                                                     c="project", f="activity",
@@ -1309,6 +1312,9 @@ class S3ProjectActivityModel(S3Model):
                                               sort=True)),
                         sortby="name",
                         )
+
+        # Also use this Represent for Report drilldowns
+        table.id.represent = represent
 
         # Components
 
@@ -1458,43 +1464,6 @@ class S3ProjectActivityModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_activity_represent(id, row=None):
-        """
-            Show activities with a prefix of the project code
-        """
-
-        if row:
-            activity = row
-            db = current.db
-            # Fetch the project record
-            ptable = db.project_project
-            project = db(ptable.id == row.project_id).select(ptable.code,
-                                                             limitby=(0, 1)).first()
-        elif not id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.project_activity
-            ptable = db.project_project
-            left = ptable.on(ptable.id == table.project_id)
-            row = db(table.id == id).select(table.name,
-                                            table.project_id,
-                                            ptable.code,
-                                            left=left,
-                                            limitby=(0, 1)).first()
-            try:
-                project = row[ptable]
-                activity = row[table]
-            except:
-                return current.messages.UNKNOWN_OPT
-
-        if project and project.code:
-            return "%s > %s" % (project.code, activity.name)
-        else:
-            return activity.name
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -6021,6 +5990,92 @@ def task_notify(form):
                  vars.description or "")
             current.msg.send_by_pe_id(pe_id, subject, message)
     return
+
+# =============================================================================
+class project_ActivityRepresent(S3Represent):
+    """ Representation of Project Activities """
+
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 multiple=False):
+
+        if current.deployment_settings.get_project_projects():
+            # Need a custom lookup
+            self.code = True
+            self.lookup_rows = self.custom_lookup_rows
+            fields = ["project_activity.name",
+                      "project_project.code",
+                      ]
+        else:
+            # Can use standard lookup of fields
+            self.code = False
+            fields = ["name"]
+
+        super(project_ActivityRepresent,
+              self).__init__(lookup="project_activity",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for activity rows, does a
+            left join with the parent project. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the activity IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+        atable = s3db.project_activity
+        ptable = s3db.project_project
+
+        left = ptable.on(ptable.id == atable.project_id)
+
+        qty = len(values)
+        if qty == 1:
+            query = (atable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (atable.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = db(query).select(atable.id,
+                                atable.name,
+                                ptable.code,
+                                left=left,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the project_activity Row
+        """
+
+        if self.code:
+            # Custom Row (with the project left-joined)
+            name = row["project_activity.name"]
+            code = row["project_project.code"]
+            if not name:
+                return row["project_activity.id"]
+        else:
+            # Standard row (from fields)
+            name = row["name"]
+            if not name:
+                return row["id"]
+
+        if self.code and code:
+            name = "%s > %s" % (code, name)
+        return s3_unicode(name)
 
 # =============================================================================
 def project_activity_year_options():
