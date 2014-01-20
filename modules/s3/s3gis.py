@@ -6650,7 +6650,7 @@ def addFeatureResources(feature_resources):
                 url = "%s&track=1" % url
             opacity = layer.get("opacity", row.opacity)
             cluster_attribute = layer.get("cluster_attribute",
-                                          row.cluster_attribute)
+                                          row.cluster_attribute) or CLUSTER_ATTRIBUTE
             cluster_distance = layer.get("cluster_distance",
                                          row.cluster_distance)
             cluster_threshold = layer.get("cluster_threshold",

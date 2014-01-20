@@ -266,10 +266,10 @@ class S3Summary(S3Method):
                      (form_id, active_tab, pending)
             s3.jquery_ready.append(script)
 
-            if active_map:
-                # If there is a map on the active tab then we need to add
-                # a callback to the Map JS Loader
-                active_map.callback = '''S3.search.summary_maps("%s")''' % form_id
+        if active_map:
+            # If there is a map on the active tab then we need to add
+            # a callback to the Map JS Loader
+            active_map.callback = '''S3.search.summary_maps("%s")''' % form_id
 
         return output
 

@@ -125,7 +125,7 @@
         },
 
         refresh: function() {
-            // Rre-draw contents
+            // Re-draw contents
             var $el = $(this.element),
                 data = null;
 
@@ -1222,14 +1222,14 @@
             $('#' + widget_id + '-rows, #' +
                     widget_id + '-cols, #' +
                     widget_id + '-fact').on('change.autosubmit', function() {
-                $el.find('.pt-form').trigger('optionChanged');
+                $('#' + widget_id + '-pt-form').trigger('optionChanged');
             });
 
             // Form submission
             if (this.options.autoSubmit) {
                 // Auto-submit
                 var timeout = this.options.autoSubmit;
-                $el.find('.pt-form').on('optionChanged', function() {
+                $('#' + widget_id + '-pt-form').on('optionChanged', function() {
                     var that = $(this);
                     if (that.data('noAutoSubmit')) {
                         // Event temporarily disabled
@@ -1248,7 +1248,7 @@
                 });
             } else {
                 // Manual submit
-                $el.find('input.pt-submit').click(function() {
+                $('#' + widget_id + '-pt-form input.pt-submit').click(function() {
                     var options = pt._getOptions(),
                         filters = pt._getFilters();
                     pt.reload(options, filters, false);
@@ -1320,7 +1320,7 @@
                     widget_id + '-cols, #' +
                     widget_id + '-fact').unbind('change.autosubmit');
                     
-            $el.find('.pt-form').unbind('optionChanged');
+            $('#' + widget_id + '-pt-form').unbind('optionChanged');
             $el.find('input.pt-submit').unbind('click');
 
             $('#' + widget_id + '-pchart-rows').unbind('click');

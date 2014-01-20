@@ -6094,14 +6094,20 @@ def project_activity_year_options():
                                       orderby=min_field,
                                       limitby=(0, 1)
                                       ).first()[min_field]
-    start_year = start_date_min.year
+    if start_date_min:
+        start_year = start_date_min.year
+    else:
+        start_year = None
 
     max_field = table.end_date.max()
     end_date_max = db(query).select(max_field,
                                     orderby=max_field,
                                     limitby=(0, 1)
                                     ).first()[max_field]
-    end_year = end_date_max.year
+    if end_date_max:
+        end_year = end_date_max.year
+    else:
+        end_year = None
 
     if not start_year or not end_year:
         return {start_year:start_year} or {end_year:end_year}
