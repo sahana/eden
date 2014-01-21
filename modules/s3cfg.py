@@ -356,6 +356,7 @@ class S3Config(Storage):
     def get_auth_record_approval(self):
         """ Use record approval (False by default) """
         return self.auth.get("record_approval", False)
+
     def get_auth_record_approval_required_for(self):
         """ Which tables record approval is required for """
         return self.auth.get("record_approval_required_for", [])
@@ -380,7 +381,7 @@ class S3Config(Storage):
 
     def get_auth_role_modules(self):
         """
-            Which modules are includes in the Role Manager
+            Which modules are included in the Role Manager
             - to assign discrete permissions to via UI
         """
         T = current.T
@@ -399,7 +400,6 @@ class S3Config(Storage):
         """
             Access levels for the Role Manager UI
         """
-        T = current.T
         return self.auth.get("access_levels", OrderedDict([
             ("reader", "Reader"),
             ("data_entry", "Data Entry"),

@@ -1392,9 +1392,10 @@ class S3HRSiteModel(S3Model):
             Update the Human Resource record with the site_id
         """
 
+        form_vars = form.vars
         # Deletion and update have a different format
         try:
-            id = form.vars.id
+            id = form_vars.id
             delete = False
         except:
             id = form.id
@@ -1411,15 +1412,14 @@ class S3HRSiteModel(S3Model):
             if record:
                 deleted_fks = json.loads(record.deleted_fk)
                 human_resource_id = deleted_fks["human_resource_id"]
-                db(table.id == human_resource_id).update(
-                                                        location_id=None,
-                                                        site_id=None,
-                                                        site_contact=False
-                                                        )
+                db(table.id == human_resource_id).update(location_id=None,
+                                                         site_id=None,
+                                                         site_contact=False
+                                                         )
         else:
-            human_resource_id = form.vars.human_resource_id
+            human_resource_id = form_vars.human_resource_id
 
-            # Check if we have multiple records for this HR
+            # Remove any additional records for this HR
             # (i.e. staff was assigned elsewhere previously)
             rows = db(ltable.human_resource_id == human_resource_id).select(ltable.id,
                                                                             ltable.site_id,
@@ -1434,10 +1434,16 @@ class S3HRSiteModel(S3Model):
                 db(ltable.id == row.id).delete()
 
             record = rows.first()
-            db(table.id == human_resource_id).update(
-                                                    site_id=record.site_id,
-                                                    site_contact=record.site_contact
-                                                    )
+            site_id = record.site_id
+            db(table.id == human_resource_id).update(site_id = site_id,
+                                                     site_contact = record.site_contact
+                                                     )
+            # Set HR record to realm entity of new site
+            entity = current.s3db.pr_get_pe_id("org_site", site_id)
+            if entity:
+                current.auth.set_realm_entity(table, human_resource_id,
+                                              entity = entity,
+                                              force_update = True)
             # Fire the normal onaccept
             hrform = Storage(id=human_resource_id)
             hrm_human_resource_onaccept(hrform)
