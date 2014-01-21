@@ -38,3 +38,34 @@ table.dataTable tr.odd {
 #page-footer #footer-copyrights {
     border-top: 0;
 }
+
+/* Make this look like Tabs */
+.pt-container {
+    /*border-radius: 4px;*/
+    background: url("../../img/bootstrap/jquery-ui/ui-bg_glass_75_ffffff_1x400.png") repeat-x scroll 50% 50% #FFFFFF;
+    margin-top: 5px;
+}
+
+/* Make this look like Report Options */
+.form-container form legend {
+    border: 0 none !important;
+    font-size: 14px;
+    margin-bottom: 0;
+    line-height: normal;
+}
+
+/* Hide options & load artefacts */
+#filter-form,
+#summary-1-totals,
+label[for='summary-1-totals'],
+.pt-chart-contents,
+.pt-empty,
+.pt-form-container,
+.pt-submit,
+.pt-table-contents,
+.pt-form .toggle-text {
+    display: none;
+}
+.pt-hide-table {
+    display: none !important;
+}

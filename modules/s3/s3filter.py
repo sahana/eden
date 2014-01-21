@@ -1018,12 +1018,14 @@ class S3LocationFilter(S3FilterWidget):
 
         if inject_hierarchy:
             # Inject the Location Hierarchy
-            hierarchy = "S3.location_filter_hierarchy=%s" % json.dumps(hierarchy)
+            hierarchy = "S3.location_filter_hierarchy=%s" % \
+                json.dumps(hierarchy, separators=(",", ":"))
             js_global = current.response.s3.js_global
             js_global.append(hierarchy)
             if translate:
                 # Inject lookup list
-                name_l10n = "S3.location_name_l10n=%s" % json.dumps(name_l10n)
+                name_l10n = "S3.location_name_l10n=%s" % \
+                    json.dumps(name_l10n, separators=(",", ":"))
                 js_global.append(name_l10n)
 
         return (ftype, levels, None)

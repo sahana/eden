@@ -55,7 +55,7 @@
         _init: function() {
             // Update widget options
             
-            var el = this.element;
+            var $el = $(this.element);
 
             this.data = null;
             this.table = null;
@@ -70,7 +70,7 @@
                 hidden: false
             };
 
-            var chart = $(el).find('.pt-chart');
+            var chart = $el.find('.pt-chart');
             if (chart.length) {
                 this.chart = chart.first();
             } else {
@@ -79,9 +79,9 @@
 
             // Hide the form or parts of it?
             if (!this.options.renderFilter && !this.options.renderOptions) {
-                $(el).find('.pt-form-container').hide();
+                $el.find('.pt-form-container').hide();
             } else {
-                var widget_id = $(el).attr('id');
+                var widget_id = $el.attr('id');
                 if (this.options.renderOptions) {
                     $('#' + widget_id + '-options').show();
                     if (this.options.collapseOptions) {
@@ -105,9 +105,9 @@
             // Hide the pivot table?
             if (this.options.collapseTable) {
                 this.table_options.hidden = true;
-                $(el).find('.pt-table').hide();
-                $(el).find('.pt-show-table').show();
-                $(el).find('.pt-hide-table').hide();
+                $el.find('.pt-table').hide();
+                $el.find('.pt-show-table').show();
+                $el.find('.pt-hide-table').hide();
             }
 
             // Render all initial contents
@@ -125,30 +125,31 @@
         },
 
         refresh: function() {
-            // Rre-draw contents
-            var el = this.element, data = null;
+            // Re-draw contents
+            var $el = $(this.element),
+                data = null;
 
             this._unbindEvents();
 
-            var pivotdata = $(el).find('input[type="hidden"][name="pivotdata"]');
+            var pivotdata = $el.find('input[type="hidden"][name="pivotdata"]');
             if (pivotdata.length) {
                 data = JSON.parse($(pivotdata).first().val());
             }
             if (!data) {
                 data = {empty: true};
                 // Show the empty section
-                $(el).find('.pt-hide-table').hide();
-                $(el).find('.pt-show-table').hide();
+                $el.find('.pt-hide-table').hide();
+                $el.find('.pt-show-table').hide();
             }
             this.data = data;
 
             if (data.nodata) {
-                $(el).find('.pt-table')
-                     .first()
-                     .empty()
-                     .append($('<div class="pt-no-data">' + data.nodata + '</div>'));
-                $(el).find('.pt-hide-table').hide();
-                $(el).find('.pt-show-table').hide();
+                $el.find('.pt-table')
+                   .first()
+                   .empty()
+                   .append($('<div class="pt-no-data">' + data.nodata + '</div>'));
+                $el.find('.pt-hide-table').hide();
+                $el.find('.pt-show-table').hide();
                 this._renderChart();
 
             } else {
@@ -157,25 +158,25 @@
                 this._renderChart();
             }
             if (data.empty) {
-                $(el).find('.pt-empty').show();
+                $el.find('.pt-empty').show();
             } else {
-                $(el).find('.pt-empty').hide();
+                $el.find('.pt-empty').hide();
             }
             if (this.options.autoSubmit) {
-                $(el).find('.pt-submit').hide();
+                $el.find('.pt-submit').hide();
             } else {
-                $(el).find('.pt-submit').show();
+                $el.find('.pt-submit').show();
             }
             this._bindEvents();
 
-            $(el).find('.pt-throbber').hide();
+            $el.find('.pt-throbber').hide();
         },
 
         _renderTable: function() {
             // Render the pivot table (according to current options)
 
-            var el = this.element;
-            var container = $(el).find('.pt-table').first().empty();
+            var $el = $(this.element);
+            var container = $el.find('.pt-table').first().empty();
 
             this.table = null;
 
@@ -211,15 +212,15 @@
                 $(container).append(this.table);
 
                 if (this.table_options.hidden) {
-                    $(el).find('.pt-show-table').show();
-                    $(el).find('.pt-hide-table').hide();
+                    $el.find('.pt-show-table').show();
+                    $el.find('.pt-hide-table').hide();
                 } else {
-                    $(el).find('.pt-show-table').hide();
-                    $(el).find('.pt-hide-table').show();
+                    $el.find('.pt-show-table').hide();
+                    $el.find('.pt-hide-table').show();
                 }
             } else {
-                $(el).find('.pt-show-table').hide();
-                $(el).find('.pt-hide-table').hide();
+                $el.find('.pt-show-table').hide();
+                $el.find('.pt-hide-table').hide();
             }
         },
 
@@ -366,8 +367,8 @@
         _renderChartOptions: function() {
             // Render the chart options (according to current options)
 
-            var el = this.element;
-            var container = $(el).find('.pt-chart-controls').first().empty();
+            var $el = $(this.element)
+            var container = $el.find('.pt-chart-controls').first().empty();
             
             var data = this.data;
             if (data.empty || !this.options.renderChart) {
@@ -375,7 +376,7 @@
             }
             var labels = data.labels;
 
-            var widget_id = $(el).attr('id'),
+            var widget_id = $el.attr('id'),
                 layer_label = labels.layer,
                 rows_label = labels.rows,
                 cols_label = labels.cols,
@@ -441,11 +442,11 @@
         _renderChart: function(chart_options) {
             // Render the chart (according to current options)
 
-            var el = this.element,
+            var $el = $(this.element),
                 data = this.data;
 
             // Hide the chart contents section initially
-            $(el).find('.pt-chart-contents').hide();
+            $el.find('.pt-chart-contents').hide();
 
             var chart = this.chart;
             if (chart) {
@@ -925,8 +926,8 @@
         _getOptions: function() {
             // Get current report options form the report options form
 
-            var el = this.element;
-            var widget_id = '#' + $(el).attr('id');
+            var $el = $(this.element);
+            var widget_id = '#' + $el.attr('id');
 
             var options = {
                 rows: $(widget_id + '-rows').val(),
@@ -1143,10 +1144,10 @@
             }
 
             var pt = this,
-                el = this.element,
+                $el = (this.element),
                 needs_reload;
             
-            var pivotdata = $(el).find('input[type="hidden"][name="pivotdata"]');
+            var pivotdata = $el.find('input[type="hidden"][name="pivotdata"]');
             if (!pivotdata.length) {
                 return;
             }
@@ -1155,8 +1156,8 @@
             }
             if (needs_reload || force) {
                 var ajaxURL = this.options.ajaxURL;
-                $(el).find('.pt-throbber').show();
-                $(el).find('.pt-empty').hide();
+                $el.find('.pt-throbber').show();
+                $el.find('.pt-empty').hide();
                 $.ajax({
                     'url': ajaxURL,
                     'dataType': 'json'
@@ -1172,7 +1173,7 @@
                     console.log(msg);
                 });
             } else {
-                $(el).find('.pt-throbber').show();
+                $el.find('.pt-throbber').show();
                 pt.refresh();
             }
         },
@@ -1181,9 +1182,9 @@
             // Bind events to generated elements (after refresh)
 
             var pt = this,
-                el = this.element;
+                $el = $(this.element);
                 data = this.data;
-            var widget_id = $(el).attr('id');
+            var widget_id = $el.attr('id');
 
             // Show/hide report options
             $('#' + widget_id + '-options legend').click(function() {
@@ -1196,15 +1197,15 @@
             });
 
             // Show/hide pivot table
-            $(el).find('.pt-hide-table').click(function() {
+            $el.find('.pt-hide-table').click(function() {
                 pt.table_options.hidden = true;
-                $(el).find('.pt-table').hide();
+                $el.find('.pt-table').hide();
                 $(this).siblings('.pt-show-table').show();
                 $(this).hide();
             });
-            $(el).find('.pt-show-table').click(function() {
+            $el.find('.pt-show-table').click(function() {
                 pt.table_options.hidden = false;
-                $(el).find('.pt-table').show();
+                $el.find('.pt-table').show();
                 $(this).siblings('.pt-hide-table').show();
                 $(this).hide();
             });
@@ -1221,14 +1222,14 @@
             $('#' + widget_id + '-rows, #' +
                     widget_id + '-cols, #' +
                     widget_id + '-fact').on('change.autosubmit', function() {
-                $(el).find('.pt-form').trigger('optionChanged');
+                $('#' + widget_id + '-pt-form').trigger('optionChanged');
             });
 
             // Form submission
             if (this.options.autoSubmit) {
                 // Auto-submit
                 var timeout = this.options.autoSubmit;
-                $(el).find('.pt-form').on('optionChanged', function() {
+                $('#' + widget_id + '-pt-form').on('optionChanged', function() {
                     var that = $(this);
                     if (that.data('noAutoSubmit')) {
                         // Event temporarily disabled
@@ -1247,7 +1248,7 @@
                 });
             } else {
                 // Manual submit
-                $(el).find('input.pt-submit').click(function() {
+                $('#' + widget_id + '-pt-form input.pt-submit').click(function() {
                     var options = pt._getOptions(),
                         filters = pt._getFilters();
                     pt.reload(options, filters, false);
@@ -1298,7 +1299,7 @@
             $('#' + widget_id + '-hchart-cols').click(function() {
                 pt._renderChart({type: 'breakdown', axis: 'cols'});
             });
-            $(el).find('.pt-hide-chart').click(function () {
+            $el.find('.pt-hide-chart').click(function () {
                 pt._renderChart(false);
             });
         },
@@ -1306,8 +1307,8 @@
         _unbindEvents: function() {
             // Unbind events (before refresh)
             
-            var el = this.element;
-            var widget_id = $(el).attr('id');
+            var $el = $(this.element);
+            var widget_id = $el.attr('id');
 
             $('#' + widget_id + ' div.pt-table div.pt-cell-zoom').unbind('click');
             $('#' + widget_id + '-options legend').unbind('click');
@@ -1319,18 +1320,18 @@
                     widget_id + '-cols, #' +
                     widget_id + '-fact').unbind('change.autosubmit');
                     
-            $(el).find('.pt-form').unbind('optionChanged');
-            $(el).find('input.pt-submit').unbind('click');
+            $('#' + widget_id + '-pt-form').unbind('optionChanged');
+            $el.find('input.pt-submit').unbind('click');
 
             $('#' + widget_id + '-pchart-rows').unbind('click');
             $('#' + widget_id + '-vchart-rows').unbind('click');
             $('#' + widget_id + '-pchart-cols').unbind('click');
             $('#' + widget_id + '-vchart-cols').unbind('click');
             
-            $(el).find('.pt-hide-table').unbind('click');
-            $(el).find('.pt-show-table').unbind('click');
+            $el.find('.pt-hide-table').unbind('click');
+            $el.find('.pt-show-table').unbind('click');
             
-            $(el).find('.pt-hide-chart').unbind('click');
+            $el.find('.pt-hide-chart').unbind('click');
             
         }
     });

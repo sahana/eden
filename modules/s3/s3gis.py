@@ -2165,6 +2165,9 @@ class GIS(object):
         tooltips = {}
         attributes = {}
         represents = {}
+        _pkey = table[pkey]
+        # Ensure there are no ID represents to confuse things
+        _pkey.represent = None
         if format == "geojson":
             if popup_fields or attr_fields:
                 # Build the Attributes &/Popup Tooltips now so that representations can be
@@ -2198,8 +2201,9 @@ class GIS(object):
                         attr_cols.append(f.colname)
 
                 rows = data["rows"]
+                _pkey = str(_pkey)
                 for row in rows:
-                    record_id = int(row[str(table[pkey])])
+                    record_id = int(row[_pkey])
                     if attr_cols:
                         attribute = {}
                         for fieldname in attr_cols:
@@ -6646,7 +6650,7 @@ def addFeatureResources(feature_resources):
                 url = "%s&track=1" % url
             opacity = layer.get("opacity", row.opacity)
             cluster_attribute = layer.get("cluster_attribute",
-                                          row.cluster_attribute)
+                                          row.cluster_attribute) or CLUSTER_ATTRIBUTE
             cluster_distance = layer.get("cluster_distance",
                                          row.cluster_distance)
             cluster_threshold = layer.get("cluster_threshold",

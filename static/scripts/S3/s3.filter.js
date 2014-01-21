@@ -1089,8 +1089,8 @@ S3.search = {};
      * - in global scope as called from callback to Map Loader
      */
     S3.search.summary_maps = function(form) {
-        // Find any Map widgets in the initially active tab
-        var maps = $('#summary-sections').find('.map_wrapper');
+        // Find any Map widgets in the common section or initially active tab
+        var maps = $('#summary-common, #summary-sections').find('.map_wrapper');
         for (var i=0; i < maps.length; i++) {
             var map = maps[i];
             if (!map.hidden) {
@@ -1529,6 +1529,9 @@ S3.search = {};
             $('.multiselect-filter-bootstrap').multiselect_bs();
         }*/
 
+        // Mark visible widgets as active, otherwise submit won't use them
+        $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
+
         // Clear all filters
         $('.filter-clear').click(function() {
             var form = $(this).closest('form.filter-form');
@@ -1545,9 +1548,6 @@ S3.search = {};
         $('.filter-submit').click(function() {
             filterSubmit($(this).closest('form.filter-form'));
         });
-
-        // Mark visible widgets as active, otherwise submit won't use them
-        $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
 
         // Advanced button
         $('.filter-advanced').on('click', function() {

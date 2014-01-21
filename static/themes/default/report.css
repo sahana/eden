@@ -81,9 +81,16 @@
 }
 .pt-throbber {
     position: absolute;
-    left: 10;
-    top: 10;
+    top: 0;
+    right: 0;
+    padding: 5px;
     z-index: 999;
+}
+.pt-show-table {
+    display: none;
+}
+.pt-form button:first-child {
+    display: none;
 }
 
 .chart-icon {

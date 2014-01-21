@@ -32,7 +32,6 @@
 """
 
 import re
-import urllib
 
 try:
     import json # try stdlib (Python 2.6)
@@ -47,7 +46,6 @@ from gluon.storage import Storage
 from gluon.html import *
 from gluon.sqlhtml import OptionsWidget
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
-from gluon.languages import lazyT
 
 from s3rest import S3Method
 
@@ -406,14 +404,15 @@ class S3ReportForm(object):
                             report_options,
                             submit,
                             hidden = hidden,
-                            _class = "pt-form"
-                        ),
-                        _class="pt-form-container form-container"
-                   ),
-                   DIV(IMG(_src=throbber,
+                            _class = "pt-form",
+                            _id = "%s-pt-form" % widget_id,
+                            ),
+                       IMG(_src=throbber,
                            _alt=current.T("Processing"),
                            _class="pt-throbber"),
-                       DIV(DIV(_class="pt-chart-controls"),
+                       _class="pt-form-container form-container",
+                       ),
+                   DIV(DIV(DIV(_class="pt-chart-controls"),
                            DIV(DIV(_class="pt-hide-chart"),
                                DIV(_class="pt-chart-title"),
                                DIV(_class="pt-chart"),
@@ -424,8 +423,7 @@ class S3ReportForm(object):
                        DIV(hide,
                            _class="pt-toggle-table pt-hide-table"),
                        DIV(show,
-                           _class="pt-toggle-table pt-show-table",
-                           _style="display:none"),
+                           _class="pt-toggle-table pt-show-table"),
                        DIV(DIV(_class="pt-table-controls"),
                            DIV(DIV(_class="pt-table"),
                                _class="pt-table-contents"
@@ -502,10 +500,11 @@ class S3ReportForm(object):
             if script not in scripts:
                 scripts.append(script)
 
-        script = '''$("#%(widget_id)s").pivottable(%(opts)s)''' % \
-                                                dict(widget_id = widget_id,
-                                                     opts = json.dumps(opts),
-                                                     )
+        script = '''$('#%(widget_id)s').pivottable(%(opts)s)''' % \
+                                        dict(widget_id = widget_id,
+                                             opts = json.dumps(opts,
+                                                               separators=(",", ":")),
+                                             )
 
         s3.jquery_ready.append(script)
 
@@ -528,13 +527,17 @@ class S3ReportForm(object):
         COLS = T("and")
 
         resource = self.resource
-        options = resource.get_config("report_options")
+        get_config = resource.get_config
+        options = get_config("report_options")
+        report_formstyle = get_config("report_formstyle", None)
 
-        label = lambda s, **attr: TD(LABEL("%s:" % s, **attr),
-                                     _class="w2p_fl")
+        label = lambda s, **attr: LABEL("%s:" % s, **attr)
 
-        # @todo: use formstyle
-        selectors = TABLE()
+        if report_formstyle:
+            # @ToDo: Full formstyle support
+            selectors = DIV()
+        else:
+            selectors = TABLE()
 
         # Layer selector
         layer_id = "%s-fact" % widget_id
@@ -543,7 +546,7 @@ class S3ReportForm(object):
                                            widget_id=layer_id)
         single_opt = {"_class": "pt-fact-single-option"} if single else {}
         if layer:
-            selectors.append(TR(label(FACT, _for=layer_id),
+            selectors.append(TR(TD(label(FACT, _for=layer_id)),
                                 TD(layer),
                                 **single_opt
                                )
@@ -562,9 +565,9 @@ class S3ReportForm(object):
                                    get_vars=get_vars,
                                    widget_id=cols_id)
 
-        selectors.append(TR(label(ROWS, _for=rows_id),
+        selectors.append(TR(TD(label(ROWS, _for=rows_id)),
                             TD(select_rows),
-                            label(COLS, _for=cols_id),
+                            TD(label(COLS, _for=cols_id)),
                             TD(select_cols)
                            )
                         )
@@ -577,8 +580,7 @@ class S3ReportForm(object):
             show_totals = False
         self.show_totals = show_totals
 
-        selectors.append(TR(label(SHOW_TOTALS,
-                                  _for=show_totals_id),
+        selectors.append(TR(TD(label(SHOW_TOTALS, _for=show_totals_id)),
                             TD(INPUT(_type="checkbox",
                                      _id=show_totals_id,
                                      _name="totals",
@@ -813,10 +815,11 @@ class S3ReportForm(object):
                                BUTTON(SHOW,
                                       _type="button",
                                       _class="toggle-text",
-                                      _style="display:none"),
+                                      ),
                                BUTTON(HIDE,
                                       _type="button",
-                                      _class="toggle-text")
+                                      _class="toggle-text",
+                                      )
                         ),
                         widgets,
                         **attr)
