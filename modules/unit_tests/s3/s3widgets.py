@@ -1,4 +1,4 @@
-# S3Search Unit Tests
+# S3 Widgets Unit Tests
 #
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3widgets.py
@@ -12,12 +12,12 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # =============================================================================
 class TestS3OptionsMatrixWidget(unittest.TestCase):
-    """
-        Test the S3SearchSimpleWidget to make sure it can create queries for
-        real and virtual fields.
-    """
+    """ Test the S3OptionsMatrixWidget widget for correct output """
+
+    # @todo: deprecate?
 
     def setUp(self):
+        
         self.field = Storage(name='roles')
 
         self.rows = (
@@ -37,6 +37,7 @@ class TestS3OptionsMatrixWidget(unittest.TestCase):
 
         self.widget = S3OptionsMatrixWidget(self.rows, self.columns)
 
+    # -------------------------------------------------------------------------
     def test_widget(self):
         # Test with just the required parameters
         expected_result = TABLE(THEAD(TR(TH("", _scope="col"),
@@ -226,6 +227,7 @@ class TestS3OptionsMatrixWidget(unittest.TestCase):
                                  )
         self.failUnlessEqual(str(self.widget(self.field, [])), str(expected_result))
 
+    # -------------------------------------------------------------------------
     def test_values(self):
         # Test the widget with values
         expected_result = TABLE(THEAD(TR(TH("", _scope="col"),
@@ -424,13 +426,9 @@ class TestS3OptionsMatrixWidget(unittest.TestCase):
 
 # =============================================================================
 class TestS3CheckboxesWidget(unittest.TestCase):
-    """
-        Test s3_checkboxes_widget
-    """
+    """ Test s3_checkboxes_widget """
 
-    def setUp(self):
-        pass
-
+    # -------------------------------------------------------------------------
     def testWidget(self):
         # Test the widget method
         field = Storage(name="f",
@@ -503,13 +501,9 @@ class TestS3CheckboxesWidget(unittest.TestCase):
 
 # =============================================================================
 class TestS3GroupedCheckboxesWidget(unittest.TestCase):
-    """
-        Test s3_checkboxes_widget
-    """
+    """ Test s3_grouped_checkboxes_widget """
 
-    def setUp(self):
-        pass
-
+    # -------------------------------------------------------------------------
     def testWidget(self):
         # Test the widget method
         field = Storage(name="f",

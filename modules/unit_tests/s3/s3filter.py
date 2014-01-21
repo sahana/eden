@@ -1,4 +1,4 @@
-# S3Search Unit Tests
+# S3Filter Unit Tests
 #
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3filter.py

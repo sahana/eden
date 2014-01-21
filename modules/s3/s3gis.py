@@ -2033,7 +2033,6 @@ class GIS(object):
         """
             Returns a Marker dict
             - called by S3REST: S3Resource.export_tree() for non-geojson resources
-            - called by S3Search
         """
 
         marker = None
