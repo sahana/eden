@@ -144,7 +144,7 @@ S3.addModals = function() {
         var url = this.href;
         var id = S3.uid();
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0" style="width:750px"></iframe>')
+        var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
                       .appendTo('body');
         dialog.dialog({
             // add a close listener to prevent adding multiple divs to the document
@@ -161,7 +161,7 @@ S3.addModals = function() {
                 // remove div with all data and events
                 dialog.remove();
             },
-            minHeight: 500,
+            minHeight: 480,
             modal: true,
             open: function(event, ui) {
                 $('.ui-widget-overlay').bind('click', function() {
@@ -169,7 +169,7 @@ S3.addModals = function() {
                 });
             },
             title: title,
-            width: 750,
+            minWidth: 320,
             closeText: ''
         });
         // Prevent browser from following link
@@ -179,8 +179,18 @@ S3.addModals = function() {
 S3.popup_loaded = function(id) {
     // Resize the iframe to fit the Dialog
     // If we need to support multiple per-frame, can identify uniquely via:
-    //var width = $(".ui-dialog[aria-describedby='" + id + "']").width() - 10;
-    //var width = $('.ui-dialog').width() - 10;
+    //$(".ui-dialog[aria-describedby='" + id + "']").width();
+    if (window != window.parent) {
+        // Popup inside Popup: increase size of parent popup
+        // 41 is the size of the .ui-dialog-titlebar
+        // @ToDo: handle parent of parent
+        var parent_dialog = $(window.parent.document).find('.ui-dialog');
+        var parent_height = parent_dialog.height();
+        parent_dialog.height(parent_height + 41);
+        var parent_iframe = parent_dialog.find('iframe');
+        var parent_iframe_height = parent_iframe.height();
+        parent_iframe.height(parent_iframe_height + 41);
+    }
     var width = $('.ui-dialog').width();
     $('#' + id).width(width)
                // Display the hidden form
