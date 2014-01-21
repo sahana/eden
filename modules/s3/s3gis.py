@@ -2190,15 +2190,24 @@ class GIS(object):
                                        represent=True)
 
                 rfields = data["rfields"]
-                popup_cols = []
                 attr_cols = []
+                _popup_cols = {}
                 for f in rfields:
                     fname = f.fname
                     selector = f.selector
-                    if fname in popup_fields or selector in popup_fields:
-                        popup_cols.append(f.colname)
+                    if fname in popup_fields:
+                        _popup_cols[fname] = f.colname
+                    elif selector in popup_fields:
+                        _popup_cols[selector] = f.colname
                     if fname in attr_fields or selector in attr_fields:
                         attr_cols.append(f.colname)
+
+                # Want to control sort order
+                popup_cols = []
+                for f in popup_fields:
+                    colname = _popup_cols.get(f, None)
+                    if colname:
+                        popup_cols.append(colname)
 
                 rows = data["rows"]
                 _pkey = str(_pkey)
