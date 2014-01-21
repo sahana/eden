@@ -312,10 +312,23 @@ class HospitalDataModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  super_entity=("org_site", "doc_entity", "pr_pentity"),
-                  onaccept = self.hms_hospital_onaccept,
                   deduplicate = self.hms_hospital_duplicate,
-                  filter_widgets=filter_widgets,
+                  filter_widgets = filter_widgets,
+                  list_fields = ["id",
+                                 #"gov_uuid",
+                                 "name",
+                                 "facility_type",
+                                 "status.facility_status",
+                                 "status.power_supply_type",
+                                 #"organisation_id",
+                                 "location_id$L1",
+                                 "location_id$L2",
+                                 "location_id$L3",
+                                 #"phone_exchange",
+                                 "total_beds",
+                                 "available_beds",
+                                 ],
+                  onaccept = self.hms_hospital_onaccept,
                   report_options = Storage(
                         rows=report_fields,
                         cols=report_fields,
@@ -324,21 +337,8 @@ class HospitalDataModel(S3Model):
                                          cols="status.facility_status",
                                          fact="count(name)",
                                          totals=True)
-                  ),
-                  list_fields=["id",
-                               #"gov_uuid",
-                               "name",
-                               "facility_type",
-                               "status.facility_status",
-                               "status.power_supply_type",
-                               #"organisation_id",
-                               "location_id$L1",
-                               "location_id$L2",
-                               "location_id$L3",
-                               #"phone_exchange",
-                               "total_beds",
-                               "available_beds",
-                               ]
+                        ),
+                  super_entity = ("org_site", "doc_entity", "pr_pentity"),
                   )
 
         # Reusable field

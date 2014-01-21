@@ -2030,8 +2030,8 @@ class S3BaseStationModel(S3Model):
             msg_list_empty=T("No Base Stations currently registered"))
 
         self.configure(tablename,
-                       super_entity = "org_site",
                        deduplicate = self.msg_basestation_duplicate,
+                       super_entity = "org_site",
                        )
 
         # ---------------------------------------------------------------------

@@ -392,6 +392,271 @@ def render_contacts(list_id, item_id, resource, rfields, record):
     return item
 
 # -----------------------------------------------------------------------------
+def render_locations(list_id, item_id, resource, rfields, record):
+    """
+        Custom dataList item renderer for Locations on the Selection Page
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["gis_location.id"]
+    item_class = "thumbnail"
+
+    raw = record._row
+    name = raw["gis_location.name"]
+    level = raw["gis_location.level"]
+    L1 = raw["gis_location.L1"]
+    L2 = raw["gis_location.L2"]
+    L3 = raw["gis_location.L3"]
+    location_url = URL(c="gis", f="location",
+                       args=[record_id, "profile"])
+
+    if level == "L1":
+        represent = name
+    if level == "L2":
+        represent = "%s (%s)" % (name, L1)
+    elif level == "L3":
+        represent = "%s (%s, %s)" % (name, L2, L1)
+    else:
+        # L0 or specific
+        represent = name
+
+    # Users don't edit locations
+    # permit = current.auth.s3_has_permission
+    # table = current.db.gis_location
+    # if permit("update", table, record_id=record_id):
+        # edit_btn = A(I(" ", _class="icon icon-edit"),
+                     # _href=URL(c="gis", f="location",
+                               # args=[record_id, "update.popup"],
+                               # vars={"refresh": list_id,
+                                     # "record": record_id}),
+                     # _class="s3_modal",
+                     # _title=current.response.s3.crud_strings.gis_location.title_update,
+                     # )
+    # else:
+        # edit_btn = ""
+    # if permit("delete", table, record_id=record_id):
+        # delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       # _class="dl-item-delete",
+                      # )
+    # else:
+        # delete_btn = ""
+    # edit_bar = DIV(edit_btn,
+                   # delete_btn,
+                   # _class="edit-bar fright",
+                   # )
+
+    # Tallies
+    # NB We assume that all records are readable here
+    # Search all sub-locations
+    locations = current.gis.get_children(record_id)
+    locations = [l.id for l in locations]
+    locations.append(record_id)
+    db = current.db
+    s3db = current.s3db
+    ltable = s3db.project_location
+    table = db.project_project
+    query = (table.deleted == False) & \
+            (ltable.deleted == False) & \
+            (ltable.project_id == table.id) & \
+            (ltable.location_id.belongs(locations))
+    rows = db(query).select(table.id, distinct=True)
+    tally_projects = len(rows)
+
+    # Build the icon, if it doesn't already exist
+    filename = "%s.svg" % record_id
+    import os
+    filepath = os.path.join(current.request.folder, "static", "cache", "svg", filename)
+    if not os.path.exists(filepath):
+        gtable = db.gis_location
+        loc = db(gtable.id == record_id).select(gtable.wkt,
+                                                limitby=(0, 1)
+                                                ).first()
+        if loc:
+            from s3.codecs.svg import S3SVG
+            S3SVG.write_file(filename, loc.wkt)
+
+    # Render the item
+    item = DIV(DIV(A(IMG(_class="media-object",
+                         _src=URL(c="static",
+                                  f="cache",
+                                  args=["svg", filename],
+                                  )
+                         ),
+                     _class="pull-left",
+                     _href=location_url,
+                     ),
+                   DIV(SPAN(A(represent,
+                              _href=location_url,
+                              _class="media-heading"
+                              ),
+                            ),
+                       #edit_bar,
+                       _class="card-header-select",
+                       ),
+                   DIV(P(T("Projects"),
+                         SPAN(tally_projects,
+                              _class="badge",
+                              ),
+                         ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# -----------------------------------------------------------------------------
+def customize_gis_location(**attr):
+    """
+        Customize gis_location controller
+        - Profile Page, used as main Homepage for this template
+    """
+
+    s3 = current.response.s3
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        if r.interactive:
+            s3db = current.s3db
+            table = s3db.gis_location
+
+            if r.method == "datalist":
+                # Country selection page
+                s3.crud_strings["gis_location"].title_list = T("Countries")
+
+                # 2-column datalist, 6 rows per page
+                s3.dl_pagelength = 12
+                s3.dl_rowsize = 2
+
+                # Just show specific Countries
+                s3.filter = (table.name.belongs("Syrian Arab Republic", "Jordan", "Iraq", "Lebanon", "Turkey"))
+                # Default 5 triggers an AJAX call, we should load all by default
+                s3.dl_pagelength = 13
+
+                list_fields = ["name",
+                               "level",
+                               "L1",
+                               "L2",
+                               "L3",
+                               ]
+                s3db.configure("gis_location",
+                               list_fields = list_fields,
+                               list_layout = render_locations,
+                               )
+
+            elif r.method == "profile":
+        
+                # Customise tables used by widgets
+                #customize_cms_post_fields()
+                #customize_project_project_fields()
+
+                # gis_location table (Sub-Locations)
+                table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
+
+                list_fields = ["name",
+                               "id",
+                               ]
+
+                location = r.record
+                record_id = location.id
+                default = "~.(location)=%s" % record_id
+                map_widget = dict(label = "Map",
+                                  type = "map",
+                                  context = "location",
+                                  icon = "icon-map",
+                                  height = 383,
+                                  width = 568,
+                                  bbox = {"lat_max" : location.lat_max,
+                                          "lon_max" : location.lon_max,
+                                          "lat_min" : location.lat_min,
+                                          "lon_min" : location.lon_min
+                                          },
+                                  )
+                #locations_widget = dict(label = "Locations",
+                #                        insert = False,
+                #                        #title_create = "Add New Location",
+                #                        type = "datalist",
+                #                        tablename = "gis_location",
+                #                        context = "location",
+                #                        icon = "icon-globe",
+                #                        # @ToDo: Show as Polygons?
+                #                        show_on_map = False,
+                #                        list_layout = render_locations_profile,
+                #                        )
+                beneficiaries_widget = dict(label = "Beneficiaries",
+                                            #title_create = "Add New Beneficiary",
+                                            type = "report",
+                                            tablename = "project_beneficiary",
+                                            ajaxurl = URL(c="project",
+                                                          f="beneficiary",
+                                                          args="report2.json",
+                                                          ),
+                                            context = "location",
+                                            default = default,
+                                            icon = "icon-contact",
+                                            layer = "Beneficiaries",
+                                            )
+                distributions_widget = dict(label = "Distributions",
+                                            #title_create = "Add New Distribution",
+                                            type = "report",
+                                            tablename = "supply_distribution",
+                                            ajaxurl = URL(c="supply",
+                                                          f="distribution",
+                                                          args="report2.json",
+                                                          ),
+                                            context = "location",
+                                            default = default,
+                                            icon = "icon-truck",
+                                            layer = "Distributions",
+                                            )
+
+                profile_title = ""
+                profile_header = DIV(A(IMG(_class="media-object",
+                                           _src=URL(c="static",
+                                                    f="themes",
+                                                    args=["Syria", "img", "IFRC.png"],
+                                                    ),
+                                           _style="height:38px;width:65px",
+                                           ),
+                                       _class="pull-left",
+                                       #_href=location_url,
+                                       ),
+                                     H2(settings.get_system_name()),
+                                     _class="profile_header",
+                                     )
+                s3db.configure("gis_location",
+                               list_fields = list_fields,
+                               profile_title = profile_title,
+                               profile_header = profile_header,
+                               profile_widgets = [#locations_widget,
+                                                  map_widget,
+                                                  beneficiaries_widget,
+                                                  distributions_widget,
+                                                  ],
+                               )
+
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_gis_location = customize_gis_location
+# -----------------------------------------------------------------------------
 def customize_hrm_human_resource_fields():
     """
         Customize hrm_human_resource for Profile widgets and 'more' popups

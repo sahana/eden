@@ -49,11 +49,12 @@ class S3CampDataModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
 
         settings = current.deployment_settings
 
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
         messages = current.messages
         super_link = self.super_link
@@ -197,10 +198,9 @@ class S3CampDataModel(S3Model):
                                              )
 
         # -------------------------------------------------------------------------
-        cr_shelter_opts = {
-            1 : T("Closed"),
-            2 : T("Open")
-        }
+        cr_shelter_opts = {1 : T("Closed"),
+                           2 : T("Open")
+                           }
 
         tablename = "cr_shelter"
         table = define_table(tablename,
@@ -315,16 +315,48 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Shelter"),
                 name_nice_plural = T("Shelters"))
 
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
+            levels.remove("L0")
+
+        report_fields = ["name",
+                         "shelter_type_id",
+                         #"organisation_id",
+                         "status",
+                         "population",
+                         ]
+
+        text_fields = ["name",
+                       "code",
+                       "comments",
+                       "organisation_id$name",
+                       "organisation_id$acronym",
+                       "location_id$name",
+                       ]
+
+        list_fields = ["id",
+                       "name",
+                       "status",
+                       "shelter_type_id",
+                       #"shelter_service_id",
+                       "capacity_day",
+                       "capacity_night",
+                       "population",
+                       "location_id$addr_street",
+                       #"person_id",
+                       ]
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            report_fields.append(lfield)
+            text_fields.append(lfield)
+            list_fields.append(lfield)
+
         filter_widgets = [
-                S3TextFilter(["name",
-                              "code",
-                              "comments",
-                              "organisation_id$name",
-                              "organisation_id$acronym",
-                              "location_id$name",
-                              "location_id$L1",
-                              "location_id$L2",
-                              ],
+                S3TextFilter(text_fields,
                              label=T("Name"),
                              _class="filter-search",
                              ),
@@ -337,7 +369,7 @@ class S3CampDataModel(S3Model):
                                 ),
                 S3LocationFilter("location_id",
                                  label=T("Location"),
-                                 levels=["L0", "L1", "L2"],
+                                 levels=levels,
                                  widget="multiselect",
                                  #cols=3,
                                  #hidden=True,
@@ -357,21 +389,11 @@ class S3CampDataModel(S3Model):
                               ),
                 ]
 
-        report_fields = ["name",
-                         "shelter_type_id",
-                         #"organisation_id",
-                         "location_id$L1",
-                         "location_id$L2",
-                         "location_id$L3",
-                         "status",
-                         "population",
-                         ]
-
         configure(tablename,
-                  super_entity=("org_site", "doc_entity", "pr_pentity"),
-                  onaccept=self.cr_shelter_onaccept,
                   deduplicate = self.cr_shelter_duplicate,
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  onaccept = self.cr_shelter_onaccept,
                   report_options = Storage(
                         rows=report_fields,
                         cols=report_fields,
@@ -381,21 +403,8 @@ class S3CampDataModel(S3Model):
                                          fact="count(name)",
                                          totals=True)
                    ),
-                   list_fields=["id",
-                                "name",
-                                "status",
-                                "shelter_type_id",
-                                #"shelter_service_id",
-                                "capacity_day",
-                                "capacity_night",
-                                "population",
-                                "location_id$addr_street",
-                                "location_id$L1",
-                                "location_id$L2",
-                                "location_id$L3",
-                                #"person_id",
-                                ]
-                   )
+                  super_entity = ("org_site", "doc_entity", "pr_pentity"),
+                  )
 
         # Reusable field
         represent = S3Represent(lookup=tablename)

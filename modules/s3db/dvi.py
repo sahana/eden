@@ -200,7 +200,8 @@ class S3DVIModel(S3Model):
 
         # Resource Configuration?
         configure(tablename,
-                  super_entity=("pr_pentity", "org_site"))
+                  super_entity = ("pr_pentity", "org_site"),
+                  )
 
         # Components
         self.add_component("dvi_body", dvi_morgue="morgue_id")

@@ -235,6 +235,7 @@ Thank you
                                       org_facility = T("Facility"),
                                       #org_facility = T("Site"),
                                       org_office = T("Office"),
+                                      transport_heliport = T("Heliport"),
                                       hms_hospital = T("Hospital"),
                                       #fire_station = T("Fire Station"),
                                       dvi_morgue = T("Morgue"),

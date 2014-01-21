@@ -155,8 +155,8 @@ class S3TransportModel(S3Model):
             msg_list_empty=T("No Airports currently registered"))
 
         configure(tablename,
-                  super_entity="org_site",
                   onaccept = self.transport_airport_onaccept,
+                  super_entity = "org_site",
                   )
 
         # ---------------------------------------------------------------------
@@ -209,8 +209,8 @@ class S3TransportModel(S3Model):
             msg_list_empty=T("No Heliports currently registered"))
 
         configure(tablename,
-                  super_entity="org_site",
                   onaccept = self.transport_heliport_onaccept,
+                  super_entity = "org_site",
                   )
 
         # ---------------------------------------------------------------------
@@ -370,15 +370,14 @@ class S3TransportModel(S3Model):
             msg_list_empty=T("No Seaports currently registered"))
 
         configure(tablename,
-                  super_entity="org_site",
                   onaccept = self.transport_seaport_onaccept,
+                  super_entity = "org_site",
                   )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod

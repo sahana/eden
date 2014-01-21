@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3WaterModel"
+__all__ = ["S3WaterModel",
            ]
 
 from gluon import *

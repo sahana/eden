@@ -2074,14 +2074,14 @@ class S3SiteModel(S3Model):
         org_site_represent = org_SiteRepresent(show_link=True)
 
         site_id = self.super_link("site_id", "org_site",
-                                  #writable = True,
+                                  comment = comment,
+                                  #default = auth.user.site_id if auth.is_logged_in() else None,
+                                  label = org_site_label,
+                                  orderby = "org_site.name",
                                   #readable = True,
-                                  label=org_site_label,
-                                  default=auth.user.site_id if auth.is_logged_in() else None,
-                                  represent=org_site_represent,
-                                  orderby="org_site.name",
-                                  widget=widget,
-                                  comment=comment
+                                  represent = org_site_represent,
+                                  widget = widget,
+                                  #writable = True,
                                   )
 
         # Custom Method for S3SiteAutocompleteWidget
@@ -2166,18 +2166,19 @@ class S3SiteModel(S3Model):
                                     multiple=False))
 
         self.configure(tablename,
-                       onaccept=self.org_site_onaccept,
                        context = {"location": "location_id",
                                   "organisation": "organisation_id",
                                   "org_group": "organisation_id$group_membership.group_id",
                                   },
-                       list_fields=["id",
-                                    "code",
-                                    "instance_type",
-                                    "name",
-                                    "organisation_id",
-                                    "location_id",
-                                    ]
+                       list_fields = ["id",
+                                      "code",
+                                      "instance_type",
+                                      "name",
+                                      "organisation_id",
+                                      "location_id",
+                                      ],
+                       onaccept = self.org_site_onaccept,
+                       ondelete_cascade = self.org_site_ondelete_cascade,
                        )
 
         # Coalitions
@@ -2232,6 +2233,33 @@ class S3SiteModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def org_site_ondelete_cascade(form):
+        """
+            Update linked HRs
+            @ToDo: handle all other linked resources
+        """
+
+        db = current.db
+        s3db = current.s3db
+        site_id = form.site_id
+
+        # Remove all link table entries
+        ltable = s3db.hrm_human_resource_site
+        db(ltable.site_id == site_id).delete()
+
+        # Update all HRs
+        htable = s3db.hrm_human_resource
+        query = (htable.site_id == site_id)
+        rows = db(query).select(htable.id)
+        db(query).update(site_id = None)
+
+        # Update HR Realm Entities
+        set_realm_entity = current.auth.set_realm_entity
+        for row in rows:
+            set_realm_entity(htable, row.id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def getCodeList(code, wildcard_posn=[]):
         """
             Called by org_site_onaccept
@@ -2249,7 +2277,7 @@ class S3SiteModel(S3Model):
         site_table = db.org_site
         query = site_table.code.like(temp_code)
         rows = db(query).select(site_table.id,
-                                        site_table.code)
+                                site_table.code)
         # Extract the rows in the database to provide a list of used codes
         codeList = []
         for record in rows:
@@ -3404,7 +3432,8 @@ class S3OfficeModel(S3Model):
                              super_link("site_id", "org_site"),
                              Field("name", notnull=True,
                                    length=64, # Mayon Compatibility
-                                   label=T("Name")),
+                                   label=T("Name"),
+                                   ),
                              Field("code", length=10, # Mayon compatibility
                                    label=T("Code"),
                                    # Deployments that don't wants office codes can hide them
@@ -4167,7 +4196,7 @@ class org_SiteRepresent(S3Represent):
         c, f = instance_type.split("_", 1)
         return A(v, _href=URL(c=c, f=f, args=[id],
                               # remove the .aaData extension in paginated views
-                              #extension=""
+                              extension=""
                               ))
 
     # -------------------------------------------------------------------------

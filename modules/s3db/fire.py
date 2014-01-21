@@ -137,7 +137,7 @@ class S3FireModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -233,7 +233,8 @@ class S3FireStationModel(S3Model):
                              *s3_meta_fields())
 
         self.configure("fire_station",
-                       super_entity="org_site")
+                       super_entity = "org_site",
+                       )
 
         station_id = S3ReusableField("station_id", table,
                                      requires = IS_NULL_OR(
@@ -265,10 +266,10 @@ class S3FireStationModel(S3Model):
             msg_list_empty = T("No Fire Stations currently registered"))
 
         add_component("vehicle_vehicle",
-                      fire_station = Storage(link="fire_station_vehicle",
-                                             joinby="station_id",
-                                             key="vehicle_id",
-                                             actuate="replace"))
+                      fire_station = dict(link="fire_station_vehicle",
+                                          joinby="station_id",
+                                          key="vehicle_id",
+                                          actuate="replace"))
 
         add_component("fire_shift",
                       fire_station = "station_id")
@@ -306,8 +307,8 @@ class S3FireStationModel(S3Model):
             msg_list_empty = T("No Vehicles currently registered"))
 
         self.set_method("fire", "station",
-                         method="vehicle_report",
-                         action=self.vehicle_report)
+                        method="vehicle_report",
+                        action=self.vehicle_report)
 
         # =====================================================================
         # Water Sources
@@ -405,10 +406,9 @@ class S3FireStationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                # used by IRS
-                fire_staff_on_duty = self.fire_staff_on_duty
-            )
+        return dict(# used by IRS
+                    fire_staff_on_duty = self.fire_staff_on_duty,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -509,6 +509,5 @@ class S3FireStationModel(S3Model):
             req.set_handler("report", S3Report())
             req.resource.add_filter(query)
             return req(rheader=rheader)
-
 
 # END =========================================================================

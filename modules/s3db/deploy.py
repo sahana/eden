@@ -616,7 +616,6 @@ class S3DeploymentModel(S3Model):
             link.update_record(experience_id=None)
             
         s3db.resource("hrm_experience", id=link.experience_id).delete()
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -642,7 +641,6 @@ class S3DeploymentModel(S3Model):
             link.update_record(appraisal_id=None)
 
         s3db.resource("hrm_appraisal", id=link.appraisal_id).delete()
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod

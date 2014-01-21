@@ -314,11 +314,8 @@ class S3WarehouseModel(S3Model):
                 ]
 
         configure(tablename,
-                  super_entity=("pr_pentity", "org_site"),
                   deduplicate = self.inv_warehouse_duplicate,
-                  onaccept = self.inv_warehouse_onaccept,
                   filter_widgets=filter_widgets,
-                  search_method = search_method,
                   list_fields=["id",
                                "name",
                                "organisation_id",   # Filtered in Component views
@@ -332,6 +329,7 @@ class S3WarehouseModel(S3Model):
                                "phone1",
                                "email"
                                ],
+                  onaccept = self.inv_warehouse_onaccept,
                   realm_components = ["contact_emergency",
                                       "physical_description",
                                       "config",
@@ -349,6 +347,9 @@ class S3WarehouseModel(S3Model):
                                       "recv",
                                       "address",
                                       ],
+                  # @ToDo: Deprecate
+                  search_method = search_method,
+                  super_entity = ("pr_pentity", "org_site"),
                   update_realm = True,
                   )
 

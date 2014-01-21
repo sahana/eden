@@ -1392,14 +1392,15 @@ class S3HRSiteModel(S3Model):
             Update the Human Resource record with the site_id
         """
 
-        form_vars = form.vars
         # Deletion and update have a different format
         try:
-            id = form_vars.id
-            delete = False
+            form_vars = form.vars
         except:
             id = form.id
             delete = True
+        else:
+            id = form_vars.id
+            delete = False
 
         # Get the full record
         db = current.db
@@ -1416,6 +1417,9 @@ class S3HRSiteModel(S3Model):
                                                          site_id=None,
                                                          site_contact=False
                                                          )
+                # Update realm_entity of HR
+                current.auth.set_realm_entity(table, human_resource_id,
+                                              force_update = True)
         else:
             human_resource_id = form_vars.human_resource_id
 
@@ -1438,7 +1442,7 @@ class S3HRSiteModel(S3Model):
             db(table.id == human_resource_id).update(site_id = site_id,
                                                      site_contact = record.site_contact
                                                      )
-            # Set HR record to realm entity of new site
+            # Update realm_entity of HR
             entity = current.s3db.pr_get_pe_id("org_site", site_id)
             if entity:
                 current.auth.set_realm_entity(table, human_resource_id,

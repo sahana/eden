@@ -1332,9 +1332,9 @@ class S3Resource(object):
                     if row[pkey] not in deletable:
                         # Check deletability again
                         restrict = False
-                        for tn, fn in rfields:
-                            rtable = db[tn]
-                            rfield = rtable[fn]
+                        for rfield in rfields:
+                            rtable = db[rfield.tablename]
+                            rfield = rtable[rfield.name]
                             query = (rfield == row[pkey])
                             if DELETED in rtable:
                                 query &= (rtable[DELETED] != True)
