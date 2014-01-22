@@ -4121,6 +4121,7 @@ def hrm_human_resource_onaccept(form):
     db = current.db
     s3db = current.s3db
     auth = current.auth
+    request = current.request
 
     # Get the 'full' record
     htable = db.hrm_human_resource
@@ -4155,7 +4156,7 @@ def hrm_human_resource_onaccept(form):
             ltable.insert(human_resource_id=id,
                           job_title_id=job_title_id,
                           main=True,
-                          start_date=current.request.utcnow,
+                          start_date=request.utcnow,
                           )
 
     data = Storage()
@@ -4180,6 +4181,11 @@ def hrm_human_resource_onaccept(form):
                                   entity = entity,
                                   force_update = True)
 
+    # Set person record to follow HR record
+    tracker = S3Tracker()
+    pr_tracker = tracker(ptable, person_id)
+    pr_tracker.check_in(htable, id, timestmp = request.utcnow)
+
     site_contact = record.site_contact
     if record.type == 1:
         # Staff
@@ -4198,18 +4204,24 @@ def hrm_human_resource_onaccept(form):
                                human_resource_id=id,
                                site_contact=site_contact)
             # Update the location ID from the selected site
-            stable = s3db.org_site
-            query = (stable._id == site_id)
+            stable = db.org_site
+            query = (stable.site_id == site_id)
             site = db(query).select(stable.location_id,
                                     limitby=(0, 1)).first()
             try:
-                data.location_id = site.location_id
+                data.location_id = location_id = site.location_id
             except:
-                # Site not found?
-                pass
+                s3_debug("Can't find site with site_id", site_id)
+            else:
+                # Set Base Location
+                hrm_tracker = tracker(htable, id)
+                hrm_tracker.set_base_location(location_id)
         else:
             db(query).delete()
             data["location_id"] = None
+            # Unset Base Location
+            hrm_tracker = tracker(htable, id)
+            hrm_tracker.set_base_location(None)
     elif record.type == 2:
         # Volunteer: synchronise the location ID with the Home Address
         atable = s3db.pr_address
@@ -4221,19 +4233,29 @@ def hrm_human_resource_onaccept(form):
                                    limitby=(0, 1)).first()
         if address:
             # Use Address to update HRM
-            data.location_id = address.location_id
-        elif "location_id" in record and record.location_id:
+            data.location_id = location_id = address.location_id
+            
+        elif record.location_id:
+            location_id = record.location_id
             # Create Address from newly-created HRM
             query = (ptable.id == person_id)
             pe = db(query).select(ptable.pe_id,
                                   limitby=(0, 1)).first()
-            if pe:
+            try:
                 record_id = atable.insert(type = 1,
                                           pe_id = pe.pe_id,
-                                          location_id = record.location_id)
-        request_vars = current.request.vars
-        if request_vars and "programme_id" in request_vars:
-            programme_id = request_vars.programme_id
+                                          location_id = location_id)
+            except:
+                s3_debug("Can't find person with id", person_id)
+        else:
+            location_id = None
+        if location_id:
+            # Set Base Location
+            hrm_tracker = tracker(htable, id)
+            hrm_tracker.set_base_location(location_id)
+        request_vars = request.vars
+        programme_id = request_vars.get("programme_id", None)
+        if programme_id:
             # Have we already got a record for this programme?
             table = s3db.hrm_programme_hours
             query = (table.deleted == False) & \
@@ -4246,7 +4268,7 @@ def hrm_human_resource_onaccept(form):
             else:
                 # Insert new record
                 table.insert(person_id=person_id,
-                             date = current.request.utcnow,
+                             date = request.utcnow,
                              programme_id=programme_id)
 
     # Add record owner (user)

@@ -586,6 +586,7 @@ S3OptionsFilter({
                                  "organisation_id",
                                  "site_id",
                                  "room_id",
+                                 "person_id",
                                  #"location_id",
                                  "cancel",
                                  "cond",
@@ -609,7 +610,7 @@ S3OptionsFilter({
         asset_id = S3ReusableField("asset_id", "integer",
                                    writable=False,
                                    readable=False)
-        return Storage(asset_asset_id=asset_id)
+        return dict(asset_asset_id=asset_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -664,7 +665,10 @@ S3OptionsFilter({
             # Set the Base Location
             tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
-            location_id = asset_tracker.set_base_location(tracker(stable, site_id))
+            location_id = db(stable.site_id == site_id).select(stable.location_id,
+                                                               limitby=(0, 1)
+                                                               ).first().location_id
+            asset_tracker.set_base_location(location_id)
             if kit:
                 # Also populate location_id field in component items
                 aitable = db.asset_item
@@ -703,7 +707,8 @@ S3OptionsFilter({
         """
 
         request = current.request
-        status = request.vars.pop("status", None)
+        get_vars = request.get_vars
+        status = get_vars.get("status", None)
         if not status:
             # e.g. Import or Record merger
             return
@@ -723,7 +728,7 @@ S3OptionsFilter({
 
         current_log = asset_get_current_log(asset_id)
 
-        type = request.get_vars.pop("type", None)
+        type = get_vars.get("type", None)
         log_time = current_log.datetime
         current_time = form_vars.get("datetime", None).replace(tzinfo=None)
         if log_time <= current_time:
@@ -735,8 +740,12 @@ S3OptionsFilter({
 
             if status == ASSET_LOG_SET_BASE:
                 # Set Base Location
-                location_id = asset_tracker.set_base_location(tracker(db.org_site,
-                                                                      form_vars.site_id))
+                site_id = form_vars.get("site_id", None)
+                stable = db.org_site
+                location_id = db(stable.site_id == site_id).select(stable.location_id,
+                                                                   limitby=(0, 1)
+                                                                   ).first().location_id
+                asset_tracker.set_base_location(location_id)
                 # Also do component items
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
 
@@ -771,8 +780,9 @@ S3OptionsFilter({
                         pass
 
                 elif type == "organisation":
-                    if form_vars.site_id:
-                        asset_tracker.check_in(db.org_site, form_vars.site_id,
+                    site_id = form_vars.get("site_id", None)
+                    if site_id:
+                        asset_tracker.check_in(db.org_site, site_id,
                                                timestmp = request.utcnow)
                         # Also do component items
                         locations = asset_tracker.get_location(_fields=[db.gis_location.id])
