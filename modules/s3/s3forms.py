@@ -339,8 +339,12 @@ class S3SQLDefaultForm(S3SQLForm):
         # Cancel button
         if not readonly and s3.cancel:
             T = current.T
+            if settings.submit_button:
+                submit_label = T(settings.submit_button)
+            else:
+                submit_label = T("Save")
             submit_button = INPUT(_type="submit",
-                                  _value=T(settings.submit_button or "Save"))
+                                  _value=submit_label)
             if settings.submit_style:
                 submit_button.add_class(settings.submit_style)
             buttons = [submit_button,
@@ -865,8 +869,12 @@ class S3SQLCustomForm(S3SQLForm):
         # Cancel button
         if not readonly and s3.cancel:
             T = current.T
+            if settings.submit_button:
+                submit_label = T(settings.submit_button)
+            else:
+                submit_label = T("Save")
             submit_button = INPUT(_type="submit",
-                                  _value=T(settings.submit_button or "Save"))
+                                  _value=submit_label)
             if settings.submit_style:
                 submit_button.add_class(settings.submit_style)
             buttons = [submit_button,

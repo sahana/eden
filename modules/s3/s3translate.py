@@ -72,7 +72,7 @@ class TranslateAPI:
         def __init__(self):
 
             self.grp = TranslateGetFiles()
-            self.grp.group_files(current.request.folder, "", 0)
+            self.grp.group_files(current.request.folder)
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -95,50 +95,43 @@ class TranslateAPI:
             return self.grp.modlist
 
         # ---------------------------------------------------------------------
-        def get_files_by_module(self, module):
-            """ Return a list of files corresponding to a module """
-
-            if module in self.grp.d.keys():
-                return self.grp.d[module]
-            else:
-                print "Module '%s' doesn't exist!" % module
-                return []
-
-        # ---------------------------------------------------------------------
         def get_strings_by_module(self, module):
             """ Return a list of strings corresponding to a module """
 
-            if module in self.grp.d.keys():
-                fileList = self.grp.d[module]
+            grp = self.grp
+            d = grp.d
+            if module in d.keys():
+                fileList = d[module]
             else:
-                print "Module '%s' doesn't exist!" % module
+                from s3.s3utils import s3_debug
+                s3_debug("Module '%s' doesn't exist!" % module)
                 return []
 
+            modlist = grp.modlist
             strings = []
             sappend = strings.append
 
             R = TranslateReadFiles()
+            findstr = R.findstr
 
             for f in fileList:
-
-                tmpstr = []
                 if f.endswith(".py") == True:
-                    tmpstr = R.findstr(f, "ALL", self.grp.modlist)
+                    tmpstr = findstr(f, "ALL", modlist)
                 elif f.endswith(".html") == True or \
                      f.endswith(".js") == True:
                     tmpstr = R.read_html_js(f)
+                else:
+                    tmpstr = []
                 for s in tmpstr:
                     sappend(("%s:%s" % (f, str(s[0])), s[1]))
 
             # Handle "special" files separately
-            fileList = self.grp.d["special"]
+            fileList = d["special"]
             for f in fileList:
-
-                tmpstr=[]
                 if f.endswith(".py") == True:
-                    tmpstr = R.findstr(f, module, self.grp.modlist)
-                for s in tmpstr:
-                    sappend(("%s:%s" % (f, str(s[0])), s[1]))
+                    tmpstr = findstr(f, module, modlist)
+                    for s in tmpstr:
+                        sappend(("%s:%s" % (f, str(s[0])), s[1]))
 
             return strings
 
@@ -216,12 +209,18 @@ class TranslateGetFiles:
 
             for f in mod_files:
                 if f[0] != ".":
+                    # Strip extension
                     mappend(f[:-3])
+
+            # Add Modules which aren't in controllers
+            mod += ["support",
+                    "translate",
+                    ]
 
             return mod
 
         # ---------------------------------------------------------------------
-        def group_files(self, currentDir, curmod, vflag):
+        def group_files(self, currentDir, curmod="", vflag=0):
             """
                 Recursive function to group Eden files into respective modules
             """
@@ -239,37 +238,33 @@ class TranslateGetFiles:
             if base_dir == "views":
                 vflag = 1
 
+            d = self.d
             files = os.listdir(currentDir)
 
             for f in files:
-                curFile = path.join(currentDir, f)
-                baseFile = path.basename(curFile)
-                if path.isdir(curFile):
+                if f.startswith(".") or f.endswith(".pyc") or f in ("test.py", "tests.py"):
+                    continue
 
+                curFile = path.join(currentDir, f)
+                if path.isdir(curFile):
                     # If the current directory is /views,
                     # categorize files based on the directory name
-                    if base_dir == "views":
-                        self.group_files(curFile, path.basename(curFile),
-                                         vflag)
+                    if vflag:
+                        self.group_files(curFile, f, vflag)
                     else:
                         self.group_files(curFile, curmod, vflag)
 
-                elif (baseFile == "test.py" or \
-                      baseFile == "tests.py") == False:
-
+                else:
                     # If in /appname/views, categorize by parent directory name
-                    if vflag == 1:
+                    if vflag:
                         base = curmod
 
                     # Categorize file as "special" as it contains strings
                     # belonging to various modules
-                    elif curFile.endswith("/%s/modules/s3menus.py" % appname) or \
-                         curFile.endswith("/%s/modules/s3cfg.py" % appname) or \
-                         baseFile == "000_config.py" or \
-                         baseFile == "config.py":
+                    elif f in ("s3menus.py", "s3cfg.py", "000_config.py", "config.py"):
                         base = "special"
                     else:
-                        # Remove '.py'
+                        # Remove extension ('.py')
                         base = path.splitext(f)[0]
 
                         # If file has "s3" as prefix, remove "s3" to get module name
@@ -278,15 +273,15 @@ class TranslateGetFiles:
 
                         # If file is inside /models and file name is
                         # of the form var_module.py, remove the "var_" prefix
-                        elif base_dir == "models" and "_" in base:
-                            base = base.split("_")[1]
+                        #elif base_dir == "models" and "_" in base:
+                        #    base = base.split("_")[1]
 
                     # If base refers to a module, append to corresponding list
-                    if base in self.d.keys():
-                        self.d[base].append(curFile)
+                    if base in d.keys():
+                        d[base].append(curFile)
                     else:
                         # Append it to "core" files list
-                        self.d["core"].append(curFile)
+                        d["core"].append(curFile)
 
 # =============================================================================
 class TranslateParseFiles:
@@ -643,44 +638,45 @@ class TranslateReadFiles:
 
             # Read all contents of file
             fileContent = f.read()
+            f.close()
+
             # Remove CL-RF and NOEOL characters
             fileContent = "%s\n" % fileContent.replace("\r", "")
-
-            P = TranslateParseFiles()
 
             try:
                 st = parser.suite(fileContent)
             except:
                 return []
 
-            f.close()
-
             # Create a parse tree list for traversal
             stList = parser.st2list(st, line_info=1)
+
+            P = TranslateParseFiles()
 
             # List which holds the extracted strings
             strings = []
 
             if spmod == "ALL":
                 # If all strings are to be extracted, call ParseAll()
+                parseAll = P.parseAll
                 for element in stList:
-                    P.parseAll(strings, element)
+                    parseAll(strings, element)
             else:
                 # Handle cases for special files which contain
                 # strings belonging to different modules
                 appname = current.request.application
-                if fileName.endswith("/%s/modules/s3menus.py" % appname) == True:
+                fileName = os.path.basename(fileName)
+                if fileName == "s3menus.py":
                     parseMenu = P.parseMenu
                     for element in stList:
                         parseMenu(spmod, strings, element, 0)
 
-                elif fileName.endswith("/%s/modules/s3cfg.py" % appname) == True:
+                elif fileName == "s3cfg.py":
                     parseS3cfg = P.parseS3cfg
                     for element in stList:
                         parseS3cfg(spmod, strings, element, modlist)
 
-                elif os.path.basename(fileName) == "000_config.py" or \
-                     os.path.basename(fileName) == "config.py":
+                elif fileName in ("000_config.py", "config.py"):
                     parseConfig = P.parseConfig
                     for element in stList:
                         parseConfig(spmod, strings, element, modlist)
@@ -703,9 +699,14 @@ class TranslateReadFiles:
 
                         # Get the actual value
                         for atr in l[1:]:
-                            obj = getattr(obj, atr)()
-                        s = obj
-                        fsappend((loc, s))
+                            try:
+                                obj = getattr(obj, atr)()
+                            except:
+                                from s3.s3utils import s3_debug
+                                s3_debug("Can't find this deployment_setting, maybe a crud.settings", atr)
+                            else:
+                                s = obj
+                                fsappend((loc, s))
                     else:
                         #@ToDo : Get the value of non-settings variables
                         pass
@@ -807,13 +808,13 @@ class TranslateReadFiles:
 
             from s3import import S3BulkImporter
 
-            # List of database strings.
+            # List of database strings
             database_strings = []
             template_list = []
             tappend = template_list.append
             base_dir = current.request.folder
             path = os.path
-            # if all templates flag is set we look in all templates' tasks.cfg file
+            # If all templates flag is set we look in all templates' tasks.cfg file
             if all_template_flag:
                 template_dir = path.join(base_dir, "private", "templates")
                 files = os.listdir(template_dir)
@@ -824,12 +825,13 @@ class TranslateReadFiles:
                     if path.isdir(curFile):
                         tappend(baseFile)
             else:
-                # Setting current template.
+                # Set current template.
                 tappend(current.deployment_settings.base.template)
 
-            # Using bulk importer class to parse tasks.cfg in template folder
+            # Use bulk importer class to parse tasks.cfg in template folder
             bi = S3BulkImporter()
             S = Strings()
+            read_csv = S.read_csv
             for template in template_list:
                 pth = path.join(base_dir, "private", "templates", template)
                 if path.exists(path.join(pth, "tasks.cfg")) == False:
@@ -838,14 +840,14 @@ class TranslateReadFiles:
 
                 s3db = current.s3db
                 for csv in bi.tasks:
-                    # Not to consider special import files
+                    # Ignore special import files
                     if csv[0] != 1:
                         continue
 
                     # csv is in format: prefix, tablename, path of csv file
                     # assuming represent.translate is always on primary key id
                     translate = False
-                    fieldname = "%s_%s_id" %(csv[1], csv[2])
+                    fieldname = "%s_%s_id" % (csv[1], csv[2])
                     if hasattr(s3db, fieldname) == False:
                         continue
                     reusable_field = s3db.get(fieldname)
@@ -854,7 +856,7 @@ class TranslateReadFiles:
                         if hasattr(represent, "translate"):
                             translate = represent.translate
 
-                    # if translate attribute is set to True
+                    # If translate attribute is set to True
                     if translate:
                         if hasattr(represent, "fields") == False:
                             # Only name field is considered
@@ -863,8 +865,9 @@ class TranslateReadFiles:
                             # List of fields is retrieved from represent.fields
                             fields = represent.fields
 
-                        # Consider it for transation (csv[3])
-                        data = S.read_csv(csv[3])
+                        # Consider it for translation (csv[3])
+                        csv_path = csv[3]
+                        data = read_csv(csv_path)
                         title_row = data[0]
                         idx = 0
                         idxlist = []
@@ -874,17 +877,20 @@ class TranslateReadFiles:
                                 idxappend(idx)
                             idx += 1
 
-                        # if list is not empty
                         if idxlist:
-                            # Line number of string retreived.
+                            # Line number of string retrieved.
                             line_number = 1
                             for row in data[1:]:
                                 line_number += 1
                                 # If string is not empty
                                 for idx in idxlist:
-                                    if row[idx] != "":
-                                        loc = "%s:%s" %(csv[3], str(line_number))
-                                        database_strings.append((loc, row[idx]))
+                                    try:
+                                        if row[idx] != "":
+                                            loc = "%s:%s" % (csv_path, line_number)
+                                            database_strings.append((loc, row[idx]))
+                                    except:
+                                        from s3.s3utils import s3_debug
+                                        s3_debug("CSV row incomplete", csv_path)
 
             return database_strings
 
@@ -995,11 +1001,11 @@ class Strings:
 
             if all_template_flag == 1:
                 # Select All Templates
-                A.grp.group_files(os.path.join(request.folder, "private", "templates"), "", 0)
+                A.grp.group_files(os.path.join(request.folder, "private", "templates"))
             else:
                 # A specific template is selected
                 template_folder = os.path.join(request.folder, "private", "templates", settings.get_template())
-                A.grp.group_files(template_folder, "", 0)
+                A.grp.group_files(template_folder)
             R = TranslateReadFiles()
 
             # Select Modules
@@ -1025,12 +1031,14 @@ class Strings:
                             if element not in modlist:
                                 modlist.append(element)
 
+            get_strings_by_module = A.get_strings_by_module
             for mod in modlist:
-                NewStrings += A.get_strings_by_module(mod)
+                NewStrings += get_strings_by_module(mod)
 
             # Retrieve strings in a file
+            get_strings_by_file = A.get_strings_by_file
             for f in filelist:
-                NewStrings += A.get_strings_by_file(f)
+                NewStrings += get_strings_by_file(f)
 
             # Remove quotes
             NewStrings = self.remove_quotes(NewStrings)
@@ -1048,6 +1056,7 @@ class Strings:
 
             # Merge those strings which were already translated earlier
             Strings = []
+            sappend = Strings.append
             i = 0
             lim = len(OldStrings)
 
@@ -1058,9 +1067,9 @@ class Strings:
 
                 if i != lim and OldStrings[i][0] == s and \
                    OldStrings[i][1].startswith("*** ") == False:
-                    Strings.append((l, s, OldStrings[i][1]))
+                    sappend((l, s, OldStrings[i][1]))
                 else:
-                    Strings.append((l, s, ""))
+                    sappend((l, s, ""))
 
             if filetype == "xls":
                 # Create excel file
@@ -1075,6 +1084,7 @@ class Strings:
             """ Function to read a CSV file and return a list of rows """
 
             import csv
+            csv.field_size_limit(2**20)  # 1 Mb
 
             data = []
             dappend = data.append
@@ -1274,7 +1284,6 @@ class Pootle:
 
             import mechanize
             import re
-            from s3.s3utils import s3_debug
 
             br = mechanize.Browser()
             br.addheaders = [("User-agent", "Firefox")]
@@ -1289,6 +1298,7 @@ class Pootle:
 
             username = settings.get_L10n_pootle_username()
             if username is False:
+                from s3.s3utils import s3_debug
                 s3_debug("No login information found")
                 return
 
@@ -1297,6 +1307,7 @@ class Pootle:
             try:
                 br.open(login_url)
             except:
+                from s3.s3utils import s3_debug
                 s3_debug("Connecton Error")
                 return
 
@@ -1308,6 +1319,7 @@ class Pootle:
 
             current_url = br.geturl()
             if current_url.endswith("login/"):
+                from s3.s3utils import s3_debug
                 s3_debug("Login Error")
                 return
 
@@ -1334,6 +1346,7 @@ class Pootle:
                 br.form.add_file(open(filename), "text/plain", file_name)
                 br.submit()
             except:
+                from s3.s3utils import s3_debug
                 s3_debug("Error in Uploading form")
                 return
 
@@ -1514,6 +1527,7 @@ class TranslateReportStatus:
                 import pickle
 
             A = TranslateAPI()
+            get_strings_by_module = A.get_strings_by_module
             modlist = A.get_modules()
             modlist.append("core")
 
@@ -1528,7 +1542,7 @@ class TranslateReportStatus:
             for mod in modlist:
                 string_list = []
                 sappend = string_list.append
-                strings = A.get_strings_by_module(mod)
+                strings = get_strings_by_module(mod)
                 for (l, s) in strings:
                     # Removing quotes around the strings
                     if (s[0] == '"' and s[-1] == '"') or\
