@@ -90,8 +90,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             center.transform(proj4326, projection_current);
         } else {
             // BBOX
-            bounds = OpenLayers.Bounds.fromArray(options.bbox)
-                                      .transform(proj4326, projection_current);
+            bounds = OpenLayers.Bounds.fromArray(options.bbox);
             var center = bounds.getCenterLonLat();
         }
         options.center = center;
@@ -118,6 +117,43 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     /**
+     * Zoom a map to the specified OpenLayers.Bounds (in WGS84: Lat/Lon)
+     * - ensuring a minimal bbox & a little padding
+     */
+    var zoomBounds = function(map, bounds) {
+        var bbox = bounds.toArray();
+        var lon_min = bbox[0],
+            lat_min = bbox[1],
+            lon_max = bbox[2],
+            lat_max = bbox[3];
+        // Ensure a minimal BBOX in case we just have a single data point
+        var min_size = 0.05;
+        var delta = (min_size - (lon_max - lon_min)) / 2;
+        if (delta > 0) {
+            lon_min -= delta;
+            lon_max += delta;
+        }
+        delta = (min_size - (lat_max - lat_min)) / 2;
+        if (delta > 0) {
+            lat_min -= delta;
+            lat_max += delta;
+        }
+        // Add an Inset in order to not have points right at the edges of the map
+        var inset = 0.007;
+        lon_min -= inset;
+        lon_max += inset;
+        lat_min -= inset;
+        lat_max += inset;
+        bounds = new OpenLayers.Bounds(lon_min, lat_min, lon_max, lat_max);
+        bounds.transform(proj4326, map.getProjectionObject());
+        // Zoom to Bounds
+        map.zoomToExtent(bounds);
+    }
+
+    // Pass to Global scope to be called from s3.locationselector.widget2.js
+    S3.gis.zoomBounds = zoomBounds;
+
+    /**
      * Callback to Re-cluster Search Results after an AJAX refresh
      * - to ensure that bounds are set correctly
      */
@@ -129,38 +165,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Zoom Out to Cluster
         //layer.map.zoomTo(0)
         if (bounds) {
-            // Ensure a minimal BBOX in case we just have a single data point
-            var min_size = 0.05;
-            // Convert to 4326 for standard numbers
-            var map = layer.map;
-            var current_projection = map.getProjectionObject();
-            bounds.transform(current_projection, proj4326);
-            var bbox = bounds.toArray();
-            var lon_min = bbox[0],
-                lat_min = bbox[1],
-                lon_max = bbox[2],
-                lat_max = bbox[3];
-            var delta = (min_size - (lon_max - lon_min)) / 2;
-            if (delta > 0) {
-                lon_min -= delta;
-                lon_max += delta;
-            }
-            delta = (min_size - (lat_max - lat_min)) / 2;
-            if (delta > 0) {
-                lat_min -= delta;
-                lat_max += delta;
-            }
-            // Add an Inset in order to not have points right at the edges of the map
-            var inset = 0.007;
-            lon_min -= inset;
-            lon_max += inset;
-            lat_min -= inset;
-            lat_max += inset;
-            bounds = new OpenLayers.Bounds(lon_min, lat_min, lon_max, lat_max);
-            // Convert back to Map projection
-            bounds.transform(proj4326, current_projection);
-            // Zoom to Bounds
-            map.zoomToExtent(bounds);
+            zoomBounds(layer.map, bounds);
         }
         var strategy,
             strategies = layer.strategies;

@@ -572,106 +572,105 @@ class GIS(object):
             if len(results) == 1:
                 place, (lat, lon) = results[0]
                 if Lx:
+                    output = None
                     # Check Results are for a specific address & not just that for the City
                     results = g.geocode(Lx_names, exactly_one=False)
-                    if len(results) == 1:
-                        place2, (lat2, lon2) = results[0]
+                    if not results:
+                        output = "Can't check that these results are specific enough"
+                    for result in results:
+                        place2, (lat2, lon2) = result
                         if place == place2:
-                            results = "We can only geocode to the Lx"
+                            output = "We can only geocode to the Lx"
+                            break
+                    if not output:
+                        # Check Results are within relevant bounds
+                        L0_row = None
+                        wkt = None
+                        if L5 and Lx[L5]["gis_feature_type"] != 1:
+                            wkt = db(table.id == L5).select(table.wkt,
+                                                            limitby=(0, 1)
+                                                            ).first().wkt
+                            used_Lx = "L5"
+                        elif L4 and Lx[L4]["gis_feature_type"] != 1:
+                            wkt = db(table.id == L4).select(table.wkt,
+                                                            limitby=(0, 1)
+                                                            ).first().wkt
+                            used_Lx = "L4"
+                        elif L3 and Lx[L3]["gis_feature_type"] != 1:
+                            wkt = db(table.id == L3).select(table.wkt,
+                                                            limitby=(0, 1)
+                                                            ).first().wkt
+                            used_Lx = "L3"
+                        elif L2 and Lx[L2]["gis_feature_type"] != 1:
+                            wkt = db(table.id == L2).select(table.wkt,
+                                                            limitby=(0, 1)
+                                                            ).first().wkt
+                            used_Lx = "L2"
+                        elif L1 and Lx[L1]["gis_feature_type"] != 1:
+                            wkt = db(table.id == L1).select(table.wkt,
+                                                            limitby=(0, 1)
+                                                            ).first().wkt
+                            used_Lx = "L1"
+                        elif L0:
+                            L0_row = db(table.id == L0).select(table.wkt,
+                                                               table.lon_min,
+                                                               table.lat_min,
+                                                               table.lon_max,
+                                                               table.lat_max,
+                                                               limitby=(0, 1)
+                                                               ).first()
+                            wkt = L0_row.wkt
+                            used_Lx = "L0"
+                        if wkt:
+                            from shapely.geometry import point
+                            from shapely.wkt import loads as wkt_loads
+                            try:
+                                # Enable C-based speedups available from 1.2.10+
+                                from shapely import speedups
+                                speedups.enable()
+                            except:
+                                s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+                            test = point.Point(lon, lat)
+                            shape = wkt_loads(wkt)
+                            ok = test.intersects(shape)
+                            if not ok:
+                                output = "Returned value not within %s" % Lx[used_Lx].name
+                        elif L0:
+                            # Check within country at least
+                            if not L0_row:
+                                L0_row = db(table.id == L0).select(table.lon_min,
+                                                                   table.lat_min,
+                                                                   table.lon_max,
+                                                                   table.lat_max,
+                                                                   limitby=(0, 1)
+                                                                   ).first()
+                            if lat < L0_row["lat_max"] and \
+                               lat > L0_row["lat_min"] and \
+                               lon < L0_row["lon_max"] and \
+                               lon > L0_row["lon_min"]:
+                                ok = True
+                            else:
+                                ok = False
+                                output = "Returned value not within %s" % check.name
                         else:
-                            if Lx:
-                                # Check Results are within relevant bounds
-                                L0_row = None
-                                wkt = None
-                                if L5 and Lx[L5]["gis_feature_type"] != 1:
-                                    wkt = db(table.id == L5).select(table.wkt,
-                                                                    limitby=(0, 1)
-                                                                    ).first().wkt
-                                    used_Lx = "L5"
-                                elif L4 and Lx[L4]["gis_feature_type"] != 1:
-                                    wkt = db(table.id == L4).select(table.wkt,
-                                                                    limitby=(0, 1)
-                                                                    ).first().wkt
-                                    used_Lx = "L4"
-                                elif L3 and Lx[L3]["gis_feature_type"] != 1:
-                                    wkt = db(table.id == L3).select(table.wkt,
-                                                                    limitby=(0, 1)
-                                                                    ).first().wkt
-                                    used_Lx = "L3"
-                                elif L2 and Lx[L2]["gis_feature_type"] != 1:
-                                    wkt = db(table.id == L2).select(table.wkt,
-                                                                    limitby=(0, 1)
-                                                                    ).first().wkt
-                                    used_Lx = "L2"
-                                elif L1 and Lx[L1]["gis_feature_type"] != 1:
-                                    wkt = db(table.id == L1).select(table.wkt,
-                                                                    limitby=(0, 1)
-                                                                    ).first().wkt
-                                    used_Lx = "L1"
-                                elif L0:
-                                    L0_row = db(table.id == L0).select(table.wkt,
-                                                                       table.lon_min,
-                                                                       table.lat_min,
-                                                                       table.lon_max,
-                                                                       table.lat_max,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-                                    wkt = L0_row.wkt
-                                    used_Lx = "L0"
-                                if wkt:
-                                    from shapely.geometry import point
-                                    from shapely.wkt import loads as wkt_loads
-                                    try:
-                                        # Enable C-based speedups available from 1.2.10+
-                                        from shapely import speedups
-                                        speedups.enable()
-                                    except:
-                                        s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
-                                    test = point.Point(lon, lat)
-                                    shape = wkt_loads(wkt)
-                                    ok = test.intersects(shape)
-                                    if not ok:
-                                        results = "Returned value not within %s" % Lx[used_Lx].name
-                                elif L0:
-                                    # Check within country at least
-                                    if not L0_row:
-                                        L0_row = db(table.id == L0).select(table.lon_min,
-                                                                           table.lat_min,
-                                                                           table.lon_max,
-                                                                           table.lat_max,
-                                                                           limitby=(0, 1)
-                                                                           ).first()
-                                    if lat < L0_row["lat_max"] and \
-                                       lat > L0_row["lat_min"] and \
-                                       lon < L0_row["lon_max"] and \
-                                       lon > L0_row["lon_min"]:
-                                        ok = True
-                                    else:
-                                        ok = False
-                                        results = "Returned value not within %s" % check.name
-                                else:
-                                    # We'll just have to trust it!
-                                    ok = True
-                            if ok:
-                                results = dict(lat=lat, lon=lon)
-                    elif not results:
-                        results = "Can't check that these results are specific enough"
-                    else:
-                        results = "Can't check that these results are specific enough"
+                            # We'll just have to trust it!
+                            ok = True
+                        if ok:
+                            output = dict(lat=lat, lon=lon)
                 else:
                     # We'll just have to trust it!
-                    results = dict(lat=lat, lon=lon)
+                    output = dict(lat=lat, lon=lon)
             elif len(results):
-                results = "Multiple results found"
+                output = "Multiple results found"
                 # @ToDo: Iterate through the results to see if just 1 is within the right bounds
             else:
-                results = "No results found"
+                output = "No results found"
         except:
             import sys
             error = sys.exc_info()[1]
-            results = str(error)
+            output = str(error)
 
-        return results
+        return output
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5238,9 +5237,6 @@ class GIS(object):
             If a WKT is defined: validate the format,
                 calculate the LonLat of the Centroid, and set bounds
             Else if a LonLat is defined: calculate the WKT for the Point.
-
-            Uses Shapely.
-            @ToDo: provide an option to use PostGIS/Spatialite
         """
 
         messages = current.messages

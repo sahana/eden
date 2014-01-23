@@ -256,8 +256,10 @@
                 }
                 $(s).val('');
             }
+
             // Set the real or parent input to this value
             resetHidden(fieldname);
+
             // Show next dropdown
             level += 1;
             var dropdown = $(selector + '_L' + level + '__row');
@@ -284,11 +286,15 @@
                     }
                 }
                 values.sort(nameSort);
-                var _id, location, option, selected;
+                var len_values = values.length,
+                    _id,
+                    location,
+                    option,
+                    selected;
                 var select = $(selector + '_L' + level);
                 // Remove old entries
                 $(selector + '_L' + level + ' option').remove('[value != ""]');
-                for (var i=0, len=values.length; i < len; i++) {
+                for (var i=0; i < len_values; i++) {
                     location = values[i];
                     _id = location['i'];
                     if (id == _id) {
@@ -299,6 +305,12 @@
                     option = '<option value="' + _id + '"' + selected + '>' + location['n'] + '</option>';
                     select.append(option);
                 }
+                if (len_values == 1) {
+                    // Only 1 option so select this one
+                    lx_select(fieldname, level, _id);
+                    // Nothing more for this old level
+                    return;
+                }
             } else {
                 // We're at the top of the hierarchy
                 var geocode_button = $(selector + '_geocode button');
@@ -308,17 +320,6 @@
             }
         } else {
             // Dropdown has been de-selected
-            if (level === 0) {
-                // Have the Map Zoom use the default bounds
-                id = 'd';
-            } else {
-                // Set the ID for the Map Zoom
-                id = $(selector + '_L' + (level - 1)).val();
-                if (!id) {
-                    // Have the Map Zoom use the default bounds
-                    id = 'd';
-                }
-            }
             // Set the real/parent inputs appropriately
             resetHidden(fieldname);
             // Hide all lower levels
@@ -336,7 +337,7 @@
             }
         }
         // Zoom the map to the appropriate bounds
-        zoomMap(fieldname, id);
+        zoomMap(fieldname);
     }
 
     /**
@@ -786,12 +787,7 @@
                     var real_input = $(selector);
                     var parent_input = $(selector + '_parent');
                     // Zoom to the appropriate bounds
-                    var id = lookupParent(fieldname);
-                    if (!id) {
-                        // Use default bounds
-                        id = 'd';
-                    }
-                    zoomMap(fieldname, id);
+                    zoomMap(fieldname);
 
                     var latfield = $(selector + '_lat');
                     var lonfield = $(selector + '_lon');
@@ -882,10 +878,8 @@
             if (map) {
                 // Zoom to point, if we have it
                 var selector = '#' + fieldname;
-                var latfield = $(selector + '_lat');
-                var lonfield = $(selector + '_lon');
-                var lat = latfield.val();
-                var lon = lonfield.val();
+                var lat = $(selector + '_lat').val();
+                var lon = $(selector + '_lon').val();
                 if (lat && lon) {
                     // Ensure a minimal BBOX in case we just have a single data point
                     var min_size = 0.05;
@@ -899,6 +893,10 @@
                     var bounds = [lon_min, lat_min, lon_max, lat_max];
                 } else {
                     // Zoom to extent of the Lx, if we have it
+                    if (!id) {
+                        // Use default bounds if lookupParent fails
+                        id = lookupParent(fieldname) || 'd';
+                    }
                     var bounds = l[id].b;
                     if (!bounds) {
                         // Try the parent
@@ -926,10 +924,8 @@
                     }
                 }
                 if (bounds) {
-                    bounds = OpenLayers.Bounds.fromArray(bounds)
-                                              .transform(gis.proj4326,
-                                                         map.getProjectionObject());
-                    map.zoomToExtent(bounds);
+                    bounds = OpenLayers.Bounds.fromArray(bounds);
+                    S3.gis.zoomBounds(map, bounds);
                 }
             }
         }
