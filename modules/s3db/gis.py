@@ -315,13 +315,13 @@ class S3LocationModel(S3Model):
             list_fields.insert(2, "name.name_l10n")
             
         self.configure(tablename,
-                       onvalidation=self.gis_location_onvalidation,
-                       onaccept=self.gis_location_onaccept,
-                       deduplicate=self.gis_location_duplicate,
-                       list_orderby=table.name,
-                       list_fields = list_fields,
                        context = {"location": "parent",
                                   },
+                       deduplicate = self.gis_location_duplicate,
+                       list_fields = list_fields,
+                       list_orderby = table.name,
+                       onaccept = self.gis_location_onaccept,
+                       onvalidation = self.gis_location_onvalidation,
                        )
 
         # Custom Method for S3LocationAutocompleteWidget
@@ -607,15 +607,16 @@ class S3LocationModel(S3Model):
                             s3_debug(lon_error)
                             return
 
-        # Add the bounds (& Centroid for Polygons)
+        # Add the WKT, bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
 
-        if form.record:
-            inherited = form.record.inherited
-            if inherited:
-                # Have we provided more accurate data?
-                if lat != form.record.lat or lon != form.record.lon:
-                    form_vars.inherited = False
+        if form_vars.wkt and not form_vars.wkt.startswith("POI"):
+            # Polygon cannot be inherited
+            form_vars.inherited = False
+        elif form.record and form.record.inherited:
+            # Have we provided more accurate data?
+            if form_vars.wkt != form.record.wkt:
+                form_vars.inherited = False
         return
 
     # -------------------------------------------------------------------------

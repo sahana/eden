@@ -1398,7 +1398,8 @@ class S3Msg(object):
                 error = "Login failed: %s" % e
                 s3_debug(error)
                 # Store status in the DB
-                db(table.channel_id == channel_id).update(status=error)
+                sinsert(channel_id=channel_id,
+                        status=error)
                 # Explicitly commit DB operations when running from Cron
                 db.commit()
                 return error
