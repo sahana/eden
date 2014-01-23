@@ -1410,7 +1410,7 @@ class S3Resource(object):
                         rkey = linked.rkey
                         fkey = linked.fkey
                         if rkey in table:
-                            query = (table._id == row[record_id])
+                            query = (table._id == record_id)
                             this = db(query).select(table._id,
                                                     table[rkey],
                                                     limitby=(0, 1)).first()
