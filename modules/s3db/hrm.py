@@ -374,6 +374,7 @@ class S3HRModel(S3Model):
                                         writable = True,
                                         represent = self.org_site_represent,
                                         widget = site_widget,
+                                        ondelete = "SET NULL",
                                         ),
                              self.pr_person_id(
                                widget=S3AddPersonWidget(controller="hrm"),
