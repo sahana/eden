@@ -919,6 +919,9 @@ class S3CRUD(S3Method):
         representation = r.representation
         if representation in ("html", "iframe", "aadata", "dl", "popup"):
 
+            hide_filter = self.hide_filter
+            filter_widgets = get_config("filter_widgets", None)
+            
             # Data
             list_type = attr.get("list_type", "datatable")
             if list_type == "datalist":
@@ -926,9 +929,18 @@ class S3CRUD(S3Method):
                 target = "datalist"
                 output = self._datalist(r, **attr)
             else:
+                # Hide datatable filter box if we have a filter form
+                if filter_widgets and not hide_filter:
+                    dtargs = attr.get("dtargs", {})
+                    if "dt_bFilter" not in dtargs:
+                        dtargs["dt_bFilter"] = False
+                    _attr = dict(attr)
+                    _attr["dtargs"] = dtargs
+                else:
+                    _attr = attr
                 filter_ajax = True
                 target = "datatable"
-                output = self._datatable(r, **attr)
+                output = self._datatable(r, **_attr)
 
             if representation in ("aadata", "dl"):
                 return output
@@ -944,8 +956,6 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # Filter-form
-            hide_filter = self.hide_filter
-            filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not hide_filter:
 
                 # Where to retrieve filtered data from:

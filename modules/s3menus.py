@@ -1530,7 +1530,6 @@ class S3OptionsMenu(object):
         return M(c="pr", restrict=ADMIN)(
                     M("Person", f="person")(
                         M("Add Person", m="create"),
-                        M("Search", f="index"),
                         M("List All"),
                     ),
                     M("Groups", f="group")(

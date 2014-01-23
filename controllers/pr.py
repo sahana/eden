@@ -52,9 +52,7 @@ def index():
 
     def prep(r):
         if r.representation == "html":
-            if not r.id and not r.method:
-                r.method = "search"
-            else:
+            if r.id or r.method:
                redirect(URL(f="person", args=request.args))
         return True
     s3.prep = prep
@@ -99,7 +97,7 @@ def index():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("pr", "person")
+    output = s3_rest_controller("pr", "person", hide_filter=False)
     response.view = "pr/index.html"
     response.title = module_name
     return output
@@ -210,7 +208,8 @@ def person():
     output = s3_rest_controller(main="first_name",
                                 extra="last_name",
                                 rheader=lambda r: \
-                                        s3db.pr_rheader(r, tabs=tabs))
+                                        s3db.pr_rheader(r, tabs=tabs),
+                                hide_filter=False)
 
     return output
 

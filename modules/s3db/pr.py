@@ -176,13 +176,6 @@ class S3PersonEntity(S3Model):
                              Field("type"),
                              Field("pe_label", length=128))
 
-        # Search method
-        #pentity_search = S3Search(name = "pentity_search_simple",
-        #                          label = T("Name and/or ID"),
-        #                          comment = "",
-        #                          field = ["pe_label"])
-        #pentity_search.pentity_represent = pr_pentity_represent
-
         # Resource configuration
         configure(tablename,
                   list_fields = ["instance_type", "type", "pe_label"],
@@ -190,7 +183,6 @@ class S3PersonEntity(S3Model):
                   deletable=False,
                   listadd=False,
                   onaccept=self.pr_pentity_onaccept,
-                  #search_method=pentity_search,
                   referenced_by=[(auth_settings.table_membership_name, "for_pe")]
                   )
 
@@ -831,19 +823,22 @@ class S3PersonModel(S3Model):
         table.age = Field.Lazy(self.pr_person_age)
         table.age_group = Field.Lazy(self.pr_person_age_group)
 
-        # Search method
-        # @ToDo: Replace with S3Filter
-        pr_person_search = S3Search(
-            name="person_search_simple",
-            label=T("Name and/or ID"),
-            comment=T("To search for a person, enter any of the first, middle or last names and/or an ID number of a person, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-            field=["pe_label",
-                   "first_name",
-                   "middle_name",
-                   "last_name",
-                   "local_name",
-                   "identity.value"
-                   ])
+        # Filter widgets
+        filter_widgets = [
+            S3TextFilter(["pe_label",
+                          "first_name",
+                          "middle_name",
+                          "last_name",
+                          "local_name",
+                          "identity.value"
+                         ],
+                         label=T("Name and/or ID"),
+                         comment=T("To search for a person, enter any of the "
+                                   "first, middle or last names and/or an ID "
+                                   "number of a person, separated by spaces. "
+                                   "You may use % as wildcard."),
+                        ),
+        ]
 
         # Custom Form
         crud_form = S3SQLCustomForm("first_name",
@@ -882,8 +877,7 @@ class S3PersonModel(S3Model):
                        main = "first_name",
                        onaccept = self.pr_person_onaccept,
                        realm_components = ["presence"],
-                       # @ToDo: Replace with S3Filter
-                       search_method = pr_person_search,
+                       filter_widgets = filter_widgets,
                        super_entity = ("pr_pentity", "sit_trackable"),
                        )
 

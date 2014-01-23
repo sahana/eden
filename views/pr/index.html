@@ -1,67 +1,80 @@
 {{extend "layout.html"}}
-{{if s3.debug:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{else:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{pass}}
-<div id='home'>
-{{=H2(module_name)}}
-<div style='margin:20px auto; width:96%; max-width:1000px;'>
-    <div>
-        {{=H4(T("Search for a Person"))}}
-        {{try:}}{{=form}}{{except:pass}}
-        <div><br /></div>
-<script type="text/javascript">//<![CDATA[
-$(document).ready(function(){
-    $('#advanced-form').hide()
-    $('#advanced-lnk').click(function() {
-        $('#simple-form').hide()
-        $('#advanced-form').show()
-    });
-    $('#simple-lnk').click(function() {
-        $('#advanced-form').hide()
-        $('#simple-form').show()
-    });
-    {{try:}}
-        {{if not simple:}}
-            $('#simple-form').hide()
-            $('#advanced-form').show()
-        {{pass}}
-    {{except:}}
-    {{pass}}
-});
-//]]></script>
-        <div id='table-container'>
-            {{try:}}
-            {{=items}}
-            {{except:}}
-            {{pass}}
-        </div>
-        {{include "dataTables.html"}}
-    </div>
-    <div>
-        {{=H4("%s: %s" % (T("Total Persons"), total and total or "?"))}}
-        <div id='charts'>
-            <table>
-                <tr>
-                    <td>
-                        <div id='chart1' style='width:260px; height:200px;'></div>
-                    </td>
-                    <td>
-                        <div id='chart2' style='width:260px; height:200px;'></div>
-                    </td>
-                </tr>
-            </table>
-        </div>
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
+<div id='list-btn-add'>
+{{try:}}{{=showadd_btn}}{{hide_listadd = True}}
+{{except:}}{{hide_listadd = False}}{{pass}}
+</div>
+<div id='list-add'>
+{{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
+{{try:}}{{=addheader}}{{except:}}{{pass}}
+{{include "key.html"}}
+<div class='form-container'>
+{{try:}}{{=form}}{{except:}}{{pass}}
+</div>
+</div>
+<div>
+    {{=H3("%s: %s" % (T("Total Persons"), total and total or "?"))}}
+    <div id='charts'>
+        <table>
+            <tr>
+                <td>
+                    <div id='chart1' style='width:260px; height:200px;'></div>
+                </td>
+                <td>
+                    <div id='chart2' style='width:260px; height:200px;'></div>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>
-</div><!-- home -->
+<div id='rheader'>
+{{try:}}{{=XML(rheader)}}
+</div>
+<div id='component'>
+{{except:}}
+</div>
+<div>
+{{pass}}
+<div id='map'></div>
+{{try:}}{{if list_filter_form:}}
+{{=H3(T("Search for Persons"))}}
+<div id='list-filter' class='form-container'>
+{{=list_filter_form}}
+</div>
+{{pass}}
+{{except:}}{{pass}}
+{{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
+{{try:}}{{items = items}}
+{{if ltype == "datalist":}}
+<div id='dl-container'>
+{{=items}}
+</div>
+{{else:}}
+<div id='table-container'>
+{{=items}}
+</div>
+{{pass}}
+{{except:}}{{pass}}
+</div>
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
+{{if ltype == "datalist":}}{{include "dataLists.html"}}
+{{else:}}{{include "dataTables.html"}}{{pass}}
+{{if r.http == "POST" or not hide_listadd:}}
+{{script = '''$('#list-add').show()
+$('#show-add-btn').hide()'''}}
+{{else:}}
+{{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
+ $('#show-add-btn').hide()})'''}}
+{{pass}}{{s3.jquery_ready.append(script)}}
 {{if s3.debug:}}
+<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.js"></script>
 <!-- @ToDo: Replace with https://github.com/SlexAxton/yepnope.js -->
 <!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.js"></script><![endif]-->
 {{else:}}
+<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
 <!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.min.js"></script><![endif]-->
