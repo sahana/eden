@@ -2235,28 +2235,19 @@ class S3SiteModel(S3Model):
     @staticmethod
     def org_site_ondelete_cascade(form):
         """
-            Update linked HRs
-            @ToDo: handle all other linked resources
+            Update realm entity in all related HRs
+
+            @todo: clean up records which RESTRICT the site_id
         """
 
-        db = current.db
-        s3db = current.s3db
         site_id = form.site_id
-
-        # Remove all link table entries
-        ltable = s3db.hrm_human_resource_site
-        db(ltable.site_id == site_id).delete()
-
-        # Update all HRs
-        htable = s3db.hrm_human_resource
+        htable = current.s3db.hrm_human_resource
         query = (htable.site_id == site_id)
+
+        db = current.db
         rows = db(query).select(htable.id)
         db(query).update(site_id = None)
-
-        # Update HR Realm Entities
-        set_realm_entity = current.auth.set_realm_entity
-        for row in rows:
-            set_realm_entity(htable, row.id)
+        current.auth.set_realm_entity(htable, rows, force_update=True)
 
     # -------------------------------------------------------------------------
     @staticmethod

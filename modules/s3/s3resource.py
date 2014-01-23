@@ -1352,7 +1352,6 @@ class S3Resource(object):
                         for rfield in rfields:
                             rtable = db[rfield.tablename]
                             rfield = rtable[rfield.name]
-                            
                             query = (rfield == record_id)
                             if DELETED in rtable:
                                 query &= (rtable[DELETED] != True)
