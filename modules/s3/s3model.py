@@ -1079,27 +1079,67 @@ class S3Model(object):
 
             @param table: the instance table
             @param record: the instance record
+
+            @return: True if successful, otherwise False (caller must
+                     roll back the transaction if False is returned!)
         """
 
-        get_config = cls.get_config
-        supertable = get_config(table._tablename, "super_entity")
-        if not supertable:
-            return True
+        # Must have a record ID
+        record_id = record.get(table._id.name, None)
+        if not record_id:
+            raise RuntimeError("Record ID required for delete_super")
 
-        uid = record.get("uuid", None)
-        if uid:
-            define_resource = current.s3db.resource
-            if not isinstance(supertable, (list, tuple)):
-                supertable = [supertable]
-            for s in supertable:
-                if isinstance(s, str):
-                    s = cls.table(s)
-                if s is None:
-                    continue
-                tn = s._tablename
-                resource = define_resource(tn, uid=uid)
-                ondelete = get_config(tn, "ondelete")
-                resource.delete(ondelete=ondelete, cascade=True)
+        # Get all super-tables
+        get_config = cls.get_config
+        supertables = get_config(table._tablename, "super_entity")
+
+        # None? Ok - done!
+        if not supertables:
+            return True
+        if not isinstance(supertables, (list, tuple)):
+            supertables = [supertables]
+            
+        # Get the keys for all super-tables
+        keys = {}
+        load = {}
+        for sname in supertables:
+            stable = cls.table(sname) if isinstance(sname, str) else sname
+            if stable is None:
+                continue
+            key = stable._id.name
+            if key in record:
+                keys[stable._tablename] = (key, record[key])
+            else:
+                load[stable._tablename] = key
+
+        # If necessary, load missing keys
+        if load:
+            row = current.db(table._id == record_id).select(
+                    table._id, *load.values(), limitby=(0, 1)).first()
+            for sname, key in load.items():
+                keys[sname] = (key, row[key])
+
+        # Delete super-records
+        define_resource = current.s3db.resource
+        update_record = record.update_record
+        for sname in keys:
+            key, value = keys[sname]
+
+            # Remove the super key
+            update_record(**{key: None})
+
+            # Delete the super record
+            sresource = define_resource(sname, id=value)
+            ondelete = get_config(sname, "ondelete")
+            success = sresource.delete(ondelete=ondelete, cascade=True)
+
+            if not success:
+                # Restore the super key
+                # @todo: is this really necessary? => caller must roll back
+                #        anyway in this case, which would automatically restore
+                update_record(**{key: value})
+                return False
+                
         return True
 
     # -------------------------------------------------------------------------

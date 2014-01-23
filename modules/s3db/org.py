@@ -306,7 +306,7 @@ class S3OrganisationModel(S3Model):
                              #document_id(), # Better to have multiple Documents on a Tab
                              #Field("privacy", "integer", default=0),
                              #Field("archived", "boolean", default=False),
-                             * s3_meta_fields())
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_ORGANIZATION = T("Add New Organization")
