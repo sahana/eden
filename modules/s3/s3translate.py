@@ -1510,171 +1510,197 @@ class Pootle:
                 os.unlink(pofilename)
 
 # =============================================================================
-class TranslateReportStatus:
+class TranslateReportStatus(object):
+    """
+        Class to report the percentage of translated strings for
+        each module for a given language.
+    """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def create_master_file(cls):
         """
-           Class to report the percentage of translated strings for each module
-           for a given language
+            Create master file of strings and their distribution in modules
         """
 
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def create_master_file():
-            """ Function to create a master file containing all the strings """
+        try:
+            import cPickle as pickle
+        except:
+            import pickle
 
-            try:
-                import cPickle as pickle
-            except:
-                import pickle
+        # Instantiate the translateAPI
+        api = TranslateAPI()
 
-            A = TranslateAPI()
-            get_strings_by_module = A.get_strings_by_module
-            modlist = A.get_modules()
-            modlist.append("core")
+        # Generate list of modules
+        modules = api.get_modules()
+        modules.append("core")
 
-            # List containing all the strings in the eden code
-            all_strings = []
-            asappend = all_strings.append
-            # Dictionary keyed on modules containg the indices of strings
-            # in all_strings which belong to the corresponding module
-            string_dict = {}
-            ind = 0
+        # The list of all strings
+        all_strings = []
+        addstring = all_strings.append
+        
+        # Dictionary of {module: indices of strings used in this module}
+        indices = {}
 
-            for mod in modlist:
-                string_list = []
-                sappend = string_list.append
-                strings = get_strings_by_module(mod)
-                for (l, s) in strings:
-                    # Removing quotes around the strings
-                    if (s[0] == '"' and s[-1] == '"') or\
-                       (s[0] == "'" and s[-1] == "'"):
-                        s = s[1:-1]
+        # Helper dict for fast lookups
+        string_indices = {}
+        
+        index = 0
+        get_strings_by_module = api.get_strings_by_module
+        for module in modules:
 
-                    if s not in all_strings:
-                        asappend(s)
-                        sappend(ind)
-                        ind += 1
-                    else:
-                        tmpind = all_strings.index(s)
-                        sappend(tmpind)
-                string_dict[mod] = string_list
+            module_indices = []
+            addindex = module_indices.append
+            
+            strings = get_strings_by_module(module)
+            for (origin, string) in strings:
+                
+                # Remove outermost quotes around the string
+                if (string[0] == '"' and string[-1] == '"') or\
+                   (string[0] == "'" and string[-1] == "'"):
+                    string = string[1:-1]
 
-            # Save all_strings and string_dict as pickle objects in a file
-            data_file = os.path.join(current.request.folder, "uploads",
-                                     "temp.pkl")
+                string_index = string_indices.get(string)
+                if string_index is None:
+                    string_indices[string] = index
+                    addstring(string)
+                    addindex(index)
+                    index += 1
+                else:
+                    addindex(string_index)
+                    
+            indices[module] = module_indices
 
-            f = open(data_file, "wb")
-            pickle.dump(all_strings, f)
-            pickle.dump(string_dict, f)
-            f.close()
+        # Save all_strings and string_dict as pickle objects in a file
+        data_file = os.path.join(current.request.folder,
+                                 "uploads",
+                                 "temp.pkl")
+        f = open(data_file, "wb")
+        pickle.dump(all_strings, f)
+        pickle.dump(indices, f)
+        f.close()
+        
+        # Mark all string counts as dirty
+        ptable = current.s3db.translate_percentage
+        current.db(ptable.id > 0).update(dirty=True)
 
-            # Set the update flag for all languages to indicate that the
-            # previously stored percentages of translation may have changed
-            # as the master file has been changed.
-            ptable = current.s3db.translate_percentage
-            current.db(ptable.id > 0).update(dirty=True)
+    # -------------------------------------------------------------------------
+    @classmethod
+    def update_string_counts(cls, lang_code):
+        """
+            Update the translation percentages for all modules for a given
+            language.
 
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def update_percentages(lang_code):
-            """
-               Update the translation percentages for all modules for a given
-               language.
+            @ToDo: Generate fresh .py files with all relevant strings for this
+                    (since we don't store untranslated strings)
+        """
 
-               @ToDo: Generate fresh .py files with all relevant strings for this
-                      (since we don't store untranslated strings)
-            """
+        try:
+            import cPickle as pickle
+        except:
+            import pickle
 
-            try:
-                import cPickle as pickle
-            except:
-                import pickle
+        base_dir = current.request.folder
 
-            base_dir = current.request.folder
-            langfile = "%s.py" % lang_code
-            langfile = os.path.join(base_dir, "languages", langfile)
+        # Read the language file
+        langfile = "%s.py" % lang_code
+        langfile = os.path.join(base_dir, "languages", langfile)
+        lang_strings = read_dict(langfile)
 
-            # Read the language file
-            lang_strings = read_dict(langfile)
+        # Retrieve the data stored in master file
+        data_file = os.path.join(base_dir, "uploads", "temp.pkl")
+        f = open(data_file, "rb")
+        all_strings = pickle.load(f)
+        string_dict = pickle.load(f)
+        f.close()
 
-            # translated_strings contains those strings which are translated
-            translated_strings = []
-            tappend = translated_strings.append
-            for s1 in lang_strings:
-                s2 = lang_strings[s1]
-                if not s2.startswith("*** "):
-                    if s1 != s2 or lang_code == "en-gb":
-                        tappend(s1)
+        db = current.db
+        ptable = current.s3db.translate_percentage
 
-            # Retrieve the data stored in master file
-            data_file = os.path.join(base_dir, "uploads", "temp.pkl")
-            f = open(data_file, "rb")
-            all_strings = pickle.load(f)
-            string_dict = pickle.load(f)
-            f.close()
+        translated = set()
+        addindex = translated.add
+        for index, string in enumerate(all_strings):
+            translation = lang_strings.get(string)
+            if translation is None or translation[:4] == "*** ":
+                continue
+            elif translation != string or lang_code == "en-gb":
+                addindex(index)
 
-            db = current.db
-            ptable = current.s3db.translate_percentage
-            for mod in string_dict.keys():
+        for module, indices in string_dict.items():
+            all_indices = set(indices)
+            num_untranslated = len(all_indices - translated)
+            num_translated = len(all_indices) - num_untranslated
 
-                count = 0
+            data = dict(code = lang_code,
+                        module = module,
+                        translated = num_translated,
+                        untranslated = num_untranslated,
+                        dirty=False)
 
-                for ind in string_dict[mod]:
-                    string = all_strings[ind]
-                    if string in translated_strings:
-                        count += 1
+            query = (ptable.code == lang_code) & \
+                    (ptable.module == module)
+            record = db(query).select(ptable._id, limitby=(0, 1)).first()
+            if record:
+                record.update_record(**data)
+            else:
+                ptable.insert(**data)
+                
+        return
 
-                # Update the translation count in the table
-                query = (ptable.code == lang_code) & \
-                        (ptable.module == mod)
-                db(query).update(translated = count,
-                                 untranslated = len(string_dict[mod]) - count,
-                                 dirty=False,
-                                 )
+    # -------------------------------------------------------------------------
+    @classmethod
+    def get_translation_percentages(cls, lang_code):
+        """
+            Get the percentages of translated strings per module for
+            the given language code.
 
-        # ---------------------------------------------------------------------
-        def get_translation_percentages(self, lang_code):
-            """
-            """
+            @param lang_code: the language code
+        """
 
-            pickle_file = os.path.join(current.request.folder, "uploads", "temp.pkl")
-            # If master file doesn't exist, create it
-            if not os.path.exists(pickle_file):
-                self.create_master_file()
+        pickle_file = os.path.join(current.request.folder,
+                                   "uploads",
+                                   "temp.pkl")
+        # If master file doesn't exist, create it
+        if not os.path.exists(pickle_file):
+            cls.create_master_file()
 
-            db = current.db
-            ptable = current.s3db.translate_percentage
+        db = current.db
+        ptable = current.s3db.translate_percentage
 
-            rows = db(ptable.code == lang_code).select(ptable.dirty,
-                                                       ptable.translated,
-                                                       ptable.untranslated,
-                                                       ptable.module,
-                                                       )
-            if rows.first().dirty:
-                # Update the percentages
-                self.update_percentages(lang_code)
+        query = (ptable.code == lang_code)
+        fields = ("dirty", "translated", "untranslated", "module")
 
-            # Dictionary keyed on modules to store percentage for each module
-            percent_dict = {}
-            # Total number of translated strings for the given language
-            total_translated = 0
-            # Total number of untranslated strings for the given language
-            total_untranslated = 0
+        rows = db(query).select(*fields)
+        if not rows or rows.first().dirty:
+            # Update the string counts
+            cls.update_string_counts(lang_code)
+            rows = db(query).select(*fields)
 
-            # Display the translation percentage for each module
-            # by fetching the data from the table
-            for row in rows:
-                total_translated += row.translated
-                total_untranslated += row.untranslated
-                percent_dict[row.module] = \
-                  (float(row.translated) / (row.translated + row.untranslated)) * 100
-            percent_dict["complete_file"] = \
-            (float(total_translated) / (total_translated + total_untranslated)) * 100
+        percentage = {}
+        total_strings = 0
+        total_translated = 0
+        total_untranslated = 0
+        for row in rows:
 
-            # Round off the percentages to 2 decimal places
-            for mod in percent_dict.keys():
-                percent_dict[mod] = round(percent_dict[mod], 2)
+            num_translated = row.translated
+            num_untranslated = row.untranslated
+            
+            total_strings += num_translated + num_untranslated
+            
+            if not num_untranslated:
+                percentage[row.module] = 100
+            else:
+                total = num_translated + num_untranslated
+                total_translated += num_translated
+                total_untranslated += num_untranslated
+                percentage[row.module] = \
+                        round((float(num_translated) / total) * 100, 2)
 
-            # Return the dictionary
-            return percent_dict
+        if not total_untranslated:
+            percentage["complete_file"] = 100
+        else:
+            percentage["complete_file"] = \
+                round((float(total_translated) / (total_strings)) * 100, 2)
+        return percentage
 
 # END =========================================================================
