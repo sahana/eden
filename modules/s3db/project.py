@@ -1982,7 +1982,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                              self.gis_location_id(readable = False,
                                                   writable = False),
                              Field("value", "integer",
-                                   label = T("Quantity"),
+                                   label = T("Number"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v: \
                                     IS_INT_AMOUNT.represent(v)
