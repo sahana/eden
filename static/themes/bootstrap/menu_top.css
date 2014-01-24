@@ -36,7 +36,7 @@
 .navbar .nav > li > a  {
     float: left;
     text-transform: uppercase;
-    padding: 1.5em;
+    padding: 1em;
 }
 
 ul.nav li.dropdown:hover > ul.dropdown-menu{

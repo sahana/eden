@@ -15,6 +15,10 @@ a.brand img{
     top: -13px;
 }
 
+div.navbar .nav > li > a {
+    padding: 1.5em;
+}
+
 #homepage-about h2 {
     word-spacing: 61px;
 }
