@@ -721,7 +721,6 @@ class S3OptionsMenu(object):
                         M("List all"),
                         M("List unidentified",
                           vars=dict(status="unidentified")),
-                        M("Search", m="search"),
                         M("Report by Age/Gender", m="report",
                           vars=dict(rows="age_group",
                                     cols="gender",
