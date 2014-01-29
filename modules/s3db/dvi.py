@@ -62,6 +62,13 @@ class S3DVIModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        dvi_id_status = {
+            1:T("Preliminary"),
+            2:T("Confirmed"),
+        }
+        dvi_id_status_filteropts = dict(dvi_id_status)
+        dvi_id_status_filteropts[None] = T("Unidentified")
+
         # ---------------------------------------------------------------------
         # Recovery Request
         #
@@ -258,18 +265,29 @@ class S3DVIModel(S3Model):
             msg_record_deleted = T("Dead body report deleted"),
             msg_list_empty = T("No dead body reports available"))
 
-        # Search method
-        body_search = S3Search(name = "body_search_simple",
-                               field = ["pe_label"],
-                               label = T("ID Tag"),
-                               comment = T("To search for a body, enter the ID tag number of the body. You may use % as wildcard. Press 'Search' without input to list all bodies."))
-
+        # Filter widgets
+        filter_widgets = [
+            S3TextFilter(["pe_label"],
+                         label = T("ID Tag"),
+                         comment = T("To search for a body, enter the ID "
+                                     "tag number of the body. You may use "
+                                     "% as wildcard."),
+                        ),
+            S3OptionsFilter("gender",
+                            options=self.pr_gender_opts),
+            S3OptionsFilter("age_group",
+                            options=self.pr_age_group_opts),
+            S3OptionsFilter("identification.status",
+                            options=dvi_id_status_filteropts,
+                            none=True),
+        ]
+        
         # Resource configuration
         configure(tablename,
                   super_entity=("pr_pentity", "sit_trackable"),
                   create_onaccept=self.body_onaccept,
                   create_next=URL(f="body", args=["[id]", "checklist"]),
-                  search_method=body_search,
+                  filter_widgets=filter_widgets,
                   list_fields=["id",
                                "pe_label",
                                "gender",
@@ -364,9 +382,8 @@ class S3DVIModel(S3Model):
         # Identification Report
         #
         dvi_id_status = {
-            1:T("Unidentified"),
-            2:T("Preliminary"),
-            3:T("Confirmed"),
+            1:T("Preliminary"),
+            2:T("Confirmed"),
         }
 
         dvi_id_methods = {
