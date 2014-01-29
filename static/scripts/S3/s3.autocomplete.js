@@ -303,7 +303,7 @@
      */
     var represent_location = function(item) {
         if (item.label != undefined) {
-            // No Match
+            // No Match or too many results
             return item.label;
         }
         if (item.name) {
@@ -502,7 +502,7 @@
      */
     var represent_person = function(item) {
         if (item.label != undefined) {
-            // No Match
+            // No Match or too many results
             return item.label;
         }
         var name = item.first;
@@ -801,7 +801,7 @@
      */
     var represent_hr = function(item) {
         if (item.label != undefined) {
-            // No Match
+            // No Match or too many results
             return item.label;
         }
         var name = item.first;
@@ -981,7 +981,7 @@
      */
     var represent_org = function(item) {
         if (item.label != undefined) {
-            // No Match
+            // No Match or too many results
             return item.label;
         }
         if (item.matchString) {
@@ -1159,7 +1159,7 @@
      */
     var represent_site = function(item) {
         if (item.label != undefined) {
-            // No Match
+            // No Match or too many results
             return item.label;
         }
 

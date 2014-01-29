@@ -1086,9 +1086,9 @@ class S3HRModel(S3Model):
         limit = int(_vars.limit or 0)
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = jsons([dict(id="",
-                                 name="Search results are over %d. Please input more characters." \
-                                    % MAX_SEARCH_RESULTS)])
+            output = json.dumps([
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
+                ])
         else:
             fields = ["id",
                       "person_id$first_name",
@@ -3664,6 +3664,7 @@ class S3HRProgrammeModel(S3Model):
                          "hours",
                          "person_id$gender",
                          ]
+
         report_options = Storage(
             rows=report_fields,
             cols=report_fields,
@@ -3683,7 +3684,6 @@ class S3HRProgrammeModel(S3Model):
                   onaccept = hrm_programme_hours_onaccept,
                   ondelete = hrm_programme_hours_onaccept,
                   orderby = ~table.date,
-                  report_options = report_options,
                   list_fields = ["id",
                                  "training",
                                  "programme_id",
@@ -3692,6 +3692,7 @@ class S3HRProgrammeModel(S3Model):
                                  "date",
                                  "hours",
                                  ],
+                  report_options = report_options,
                   )
 
         # ---------------------------------------------------------------------
@@ -3762,18 +3763,18 @@ def hrm_programme_hours_month(row):
     """
 
     try:
-        thisdate = row["programme_hours.date"]
+        thisdate = row["hrm_programme_hours.date"]
     except AttributeError:
         return current.messages["NONE"]
     if not thisdate:
         return current.messages["NONE"]
 
-    thisdate = thisdate.date()
+    #thisdate = thisdate.date()
     month = thisdate.month
     year = thisdate.year
-    first = date(year, month, 1)
+    first = datetime.date(year, month, 1)
 
-    return first
+    return first.strftime("%y-%m")
 
 # =============================================================================
 def hrm_programme_hours_onaccept(form):

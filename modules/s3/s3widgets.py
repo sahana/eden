@@ -6074,9 +6074,9 @@ def search_ac(r, **attr):
         MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and \
            resource.count() > MAX_SEARCH_RESULTS:
-            output = [dict(id="",
-                           name="Search results are over %d. Please input more characters." \
-                               % MAX_SEARCH_RESULTS)]
+            output = json.dumps([
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
+                ])
 
     if output is None:
         rows = resource.select(fields,

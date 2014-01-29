@@ -798,9 +798,9 @@ class S3OrganisationModel(S3Model):
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = json.dumps([dict(id="",
-                                      name="Search results are over %d. Please input more characters." \
-                                          % MAX_SEARCH_RESULTS)])
+            output = json.dumps([
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
+                ])
         else:
             field = table.name
             field2 = table.acronym
@@ -2389,9 +2389,9 @@ class S3SiteModel(S3Model):
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = json.dumps([dict(id="",
-                                      name="Search results are over %d. Please input more characters." \
-                                          % MAX_SEARCH_RESULTS)])
+            output = json.dumps([
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
+                ])
         else:
             from s3.s3widgets import set_match_strings
             s3db = current.s3db
@@ -2488,9 +2488,9 @@ class S3SiteModel(S3Model):
         MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
         limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = json.dumps([dict(id="",
-                                      name="Search results are over %d. Please input more characters." \
-                                          % MAX_SEARCH_RESULTS)])
+            output = json.dumps([
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
+                ])
         else:
             s3db = current.s3db
 

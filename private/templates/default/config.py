@@ -155,15 +155,15 @@ settings.L10n.decimal_separator = "."
 # Make last name in person/user records mandatory
 #settings.L10n.mandatory_lastname = True
 # Configure the list of Religions
-#settings.L10n.get("religions", {"none": T("none"),
-                                #"christian": T("Christian"),
-                                #"muslim": T("Muslim"),
-                                #"jewish": T("Jewish"),
-                                #"buddhist": T("Buddhist"),
-                                #"hindu": T("Hindu"),
-                                #"bahai": T("Bahai"),
-                                #"other": T("other")
-                                #})
+#settings.L10n.religions = {"none": T("none"),
+                           #"christian": T("Christian"),
+                           #"muslim": T("Muslim"),
+                           #"jewish": T("Jewish"),
+                           #"buddhist": T("Buddhist"),
+                           #"hindu": T("Hindu"),
+                           #"bahai": T("Bahai"),
+                           #"other": T("other")
+                           #}
 # Uncomment this to Translate CMS Series Names
 #settings.L10n.translate_cms_series = True
 # Uncomment this to Translate Layer Names
