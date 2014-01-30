@@ -53,23 +53,32 @@ def index():
     except:
         module_name = T("Disaster Victim Identification")
 
-    table = s3db.dvi_body
-    total = db(table.deleted == False).count()
-
+    btable = s3db.dvi_body
     itable = s3db.dvi_identification
-    query = (table.deleted == False) & \
-            (itable.pe_id == table.pe_id) & \
-            (itable.deleted == False) & \
-            (itable.status == 3)
-    identified = db(query).count()
 
-    status = [[str(T("identified")), int(identified)],
-              [str(T("unidentified")), int(total-identified)]]
+    query = (btable.deleted == False)
+    left = itable.on(itable.pe_id == btable.pe_id)
+    body_count = btable.id.count()
+    rows = db(query).select(body_count,
+                            itable.status,
+                            left=left,
+                            groupby=itable.status)
+    numbers = {None: 0}
+    for row in rows:
+        numbers[row[itable.status]] = row[body_count]
+    total = sum(numbers.values())
+
+    dvi_id_status = dict(s3db.dvi_id_status)
+    dvi_id_status[None] = T("unidentified")
+    statistics = []
+    for status in dvi_id_status:
+        count = numbers.get(status) or 0
+        statistics.append((str(dvi_id_status[status]), count))
 
     response.title = module_name
     return dict(module_name=module_name,
                 total=total,
-                status=json.dumps(status))
+                status=json.dumps(statistics))
 
 # -----------------------------------------------------------------------------
 def recreq():
@@ -122,20 +131,6 @@ def body():
     gender_opts = s3db.pr_gender_opts
     gender_opts[1] = T("unknown")
 
-    btable = s3db.dvi_body
-    itable = s3db.dvi_identification
-
-    status = request.get_vars.get("status", None)
-    if status == "unidentified":
-        query = (itable.deleted == False) & \
-                (itable.status == 3)
-        ids = db(query).select(itable.pe_id)
-        ids = [i.pe_id for i in ids]
-        if ids:
-            s3.filter = (~(btable.pe_id.belongs(ids)))
-
-    s3db.configure("dvi_body", main="pe_label", extra="gender")
-
     ntable = s3db.pr_note
     ntable.status.readable = False
     ntable.status.writable = False
@@ -146,15 +141,15 @@ def body():
                 (T("Physical Description"), "physical_description"),
                 (T("Effects Inventory"), "effects"),
                 (T("Journal"), "note"),
-                (T("Identification"), "identification")]
+                (T("Identification"), "identification"),
+               ]
 
-    rheader = S3ResourceHeader([
-                    [(T("ID Tag Number"), "pe_label")],
-                    ["gender"],
-                    ["age_group"],
-                ], tabs=dvi_tabs)
-    output = s3_rest_controller(rheader=rheader, hide_filter=False)
-    return output
+    rheader = S3ResourceHeader([[(T("ID Tag Number"), "pe_label")],
+                                ["gender"],
+                                ["age_group"],
+                               ],
+                               tabs=dvi_tabs)
+    return s3_rest_controller(rheader=rheader, hide_filter=False)
 
 # -----------------------------------------------------------------------------
 def person():

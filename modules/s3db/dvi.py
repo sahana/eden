@@ -42,7 +42,8 @@ class S3DVIModel(S3Model):
              "dvi_morgue",
              "dvi_checklist",
              "dvi_effects",
-             "dvi_identification"
+             "dvi_identification",
+             "dvi_id_status",
              ]
 
     def model(self):
@@ -295,7 +296,10 @@ class S3DVIModel(S3Model):
                                "incomplete",
                                "date_of_recovery",
                                "location_id"
-                               ])
+                               ],
+                  main="pe_label",
+                  extra="gender",
+                 )
 
         # ---------------------------------------------------------------------
         # Checklist of operations
@@ -447,7 +451,7 @@ class S3DVIModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return Storage()
+        return Storage(dvi_id_status=dvi_id_status)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -25,7 +25,7 @@
             <table>
                 <tr>
                     <td>
-                        <div id='chart1' style='width:260px; height:200px;'></div>
+                        <div id='chart1' style='width:300px; height:300px;'></div>
                     </td>
                 </tr>
             </table>
@@ -50,7 +50,8 @@ $(document).ready(function(){
     if ( status ) {
         var plot1 = $.jqplot('chart1', [status], {
           title: 'Identification Progress',
-          seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{diameter:100}},
+          seriesDefaults:{renderer:$.jqplot.PieRenderer,
+                          rendererOptions:{diameter:150,showDataLabels:true,dataLabels:'value'}},
           legend:{show:true, escapeHtml:true}
         });
     }

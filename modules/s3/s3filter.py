@@ -1457,7 +1457,7 @@ class S3OptionsFilter(S3FilterWidget):
         empty = None
         for k, v in opt_list:
             if k is None:
-                empty = ("NONE", v)
+                empty = ("None", v)
             else:
                 options.append((k, v))
         if empty and none:

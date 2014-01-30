@@ -710,17 +710,15 @@ class S3OptionsMenu(object):
 
         return M(c="dvi")(
                     #M("Home", f="index"),
-                    M("Body Recovery", f="recreq")(
+                    M("Recovery Requests", f="recreq")(
                         M("New Request", m="create"),
                         M("List Current",
                           vars={"recreq.status":"1,2,3"}),
-                        M("List All"),
                     ),
                     M("Dead Bodies", f="body")(
                         M("New", m="create"),
-                        M("List all"),
                         M("List unidentified",
-                          vars=dict(status="unidentified")),
+                          vars={"identification.status": "None"}),
                         M("Report by Age/Gender", m="report",
                           vars=dict(rows="age_group",
                                     cols="gender",
