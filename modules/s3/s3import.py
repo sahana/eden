@@ -1817,7 +1817,7 @@ class S3ImportItem(object):
             tablename = element.get(xml.ATTRIBUTE["name"], None)
             table = s3db.table(tablename)
             if table is None:
-                self.error = self.ERROR.BAD_RESOURCE
+                self.error ="%s tablename: %s" % (self.ERROR.BAD_RESOURCE, tablename)
                 element.set(xml.ATTRIBUTE["error"], self.error)
                 return False
 
