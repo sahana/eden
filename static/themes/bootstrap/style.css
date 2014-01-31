@@ -189,6 +189,7 @@ a i.icon.icon-plus-sign.big-add:hover {
 }
 
 #popup.cf .form-horizontal {
+    margin-top: 10px;
     margin-left: -10px;
     padding-left: 0;
 }
@@ -197,7 +198,7 @@ a i.icon.icon-plus-sign.big-add:hover {
     content: "x";
 }
 
-.ui-dialog-titlebar {
+.ui-dialog-titlebar.ui-widget-header {
     text-align: center;
     background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8)) !important;
     background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
@@ -205,26 +206,47 @@ a i.icon.icon-plus-sign.big-add:hover {
     background-image: -o-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
     background-image: -ms-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
     background-image: linear-gradient(top,#f9f9fa,#e0e2e8) !important;
+    border-bottom-right-radius: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
 }
 
 .ui-dialog {
 	width: 600px !important;
+	padding: 0;
 }
 
-/* Forms */
-form.form-horizontal {  
+/* Page Elements */
+.form-container form.form-horizontal,
+#datalist-filter-form,
+#datatable-filter-form,
+#datatable_wrapper {  
     background-color: #fff;
-    box-shadow: none;
-    border-radius: 5px;
-    box-shadow: none;
+    border-radius: 4px;
+    border: 1px solid #9e9b9b;
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    -moz-box-shadow: 0 1px 1px #aaaaa7;
+    -webkit-box-shadow: 0 1px 1px #aaaaa7;
+    box-shadow: 0 1px 1px #aaaaa7;
+}
+
+div.form-container form.form-horizontal,
+form#datalist-filter-form,
+form#datatable-filter-form {
     padding-top: 7px;
     padding-left: 9px;
 }
+
+/*
+What is this for? Breaks pop-up
 form.form-horizontal.pr_person,
 form.form-horizontal.org_resource,
 form.form-horizontal.project_project {
     border: 1px solid #b2b2b2;
-}
+}*/
 
 .form-container form fieldset {
     border: none;
@@ -360,11 +382,17 @@ a.action-btn:hover {
 }
 
 /* Required Fields */
+/* Better solution will be to use inline 'Optional' hints:
+http://www.usabilitycounts.com/2009/11/18/form-design-and-the-fallacy-of-the-required-field/
+http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ */
 b.red {
     position: absolute;
     z-index: 1;
-    margin-top: 5px;
     margin-left: 7px;
+    /* This pushed it 'out of the way' on NYC so not easy to see (CRMT just pads it down a little, still looking worse, DRMP looks awful with this)
+    float: right;
+    margin-right: 7px;*/
+    margin-top: 5px;
     font-size: 12px;
 }
 
@@ -462,6 +490,7 @@ table.embeddedComponent .add-row td {
     /* Hide the table */
     border-bottom: none;
     padding: 0 5px 0 0;
+    vertical-align: top;
 }
 .inline-add {
     background-image: url(../../img/bootstrap/add.png);
@@ -623,25 +652,6 @@ label.ui-corner-all span {
 #datatable.dataTable.display {
     background-color: #fff;
     margin-top: 10px;
-}
-
-#datatable_wrapper {
-    background: rgba(255,255,255,1);
-    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
-    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
-    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
-    background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
-    background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
-    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	-moz-box-shadow: 0 -1px 3px #d7d7d6;
-    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
-    box-shadow: 0 -1px 3px #d7d7d6;
-    border: 1px solid #9e9b9b;
-    -moz-box-shadow: 0 1px 1px #aaaaa7;
-    -webkit-box-shadow: 0 1px 1px #aaaaa7;
-    box-shadow: 0 1px 1px #aaaaa7;
-    border: 1px solid #b2b2b2;
-    border-radius: 5px;
 }
 
 #datatable_filter label {

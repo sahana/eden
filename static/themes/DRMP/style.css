@@ -1,5 +1,9 @@
 /* Stuff which is DRMP-specific */
 
+body {
+    padding-top: 90px;
+}
+
 .navbar .brand {
     width: 200px;
     text-shadow: none;
@@ -13,6 +17,10 @@ a.brand img{
     width: 60px;
     position: relative;
     top: -13px;
+}
+
+div.navbar .nav > li > a {
+    padding: 1.5em;
 }
 
 #homepage-about h2 {

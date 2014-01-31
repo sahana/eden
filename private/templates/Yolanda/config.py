@@ -80,14 +80,14 @@ settings.auth.person_realm_human_resource_site_then_org = False
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["Philippines"]
+settings.base.prepopulate = ["Yolanda"]
 
 settings.base.system_name = T("Sahana")
 settings.base.system_name_short = T("Sahana")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "Philippines"
+settings.base.theme = "Yolanda"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 #settings.gis.map_height = 600
@@ -217,6 +217,9 @@ settings.org.site_autocomplete_fields = ["location_id$L1",
                                          "location_id$L4",
                                          ]
 
+# -----------------------------------------------------------------------------
+# Resources
+settings.inv.direct_stock_edits = True
 # -----------------------------------------------------------------------------
 # Project
 # Uncomment this to use multiple Organisations per project
@@ -1414,17 +1417,17 @@ def customize_gis_location(**attr):
                                           "lon_min" : location.lon_min
                                           },
                                   )
-                #locations_widget = dict(label = "Locations",
-                #                        insert = False,
-                #                        #title_create = "Add New Location",
-                #                        type = "datalist",
-                #                        tablename = "gis_location",
-                #                        context = "location",
-                #                        icon = "icon-globe",
-                #                        # @ToDo: Show as Polygons?
-                #                        show_on_map = False,
-                #                        list_layout = render_locations_profile,
-                #                        )
+                locations_widget = dict(label = "Locations",
+                                        insert = False,
+                                        #title_create = "Add New Location",
+                                        type = "datalist",
+                                        tablename = "gis_location",
+                                        context = "location",
+                                        icon = "icon-globe",
+                                        # @ToDo: Show as Polygons?
+                                        show_on_map = False,
+                                        list_layout = render_locations_profile,
+                                        )
                 #needs_widget = dict(label = "Needs",
                 #                    title_create = "Add New Need",
                 #                    type = "datalist",
@@ -1463,19 +1466,19 @@ def customize_gis_location(**attr):
                                       #marker = "donation",
                                       list_layout = s3db.req_render_commits,
                                       )
-                #resources_widget = dict(label = "Resources",
-                #                        title_create = "Add New Resource",
-                #                        type = "datalist",
-                #                        tablename = "org_resource",
-                #                        context = "location",
-                #                        default = default,
-                #                        #filter = S3FieldSelector("req_status").belongs([0, 1]),
-                #                        icon = "icon-wrench",
-                #                        layer = "Resources",
-                #                        # provided by Catalogue Layer
-                #                        #marker = "resource",
-                #                        list_layout = s3db.org_render_org_resources,
-                #                        )
+                resources_widget = dict(label = "Resources",
+                                        title_create = "Add New Resource",
+                                        type = "datalist",
+                                        tablename = "org_resource",
+                                        context = "location",
+                                        default = default,
+                                        #filter = S3FieldSelector("req_status").belongs([0, 1]),
+                                        icon = "icon-wrench",
+                                        layer = "Resources",
+                                        # provided by Catalogue Layer
+                                        #marker = "resource",
+                                        list_layout = s3db.org_render_org_resources,
+                                        )
                 sites_widget = dict(label = "Sites",
                                     title_create = "Add New Site",
                                     type = "datalist",
@@ -1533,9 +1536,9 @@ def customize_gis_location(**attr):
                                profile_widgets = [reqs_widget,
                                                   map_widget,
                                                   commits_widget,
-                                                  #resources_widget,
+                                                  resources_widget,
                                                   sites_widget,
-                                                  #locations_widget,
+                                                  locations_widget,
                                                   ],
                                )
 
@@ -2261,10 +2264,6 @@ def customize_org_organisation(**attr):
                            "logo",
                            "phone",
                            "website",
-                           "needs.money",
-                           "needs.money_details",
-                           #"needs.vol",
-                           #"needs.vol_details",
                            ]
 
             if r.method == "profile":
@@ -2302,30 +2301,30 @@ def customize_org_organisation(**attr):
                                     show_on_map = False,
                                     list_layout = render_org_needs,
                                     )
-                reqs_widget = dict(label = "Requests",
-                                   title_create = "Add New Request",
+                reqs_widget = dict(label = "Needs",
+                                   title_create = "Add Need",
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
                                    filter = S3FieldSelector("req_status").belongs([0, 1]),
                                    icon = "icon-flag",
-                                   layer = "Requests",
+                                   layer = "Needs",
                                    # provided by Catalogue Layer
                                    #marker = "request",
                                    list_layout = s3db.req_render_reqs,
                                    )
-                #resources_widget = dict(label = "Resources",
-                #                        title_create = "Add New Resource",
-                #                        type = "datalist",
-                #                        tablename = "org_resource",
-                #                        context = "organisation",
-                #                        #filter = S3FieldSelector("req_status").belongs([0, 1]),
-                #                        icon = "icon-wrench",
-                #                        layer = "Resources",
-                #                        # provided by Catalogue Layer
-                #                        #marker = "resource",
-                #                        list_layout = s3db.org_render_org_resources,
-                #                        )
+                resources_widget = dict(label = "Resources",
+                                        title_create = "Add New Resource",
+                                        type = "datalist",
+                                        tablename = "org_resource",
+                                        context = "organisation",
+                                        #filter = S3FieldSelector("req_status").belongs([0, 1]),
+                                        icon = "icon-wrench",
+                                        layer = "Resources",
+                                        # provided by Catalogue Layer
+                                        #marker = "resource",
+                                        list_layout = s3db.org_render_org_resources,
+                                        )
                 commits_widget = dict(label = "Donations",
                                       #title_create = "Add New Donation",
                                       type = "datalist",
@@ -2342,11 +2341,11 @@ def customize_org_organisation(**attr):
                 sites_widget = dict(label = "Sites",
                                     title_create = "Add New Site",
                                     type = "datalist",
-                                    tablename = "org_facility",
+                                    tablename = "org_office",
                                     context = "organisation",
                                     filter = S3FieldSelector("obsolete") == False,
                                     icon = "icon-home",
-                                    layer = "Facilities",
+                                    layer = "Offices",
                                     # provided by Catalogue Layer
                                     #marker = "office",
                                     list_layout = render_sites,
@@ -2374,15 +2373,13 @@ def customize_org_organisation(**attr):
                                                     H2(record.name),
                                                     _class="profile_header",
                                                     ),
-                               profile_widgets = [reqs_widget,
+                               profile_widgets = [contacts_widget,
                                                   map_widget,
-                                                  # @ToDo: Move to profile_header
-                                                  #needs_widget,
+                                                  reqs_widget,
                                                   #resources_widget,
-                                                  commits_widget,
-                                                  needs_widget,
-                                                  contacts_widget,
+                                                  
                                                   sites_widget,
+                                                  #@ToDo - Projects & Activities & INventory
                                                   ]
                                )
             elif r.method == "datalist":
@@ -2444,6 +2441,30 @@ def customize_org_organisation(**attr):
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False
+
+            # Labels
+            table.comments.labels = T("Description")
+
+            s3_sql_custom_fields = ["id",
+                                    "name",
+                                    "organisation_type_id",
+                                    "country",
+                                     S3SQLInlineComponentMultiSelectWidget(
+                                         "sector",
+                                         label = T("Sectors"),
+                                         field = "sector_id",
+                                     ),
+                                     S3SQLInlineComponentMultiSelectWidget(
+                                         "service",
+                                         label = T("Services"),
+                                         field = "service_id",
+                                     ),
+                                    "logo",
+                                    "phone",
+                                    "website",
+                                    "comments"
+                                    ]
+            crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
             
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="org", f="organisation", args="datalist")
@@ -2456,6 +2477,7 @@ def customize_org_organisation(**attr):
                            listadd = False,
                            list_fields = list_fields,
                            list_layout = render_organisations,
+                           crud_form = crud_form,
                            )
 
         return True
@@ -2488,6 +2510,130 @@ def customize_org_organisation(**attr):
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
+def customize_org_resource(**attr):
+    """
+        Customize org_resource controller
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    table = s3db.org_resource
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive or r.representation == "aadata":
+            s3db.org_customize_org_resource_fields(r.method)
+    
+            # Configure fields
+            #table.site_id.readable = table.site_id.readable = False
+            location_field = table.location_id
+            #location_field.label = T("District")
+
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            get_vars = current.request.get_vars
+            location_id = get_vars.get("~.(location)", None)
+            organisation_id = get_vars.get("~.(organisation)", None)
+            if organisation_id:
+                org_field = table.organisation_id
+                org_field.default = organisation_id
+                org_field.readable = org_field.writable = False
+            if location_id:
+                location_field.default = location_id
+                # We still want to be able to specify a precise location
+                #location_field.readable = location_field.writable = False
+            #else:
+            # Which levels of Hierarchy are we using?
+            hierarchy = current.gis.get_location_hierarchy()
+            levels = hierarchy.keys()
+            if len(current.deployment_settings.gis.countries) == 1 or \
+               s3.gis.config.region_location_id:
+                levels.remove("L0")
+
+            location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+            location_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                              show_address=True,
+                                                              show_map=True)
+
+            # Don't add new Locations here
+            location_field.comment = None
+
+            # Return to Sumamry view after create/update/delete (unless done via Modal)
+            url_next = URL(c="org", f="resource", args="summary")
+
+            # @ToDo: Month/Year Lazy virtual fields
+            report_fields = ["organisation_id",
+                             "parameter_id",
+                             "location_id$L1",
+                             "location_id$L2",
+                             "location_id$L3",
+                             "location_id$L4",
+                             "value"
+                             ]
+
+            report_options = Storage(rows = report_fields,
+                                     cols = report_fields,
+                                     fact = report_fields,
+                                     defaults=Storage(rows = "location_id$L2",
+                                                      cols = "parameter_id",
+                                                      fact = "sum(value)",
+                                                      totals = True,
+                                                      chart = "barchart:rows",
+                                                      #table = "collapse",
+                                                      )
+                                     )
+
+            s3db.configure("org_resource",
+                           create_next = url_next,
+                           delete_next = url_next,
+                           update_next = url_next,
+                           # Don't include a Create form in 'More' popups
+                           listadd = False if r.method=="datalist" else True,
+                           report_options = report_options,
+                           )
+
+            # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
+            #s3.cancel = URL(c="org", f="resource")
+
+        return True
+    s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive:
+            # All users just get "Open"
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="org", f="resource",
+                                    args=["[id]", "read"]))
+                       ]
+            s3.actions = actions
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("org_resource")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("org_resource")
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.ui.customize_org_resource = customize_org_resource
 
 # -----------------------------------------------------------------------------
 def customize_site_needs_fields(profile=False):
@@ -2771,6 +2917,43 @@ def customize_pr_person(**attr):
 
 settings.ui.customize_pr_person = customize_pr_person
 
+
+# -----------------------------------------------------------------------------
+def customize_inv_inv_item(**attr):
+
+    s3db = current.s3db
+    tablename = "inv_inv_item"
+    table = s3db[tablename]
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.interactive:
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Resource"),
+                title_display = T("Resource"),
+                title_list = T("Resources"),
+                title_update = T("Edit Resource"),
+                title_search = T("Search Resources"),
+                subtitle_create = T("Add Resource"),
+                label_list_button = T("List New Resources"),
+                label_create_button = T("Add Resources"),
+                label_delete_button = T("Remove Resources"),
+                msg_record_created = T("Resources added"),
+                msg_record_modified = T("Resources updated"),
+                msg_record_deleted = T("Resources removed"),
+                msg_list_empty = T("No Resources currently recorded"))
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_inv_inv_item = customize_inv_inv_item
+
 # -----------------------------------------------------------------------------
 def customize_doc_document(**attr):
     """
@@ -2851,6 +3034,22 @@ def customize_req_req(**attr):
     """
 
     s3 = current.response.s3
+
+
+    s3.crud_strings["req_req"] = Storage(
+        title_create = T("Add Need"),
+        title_display = T("Need"),
+        title_list = T("Needs"),
+        title_update = T("Edit Need"),
+        title_search = T("Search Needs"),
+        subtitle_create = T("Add Need"),
+        label_list_button = T("List New Need"),
+        label_create_button = T("Add Need"),
+        label_delete_button = T("Remove Need"),
+        msg_record_created = T("Need added"),
+        msg_record_modified = T("Need updated"),
+        msg_record_deleted = T("Needs removed"),
+        msg_list_empty = T("No Needs currently recorded"))
 
     # Custom PreP
     #standard_prep = s3.prep
@@ -3004,6 +3203,230 @@ def customize_req_commit(**attr):
 
 settings.ui.customize_req_commit = customize_req_commit
 
+# -----------------------------------------------------------------------------
+def customize_project_activity(**attr):
+    """
+        Customize project_activity controller
+    """
+
+    s3db = current.s3db
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        tablename = "project_activity"
+        table = s3db[tablename]
+
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Aid Delivery"),
+            title_display = T("Aid Delivery"),
+            title_list = T("Aid Deliveries"),
+            title_update = T("Edit Aid Delivery"),
+            title_search = T("Search Aid Deliveries"),
+            subtitle_create = T("Add Aid Delivery"),
+            label_list_button = T("List New Aid Delivery"),
+            label_create_button = T("Add Aid Delivery"),
+            label_delete_button = T("Remove Aid Delivery"),
+            msg_record_created = T("Aid Delivery added"),
+            msg_record_modified = T("Aid Delivery updated"),
+            msg_record_deleted = T("Aid Deliverys removed"),
+            msg_list_empty = T("No Aid Deliveries currently recorded"))
+
+        table.name.label = T("Activity")
+
+        list_fields = ["activity_organisation.organisation_id",
+                       "sector_activity.sector_id",
+                       "location_id",
+                       "name",
+                       (T("Distribution"), "distribution.parameter_id"),
+                       (T("Beneficiaries"), "beneficiary.value"),
+                       "status_id",
+                       "date",
+                       "end_date",
+                       #"comments",
+                       ]
+
+        # Custom Form (Read/Create/Update)
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        if r.method in ("create", "update"):
+            editable = True
+            # Custom Widgets/Validators
+            from s3.s3validators import IS_LOCATION_SELECTOR2
+            from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
+            field = table.location_id
+            field.label = "" # Gets replaced by widget
+            levels = ("L1", "L2", "L3", "L4")
+            field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+            field.widget = S3LocationSelectorWidget2(levels=levels)
+            #s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
+
+            # Hide Labels when just 1 column in inline form
+            #s3db.doc_document.file.label = ""
+            s3db.project_activity_activity_type.activity_type_id.label = ""
+            s3db.project_activity_organisation.organisation_id.label = ""
+            s3db.project_activity.comments.label = T("Materials/Service Provided")
+            #s3db.project_beneficiary.value.label = "Number"
+        else:
+            editable = False
+
+        # Custom Crud Form
+        crud_form = S3SQLCustomForm(
+            #S3SQLInlineComponent(
+            #    "activity_activity_type",
+            #    label = T("Activity Type"),
+            #    fields = ["activity_type_id"],
+            #    multiple = False,
+            #),
+            S3SQLInlineComponent(
+                "activity_organisation",
+                label = T("Organization"),
+                fields = ["organisation_id"],
+                multiple = False,
+            ),
+            "location_id",
+            "name",
+            "comments",
+            S3SQLInlineComponent(
+                "beneficiary",
+                label = T("Beneficiaries"),
+                link = False,
+                multiple = False,
+                fields = ["parameter_id",
+                          "value"],
+            ),
+            #S3SQLInlineComponent(
+            #    "distribution",
+            #    label = T("Distributions"),
+            #    link = False,
+            #    #multiple = False,
+            #    fields = ["parameter_id", "value"],
+            #),
+            #S3SQLInlineComponent(
+            #    "document",
+            #    name = "file",
+            #    label = T("Files"),
+            #    fields = ["file",
+            #              #"comments",
+            #              ],
+            #),
+            "status_id",
+            "date",
+            "end_date",
+            )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       # Hide Open & Delete dataTable action buttons
+                       deletable = editable,
+                       editable = editable,
+                       #filter_formstyle = filter_formstyle,
+                       listadd = False,
+                       list_fields = list_fields,
+                       )
+
+        return True
+    s3.prep = custom_prep
+
+    # Remove rheader
+    attr["rheader"] = None
+
+    return attr
+
+settings.ui.customize_project_activity = customize_project_activity
+
+# -----------------------------------------------------------------------------
+def customize_project_task(**attr):
+    """
+        Customize project_task controller
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    tablename = "project_task"
+    table = s3db[tablename]
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        from s3.s3filter import S3TextFilter, S3OptionsFilter, S3RangeFilter
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "description",
+                          ],
+                         label=T("Description"),
+                         _class="filter-search",
+                         ),
+            S3OptionsFilter("priority",
+                            label=T("Priority"),
+                            #represent="%(name)s",
+                            #widget="multiselect",
+                            #options=project_task_priority_opts,
+                            cols=4,
+                            ),
+            S3OptionsFilter("pe_id",
+                            label=T("Assigned To"),
+                            # @ToDo: Implement support for this in S3OptionsFilter
+                            #null = T("Unassigned"),
+                            #represent="%(name)s",
+                            #widget="multiselect",
+                            cols=4,
+                            ),
+            S3RangeFilter("created_on",
+                          label=T("Date Created"),
+                          hide_time=True,
+                          #hidden=True,
+                          ),
+            S3OptionsFilter("status",
+                            label=T("Status"),
+                            #options=project_task_status_opts,
+                            #represent="%(name)s",
+                            #widget="multiselect",
+                            cols=4,
+                            ),
+            ]
+
+        list_fields=["priority",
+                     "name",
+                     "pe_id",
+                     "status",
+                     ]
+
+        table.description.label = T("Detailed Description")
+
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    "pe_id",
+                                    "priority",
+                                    "status",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+        return True
+    s3.prep = custom_prep
+
+    attr["hide_filter"] = False
+    attr["rheader"] = None
+    return attr
+
+settings.ui.customize_project_task = customize_project_task
+
 # =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them
@@ -3090,25 +3513,30 @@ settings.modules = OrderedDict([
         # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
         module_type = None,
     )),
-    #("event", Storage(
-    #    name_nice = "Disasters",
-    #    #description = "Events",
-    #    restricted = True,
-    #    module_type = None
-    #)),
+    ("event", Storage(
+        name_nice = "Disasters",
+        #description = "Events",
+        restricted = True,
+        module_type = None
+    )),
     ("req", Storage(
             name_nice = "Requests",
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
             module_type = None,
         )),
-    #("project", Storage(
-    #    name_nice = "Projects",
-    #    restricted = True,
-    #    module_type = None
-    #)),
+    ("project", Storage(
+        name_nice = "Projects",
+        restricted = True,
+        module_type = None
+    )),
     ("stats", Storage(
         name_nice = "Statistics",
+        restricted = True,
+        module_type = None
+    )),
+    ("inv", Storage(
+        name_nice = "Inventory",
         restricted = True,
         module_type = None
     )),

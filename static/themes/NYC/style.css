@@ -196,6 +196,8 @@ button:hover,
 b.red {
     /* If form is margin 0 then this needs to be too */
     margin: 0;
+    /* If set to float right
+    margin-right: 20px;*/
 }
 .ui-widget-content {
     background: #ffffff !important;
@@ -234,8 +236,8 @@ b.red {
     text-transform: uppercase;
     letter-spacing: 1px;
     font-size: 18px;
-    padding: 4px!important;
-    font-weight: normal!important;
+    padding: 4px !important;
+    font-weight: normal !important;
 }
 .ui-datepicker-header {
     height: 31px;

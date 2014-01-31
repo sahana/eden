@@ -1,5 +1,4 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
-ANONYMOUS,Anonymous,,cms,newsfeed,,,READ,,,,,
 ANONYMOUS,Anonymous,,org,,,,READ,,,,,
 ANONYMOUS,Anonymous,,req,,,,READ,READ,,,,View Requests & Donations
 ANONYMOUS,Anonymous,,,,gis_location,,READ,,,,,
@@ -38,7 +37,6 @@ AUTHENTICATED,Authenticated,,,,pr_contact,,READ|CREATE,READ|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,pr_image,,READ|CREATE,READ|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,pr_person,,READ,READ|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,req_commit,,READ|CREATE,READ|UPDATE,,,,
-EDITOR,Call Center,,cms,,,any,READ|CREATE|UPDATE,ALL,,,,
 EDITOR,Call Center,,org,,,any,READ|CREATE|UPDATE,ALL,,,,
 EDITOR,Call Center,,pr,person,,any,READ|CREATE|UPDATE,ALL,,,,
 EDITOR,Call Center,,pr,contact,,any,READ|CREATE|UPDATE,ALL,,,,
