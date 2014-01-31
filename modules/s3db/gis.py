@@ -89,7 +89,7 @@ class S3LocationModel(S3Model):
         NONE = messages["NONE"]
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         #define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -329,23 +329,24 @@ class S3LocationModel(S3Model):
                         method="search_ac",
                         action=self.gis_search_ac)
 
-        # Tags as component of Locations
-        add_component("gis_location_tag",
-                      gis_location=dict(joinby="location_id",
-                                        name="tag"))
+        # Components
+        add_components(tablename,
+                       # Tags
+                       gis_location_tag={"name": "tag",
+                                         "joinby": "location_id",
+                                        },
+                       # Names
+                       gis_location_name={"name": "name",
+                                          "joinby": "location_id",
+                                         },
+                       # Child Locations
+                       #gis_location={"joinby": "parent",
+                       #              "multiple": False,
+                       #             },
 
-        # Names as component of Locations
-        add_component("gis_location_name",
-                      gis_location=dict(joinby="location_id",
-                                        name="name"))
-
-        # Locations as component of Locations ('Parent')
-        #add_component(table, joinby=dict(gis_location="parent"),
-        #              multiple=False)
-
-        # Sites as component of Locations
-        add_component("org_site",
-                      gis_location="location_id")
+                       # Sites
+                       org_site="location_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Error
@@ -1205,8 +1206,9 @@ class S3LocationGroupModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        self.add_component("gis_location_group_member",
-                           gis_location_group="location_group_id")
+        self.add_components(tablename,
+                            gis_location_group_member="location_group_id",
+                           )
 
         # ---------------------------------------------------------------------
         # Location Group Membership
@@ -1417,7 +1419,7 @@ class S3GISConfigModel(S3Model):
         NONE = current.messages["NONE"]
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1487,14 +1489,15 @@ class S3GISConfigModel(S3Model):
                                     ondelete = "SET NULL")
 
         # Components
-        # Layers
-        add_component("gis_layer_entity",
-                      gis_marker=dict(link="gis_layer_symbology",
-                                      joinby="marker_id",
-                                      key="layer_id",
-                                      actuate="hide",
-                                      autocomplete="name",
-                                      autodelete=False))
+        add_components(tablename,
+                       gis_layer_entity={"link": "gis_layer_symbology",
+                                         "joinby": "marker_id",
+                                         "key": "layer_id",
+                                         "actuate": "hide",
+                                         "autocomplete": "name",
+                                         "autodelete": False,
+                                        },
+                      )
 
         configure(tablename,
                   onvalidation=self.gis_marker_onvalidation,
@@ -1612,23 +1615,24 @@ class S3GISConfigModel(S3Model):
                                        ondelete = "SET NULL")
 
         # Components
-        # Layers
-        add_component("gis_layer_entity",
-                      gis_symbology=dict(link="gis_layer_symbology",
-                                         joinby="symbology_id",
-                                         key="layer_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
-
-        # Markers
-        add_component("gis_marker",
-                      gis_symbology=dict(link="gis_layer_symbology",
-                                         joinby="symbology_id",
-                                         key="marker_id",
-                                         actuate="replace",
-                                         autocomplete="name",
-                                         autodelete=False))
+        add_components(tablename,
+                       # Layers
+                       gis_layer_entity={"link": "gis_layer_symbology",
+                                         "joinby": "symbology_id",
+                                         "key": "layer_id",
+                                         "actuate": "hide",
+                                         "autocomplete": "name",
+                                         "autodelete": False,
+                                        },
+                       # Markers
+                       gis_marker={"link": "gis_layer_symbology",
+                                   "joinby": "symbology_id",
+                                   "key": "marker_id",
+                                   "actuate": "replace",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         configure(tablename,
                   deduplicate=self.gis_symbology_deduplicate)
@@ -1754,16 +1758,6 @@ class S3GISConfigModel(S3Model):
             msg_list_empty = T("No Map Configurations currently defined")
         )
 
-        # Components
-        # Layers
-        add_component("gis_layer_entity",
-                      gis_config=dict(link="gis_layer_config",
-                                      joinby="config_id",
-                                      key="layer_id",
-                                      actuate="hide",
-                                      autocomplete="name",
-                                      autodelete=False))
-
         configure(tablename,
                   deduplicate=self.gis_config_deduplicate,
                   onvalidation=self.gis_config_onvalidation,
@@ -1772,6 +1766,18 @@ class S3GISConfigModel(S3Model):
                                   args=["[id]", "layer_entity"]),
                   ondelete=self.gis_config_ondelete,
                   )
+
+        # Components
+        add_components(tablename,
+                       # Layers
+                       gis_layer_entity={"link": "gis_layer_config",
+                                         "joinby": "config_id",
+                                         "key": "layer_id",
+                                         "actuate": "hide",
+                                         "autocomplete": "name",
+                                         "autodelete": False,
+                                        },
+                      )
 
         if current.deployment_settings.get_security_map() and not \
            current.auth.s3_has_role("MapAdmin"):
@@ -2275,7 +2281,7 @@ class S3LayerEntityModel(S3Model):
         T = current.T
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -2335,33 +2341,33 @@ class S3LayerEntityModel(S3Model):
                                    readable=True, writable=True)
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_entity=dict(link="gis_layer_config",
-                                            pkey="layer_id",
-                                            joinby="layer_id",
-                                            key="config_id",
-                                            actuate="hide",
-                                            autocomplete="name",
-                                            autodelete=False))
-
-        # Symbologies
-        add_component("gis_symbology",
-                      gis_layer_entity=dict(link="gis_layer_symbology",
-                                            pkey="layer_id",
-                                            joinby="layer_id",
-                                            key="symbology_id",
-                                            actuate="hide",
-                                            autocomplete="name",
-                                            autodelete=False))
-
-        # Posts
-        add_component("cms_post",
-                      gis_layer_entity=dict(link="cms_post_layer",
-                                            pkey="layer_id",
-                                            joinby="layer_id",
-                                            key="post_id"))
-
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       # Symbologies
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                       # Posts
+                       cms_post={"link": "cms_post_layer",
+                                 "pkey": "layer_id",
+                                 "joinby": "layer_id",
+                                 "key": "post_id",
+                                },
+                      )
+                      
         # =====================================================================
         #  Layer Config link table
 
@@ -2542,7 +2548,7 @@ class S3FeatureLayerModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
 
         # =====================================================================
@@ -2668,25 +2674,26 @@ class S3FeatureLayerModel(S3Model):
                                     ])
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_feature=dict(link="gis_layer_config",
-                                             pkey="layer_id",
-                                             joinby="layer_id",
-                                             key="config_id",
-                                             actuate="hide",
-                                             autocomplete="name",
-                                             autodelete=False))
-
-        # Symbologies
-        add_component("gis_symbology",
-                      gis_layer_feature=dict(link="gis_layer_symbology",
-                                             pkey="layer_id",
-                                             joinby="layer_id",
-                                             key="symbology_id",
-                                             actuate="hide",
-                                             autocomplete="name",
-                                             autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       # Symbologies
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                      )
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -2787,7 +2794,7 @@ class S3MapModel(S3Model):
         projection_id = self.gis_projection_id
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         define_table = self.define_table
 
@@ -2897,15 +2904,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_arcrest=dict(link="gis_layer_config",
-                                             pkey="layer_id",
-                                             joinby="layer_id",
-                                             key="config_id",
-                                             actuate="hide",
-                                             autocomplete="name",
-                                             autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # Bing tiles
@@ -2929,15 +2938,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_bing=dict(link="gis_layer_config",
-                                          pkey="layer_id",
-                                          joinby="layer_id",
-                                          key="config_id",
-                                          actuate="hide",
-                                          autocomplete="name",
-                                          autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # Coordinate grid
@@ -2957,15 +2968,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_coordinate=dict(link="gis_layer_config",
-                                                pkey="layer_id",
-                                                joinby="layer_id",
-                                                key="config_id",
-                                                actuate="hide",
-                                                autocomplete="name",
-                                                autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # Empty (no baselayer, so can display just overlays)
@@ -2985,15 +2998,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_coordinate=dict(link="gis_layer_config",
-                                                pkey="layer_id",
-                                                joinby="layer_id",
-                                                key="config_id",
-                                                actuate="hide",
-                                                autocomplete="name",
-                                                autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # GeoJSON
@@ -3025,25 +3040,26 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_geojson=dict(link="gis_layer_config",
-                                             pkey="layer_id",
-                                             joinby="layer_id",
-                                             key="config_id",
-                                             actuate="hide",
-                                             autocomplete="name",
-                                             autodelete=False))
-
-        # Symbologies
-        add_component("gis_symbology",
-                      gis_layer_geojson=dict(link="gis_layer_symbology",
-                                             pkey="layer_id",
-                                             joinby="layer_id",
-                                             key="symbology_id",
-                                             actuate="hide",
-                                             autocomplete="name",
-                                             autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       # Symbologies
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                      )
 
         # ---------------------------------------------------------------------
         # GeoRSS
@@ -3082,25 +3098,26 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_georss=dict(link="gis_layer_config",
-                                            pkey="layer_id",
-                                            joinby="layer_id",
-                                            key="config_id",
-                                            actuate="hide",
-                                            autocomplete="name",
-                                            autodelete=False))
-
-        # Symbologies
-        add_component("gis_symbology",
-                      gis_layer_georss=dict(link="gis_layer_symbology",
-                                            pkey="layer_id",
-                                            joinby="layer_id",
-                                            key="symbology_id",
-                                            actuate="hide",
-                                            autocomplete="name",
-                                            autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       # Symbologies
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                      )
 
         # ---------------------------------------------------------------------
         # Google tiles
@@ -3126,15 +3143,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_google=dict(link="gis_layer_config",
-                                            pkey="layer_id",
-                                            joinby="layer_id",
-                                            key="config_id",
-                                            actuate="hide",
-                                            autocomplete="name",
-                                            autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # GPX - GPS eXchange format
@@ -3181,15 +3200,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_gpx=dict(link="gis_layer_config",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="config_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # KML
@@ -3228,25 +3249,26 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_kml=dict(link="gis_layer_config",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="config_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
-
-        # Symbologies
-        add_component("gis_symbology",
-                      gis_layer_kml=dict(link="gis_layer_symbology",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="symbology_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       # Symbologies
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                      )
 
         # ---------------------------------------------------------------------
         # JS
@@ -3271,15 +3293,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        # add_component("gis_config",
-                      # gis_layer_js=dict(link="gis_layer_config",
-                                        # pkey="layer_id",
-                                        # joinby="layer_id",
-                                        # key="config_id",
-                                        # actuate="hide",
-                                        # autocomplete="name",
-                                        # autodelete=False))
+        #add_components(tablename,
+                       ## Configs
+                       #gis_config={"link": "gis_layer_config",
+                                   #"pkey": "layer_id",
+                                   #"joinby": "layer_id",
+                                   #"key": "config_id",
+                                   #"actuate": "hide",
+                                   #"autocomplete": "name",
+                                   #"autodelete": False,
+                                  #},
+                      #)
 
         # ---------------------------------------------------------------------
         # MGRS
@@ -3303,15 +3327,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        # add_component("gis_config",
-                      # gis_layer_mgrs=dict(link="gis_layer_config",
-                                          # pkey="layer_id",
-                                          # joinby="layer_id",
-                                          # key="config_id",
-                                          # actuate="hide",
-                                          # autocomplete="name",
-                                          # autodelete=False))
+        #add_components(tablename,
+                       ## Configs
+                       #gis_config={"link": "gis_layer_config",
+                                   #"pkey": "layer_id",
+                                   #"joinby": "layer_id",
+                                   #"key": "config_id",
+                                   #"actuate": "hide",
+                                   #"autocomplete": "name",
+                                   #"autodelete": False,
+                                  #},
+                      #)
 
         # ---------------------------------------------------------------------
         # OpenStreetMap tiles
@@ -3355,15 +3381,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_openstreetmap=dict(link="gis_layer_config",
-                                                   pkey="layer_id",
-                                                   joinby="layer_id",
-                                                   key="config_id",
-                                                   actuate="hide",
-                                                   autocomplete="name",
-                                                   autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # OpenWeatherMap
@@ -3388,15 +3416,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_openweathermap=dict(link="gis_layer_config",
-                                                    pkey="layer_id",
-                                                    joinby="layer_id",
-                                                    key="config_id",
-                                                    actuate="hide",
-                                                    autocomplete="name",
-                                                    autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # Shapefiles
@@ -3467,25 +3497,26 @@ class S3MapModel(S3Model):
                   )
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_shapefile=dict(link="gis_layer_config",
-                                               pkey="layer_id",
-                                               joinby="layer_id",
-                                               key="config_id",
-                                               actuate="hide",
-                                               autocomplete="name",
-                                               autodelete=False))
-
-        # Symbologies
-        add_component("gis_symbology",
-                      gis_layer_shapefile=dict(link="gis_layer_symbology",
-                                               pkey="layer_id",
-                                               joinby="layer_id",
-                                               key="symbology_id",
-                                               actuate="hide",
-                                               autocomplete="name",
-                                               autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       # Symbologies
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                      )
 
         # ---------------------------------------------------------------------
         # TMS
@@ -3526,15 +3557,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_tms=dict(link="gis_layer_config",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="config_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # WFS
@@ -3617,25 +3650,26 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_wfs=dict(link="gis_layer_config",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="config_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
-
-        # Symbologies
-        add_component("gis_symbology",
-                      gis_layer_wfs=dict(link="gis_layer_symbology",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="symbology_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       # Symbologies
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                      )
 
         # ---------------------------------------------------------------------
         # WMS
@@ -3740,15 +3774,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_wms=dict(link="gis_layer_config",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="config_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # XYZ
@@ -3789,15 +3825,17 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_xyz=dict(link="gis_layer_config",
-                                         pkey="layer_id",
-                                         joinby="layer_id",
-                                         key="config_id",
-                                         actuate="hide",
-                                         autocomplete="name",
-                                         autodelete=False))
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                      )
 
         # ---------------------------------------------------------------------
         # GIS Cache
@@ -4223,7 +4261,7 @@ class S3GISThemeModel(S3Model):
         db = current.db
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         define_table = self.define_table
         layer_id = self.super_link("layer_id", "gis_layer_entity")
@@ -4254,18 +4292,18 @@ class S3GISThemeModel(S3Model):
                   super_entity="gis_layer_entity")
 
         # Components
-        # Configs
-        add_component("gis_config",
-                      gis_layer_theme=dict(link="gis_layer_config",
-                                           pkey="layer_id",
-                                           joinby="layer_id",
-                                           key="config_id",
-                                           actuate="hide",
-                                           autocomplete="name",
-                                           autodelete=False))
-
-        # Theme Data
-        add_component("gis_theme_data", gis_layer_theme="layer_theme_id")
+        add_components(tablename,
+                       # Configs
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
+                       gis_theme_data="layer_theme_id")
+                      )
 
         represent = S3Represent(lookup=tablename)
         layer_theme_id = S3ReusableField("layer_theme_id", table,

@@ -184,7 +184,7 @@ class S3FireStationModel(S3Model):
         ireport_id = self.irs_ireport_id
         vehicle_id = self.vehicle_vehicle_id
 
-        add_component = self.add_component
+        add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -265,17 +265,16 @@ class S3FireStationModel(S3Model):
             msg_no_match = T("No Fire Stations could be found"),
             msg_list_empty = T("No Fire Stations currently registered"))
 
-        add_component("vehicle_vehicle",
-                      fire_station = dict(link="fire_station_vehicle",
-                                          joinby="station_id",
-                                          key="vehicle_id",
-                                          actuate="replace"))
-
-        add_component("fire_shift",
-                      fire_station = "station_id")
-
-        add_component("fire_shift_staff",
-                      fire_station = "station_id")
+        # Components
+        add_components(tablename,
+                       vehicle_vehicle={"link": "fire_station_vehicle",
+                                        "joinby": "station_id",
+                                        "key": "vehicle_id",
+                                        "actuate": "replace",
+                                       },
+                       fire_shift="station_id",
+                       fire_shift_staff="station_id",
+                      )
 
         # =====================================================================
         # Vehicles of Fire stations
