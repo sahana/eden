@@ -1812,13 +1812,15 @@ class S3ImportItem(object):
         s3db = current.s3db
         xml = current.xml
 
+        ERROR = xml.ATTRIBUTE["error"]
+        
         self.element = element
         if table is None:
             tablename = element.get(xml.ATTRIBUTE["name"], None)
             table = s3db.table(tablename)
             if table is None:
                 self.error = self.ERROR.BAD_RESOURCE
-                element.set(xml.ATTRIBUTE["error"], self.error)
+                element.set(ERROR, str(self.error))
                 return False
 
         self.table = table
@@ -1837,7 +1839,6 @@ class S3ImportItem(object):
         if data is None:
             self.error = self.ERROR.VALIDATION_ERROR
             self.accepted = False
-            ERROR = xml.ATTRIBUTE["error"]
             if not element.get(ERROR, False):
                 element.set(ERROR, str(self.error))
             return False
