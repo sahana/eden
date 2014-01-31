@@ -211,7 +211,8 @@ class S3DVIModel(S3Model):
 
         # Components
         self.add_components("dvi_morgue",
-                            dvi_body="morgue_id")
+                            dvi_body="morgue_id",
+                           )
 
         # ---------------------------------------------------------------------
         # Body

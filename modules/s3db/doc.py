@@ -64,7 +64,7 @@ class S3DocumentLibrary(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -107,8 +107,11 @@ class S3DocumentLibrary(S3Model):
         doc_entity = self.super_entity(tablename, "doc_id", entity_types)
 
         # Components
-        add_component("doc_document", doc_entity=super_key(doc_entity))
-        add_component("doc_image", doc_entity=super_key(doc_entity))
+        doc_id = super_key(doc_entity)
+        add_components(tablename,
+                       doc_document=doc_id,
+                       doc_image=doc_id,
+                      )
 
         # ---------------------------------------------------------------------
         # Documents

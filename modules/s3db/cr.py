@@ -425,9 +425,11 @@ class S3CampDataModel(S3Model):
                                      widget = S3AutocompleteWidget("cr", "shelter")
                                      )
 
-        self.add_component("cr_shelter_status",
-                           cr_shelter=dict(joinby="shelter_id",
-                                           name="status"))
+        self.add_components(tablename,
+                            cr_shelter_status={"name": "status",
+                                               "joinby": "shelter_id",
+                                              },
+                           )
 
         # -------------------------------------------------------------------------
         # Shelter statuses

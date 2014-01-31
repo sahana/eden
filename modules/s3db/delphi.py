@@ -60,7 +60,7 @@ class S3DelphiModel(S3Model):
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -102,8 +102,16 @@ class S3DelphiModel(S3Model):
         configure(tablename,
                   list_fields=["id",
                                "name",
-                               "description"])
+                               "description"],
+                  deduplicate=self.group_duplicate,
+                 )
 
+        # Components
+        add_components(tablename,
+                       delphi_membership="group_id",
+                       delphi_problem="group_id",
+                      )
+                      
         group_id = S3ReusableField("group_id", table, notnull=True,
                                    label = T("Problem Group"),
                                    requires = IS_ONE_OF(db, "delphi_group.id",
@@ -117,17 +125,6 @@ class S3DelphiModel(S3Model):
                                   requires = IS_ONE_OF(db, "auth_user.id",
                                                        s3_auth_user_represent),
                                   represent = s3_auth_user_represent)
-
-        # Memberships as component of Groups
-        add_component("delphi_membership",
-                      delphi_group="group_id")
-
-        # Problems as component of Groups
-        add_component("delphi_problem",
-                      delphi_group="group_id")
-
-        configure("delphi_group",
-                  deduplicate=self.group_duplicate)
 
         # ---------------------------------------------------------------------
         # Group Membership
@@ -238,7 +235,15 @@ class S3DelphiModel(S3Model):
                                "name",
                                "description",
                                "created_by",
-                               "modified_on"])
+                               "modified_on"],
+                  deduplicate = self.problem_duplicate,
+                  orderby = table.code,
+                 )
+
+        # Components
+        add_components(tablename,
+                       delphi_solution="problem_id",
+                      )
 
         problem_id = S3ReusableField("problem_id", table, notnull=True,
                                      label = T("Problem"),
@@ -246,15 +251,6 @@ class S3DelphiModel(S3Model):
                                                           self.delphi_problem_represent
                                                           ),
                                      represent = self.delphi_problem_represent)
-
-        # Solutions as component of Problems
-        add_component("delphi_solution",
-                      delphi_problem="problem_id")
-
-        configure("delphi_problem",
-                  deduplicate = self.problem_duplicate,
-                  orderby = table.code,
-                  )
 
         # ---------------------------------------------------------------------
         # Solutions

@@ -69,7 +69,7 @@ class S3DeploymentModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -322,14 +322,11 @@ class S3DeploymentModel(S3Model):
                   )
 
         # Components
-        add_component("deploy_assignment",
-                      deploy_mission="mission_id")
-
-        add_component("deploy_alert",
-                      deploy_mission="mission_id")
-
-        add_component("deploy_response",
-                      deploy_mission="mission_id")
+        add_components(tablename,
+                       deploy_assignment="mission_id",
+                       deploy_alert="mission_id",
+                       deploy_response="mission_id",
+                      )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -454,12 +451,14 @@ class S3DeploymentModel(S3Model):
                   )
 
         # Components
-        add_component("hrm_appraisal",
-                      deploy_assignment=dict(name="appraisal",
-                                             link="deploy_assignment_appraisal",
-                                             joinby="assignment_id",
-                                             key="appraisal_id",
-                                             autodelete=False))
+        add_components(tablename,
+                       hrm_appraisal={"name": "appraisal",
+                                      "link": "deploy_assignment_appraisal",
+                                      "joinby": "assignment_id",
+                                      "key": "appraisal_id",
+                                      "autodelete": False,
+                                     },
+                      )
 
         assignment_id = S3ReusableField("assignment_id", table,
                                         ondelete = "CASCADE")
@@ -681,7 +680,7 @@ class S3DeploymentAlertModel(S3Model):
 
         T = current.T
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -774,17 +773,17 @@ class S3DeploymentAlertModel(S3Model):
                   )
 
         # Components
-        add_component("deploy_alert_recipient",
-                      deploy_alert=dict(name="recipient",
-                                        joinby="alert_id"))
-
-        # Used to link to custom tab deploy_alert_select_recipients
-        add_component("hrm_human_resource",
-                      deploy_alert=dict(name="select",
-                                        link="deploy_alert_recipient",
-                                        joinby="alert_id",
-                                        key="human_resource_id",
-                                        autodelete=False))
+        add_components(tablename,
+                       deploy_alert_recipient={"name": "recipient",
+                                               "joinby": "alert_id",
+                                              },
+                       hrm_human_resource={"name": "select",
+                                           "link": "deploy_alert_recipient",
+                                           "joinby": "alert_id",
+                                           "key": "human_resource_id",
+                                           "autodelete": False,
+                                          },
+                      )
 
         # Custom method to send alerts
         self.set_method("deploy", "alert",

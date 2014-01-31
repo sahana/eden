@@ -113,8 +113,6 @@ class S3DVRModel(S3Model):
             msg_list_empty = T("No Cases found")
         )
 
-        #self.add_component("pr_address", pr_pentity="pe_id")
-
         self.configure(tablename,
                        onaccept=self.dvr_case_onaccept,
                     )

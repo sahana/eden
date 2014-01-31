@@ -76,7 +76,7 @@ class S3EventModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -220,25 +220,19 @@ class S3EventModel(S3Model):
                   )
 
         # Components
-        # Incidents
-        add_component("event_incident", event_event="event_id")
-
-        # Locations
-        add_component("gis_location",
-                      event_event=Storage(link="event_event_location",
-                                          joinby="event_id",
-                                          key="location_id",
-                                          actuate="hide"))
-        # CustomForms don't work with link tables
-        add_component("event_event_location", event_event="event_id")
-
-        # Requests
-        add_component("req_req", event_event="event_id")
-
-        # Tags
-        add_component("event_event_tag",
-                      event_event=dict(joinby="event_id",
-                                       name="tag"))
+        add_components(tablename,
+                       event_incident="event_id",
+                       gis_location={"link": "event_event_location",
+                                     "joinby": "event_id",
+                                     "key": "location_id",
+                                     "actuate": "hide",
+                                    },
+                        event_event_location="event_id",
+                        req_req="event_id",
+                        event_event_tag={"name": "tag",
+                                         "joinby": "event_id",
+                                        },
+                       )
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)
@@ -426,7 +420,7 @@ class S3IncidentModel(S3Model):
         db = current.db
         settings = current.deployment_settings
         
-        add_component = self.add_component
+        add_components = self.add_components
 
         # ---------------------------------------------------------------------
         # Incidents
@@ -521,50 +515,43 @@ class S3IncidentModel(S3Model):
                                       ])
 
         # Components
-        # Tasks
-        add_component("project_task",
-                      event_incident=Storage(link="event_task",
-                                             joinby="incident_id",
-                                             key="task_id",
-                                             # @ToDo: Widget to handle embedded LocationSelector
-                                             #actuate="embed",
-                                             actuate="link",
-                                             autocomplete="name",
-                                             autodelete=False))
-
-        # Human Resources
-        add_component("event_human_resource", event_incident="incident_id")
-        add_component("hrm_human_resource",
-                      event_incident=Storage(link="event_human_resource",
-                                             joinby="incident_id",
-                                             key="human_resource_id",
-                                             # @ToDo: Widget to handle embedded AddPersonWidget
-                                             #actuate="embed",
-                                             actuate="link",
-                                             autocomplete="name",
-                                             autodelete=False))
-
-        # Assets
-        add_component("asset_asset",
-                      event_incident=Storage(link="event_asset",
-                                             joinby="incident_id",
-                                             key="asset_id",
-                                             actuate="embed",
-                                             autocomplete="name",
-                                             autodelete=False))
-
-        # Facilities
-        add_component("event_site", event_incident="incident_id")
-
-        # Map Config
-        add_component("gis_config",
-                      event_incident=Storage(link="event_config",
-                                             joinby="incident_id",
-                                             multiple=False,
-                                             key="config_id",
-                                             actuate="replace",
-                                             autocomplete="name",
-                                             autodelete=True))
+        add_components(tablename,
+                       project_task={"link": "event_task",
+                                     "joinby": "incident_id",
+                                     "key": "task_id",
+                                     # @ToDo: Widget to handle embedded LocationSelector
+                                     #"actuate": "embed",
+                                     "actuate": "link",
+                                     "autocomplete": "name",
+                                     "autodelete": False,
+                                    },
+                       event_human_resource="incident_id",
+                       hrm_human_resource={"link": "event_human_resource",
+                                           "joinby": "incident_id",
+                                           "key": "human_resource_id",
+                                           # @ToDo: Widget to handle embedded AddPersonWidget
+                                           #"actuate": "embed",
+                                           "actuate": "link",
+                                           "autocomplete": "name",
+                                           "autodelete": False,
+                                          },
+                       asset_asset={"link": "event_asset",
+                                    "joinby": "incident_id",
+                                    "key": "asset_id",
+                                    "actuate": "embed",
+                                    "autocomplete": "name",
+                                    "autodelete": False,
+                                    },
+                       event_site="incident_id",
+                       gis_config={"link": "event_config",
+                                   "joinby": "incident_id",
+                                   "multiple": False,
+                                   "key": "config_id",
+                                   "actuate": "replace",
+                                   "autocomplete": "name",
+                                   "autodelete": True,
+                                  },
+                      )
 
         # Pass names back to global scope (s3.*)
         return dict(event_incident_id = incident_id,
@@ -720,7 +707,7 @@ class S3IncidentReportModel(S3Model):
 
         T = current.T
 
-        add_component = self.add_component
+        add_components = self.add_components
 
         # ---------------------------------------------------------------------
         # Incident Reports
@@ -767,18 +754,20 @@ class S3IncidentReportModel(S3Model):
                        filter_widgets = filter_widgets,
                        )
 
-        # Coalitions
-        add_component("org_group",
-                      event_incident_report=dict(link="event_incident_report_group",
-                                                 joinby="incident_report_id",
-                                                 key="group_id",
-                                                 actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("event_incident_report_group",
-                      event_incident_report="incident_report_id")
+        # Components
+        add_components(tablename,
+                       # Coalitions
+                       org_group={"link": "event_incident_report_group",
+                                  "joinby": "incident_report_id",
+                                  "key": "group_id",
+                                  "actuate": "hide",
+                                 },
+                       # Format for InlineComponent/filter_widget
+                       event_incident_report_group="incident_report_id",
+                      )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3IncidentGroupModel(S3Model):
