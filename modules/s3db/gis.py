@@ -4302,7 +4302,7 @@ class S3GISThemeModel(S3Model):
                                    "autocomplete": "name",
                                    "autodelete": False,
                                   },
-                       gis_theme_data="layer_theme_id")
+                       gis_theme_data="layer_theme_id",
                       )
 
         represent = S3Represent(lookup=tablename)
