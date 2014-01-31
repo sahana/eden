@@ -71,7 +71,7 @@ from gluon.html import *
 from s3codec import S3Codec
 from s3crud import S3CRUD
 from s3forms import S3SQLDefaultForm
-from s3utils import s3_debug
+from s3utils import s3_debug, s3_unicode
 from s3validators import IS_IN_SET, IS_ONE_OF, IS_ONE_OF_EMPTY
 from s3widgets import S3PentityAutocompleteWidget
 
@@ -396,12 +396,13 @@ class S3Msg(object):
         if isinstance(pe_id, list):
             # Add an entry per recipient
             listindex = 0
+            insert = table.insert
             for id in pe_id:
                 try:
-                    table.insert(message_id = message_id,
-                                 pe_id = id,
-                                 contact_method = contact_method,
-                                 system_generated = system_generated)
+                    insert(message_id = message_id,
+                           pe_id = id,
+                           contact_method = contact_method,
+                           system_generated = system_generated)
                     listindex = listindex + 1
                 except:
                     return listindex
