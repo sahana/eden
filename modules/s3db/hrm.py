@@ -104,7 +104,7 @@ class S3HRModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         ORGANISATION = messages.ORGANISATION
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -571,121 +571,112 @@ class S3HRModel(S3Model):
                    action = self.hrm_lookup)
 
         # Components
-        # Email
-        add_component("pr_contact",
-                      hrm_human_resource=dict(name="email",
-                                              link="pr_person",
-                                              joinby="id",
-                                              key="pe_id",
-                                              fkey="pe_id",
-                                              pkey="person_id",
-                                              filterby="contact_method",
-                                              filterfor=["EMAIL"],
-                                              ))
-        # Mobile Phone
-        add_component("pr_contact",
-                      hrm_human_resource=dict(name="phone",
-                                              link="pr_person",
-                                              joinby="id",
-                                              key="pe_id",
-                                              fkey="pe_id",
-                                              pkey="person_id",
-                                              filterby="contact_method",
-                                              filterfor=["SMS"],
-                                              ))
+        add_components(tablename,
+                       # Contact Data
+                       pr_contact=(# Email
+                                   {"name": "email",
+                                    "link": "pr_person",
+                                    "joinby": "id",
+                                    "key": "pe_id",
+                                    "fkey": "pe_id",
+                                    "pkey": "person_id",
+                                    "filterby": "contact_method",
+                                    "filterfor": ["EMAIL"],
+                                   },
+                                   # Mobile Phone
+                                   {"name": "phone",
+                                    "link": "pr_person",
+                                    "joinby": "id",
+                                    "key": "pe_id",
+                                    "fkey": "pe_id",
+                                    "pkey": "person_id",
+                                    "filterby": "contact_method",
+                                    "filterfor": ["SMS"],
+                                   },
+                                  ),
+                        # Skills
+                        hrm_certification={"link": "pr_person",
+                                           "joinby": "id",
+                                           "key": "id",
+                                           "fkey": "person_id",
+                                           "pkey": "person_id",
+                                          },
+                        hrm_competency={"link": "pr_person",
+                                        "joinby": "id",
+                                        "key": "id",
+                                        "fkey": "person_id",
+                                        "pkey": "person_id",
+                                       },
+                        hrm_credential={"link": "pr_person",
+                                        "joinby": "id",
+                                        "key": "id",
+                                        "fkey": "person_id",
+                                        "pkey": "person_id",
+                                       },
+                        hrm_experience={"link": "pr_person",
+                                        "joinby": "id",
+                                        "key": "id",
+                                        "fkey": "person_id",
+                                        "pkey": "person_id",
+                                       },
+                        hrm_training={"link": "pr_person",
+                                      "joinby": "id",
+                                      "key": "id",
+                                      "fkey": "person_id",
+                                      "pkey": "person_id",
+                                     },
+                        # Organisation Groups
+                        org_group_person={"link": "pr_person",
+                                          "joinby": "id",
+                                          "key": "id",
+                                          "fkey": "person_id",
+                                          "pkey": "person_id",
+                                         },
+                        # Application for Deployment (RDRT)
+                        deploy_application="human_resource_id",
+                        # Availability
+                        #hrm_availability="human_resource_id",
+                        # Hours
+                        #hrm_hours="human_resource_id",
+                       )
 
-        # Skills
-        add_component("hrm_certification",
-                      hrm_human_resource=dict(link="pr_person",
-                                              joinby="id",
-                                              key="id",
-                                              fkey="person_id",
-                                              pkey="person_id",
-                                              ))
-        add_component("hrm_competency",
-                      hrm_human_resource=dict(link="pr_person",
-                                              joinby="id",
-                                              key="id",
-                                              fkey="person_id",
-                                              pkey="person_id",
-                                              ))
-        add_component("hrm_credential",
-                      hrm_human_resource=dict(link="pr_person",
-                                              joinby="id",
-                                              key="id",
-                                              fkey="person_id",
-                                              pkey="person_id",
-                                              ))
-        add_component("hrm_experience",
-                      hrm_human_resource=dict(link="pr_person",
-                                              joinby="id",
-                                              key="id",
-                                              fkey="person_id",
-                                              pkey="person_id",
-                                              ))
-        add_component("hrm_training",
-                      hrm_human_resource=dict(link="pr_person",
-                                              joinby="id",
-                                              key="id",
-                                              fkey="person_id",
-                                              pkey="person_id",
-                                              ))
-
+        # Optional Components
         teams = settings.get_hrm_teams()
         if teams:
-            # Teams
-            add_component("pr_group_membership",
-                          hrm_human_resource=dict(link="pr_person",
-                                                  joinby="id",
-                                                  key="id",
-                                                  fkey="person_id",
-                                                  pkey="person_id",
-                                                  ))
-
-        # Organisation Groups
-        add_component("org_group_person",
-                      hrm_human_resource=dict(link="pr_person",
-                                              joinby="id",
-                                              key="id",
-                                              fkey="person_id",
-                                              pkey="person_id",
-                                              ))
+            add_components(tablename,
+                           # Team Memberships
+                           pr_group_membership={"link": "pr_person",
+                                                "joinby": "id",
+                                                "key": "id",
+                                                "fkey": "person_id",
+                                                "pkey": "person_id",
+                                               },
+                          )
 
         if group == "volunteer":
-            # Programmes
-            add_component("hrm_programme_hours",
-                          hrm_human_resource=dict(link="pr_person",
-                                                  joinby="id",
-                                                  key="id",
-                                                  fkey="person_id",
-                                                  pkey="person_id",
-                                                  ))
-
-            # Volunteer Details
-            add_component("vol_details",
-                          hrm_human_resource=dict(joinby="human_resource_id",
-                                                  multiple=False))
-
-            # Volunteer Cluster
-            add_component("vol_volunteer_cluster",
-                          hrm_human_resource=dict(joinby="human_resource_id",
-                                                  multiple=False))
+            add_components(tablename,
+                           # Programmes
+                           hrm_programme_hours={"link": "pr_person",
+                                                "joinby": "id",
+                                                "key": "id",
+                                                "fkey": "person_id",
+                                                "pkey": "person_id",
+                                               },
+                           # Volunteer Details
+                           vol_details={"joinby": "human_resource_id",
+                                        "multiple": False,
+                                       },
+                           # Volunteer Cluster
+                           vol_volunteer_cluster={"joinby": "human_resource_id",
+                                                  "multiple": False,
+                                                 },
+                          )
 
         if settings.get_hrm_multiple_job_titles():
-            # Job Titles
-            add_component("hrm_job_title_human_resource",
-                          hrm_human_resource="human_resource_id")
-
-        # Application for Deployment (RDRT)
-        add_component("deploy_application",
-                      hrm_human_resource="human_resource_id")
-
-        # Availability
-        #add_component("hrm_availability",
-        #              hrm_human_resource="human_resource_id")
-        # Hours
-        #add_component("hrm_hours",
-        #              hrm_human_resource="human_resource_id")
+            add_components(tablename,
+                           # Job Titles
+                           hrm_job_title_human_resource="human_resource_id",
+                          )
 
         crud_fields = ["organisation_id",
                        "person_id",
@@ -1676,7 +1667,7 @@ class S3HRSkillModel(S3Model):
         s3_string_represent = lambda str: str if str else NONE
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -1828,7 +1819,10 @@ class S3HRSkillModel(S3Model):
                   deduplicate=self.hrm_skill_duplicate)
 
         # Components
-        add_component("req_req_skill", hrm_skill="skill_id")
+        add_components(tablename,
+                       # Requests
+                       req_req_skill="skill_id",
+                      )
 
         # =====================================================================
         # Competency Ratings
@@ -2161,16 +2155,19 @@ class S3HRSkillModel(S3Model):
                                     #widget = S3AutocompleteWidget("hrm", "course")
                                     )
 
-        configure("hrm_course",
+        configure(tablename,
                   create_next = URL(f="course",
                                     args=["[id]", "course_certificate"]),
                   deduplicate = self.hrm_course_duplicate,
                   )
 
         # Components
-        add_component("hrm_course_certificate", hrm_course="course_id")
-
-        add_component("hrm_course_job_title", hrm_course="course_id")
+        add_components(tablename,
+                       # Certificates
+                       hrm_course_certificate="course_id",
+                       # Job Titles
+                       hrm_course_job_title="course_id",
+                      )
 
         # =========================================================================
         # Training Events
@@ -2274,13 +2271,16 @@ class S3HRSkillModel(S3Model):
                   filter_widgets = filter_widgets,
                   )
 
-        # Participants of events
-        add_component("pr_person",
-                      hrm_training_event=dict(name="participant",
-                                              link="hrm_training",
-                                              joinby="training_event_id",
-                                              key="person_id",
-                                              actuate="hide"))
+        # Components
+        add_components(tablename,
+                       # Participants
+                       pr_person={"name": "participant",
+                                  "link": "hrm_training",
+                                  "joinby": "training_event_id",
+                                  "key": "person_id",
+                                  "actuate": "hide",
+                                 },
+                      )
 
         # =====================================================================
         # Training Participations
@@ -2488,12 +2488,15 @@ class S3HRSkillModel(S3Model):
                               args=["[id]", "certificate_skill"])
         else:
             create_next = None
-        configure("hrm_certificate",
+            
+        configure(tablename,
                   create_next=create_next,
                   deduplicate=self.hrm_certificate_duplicate)
 
         # Components
-        add_component("hrm_certificate_skill", hrm_certificate="certificate_id")
+        add_components(tablename,
+                       hrm_certificate_skill="certificate_id",
+                      )
 
         # =====================================================================
         # Certifications
@@ -3275,11 +3278,15 @@ class S3HRAppraisalModel(S3Model):
                   orderby = ~table.date,
                   )
 
-        self.add_component("doc_document",
-                           hrm_appraisal=dict(link="hrm_appraisal_document",
-                                              joinby="appraisal_id",
-                                              key="document_id",
-                                              autodelete=False))
+        # Components
+        self.add_components(tablename,
+                            # Appraisal Documents
+                            doc_document={"link": "hrm_appraisal_document",
+                                          "joinby": "appraisal_id",
+                                          "key": "document_id",
+                                          "autodelete": False,
+                                         },
+                           )
 
         # =====================================================================
         # Appraisal Documents
@@ -3468,8 +3475,11 @@ class S3HRExperienceModel(S3Model):
                        orderby = ~table.start_date,
                        )
 
-        self.add_component("deploy_assignment",
-                           hrm_experience="experience_id")
+        # Components
+        self.add_components(tablename,
+                            # Assignments
+                            deploy_assignment="experience_id",
+                           )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3565,13 +3575,16 @@ class S3HRProgrammeModel(S3Model):
                                                           tooltip=T("Add a new program to the catalog.")),
                                 ondelete = "SET NULL")
 
-        self.add_component("hrm_programme_hours",
-                           hrm_programme=Storage(name="person",
-                                                 joinby="programme_id"))
-
         configure(tablename,
                   deduplicate = self.hrm_programme_duplicate,
-                  )
+                 )
+
+        # Components
+        self.add_components(tablename,
+                            hrm_programme_hours={"name": "person",
+                                                 "joinby": "programme_id",
+                                                },
+                           )
 
         # =========================================================================
         # Programmes <> Persons Link Table
@@ -5299,8 +5312,7 @@ def hrm_group_controller():
             msg_list_empty = T("No Teams currently registered"))
 
     # Format for filter_widgets & imports
-    s3db.add_component("org_organisation_team",
-                       pr_group="group_id")
+    s3db.add_components("pr_group", org_organisation_team="group_id")
 
     s3db.org_organisation_team.organisation_id.label = ""
     crud_form = S3SQLCustomForm("name",
@@ -5844,8 +5856,7 @@ def hrm_person_controller(**attr):
 
     if settings.has_module("asset"):
         # Assets as component of people
-        s3db.add_component("asset_asset",
-                           pr_person="assigned_to_id")
+        s3db.add_components("pr_person", asset_asset="assigned_to_id")
         # Edits should always happen via the Asset Log
         # @ToDo: Allow this method too, if we can do so safely
         configure("asset_asset",

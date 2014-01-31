@@ -66,7 +66,7 @@ class HospitalDataModel(S3Model):
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -362,19 +362,19 @@ class HospitalDataModel(S3Model):
         # Components
         single = dict(joinby="hospital_id", multiple=False)
         multiple = "hospital_id"
-
-        add_component("hms_status", hms_hospital=single)
-        add_component("hms_contact", hms_hospital=multiple)
-        add_component("hms_bed_capacity", hms_hospital=multiple)
-        add_component("hms_services", hms_hospital=single)
-        add_component("hms_resources", hms_hospital=multiple)
+        add_components(tablename,
+                       hms_status=single,
+                       hms_contact=multiple,
+                       hms_bed_capacity=multiple,
+                       hms_services=single,
+                       hms_resources=multiple,
+                      )
 
         # Optional components
         if settings.get_hms_track_ctc():
-            add_component("hms_ctc", hms_hospital=single)
-
+            add_components(tablename, hms_ctc=single)
         if settings.get_hms_activity_reports():
-            add_component("hms_activity", hms_hospital=multiple)
+            add_components(tablename, hms_activity=multiple)
 
         # ---------------------------------------------------------------------
         # Hospital status
