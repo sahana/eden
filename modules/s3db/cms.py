@@ -72,7 +72,7 @@ class S3ContentModel(S3Model):
 
         T = current.T
         db = current.db
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -148,7 +148,9 @@ class S3ContentModel(S3Model):
                   create_next=URL(f="series", args=["[id]", "post"]))
 
         # Components
-        add_component("cms_post", cms_series="series_id")
+        add_components(tablename,
+                       cms_post="series_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Posts
@@ -276,35 +278,36 @@ class S3ContentModel(S3Model):
                   )
 
         # Components
-        add_component("cms_comment", cms_post="post_id")
+        add_components(tablename,
+                       cms_comment="post_id",
+                       cms_post_module="post_id",
+                       cms_post_user={"name": "bookmark",
+                                      "joinby": "post_id",
+                                     },
+                       cms_tag={"link": "cms_tag_post",
+                                "joinby": "post_id",
+                                "key": "tag_id",
+                                "actuate": "hide",
+                               },
+                               
+                       # For filter widget
+                       cms_post_tag="post_id",
+                       
+                       cms_post_organisation={"joinby": "post_id",
+                                              # @ToDo: deployment_setting
+                                              "multiple": False,
+                                             },
+                                             
+                       # For InlineForm to tag Posts to Events
+                       event_event_post="post_id",
 
-        add_component("cms_post_module", cms_post="post_id")
-
-        add_component("cms_post_user", cms_post=dict(name="bookmark",
-                                                     joinby="post_id"))
-
-        add_component("cms_tag", cms_post=dict(link="cms_tag_post",
-                                               joinby="post_id",
-                                               key="tag_id",
-                                               actuate="hide"))
-
-        # For FilterWidget
-        add_component("cms_post_tag", cms_post="post_id")
-
-        add_component("cms_post_organisation",
-                      cms_post=dict(joinby="post_id",
-                                    # @ToDo: deployment_setting
-                                    multiple=False,
-                                    ))
-
-        # For InlineForm to tag Posts to Events
-        add_component("event_event_post", cms_post="post_id")
-
-        # For Profile to filter appropriately
-        add_component("event_event", cms_post=dict(link="event_event_post",
-                                                   joinby="post_id",
-                                                   key="event_id",
-                                                   actuate="hide"))
+                       # For Profile to filter appropriately
+                       event_event={"link": "event_event_post",
+                                    "joinby": "post_id",
+                                    "key": "event_id",
+                                    "actuate": "hide",
+                                   },
+                      )
 
         # Custom Methods
         set_method("cms", "post",

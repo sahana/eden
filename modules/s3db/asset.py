@@ -116,7 +116,7 @@ class S3AssetModel(S3Model):
         vehicle = settings.has_module("vehicle")
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -386,20 +386,14 @@ S3OptionsFilter({
                   update_realm = True,
                   )
 
-        # Log as component of Assets
-        add_component("asset_log", asset_asset="asset_id")
-
-        # Vehicles as component of Assets
-        add_component("vehicle_vehicle",
-                      asset_asset=dict(joinby="asset_id",
-                                       multiple=False))
-
-        # GPS as a component of Assets
-        add_component("vehicle_gps", asset_asset="asset_id")
-
-        # Asset Items
-        add_component("asset_item",
-                      asset_asset="asset_id")
+        # Components
+        add_components(tablename,
+                       asset_log="asset_id",
+                       asset_item="asset_id",
+                       vehicle_vehicle={"joinby": "asset_id",
+                                        "multiple": False},
+                       vehicle_gps="asset_id",
+                      )
 
         # =====================================================================
         # Asset Items

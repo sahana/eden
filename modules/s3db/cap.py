@@ -62,7 +62,7 @@ class S3CAPModel(S3Model):
         db = current.db
         settings = current.deployment_settings
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -321,6 +321,13 @@ class S3CAPModel(S3Model):
         configure(tablename,
                   search_method=cap_search)
 
+        # Components
+        add_components(tablename,
+                       cap_info="alert_id",
+                       #cap_resource="alert_id",
+                       #cap_area="alert_id",
+                      )
+
         if crud_strings["cap_template"]:
             crud_strings[tablename] = crud_strings["cap_template"]
         else:
@@ -349,15 +356,6 @@ class S3CAPModel(S3Model):
                                    label = T("Alert"),
                                    comment = T("The alert message containing this information"),
                                    ondelete = "RESTRICT")
-
-        # CAP Informations as component of Alerts
-        add_component("cap_info", cap_alert="alert_id")
-
-        # CAP Resources as component of Alerts
-        #add_component("cap_resource", cap_alert="alert_id")
-
-        # CAP Areas as component of Alerts
-        #add_component("cap_area", cap_alert="alert_id")
 
         # ---------------------------------------------------------------------
         # CAP info segments
@@ -528,8 +526,11 @@ class S3CAPModel(S3Model):
         configure(tablename,
                   onaccept=self.info_onaccept)
 
-        add_component("cap_resource", cap_info="info_id")
-        add_component("cap_area", cap_info="info_id")
+        # Components
+        add_components(tablename,
+                       cap_resource="info_id",
+                       cap_area="info_id",
+                      )
 
         # ---------------------------------------------------------------------
         # CAP Resource segments
