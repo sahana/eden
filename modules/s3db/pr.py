@@ -132,7 +132,7 @@ class S3PersonEntity(S3Model):
         T = current.T
         auth_settings = current.auth.settings
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -186,6 +186,47 @@ class S3PersonEntity(S3Model):
                   referenced_by=[(auth_settings.table_membership_name, "for_pe")]
                   )
 
+        # Components
+        pe_id = super_key(table)
+        add_components(tablename,
+
+                       # PR components
+                       pr_address=pe_id,
+                       pr_contact=(
+                            # All contact information:
+                            pe_id,
+                            # Email addresses:
+                            {"name": "email",
+                             "joinby": "pe_id",
+                             "filterby": "contact_method",
+                             "filterfor": ["EMAIL"],
+                            },
+                            # Mobile phone numbers:
+                            {"name": "phone",
+                             "joinby": "pe_id",
+                             "filterby": "contact_method",
+                             "filterfor": ["SMS"],
+                            },
+                       ),
+                       pr_contact_emergency=pe_id,
+                       pr_image=pe_id,
+                       pr_note=pe_id,
+                       pr_role=pe_id,
+                       pr_saved_search=pe_id,
+                       pr_physical_description={"joinby": pe_id, "multiple": False},
+
+                       # DVI components
+                       dvi_effects={"joinby": pe_id, "multiple": False},
+                       dvi_checklist={"joinby": pe_id, "multiple": False},
+                       dvi_identification={"joinby": pe_id, "multiple": False},
+
+                       # Map Configs 'Saved Maps'
+                       #   - Personalised configurations
+                       #   - OU configurations (Organisation/Branch/Facility/Team)
+                       gis_config=pe_id,
+
+                      )
+                      
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
                                       label = T("ID Tag Number"),
@@ -197,46 +238,7 @@ class S3PersonEntity(S3Model):
                         method="search_ac",
                         action=self.pe_search_ac)
 
-        # Components
-        pe_id = super_key(table)
-        add_component("pr_address", pr_pentity=pe_id)
-        add_component("pr_contact", pr_pentity=pe_id)
-        # Email
-        add_component("pr_contact",
-                      pr_pentity=dict(name="email",
-                                      joinby="pe_id",
-                                      filterby="contact_method",
-                                      filterfor=["EMAIL"],
-                                      ))
-        # Mobile Phone
-        add_component("pr_contact",
-                      pr_pentity=dict(name="phone",
-                                      joinby="pe_id",
-                                      filterby="contact_method",
-                                      filterfor=["SMS"],
-                                      ))
-        add_component("pr_contact_emergency", pr_pentity=pe_id)
-        add_component("pr_image", pr_pentity=pe_id)
-        add_component("pr_note", pr_pentity=pe_id)
-        add_component("pr_physical_description",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        add_component("pr_role", pr_pentity=pe_id)
-        add_component("pr_saved_search", pr_pentity=pe_id)
-        add_component("dvi_checklist",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        add_component("dvi_effects",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        add_component("dvi_identification",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
-        # Map Configs 'Saved Maps'
-        #   - Personalised configurations
-        #   - OU configurations (Organisation/Branch/Facility/Team)
-        add_component("gis_config", pr_pentity=pe_id)
-
+                      
         # ---------------------------------------------------------------------
         # Person <-> User
         #
@@ -312,6 +314,10 @@ class S3PersonEntity(S3Model):
         configure(tablename,
                   onvalidation=self.pr_role_onvalidation)
 
+        # Components
+        add_components(tablename,
+                       pr_affiliation="role_id")
+
         # Reusable fields
         pr_role_represent = pr_RoleRepresent()
         role_id = S3ReusableField("role_id", table,
@@ -320,8 +326,6 @@ class S3PersonEntity(S3Model):
                                   represent = pr_role_represent,
                                   label = T("Role"),
                                   ondelete = "CASCADE")
-
-        add_component("pr_affiliation", pr_role="role_id")
 
         # ---------------------------------------------------------------------
         # Affiliation

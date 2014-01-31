@@ -204,15 +204,14 @@ class S3DVIModel(S3Model):
             msg_record_deleted = T("Morgue deleted"),
             msg_list_empty = T("No morgues found"))
 
-        # Search Method?
-
-        # Resource Configuration?
+        # Resource Configuration
         configure(tablename,
                   super_entity = ("pr_pentity", "org_site"),
                   )
 
         # Components
-        self.add_component("dvi_body", dvi_morgue="morgue_id")
+        self.add_components("dvi_morgue",
+                            dvi_body="morgue_id")
 
         # ---------------------------------------------------------------------
         # Body

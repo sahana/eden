@@ -425,12 +425,107 @@ class S3Model(object):
     # Resource components
     #--------------------------------------------------------------------------
     @classmethod
+    def add_components(cls, master, **links):
+        """
+            Configure component links for a master table.
+
+            @param master: the name of the master table
+            @param links: component link configurations
+        """
+
+        components = current.model.components
+
+        master = master._tablename if type(master) is Table else master
+        
+        hooks = components.get(master)
+        if hooks is None:
+            hooks = Storage()
+        for tablename, ll in links.items():
+
+            prefix, name = tablename.split("_", 1)
+            if not isinstance(ll, (tuple, list)):
+                ll = [ll]
+
+            for link in ll:
+                
+                if isinstance(link, str):
+                    alias = name
+
+                    pkey = None
+                    fkey = link
+                    linktable = None
+                    lkey = None
+                    rkey = None
+                    actuate = None
+                    autodelete = False
+                    autocomplete = None
+                    values = None
+                    multiple = True
+                    filterby = None
+                    filterfor = None
+
+                elif isinstance(link, dict):
+                    alias = link.get("name", name)
+
+                    joinby = link.get("joinby")
+                    if not joinby:
+                        continue
+
+                    linktable = link.get("link")
+                    linktable = linktable._tablename \
+                                if type(linktable) is Table else linktable
+
+                    pkey = link.get("pkey")
+                    if linktable is None:
+                        lkey = None
+                        rkey = None
+                        fkey = joinby
+                    else:
+                        lkey = joinby
+                        rkey = link.get("key")
+                        if not rkey:
+                            continue
+                        fkey = link.get("fkey")
+
+                    actuate = link.get("actuate")
+                    autodelete = link.get("autodelete", False)
+                    autocomplete = link.get("autocomplete")
+                    values = link.get("values")
+                    multiple = link.get("multiple", True)
+                    filterby = link.get("filterby")
+                    filterfor = link.get("filterfor")
+
+                else:
+                    continue
+
+                component = Storage(tablename=tablename,
+                                    pkey=pkey,
+                                    fkey=fkey,
+                                    linktable=linktable,
+                                    lkey=lkey,
+                                    rkey=rkey,
+                                    actuate=actuate,
+                                    autodelete=autodelete,
+                                    autocomplete=autocomplete,
+                                    values=values,
+                                    multiple=multiple,
+                                    filterby=filterby,
+                                    filterfor=filterfor)
+                hooks[alias] = component
+
+        components[master] = hooks
+        return
+
+    #--------------------------------------------------------------------------
+    @classmethod
     def add_component(cls, table, **links):
         """
             Defines a component.
 
             @param table: the component table or table name
             @param links: the component links
+
+            @todo: deprecate
         """
 
         components = current.model.components
