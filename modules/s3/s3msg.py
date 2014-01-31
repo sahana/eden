@@ -858,7 +858,19 @@ class S3Msg(object):
 
         mobile = self.sanitise_phone(mobile)
 
-        post_data[sms_api.message_variable] = text
+        # To send non-ASCII characters in UTF-8 encoding, we'd need
+        # to hex-encode the text and activate unicode=1, but this
+        # would limit messages to 70 characters, and many mobile
+        # phones can't display unicode anyway.
+        
+        # To be however able to send messages with at least special
+        # European characters like á or ø,  we convert the UTF-8 to
+        # the default ISO-8859-1 (latin-1) here:
+        text_latin1 = s3_unicode(text).encode("utf-8") \
+                                      .decode("utf-8") \
+                                      .encode("iso-8859-1")
+
+        post_data[sms_api.message_variable] = text_latin1
         post_data[sms_api.to_variable] = str(mobile)
 
         url = sms_api.url
