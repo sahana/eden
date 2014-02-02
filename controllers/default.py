@@ -637,8 +637,7 @@ def person():
 
     #if settings.has_module("asset"):
     #    # Assets as component of people
-    #    s3db.add_component("asset_asset",
-    #                       pr_person="assigned_to_id")
+    #    s3db.add_components("pr_person", asset_asset="assigned_to_id")
 
     # CRUD pre-process
     def prep(r):
@@ -715,10 +714,11 @@ def person():
                                                                           limitby=(0, 1))
                     if openstreetmap:
                         # OpenStreetMap config
-                        s3db.add_component("auth_user_options",
-                                           gis_config=dict(joinby="pe_id",
-                                                           pkey="pe_id",
-                                                           multiple=False)
+                        s3db.add_components("gis_config",
+                                            auth_user_options={"joinby": "pe_id",
+                                                               "pkey": "pe_id",
+                                                               "multiple": False,
+                                                              },
                                            )
                         fields += ["user_options.osm_oauth_consumer_key",
                                    "user_options.osm_oauth_consumer_secret",

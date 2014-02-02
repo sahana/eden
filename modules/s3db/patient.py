@@ -57,7 +57,7 @@ class S3PatientModel(S3Model):
         s3_date_format = current.deployment_settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        add_component = self.add_component
+        add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
@@ -125,15 +125,16 @@ class S3PatientModel(S3Model):
                                      ondelete = "RESTRICT")
 
         # Components
-        # Relatives
-        add_component("patient_relative",
-                      patient_patient=dict(joinby="patient_id",
-                                           multiple=False))
-
-        # Homes
-        add_component("patient_home",
-                      patient_patient=dict(joinby="patient_id",
-                                           multiple=False))
+        add_components(tablename,
+                       # Relatives
+                       patient_relative={"joinby": "patient_id",
+                                         "multiple": False,
+                                        },
+                       # Homes
+                       patient_home={"joinby": "patient_id",
+                                     "multiple": False,
+                                    },
+                      )
 
         # ---------------------------------------------------------------------
         # Relatives

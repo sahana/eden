@@ -64,7 +64,7 @@ class SyncDataModel(S3Model):
         crud_strings = s3.crud_strings
         define_table = self.define_table
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         set_method = self.set_method
 
@@ -248,18 +248,20 @@ class SyncDataModel(S3Model):
                                         label = T("Repository"))
 
         # Components
-        add_component("sync_task",
-                      sync_repository="repository_id")
-        add_component("sync_log",
-                      sync_repository="repository_id")
-        #add_component("sync_conflict",
-        #              sync_repository="repository_id")
-        add_component(S3Task.TASK_TABLENAME,
-                      sync_repository=dict(name="job",
-                                           joinby="repository_id",
-                                           link="sync_job",
-                                           key="scheduler_task_id",
-                                           actuate="replace"))
+        add_components(tablename,
+                       sync_task="repository_id",
+                       sync_log="repository_id",
+                       #sync_conflict="repository_id",
+                       
+                       **{# Scheduler Jobs
+                          S3Task.TASK_TABLENAME: {"name": "job",
+                                                  "joinby": "repository_id",
+                                                  "link": "sync_job",
+                                                  "key": "scheduler_task_id",
+                                                  "actuate": "replace",
+                                                 },
+                         }
+                      )
 
         # -------------------------------------------------------------------------
         # Task
@@ -407,7 +409,9 @@ class SyncDataModel(S3Model):
                                   label = T("Task"))
 
         # Components
-        add_component("sync_resource_filter", sync_task="task_id")
+        add_components(tablename,
+                       sync_resource_filter="task_id",
+                      )
                       
         # -------------------------------------------------------------------------
         # Filters

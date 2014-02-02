@@ -62,7 +62,7 @@ class S3MembersModel(S3Model):
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -193,33 +193,6 @@ class S3MembersModel(S3Model):
 
         table.paid = Field.Lazy(self.member_membership_paid)
 
-        # Components
-        # Email
-        add_component("pr_contact",
-                      member_membership = dict(name = "email",
-                                               link = "pr_person",
-                                               joinby = "id",
-                                               key = "pe_id",
-                                               fkey = "pe_id",
-                                               pkey = "person_id",
-                                               filterby = "contact_method",
-                                               filterfor = ["EMAIL"],
-                                               ))
-        # Phone
-        add_component("pr_contact",
-                      member_membership = dict(name = "phone",
-                                               link = "pr_person",
-                                               joinby = "id",
-                                               key = "pe_id",
-                                               fkey = "pe_id",
-                                               pkey = "person_id",
-                                               filterby = "contact_method",
-                                               filterfor = ["SMS",
-                                                            "HOME_PHONE",
-                                                            "WORK_PHONE",
-                                                            ],
-                                               ))
-
         def member_type_opts():
             """
                 Provide the options for the Membership Type search filter
@@ -331,6 +304,35 @@ class S3MembersModel(S3Model):
                   update_realm = True,
                   )
 
+        # Components
+        add_components(tablename,
+                       # Contact Information
+                       pr_contact = (# Email
+                                     {"name": "email",
+                                      "link": "pr_person",
+                                      "joinby": "id",
+                                      "key": "pe_id",
+                                      "fkey": "pe_id",
+                                      "pkey": "person_id",
+                                      "filterby": "contact_method",
+                                      "filterfor": ["EMAIL"],
+                                     },
+                                     # Phone
+                                     {"name": "phone",
+                                      "link": "pr_person",
+                                      "joinby": "id",
+                                      "key": "pe_id",
+                                      "fkey": "pe_id",
+                                      "pkey": "person_id",
+                                      "filterby": "contact_method",
+                                      "filterfor": ["SMS",
+                                                    "HOME_PHONE",
+                                                    "WORK_PHONE",
+                                                   ],
+                                     },
+                                    ),
+                      )
+                      
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #

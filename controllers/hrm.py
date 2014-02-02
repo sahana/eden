@@ -207,8 +207,7 @@ def profile():
 
     if settings.has_module("asset"):
         # Assets as component of people
-        s3db.add_component("asset_asset",
-                           pr_person="assigned_to_id")
+        s3db.add_components("pr_person", asset_asset="assigned_to_id")
 
     group = request.get_vars.get("group", "staff")
 

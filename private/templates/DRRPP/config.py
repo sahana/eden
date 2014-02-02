@@ -205,23 +205,25 @@ def customize_project_project(**attr):
     table = s3db[tablename]
 
     # Custom Components
-    add_component = s3db.add_component
-    add_component("project_drrpp",
-                  project_project=Storage(joinby="project_id",
-                                          multiple = False))
-    add_component("project_output", project_project="project_id")
-    add_component("doc_document",
-                  project_project=dict(name="file",
-                                       joinby="doc_id",
-                                       filterby="url",
-                                       filterfor=["", None],
-                                       ))
-    add_component("doc_document",
-                  project_project=dict(name="url",
-                                       joinby="doc_id",
-                                       filterby="file",
-                                       filterfor=["", None],
-                                       ))
+    s3db.add_components(tablename,
+                        project_drrpp={"joinby":"project_id",
+                                       "multiple": False,
+                                      },
+                        project_output="project_id",
+                        doc_document=(# Files
+                                      {"name": "file",
+                                       "joinby": "doc_id",
+                                       "filterby": "url",
+                                       "filterfor": ["", None],
+                                      },
+                                      # Links
+                                      {"name": "url",
+                                       "joinby": "doc_id",
+                                       "filterby": "file",
+                                       "filterfor": ["", None],
+                                      },
+                                     ),
+                       )
 
     # Custom CRUD Strings
     crud_strings = s3.crud_strings
@@ -709,9 +711,11 @@ def customize_project_location(**attr):
     table = s3db.project_location
 
     # Custom Components
-    s3db.add_component("project_drrpp",
-                       project_project=Storage(joinby="project_id",
-                                               multiple = False))
+    s3db.add_components("project_project",
+                        project_drrpp={"joinby": "project_id",
+                                       "multiple": False,
+                                      },
+                       )
 
     # Custom CRUD Strings
     s3.crud_strings.project_location.title_map = T("Project Map")

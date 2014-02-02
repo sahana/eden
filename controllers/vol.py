@@ -470,8 +470,7 @@ def person():
 
     if settings.has_module("asset"):
         # Assets as component of people
-        s3db.add_component("asset_asset",
-                           pr_person = "assigned_to_id")
+        s3db.add_components("pr_person", asset_asset="assigned_to_id")
         # Edits should always happen via the Asset Log
         # @ToDo: Allow this method too, if we can do so safely
         configure("asset_asset",

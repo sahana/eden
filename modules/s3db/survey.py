@@ -157,7 +157,7 @@ class S3SurveyTemplateModel(S3Model):
                             4: T("Master")
                           }
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -242,8 +242,10 @@ class S3SurveyTemplateModel(S3Model):
                                       represent = self.survey_template_represent,
                                       ondelete = "CASCADE")
         # Components
-        add_component("survey_series", survey_template="template_id")
-        add_component("survey_translate", survey_template = "template_id")
+        add_components(tablename,
+                       survey_series="template_id",
+                       survey_translate="template_id",
+                      )
 
         configure(tablename,
                   onvalidation = self.template_onvalidate,
@@ -1646,7 +1648,9 @@ class S3SurveySeriesModel(S3Model):
                        )
 
         # Components
-        self.add_component("survey_complete", survey_series="series_id")
+        self.add_components(tablename,
+                            survey_complete="series_id",
+                           )
 
         # Custom Methods
         set_method("survey", "series", method="summary", action=self.seriesSummary)
@@ -2623,9 +2627,8 @@ class S3SurveyCompleteModel(S3Model):
                   deduplicate=self.survey_complete_duplicate,
                   )
 
-        self.add_component("survey_complete",
-                           survey_series = dict(joinby="series_id",
-                                                multiple=True)
+        self.add_components(tablename,
+                            survey_complete="series_id",
                            )
 
         # ---------------------------------------------------------------------

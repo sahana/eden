@@ -131,7 +131,7 @@ class S3WarehouseModel(S3Model):
         db = current.db
         messages = current.messages
         NONE = messages["NONE"]
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -187,9 +187,11 @@ class S3WarehouseModel(S3Model):
         #          )
 
         # Tags as component of Warehouse Types
-        #add_component("inv_warehouse_type_tag",
-        #              inv_warehouse_type=dict(joinby="warehouse_type_id",
-        #                                      name="tag"))
+        #add_components(tablename,
+        #               inv_warehouse_type_tag={"name": "tag",
+        #                                       "joinby": "warehouse_type_id",
+        #                                      }
+        #              )
 
         # ---------------------------------------------------------------------
         # Warehouses
@@ -1012,7 +1014,7 @@ class S3TrackingModel(S3Model):
         type_default = settings.get_inv_send_type_default()
         time_in = settings.get_inv_send_show_time_in()
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1277,7 +1279,9 @@ class S3TrackingModel(S3Model):
                                   ondelete = "RESTRICT")
 
         # Components
-        add_component("inv_track_item", inv_send="send_id")
+        add_components(tablename,
+                       inv_track_item="send_id",
+                      )
 
         # Custom methods
         # Generate Consignment Note
@@ -1582,7 +1586,9 @@ class S3TrackingModel(S3Model):
                   sortby=[[6, "desc"], [1, "asc"]])
 
         # Components
-        add_component("inv_track_item", inv_recv="recv_id")
+        add_components(tablename,
+                       inv_track_item="recv_id",
+                      )
 
         # Custom methods
         # Print Forms
@@ -4033,11 +4039,16 @@ class S3AdjustModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        self.configure("inv_adj",
+        self.configure(tablename,
                        super_entity = "doc_entity",
                        onaccept = self.inv_adj_onaccept,
                        create_next = URL(args=["[id]", "adj_item"]),
-                       )
+                      )
+
+        # Components
+        self.add_components(tablename,
+                            inv_adj_item="adj_id",
+                           )
 
         # Reusable Field
         adj_id = S3ReusableField("adj_id", table,
@@ -4198,10 +4209,6 @@ class S3AdjustModel(S3Model):
             msg_record_modified = T("Item quantity adjusted"),
             #msg_record_deleted = T("Item removed from Stock"), # This should be forbidden - set qty to zero instead
             msg_list_empty = T("No items currently in stock"))
-
-        # Component
-        self.add_component("inv_adj_item",
-                           inv_adj="adj_id")
 
         return dict(inv_adj_item_id = adj_item_id,
                     )

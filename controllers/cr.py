@@ -57,8 +57,7 @@ def shelter():
     table = s3db.cr_shelter
 
     # Access Presence from Shelters for Check-In/Check-Out
-    s3db.add_component("pr_presence",
-                       cr_shelter="shelter_id")
+    s3db.add_components("cr_shelter", pr_presence="shelter_id")
 
     s3db.configure("cr_shelter",
                    # Go to People check-in for this shelter after creation
@@ -163,8 +162,11 @@ def shelter():
                         )
 
                     # Make Persons a component of Presence to add to list_fields
-                    s3db.add_component("pr_person",
-                                       pr_presence=Storage(joinby="pe_id", pkey="pe_id"))
+                    s3db.add_components("pr_presence",
+                                        pr_person={"joinby": "pe_id",
+                                                   "pkey": "pe_id",
+                                                  },
+                                       )
 
                     s3db.configure("pr_presence",
                                    # presence not deletable in this view! (need to register a check-out

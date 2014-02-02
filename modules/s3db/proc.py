@@ -152,8 +152,9 @@ class S3ProcurementModel(S3Model):
                                   ondelete = "CASCADE")
 
         # Items as a component of Plans
-        self.add_component("proc_plan_item",
-                            proc_plan="plan_id")
+        self.add_components(tablename,
+                            proc_plan_item="plan_id",
+                           )
 
         # =====================================================================
         # Procurement Plan Items

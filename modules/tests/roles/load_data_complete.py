@@ -64,7 +64,7 @@ def create_role_test_data(orgs, branches):
     # Ensure that the users are imported correctly
     s3db.configure( "auth_user",
                     onaccept = lambda form: auth.s3_link_user(form.vars))
-    s3db.add_component("auth_membership", auth_user="user_id")
+    s3db.add_components("auth_user", auth_membership="user_id")
     s3mgr.import_prep = auth.s3_import_prep
 
     user_resource = s3db.resource("auth_user")

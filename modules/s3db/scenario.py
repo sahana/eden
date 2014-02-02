@@ -60,7 +60,7 @@ class S3ScenarioModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
 
         # ---------------------------------------------------------------------
         # Scenarios
@@ -102,64 +102,55 @@ class S3ScenarioModel(S3Model):
             msg_list_empty = T("No Scenarios currently registered"))
 
         # Components
-        # Tasks
-        add_component("project_task",
-                      scenario_scenario=Storage(
-                                link="scenario_task",
-                                joinby="scenario_id",
-                                key="task_id",
-                                # @ToDo: Widget to handle embedded LocationSelector
-                                #actuate="embed",
-                                actuate="link",
-                                autocomplete="name",
-                                autodelete=False))
-
-        # Human Resources
-        add_component("hrm_human_resource",
-                      scenario_scenario=Storage(
-                                    link="scenario_human_resource",
-                                    joinby="scenario_id",
-                                    key="human_resource_id",
-                                    # @ToDo: Widget to handle embedded AddPersonWidget
-                                    #actuate="embed",
-                                    actuate="link",
-                                    autocomplete="name",
-                                    autodelete=False))
-
-        # Assets
-        add_component("asset_asset",
-                      scenario_scenario=Storage(
-                                    link="scenario_asset",
-                                    joinby="scenario_id",
-                                    key="asset_id",
-                                    actuate="embed",
-                                    autocomplete="name",
-                                    autodelete=False))
-
-        # Facilities
-        add_component("scenario_site",
-                      scenario_scenario="scenario_id")
-
-        # Organisations
-        add_component("org_organisation",
-                      scenario_scenario=Storage(
-                                    link="scenario_organisation",
-                                    joinby="scenario_id",
-                                    key="organisation_id",
-                                    actuate="embed",
-                                    autocomplete="name",
-                                    autodelete=False))
-
-        # Map Config as a component of Scenarios
-        add_component("gis_config",
-                      scenario_scenario=Storage(
-                                    link="scenario_config",
-                                    joinby="scenario_id",
-                                    multiple=False,
-                                    key="config_id",
-                                    actuate="replace",
-                                    autocomplete="name",
-                                    autodelete=True))
+        add_components(tablename,
+                       # Tasks
+                       project_task={"link": "scenario_task",
+                                     "joinby": "scenario_id",
+                                     "key": "task_id",
+                                     # @ToDo: Widget to handle embedded LocationSelector
+                                     #"actuate": "embed",
+                                     "actuate": "link",
+                                     "autocomplete": "name",
+                                     "autodelete": False,
+                                    },
+                       # Human Resources
+                       hrm_human_resource={"link": "scenario_human_resource",
+                                           "joinby": "scenario_id",
+                                           "key": "human_resource_id",
+                                           # @ToDo: Widget to handle embedded AddPersonWidget
+                                           #"actuate": "embed",
+                                           "actuate": "link",
+                                           "autocomplete": "name",
+                                           "autodelete": False,
+                                          },
+                       # Assets
+                       asset_asset={"link": "scenario_asset",
+                                    "joinby": "scenario_id",
+                                    "key": "asset_id",
+                                    "actuate": "embed",
+                                    "autocomplete": "name",
+                                    "autodelete": False,
+                                   },
+                       # Facilities
+                       scenario_site="scenario_id",
+                       # Organisations
+                       org_organisation={"link": "scenario_organisation",
+                                         "joinby": "scenario_id",
+                                         "key": "organisation_id",
+                                         "actuate": "embed",
+                                         "autocomplete": "name",
+                                         "autodelete": False,
+                                        },
+                       # Map Config as a component of Scenarios
+                       gis_config={"link": "scenario_config",
+                                   "joinby": "scenario_id",
+                                   "multiple": False,
+                                   "key": "config_id",
+                                   "actuate": "replace",
+                                   "autocomplete": "name",
+                                   "autodelete": True,
+                                  },
+                      )
 
         scenario_id = S3ReusableField("scenario_id", table,
                                       sortby="name",

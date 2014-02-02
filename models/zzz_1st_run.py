@@ -282,7 +282,7 @@ if len(pop_list) > 0:
     # Additional settings for user table imports:
     s3db.configure("auth_user",
                    onaccept = lambda form: auth.s3_approve_user(form.vars))
-    s3db.add_component("auth_membership", auth_user="user_id")
+    s3db.add_components("auth_user", auth_membership="user_id")
 
     # Allow population via shell scripts
     if not request.env.request_method:

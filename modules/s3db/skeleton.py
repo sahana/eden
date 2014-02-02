@@ -91,7 +91,7 @@ class S3SkeletonDataModel(S3Model):
         # self.super_entity   => super_entity
         # self.super_key      => super_key
         # self.super_link     => super_link
-        # self.add_component  => s3db.add_component
+        # self.add_components => s3db.add_components
         # self.configure      => s3db.configure
         # self.table          => s3db.table
         #

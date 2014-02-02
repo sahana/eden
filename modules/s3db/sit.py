@@ -96,6 +96,12 @@ class S3SituationModel(S3Model):
                   listadd = False,
                   )
 
+        # Components
+        self.add_components(tablename,
+                            # Presence
+                            sit_presence=self.super_key(sit_trackable),
+                           )
+
         # ---------------------------------------------------------------------
         # Presence Records for trackables
         #
@@ -114,10 +120,6 @@ class S3SituationModel(S3Model):
                                         writable = False,
                                         ),
                                   *s3_meta_fields())
-
-        # Shared component of all trackable types
-        self.add_component(table,
-                           sit_trackable=self.super_key(sit_trackable))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

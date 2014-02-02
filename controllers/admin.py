@@ -35,8 +35,9 @@ def role():
     """
 
     # ACLs as component of roles
-    s3db.add_component(auth.permission.table,
-                       auth_group="group_id")
+    s3db.add_components("auth_group",
+                        **{auth.permission.TABLENAME: "group_id"}
+                       )
 
     def prep(r):
         if r.representation != "html":
@@ -86,7 +87,7 @@ def user():
 
     auth.configure_user_fields(pe_ids)
 
-    s3db.add_component("auth_membership", auth_user="user_id")
+    s3db.add_components("auth_user", auth_membership="user_id")
 
     list_fields = ["first_name",
                    "last_name",

@@ -131,8 +131,8 @@ def human_resource():
     settings.search.filter_manager = True
 
     # Add deploy_alert_recipient as component so that we filter by it
-    s3db.add_component("deploy_alert_recipient",
-                       hrm_human_resource = "human_resource_id")
+    s3db.add_components("hrm_human_resource",
+                        deploy_alert_recipient="human_resource_id")
 
     q = s3base.S3FieldSelector("application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)

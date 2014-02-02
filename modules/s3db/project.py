@@ -131,7 +131,7 @@ class S3ProjectModel(S3Model):
         multi_budgets = settings.get_project_multiple_budgets()
         multi_orgs = settings.get_project_multiple_organisations()
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -461,98 +461,88 @@ class S3ProjectModel(S3Model):
                    action=self.project_map)
 
         # Components
+        add_components(tablename,
+                       # Sites
+                       #project_site="project_id",
+                       # Activities
+                       project_activity="project_id",
+                       # Activity Types
+                       project_activity_type={"link": "project_activity_type_project",
+                                              "joinby": "project_id",
+                                              "key": "activity_type_id",
+                                              "actuate": "link",
+                                             },
+                       # Milestones
+                       project_milestone="project_id",
+                       # Outputs
+                       project_output="project_id",
+                       # Tasks
+                       project_task={"link": "project_task_project",
+                                     "joinby": "project_id",
+                                     "key": "task_id",
+                                     "actuate": "replace",
+                                     "autocomplete": "name",
+                                     "autodelete": False,
+                                    },
+                       # Annual Budgets
+                       project_annual_budget="project_id",
+                       # Beneficiaries
+                       project_beneficiary="project_id",
+                       # Hazards
+                       project_hazard={"link": "project_hazard_project",
+                                       "joinby": "project_id",
+                                       "key": "hazard_id",
+                                       "actuate": "hide",
+                                      },
+                       # Human Resources
+                       project_human_resource="project_id",
+                       # Locations
+                       project_location="project_id",
+                       # Sectors
+                       org_sector={"link": "project_sector_project",
+                                   "joinby": "project_id",
+                                   "key": "sector_id",
+                                   "actuate": "hide",
+                                  },
+                       # Format needed by S3Filter
+                       project_sector_project="project_id",
+                       # Themes
+                       project_theme={"link": "project_theme_project",
+                                      "joinby": "project_id",
+                                      "key": "theme_id",
+                                      "actuate": "hide",
+                                     },
+                       # Format needed by S3Filter
+                       project_theme_project="project_id",
+                      )
+
         if multi_orgs:
-            # Organisations
-            add_component("project_organisation", project_project="project_id")
-            # Donors
-            add_component("project_organisation",
-                          project_project=dict(
-                            name="donor",
-                            joinby="project_id",
-                            filterby="role",
-                            filterfor=[3], # Works for IFRC & DRRPP
-                          ))
-            # Partners
-            add_component("project_organisation",
-                          project_project=dict(
-                            name="partner",
-                            joinby="project_id",
-                            filterby="role",
-                            filterfor=[2, 9], # Works for IFRC & DRRPP
-                          ))
-
-        # Sites
-        #add_component("project_site", project_project="project_id")
-
-        # Activities
-        add_component("project_activity", project_project="project_id")
-        
-        # Activity Types
-        add_component("project_activity_type",
-                      project_project=dict(link="project_activity_type_project",
-                                           joinby="project_id",
-                                           key="activity_type_id",
-                                           actuate="link"))
-
-        # Milestones
-        add_component("project_milestone", project_project="project_id")
-
-        # Outputs
-        add_component("project_output", project_project="project_id")
-
-        # Tasks
-        add_component("project_task",
-                      project_project=dict(link="project_task_project",
-                                           joinby="project_id",
-                                           key="task_id",
-                                           actuate="replace",
-                                           autocomplete="name",
-                                           autodelete=False))
-
-        # Annual Budgets
-        add_component("project_annual_budget", project_project="project_id")
-
-        # Beneficiaries
-        add_component("project_beneficiary", project_project="project_id")
-
-        # Hazards
-        add_component("project_hazard",
-                      project_project=dict(link="project_hazard_project",
-                                           joinby="project_id",
-                                           key="hazard_id",
-                                           actuate="hide"))
-
-        # Human Resources
-        add_component("project_human_resource", project_project="project_id")
-
-        # Locations
-        add_component("project_location", project_project="project_id")
-
-        # Sectors
-        add_component("org_sector",
-                      project_project=dict(link="project_sector_project",
-                                           joinby="project_id",
-                                           key="sector_id",
-                                           actuate="hide"))
-        # Format needed by S3Filter
-        add_component("project_sector_project",
-                      project_project="project_id")
-
-        # Themes
-        add_component("project_theme",
-                      project_project=dict(link="project_theme_project",
-                                           joinby="project_id",
-                                           key="theme_id",
-                                           actuate="hide"))
-        # Format needed by S3Filter
-        add_component("project_theme_project",
-                      project_project="project_id")
-
+            add_components(tablename,
+                           project_organisation=(# Organisations
+                                                 "project_id",
+                                                 # Donors
+                                                 {"name": "donor",
+                                                  "joinby": "project_id",
+                                                  "filterby": "role",
+                                                  # Works for IFRC & DRRPP:
+                                                  "filterfor": [3],
+                                                 },
+                                                 # Partners
+                                                 {"name": "partner",
+                                                  "joinby": "project_id",
+                                                  "filterby": "role",
+                                                  # Works for IFRC & DRRPP:
+                                                  "filterfor": [2, 9],
+                                                 },
+                                                ),
+                          )
         # DRR
         if mode_drr:
-            add_component("project_drr",
-                          project_project=dict(joinby="project_id",
-                                               multiple = False))
+            add_components(tablename,
+                           project_drr={"joinby": "project_id",
+                                        "multiple": False,
+                                       },
+                          )
 
         # ---------------------------------------------------------------------
         # Project Human Resources
@@ -1081,7 +1071,7 @@ class S3ProjectActivityModel(S3Model):
         db = current.db
         s3 = current.response.s3
 
-        add_component = self.add_component
+        add_components = self.add_components
         crud_strings = s3.crud_strings
         define_table = self.define_table
 
@@ -1317,88 +1307,74 @@ class S3ProjectActivityModel(S3Model):
         table.id.represent = represent
 
         # Components
-
-        # Activity Types
-        add_component("project_activity_type",
-                      project_activity=dict(link="project_activity_activity_type",
-                                            joinby="activity_id",
-                                            key="activity_type_id",
-                                            actuate="replace",
-                                            autocomplete="name",
-                                            autodelete=False))
-        # Format for InlineComponent/filter_widget
-        add_component("project_activity_activity_type",
-                      project_activity="activity_id")
-
-        # Beneficiaries
-        add_component("project_beneficiary",
-                      project_activity=dict(link="project_beneficiary_activity",
-                                            joinby="activity_id",
-                                            key="beneficiary_id",
-                                            actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("project_beneficiary_activity",
-                      project_activity="activity_id")
-
-        # Distributions
-        add_component("supply_distribution",
-                      project_activity="activity_id")
-
-        # Events
-        add_component("event_event",
-                      project_activity=dict(link="event_activity",
-                                            joinby="activity_id",
-                                            key="event_id",
-                                            actuate="hide"))
-
-        # Organisations
-        add_component("org_organisation",
-                      project_activity=dict(link="project_activity_organisation",
-                                            joinby="activity_id",
-                                            key="organisation_id",
-                                            actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("project_activity_organisation",
-                      project_activity="activity_id")
-
-        # Organisation Groups (Coalitions/Networks)
-        add_component("org_group",
-                      project_activity=dict(link="project_activity_group",
-                                            joinby="activity_id",
-                                            key="group_id",
-                                            actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("project_activity_group",
-                      project_activity="activity_id")
-
-        # Sectors
-        add_component("org_sector",
-                      project_activity=dict(link="project_sector_activity",
-                                            joinby="activity_id",
-                                            key="sector_id",
-                                            actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("project_sector_activity",
-                      project_activity="activity_id")
-
-        # Tasks
-        add_component("project_task",
-                      project_activity=dict(link="project_task_activity",
-                                            joinby="activity_id",
-                                            key="task_id",
-                                            actuate="replace",
-                                            autocomplete="name",
-                                            autodelete=False))
-
-        # Themes
-        add_component("project_theme",
-                      project_activity=dict(link="project_theme_activity",
-                                            joinby="activity_id",
-                                            key="theme_id",
-                                            actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("project_theme_activity",
-                      project_activity="activity_id")
+        add_components(tablename,
+                       # Activity Types
+                       project_activity_type={"link": "project_activity_activity_type",
+                                              "joinby": "activity_id",
+                                              "key": "activity_type_id",
+                                              "actuate": "replace",
+                                              "autocomplete": "name",
+                                              "autodelete": False,
+                                             },
+                       # Format for InlineComponent/filter_widget
+                       project_activity_activity_type="activity_id",
+                       # Beneficiaries
+                       project_beneficiary={"link": "project_beneficiary_activity",
+                                            "joinby": "activity_id",
+                                            "key": "beneficiary_id",
+                                            "actuate": "hide",
+                                           },
+                       # Format for InlineComponent/filter_widget
+                       project_beneficiary_activity="activity_id",
+                       # Distributions
+                       supply_distribution="activity_id",
+                       # Events
+                       event_event={"link": "event_activity",
+                                    "joinby": "activity_id",
+                                    "key": "event_id",
+                                    "actuate": "hide",
+                                   },
+                       # Organisations
+                       org_organisation={"link": "project_activity_organisation",
+                                         "joinby": "activity_id",
+                                         "key": "organisation_id",
+                                         "actuate": "hide",
+                                        },
+                       # Format for InlineComponent/filter_widget
+                       project_activity_organisation="activity_id",
+                       # Organisation Groups (Coalitions/Networks)
+                       org_group={"link": "project_activity_group",
+                                  "joinby": "activity_id",
+                                  "key": "group_id",
+                                  "actuate": "hide",
+                                 },
+                       # Format for InlineComponent/filter_widget
+                       project_activity_group="activity_id",
+                       # Sectors
+                       org_sector={"link": "project_sector_activity",
+                                   "joinby": "activity_id",
+                                   "key": "sector_id",
+                                   "actuate": "hide",
+                                  },
+                       # Format for InlineComponent/filter_widget
+                       project_sector_activity="activity_id",
+                       # Tasks
+                       project_task={"link": "project_task_activity",
+                                     "joinby": "activity_id",
+                                     "key": "task_id",
+                                     "actuate": "replace",
+                                     "autocomplete": "name",
+                                     "autodelete": False,
+                                    },
+                       # Themes
+                       project_theme={"link": "project_theme_activity",
+                                      "joinby": "activity_id",
+                                      "key": "theme_id",
+                                      "actuate": "hide",
+                                     },
+                       # Format for InlineComponent/filter_widget
+                       project_theme_activity="activity_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Activity Type - Activity Link Table
@@ -1425,10 +1401,6 @@ class S3ProjectActivityModel(S3Model):
             msg_list_empty = T("No Activity Types found for this Activity")
         )
         
-        # Activity Organization
-        add_component("project_activity_organisation", 
-                      project_activity="activity_id")
-
         # Pass names back to global scope (s3.*)
         return dict(project_activity_id = activity_id,
                     )
@@ -1577,8 +1549,9 @@ class S3ProjectActivityTypeModel(S3Model):
                                            ondelete = "SET NULL")
 
         # Component (for Custom Form)
-        self.add_component("project_activity_type_sector",
-                           project_activity_type="activity_type_id")
+        self.add_components(tablename,
+                            project_activity_type_sector="activity_type_id",
+                           )
 
         crud_form = S3SQLCustomForm(
                         "name",
@@ -2381,7 +2354,7 @@ class S3ProjectCampaignModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -2437,8 +2410,9 @@ class S3ProjectCampaignModel(S3Model):
                                         T("If you don't see the campaign in the list, you can add a new one by clicking link 'Add Campaign'.")),
                                       ondelete = "CASCADE")
 
-        add_component("project_campaign_message",
-                      project_campaign="campaign_id")
+        add_components(tablename,
+                       project_campaign_message="campaign_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Project Campaign Message
@@ -2495,11 +2469,13 @@ class S3ProjectCampaignModel(S3Model):
                                      label = T("Campaign Message"),
                                      ondelete = "CASCADE")
 
-        #add_component("project_campaign_response",
-        #              project_campaign_message="campaign_message_id")
-
-        add_component("project_campaign_response_summary",
-                      project_campaign_message="campaign_message_id")
+        # Components
+        add_components(tablename,
+                       # Responses
+                       #project_campaign_response="campaign_message_id",
+                       # Summary
+                       project_campaign_response_summary="campaign_message_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Project Campaign Keyword
@@ -2758,8 +2734,9 @@ class S3ProjectFrameworkModel(S3Model):
                                        ondelete = "CASCADE",
                                        )
 
-        self.add_component("project_framework_organisation",
-                           project_framework="framework_id")
+        self.add_components(tablename,
+                            project_framework_organisation="framework_id",
+                           )
 
         # ---------------------------------------------------------------------
         # Project Framework Organisations
@@ -2944,7 +2921,7 @@ class S3ProjectLocationModel(S3Model):
         NONE = messages["NONE"]
         COUNTRY = messages.COUNTRY
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -3177,39 +3154,32 @@ class S3ProjectLocationModel(S3Model):
             )
 
         # Components
-        # Activity Types
-        add_component("project_activity_type",
-                      project_location=dict(
-                                link="project_activity_type_location",
-                                joinby="project_location_id",
-                                key="activity_type_id",
-                                actuate="hide"))
-
-        # Beneficiaries
-        add_component("project_beneficiary",
-                      project_location="project_location_id")
-
-        # Contacts
-        add_component("pr_person",
-                      project_location=dict(
-                            name="contact",
-                            link="project_location_contact",
-                            joinby="project_location_id",
-                            key="person_id",
-                            actuate="hide",
-                            autodelete=False))
-
-        # Distributions
-        add_component("supply_distribution",
-                      project_location="project_location_id")
-
-        # Themes
-        add_component("project_theme",
-                      project_location=dict(
-                                link="project_theme_location",
-                                joinby="project_location_id",
-                                key="theme_id",
-                                actuate="hide"))
+        add_components(tablename,
+                       # Activity Types
+                       project_activity_type={"link": "project_activity_type_location",
+                                              "joinby": "project_location_id",
+                                              "key": "activity_type_id",
+                                              "actuate": "hide",
+                                             },
+                       # Beneficiaries
+                       project_beneficiary="project_location_id",
+                       # Contacts
+                       pr_person={"name": "contact",
+                                  "link": "project_location_contact",
+                                  "joinby": "project_location_id",
+                                  "key": "person_id",
+                                  "actuate": "hide",
+                                  "autodelete": False,
+                                 },
+                       # Distributions
+                       supply_distribution="project_location_id",
+                       # Themes
+                       project_theme={"link": "project_theme_location",
+                                      "joinby": "project_location_id",
+                                      "key": "theme_id",
+                                      "actuate": "hide",
+                                     },
+                      )
 
         # ---------------------------------------------------------------------
         # Project Community Contact Person
@@ -3242,30 +3212,30 @@ class S3ProjectLocationModel(S3Model):
             msg_list_empty = T("No Contacts Found"))
 
         # Components
-        # Email
-        add_component("pr_contact",
-                      project_location_contact=dict(
-                        name="email",
-                        link="pr_person",
-                        joinby="id",
-                        key="pe_id",
-                        fkey="pe_id",
-                        pkey="person_id",
-                        filterby="contact_method",
-                        filterfor=["EMAIL"],
-                        ))
-        # Mobile Phone
-        add_component("pr_contact",
-                      project_location_contact=dict(
-                        name="phone",
-                        link="pr_person",
-                        joinby="id",
-                        key="pe_id",
-                        fkey="pe_id",
-                        pkey="person_id",
-                        filterby="contact_method",
-                        filterfor=["SMS"],
-                        ))
+        add_components(tablename,
+                       # Contact Information
+                       pr_contact=(# Email
+                                   {"name": "email",
+                                    "link": "pr_person",
+                                    "joinby": "id",
+                                    "key": "pe_id",
+                                    "fkey": "pe_id",
+                                    "pkey": "person_id",
+                                    "filterby": "contact_method",
+                                    "filterfor": ["EMAIL"],
+                                   },
+                                   # Mobile Phone
+                                   {"name": "phone",
+                                    "link": "pr_person",
+                                    "joinby": "id",
+                                    "key": "pe_id",
+                                    "fkey": "pe_id",
+                                    "pkey": "person_id",
+                                    "filterby": "contact_method",
+                                    "filterfor": ["SMS"],
+                                   },
+                                  ),
+                      )
 
         contact_search_method = S3Search(
             advanced=(S3SearchSimpleWidget(
@@ -3789,7 +3759,7 @@ class S3ProjectThemeModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -3848,15 +3818,17 @@ class S3ProjectThemeModel(S3Model):
         #table.id.label = T("Theme")
 
         # Components
-        add_component("project_theme_project", project_theme="theme_id")
-
-        add_component("project_theme_sector", project_theme="theme_id")
-
-        # For Sync Filter
-        add_component("org_sector",
-                      project_theme=Storage(link="project_theme_sector",
-                                            joinby="theme_id",
-                                            key="sector_id"))
+        add_components(tablename,
+                       # Projects
+                       project_theme_project="theme_id",
+                       # Sectors
+                       project_theme_sector="theme_id",
+                       # For Sync Filter
+                       org_sector={"link": "project_theme_sector",
+                                   "joinby": "theme_id",
+                                   "key": "sector_id",
+                                  },
+                      )
 
         crud_form = S3SQLCustomForm(
                         "name",
@@ -4396,7 +4368,7 @@ class S3ProjectTaskModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -4764,65 +4736,60 @@ class S3ProjectTaskModel(S3Model):
                    action=self.project_task_dispatch)
 
         # Components
-        # Projects (for imports)
-        add_component("project_project",
-                      project_task=dict(link="project_task_project",
-                                        joinby="task_id",
-                                        key="project_id",
-                                        actuate="embed",
-                                        autocomplete="name",
-                                        autodelete=False))
-
-        # Activities
-        add_component("project_activity",
-                      project_task=dict(link="project_task_activity",
-                                        joinby="task_id",
-                                        key="activity_id",
-                                        actuate="embed",
-                                        autocomplete="name",
-                                        autodelete=False))
-
-        # Milestones
-        add_component("project_milestone",
-                      project_task=dict(link="project_task_milestone",
-                                        joinby="task_id",
-                                        key="milestone_id",
-                                        actuate="embed",
-                                        autocomplete="name",
-                                        autodelete=False))
-
-        # Job titles
-        add_component("hrm_job_title",
-                      project_task=dict(link="project_task_job_title",
-                                        joinby="task_id",
-                                        key="job_title_id",
-                                        actuate="embed",
-                                        autocomplete="name",
-                                        autodelete=False))
-
-        # Human Resources (assigned)
-        add_component("hrm_human_resource",
-                      project_task=dict(link="project_task_human_resource",
-                                        joinby="task_id",
-                                        key="human_resource_id",
-                                        actuate="embed",
-                                        autocomplete="name",
-                                        autodelete=False))
-
-        # Requests
-        add_component("req_req",
-                      project_task=dict(link="project_task_req",
-                                        joinby="task_id",
-                                        key="req_id",
-                                        actuate="embed",
-                                        autocomplete="request_number",
-                                        autodelete=False))
-
-        # Time
-        add_component("project_time", project_task="task_id")
-
-        # Comments (for imports))
-        add_component("project_comment", project_task="task_id")
+        add_components(tablename,
+                       # Projects (for imports)
+                       project_project={"link": "project_task_project",
+                                        "joinby": "task_id",
+                                        "key": "project_id",
+                                        "actuate": "embed",
+                                        "autocomplete": "name",
+                                        "autodelete": False,
+                                       },
+                       # Activities
+                       project_activity={"link": "project_task_activity",
+                                         "joinby": "task_id",
+                                         "key": "activity_id",
+                                         "actuate": "embed",
+                                         "autocomplete": "name",
+                                         "autodelete": False,
+                                        },
+                       # Milestones
+                       project_milestone={"link": "project_task_milestone",
+                                          "joinby": "task_id",
+                                          "key": "milestone_id",
+                                          "actuate": "embed",
+                                          "autocomplete": "name",
+                                          "autodelete": False,
+                                         },
+                       # Job titles
+                       hrm_job_title={"link": "project_task_job_title",
+                                      "joinby": "task_id",
+                                      "key": "job_title_id",
+                                      "actuate": "embed",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
+                       # Human Resources (assigned)
+                       hrm_human_resource={"link": "project_task_human_resource",
+                                           "joinby": "task_id",
+                                           "key": "human_resource_id",
+                                           "actuate": "embed",
+                                           "autocomplete": "name",
+                                           "autodelete": False
+                                          },
+                       # Requests
+                       req_req={"link": "project_task_req",
+                                "joinby": "task_id",
+                                "key": "req_id",
+                                "actuate": "embed",
+                                "autocomplete": "request_number",
+                                "autodelete": False,
+                               },
+                       # Time
+                       project_time="task_id",
+                       # Comments (for imports))
+                       project_comment="task_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Link Tasks <-> Projects

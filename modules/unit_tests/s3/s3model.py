@@ -31,14 +31,11 @@ class S3SuperEntityTests(unittest.TestCase):
                           {"setest_master": "SE Test Master"})
 
         # Add components to the SE
-        s3db.add_component("setest_component_cascade",
-                           setest_super="se_id")
-
-        s3db.add_component("setest_component_setnull",
-                           setest_super="se_id")
-
-        s3db.add_component("setest_component_restrict",
-                           setest_super="se_id")
+        s3db.add_components("setest_super",
+                            setest_component_cascade="se_id",
+                            setest_component_setnull="se_id",
+                            setest_component_restrict="se_id",
+                           )
 
         # Define master table
         s3db.define_table("setest_master",

@@ -713,8 +713,7 @@ def customize_pr_group(**attr):
         tablename = "pr_group"
 
         # Format for filter_widgets & imports
-        s3db.add_component("org_group_team",
-                           pr_group="group_id")
+        s3db.add_components("pr_group", org_group_team="group_id")
 
         from gluon import URL
         from s3.s3filter import S3TextFilter, S3OptionsFilter

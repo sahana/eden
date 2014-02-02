@@ -404,8 +404,9 @@ class S3MessageModel(S3Model):
                                      represent = message_represent,
                                      ondelete = "RESTRICT")
 
-        self.add_component("msg_attachment",
-                           msg_message="message_id")
+        self.add_components(tablename,
+                            msg_attachment="message_id",
+                           )
 
         # ---------------------------------------------------------------------
         # Outbound Messages
@@ -520,7 +521,7 @@ class S3EmailModel(S3ChannelModel):
 
         T = current.T
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         define_table = self.define_table
         set_method = self.set_method
@@ -615,16 +616,16 @@ class S3EmailModel(S3ChannelModel):
                   )
 
         # Components
-        add_component("deploy_response",
-                      msg_email="message_id")
-
-        # Used to link to custom tab deploy_response_select_mission
-        add_component("deploy_mission",
-                      msg_email=dict(name="select",
-                                     link="deploy_response",
-                                     joinby="message_id",
-                                     key="mission_id",
-                                     autodelete=False))
+        add_components(tablename,
+                       deploy_response="message_id",
+                       # Used to link to custom tab deploy_response_select_mission:
+                       deploy_mission={"name": "select",
+                                       "link": "deploy_response",
+                                       "joinby": "message_id",
+                                       "key": "mission_id",
+                                       "autodelete": False,
+                                      },
+                      )
 
         # ---------------------------------------------------------------------
         return dict()

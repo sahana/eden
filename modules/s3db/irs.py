@@ -63,7 +63,7 @@ class S3IRSModel(S3Model):
         settings = current.deployment_settings
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -428,53 +428,50 @@ class S3IRSModel(S3Model):
                  )
 
         # Components
-        # Tasks
-        add_component("project_task",
-                      irs_ireport=Storage(link="project_task_ireport",
-                                          joinby="ireport_id",
-                                          key="task_id",
-                                          actuate="replace",
-                                          autocomplete="name",
-                                          autodelete=False))
-
-        # Vehicles
-        add_component("asset_asset",
-                      irs_ireport=Storage(
-                            link="irs_ireport_vehicle",
-                            joinby="ireport_id",
-                            key="asset_id",
-                            name="vehicle",
-                            # Dispatcher doesn't need to Add/Edit records, just Link
-                            actuate="link",
-                            autocomplete="name",
-                            autodelete=False))
-
         if settings.get_irs_vehicle():
             # @ToDo: This workflow requires more work
-            link_table = "irs_ireport_vehicle_human_resource"
+            hr_link_table = "irs_ireport_vehicle_human_resource"
         else:
-            link_table = "irs_ireport_human_resource"
-        add_component("hrm_human_resource",
-                      irs_ireport=dict(link=link_table,
-                                       joinby="ireport_id",
-                                       key="human_resource_id",
-                                       # Dispatcher doesn't need to Add/Edit HRs, just Link
-                                       actuate="hide",
-                                       autocomplete="name",
-                                       autodelete=False,
-                                       ))
-
-        # Affected Persons
-        add_component("pr_person",
-                      irs_ireport=dict(link="irs_ireport_person",
-                                       joinby="ireport_id",
-                                       key="person_id",
-                                       actuate="link",
-                                       #actuate="embed",
-                                       #widget=S3AddPersonWidget(),
-                                       autodelete=False,
-                                       ))
-
+            hr_link_table = "irs_ireport_human_resource"
+        add_components(tablename,
+                       # Tasks
+                       project_task={"link": "project_task_ireport",
+                                     "joinby": "ireport_id",
+                                     "key": "task_id",
+                                     "actuate": "replace",
+                                     "autocomplete": "name",
+                                     "autodelete": False,
+                                    },
+                       # Vehicles
+                       asset_asset={"link": "irs_ireport_vehicle",
+                                    "joinby": "ireport_id",
+                                    "key": "asset_id",
+                                    "name": "vehicle",
+                                    # Dispatcher doesn't need to Add/Edit records, just Link
+                                    "actuate": "link",
+                                    "autocomplete": "name",
+                                    "autodelete": False,
+                                   },
+                       # Human Resources
+                       hrm_human_resource={"link": hr_link_table,
+                                           "joinby": "ireport_id",
+                                           "key": "human_resource_id",
+                                           # Dispatcher doesn't need to Add/Edit HRs, just Link
+                                           "actuate": "hide",
+                                           "autocomplete": "name",
+                                           "autodelete": False,
+                                          },
+                       # Affected Persons
+                       pr_person={"link": "irs_ireport_person",
+                                  "joinby": "ireport_id",
+                                  "key": "person_id",
+                                  "actuate": "link",
+                                  #"actuate": "embed",
+                                  #"widget": S3AddPersonWidget(),
+                                  "autodelete": False,
+                                 },
+                      )
+                      
         ireport_id = S3ReusableField("ireport_id", table,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,

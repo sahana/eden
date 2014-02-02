@@ -64,7 +64,9 @@ class S3WorkflowStatusModel(S3Model):
                                   we_types)
 
         # Status as component
-        add_component("workflow_status", workflow_entity = "workflow_id")
+        self.add_components(tablename,
+                            workflow_status="workflow_id",
+                           )
 
 
         # ---------------------------------------------------------------------

@@ -944,10 +944,11 @@ def config():
                                                                               limitby=(0, 1))
                         if openstreetmap:
                             # OpenStreetMap config
-                            s3db.add_component("auth_user_options",
-                                               gis_config=dict(joinby="pe_id",
-                                                               pkey="pe_id",
-                                                               multiple=False)
+                            s3db.add_components("gis_config",
+                                                auth_user_options={"joinby": "pe_id",
+                                                                   "pkey": "pe_id",
+                                                                   "multiple": False,
+                                                                  },
                                                )
                             fields += ["user_options.osm_oauth_consumer_key",
                                        "user_options.osm_oauth_consumer_secret",
@@ -2266,8 +2267,8 @@ def layer_shapefile():
                 if extension:
                     new_arg = "%s%s" % (new_arg, extension)
                 args[1] = new_arg
-                s3db.add_component(_tablename,
-                                   gis_layer_shapefile="layer_id")
+                s3db.add_components("gis_layer_shapefile",
+                                    **{_tablename: "layer_id"})
                 # @ToDo: onaccept to write any modified data back to the attached shapefile
                 # If we need to reproject, then we need to write a .prj file out:
                 #outSpatialRef.MorphToESRI()

@@ -102,7 +102,7 @@ class S3OrganisationModel(S3Model):
         messages = current.messages
         settings = current.deployment_settings
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -152,14 +152,18 @@ class S3OrganisationModel(S3Model):
             ondelete="SET NULL")
 
         configure(tablename,
-                  # Not needed since unique=True but would be if we removed to make these variable by Org
+                  # Not needed since unique=True but would be
+                  # if we removed to make these variable by Org
                   #deduplicate=self.organisation_type_duplicate,
                   )
 
-        # Tags as component of Organisation Types
-        add_component("org_organisation_type_tag",
-                      org_organisation_type=dict(joinby="organisation_type_id",
-                                                 name="tag"))
+        # Components
+        add_components(tablename,
+                       # Tags
+                       org_organisation_type_tag={"name": "tag",
+                                                  "joinby": "organisation_type_id",
+                                                 },
+                      )
 
         if settings.get_org_regions():
             # ---------------------------------------------------------------------
@@ -425,149 +429,126 @@ class S3OrganisationModel(S3Model):
                         action=self.org_search_ac)
 
         # Components
+        add_components(tablename,
+                       # Documents
+                       doc_document="organisation_id",
+                       doc_image="organisation_id",
+                       # Groups
+                       org_group={"link": "org_group_membership",
+                                  "joinby": "organisation_id",
+                                  "key": "group_id",
+                                  "actuate": "hide",
+                                 },
+                       # Format for InlineComponent/filter_widget
+                       org_group_membership="organisation_id",
+                       # Sites
+                       org_site="organisation_id",
+                       # Facilities
+                       org_facility="organisation_id",
+                       # Offices
+                       org_office="organisation_id",
+                       # Warehouses
+                       inv_warehouse="organisation_id",
+                       # Staff/Volunteers
+                       hrm_human_resource="organisation_id",
+                       # Members
+                       member_membership="organisation_id",
+                       # Locations served
+                       gis_location={"link": "org_organisation_location",
+                                     "joinby": "organisation_id",
+                                     "key": "location_id",
+                                     "actuate": "hide",
+                                    },
+                       # Format for filter_widget
+                       org_organisation_location="organisation_id",
+                       # Catalogs
+                       supply_catalog="organisation_id",
+                       # Resources
+                       org_resource="organisation_id",
+                       # Sectors
+                       org_sector={"link": "org_sector_organisation",
+                                   "joinby": "organisation_id",
+                                   "key": "sector_id",
+                                   "actuate": "hide",
+                                  },
+                       # Format for filter_widget
+                       org_sector_organisation="organisation_id",
+                       # Services
+                       org_service={"link": "org_service_organisation",
+                                    "joinby": "organisation_id",
+                                    "key": "service_id",
+                                    "actuate": "hide",
+                                   },
+                       # Format for filter_widget
+                       org_service_organisation="organisation_id",
+                       # Assets
+                       asset_asset="organisation_id",
+                       # Needs
+                       req_organisation_needs={"name": "needs",
+                                               "joinby": "organisation_id",
+                                               "multiple": False,
+                                              },
+                       # Requests
+                       #req_req="donated_by_id",
+                       
+                       # Enable this to allow migration of users between instances
+                       #auth_user="organisation_id",
 
-        # Documents
-        add_component("doc_document", org_organisation="organisation_id")
-        add_component("doc_image", org_organisation="organisation_id")
-
-        # Groups
-        add_component("org_group",
-                      org_organisation=dict(link="org_group_membership",
-                                            joinby="organisation_id",
-                                            key="group_id",
-                                            actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("org_group_membership",
-                      org_organisation="organisation_id")
-
-        # Sites
-        add_component("org_site",
-                      org_organisation="organisation_id")
-
-        # Facilities
-        add_component("org_facility",
-                      org_organisation="organisation_id")
-
-        # Offices
-        add_component("org_office",
-                      org_organisation="organisation_id")
-
-        # Warehouses
-        add_component("inv_warehouse",
-                      org_organisation="organisation_id")
-
-        # Staff/Volunteers
-        add_component("hrm_human_resource",
-                      org_organisation="organisation_id")
-
-        # Members
-        add_component("member_membership",
-                      org_organisation="organisation_id")
-
-        # Locations served
-        add_component("gis_location",
-                      org_organisation=dict(link="org_organisation_location",
-                                            joinby="organisation_id",
-                                            key="location_id",
-                                            actuate="hide"))
-        # Format for filter_widget
-        add_component("org_organisation_location",
-                      org_organisation="organisation_id")
-
-        # Catalogs
-        add_component("supply_catalog",
-                      org_organisation="organisation_id")
-
-        # Resources
-        add_component("org_resource",
-                      org_organisation="organisation_id")
-
-        # Sectors
-        add_component("org_sector",
-                      org_organisation=dict(link="org_sector_organisation",
-                                            joinby="organisation_id",
-                                            key="sector_id",
-                                            actuate="hide"))
-        # Format for filter_widget
-        add_component("org_sector_organisation",
-                      org_organisation="organisation_id")
-
-        # Services
-        add_component("org_service",
-                      org_organisation=dict(link="org_service_organisation",
-                                            joinby="organisation_id",
-                                            key="service_id",
-                                            actuate="hide"))
-        # Format for filter_widget
-        add_component("org_service_organisation",
-                      org_organisation="organisation_id")
-
-        # Assets
-        add_component("asset_asset",
-                      org_organisation="organisation_id")
+                       # Related Organisations
+                       org_organisation=(# Branches
+                                         {"name": "branch",
+                                          "link": "org_organisation_branch",
+                                          "joinby": "organisation_id",
+                                          "key": "branch_id",
+                                          "actuate": "embed",
+                                          "autocomplete": "name",
+                                          "autodelete": True,
+                                         },
+                                         # Parent (for imports)
+                                         {"name": "parent",
+                                          "link": "org_organisation_branch",
+                                          "joinby": "branch_id",
+                                          "key": "organisation_id",
+                                          "actuate": "embed",
+                                          "autocomplete": "name",
+                                          "autodelete": False,
+                                         },
+                                        ),
+                      )
 
         # Projects
         if settings.get_project_multiple_organisations():
-            add_component("project_project",
-                          org_organisation=dict(link="project_organisation",
-                                                joinby="organisation_id",
-                                                key="project_id",
-                                                # Embed widget doesn't currently support 2 fields of same name (8 hours)
-                                                #actuate="embed",
-                                                actuate="hide",
-                                                autocomplete="name",
-                                                autodelete=False))
-            # Format for filter_widget
-            add_component("project_organisation",
-                          org_organisation=dict(joinby="organisation_id",
-                                                name="project_organisation"))
-            
+            # Use link table
+            add_components(tablename,
+                           project_project={"link": "project_organisation",
+                                            "joinby": "organisation_id",
+                                            "key": "project_id",
+                                            # Embed widget doesn't currently
+                                            # support 2 fields of same name (8 hours)
+                                            #"actuate": "embed",
+                                            "actuate": "hide",
+                                            "autocomplete": "name",
+                                            "autodelete": False,
+                                           },
+                            # Format for filter_widget
+                            project_organisation={"name": "project_organisation",
+                                                  "joinby": "organisation_id",
+                                                 },
+                           )
+
         else:
-            add_component("project_project",
-                          org_organisation="organisation_id")
+            # Direct link
+            add_components(tablename,
+                           project_project="organisation_id",
+                          )
 
         # Organisation Summary data
         if settings.get_org_summary():
-            add_component("org_organisation_summary",
-                          org_organisation=dict(name="summary",
-                                                joinby="organisation_id"))
-
-        # Needs
-        add_component("req_organisation_needs",
-                      org_organisation = dict(name="needs",
-                                              joinby="organisation_id",
-                                              multiple=False,
-                                              ))
-
-        # Requests
-        #add_component("req_req",
-        #              org_organisation = "donated_by_id")
-
-        # -----------------------------------------------------------------------------
-        # Enable this to allow migration of users between instances
-        #add_component(db.auth_user,
-        #              org_organisation="organisation_id")
-
-        # Branches
-        add_component("org_organisation",
-                      org_organisation=dict(name="branch",
-                                            link="org_organisation_branch",
-                                            joinby="organisation_id",
-                                            key="branch_id",
-                                            actuate="embed",
-                                            autocomplete="name",
-                                            autodelete=True))
-
-        # For imports
-        add_component("org_organisation",
-                      org_organisation=dict(name="parent",
-                                            link="org_organisation_branch",
-                                            joinby="branch_id",
-                                            key="organisation_id",
-                                            actuate="embed",
-                                            autocomplete="name",
-                                            autodelete=False))
-
+            add_components(tablename,
+                           org_organisation_summary={"name": "summary",
+                                                     "joinby": "organisation_id",
+                                                    },
+                          )
 
         # ---------------------------------------------------------------------
         # Organisation <-> User
@@ -1057,7 +1038,7 @@ class S3OrganisationGroupModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         define_table = self.define_table
         super_link = self.super_link
@@ -1137,17 +1118,18 @@ class S3OrganisationGroupModel(S3Model):
                                    ondelete="CASCADE",
                                    )
 
-        add_component("org_group_membership",
-                      org_group=dict(name="membership",
-                                     joinby="group_id"))
-
-        add_component("pr_group",
-                      org_group=dict(name="pr_group",
-                                     joinby="org_group_id",
-                                     key="group_id",
-                                     link="org_group_team",
-                                     actuate="replace",
-                                     ))
+        # Components
+        add_components(tablename,
+                       org_group_membership={"name": "membership",
+                                             "joinby": "group_id",
+                                            },
+                       pr_group={"name": "pr_group",
+                                 "joinby": "org_group_id",
+                                 "key": "group_id",
+                                 "link": "org_group_team",
+                                 "actuate": "replace",
+                                },
+                      )
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -1487,7 +1469,7 @@ class S3OrganisationSectorModel(S3Model):
         T = current.T
         db = current.db
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1590,26 +1572,29 @@ class S3OrganisationSectorModel(S3Model):
                                     ondelete="SET NULL")
 
         # Components
-        add_component("org_organisation",
-                      org_sector=dict(link="org_sector_organisation",
-                                      joinby="sector_id",
-                                      key="organisation_id",
-                                      actuate="hide"))
-        add_component("project_project",
-                      org_sector=dict(link="project_sector_project",
-                                      joinby="sector_id",
-                                      key="project_id",
-                                      actuate="hide"))
-        #add_component("project_activity_type",
-        #              org_sector=dict(link="project_activity_type_sector",
-        #                              joinby="sector_id",
-        #                              key="activity_type_id",
-        #                              actuate="hide"))
-        #add_component("project_theme",
-        #              org_sector=dict(link="project_theme_sector",
-        #                              joinby="sector_id",
-        #                              key="theme_id",
-        #                              actuate="hide"))
+        add_components(tablename,
+                       org_organisation={"link": "org_sector_organisation",
+                                         "joinby": "sector_id",
+                                         "key": "organisation_id",
+                                         "actuate": "hide",
+                                        },
+                       project_project={"link": "project_sector_project",
+                                        "joinby": "sector_id",
+                                        "key": "project_id",
+                                        "actuate": "hide",
+                                       },
+                       #project_activity_type={"link": "project_activity_type_sector",
+                       #                       "joinby": "sector_id",
+                       #                       "key": "activity_type_id",
+                       #                       "actuate": "hide",
+                       #                      },
+                       #project_theme={"link": "project_theme_sector",
+                       #               "joinby": "sector_id",
+                       #               "key": "theme_id",
+                       #               "actuate": "hide",
+                       #              },
+                       #org_subsector="sector_id",
+                      )
 
         # =====================================================================
         # (Cluster) Subsector
@@ -1670,7 +1655,6 @@ class S3OrganisationSectorModel(S3Model):
                                        # ondelete = "SET NULL")
 
         # configure("org_subsector", deduplicate=self.org_sector_duplicate)
-        # add_component("org_subsector", org_sector="sector_id")
 
         # ---------------------------------------------------------------------
         # Organizations <> Sectors Link Table
@@ -2019,7 +2003,7 @@ class S3SiteModel(S3Model):
         T = current.T
         auth = current.auth
 
-        add_component = self.add_component
+        add_components = self.add_components
         set_method = self.set_method
 
         # =====================================================================
@@ -2100,71 +2084,6 @@ class S3SiteModel(S3Model):
                    method="site_contact_person",
                    action=self.site_contact_person)
 
-        # Components
-
-        # Facility Types
-        # Format for S3SQLInlineComponentCheckbox
-        add_component("org_facility_type",
-                      org_site=dict(link="org_site_facility_type",
-                                    joinby="site_id",
-                                    key="facility_type_id",
-                                    actuate="hide"))
-        # Format for filter_widgets & imports
-        add_component("org_site_facility_type",
-                      org_site="site_id")
-
-        # Human Resources
-        # - direct component (suitable for Create/List)
-        add_component("hrm_human_resource",
-                      org_site="site_id")
-        # - via link table (suitable for Assign)
-        add_component("hrm_human_resource_site",
-                      org_site="site_id")
-
-        # Documents
-        add_component("doc_document",
-                      org_site="site_id")
-        add_component("doc_image",
-                      org_site="site_id")
-
-        # Inventory
-        add_component("inv_inv_item",
-                      org_site="site_id")
-        add_component("inv_recv",
-                      org_site="site_id")
-        add_component("inv_send",
-                      org_site="site_id")
-
-        # Assets
-        add_component("asset_asset",
-                      org_site="site_id")
-
-        # Procurement Plans
-        add_component("proc_plan",
-                      org_site="site_id")
-
-        # Needs
-        add_component("req_site_needs",
-                      org_site = dict(name="needs",
-                                      joinby="site_id",
-                                      multiple=False,
-                                      ))
-
-        # Requests
-        add_component("req_req",
-                      org_site="site_id")
-        add_component("req_commit",
-                      org_site="site_id")
-        add_component("req_site_needs",
-                      org_site=dict(joinby="site_id",
-                                    multiple=False))
-
-        # Status
-        add_component("org_site_status",
-                      org_site=dict(name="status",
-                                    joinby="site_id",
-                                    multiple=False))
-
         self.configure(tablename,
                        context = {"location": "location_id",
                                   "organisation": "organisation_id",
@@ -2181,15 +2100,69 @@ class S3SiteModel(S3Model):
                        ondelete_cascade = self.org_site_ondelete_cascade,
                        )
 
-        # Coalitions
-        add_component("org_group",
-                      org_site=dict(link="org_site_org_group",
-                                    joinby="site_id",
-                                    key="group_id",
-                                    actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("org_site_org_group",
-                      org_site="site_id")
+        # Components
+        add_components(tablename,
+                       # Facility Types
+                       # Format for S3SQLInlineComponentCheckbox
+                       org_facility_type={"link": "org_site_facility_type",
+                                          "joinby": "site_id",
+                                          "key": "facility_type_id",
+                                          "actuate": "hide",
+                                         },
+                       # Format for filter_widgets & imports
+                       org_site_facility_type="site_id",
+
+                       # Human Resources
+                       # - direct component (suitable for Create/List)
+                       hrm_human_resource="site_id",
+                       # - via link table (suitable for Assign)
+                       hrm_human_resource_site="site_id",
+
+                       # Documents
+                       doc_document="site_id",
+                       doc_image="site_id",
+
+                       # Inventory
+                       inv_inv_item="site_id",
+                       inv_recv="site_id",
+                       inv_send="site_id",
+
+                       # Assets
+                       asset_asset="site_id",
+
+                       # Procurement Plans
+                       proc_plan="site_id",
+
+                       # Needs
+                       req_site_needs=(# with alias
+                                       {"name": "needs",
+                                        "joinby": "site_id",
+                                        "multiple": False,
+                                       },
+                                       # without alias
+                                       {"joinby": "site_id",
+                                        "multiple": False,
+                                       },
+                                      ),
+                                      
+                       # Requests
+                       req_req="site_id",
+                       req_commit="site_id",
+
+                       # Status
+                       org_site_status={"name": "status",
+                                        "joinby": "site_id",
+                                        "multiple": False,
+                                       },
+                       # Coalitions
+                       org_group={"link": "org_site_org_group",
+                                  "joinby": "site_id",
+                                  "key": "group_id",
+                                  "actuate": "hide",
+                                 },
+                       # Format for InlineComponent/filter_widget
+                       org_site_org_group="site_id",
+                      )
 
         # Pass names back to global scope (s3.*)
         return dict(org_site_id=site_id,
@@ -2644,7 +2617,6 @@ class S3FacilityModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        add_component = self.add_component
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -3348,7 +3320,7 @@ class S3OfficeModel(S3Model):
         s3 = current.response.s3
         messages = current.messages
         settings = current.deployment_settings
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -3408,10 +3380,13 @@ class S3OfficeModel(S3Model):
                   deduplicate=self.office_type_duplicate,
                   )
 
-        # Tags as component of Office Types
-        add_component("org_office_type_tag",
-                      org_office_type=dict(joinby="office_type_id",
-                                           name="tag"))
+        # Components
+        add_components(tablename,
+                       # Tags
+                       org_office_type_tag={"name": "tag",
+                                            "joinby": "office_type_id",
+                                           },
+                      )
 
         # ---------------------------------------------------------------------
         # Offices
@@ -3578,9 +3553,11 @@ class S3OfficeModel(S3Model):
                   )
 
         if settings.get_org_summary():
-            add_component("org_office_summary",
-                          org_office=dict(name="summary",
-                                          joinby="office_id"))
+            add_components(tablename,
+                           org_office_summary={"name": "summary",
+                                               "joinby": "office_id",
+                                              },
+                          )
 
         # Pass names back to global scope (s3.*)
         return dict(org_office_type_id=office_type_id,

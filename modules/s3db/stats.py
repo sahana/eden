@@ -156,7 +156,9 @@ class S3StatsModel(S3Model):
                                     represent=represent,
                                     )
 
-        #self.add_component("stats_source_details", stats_source="source_id")
+        #self.add_components(tablename,
+        #                    stats_source_details="source_id",
+        #                   )
 
         # ---------------------------------------------------------------------
         # Stats Source Details
@@ -1139,7 +1141,7 @@ class S3StatsPeopleModel(S3Model):
 
         T = current.T
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1252,15 +1254,17 @@ class S3StatsPeopleModel(S3Model):
                   filter_widgets = filter_widgets,
                   )
 
-        # Coalitions
-        add_component("org_group",
-                      stats_people=dict(link="stats_people_group",
-                                          joinby="people_id",
-                                          key="group_id",
-                                          actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("stats_people_group",
-                      stats_people="people_id")
+        # Components
+        add_components(tablename,
+                       # Coalitions
+                       org_group={"link": "stats_people_group",
+                                  "joinby": "people_id",
+                                  "key": "group_id",
+                                  "actuate": "hide",
+                                 },
+                       # Format for InlineComponent/filter_widget
+                       stats_people_group="people_id",
+                      )
 
         represent = S3Represent(lookup=tablename)
 
@@ -1322,7 +1326,7 @@ class S3StatsTrainedPeopleModel(S3Model):
 
         T = current.T
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1441,15 +1445,17 @@ class S3StatsTrainedPeopleModel(S3Model):
                   filter_widgets = filter_widgets,
                   )
 
-        # Coalitions
-        add_component("org_group",
-                      stats_trained=dict(link="stats_trained_group",
-                                         joinby="trained_id",
-                                         key="group_id",
-                                         actuate="hide"))
-        # Format for InlineComponent/filter_widget
-        add_component("stats_trained_group",
-                      stats_trained="trained_id")
+        # Components
+        add_components(tablename,
+                       # Coalitions
+                       org_group={"link": "stats_trained_group",
+                                  "joinby": "trained_id",
+                                  "key": "group_id",
+                                  "actuate": "hide",
+                                 },
+                       # Format for InlineComponent/filter_widget
+                       stats_trained_group="trained_id",
+                      )
 
         represent = S3Represent(lookup=tablename)
 

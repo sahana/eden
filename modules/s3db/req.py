@@ -91,7 +91,7 @@ class S3RequestModel(S3Model):
 
         s3_string_represent = lambda str: str if str else NONE
 
-        add_component = self.add_component
+        add_components = self.add_components
         crud_strings = s3.crud_strings
         set_method = self.set_method
         super_link = self.super_link
@@ -550,37 +550,34 @@ class S3RequestModel(S3Model):
                    action=self.req_form)
 
         # Components
-        # Documents as a component of Requests
-        add_component("req_document",
-                      req_req="req_id")
-
-        # Request Items as component of Requests
-        add_component("req_req_item",
-                      req_req=dict(joinby="req_id",
-                                   multiple=multiple_req_items))
-
-        # Request Skills as component of Requests
-        add_component("req_req_skill",
-                      req_req=dict(joinby="req_id",
-                                   multiple=multiple_req_items))
-
-        # Commitment as a component of Requests
-        add_component("req_commit",
-                      req_req="req_id")
-
-        # Item Categories as a component of Requests
-        add_component("supply_item_category",
-                      req_req=dict(link="req_req_item_category",
-                                   joinby="req_id",
-                                   key="item_category_id"))
-
-        # Request Jobs as a component of Requests
-        add_component(S3Task.TASK_TABLENAME,
-                      req_req=dict(name="job",
-                                   joinby="req_id",
-                                   link="req_job",
-                                   key="scheduler_task_id",
-                                   actuate="replace"))
+        add_components(tablename,
+                       # Documents
+                       req_document="req_id",
+                       # Requested Items
+                       req_req_item={"joinby": "req_id",
+                                     "multiple": multiple_req_items,
+                                    },
+                       # Requested Skills
+                       req_req_skill={"joinby": "req_id",
+                                      "multiple": multiple_req_items,
+                                     },
+                       # Commitment
+                       req_commit="req_id",
+                       # Item Categories
+                       supply_item_category={"link": "req_req_item_category",
+                                             "joinby": "req_id",
+                                             "key": "item_category_id",
+                                            },
+                                            
+                       **{# Scheduler Jobs (for recurring requests)
+                          S3Task.TASK_TABLENAME: {"name": "job",
+                                                  "joinby": "req_id",
+                                                  "link": "req_job",
+                                                  "key": "scheduler_task_id",
+                                                  "actuate": "replace",
+                                                 },
+                         }
+                      )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2273,7 +2270,7 @@ class S3CommitModel(S3Model):
         auth = current.auth
         s3 = current.response.s3
 
-        add_component = self.add_component
+        add_components = self.add_components
 
         settings = current.deployment_settings
         req_types = settings.get_req_req_type()
@@ -2466,17 +2463,14 @@ class S3CommitModel(S3Model):
                        )
 
         # Components
-        # Committed Items as component of Commitment
-        add_component("req_commit_item",
-                      req_commit="commit_id")
-
-        # Committed Persons as component of Commitment
-        add_component("req_commit_person",
-                      req_commit="commit_id")
-
-        # Committed Skills as component of Commitment
-        add_component("req_commit_skill",
-                      req_commit="commit_id")
+        add_components(tablename,
+                       # Committed Items
+                       req_commit_item="commit_id",
+                       # Committed Persons
+                       req_commit_person="commit_id",
+                       # Committed Skills
+                       req_commit_skill="commit_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

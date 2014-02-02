@@ -55,7 +55,7 @@ def s3_assess_severity_represent(value):
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 S3Represent = s3base.S3Represent
 
-add_component = s3db.add_component
+add_components = s3db.add_components
 configure = s3db.configure
 crud_strings = s3.crud_strings
 define_table = db.define_table
@@ -69,7 +69,7 @@ human_resource_id = s3db.hrm_human_resource_id
 ireport_id = s3db.irs_ireport_id
 
 # Impact as component of assessments
-add_component("impact_impact", assess_assess="assess_id")
+add_components("assess_assess", impact_impact="assess_id")
 
 def assess_tables():
     """ Load the Assess Tables when needed """
@@ -125,7 +125,7 @@ def assess_tables():
         name_nice_plural = T("Assessments"))
 
     # assess_assess as component of org_organisation
-    add_component(table, org_organisation="organisation_id")
+    add_components("org_organisation", assess_assess="organisation_id")
 
     # Hide Add Assessment functionality. Users should only add assessments
     # through the Basic Assessment.
@@ -213,7 +213,7 @@ def assess_tables():
         name_nice_plural = T("Baselines"))
 
     # Baseline as component of assessments
-    add_component(table, assess_assess="assess_id")
+    add_components("assess_assess", assess_baseline="assess_id")
 
     # =========================================================================
     # Summary
@@ -252,7 +252,7 @@ def assess_tables():
         name_nice_plural = T("Assessments"))
 
     # Summary as component of assessments
-    add_component(table, assess_assess="assess_id")
+    add_components("assess_assess", assess_summary="assess_id")
 
     # Pass variables back to global scope (response.s3.*)
     return dict(
@@ -529,7 +529,7 @@ def rat_tables():
     # Assessment as component of cr_shelter.
     # RAT has components itself, so best not to constrain within the parent resource tabs
     # - therefore disable the listadd & jump out of the tabs for Create/Update
-    add_component(table, cr_shelter="shelter_id")
+    add_components("cr_shelter", assess_rat="shelter_id")
 
     configure(tablename,
               listadd=False,    # We override this in the RAT controller for when not a component
@@ -642,9 +642,6 @@ def rat_tables():
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
     configure(tablename, deletable=False)
 
     # Section 3: Shelter & Essential NFIs -------------------------------------
@@ -755,10 +752,6 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
 
     configure(tablename, deletable=False)
 
@@ -915,10 +908,6 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
 
     configure(tablename, deletable=False)
 
@@ -1079,10 +1068,6 @@ def rat_tables():
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
-
     configure(tablename, deletable=False)
 
     # Section 6 - Nutrition/Food Security -------------------------------------
@@ -1181,10 +1166,6 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
 
     configure(tablename, deletable=False)
 
@@ -1302,10 +1283,6 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
 
     configure(tablename, deletable=False)
 
@@ -1505,11 +1482,7 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
-
+    
     configure(tablename, deletable=False)
 
 
@@ -1769,13 +1742,37 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-
-    add_component(table,
-                  assess_rat=dict(joinby="assessment_id",
-                                  multiple=False))
-
+    
     configure(tablename, deletable=False)
 
+    # Sections as components of RAT
+    add_components("assess_rat",
+                   assess_section2={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                   assess_section3={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                   assess_section4={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                   assess_section5={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                   assess_section6={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                   assess_section7={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                   assess_section8={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                   assess_section9={"joinby": "assessment_id",
+                                    "multiple": False,
+                                   },
+                  )
+                 
     # -----------------------------------------------------------------------------
     def assess_rat_summary(r, **attr):
 
@@ -1835,7 +1832,7 @@ crud_strings[tablename] = Storage(
     name_nice_plural = T("Population Statistics"))
 
 # Impact as component of incident reports
-#add_component("impact_impact", irs_ireport="ireport_id")
+#add_components("irs_ireport", impact_impact="ireport_id")
 
 # =========================================================================
 def impact_tables():

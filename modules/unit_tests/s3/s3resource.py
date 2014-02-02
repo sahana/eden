@@ -3401,11 +3401,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db = current.s3db
 
         # Define a filtered component with single value
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=5))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": 5,
+                                         },
+                           )
 
         # Define the resource
         resource = s3db.resource("org_organisation", components=["test"])
@@ -3420,11 +3422,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                          str((table.office_type_id == 5)))
 
         # Define a filtered component with single value in list
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=[5]))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": [5],
+                                         },
+                           )
         resource = s3db.resource("org_organisation", components=["test"])
         component = resource.components["test"]
         table = component.table
@@ -3432,11 +3436,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                          str((table.office_type_id == 5)))
 
         # Define a filtered component with value list
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=[4, 5]))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": [4, 5],
+                                         },
+                           )
         resource = s3db.resource("org_organisation", components=["test"])
         component = resource.components["test"]
         table = component.table
@@ -3444,11 +3450,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                          str((table.office_type_id.belongs(4,5))))
 
         # Define a filtered component with empty filter value list
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=[]))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": [],
+                                         },
+                           )
         resource = s3db.resource("org_organisation", components=["test"])
         component = resource.components["test"]
         self.assertEqual(component.filter, None)
@@ -3464,11 +3472,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db = current.s3db
 
         # Define a filtered component
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=5))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": 5,
+                                         },
+                           )
 
         # Define the resource
         resource = s3db.resource("org_organisation")
@@ -3494,11 +3504,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         org_test_office = s3db.org_office.with_alias("org_test_office")
 
         # Define a filtered component
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=5))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": 5,
+                                         },
+                           )
 
         # Define the resource
         resource = s3db.resource("org_organisation")
@@ -3559,11 +3571,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         org_office_type = s3db.org_office_type
         org_test_office = s3db.org_office.with_alias("org_test_office")
 
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=5))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": 5,
+                                         },
+                           )
 
         resource = s3db.resource("org_organisation")
         fields = ["id", "name", "test.name", "test.office_type_id$name"]
@@ -3624,11 +3638,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         row = resource.select(["id"], limit=1, as_rows=True)[0]
         type_id = row.id
 
-        s3db.add_component("org_office",
-                           org_organisation = dict(name="test",
-                                                   joinby="organisation_id",
-                                                   filterby="office_type_id",
-                                                   filterfor=type_id))
+        s3db.add_components("org_organisation",
+                            org_office = {"name": "test",
+                                          "joinby": "organisation_id",
+                                          "filterby": "office_type_id",
+                                          "filterfor": type_id,
+                                         },
+                           )
         
         resource = current.s3db.resource("org_organisation", uid="FCTESTORG")
         fields = ["id", "name", "test.name", "test.office_type_id$name"]
@@ -3730,20 +3746,20 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         current.auth.override = True
         s3db = current.s3db
-        s3db.add_component("org_office",
-                      org_organisation=dict(name="fieldoffice",
-                                            joinby="organisation_id",
-                                            filterby="office_type_id",
-                                            filterfor=5
-                                            )
-                      )
-        s3db.add_component("org_office",
-                      org_organisation=dict(name="hq",
-                                            joinby="organisation_id",
-                                            filterby="office_type_id",
-                                            filterfor=4
-                                            )
-                      )
+        s3db.add_components("org_organisation",
+                            org_office = ({"name": "fieldoffice",
+                                           "joinby": "organisation_id",
+                                           "filterby": "office_type_id",
+                                           "filterfor": 5,
+                                          },
+                                          {"name": "hq",
+                                           "joinby": "organisation_id",
+                                           "filterby": "office_type_id",
+                                           "filterfor": 4,
+                                          },
+                                         ),
+                           )
+                           
         resource = s3db.resource("org_organisation")
         self.assertEqual(str(resource.components.fieldoffice.filter), \
                          "(org_fieldoffice_office.office_type_id = 5)")
@@ -3859,8 +3875,8 @@ class ResourceDeleteTests(unittest.TestCase):
                                             s3db.del_master,
                                             ondelete="CASCADE"),
                                       *s3_meta_fields())
-        s3db.add_component("del_component",
-                           del_master="del_master_id")
+        s3db.add_components("del_master",
+                            del_component="del_master_id")
 
         try:
             # Create a component record
@@ -3907,8 +3923,8 @@ class ResourceDeleteTests(unittest.TestCase):
                                             s3db.del_master,
                                             ondelete="SET NULL"),
                                       *s3_meta_fields())
-        s3db.add_component("del_component",
-                           del_master="del_master_id")
+        s3db.add_components("del_master",
+                            del_component="del_master_id")
 
         try:
             # Create a component record
@@ -3956,8 +3972,8 @@ class ResourceDeleteTests(unittest.TestCase):
                                             s3db.del_master,
                                             ondelete="RESTRICT"),
                                       *s3_meta_fields())
-        s3db.add_component("del_component",
-                           del_master="del_master_id")
+        s3db.add_components("del_master",
+                            del_component="del_master_id")
 
         try:
             # Create a component record
@@ -4035,8 +4051,8 @@ class ResourceDeleteTests(unittest.TestCase):
                                                       "del_super",
                                                       ondelete="CASCADE"),
                                       *s3_meta_fields())
-        s3db.add_component("del_component",
-                           del_super="del_super_id")
+        s3db.add_components("del_super",
+                            del_component="del_super_id")
 
         try:
             # Get the super_id
@@ -4093,8 +4109,8 @@ class ResourceDeleteTests(unittest.TestCase):
                                                       "del_super",
                                                       ondelete="SET NULL"),
                                       *s3_meta_fields())
-        s3db.add_component("del_component",
-                           del_super="del_super_id")
+        s3db.add_components("del_super",
+                            del_component="del_super_id")
 
         try:
             # Get the super_id
@@ -4151,8 +4167,8 @@ class ResourceDeleteTests(unittest.TestCase):
                                                       "del_super",
                                                       ondelete="RESTRICT"),
                                       *s3_meta_fields())
-        s3db.add_component("del_component",
-                           del_super="del_super_id")
+        s3db.add_components("del_super",
+                            del_component="del_super_id")
 
         try:
             # Get the super_id

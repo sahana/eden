@@ -3254,12 +3254,13 @@ def customize_org_organisation(**attr):
                                                     ).first()
                 if national:
                     national = national.id
-                    s3db.add_component("org_office",
-                                       org_organisation=dict(name="nat_office",
-                                                             joinby="organisation_id",
-                                                             filterby="office_type_id",
-                                                             filterfor=[national],
-                                                             ))
+                    s3db.add_components("org_organisation",
+                                        org_office={"name": "nat_office",
+                                                    "joinby": "organisation_id",
+                                                    "filterby": "office_type_id",
+                                                    "filterfor": [national],
+                                                   },
+                                       )
                     list_fields.append("nat_office.location_id$addr_street")
 
             # Represent used in rendering

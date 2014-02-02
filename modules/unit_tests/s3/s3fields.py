@@ -328,9 +328,12 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         s3db = current.s3db
         table = s3db[tablename]
-        s3db.add_component(tablename,
-                           org_organisation=Storage(name="test",
-                                                    joinby="organisation_id"))
+        s3db.add_components("org_organisation",
+                            **{tablename: {"name": "test",
+                                           "joinby": "organisation_id",
+                                          },
+                              }
+                           )
         current.auth.override = True
 
 

@@ -99,7 +99,7 @@ class S3SupplyModel(S3Model):
         settings = current.deployment_settings
 
         # Shortcuts
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -214,11 +214,13 @@ class S3SupplyModel(S3Model):
             ondelete = "RESTRICT",
             )
 
-        # Categories as component of Catalogs
-        add_component("supply_item_category", supply_catalog="catalog_id")
-
-        # Catalog Items as component of Catalogs
-        add_component("supply_catalog_item", supply_catalog="catalog_id")
+        # Components
+        add_components(tablename,
+                       # Categories
+                       supply_item_category="catalog_id",
+                       # Catalog Items
+                       supply_catalog_item="catalog_id",
+                      )
 
         # =====================================================================
         # Item Category
@@ -318,9 +320,11 @@ S3OptionsFilter({
  'lookupResource':'item_category',
 })'''
 
-        # Categories as component of Categories
-        add_component("supply_item_category",
-                      supply_item_category="parent_item_category_id")
+        # Components
+        add_components(tablename,
+                       # Child categories
+                       supply_item_category="parent_item_category_id",
+                      )
 
         def supply_item_category_onvalidate(form):
             """
@@ -490,35 +494,37 @@ S3OptionsFilter({
                   report_options = report_options,
                   )
 
-        # Catalog Items as component of Items
-        add_component("supply_catalog_item", supply_item="item_id")
+        # Components
+        add_components(tablename,
+                       # Catalog Items
+                       supply_catalog_item="item_id",
+                       # Packs
+                       supply_item_pack="item_id",
+                       # Inventory Items
+                       inv_inv_item="item_id",
+                       # Order Items
+                       inv_track_item="item_id",
+                       # Procurement Plan Items
+                       proc_plan_item="item_id",
+                       # Request Items
+                       req_req_item="item_id",
+                       # Supply Kit Items
+                       supply_kit_item="parent_item_id",
+                       # Supply Kit Items (with link table)
+                       #supply_item={"name": "kit_item",
+                       #             "link": "supply_kit_item",
+                       #             "joinby": "parent_item_id",
+                       #             "key": "item_id"
+                       #             "actuate": "hide",
+                       #            },
+                      )
 
-        # Packs as component of Items
-        add_component("supply_item_pack", supply_item="item_id")
-
+        # Optional components
         if settings.get_supply_use_alt_name():
-            # Alternative Items as component of Items
-            add_component("supply_item_alt", supply_item="item_id")
-
-        # Inventory Items as component of Items
-        add_component("inv_inv_item", supply_item="item_id")
-
-        # Order Items as component of Items
-        add_component("inv_track_item", supply_item="item_id")
-
-        # Procurement Plan Items as component of Items
-        add_component("proc_plan_item", supply_item="item_id")
-
-        # Request Items as component of Items
-        add_component("req_req_item", supply_item="item_id")
-
-        # Supply Kit Items as component of Items
-        add_component("supply_kit_item", supply_item="parent_item_id")
-        #add_component("supply_item", supply_item = dict(joinby="parent_item_id",
-        #                                                alias="kit_item",
-        #                                                link="supply_kit_item",
-        #                                                actuate="hide",
-        #                                                key="item_id"))
+            add_components(tablename,
+                           # Alternative Items
+                           supply_item_alt="item_id",
+                          )
 
         # =====================================================================
         # Catalog Item
@@ -687,8 +693,11 @@ S3OptionsFilter({
         configure(tablename,
                   deduplicate = self.supply_item_pack_duplicate)
 
-        # Inventory items as component of Packs
-        add_component("inv_inv_item", supply_item_pack="item_pack_id")
+        # Components
+        add_components(tablename,
+                       # Inventory Items
+                       inv_inv_item="item_pack_id",
+                      )
 
         # =====================================================================
         # Supply Kit Item Table
@@ -1183,7 +1192,6 @@ class S3SupplyDistributionModel(S3Model):
         db = current.db
         s3 = current.response.s3
 
-        add_component = self.add_component
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table

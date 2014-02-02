@@ -237,7 +237,7 @@ def mailing_list():
             table = s3db[tablename]
             _rheader = s3db.org_rheader
             _tabs = []
-    s3db.add_component("pr_group_membership", pr_group="group_id")
+    s3db.add_components("pr_group", pr_group_membership="group_id")
 
     rheader = lambda r: _rheader(r, tabs = _tabs)
     return s3_rest_controller("pr",

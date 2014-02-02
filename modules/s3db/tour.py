@@ -54,7 +54,7 @@ class S3GuidedTourModel(S3Model):
         NONE = current.messages["NONE"]
         s3 = current.response.s3
 
-        add_component = self.add_component
+        add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -118,10 +118,14 @@ class S3GuidedTourModel(S3Model):
                                          represent=represent,
                                          label=T("Tour Name"),
                                          ondelete="SET NULL")
-        # Details as component of Tour Configs
-        add_component("tour_details", tour_config="tour_config_id")
-        # Users as component of Tour Configs
-        add_component("tour_user", tour_config="tour_config_id")
+
+        # Components
+        add_components(tablename,
+                       # Details
+                       tour_details="tour_config_id",
+                       # Users
+                       tour_user="tour_config_id",
+                      )
 
         # ---------------------------------------------------------------------
         # Details of the tour.
