@@ -1162,7 +1162,8 @@ class S3ProjectActivityModel(S3Model):
 
         # Resource Configuration
         use_projects = settings.get_project_projects()
-        list_fields = ["name",
+        list_fields = ["id",
+                       "name",
                        "comments",
                        ]
 
