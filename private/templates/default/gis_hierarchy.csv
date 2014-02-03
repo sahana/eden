@@ -6,6 +6,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,CF,"Prefecture","Sub-Prefecture","Commune",,
 ,CM,"Region","Division","Sub-Division","District",
 ,FI,"Regional State Administrative Agency","Region","Sub-region","Municipality",,
+,ID,"Province","Regency / City","District","Administrative Village",,
 ,IN,"State","District","Subdistrict",,,
 ,KE,"Province","District","Division","Location",
 ,LY,"District","City / Town / Village",,,,

@@ -219,8 +219,12 @@ class S3VolunteerAwardModel(S3Model):
             msg_record_deleted = T("Award deleted"),
             msg_list_empty = T("No Awards found"))
 
+        self.configure(tablename,
+                       context = {"person": "person_id"},
+                       )
+
         # Pass names back to global scope (s3.*)
-        return Storage()
+        return dict()
 
 # =============================================================================
 class S3VolunteerClusterModel(S3Model):
@@ -398,10 +402,9 @@ S3OptionsFilter({
                              *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return Storage(
-                vol_cluster_type_id = vol_cluster_type_id,
-                vol_cluster_id = vol_cluster_id,
-            )
+        return dict(vol_cluster_type_id = vol_cluster_type_id,
+                    vol_cluster_id = vol_cluster_id,
+                    )
 
     # =====================================================================
     @staticmethod
@@ -412,7 +415,7 @@ S3OptionsFilter({
             deployment_settings.
         """
 
-        return Storage(
+        return dict(
             vol_cluster_id = S3ReusableField("vol_cluster_id", "integer",
                                              readable=False,
                                              writable=False),
