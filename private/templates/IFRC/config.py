@@ -179,7 +179,7 @@ settings.base.system_name_short = T("RMS")
 settings.base.theme = "IFRC"
 settings.base.xtheme = "IFRC/xtheme-ifrc.css"
 settings.gis.map_height = 600
-settings.gis.map_width = 854
+settings.gis.map_width = 869
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?
 settings.gis.display_L0 = True
@@ -1057,7 +1057,8 @@ def customize_pr_contact(**attr):
     s3db = current.s3db
     otable = s3db.org_organisation
     vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
-                                                          limitby=(0, 1)
+                                                          limitby=(0, 1),
+                                                          cache=s3db.cache,
                                                           ).first().id
     if current.auth.root_org() == vnrc:
         # Hard to translate in Vietnamese
@@ -1094,9 +1095,11 @@ def customize_pr_person(**attr):
     s3db = current.s3db
     otable = s3db.org_organisation
     vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
-                                                          limitby=(0, 1)
+                                                          limitby=(0, 1),
+                                                          cache=s3db.cache,
                                                           ).first().id
-    if current.auth.root_org() == vnrc:
+    root_org = current.auth.root_org()
+    if root_org == vnrc:
         vnrc = True
         settings.hrm.use_skills = True
         settings.hrm.vol_experience = "both"
@@ -1107,6 +1110,12 @@ def customize_pr_person(**attr):
             pass
     else:
         vnrc = False
+        idrc = db(otable.name == "Indonesian Red Cross Society (Pelang Merah Indonesia)").select(otable.id,
+                                                                                                 limitby=(0, 1),
+                                                                                                 cache=s3db.cache,
+                                                                                                 ).first().id
+        if root_org == idrc:
+            settings.hrm.use_skills = True
 
     if current.request.controller == "deploy":
         # Replace default title in imports:
