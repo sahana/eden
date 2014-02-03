@@ -122,16 +122,12 @@ def alert():
         if lastid and request.post_vars.get("edit_info", False):
             table = db.cap_alert
             alert = db(table.id == lastid).select(table.template_id,
-                                                  limitby=(0, 1)
-                                                  ).first()
+                                                  limitby=(0, 1)).first()
 
             if alert:
-                # @ToDo: replace this with a retrieve of just the wanted fields
-                # - faster & safer
-                rows = db(db.cap_info.alert_id == alert.template_id).select()
-                for row in rows:
-                    row_clone = row.as_dict()
-                    unwanted_fields = ["deleted_rb",
+                # Clone all cap_info entries from the alert template
+                itable = s3db.cap_info
+                unwanted_fields = set(("deleted_rb",
                                        "owned_by_user",
                                        "approved_by",
                                        "mci",
@@ -144,24 +140,22 @@ def alert():
                                        # Don't copy this: make an
                                        # Ajax call instead
                                        "template_settings",
-                                       "id"
-                                      ]
-                    for key in unwanted_fields:
-                        try:
-                            row_clone.pop(key)
-                        except KeyError:
-                            pass
-
+                                      ))
+                fields = [itable[f] for f in itable.fields
+                                    if f not in unwanted_fields]
+                rows = db(itable.alert_id == alert.template_id).select(*fields)
+                for row in rows:
+                    row_clone = row.as_dict()
+                    del row_clone["id"]
                     row_clone["alert_id"] = lastid
                     row_clone["template_info_id"] = row.id
                     row_clone["is_template"] = False
+                    itable.insert(**row_clone)
 
-                    db.cap_info.insert(**row_clone)
+            r.next = URL(c="cap", f="alert", args=[lastid, "info"])
 
-            r.next = URL(c="cap", f="alert",
-                         args=[lastid, "info"])
-
-        if r.method != "search" and "form" in output:
+        if r.interactive and \
+           isinstance(output, dict) and "form" in output:
             if not r.component:
                 fields = s3db.cap_info_labels()
                 jsobj = []
@@ -177,7 +171,8 @@ def alert():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.cap_alert_rheader)
+    output = s3_rest_controller(rheader = s3db.cap_alert_rheader,
+                                hide_filter = False)
     return output
 
 # -----------------------------------------------------------------------------
@@ -269,7 +264,8 @@ def template():
     s3.postp = postp
 
     output = s3_rest_controller("cap", "alert",
-                                rheader=s3db.cap_template_rheader)
+                                rheader=s3db.cap_template_rheader,
+                                hide_filter=False)
     return output
 
 # -----------------------------------------------------------------------------

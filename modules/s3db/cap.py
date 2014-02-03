@@ -71,9 +71,11 @@ class S3CAPModel(S3Model):
         # List of Incident Categories -- copied from irs module <--
         # @ToDo: Switch to using event_incident_type
         #
-        # The keys are based on the Canadian ems.incident hierarchy, with a few extra general versions added to 'other'
+        # The keys are based on the Canadian ems.incident hierarchy, with a
+        # few extra general versions added to 'other'
         # The values are meant for end-users, so can be customised as-required
-        # NB It is important that the meaning of these entries is not changed as otherwise this hurts our ability to do synchronisation
+        # NB It is important that the meaning of these entries is not changed
+        # as otherwise this hurts our ability to do synchronisation
         # Entries can be hidden from user view in the controller.
         # Additional sets of 'translations' can be added to the tuples.
         cap_incident_type_opts = {
@@ -171,9 +173,11 @@ class S3CAPModel(S3Model):
             "meteorological.waterspout": T("Waterspout"),
             "meteorological.winterStorm": T("Winter Storm"),
             "missingPerson": T("Missing Person"),
-            "missingPerson.amberAlert": T("Child Abduction Emergency"),   # http://en.wikipedia.org/wiki/Amber_Alert
+            # http://en.wikipedia.org/wiki/Amber_Alert
+            "missingPerson.amberAlert": T("Child Abduction Emergency"),
             "missingPerson.missingVulnerablePerson": T("Missing Vulnerable Person"),
-            "missingPerson.silver": T("Missing Senior Citizen"),          # http://en.wikipedia.org/wiki/Silver_Alert
+            # http://en.wikipedia.org/wiki/Silver_Alert
+            "missingPerson.silver": T("Missing Senior Citizen"),
             "publicService.emergencySupportFacility": T("Emergency Support Facility"),
             "publicService.emergencySupportService": T("Emergency Support Service"),
             "publicService.schoolClosure": T("School Closure"),
@@ -279,7 +283,8 @@ class S3CAPModel(S3Model):
                                    label = T("Restriction")),
                              Field("addresses", "list:string",
                                    label = T("Recipients"),
-                                   #@ToDo: provide a better way to add multiple addresses, do not ask the user to delimit it themselves
+                                   #@ToDo: provide a better way to add multiple addresses,
+                                   #       do not ask the user to delimit it themselves
                                    #       this should eventually use the CAP contacts
                                    #widget = S3CAPAddressesWidget,
                                    represent=self.list_string_represent),
@@ -293,8 +298,11 @@ class S3CAPModel(S3Model):
                                    label = T("Note")),
                              Field("reference", "list:reference cap_alert",
                                    label = T("Reference"),
-                                   # @ToDo: This should not be manually entered, needs a widget
-                                   #widget = S3ReferenceWidget(table, one_to_many=True, allow_create=False),
+                                   # @ToDo: This should not be manually entered,
+                                   #        needs a widget
+                                   #widget = S3ReferenceWidget(table,
+                                   #                           one_to_many=True,
+                                   #                           allow_create=False),
                                    represent=self.alert_reference_represent),
                              # @ToDo: Switch to using event_incident_type_id
                              Field("incidents",
@@ -304,22 +312,20 @@ class S3CAPModel(S3Model):
                                    represent = self.list_string_represent),
                              *s3_meta_fields())
 
-        cap_search = S3Search(
-                 simple = (S3SearchSimpleWidget(
-                     name="org_search_text_simple",
-                     label = T("Search"),
-                     comment = T("Search for an Alert by sender, incident, headline or event."),
-                     field = ["sender",
-                              "incidents",
-                              "cap_info$headline",
-                              "cap_info$event"
-                              ]
-                     )
-                 ),
-            )
+        filter_widgets = [
+            S3TextFilter(["identifier",
+                          "sender",
+                          "incidents",
+                          "cap_info.headline",
+                          "cap_info.event",
+                         ],
+                         label = T("Search"),
+                         comment = T("Search for an Alert by sender, incident, headline or event."),
+                        ),
+        ]
 
         configure(tablename,
-                  search_method=cap_search)
+                  filter_widgets = filter_widgets)
 
         # Components
         add_components(tablename,
@@ -336,7 +342,9 @@ class S3CAPModel(S3Model):
                 title_create = ADD_ALERT,
                 title_display = T("Alert Details"),
                 title_list = T("Alerts"),
-                title_update = T("Edit Alert"), # If already-published, this should create a new "Update" alert instead of modifying the original
+                # If already-published, this should create a new "Update"
+                # alert instead of modifying the original
+                title_update = T("Edit Alert"),
                 title_upload = T("Import Alerts"),
                 title_search = T("Search Alerts"),
                 subtitle_create = T("Create new Alert"),
@@ -875,7 +883,8 @@ def cap_template_rheader(r):
 
             rheader = DIV(TABLE(TR( TH("%s: " % T("Template")),
                                     A(S3CAPModel.template_represent(item.id),
-                                      _href=URL(c="cap", f="template", args=[item.id, "update"]))
+                                      _href=URL(c="cap", f="template",
+                                                args=[item.id, "update"]))
                                   )
                                ),
                           rheader_tabs,

@@ -574,13 +574,12 @@ class S3OptionsMenu(object):
 
         return M(c="cap")(
                     M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
-                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
-                        M("Create alert", f="alert", m="create"),
-                        M("Search & Subscribe", m="search"),
+                        M("List All", f="alert", vars={'alert.is_template': 'false'}),
+                        M("Create Alert", f="alert", m="create"),
                     ),
                     M("Templates", f="template", vars={'alert.is_template': 'true'})(
-                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
-                        M("Create template", f="template", m="create"),
+                        M("List All", f="template", vars={'alert.is_template': 'true'}),
+                        M("Create Template", f="template", m="create"),
                     ),
                     #M("CAP Profile", f="profile")(
                     #    M("Edit profile", f="profile")
