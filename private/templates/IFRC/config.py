@@ -1090,7 +1090,7 @@ def customize_pr_person(**attr):
         Customize pr_person controller
     """
 
-    # Special cases for Viet Nam Red Cross
+    # Special cases for Viet Nam Red Cross & Indonesian Red Crescent
     db = current.db
     s3db = current.s3db
     otable = s3db.org_organisation
@@ -1116,6 +1116,7 @@ def customize_pr_person(**attr):
                                                                                                  ).first().id
         if root_org == idrc:
             settings.hrm.use_skills = True
+            settings.hrm.vol_experience = "both"
 
     if current.request.controller == "deploy":
         # Replace default title in imports:
