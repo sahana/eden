@@ -37,11 +37,11 @@
 {{else:}}
 <body>
  <div id='container'>
-  <div id='header'>
-   <div id='society-icon'><img src='/{{=appname}}/static/themes/IFRC/img/dummy_flag.png' alt='Red Cross/Red Crescent'></div>
+  <div id='header'>{{org_menu = current.menu.org.render()}}
+   <div id='society-icon'>{{=org_menu[1]}}</div>
    <div id='logo'>
     <h1><a href='/{{=appname}}/default/index' title='Return to Home Page'>Resource Mapping System</a></h1>
-    <div id='region' class='big'><!--Asia--><br><!--Pacific--></div>
+    <div id='region' class='big'>{{=org_menu[0]}}</div>
    </div>
    <div id='personal-menu'>
     {{if auth.is_logged_in():}}<div class="username fright">{{=auth.user.email}}</div>{{pass}}

@@ -147,9 +147,8 @@ class S3NavigationItem(object):
         """
 
         # Label
-        T = current.T
         if isinstance(label, basestring) and translate:
-            self.label = T(label)
+            self.label = current.T(label)
         else:
             self.label = label
 

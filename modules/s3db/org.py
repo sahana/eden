@@ -3761,14 +3761,16 @@ def org_organisation_address(row):
         return current.messages["NONE"]
 
 # =============================================================================
-def org_organisation_logo(id, type="png"):
+def org_organisation_logo(id,
+                          #type="png",
+                          ):
     """
         Return a logo of the organisation with the given id, if one exists
 
         The id can either be the id of the organisation
                or a Row of the organisation
 
-        The type can either be png or bmp and is the format of the saved image
+        @ToDo: The type can either be png or bmp and is the format of the saved image
     """
 
     if not id:
@@ -3780,27 +3782,26 @@ def org_organisation_logo(id, type="png"):
         record = id
     else:
         table = s3db.org_organisation
-        query = (table.id == id)
-        record = current.db(query).select(table.name,
-                                          table.acronym,
-                                          table.logo,
-                                          limitby=(0, 1)).first()
+        record = current.db(table.id == id).select(table.name,
+                                                   table.acronym,
+                                                   table.logo,
+                                                   limitby=(0, 1)).first()
 
-    format = None
-    if type == "bmp":
-        format = "bmp"
-    size = (None, 60)
-    image = s3db.pr_image_represent(record.logo, size=size)
-    url_small = URL(c="default", f="download", args=image)
-    if record and image:
-        if record.acronym == None or record.acronym == "":
+    if record and record.logo:
+        #format = None
+        #if type == "bmp":
+        #    format = "bmp"
+        size = (None, 60)
+        image = s3db.pr_image_represent(record.logo, size=size)
+        url_small = URL(c="default", f="download", args=image)
+        if record.acronym is None or record.acronym == "":
             alt = "%s logo" % record.name
         else:
             alt = "%s logo" % record.acronym
         logo = IMG(_src=url_small,
-                       _alt=alt,
-                       _height=60,
-                      )
+                   _alt=alt,
+                   _height=60,
+                   )
         return logo
     return DIV() # no logo so return an empty div
 

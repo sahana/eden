@@ -5754,7 +5754,7 @@ def pr_role_rebuild_path(role_id, skip=[], clear=False):
 def pr_image_represent(image_name,
                        format = None,
                        size = (),
-                      ):
+                       ):
     """
         Get the image that matches the required image type
 

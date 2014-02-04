@@ -28,6 +28,7 @@ class S3MainMenu(default.S3MainMenu):
         # Additional menus
         current.menu.personal = cls.menu_personal()
         current.menu.dashboard = cls.menu_dashboard()
+        current.menu.org = cls.menu_org()
 
         return main_menu
 
@@ -195,6 +196,14 @@ class S3MainMenu(default.S3MainMenu):
             dashboard = None
 
         return dashboard
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_org(cls):
+        """ Custom Organisation Menu """
+
+        OM = S3OrgMenuLayout
+        return OM()
 
     # -------------------------------------------------------------------------
     @classmethod

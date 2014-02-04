@@ -218,4 +218,64 @@ class S3DashBoardMenuLayout(S3NavigationItem):
 # Shortcut
 DB = S3DashBoardMenuLayout
 
+# =============================================================================
+class S3OrgMenuLayout(S3NavigationItem):
+    """ Layout for the organisation-specific menu """
+
+    @staticmethod
+    def layout(item):
+
+        name = "IFRC"
+        logo = None
+
+        # Lookup Root Organisation name & Logo
+        root_org = current.auth.root_org()
+        if root_org:
+            s3db = current.s3db
+            table = s3db.org_organisation
+            record = current.db(table.id == root_org).select(table.name,
+                                                             table.acronym,
+                                                             table.logo,
+                                                             limitby = (0, 1),
+                                                             cache = s3db.cache,
+                                                             ).first()
+            if record:
+                if record.acronym:
+                    name = _name = record.acronym
+                else:
+                    _name = record.name
+                    names = _name.split(" ")
+                    names_with_breaks = []
+                    nappend = names_with_breaks.append
+                    for name in names:
+                        nappend(name)
+                        nappend(BR())
+                    # Remove last BR()
+                    names_with_breaks.pop()
+                    name = TAG[""](*names_with_breaks)
+
+                if record.logo:
+                    size = (60, None)
+                    image = s3db.pr_image_represent(record.logo, size=size)
+                    url_small = URL(c="default", f="download", args=image)
+                    alt = "%s logo" % _name
+                    logo = IMG(_src=url_small,
+                               _alt=alt,
+                               _width=60,
+                               )
+
+        if not logo:
+            # Default to generic IFRC
+            logo = IMG(_src="/eden/static/themes/IFRC/img/dummy_flag.png",
+                       _alt=current.T("Red Cross/Red Crescent"),
+                       _width=60,
+                       )
+
+        # Note: render using current.menu.org.render()[0] + current.menu.org.render()[1]
+        return (name, logo)
+
+# -----------------------------------------------------------------------------
+# Shortcut
+OM = S3OrgMenuLayout
+
 # END =========================================================================
