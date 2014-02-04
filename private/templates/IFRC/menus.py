@@ -110,8 +110,9 @@ class S3MainMenu(default.S3MainMenu):
 
         DB = S3DashBoardMenuLayout
         request = current.request
+        controller = request.controller
 
-        if request.controller == "vol":
+        if controller == "vol":
             dashboard = DB()(
                 DB("VOLUNTEERS",
                     c="vol",
@@ -129,7 +130,7 @@ class S3MainMenu(default.S3MainMenu):
                     #DB("Skills", f="skill"),
                     DB("Job Titles", f="job_title")
                 ))
-        elif request.controller in ("hrm", "org"):
+        elif controller in ("hrm", "org"):
             dashboard = DB()(
                 DB("STAFF",
                     c="hrm",
@@ -157,7 +158,7 @@ class S3MainMenu(default.S3MainMenu):
                     DB("Job Titles", f="job_title")
                 ))
 
-        elif request.controller == "default" and request.function == "index":
+        elif controller == "default" and request.function == "index":
 
             dashboard = DB(_id="dashboard")(
                 DB("Staff", c="hrm", f="staff", m="search",

@@ -39,7 +39,7 @@
          Elevation..........float........Elevation    (optional)
          Start Date.........YYYY-MM-DD...Start Date   (optional)
          End Date...........YYYY-MM-DD...End Date     (optional)
-         Population.........integer......Population   (optional)
+         Population.........integer......Population   (optional) NB Better to store in stats_demographic_data
          Comments...........string.......Comments     (optional)
 
          Specify as many level of hierarchy as you need to ensure correct

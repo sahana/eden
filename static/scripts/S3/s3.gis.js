@@ -165,6 +165,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Zoom Out to Cluster
         //layer.map.zoomTo(0)
         if (bounds) {
+            // Convert to WGS84: Lat/Lon
+            bounds.transform(map.getProjectionObject(), proj4326);
             zoomBounds(layer.map, bounds);
         }
         var strategy,

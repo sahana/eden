@@ -17,14 +17,16 @@ class S3MainMenuOuterLayout(S3NavigationItem):
         items = item.render_components()
 
         # When the screen width is reduced, show a button to open the menu
+        attr = {"_data-toggle": "collapse",
+                "_data-target": ".nav-collapse",
+                }
         button = BUTTON(SPAN(_class="icon-bar"),
                         SPAN(_class="icon-bar"),
                         SPAN(_class="icon-bar"),
                         _type="button",
                         _class="btn btn-navbar",
+                        **attr
                         )
-        button["data-toggle"] = "collapse"
-        button["data-target"] = ".nav-collapse"
 
         return DIV(DIV(DIV(button,
                            DIV(items,

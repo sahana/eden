@@ -4944,7 +4944,7 @@ def org_facility_controller():
                     # Filter to just Staff
                     s3.filter = (s3db.hrm_human_resource.type == 1)
                     # Make it clear that this is for adding new staff, not assigning existing
-                    s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
+                    s3.crud_strings.hrm_human_resource.label_create_button = current.T("Add New Staff Member")
                     # Cascade the organisation_id from the office to the staff
                     htable = s3db.hrm_human_resource
                     field = htable.organisation_id
