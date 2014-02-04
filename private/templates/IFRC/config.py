@@ -1116,6 +1116,7 @@ def customize_pr_person(**attr):
                                                                                                  ).first().id
         if root_org == idrc:
             settings.hrm.use_skills = True
+            settings.hrm.staff_experience = "experience"
             settings.hrm.vol_experience = "both"
 
     if current.request.controller == "deploy":
