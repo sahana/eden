@@ -1237,50 +1237,16 @@ def twitter_channel():
     return s3_rest_controller(deduplicate="", list_btn="")
 
 # -----------------------------------------------------------------------------
-def inject_search_after_save(output):
-    """
-        Inject a Search After Save checkbox
-        in the Twitter Search Query Form
-    """
-
-    if "form" in output:
-        id = "search_after_save"
-        label = LABEL("%s:" % T("Search After Save?"),
-                      _for="msg_twitter_search")
-        widget = INPUT(_name="search_after_save",
-                       _type="checkbox",
-                       value="on",
-                       _id=id,
-                       _class="boolean")
-        comment = ""
-        if s3_formstyle == "bootstrap":
-            _controls = DIV(widget, comment, _class="controls")
-            row = DIV(label,
-                      _controls,
-                      _class="control-group",
-                      _id="%s__row" % id
-                      )
-        elif callable(s3_formstyle):
-            row = s3_formstyle(id=id,
-                               label=label,
-                               widget=widget,
-                               comment=comment)
-        else:
-            # Unsupported
-            raise
-
-        output["form"][0][-2].append(row)
-
-# -----------------------------------------------------------------------------
 def action_after_save(form):
     """
-        Schedules Twitter query search immediately after save
-        depending on flag
+        Sets default values of scheduled task associated with the Twitter Search Query
     """
 
-    if request.post_vars.get("search_after_save"):
-        s3task.async("msg_twitter_search", args=[form.vars.id])
-        session.information = T("The search results should appear shortly - refresh to see them")
+    job_table = s3db["scheduler_task"]
+    job_table.function_name.default = "msg_twitter_search"
+    job_table.task_name.default = "msg_twitter_search"
+    job_table.args.default = [form.vars.id]
+    job_table.vars.default = {"user_id": auth.user.id}
 
 # -----------------------------------------------------------------------------
 def twitter_search():
@@ -1369,11 +1335,23 @@ def twitter_search():
     else:
         url_after_save = None
 
+    crud_form = s3base.S3SQLCustomForm("keywords",
+                                       "lang",
+                                       "count",
+                                       "include_entities",
+                                       s3base.S3SQLInlineComponent(
+                                             "task",
+                                             label=T("Search Job"),
+                                             fields=["enabled", "period", "repeats"]
+                                       ),
+                                      )
+
     s3db.configure(tablename,
                    listadd=True,
                    deletable=True,
                    create_onaccept=action_after_save,
-                   create_next=url_after_save
+                   create_next=url_after_save,
+                   crud_form=crud_form
                    )
 
     def prep(r):
@@ -1415,8 +1393,6 @@ def twitter_search():
                                 url = URL(args=["[id]", "keygraph"]),
                                           restrict = restrict_k),
                            ]
-
-            inject_search_after_save(output)
 
         return output
     s3.postp = postp
