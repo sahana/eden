@@ -5,7 +5,7 @@
     @copyright: 2011-2013 (c) Sahana Software Foundation
     @license: MIT
 
-    ADAT - Assessment Data Analysis Tool
+    ADAT - Survey Data Analysis Tool
 
     For more details see the blueprint at:
     http://eden.sahanafoundation.org/wiki/BluePrint/SurveyTool/ADAT
@@ -188,7 +188,7 @@ class S3SurveyTemplateModel(S3Model):
                                    readable=True,
                                    writable=False),
                              # Standard questions which may belong to all template
-                             # competion_qstn: who completed the assessment
+                             # competion_qstn: who completed the Survey
                              Field("competion_qstn", "string", length=200,
                                    label = T("Completion Question"),
                                    ),
@@ -216,21 +216,21 @@ class S3SurveyTemplateModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Assessment Template"),
-            title_display = T("Assessment Template Details"),
-            title_list = T("Assessment Templates"),
-            title_analysis_summary = T("Template Summary"),
-            title_update = T("Edit Assessment Template"),
+            title_create = T("Add Survey Template"),
+            title_display = T("Survey Template Details"),
+            title_list = T("Survey Templates"),
+            title_analysis_summary = T("Template Survey"),
+            title_update = T("Edit Survey Template"),
             title_question_details = T("Details of each question in the Template"),
-            subtitle_create = T("Add a new Assessment Template"),
-            subtitle_analysis_summary = T("Summary by Question Type - (The fewer text questions the better the analysis can be)"),
-            label_list_button = T("List Assessment Templates"),
-            label_create_button = T("Add a new Assessment Template"),
-            label_delete_button = T("Delete this Assessment Template"),
-            msg_record_created = T("Assessment Template added"),
-            msg_record_modified = T("Assessment Template updated"),
-            msg_record_deleted = T("Assessment Template deleted"),
-            msg_list_empty = T("No Assessment Templates"))
+            subtitle_create = T("Add a new Survey Template"),
+            subtitle_analysis_summary = T("Survey by Question Type - (The fewer text questions the better the analysis can be)"),
+            label_list_button = T("List Survey Templates"),
+            label_create_button = T("Add a new Survey Template"),
+            label_delete_button = T("Delete this Survey Template"),
+            msg_record_created = T("Survey Template added"),
+            msg_record_modified = T("Survey Template updated"),
+            msg_record_deleted = T("Survey Template deleted"),
+            msg_list_empty = T("No Survey Templates"))
 
         template_id = S3ReusableField("template_id", table,
                                       sortby="name",
@@ -322,9 +322,18 @@ class S3SurveyTemplateModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def addQuestion(template_id, name, code, notes, type, posn, metadata={}):
-        """
-        """
+    def addQuestion(template_id , name, code, notes, type, posn,
+                    metadata=None,
+                    section_name = None, 
+                    section_posn=None):
+
+        if metadata == None: # defaults if metadata, section name, and section position are not provided 
+            metadata = {}
+        if section_name == None:
+            section_name = "Background Information"
+        if section_posn == None:
+           section_posn = 0 # special section with no position
+        # Add these questions to the section: "Background Information"
 
         db = current.db
         s3db = current.s3db
@@ -348,7 +357,7 @@ class S3SurveyTemplateModel(S3Model):
                                            descriptor = descriptor,
                                            value = value
                                           )
-        # Add these questions to the section: "Background Information"
+        
         sectable = s3db.survey_section
         section_name = "Background Information"
         query = (sectable.name == section_name) & \
@@ -359,7 +368,7 @@ class S3SurveyTemplateModel(S3Model):
         else:
             section_id = sectable.insert(name = section_name,
                                          template_id = template_id,
-                                         posn = 0 # special section with no position
+                                         posn = section_posn
                                          )
         # Add the question to the list of questions in the template
         qstn_list_table = s3db.survey_question_list
@@ -378,7 +387,7 @@ class S3SurveyTemplateModel(S3Model):
     def template_onaccept(form):
         """
             All of the standard questions will now be generated
-            competion_qstn: who completed the assessment
+            competion_qstn: who completed the Survey
             date_qstn: when it was completed (date)
             time_qstn: when it was completed (time)
             location_detail: json of the location question
@@ -399,21 +408,21 @@ class S3SurveyTemplateModel(S3Model):
         if vars.competion_qstn != None:
             name = vars.competion_qstn
             code = "STD-WHO"
-            notes = "Who completed the assessment"
+            notes = "Who completed the Survey"
             type = "String"
             posn = -10 # negative used to force these question to appear first
             addQuestion(template_id, name, code, notes, type, posn)
         if vars.date_qstn != None:
             name = vars.date_qstn
             code = "STD-DATE"
-            notes = "Date the assessment was completed"
+            notes = "Date the Survey was completed"
             type = "Date"
             posn += 1
             addQuestion(template_id, name, code, notes, type, posn)
         if vars.time_qstn != None:
             name = vars.time_qstn
             code = "STD-TIME"
-            notes = "Time the assessment was completed"
+            notes = "Time the Survey was completed"
             type = "Time"
             posn += 1
             addQuestion(template_id, name, code, notes, type, posn)
@@ -441,7 +450,15 @@ class S3SurveyTemplateModel(S3Model):
                     metadata = {}
                 posn += 1
                 addQuestion(template_id, name, code, "", type, posn, metadata)
-
+        # prevent a map loading error if the user does not enter a question code in the template creation UI
+        if not vars.priority_qstn: 
+            s3db = current.s3db
+            s3db.survey_template[template_id] = dict(priority_qstn="-default_pqstn[s]")
+            code = "-default_pqstn[s]"
+            notes = "priority question"
+            type = "Numeric"
+            posn += 1
+            addQuestion(template_id, "Enter priority (0-2)", code, notes, type, posn)
     # -------------------------------------------------------------------------
     @staticmethod
     def survey_template_duplicate(job):
@@ -882,18 +899,18 @@ class S3SurveyQuestionModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add an Assessment Question"),
-            title_display = T("Assessment Question Details"),
-            title_list = T("Assessment Questions"),
-            title_update = T("Edit Assessment Question"),
-            subtitle_create = T("Add a new Assessment Question"),
-            label_list_button = T("List Assessment Questions"),
-            label_create_button = T("Add a new Assessment Question"),
-            label_delete_button = T("Delete this Assessment Question"),
-            msg_record_created = T("Assessment Question added"),
-            msg_record_modified = T("Assessment Question updated"),
-            msg_record_deleted = T("Assessment Question deleted"),
-            msg_list_empty = T("No Assessment Questions"))
+            title_create = T("Add a Survey Question"),
+            title_display = T("Survey Question Details"),
+            title_list = T("Survey Questions"),
+            title_update = T("Edit Survey Question"),
+            subtitle_create = T("Add a new Survey Question"),
+            label_list_button = T("List Survey Questions"),
+            label_create_button = T("Add a new Survey Question"),
+            label_delete_button = T("Delete this Survey Question"),
+            msg_record_created = T("Survey Question added"),
+            msg_record_modified = T("Survey Question updated"),
+            msg_record_deleted = T("Survey Question deleted"),
+            msg_list_empty = T("No Survey Questions"))
 
         configure(tablename,
                   onvalidation = self.question_onvalidate,
@@ -985,7 +1002,7 @@ class S3SurveyQuestionModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_upload = T("Upload an Assessment Template import file")
+            title_upload = T("Upload a Survey Template import file")
             )
 
         configure(tablename,
@@ -1620,28 +1637,28 @@ class S3SurveySeriesModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Conduct a Disaster Assessment"),
-            title_display = T("Details of Disaster Assessment"),
-            title_list = T("Disaster Assessments"),
-            title_update = T("Edit this Disaster Assessment"),
-            title_analysis_summary = T("Disaster Assessment Summary"),
-            title_analysis_chart = T("Disaster Assessment Chart"),
-            title_map = T("Disaster Assessment Map"),
-            subtitle_create = T("Add a new Disaster Assessment"),
-            subtitle_analysis_summary = T("Summary of Completed Assessment Forms"),
-            help_analysis_summary = T("Click on questions below to select them, then click 'Display Selected Questions' button to view the selected questions for all Completed Assessment Forms"),
+            title_create = T("Conduct a Disaster Survey"),
+            title_display = T("Details of Disaster Survey"),
+            title_list = T("Disaster Surveys"),
+            title_update = T("Edit this Disaster Survey"),
+            title_analysis_summary = T("Disaster Survey Summary"),
+            title_analysis_chart = T("Disaster Survey Chart"),
+            title_map = T("Disaster Survey Map"),
+            subtitle_create = T("Add a new Disaster Survey"),
+            subtitle_analysis_summary = T("Summary of Completed Survey Forms"),
+            help_analysis_summary = T("Click on questions below to select them, then click 'Display Selected Questions' button to view the selected questions for all Completed Survey Forms"),
             subtitle_analysis_chart = T("Select a label question and at least one numeric question to display the chart."),
-            subtitle_map = T("Disaster Assessment Map"),
-            label_list_button = T("List Disaster Assessments"),
-            label_create_button = T("Add a new Disaster Assessment"),
-            label_delete_button = T("Delete this Disaster Assessment"),
-            msg_record_created = T("Disaster Assessment added"),
-            msg_record_modified = T("Disaster Assessment updated"),
-            msg_record_deleted = T("Disaster Assessment deleted"),
-            msg_list_empty = T("No Disaster Assessments"))
+            subtitle_map = T("Disaster Survey Map"),
+            label_list_button = T("List Disaster Surveys"),
+            label_create_button = T("Add a new Disaster Survey"),
+            label_delete_button = T("Delete this Disaster Survey"),
+            msg_record_created = T("Disaster Survey added"),
+            msg_record_modified = T("Disaster Survey updated"),
+            msg_record_deleted = T("Disaster Survey deleted"),
+            msg_list_empty = T("No Disaster Surveys"))
 
         self.configure(tablename,
-                       create_next = URL(f="newAssessment",
+                       create_next = URL(f="newSurvey",
                                          vars={"viewing":"survey_series.[id]"}),
                        onaccept = self.series_onaccept,
                        deduplicate = self.survey_series_duplicate,
@@ -1950,7 +1967,7 @@ class S3SurveySeriesModel(S3Model):
 
         table.append(TR(TH(T("Select Numeric Questions (one or more):")), _class="survey_question"))
         # First add the special questions
-        specialQuestions = [{"code":"Count", "name" : T("Number of Completed Assessment Forms")}]
+        specialQuestions = [{"code":"Count", "name" : T("Number of Completed Survey Forms")}]
         innerTable = TABLE()
         for qstn in specialQuestions:
             tr = addQstnChkboxToTR(numQstnList, qstn)
@@ -2202,7 +2219,7 @@ $('#chart_btn').click(function(){
                     location.opacity = priorityObj.opacity[priority]
                     location.popup_url = url
                     location.popup_label = response_locations[i].name
-                feature_queries.append({ "name": "%s: Assessments" % series_name,
+                feature_queries.append({ "name": "%s: Surveys" % series_name,
                                          "query": response_locations,
                                          "active": True })
                 if bounds == {}:
@@ -2251,7 +2268,7 @@ $('#chart_btn').click(function(){
 
         output["title"] = crud_strings.title_map
         output["subtitle"] = crud_strings.subtitle_map
-        output["instructions"] = T("Click on a marker to see the Completed Assessment Form")
+        output["instructions"] = T("Click on a marker to see the Completed Survey Form")
         output["form"] = form
         output["map"] = map
 
@@ -2303,20 +2320,20 @@ def survey_series_rheader(r):
 
             # Tabs
             tabs = [(T("Details"), None),
-                    (T("Completed Assessments"), "complete"),
+                    (T("Completed Surveys"), "complete"),
                     (T("Summary"), "summary"),
                     (T("Chart"), "graph"),
                     (T("Map"), "map"),
                     ]
             if current.auth.s3_has_permission("create", "survey_complete"):
-                tabs.insert(1, (T("Enter Completed Assessment"), "newAssessment/"))
+                tabs.insert(1, (T("Enter Completed Survey"), "newSurvey/"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             completeTable = s3db.survey_complete
             qty = current.db(completeTable.series_id == record.id).count()
             tsection = TABLE(_class="survey-complete-list")
-            lblSection = T("Number of Completed Assessment Forms")
+            lblSection = T("Number of Completed Survey Forms")
             rsection = TR(TH(lblSection), TD(qty))
             tsection.append(rsection)
 
@@ -2351,7 +2368,7 @@ def survey_series_rheader(r):
             export_xls_btn = INPUT(_type="submit",
                                    _id="export_xls_btn",
                                    _name="Export_Spreadsheet",
-                                   _value=T("Download Assessment Form Spreadsheet"),
+                                   _value=T("Download Survey Form Spreadsheet"),
                                    _class="action-btn"
                                   )
             tranForm.append(export_xls_btn)
@@ -2361,7 +2378,7 @@ def survey_series_rheader(r):
                 export_rtf_btn = INPUT(_type="submit",
                                        _id="export_rtf_btn",
                                        _name="Export_Word",
-                                       _value=T("Download Assessment Form Document"),
+                                       _value=T("Download Survey Form Document"),
                                        _class="action-btn"
                                       )
                 tranForm.append(export_rtf_btn)
@@ -2371,7 +2388,7 @@ def survey_series_rheader(r):
                             f="export_all_responses",
                             args=[record.id],
                             )
-            buttons = DIV(A(T("Export all Completed Assessment Data"),
+            buttons = DIV(A(T("Export all Completed Survey Data"),
                             _href=urlimport,
                             _id="All_resposnes",
                             _class="action-btn"
@@ -2604,21 +2621,21 @@ class S3SurveyCompleteModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Enter Completed Assessment Form"),
-            title_display = T("Completed Assessment Form Details"),
-            title_list = T("Completed Assessment Forms"),
-            title_update = T("Edit Completed Assessment Form"),
-            title_selected = T("Selected Questions for all Completed Assessment Forms"),
-            subtitle_create = T("Enter Completed Assessment Form"),
-            subtitle_selected = T("Selected Questions for all Completed Assessment Forms"),
-            label_list_button = T("List Completed Assessment Forms"),
-            label_create_button = T("Add a new Completed Assessment Form"),
-            label_delete_button = T("Delete this Completed Assessment Form"),
-            msg_record_created = T("Completed Assessment Form entered"),
-            msg_record_modified = T("Completed Assessment Form updated"),
-            msg_record_deleted = T("Completed Assessment Form deleted"),
-            msg_list_empty = T("No Completed Assessment Forms"),
-            title_upload = T("Upload the Completed Assessment Form")
+            title_create = T("Enter Completed Survey Form"),
+            title_display = T("Completed Survey Form Details"),
+            title_list = T("Completed Survey Forms"),
+            title_update = T("Edit Completed Survey Form"),
+            title_selected = T("Selected Questions for all Completed Survey Forms"),
+            subtitle_create = T("Enter Completed Survey Form"),
+            subtitle_selected = T("Selected Questions for all Completed Survey Forms"),
+            label_list_button = T("List Completed Survey Forms"),
+            label_create_button = T("Add a new Completed Survey Form"),
+            label_delete_button = T("Delete this Completed Survey Form"),
+            msg_record_created = T("Completed Survey Form entered"),
+            msg_record_modified = T("Completed Survey Form updated"),
+            msg_record_deleted = T("Completed Survey Form deleted"),
+            msg_list_empty = T("No Completed Survey Forms"),
+            title_upload = T("Upload the Completed Survey Form")
             )
 
         configure(tablename,
@@ -2652,18 +2669,18 @@ class S3SurveyCompleteModel(S3Model):
                              *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Assessment Answer"),
-            title_display = T("Assessment Answer Details"),
-            title_list = T("Assessment Answers"),
-            title_update = T("Edit Assessment Answer"),
-            subtitle_create = T("Add a new Assessment Answer"),
-            label_list_button = T("List Assessment Answers"),
-            label_create_button = T("Add a new Assessment Answer"),
-            label_delete_button = T("Delete this Assessment Answer"),
-            msg_record_created = T("Assessment Answer added"),
-            msg_record_modified = T("Assessment Answer updated"),
-            msg_record_deleted = T("Assessment Answer deleted"),
-            msg_list_empty = T("No Assessment Answers"))
+            title_create = T("Add Survey Answer"),
+            title_display = T("Survey Answer Details"),
+            title_list = T("Survey Answers"),
+            title_update = T("Edit Survey Answer"),
+            subtitle_create = T("Add a new Survey Answer"),
+            label_list_button = T("List Survey Answers"),
+            label_create_button = T("Add a new Survey Answer"),
+            label_delete_button = T("Delete this Survey Answer"),
+            msg_record_created = T("Survey Answer added"),
+            msg_record_modified = T("Survey Answer updated"),
+            msg_record_deleted = T("Survey Answer deleted"),
+            msg_list_empty = T("No Survey Answers"))
 
         configure(tablename,
                   onaccept = self.answer_onaccept,
@@ -3212,7 +3229,7 @@ def getLocationList(series_id):
             location.complete_id = row.id
             rappend(location)
         else:
-            # The lat & lon were not added to the assessment so try and get one
+            # The lat & lon were not added to the Survey so try and get one
             locWidget = get_default_location(row.id)
             if locWidget:
                 complete_id = locWidget.question["complete_id"]
