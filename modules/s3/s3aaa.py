@@ -2903,8 +2903,9 @@ S3OptionsFilter({
 
         uid = args.get("uid", None)
         if uid:
-            query = (table.uuid == uid)
-            record = current.db(query).select(limitby=(0, 1)).first()
+            record = current.db(table.uuid == uid).select(table.id,
+                                                          limitby=(0, 1)
+                                                          ).first()
         else:
             record = None
             uid = uuid4()

@@ -3927,7 +3927,7 @@ class S3BulkImporter(object):
             if role in roles:
                 acls[role].append(rules)
             else:
-                roles[role] = [role,desc]
+                roles[role] = [role, desc]
                 acls[role] = [rules]
             if len(extra_param) > 0 and role not in args:
                 args[role] = extra_param

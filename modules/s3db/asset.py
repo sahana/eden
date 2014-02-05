@@ -171,9 +171,10 @@ class S3AssetModel(S3Model):
                                    represent = lambda bool: \
                                     (bool and [T("Yes")] or [NONE])[0],
                                    ),
-                             organisation_id(#requires=self.org_organisation_requires(
-                                             #           updateable=True,
-                                             #           required=True),
+                             organisation_id(requires=self.org_organisation_requires(
+                                                updateable=True,
+                                                #required=True
+                                             ),
                                              required = True,
                                              script = '''
 S3OptionsFilter({
@@ -388,12 +389,12 @@ S3OptionsFilter({
 
         # Components
         add_components(tablename,
-                       asset_log="asset_id",
                        asset_item="asset_id",
+                       asset_log="asset_id",
+                       vehicle_gps="asset_id",
                        vehicle_vehicle={"joinby": "asset_id",
                                         "multiple": False},
-                       vehicle_gps="asset_id",
-                      )
+                       )
 
         # =====================================================================
         # Asset Items
