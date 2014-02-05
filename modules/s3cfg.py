@@ -1286,7 +1286,7 @@ class S3Config(Storage):
         """
             Enable the Saved Search widget
         """
-        return self.search.get("save_widget", True)
+        return self.search.get("save_widget", False)
 
     # -------------------------------------------------------------------------
     # Filter Manager Widget

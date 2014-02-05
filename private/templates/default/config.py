@@ -623,11 +623,8 @@ settings.L10n.decimal_separator = "."
 #settings.irs.vehicle = True
 
 # -----------------------------------------------------------------------------
-# Save Search Widget
-# New S3Filter
+# Filter Manager
 #settings.search.filter_manager = False
-# Old S3Search
-#settings.search.save_widget = False
 
 # if you want to have videos appearing in /default/video
 #settings.base.youtube_id = [dict(id = "introduction",

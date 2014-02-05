@@ -21,8 +21,8 @@ def index():
         # Go to Personal Profile
         redirect(URL(f="person"))
     else:
-        # Bypass home page & go direct to searchable list of Volunteers
-        redirect(URL(f="volunteer", args="search"))
+        # Bypass home page & go direct to filterable list of Volunteers
+        redirect(URL(f="volunteer"))
 
 # =============================================================================
 # People
@@ -202,237 +202,199 @@ def human_resource():
 
 # -----------------------------------------------------------------------------
 def volunteer():
-    """
-        Volunteer Controller
-    """
+    """ Volunteers Controller """
 
-    tablename = "hrm_human_resource"
-    table = s3db[tablename]
-
-    _type = table.type
-    s3.filter = (_type == 2)
-    _location = table.location_id
-    _location.label = T("Home Address")
-    list_fields = ["person_id",
-                   "job_title_id",
-                   "organisation_id",
-                   (settings.get_ui_label_mobile_phone(), "phone.value"),
-                   (T("Email"), "email.value"),
-                   "location_id",
-                   ]
-    if settings.get_hrm_use_trainings():
-        list_fields.append("person_id$training.course_id")
-    if settings.get_hrm_use_certificates():
-        list_fields.append("person_id$certification.certificate_id")
-    get_config = s3db.get_config
-    # Modify list_fields, search_method & report_options based on Settings
-    search_method = get_config(tablename,
-                               "search_method")
-    report_options = get_config(tablename,
-                                "report_options")
+    # Volunteers only
+    s3.filter = s3base.S3FieldSelector("type") == 2
+    
     vol_experience = settings.get_hrm_vol_experience()
-    if vol_experience in ("programme", "both"):
-        enable_active_field = settings.set_org_dependent_field("vol_details", "active",
-                                                               enable_field = False)
-        # Add to List Fields
-        if enable_active_field:
-            list_fields.insert(3, (T("Active?"), "details.active"))
-        list_fields.insert(6, "person_id$hours.programme_id")
-        # Add to Report Options
-        report_fields = report_options.rows
-        report_fields.append("person_id$hours.programme_id")
-        if enable_active_field:
-            report_fields.append((T("Active?"), "details.active"))
-        report_options.rows = report_fields
-        report_options.cols = report_fields
-        report_options.fact = report_fields
-        # Remove deprecated Active/Obsolete
-        search_method.advanced.pop(1)
-        table.status.readable = table.status.writable = False
-        # Add to the Search Filters
-        if enable_active_field:
-            YES = T("Yes")
-            NO = T("No")
-            widget = s3base.S3SearchOptionsWidget(
-                        name="human_resource_search_active",
-                        label=T("Active?"),
-                        field="details.active",
-                        cols = 2,
-                        # T on both sides here to match the output of the represent
-                        options = {YES: YES,
-                                   NO: NO
-                                   }
-                        ),
-            search_widget = ("human_resource_search_active", widget[0])
-            search_method.advanced.insert(1, search_widget)
-
-        def hrm_programme_opts():
-            """
-                Provide the options for the HRM programme search filter
-            """
-            ptable = s3db.hrm_programme
-            root_org = auth.root_org()
-            if root_org:
-                query = (ptable.deleted == False) & \
-                        ((ptable.organisation_id == root_org) | \
-                         (ptable.organisation_id == None))
-            else:
-                query = (ptable.deleted == False) & \
-                        (ptable.organisation_id == None)
-            opts = db(query).select(ptable.id,
-                                    ptable.name)
-            _dict = {}
-            for opt in opts:
-                _dict[opt.id] = opt.name
-            return _dict
-
-        widget = s3base.S3SearchOptionsWidget(
-                            name="human_resource_search_programme",
-                            label=T("Program"),
-                            field="person_id$hours.programme_id",
-                            cols = 2,
-                            options = hrm_programme_opts
-                          ),
-        search_widget = ("human_resource_search_programme", widget[0])
-        search_method.advanced.insert(3, search_widget)
-    else:
-        list_fields.append("status")
-    s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
-    s3db.configure(tablename,
-                   list_fields = list_fields,
-                   report_options = report_options,
-                   search_method = search_method,
-                   )
-
+    
     def prep(r):
-        if r.interactive:
-            table = r.table
-            table.person_id.widget = S3AddPersonWidget(controller="vol")
-            if not r.component and \
-               not r.id and \
-               r.method in [None, "create"]:
-                # Don't redirect
-                # Assume staff only between 12-81
-                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+        resource = r.resource
+        get_config = resource.get_config
+        
+        # CRUD String
+        s3.crud_strings[resource.tablename] = s3.crud_strings["hrm_volunteer"]
 
-                _type.default = 2
-                _location.writable = _location.readable = True
-                table.site_id.writable = table.site_id.readable = False
-                table.code.writable = table.code.readable = False
-                table.department_id.writable = table.department_id.readable = False
-                table.essential.writable = table.essential.readable = False
-                table.site_contact.writable = table.site_contact.readable = False
-                table.status.writable = table.status.readable = False
+        # Default to volunteers
+        table = r.table
+        table.type.default = 2
 
-                s3db.pr_person_details.occupation.label = T("Normal Job")
-
-                # Organisation Dependent Fields
-                set_org_dependent_field = settings.set_org_dependent_field
-                set_org_dependent_field("pr_person_details", "father_name")
-                set_org_dependent_field("pr_person_details", "mother_name")
-                set_org_dependent_field("pr_person_details", "affiliations")
-                set_org_dependent_field("pr_person_details", "company")
-                set_org_dependent_field("vol_details", "availability")
-                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
-                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
-                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
-
-            elif r.method == "delete":
-                # Don't redirect
-                pass
-            elif r.id:
-                # Redirect to person controller
-                redirect(URL(f="person",
-                             vars={"human_resource.id": r.id,
-                                   "group": "volunteer"
-                                   }))
-            elif r.method == "import":
-                # Redirect to person controller
-                redirect(URL(f="person",
-                             args="import",
-                             vars={"group": "volunteer"}))
-
-        elif r.representation == "xls":
-            # Split person_id into first/middle/last to make it match Import sheets
-            list_fields = s3db.get_config(tablename,
-                                          "list_fields")
-            list_fields.remove("person_id")
+        # Volunteers use home address
+        location_id = table.location_id
+        location_id.label = T("Home Address")
+        
+        # Configure list_fields
+        if r.representation == "xls":
+            # Split person_id into first/middle/last to
+            # make it match Import sheets
             list_fields = ["person_id$first_name",
                            "person_id$middle_name",
                            "person_id$last_name",
-                           ] + list_fields
+                          ]
+        else:
+            list_fields = ["person_id",
+                          ]
+        list_fields.extend(["job_title_id",
+                            "organisation_id",
+                            (settings.get_ui_label_mobile_phone(), "phone.value"),
+                            (T("Email"), "email.value"),
+                            "location_id",
+                           ])
+        if settings.get_hrm_use_trainings():
+            list_fields.append("person_id$training.course_id")
+        if settings.get_hrm_use_certificates():
+            list_fields.append("person_id$certification.certificate_id")
 
-            s3db.configure(tablename,
-                           list_fields = list_fields)
+        # Volunteer Programme and Active-status
+        report_options = get_config("report_options")
+        if vol_experience in ("programme", "both"):
+            # Don't use status field
+            table.status.readable = table.status.writable = False
+            # Use active-field?
+            enable_active = settings.set_org_dependent_field("vol_details",
+                                                             "active",
+                                                             enable_field=False)
+            # Add active and programme to List Fields
+            if enable_active:
+                list_fields.insert(3, (T("Active?"), "details.active"))
+            list_fields.insert(6, "person_id$hours.programme_id")
+            
+            # Add active and programme to Report Options
+            report_fields = report_options.rows
+            report_fields.append("person_id$hours.programme_id")
+            if enable_active:
+                report_fields.append((T("Active?"), "details.active"))
+            report_options.rows = report_fields
+            report_options.cols = report_fields
+            report_options.fact = report_fields
+        else:
+            # Use status field
+            list_fields.append("status")
 
+        # Update filter widgets
+        filter_widgets = s3db.hrm_human_resource_filters(
+                                resource_type="volunteer",
+                                hrm_type_opts=s3db.hrm_type_opts)
+                                
+        # Reconfigure
+        resource.configure(list_fields = list_fields,
+                           filter_widgets = filter_widgets,
+                           report_options = report_options,
+                          )
+                    
+        if r.interactive:
+            if r.id:
+                if r.method not in ("profile", "delete"):
+                    # Redirect to person controller
+                    vars = {
+                        "human_resource.id": r.id,
+                        "group": "volunteer"
+                    }
+                    redirect(URL(f="person", vars=vars))
+            else:
+                if r.method == "import":
+                    # Redirect to person controller
+                    redirect(URL(f="person",
+                                args="import",
+                                vars={"group": "volunteer"}))
+                                
+                elif not r.component and r.method != "delete":
+                    # Configure AddPersonWidget
+                    table.person_id.widget = S3AddPersonWidget(controller="vol")
+                    # Show location ID
+                    location_id.writable = location_id.readable = True
+                    # Hide unwanted fields
+                    for fn in ("site_id",
+                               "code",
+                               "department_id",
+                               "essential",
+                               "site_contact",
+                               "status",
+                              ):
+                        table[fn].writable = table[fn].readable = False
+                    # Organisation Dependent Fields
+                    set_org_dependent_field = settings.set_org_dependent_field
+                    set_org_dependent_field("pr_person_details", "father_name")
+                    set_org_dependent_field("pr_person_details", "mother_name")
+                    set_org_dependent_field("pr_person_details", "affiliations")
+                    set_org_dependent_field("pr_person_details", "company")
+                    set_org_dependent_field("vol_details", "availability")
+                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
+                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
+                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
+                    # Label for "occupation"
+                    s3db.pr_person_details.occupation.label = T("Normal Job")
+                    # Assume volunteers only between 12-81
+                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
         return True
     s3.prep = prep
 
     def postp(r, output):
-        if r.interactive:
-            if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
+        if r.interactive and not r.component:
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
-                s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-                if "msg" in settings.modules:
-                    # @ToDo: Remove this now that we have it in Events?
-                    s3.actions.append({
-                            "url": URL(f="compose",
-                                       vars = {"human_resource.id": "[id]"}),
-                            "_class": "action-btn send",
-                            "label": str(T("Send Message"))
-                        })
-                vol_experience = settings.get_hrm_vol_experience()
-                if vol_experience in ("programme", "both") and \
-                   r.method not in ["search", "report", "import"] and \
-                   "form" in output:
-                    # Insert field to set the Programme
-                    # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
-                    sep = ": "
-                    table = s3db.hrm_programme_hours
-                    field = table.programme_id
-                    default = field.default
-                    widget = field.widget or SQLFORM.widgets.options.widget(field, default)
-                    field_id = "%s_%s" % (table._tablename, field.name)
-                    label = field.label
-                    row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                    if s3_formstyle == "bootstrap":
-                        label = LABEL(label, label and sep, _class="control-label", _for=field_id)
-                        _controls = DIV(widget, _class="controls")
-                        row = DIV(label, _controls,
-                                  _class="control-group",
-                                  _id=row_id,
-                                  )
-                        output["form"][0].insert(4, row)
-                    elif callable(s3_formstyle):
-                        label = LABEL(label, label and sep, _for=field_id,
-                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-                        programme = s3_formstyle(row_id, label, widget,
-                                                 field.comment)
-                        try:
-                            output["form"][0].insert(4, programme[1])
-                        except:
-                            # A non-standard formstyle with just a single row
-                            pass
-                        try:
-                            output["form"][0].insert(4, programme[0])
-                        except:
-                            pass
-                    else:
-                        # Unsupported
-                        raise
+            # Configure action buttons
+            s3_action_buttons(r, deletable=settings.get_hrm_deletable())
+            if "msg" in settings.modules:
+                # @ToDo: Remove this now that we have it in Events?
+                s3.actions.append({
+                        "url": URL(f="compose",
+                                    vars = {"human_resource.id": "[id]"}),
+                        "_class": "action-btn send",
+                        "label": str(T("Send Message"))
+                    })
 
-        elif r.representation == "plain" and \
-             r.method !="search":
+            # Insert field to set the Programme
+            if vol_experience in ("programme", "both") and \
+               r.method not in ("search", "report", "import", "report2") and \
+               "form" in output:
+                # @ToDo: Re-implement using
+                # http://eden.sahanafoundation.org/wiki/S3SQLForm
+                sep = ": "
+                table = s3db.hrm_programme_hours
+                field = table.programme_id
+                default = field.default
+                widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                field_id = "%s_%s" % (table._tablename, field.name)
+                label = field.label
+                row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                if s3_formstyle == "bootstrap":
+                    label = LABEL(label, label and sep, _class="control-label", _for=field_id)
+                    _controls = DIV(widget, _class="controls")
+                    row = DIV(label, _controls,
+                                _class="control-group",
+                                _id=row_id,
+                                )
+                    output["form"][0].insert(4, row)
+                elif callable(s3_formstyle):
+                    label = LABEL(label, label and sep, _for=field_id,
+                                    _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                    programme = s3_formstyle(row_id, label, widget,
+                                                field.comment)
+                    try:
+                        output["form"][0].insert(4, programme[1])
+                    except:
+                        # A non-standard formstyle with just a single row
+                        pass
+                    try:
+                        output["form"][0].insert(4, programme[0])
+                    except:
+                        pass
+                else:
+                    # Unsupported
+                    raise
+
+        elif r.representation == "plain":
             # Map Popups
             output = s3db.hrm_map_popup(r)
-
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("hrm", "human_resource")
+    output = s3_rest_controller("hrm", "human_resource",
+                                hide_filter=False)
     return output
 
 # -----------------------------------------------------------------------------

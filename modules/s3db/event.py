@@ -294,6 +294,9 @@ class S3EventModel(S3Model):
                 event_event_id = S3ReusableField("event_id", "integer",
                                                  readable=False,
                                                  writable=False),
+                event_type_id = S3ReusableField("event_id", "integer",
+                                                readable=False,
+                                                writable=False),
                 )
 
     # -------------------------------------------------------------------------

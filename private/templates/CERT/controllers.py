@@ -50,8 +50,8 @@ class index():
         # Menu Boxes
         # NB Order defined later (in sit_dec_res_box)
         menu_btns = [#div, label, app, function, is_icon
-                    ["vol", T("View Volunteers"), "vol", "volunteer/search", True],
-                    ["vol", T("View Volunteers"), "vol", "volunteer/search", False],
+                    ["vol", T("View Volunteers"), "vol", "volunteer", True],
+                    ["vol", T("View Volunteers"), "vol", "volunteer", False],
                     ["vol", T("Add Volunteer"), "vol", "volunteer/create", False],
                     ["qua", T("View Qualifications"), "vol", "certificate", True],
                     ["qua", T("View Qualifications"), "vol", "certificate", False],
