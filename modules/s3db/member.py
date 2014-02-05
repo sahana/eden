@@ -207,12 +207,8 @@ class S3MembersModel(S3Model):
                 query = (ttable.deleted == False) & \
                         (ttable.organisation_id == None)
 
-            opts = db(query).select(ttable.id,
-                                    ttable.name)
-            _dict = {}
-            for opt in opts:
-                _dict[opt.id] = opt.name
-            return _dict
+            rows = db(query).select(ttable.id, ttable.name)
+            return dict((row.id, row.name) for row in rows)
 
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
@@ -404,22 +400,6 @@ class S3MembersModel(S3Model):
 
         return current.messages["NONE"]
         
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def member_search_simple_widget(type):
-
-        T = current.T
-
-        return S3SearchSimpleWidget(
-            name = "member_search_simple_%s" % type,
-            label = T("Name"),
-            comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-            field = ["person_id$first_name",
-                     "person_id$middle_name",
-                     "person_id$last_name",
-                     ]
-            )
-
     # ---------------------------------------------------------------------
     @staticmethod
     def member_onaccept(form):
