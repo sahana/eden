@@ -1122,14 +1122,19 @@ class S3OrganisationGroupModel(S3Model):
         add_components(tablename,
                        org_group_membership={"name": "membership",
                                              "joinby": "group_id",
-                                            },
+                                             },
+                       org_organisation={"joinby": "group_id",
+                                         "key": "organisation_id",
+                                         "link": "org_group_membership",
+                                         "actuate": "replace",
+                                         },
                        pr_group={"name": "pr_group",
                                  "joinby": "org_group_id",
                                  "key": "group_id",
                                  "link": "org_group_team",
                                  "actuate": "replace",
-                                },
-                      )
+                                 },
+                       )
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -4440,9 +4445,9 @@ def org_rheader(r, tabs=[]):
 
     elif tablename == "org_group":
         tabs = [(T("Basic Details"), None),
-                (T("Member Organizations"), "membership"),
+                (T("Member Organizations"), "organisation"),
                 (T("Groups"), "pr_group"),
-                (T("Attachments"), "document"),
+                (T("Documents"), "document"),
                 ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(TR(

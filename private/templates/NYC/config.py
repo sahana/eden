@@ -395,14 +395,12 @@ def customize_org_organisation(**attr):
                 "name",
                 "acronym",
                 "organisation_type_id",
-                #S3SQLInlineComponentCheckbox(
                 S3SQLInlineComponentMultiSelectWidget(
                     "service",
                     label = T("Services"),
                     field = "service_id",
                     cols = 4,
                 ),
-                #S3SQLInlineComponentCheckbox(
                 S3SQLInlineComponentMultiSelectWidget(
                     "group",
                     label = T("Network"),
@@ -417,7 +415,6 @@ def customize_org_organisation(**attr):
                     # Ultimately should go into location_id$addr_street
                     fields = ["comments"],
                 ),
-                #S3SQLInlineComponentCheckbox(
                 S3SQLInlineComponentMultiSelectWidget(
                     "location",
                     label = T("Neighborhoods Served"),
@@ -601,6 +598,8 @@ def customize_org_group(**attr):
 
         if r.interactive:
             if not r.component:
+                from gluon.html import DIV, INPUT
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
                 from s3.s3validators import IS_LOCATION_SELECTOR2
                 from s3.s3widgets import S3LocationSelectorWidget2
                 field = s3db.org_group.location_id
@@ -609,6 +608,93 @@ def customize_org_group(**attr):
                 field.widget = S3LocationSelectorWidget2(levels=("L2",),
                                                          polygons=True,
                                                          )
+                s3db.pr_contact.value.label = ""
+                s3db.doc_document.url.label = ""
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "location_id",
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "phone",
+                        label = T("Phone"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "WORK_PHONE"
+                                        )
+                    ),
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "email",
+                        label = T("Email"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "EMAIL"
+                                        )
+                    ),
+                    #"website",
+                    S3SQLInlineComponent(
+                        "contact",
+                        comment = DIV(INPUT(_type="checkbox",
+                                            _name="rss_no_import"),
+                                      T("Don't Import Feed")),
+                        name = "rss",
+                        label = T("RSS"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "RSS"
+                                        )
+                    ),
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "iCal",
+                        label = "iCAL",
+                        multiple = False,
+                        fields = ["url",
+                                  ],
+                        filterby = dict(field = "name",
+                                        options="iCal"
+                                        )
+                    ),                                                                
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "data",
+                        label = T("Data"),
+                        multiple = False,
+                        fields = ["url",
+                                  ],
+                        filterby = dict(field = "name",
+                                        options="Data"
+                                        )
+                    ),                                                                
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "twitter",
+                        label = T("Twitter"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "TWITTER"
+                                        )
+                    ),
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "facebook",
+                        label = T("Facebook"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "FACEBOOK"
+                                        )
+                    ),
+                    "comments",
+                )
+                s3db.configure("org_group",
+                               crud_form = crud_form,
+                               )
+
             elif r.component_name == "pr_group":
                 field = s3db.pr_group.group_type
                 field.default = 3 # Relief Team, to show up in hrm/group
@@ -616,6 +702,9 @@ def customize_org_group(**attr):
 
         return result
     s3.prep = custom_prep
+
+    # Allow components with components (such as org/group) to breakout from tabs
+    attr["native"] = True
 
     return attr
 
@@ -716,9 +805,14 @@ def customize_pr_group(**attr):
         s3db.add_components("pr_group", org_group_team="group_id")
 
         from gluon import URL
+        from gluon.sqlhtml import TextWidget
+        from s3.s3fields import S3Represent
         from s3.s3filter import S3TextFilter, S3OptionsFilter
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-        s3db.org_group_team.org_group_id.label = ""
+        field = s3db.org_group_team.org_group_id
+        field.label = ""
+        field.represent = S3Represent(lookup="org_group", show_link=True)
+        s3db.pr_group.description.widget = TextWidget.widget
         crud_form = S3SQLCustomForm("name",
                                     "description",
                                     S3SQLInlineComponent("group_team",
