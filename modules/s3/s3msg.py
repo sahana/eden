@@ -1845,6 +1845,24 @@ class S3Msg(object):
                 location_id = gtable.insert(lat=lat, lon=lon)
             else:
                 location_id = None
+
+            image_url = None
+            video_url = None
+
+
+            if tweet["entities"]:
+                try:
+                    if tweet["entities"]["media"]:
+                        image_url = tweet["entities"]["media"][0]["media_url"]
+                except:
+                    image_url = None
+
+                try:
+                    if tweet["entities"]["urls"]:
+                        video_url = tweet["entities"]["urls"][0]["expanded_url"]
+                except:
+                    video_url = None
+
             id = rtable.insert(from_address = user,
                                search_id = search_id,
                                body = body,
@@ -1853,6 +1871,8 @@ class S3Msg(object):
                                created_on = created_on,
                                inbound = True,
                                location_id = location_id,
+                               image_url = image_url,
+                               video_url = video_url,
                                )
             update_super(rtable, dict(id=id))
 
