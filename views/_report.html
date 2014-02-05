@@ -35,7 +35,15 @@
         <a class='chart-icon' id='bd_chart_cols'><img src='/{{=appname}}/static/img/report/hchart.png' style='vertical-align:middle;'/></a>
         {{=report_data.col_label}}
       {{pass}}
+
     </div>
+    <form action="#" enctype="multipart/form-data" method="post">
+        <div class="list_formats">
+            Export to:
+
+            <div class="export_pdf" title="Export in PDF format"></div>
+        </div>
+    </form>
   {{pass}}
 {{except:}}{{pass}}
 <div id='chart-container' class='hide' style='width: 800px;'>
@@ -61,5 +69,10 @@ var json_data={{=XML(json_data)}}
 <script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/flot/jquery.flot.pie.js'></script>
 <script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/S3/s3.report.js'></script>
 {{else:}}
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/bytescout/bytescoutpdf1.04.84.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/bytescout/checkdatauri.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/bytescout/createpdf-canvas-1.1.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/bytescout/downloadify.js'></script>
+<script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/bytescout/html2canvas.js'></script>
 <script language='javascript' type='text/javascript' src='/{{=appname}}/static/scripts/S3/s3.report.min.js'></script>
 {{pass}}
