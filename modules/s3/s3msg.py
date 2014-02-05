@@ -34,6 +34,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
 """
+from itertools import imap
 
 __all__ = ["S3Msg",
            "S3Compose",
@@ -1845,6 +1846,22 @@ class S3Msg(object):
                 location_id = gtable.insert(lat=lat, lon=lon)
             else:
                 location_id = None
+
+            image_url = None
+            video_url = None
+
+            try:
+                if tweet["entities"]:
+                    if tweet["entities"]["media"]:
+                        image_url = tweet["entities"]["media"][0]["media_url"]
+
+                    if tweet["entities"]["urls"]:
+                        video_url = tweet["entities"]["urls"][0]["expanded_url"]
+
+            except:
+                image_url = None
+                video_url = None
+
             id = rtable.insert(from_address = user,
                                search_id = search_id,
                                body = body,
@@ -1853,6 +1870,8 @@ class S3Msg(object):
                                created_on = created_on,
                                inbound = True,
                                location_id = location_id,
+                               image_url = image_url,
+                               video_url = video_url,
                                )
             update_super(rtable, dict(id=id))
 

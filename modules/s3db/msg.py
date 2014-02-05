@@ -1692,7 +1692,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         configure = self.configure
         define_table = self.define_table
         set_method = self.set_method
-
+        s3db = current.s3db
         # ---------------------------------------------------------------------
         # Twitter Search Query
         #
@@ -1718,6 +1718,11 @@ class S3TwitterSearchModel(S3ChannelModel):
                                                  _title="%s|%s" % (T("Entity Information"),
                                                                    T("This is required if analyzing with KeyGraph."))),
                                    ),
+                             Field("include_to_map", "boolean",
+                                    default = True,
+                                    label = T("Include on Map?"),
+                                    represent = s3_yes_no_represent,
+                                    ),
                              # @ToDo: Rename or even move to Component Table
                              Field("is_processed", "boolean",
                                    default = False,
@@ -1793,6 +1798,12 @@ class S3TwitterSearchModel(S3ChannelModel):
                                    default = True,
                                    readable = False,
                                    writable = False,
+                                   ),
+                             Field("image_url","text",
+                                   label = T("Image URL")
+                                   ),
+                             Field("video_url","text",
+                                   label = T("Video URL")
                                    ),
                              *s3_meta_fields())
 
