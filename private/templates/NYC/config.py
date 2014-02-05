@@ -695,6 +695,10 @@ def customize_org_group(**attr):
                                crud_form = crud_form,
                                )
 
+                s3db.configure("pr_contact",
+                               onaccept = pr_contact_onaccept,
+                               )
+
             elif r.component_name == "pr_group":
                 field = s3db.pr_group.group_type
                 field.default = 3 # Relief Team, to show up in hrm/group
@@ -870,7 +874,7 @@ settings.ui.customize_pr_group = customize_pr_group
 # -----------------------------------------------------------------------------
 def pr_contact_onaccept(form):
     """
-        Import Organisation RSS Feeds
+        Import Organisation/Network RSS Feeds
     """
 
     form_vars = form.vars
@@ -887,11 +891,16 @@ def pr_contact_onaccept(form):
     exists  = db(table.url == url).select(table.id, limitby=(0, 1))
     if exists:
         return
-    # Lookup org name
-    otable = db.org_organisation
-    name = db(otable.pe_id == form_vars.pe_id).select(otable.name,
-                                                      limitby=(0, 1)
-                                                      ).first().name
+    # Lookup name of Org/Network
+    pe_id = form_vars.pe_id
+    etable = db.pr_pentity
+    instance_type = db(etable.pe_id == pe_id).select(etable.instance_type,
+                                                     limitby=(0, 1)
+                                                     ).first().instance_type
+    otable = db[instance_type]
+    name = db(otable.pe_id == pe_id).select(otable.name,
+                                            limitby=(0, 1)
+                                            ).first().name
     # Add RSS Channel
     id = table.insert(name=name, enabled=True, url=url)
     record = dict(id=id)
