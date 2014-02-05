@@ -353,14 +353,14 @@ class S3OrganisationModel(S3Model):
 
         auth = current.auth
         organisation_id = S3ReusableField("organisation_id", table,
-                                          sortby="name",
+                                          comment = organisation_comment,
                                           default = auth.user.organisation_id if auth.is_logged_in() \
                                                                               else None,
-                                          requires=org_organisation_requires(),
-                                          represent=org_organisation_represent,
-                                          label=messages.ORGANISATION,
-                                          comment=organisation_comment,
-                                          ondelete="RESTRICT",
+                                          label = messages.ORGANISATION,
+                                          ondelete = "RESTRICT",
+                                          represent = org_organisation_represent,
+                                          requires = org_organisation_requires(),
+                                          sortby = "name",
                                           widget = org_widget,
                                           )
 
