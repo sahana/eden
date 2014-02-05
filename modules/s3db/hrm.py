@@ -6907,6 +6907,7 @@ def hrm_human_resource_filters(resource_type=None,
                                                False: T("No"),
                                                #None: T("Unknown"),
                                               },
+                                    hidden=True,
                                     #none = True,
                                 )
                 )
@@ -6916,6 +6917,7 @@ def hrm_human_resource_filters(resource_type=None,
                                 label=T("Program"),
                                 cols = 2,
                                 options = hrm_programme_opts,
+                                hidden=True,
                                )
             )
 

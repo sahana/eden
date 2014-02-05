@@ -346,9 +346,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
-                    M("Reports", c="hrm", f="staff", m="report",
+                    M("Reports", c="hrm", f="staff", m="report2",
                       check=manager_mode)(
-                        M("Staff Report", m="report"),
+                        M("Staff Report", m="report2"),
                         M("Expiring Staff Contracts Report",
                           vars=dict(expiring="1")),
                         M("Training Report", f="training", m="report2"),
@@ -510,9 +510,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         #M("List All"),
                     ),
-                    M("Reports", f="volunteer", m="report",
+                    M("Reports", f="volunteer", m="report2",
                       check=manager_mode)(
-                        M("Volunteer Report", m="report"),
+                        M("Volunteer Report", m="report2"),
                         M("Hours by Role Report", f="programme_hours", m="report2",
                           vars=Storage(rows="job_title_id",
                                        cols="month",

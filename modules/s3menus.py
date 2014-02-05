@@ -1006,9 +1006,9 @@ class S3OptionsMenu(object):
                         #M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
-                    M("Reports", f="staff", m="report",
+                    M("Reports", f="staff", m="report2",
                       check=manager_mode)(
-                        M("Staff Report", m="report"),
+                        M("Staff Report", m="report2"),
                         M("Expiring Staff Contracts Report",
                           vars=dict(expiring=1)),
                         M("Training Report", f="training", m="report2"),

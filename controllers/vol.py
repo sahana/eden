@@ -349,7 +349,7 @@ def volunteer():
 
             # Insert field to set the Programme
             if vol_experience in ("programme", "both") and \
-               r.method not in ["search", "report", "import"] and \
+               r.method not in ("search", "report", "import", "report2") and \
                "form" in output:
                 # @ToDo: Re-implement using
                 # http://eden.sahanafoundation.org/wiki/S3SQLForm
