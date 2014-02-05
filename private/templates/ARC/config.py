@@ -223,9 +223,8 @@ settings.fin.currencies = {
 #settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
-# Save Search Widget
-settings.search.save_widget = False
-
+# Filter Manager
+settings.search.filter_manager = False
 
 # =============================================================================
 # Module Settings

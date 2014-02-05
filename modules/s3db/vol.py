@@ -74,7 +74,8 @@ class S3VolunteerModel(S3Model):
                                   Field("active", "boolean",
                                         represent = self.vol_active_represent,
                                         label = T("Active"),
-                                        ),
+                                        default = False,
+                                       ),
                                   Field("availability", "integer",
                                         requires = IS_NULL_OR(
                                                     IS_IN_SET(availability_opts)
@@ -89,28 +90,18 @@ class S3VolunteerModel(S3Model):
     # =========================================================================
     @staticmethod
     def vol_active_represent(opt):
-        """
-            Represent the Active status of a Volunteer
-        """
+        """ Represent the Active status of a Volunteer """
 
-        request = current.request
-        args = request.args
-        if "report" in args or \
-           "report2" in args:
+        args = current.request.args
+        if "report" in args or "report2" in args:
             # We can't use a represent
             return opt
-        elif "search" in args:
-            # We can't use an HTML represent, but can use a LazyT
-            # if we match in the search options
-            return current.T("Yes") if opt else current.T("No")
 
         # List view, so HTML represent is fine
         if opt:
-            output = DIV(current.T("Yes"),
-                         _style="color:green;")
+            output = DIV(current.T("Yes"), _style="color:green;")
         else:
-            output = DIV(current.T("No"),
-                         _style="color:red;")
+            output = DIV(current.T("No"), _style="color:red;")
         return output
 
 # =============================================================================

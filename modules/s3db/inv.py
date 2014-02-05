@@ -2916,8 +2916,6 @@ S3OptionsFilter({
         inv_item_table = db.inv_inv_item
         stable = db.inv_send
         rtable = db.inv_recv
-        ritable = s3db.req_req_item
-        rrtable = s3db.req_req
         siptable = db.supply_item_pack
         supply_item_add = s3db.supply_item_add
         oldTotal = 0
@@ -2967,8 +2965,19 @@ S3OptionsFilter({
         if form.vars.send_id and form.vars.recv_id:
             # @ToDo: Optimise
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
-        # if this is linked to a request then copy the req_ref to the send item
-        if record and record.req_item_id:
+
+        rrtable = s3db.table("req_req")
+        ritable = s3db.table("req_req_item")
+        if rrtable and ritable:
+            use_req = True
+        else:
+            # Req module deactivated
+            use_req = False
+            
+        # If this item is linked to a request, then
+        # copy the req_ref to the send item
+        if use_req and record and record.req_item_id:
+            
             # @ToDo: Optimise
             req_id = ritable[record.req_item_id].req_id
             # @ToDo: Optimise
@@ -3031,8 +3040,9 @@ S3OptionsFilter({
                                                     source_type = source_type,
                                                     status = record.inv_item_status,
                                                     )
-            # if this is linked to a request then update the quantity fulfil
-            if record.req_item_id:
+            # If this item is linked to a request, then update
+            # the quantity fulfil
+            if use_req and record.req_item_id:
                 # @ToDo: Optimise
                 req_item = ritable[record.req_item_id]
                 req_quantity = req_item.quantity_fulfil
