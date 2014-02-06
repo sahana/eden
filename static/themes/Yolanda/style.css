@@ -1,0 +1,82 @@
+/* Consider migrating to cross-template bootstrap.css after more testing */
+
+.summary-heading {
+    float: left;
+}
+
+.summary-create {
+    margin: 12px;
+}
+
+#summary-common {
+    clear: both;
+}
+
+#summary-filter-form,
+#summary-sections,
+#pivottable {  
+    background-color: #fff;
+    border-radius: 4px;
+    border: 1px solid #9e9b9b;
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    -moz-box-shadow: 0 1px 1px #aaaaa7;
+    -webkit-box-shadow: 0 1px 1px #aaaaa7;
+    box-shadow: 0 1px 1px #aaaaa7;
+}
+
+#summary-tabs {
+    margin-top: 10px;
+}
+
+#summary-tab-headers .ui-tabs-nav {
+    border: none;
+    margin: 0 10px;
+}
+
+#summary-tab-headers a {
+    border-color: #B2B2B2;
+}
+
+#summary-tab-headers .ui-tabs-active a {
+    border-bottom: 1px solid white;
+}
+
+#summary-tab-headers li {
+    margin-right: 5px;
+    box-shadow: none;
+}
+
+#summary-tabs.ui-widget-content {
+    background: none;
+    border: none;
+}
+
+/* Fit Summary Map Inside Summary Section */
+#summary-sections .x-panel-body {
+    border: none;
+    border-radius: 4px;
+}
+
+table.embeddedComponent td {
+    /* Hide the table */
+    border-bottom: none;
+    padding: 0;
+    vertical-align: top;
+}
+
+table.embeddedComponent .add-row td {
+    padding-top: 5px;
+}
+
+/* Throbber when not using toolbar */
+.layer_throbber.float {
+    top: 10px;
+    right: 10px;
+}
+
+.pt-throbber {
+    position: static;
+    float: right;
+}

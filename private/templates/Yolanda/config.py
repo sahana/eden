@@ -2389,44 +2389,17 @@ def customize_org_organisation(**attr):
                 s3.dl_rowsize = 2
 
                 from s3.s3filter import S3TextFilter, S3OptionsFilter
-                filter_widgets = [
-                    # no other filter widgets here yet?
-                ]
-
-                # Needs page
-                # Truncate details field(s)
-                from s3.s3utils import s3_trunk8
-                s3_trunk8(lines=2)
-
-                get_vars = current.request.get_vars
-                money = get_vars.get("needs.money", None)
-                #vol = get_vars.get("needs.vol", None)
-                if money:
-                    needs_fields = ["needs.money_details"]
-                    s3.crud_strings["org_organisation"].title_list = T("Organizations soliciting Money")
-                #elif vol:
-                #    needs_fields = ["needs.vol_details"]
-                #    s3.crud_strings["org_organisation"].title_list = T("Organizations with remote Volunteer opportunities")
-                else:
-                    yesno = {True: T("Yes"), False: T("No")}
-                    needs_fields = ["needs.money_details", "needs.vol_details"]
-                    filter_widgets.insert(0, S3OptionsFilter("needs.money",
-                                                             options = yesno,
-                                                             multiple=False,
-                                                             hidden=True,
-                                                             ))
-                    #filter_widgets.insert(1, S3OptionsFilter("needs.vol",
-                    #                                         options = yesno,
-                    #                                         multiple=False,
-                    #                                         hidden=True,
-                    #                                         ))
-
-                filter_widgets.insert(0, S3TextFilter(["name",
-                                                       "acronym",
-                                                       "website",
-                                                       "comments",
-                                                       ] + needs_fields,
-                                                      label = T("Search")))
+                filter_widgets = [S3TextFilter(["name",
+                                                "acronym",
+                                                "website",
+                                                "comments",
+                                                ],
+                                              label = T("Search")),
+                                  S3OptionsFilter("organisation_type_id",
+                                                  label = T("Type"),
+                                                  widget = "multiselect",
+                                                  ),
+                                  ]
 
                 ntable = s3db.req_organisation_needs
                 s3db.configure("org_organisation",
@@ -2437,7 +2410,6 @@ def customize_org_organisation(**attr):
             current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
 
             # Hide fields
-            table.organisation_type_id.readable = table.organisation_type_id.writable = False
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False
@@ -3227,9 +3199,8 @@ def customize_project_activity(**attr):
             title_display = T("Aid Delivery"),
             title_list = T("Aid Deliveries"),
             title_update = T("Edit Aid Delivery"),
-            title_search = T("Search Aid Deliveries"),
             subtitle_create = T("Add Aid Delivery"),
-            label_list_button = T("List New Aid Delivery"),
+            label_list_button = T("List Aid Deliveries"),
             label_create_button = T("Add Aid Delivery"),
             label_delete_button = T("Remove Aid Delivery"),
             msg_record_created = T("Aid Delivery added"),
@@ -3241,9 +3212,9 @@ def customize_project_activity(**attr):
 
         list_fields = ["activity_organisation.organisation_id",
                        "sector_activity.sector_id",
+                       "activity_activity_type.activity_type_id",
                        "location_id",
                        "name",
-                       (T("Distribution"), "distribution.parameter_id"),
                        (T("Beneficiaries"), "beneficiary.value"),
                        "status_id",
                        "date",
@@ -3251,16 +3222,16 @@ def customize_project_activity(**attr):
                        #"comments",
                        ]
 
+        levels = ("L1", "L2", "L3", "L4")
+
         # Custom Form (Read/Create/Update)
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-        if r.method in ("create", "update"):
-            editable = True
+        if r.method in (None, "create", "update"):
             # Custom Widgets/Validators
             from s3.s3validators import IS_LOCATION_SELECTOR2
             from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
             field = table.location_id
             field.label = "" # Gets replaced by widget
-            levels = ("L1", "L2", "L3", "L4")
             field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             field.widget = S3LocationSelectorWidget2(levels=levels)
             #s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
@@ -3271,21 +3242,19 @@ def customize_project_activity(**attr):
             s3db.project_activity_organisation.organisation_id.label = ""
             s3db.project_activity.comments.label = T("Materials/Service Provided")
             #s3db.project_beneficiary.value.label = "Number"
-        else:
-            editable = False
 
         # Custom Crud Form
         crud_form = S3SQLCustomForm(
-            #S3SQLInlineComponent(
-            #    "activity_activity_type",
-            #    label = T("Activity Type"),
-            #    fields = ["activity_type_id"],
-            #    multiple = False,
-            #),
             S3SQLInlineComponent(
                 "activity_organisation",
                 label = T("Organization"),
                 fields = ["organisation_id"],
+                multiple = False,
+            ),
+            S3SQLInlineComponent(
+                "activity_activity_type",
+                label = T("Activity Type"),
+                fields = ["activity_type_id"],
                 multiple = False,
             ),
             "location_id",
@@ -3319,12 +3288,50 @@ def customize_project_activity(**attr):
             "end_date",
             )
 
+        # Search Method
+        from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+        filter_widgets = [S3TextFilter(["name",
+                                        ],
+                                       label=T("Description"),
+                                       _class="filter-search",
+                                       ),
+                          S3LocationFilter("location_id",
+                                           levels=levels,
+                                           widget="multiselect"
+                                           ),
+                          S3OptionsFilter("status_id",
+                                          label = T("Status"),
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          # @ToDo: Introspect cols
+                                          cols = 3,
+                                          #widget="multiselect",
+                                          ),
+                          S3OptionsFilter("activity_activity_type.activity_type_id",
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          S3OptionsFilter("sector_activity.sector_id",
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          S3OptionsFilter("activity_organisation.organisation_id",
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          S3OptionsFilter("activity_organisation.organisation_id$organisation_type_id",
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
-                       # Hide Open & Delete dataTable action buttons
-                       deletable = editable,
-                       editable = editable,
-                       #filter_formstyle = filter_formstyle,
+                       filter_widgets = filter_widgets,
                        listadd = False,
                        list_fields = list_fields,
                        )
