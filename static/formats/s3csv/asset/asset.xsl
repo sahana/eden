@@ -8,8 +8,9 @@
          CSV fields:
          Organisation....................organisation_id.name & asset_log.organisation_id.name
          Acronym.........................organisation_id.acronym & asset_log.organisation_id.acronym
-         Office..........................site_id & asset_log.site_id
-         OfficeCode......................site_id.code & asset_log.site_id.code
+         Facility........................site_id & asset_log.site_id
+         Facility Code...................site_id.code & asset_log.site_id.code
+         Facility Type......optional.....Facility, Hospital, Shelter, Warehouse, Office (default)
          Catalog.........................supply_catalog_item.catalog_id.name
          Asset No........................number
          Type............................type
@@ -45,11 +46,15 @@
     <xsl:output method="xml"/>
 
     <xsl:key name="organisations" match="row" use="col[@field='Organisation']/text()"/>
-    <xsl:key name="offices" match="row" use="concat(col[@field='Organisation']/text(), '|',
-                                                         col[@field='Office']/text())"/>
+    <xsl:key name="sites" match="row" use="concat(col[@field='Organisation']/text(), '|',
+                                                  col[@field='Facility']/text(), '|',
+                                                  col[@field='Facility Code']/text(), '|',
+                                                  col[@field='Facility Type']/text())"/>
     <xsl:key name="rooms" match="row" use="concat(col[@field='Organisation']/text(), '|',
-                                                         col[@field='Office']/text(), '|',
-                                                         col[@field='Room']/text())"/>
+                                                  col[@field='Facility']/text(), '|',
+                                                  col[@field='Facility Code']/text(), '|',
+                                                  col[@field='Facility Type']/text(), '|',
+                                                  col[@field='Room']/text())"/>
     <xsl:key name="persons" match="row" use="col[@field='Assigned To']/text()"/>
     <xsl:key name="brands" match="row" use="col[@field='Brand']/text()"/>
     <xsl:key name="catalogs" match="row" use="col[@field='Catalog']/text()"/>
@@ -74,19 +79,23 @@
                 </xsl:call-template>
             </xsl:for-each>
 
-            <!-- Offices -->
+            <!-- Sites -->
             <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('offices',
+                                        generate-id(key('sites',
                                                         concat(col[@field='Organisation']/text(), '|',
-                                                               col[@field='Office']/text()))[1])]">
-                <xsl:call-template name="Office"/>
+                                                               col[@field='Facility']/text(), '|',
+                                                               col[@field='Facility Code']/text(), '|',
+                                                               col[@field='Facility Type']/text()))[1])]">
+                <xsl:call-template name="Site"/>
             </xsl:for-each>
 
             <!-- Rooms -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('rooms',
                                                         concat(col[@field='Organisation']/text(), '|',
-                                                               col[@field='Office']/text(), '|',
+                                                               col[@field='Facility']/text(), '|',
+                                                               col[@field='Facility Code']/text(), '|',
+                                                               col[@field='Facility Type']/text(), '|',
                                                                col[@field='Room']/text()))[1])]">
                 <xsl:call-template name="Room"/>
             </xsl:for-each>
@@ -143,10 +152,12 @@
     <xsl:template match="row">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
-        <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
+        <xsl:variable name="FacilityName" select="col[@field='Facility']/text()"/>
+        <xsl:variable name="FacilityCode" select="col[@field='Facility Code']/text()"/>
+        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+        <xsl:variable name="FacilityTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType)"/>
         <xsl:variable name="RoomName" select="col[@field='Room']/text()"/>
-        <xsl:variable name="RoomID" select="concat($OrgName, '|', $OfficeName, '|', $RoomName)"/>
+        <xsl:variable name="RoomTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType, '|', $RoomName)"/>
 
         <xsl:variable name="CatalogName" select="col[@field='Catalog']/text()"/>
         <xsl:variable name="CategoryName" select="col[@field='Category']/text()"/>
@@ -160,6 +171,17 @@
         <xsl:variable name="PersonName" select="col[@field='Assigned To']/text()"/>
         <xsl:variable name="AssetNumber" select="col[@field='Asset No']/text()"/>
         <xsl:variable name="Date" select="col[@field='Date']/text()"/>
+
+        <xsl:variable name="resourcename">
+            <xsl:choose>
+                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                <xsl:otherwise>org_office</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
 
         <!-- Asset  -->
         <resource name="asset_asset">
@@ -208,15 +230,19 @@
                     <xsl:value-of select="$ItemCode"/>
                 </xsl:attribute>
             </reference>
-            <!-- Site -->
+            <!-- Org -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$OrgName"/>
                 </xsl:attribute>
             </reference>
-            <reference field="site_id" resource="org_office">
+            <!-- Site -->
+            <reference field="site_id">
+                <xsl:attribute name="resource">
+                    <xsl:value-of select="$resourcename"/>
+                </xsl:attribute>
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OfficeID"/>
+                    <xsl:value-of select="$FacilityTUID"/>
                 </xsl:attribute>
             </reference>
         </resource>
@@ -253,19 +279,35 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Office">
+    <xsl:template name="Site">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
-        <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
+        <xsl:variable name="FacilityName" select="col[@field='Facility']/text()"/>
+        <xsl:variable name="FacilityCode" select="col[@field='Facility Code']/text()"/>
+        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+        <xsl:variable name="FacilityTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType)"/>
 
-        <resource name="org_office">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeID"/>
+        <xsl:variable name="resourcename">
+            <xsl:choose>
+                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                <xsl:otherwise>org_office</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <resource>
+            <xsl:attribute name="name">
+                <xsl:value-of select="$resourcename"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OfficeName"/></data>
-            <xsl:if test="col[@field='OfficeCode'] != ''">
-                <data field="code"><xsl:value-of select="col[@field='OfficeCode']"/></data>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$FacilityTUID"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$FacilityName"/></data>
+            <xsl:if test="col[@field='FacilityCode'] != ''">
+                <data field="code"><xsl:value-of select="col[@field='FacilityCode']"/></data>
             </xsl:if>
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
@@ -393,20 +435,36 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Room">
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OfficeName" select="col[@field='Office']/text()"/>
-        <xsl:variable name="OfficeID" select="concat($OrgName, '|', $OfficeName)"/>
+        <xsl:variable name="FacilityName" select="col[@field='Facility']/text()"/>
+        <xsl:variable name="FacilityCode" select="col[@field='Facility Code']/text()"/>
+        <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+        <xsl:variable name="FacilityTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType)"/>
         <xsl:variable name="RoomName" select="col[@field='Room']/text()"/>
-        <xsl:variable name="RoomID" select="concat($OrgName, '|', $OfficeName, '|', $RoomName)"/>
+        <xsl:variable name="RoomTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType, '|', $RoomName)"/>
+
+        <xsl:variable name="resourcename">
+            <xsl:choose>
+                <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
+                <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
+                <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
+                <xsl:otherwise>org_office</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
 
         <xsl:if test="$RoomName!=''">
             <resource name="org_room">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$RoomID"/>
+                    <xsl:value-of select="$RoomTUID"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$RoomName"/></data>
-                <reference field="site_id" resource="org_office">
+                <reference field="site_id">
+                    <xsl:attribute name="resource">
+                        <xsl:value-of select="$resourcename"/>
+                    </xsl:attribute>
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OfficeID"/>
+                        <xsl:value-of select="$FacilityTUID"/>
                     </xsl:attribute>
                 </reference>
             </resource>
