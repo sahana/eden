@@ -1773,6 +1773,10 @@ class S3Resource(object):
             fields.insert(0, table._id.name)
             selectors.insert(0, table._id.name)
 
+        # Skip representation of IDs in data tables
+        id_repr = table._id.represent
+        table._id.represent = None
+
         # Extract the data
         data = self.select(selectors,
                            start=start,
@@ -1784,8 +1788,10 @@ class S3Resource(object):
                            getids=getids,
                            represent=True)
 
-
         rows = data["rows"]
+
+        # Restore ID representation
+        table._id.represent = id_repr
 
         # Empty table - or just no match?
         empty = False
