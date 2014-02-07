@@ -710,6 +710,19 @@ class S3LocationModel(S3Model):
                                                       table.name,
                                                       orderby=~table.end_date,
                                                       limitby=(0, 1)).last()
+
+            elif current.deployment_settings.get_gis_lookup_pcode():
+                kv_table = current.s3db.gis_location_tag
+                if data.name[0].isdigit():
+                    #The name is a PCode - look up record
+                    query = (kv_table.tag == "PCode") & \
+                            (kv_table.value == data.name) & \
+                            (kv_table.location_id == table.id)
+                    _duplicate = current.db(query).select(table.id,
+                                                          table.name,
+                                                          orderby=~table.end_date,
+                                                          limitby=(0, 1)).last()
+                
                 if _duplicate:
                     # @ToDo: Import Log
                     #s3_debug("Location l10n Match")
