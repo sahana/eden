@@ -685,13 +685,13 @@ class S3LocationModel(S3Model):
             if start_date:
                 query &= (table.start_date == start_date)
 
-            _duplicate = current.db(query).select(table.id,
-                                                  orderby=~table.end_date,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
+            duplicate = current.db(query).select(table.id,
+                                                 orderby=~table.end_date,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
                 # @ToDo: Import Log
                 #s3_debug("Location Match")
-                job.id = _duplicate.id
+                job.id = duplicate.id
                 job.method = job.METHOD.UPDATE
             elif current.deployment_settings.get_L10n_translate_gis_location():
                 # See if this a name_l10n
@@ -706,15 +706,28 @@ class S3LocationModel(S3Model):
                 if start_date:
                     query &= (table.start_date == start_date)
 
-                _duplicate = current.db(query).select(table.id,
+                duplicate = current.db(query).select(table.id,
                                                       table.name,
                                                       orderby=~table.end_date,
-                                                      limitby=(0, 1)).last()
-                if _duplicate:
+                                                      limitby=(0, 1)).first()
+
+            elif current.deployment_settings.get_gis_lookup_pcode():
+                kv_table = current.s3db.gis_location_tag
+                if data.name[0].isdigit():
+                    #The name is a PCode - look up record
+                    query = (kv_table.tag == "PCode") & \
+                            (kv_table.value == data.name) & \
+                            (kv_table.location_id == table.id)
+                    duplicate = current.db(query).select(table.id,
+                                                          table.name,
+                                                          orderby=~table.end_date,
+                                                          limitby=(0, 1)).first()
+                
+                if duplicate:
                     # @ToDo: Import Log
                     #s3_debug("Location l10n Match")
-                    data.name = _duplicate.name # Don't update the name
-                    job.id = _duplicate.id
+                    data.name = duplicate.name # Don't update the name
+                    job.id = duplicate.id
                     job.method = job.METHOD.UPDATE
                 else:
                     # @ToDo: Import Log

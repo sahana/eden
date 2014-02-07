@@ -843,6 +843,12 @@ class S3Config(Storage):
         """
         return self.gis.get("zoomcontrol", True)
 
+    def get_gis_lookup_pcode(self):
+        """
+            Should the gis_location deduplication look up location names as PCodes? 
+        """
+        return self.gis.get("lookup_pcode", False)
+
     # -------------------------------------------------------------------------
     # L10N Settings
     def get_L10n_default_language(self):
