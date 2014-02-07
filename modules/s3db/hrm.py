@@ -6891,7 +6891,7 @@ def hrm_human_resource_filters(resource_type=None,
         )
 
     # Active Filter / Programme filter (volunteer only)
-    if resource_type in ("volunteer"):
+    if resource_type == "volunteer":
         vol_experience = settings.get_hrm_vol_experience()
         if vol_experience in ("programme", "both"):
             # Active filter
