@@ -3183,6 +3183,11 @@ def customize_project_activity(**attr):
 
     s3db = current.s3db
 
+    #current.manager.LABEL = Storage({"READ": I(_class = "icon-pencil"),
+    #                                 "UPDATE": I(_class = "icon-pencil"),
+    #                                 "DELETE": I(_class = "icon-trash")
+    #                                 })
+
     # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
@@ -3245,6 +3250,18 @@ def customize_project_activity(**attr):
 
         # Custom Crud Form
         crud_form = S3SQLCustomForm(
+            S3SQLInlineComponent(
+                "sector_activity",
+                label = T("Sector"),
+                fields = ["sector_id"],
+                multiple = False,
+            ),
+            S3SQLInlineComponent(
+                "activity_activity_type",
+                label = T("Activity Type"),
+                fields = ["activity_type_id"],
+                multiple = False,
+            ),
             S3SQLInlineComponent(
                 "activity_organisation",
                 label = T("Organization"),

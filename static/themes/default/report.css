@@ -80,9 +80,7 @@
     top: 0;
 }
 .pt-throbber {
-    position: absolute;
-    top: 0;
-    right: 0;
+    float: right;
     padding: 5px;
     z-index: 999;
 }
