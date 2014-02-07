@@ -35,7 +35,7 @@ class S3MainMenu(default.S3MainMenu):
 
         return [
             MM("Home", c="default", f="index"),
-            MM("Project List", c="project", f="project", m="search"),
+            MM("Project List", c="project", f="project"),
             MM("Project Analysis", c="default", f="index", args="analysis"),
             MM("Regional Organizations", c="default", f="index", args="organisations"),
             MM("Policies & Strategies", c="project", f="framework"),

@@ -392,7 +392,7 @@
 
             if (layer_label) {
                 $(chart_opts).append($(
-                    '<span class="pt-chart-label">' + layer_label + '</span>'
+                    '<span class="pt-chart-label">' + layer_label + ': </span>'
                 ));
             }
             if (rows_label) {
@@ -413,7 +413,7 @@
 
             if (rows_label && cols_label) {
                 $(chart_opts).append($(
-                    '<span class="pt-chart-label">| ' + labels.breakdown + '</span>' +
+                    '<span class="pt-chart-label">| ' + labels.breakdown + ': </span>' +
                     '<div id="' + hchart_rows + '" class="pt-chart-icon pt-hchart"/>' +
                     '<span class="pt-chart-label">' +
                         [per, rows_label, '&amp;', cols_label].join(' ') +

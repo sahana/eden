@@ -1568,37 +1568,32 @@ class S3OptionsMenu(object):
                 menu(
                      M("Projects", f="project")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
+                        #M("List All"),
                      ),
                      M("Communities", f="location")(
                         # Better created from tab (otherwise Activity Type filter won't work)
                         #M("New", m="create"),
-                        M("List All"),
+                        #M("List All"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
-                        M("List All Community Contacts", f="location_contact"),
-                        M("Search Community Contacts", f="location_contact",
-                          m="search"),
+                        M("List Community Contacts", f="location_contact"),
                      ),
                     )
             else:
                 menu(
                      M("Projects", f="project")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("List All"),
                         M("Map", f="location", m="map"),
-                        M("Search", m="search"),
                      )
                     )
             stats = lambda i: settings.has_module("stats")
             menu(
-                 M("Reports", f="location", m="report")(
-                    M("3W", f="location", m="report"),
+                 M("Reports", f="location", m="report2")(
+                    M("3W", f="location", m="report2"),
                     M("Beneficiaries", f="beneficiary", m="report2",
                       check = stats,
                       ),
-                    M("Funding", f="organisation", m="report"),
+                    M("Funding", f="organisation", m="report2"),
                  ),
                  M("Import", f="project", m="import", p="create")(
                     M("Import Projects", m="import", p="create"),
@@ -1609,27 +1604,26 @@ class S3OptionsMenu(object):
                  ),
                 M("Partner Organizations",  f="partners")(
                     M("New", m="create"),
-                    M("List All"),
+                    #M("List All"),
                     M("Import", m="import", p="create"),
                 ),
                  M("Themes", f="theme")(
                     M("New", m="create"),
-                    M("List All"),
+                    #M("List All"),
                  ),
                  M("Activity Types", f="activity_type")(
                     M("New", m="create"),
-                    M("List All"),
-                    #M("Search", m="search")
+                    #M("List All"),
                  ),
                  M("Beneficiary Types", f="beneficiary_type",
                    check = stats,)(
                     M("New", m="create"),
-                    M("List All"),
+                    #M("List All"),
                  ),
                  M("Demographics", f="demographic",
                    check = stats,)(
                     M("New", m="create"),
-                    M("List All"),
+                    #M("List All"),
                  ),
                 )
 
@@ -1637,27 +1631,27 @@ class S3OptionsMenu(object):
                 menu(
                      M("Hazards", f="hazard")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("List All"),
                      )
                     )
-            # if settings.get_project_sectors():
-                # menu(
-                     # M("Sectors", c="org", f="sector")(
-                        # M("New", m="create"),
-                        # M("List All"),
-                     # )
-                    # )
+            #if settings.get_project_sectors():
+            #    menu(
+            #         M("Sectors", c="org", f="sector")(
+            #            M("New", m="create"),
+            #            #M("List All"),
+            #         )
+            #        )
 
         elif settings.get_project_mode_task():
             menu(
                  M("Projects", f="project")(
                     M("New", m="create"),
-                    M("List All"),
+                    #M("List All"),
                     M("Open Tasks for Project", vars={"tasks":1}),
                  ),
                  M("Tasks", f="task")(
                     M("New", m="create"),
-                    M("Search"),
+                    #M("Search"),
                  ),
                 )
             if current.auth.s3_has_role("STAFF"):
@@ -1690,8 +1684,7 @@ class S3OptionsMenu(object):
             menu(
                  M("Projects", f="project")(
                     M("New", m="create"),
-                    M("List All"),
-                    M("Search", m="search"),
+                    #M("List All"),
                     M("Import", m="import", p="create"),
                  ),
                 )

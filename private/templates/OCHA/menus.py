@@ -72,7 +72,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         menu = M(c="project")(
             M("Projects", f="project")(
                 M("New", m="create"),
-                M("List All"),
+                #M("List All"),
                 M("Map", f="location", m="map"),
             ),
             M("Reports", f="location", m="report2")(
@@ -89,25 +89,24 @@ class S3OptionsMenu(default.S3OptionsMenu):
             ),
             M("Partner Organizations",  f="partners")(
                 M("New", m="create"),
-                M("List All"),
+                #M("List All"),
                 M("Import", m="import", p="create"),
             ),
             M("Themes", f="theme")(
                 M("New", m="create"),
-                M("List All"),
+                #M("List All"),
             ),
             M("Activity Types", f="activity_type")(
                 M("New", m="create"),
-                M("List All"),
-                #M("Search", m="search")
+                #M("List All"),
             ),
             M("Beneficiary Types", f="beneficiary_type")(
                 M("New", m="create"),
-                M("List All"),
+                #M("List All"),
             ),
             M("Demographics", f="demographic")(
                 M("New", m="create"),
-                M("List All"),
+                #M("List All"),
             ),
         )
 

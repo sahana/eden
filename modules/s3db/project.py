@@ -53,7 +53,16 @@ __all__ = ["S3ProjectModel",
            "project_rheader",
            "project_task_form_inject",
            "project_task_controller",
-           ]
+           "project_theme_options",
+           "project_theme_help_fields",
+           "project_hazard_options",
+           "project_hazard_help_fields",
+           "project_hfa_opts",
+           "project_jnap_opts",
+           "project_pifacc_opts",
+           "project_rfa_opts",
+           "project_project_filters",
+          ]
 
 import datetime
 
@@ -102,15 +111,7 @@ class S3ProjectModel(S3Model):
              "project_project_id",
              "project_project_represent",
              "project_human_resource",
-             "project_hfa_opts",
-             "project_jnap_opts",
-             "project_pifacc_opts",
-             "project_rfa_opts",
-             "project_theme_opts",
-             "project_theme_helps",
-             "project_hazard_opts",
-             "project_hazard_helps",
-             ]
+            ]
 
     def model(self):
 
@@ -235,116 +236,8 @@ class S3ProjectModel(S3Model):
             msg_record_deleted = T("Project deleted"),
             msg_list_empty = T("No Projects currently registered"))
 
-        # Search Method
-        status_search_widget = S3SearchOptionsWidget(
-                name = "project_search_status",
-                label = T("Status"),
-                field = "status_id",
-                cols = 4,
-                )
-        simple = [
-            S3SearchSimpleWidget(name = "project_search_text_advanced",
-                                 label = T("Description"),
-                                 comment = T("Search for a Project by name, code, or description."),
-                                 field = ["name",
-                                          "code",
-                                          "description",
-                                          ]
-                                 ),
-            status_search_widget,
-            ]
-        advanced = list(simple)
-        append = advanced.append
-
-        append(S3SearchOptionsWidget(
-                    name = "project_search_organisation_id",
-                    label = org_label,
-                    field = "organisation_id",
-                    cols = 3
-                ))
-
-        append(S3SearchOptionsWidget(
-                name = "project_search_L0",
-                field = "location.location_id$L0",
-                location_level="L0",
-                cols = 3
-                ))
-        append(S3SearchOptionsWidget(
-                name = "project_search_L1",
-                field = "location.location_id$L1",
-                location_level="L1",
-                cols = 3
-                ))
-            #append(S3SearchOptionsWidget(
-            #        name = "project_search_L2",
-            #        label = T("Countries"),
-            #        field = "location.location_id$L2",
-            #        location_level="L2",
-            #        cols = 3
-            #        ))
-
-        if use_sectors:
-            if settings.get_ui_label_cluster():
-                sector = T("Cluster")
-            else:
-                sector = T("Sector")
-            append(S3SearchOptionsWidget(
-                        name = "project_search_sector",
-                        label = sector,
-                        field = "sector.id",
-                        options = self.org_sector_opts,
-                        cols = 4
-                    ))
-        if mode_drr:
-            append(S3SearchOptionsWidget(
-                        name = "project_search_hazard",
-                        label = T("Hazard"),
-                        field = "hazard.id",
-                        options = self.project_hazard_opts,
-                        help_field = self.project_hazard_helps,
-                        cols = 4
-                    ))
-        if mode_3w:
-            append(S3SearchOptionsWidget(
-                        name = "project_search_theme",
-                        label = T("Theme"),
-                        field = "theme.id",
-                        options = self.project_theme_opts,
-                        help_field = self.project_theme_helps,
-                        cols = 4
-                    ))
-        if mode_drr:
-            project_hfa_opts = self.project_hfa_opts()
-            options = {}
-            #options = {None:NONE} To search NO HFA
-            for key in project_hfa_opts.keys():
-                options[key] = "HFA %s" % key
-            append(S3SearchOptionsWidget(
-                        name = "project_search_hfa",
-                        label = T("HFA"),
-                        field = "drr.hfa",
-                        options = options,
-                        help_field = project_hfa_opts,
-                        cols = 5
-                    ))
-
-        if multi_orgs:
-            append(S3SearchOptionsWidget(
-                        name = "project_search_partners",
-                        field = "partner.organisation_id",
-                        label = T("Partners"),
-                        cols = 3,
-                    ))
-
-            append(S3SearchOptionsWidget(
-                        name = "project_search_donors",
-                        field = "donor.organisation_id",
-                        label = T("Donors"),
-                        cols = 3,
-                    ))
-
-        project_search = S3Search(simple = simple,
-                                  advanced = advanced)
+        # Filter widgets
+        filter_widgets = project_project_filters(org_label=org_label)
 
         # Resource Configuration
         if settings.get_project_theme_percentages():
@@ -391,13 +284,16 @@ class S3ProjectModel(S3Model):
         #report_fact_default = "theme.name"
 
         configure(tablename,
+                  super_entity = "doc_entity",
+                  filter_widgets = filter_widgets,
                   context = {"location": "location.location_id",
                              "organisation": "organisation_id",
                              },
+                  list_fields = list_fields,
                   create_next = create_next,
                   deduplicate = self.project_project_deduplicate,
-                  list_fields = list_fields,
                   onaccept = self.project_project_onaccept,
+                  update_realm = True,
                   realm_components = ["human_resource",
                                       "task",
                                       "organisation",
@@ -412,7 +308,6 @@ class S3ProjectModel(S3Model):
                                       "image",
                                       ],
                   report_options = Storage(
-                    search = [status_search_widget] + advanced,
                     rows=report_fields,
                     cols=report_fields,
                     fact=report_fact_fields,
@@ -424,10 +319,7 @@ class S3ProjectModel(S3Model):
                         totals=True
                     )
                   ),
-                  search_method = project_search,
-                  super_entity = "doc_entity",
-                  update_realm = True,
-                  )
+                 )
 
         # Reusable Field
         if use_codes:
@@ -568,15 +460,7 @@ class S3ProjectModel(S3Model):
         #
         return dict(project_project_id = project_id,
                     project_project_represent = project_represent,
-                    project_hfa_opts = self.project_hfa_opts,
-                    project_jnap_opts = self.project_jnap_opts,
-                    project_pifacc_opts = self.project_pifacc_opts,
-                    project_rfa_opts = self.project_rfa_opts,
-                    project_theme_opts = self.project_theme_opts,
-                    project_theme_helps = self.project_theme_helps,
-                    project_hazard_opts = self.project_hazard_opts,
-                    project_hazard_helps = self.project_hazard_helps,
-                    )
+                   )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -901,155 +785,6 @@ class S3ProjectModel(S3Model):
             form.errors.human_resource_id = current.T("Record already exists")
 
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_hazard_opts():
-        """
-            Provide the options for the Hazard search filter
-            - defined in the model used to ensure a good load order
-        """
-
-        table = current.s3db.project_hazard
-        opts = current.db(table.deleted == False).select(table.id,
-                                                         table.name,
-                                                         orderby=table.name)
-        T = current.T
-        od = OrderedDict()
-        for opt in opts:
-            od[opt.id] = T(opt.name) if opt.name else ""
-        return od
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_hazard_helps():
-        """
-            Provide the help tooltips for the Hazard search filter
-            - defined in the model used to ensure a good load order
-        """
-
-        table = current.s3db.project_hazard
-        opts = current.db(table.deleted == False).select(table.id,
-                                                         table.comments)
-        T = current.T
-        d = {}
-        for opt in opts:
-            d[opt.id] = T(opt.comments) if opt.comments else ""
-        return d
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_hfa_opts():
-        """
-            Provide the options for the HFA search filter
-            - defined in the model used to ensure a good load order
-
-            HFA: Hyogo Framework Agreement
-        """
-
-        T = current.T
-        return {
-            1: T("HFA1: Ensure that disaster risk reduction is a national and a local priority with a strong institutional basis for implementation."),
-            2: T("HFA2: Identify, assess and monitor disaster risks and enhance early warning."),
-            3: T("HFA3: Use knowledge, innovation and education to build a culture of safety and resilience at all levels."),
-            4: T("HFA4: Reduce the underlying risk factors."),
-            5: T("HFA5: Strengthen disaster preparedness for effective response at all levels."),
-        }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_jnap_opts():
-        """
-            Provide the options for the PIFACC search filter (currently unused)
-            - defined in the model used to ensure a good load order
-
-            JNAP (Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation):
-             applies to Cook Islands only
-        """
-
-        T = current.T
-        return {
-            1: T("JNAP-1: Strategic Area 1: Governance"),
-            2: T("JNAP-2: Strategic Area 2: Monitoring"),
-            3: T("JNAP-3: Strategic Area 3: Disaster Management"),
-            4: T("JNAP-4: Strategic Area 4: Risk Reduction and Climate Change Adaptation"),
-        }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_pifacc_opts():
-        """
-            Provide the options for the PIFACC search filter (currently unused)
-            - defined in the model used to ensure a good load order
-
-            PIFACC (Pacific Islands Framework for Action on Climate Change):
-             applies to Pacific countries only
-        """
-
-        T = current.T
-        return {
-            1: T("PIFACC-1: Implementing Tangible, On-Ground Adaptation Measures"),
-            2: T("PIFACC-2: Governance and Decision Making"),
-            3: T("PIFACC-3: Improving our understanding of climate change"),
-            4: T("PIFACC-4: Education, Training and Awareness"),
-            5: T("PIFACC-5: Mitigation of Global Greenhouse Gas Emissions"),
-            6: T("PIFACC-6: Partnerships and Cooperation"),
-        }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_rfa_opts():
-        """
-            Provide the options for the RFA search filter
-            - defined in the model used to ensure a good load order
-
-            RFA: applies to Pacific countries only
-        """
-
-        T = current.T
-        return {
-            1: T("RFA1: Governance-Organisational, Institutional, Policy and Decision Making Framework"),
-            2: T("RFA2: Knowledge, Information, Public Awareness and Education"),
-            3: T("RFA3: Analysis and Evaluation of Hazards, Vulnerabilities and Elements at Risk"),
-            4: T("RFA4: Planning for Effective Preparedness, Response and Recovery"),
-            5: T("RFA5: Effective, Integrated and People-Focused Early Warning Systems"),
-            6: T("RFA6: Reduction of Underlying Risk Factors"),
-        }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_theme_opts():
-        """
-            Provide the options for the Theme search filter
-            - defined in the model used to ensure a good load order
-        """
-
-        table = current.s3db.project_theme
-        opts = current.db(table.deleted == False).select(table.id,
-                                                         table.name,
-                                                         orderby=table.name)
-        T = current.T
-        od = OrderedDict()
-        for opt in opts:
-            od[opt.id] = T(opt.name) if opt.name else ""
-        return od
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_theme_helps():
-        """
-            Provide the help tooltips for the Theme search filter
-            - defined in the model used to ensure a good load order
-        """
-
-        table = current.s3db.project_theme
-        opts = current.db(table.deleted == False).select(table.id,
-                                                         table.comments)
-        T = current.T
-        d = {}
-        for opt in opts:
-            d[opt.id] = T(opt.comments) if opt.comments else ""
-        return d
 
 # =============================================================================
 class S3ProjectActivityModel(S3Model):
@@ -2703,19 +2438,19 @@ class S3ProjectFrameworkModel(S3Model):
             ),
         )
 
-        # search_method = S3Search(simple = S3SearchSimpleWidget(
-                # name = "project_framework_search_text",
-                # label = T("Name"),
-                # comment = T("Search for a Policy or Strategy by name or description."),
-                # field = ["name",
-                         # "description",
-                         # ]
-            # ))
+        #filter_widgets = [
+        #    S3TextFilter(["name",
+        #                  "description",
+        #                 ],
+        #                 label = T("Name"),
+        #                 comment = T("Search for a Policy or Strategy by name or description."),
+        #                ),
+        #]
         
         self.configure(tablename,
                        super_entity="doc_entity",
                        crud_form = crud_form,
-                       #search_method = search_method,
+                       #filter_widgets = filter_widgets,
                        list_fields = ["name",
                                       (ORGANISATIONS, "framework_organisation.organisation_id"),
                                       "description",
@@ -3003,103 +2738,10 @@ class S3ProjectLocationModel(S3Model):
                     msg_list_empty = T("No Locations Found")
             )
 
-        # Search Method
-        if community:
-            simple = S3SearchSimpleWidget(
-                name = "project_location_search_text",
-                label = T("Name"),
-                comment = T("Search for a Project Community by name."),
-                field = ["location_id$L0",
-                         "location_id$L1",
-                         "location_id$L2",
-                         "location_id$L3",
-                         "location_id$L4",
-                         #"location_id$L5",
-                         ]
-            )
-        else:
-            simple = S3SearchSimpleWidget(
-                name = "project_location_search_text",
-                label = T("Text"),
-                comment = T("Search for a Project by name, code, location, or description."),
-                field = ["location_id$L0",
-                         "location_id$L1",
-                         "location_id$L2",
-                         "location_id$L3",
-                         "location_id$L4",
-                         #"location_id$L5",
-                         "project_id$name",
-                         "project_id$code",
-                         "project_id$description",
-                         ]
-            )
+        # Filter widgets
+        filter_widgets = project_location_filters()
 
-        advanced_search = [
-            simple,
-            # This is only suitable for deployments with a few projects
-            #S3SearchOptionsWidget(
-            #    name = "project_location_search_project",
-            #    label = T("Project"),
-            #    field = "project_id",
-            #    cols = 3
-            #),
-            S3SearchOptionsWidget(
-                name = "project_location_search_theme",
-                label = T("Theme"),
-                field = "project_id$theme_project.theme_id",
-                options = self.project_theme_opts,
-                cols = 1,
-            ),
-            S3SearchOptionsWidget(
-                name = "project_location_search_L0",
-                field = "location_id$L0",
-                label = COUNTRY,
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name = "project_location_search_L1",
-                field = "location_id$L1",
-                location_level = "L1",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name = "project_location_search_L2",
-                field = "location_id$L2",
-                location_level = "L2",
-                cols = 3
-            ),
-            S3SearchOptionsWidget(
-                name = "project_location_search_L3",
-                field = "location_id$L3",
-                location_level = "L3",
-                cols = 3
-            )
-        ]
-
-        if settings.get_project_sectors():
-            sectors = S3SearchOptionsWidget(
-                name = "project_location_search_sector",
-                label = T("Sector"),
-                field = "project_id$sector.name",
-                cols = 3
-            )
-            advanced_search.insert(1, sectors)
-
-        search_method = S3Search(
-            simple = (simple),
-            advanced = advanced_search,
-        )
-
-        # Resource Configuration
-        report_fields = [(COUNTRY, "location_id$L0"),
-                         "location_id$L1",
-                         "location_id$L2",
-                         "location_id$L3",
-                         "location_id$L4",
-                         (messages.ORGANISATION, "project_id$organisation_id"),
-                         (T("Project"), "project_id"),
-                         (T("Activity Types"), "activity_type.activity_type_id"),
-                         ]
+        # List fields
         list_fields = ["location_id",
                        (COUNTRY, "location_id$L0"),
                        "location_id$L1",
@@ -3114,8 +2756,18 @@ class S3ProjectLocationModel(S3Model):
             list_fields.append((T("Activity Types"), "activity_type.activity_type_id"))
         list_fields.append("comments")
 
-        report_options = Storage(search = advanced_search,
-                                 rows=report_fields,
+        # Report options
+        report_fields = [(COUNTRY, "location_id$L0"),
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         "location_id$L4",
+                         (messages.ORGANISATION, "project_id$organisation_id"),
+                         (T("Project"), "project_id"),
+                         (T("Activity Types"), "activity_type.activity_type_id"),
+                         ]
+
+        report_options = Storage(rows=report_fields,
                                  cols=report_fields,
                                  fact=report_fields,
                                  defaults=Storage(rows="location.location_id$L1",
@@ -3126,33 +2778,17 @@ class S3ProjectLocationModel(S3Model):
                                                   )
                                  )
 
+        # Resource Configuration
         configure(tablename,
+                  super_entity="doc_entity",
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   create_next = URL(c="project", f="location",
                                     args=["[id]", "beneficiary"]),
                   deduplicate = self.project_location_deduplicate,
-                  list_fields = list_fields,
                   onaccept = self.project_location_onaccept,
                   report_options = report_options,
-                  search_method = search_method,
-                  super_entity="doc_entity",
-                  )
-
-        # Reusable Field
-        project_location_represent = project_LocationRepresent()
-        project_location_id = S3ReusableField("project_location_id", table,
-            requires = IS_NULL_OR(
-                        IS_ONE_OF(db(current.auth.s3_accessible_query("update",
-                                                                      table)),
-                                  "project_location.id",
-                                  project_location_represent,
-                                  sort=True)),
-            represent = project_location_represent,
-            label = LOCATION,
-            comment = S3AddResourceLink(ADD_LOCATION,
-                                        c="project", f="location",
-                                        tooltip=LOCATION_TOOLTIP),
-            ondelete = "CASCADE"
-            )
+                 )
 
         # Components
         add_components(tablename,
@@ -3181,6 +2817,23 @@ class S3ProjectLocationModel(S3Model):
                                       "actuate": "hide",
                                      },
                       )
+
+        # Reusable Field
+        project_location_represent = project_LocationRepresent()
+        project_location_id = S3ReusableField("project_location_id", table,
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db(current.auth.s3_accessible_query("update",
+                                                                      table)),
+                                  "project_location.id",
+                                  project_location_represent,
+                                  sort=True)),
+            represent = project_location_represent,
+            label = LOCATION,
+            comment = S3AddResourceLink(ADD_LOCATION,
+                                        c="project", f="location",
+                                        tooltip=LOCATION_TOOLTIP),
+            ondelete = "CASCADE"
+            )
 
         # ---------------------------------------------------------------------
         # Project Community Contact Person
@@ -3212,6 +2865,32 @@ class S3ProjectLocationModel(S3Model):
             msg_record_deleted = T("Contact Deleted"),
             msg_list_empty = T("No Contacts Found"))
 
+        # Filter Widgets
+        filter_widgets = [
+            S3TextFilter(["person_id$first_name",
+                          "person_id$middle_name",
+                          "person_id$last_name"
+                         ],
+                         label = T("Name"),
+                         comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+                        ),
+            S3LocationFilter("project_location_id$location_id",
+                             levels = ["L1", "L2"],
+                             widget = "multiselect",
+                             hidden = True,
+                            ),
+        ]
+
+        # Resource configuration
+        configure(tablename,
+                  filter_widgets = filter_widgets,
+                  list_fields=["person_id",
+                               (T("Email"), "email.value"),
+                               (T("Mobile Phone"), "phone.value"),
+                               "project_location_id",
+                               (T("Project"), "project_location_id$project_id"),
+                               ])
+
         # Components
         add_components(tablename,
                        # Contact Information
@@ -3238,57 +2917,24 @@ class S3ProjectLocationModel(S3Model):
                                   ),
                       )
 
-        contact_search_method = S3Search(
-            advanced=(S3SearchSimpleWidget(
-                            name = "location_contact_search_simple",
-                            label = T("Name"),
-                            comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-                            field = ["person_id$first_name",
-                                     "person_id$middle_name",
-                                     "person_id$last_name"
-                                     ]
-                        ),
-                        S3SearchOptionsWidget(
-                            name="location_contact_search_L1",
-                            field="project_location_id$location_id$L1",
-                            location_level="L1",
-                            cols = 3,
-                        ),
-                        S3SearchOptionsWidget(
-                            name="location_contact_search_L2",
-                            field="project_location_id$location_id$L2",
-                            location_level="L2",
-                            cols = 3,
-                        )
-                    ))
-
-        # Resource configuration
-        configure(tablename,
-                  search_method=contact_search_method,
-                  list_fields=["person_id",
-                               (T("Email"), "email.value"),
-                               (T("Mobile Phone"), "phone.value"),
-                               "project_location_id",
-                               (T("Project"), "project_location_id$project_id"),
-                               ])
-
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(project_location_id = project_location_id,
                     project_location_represent = project_location_represent,
-                    )
+                   )
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults for model-global names if module is disabled """
 
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable=False,
-                                writable=False)
+        project_location_id = S3ReusableField("project_location_id", "integer",
+                                              readable=False,
+                                              writable=False)
 
-        return dict(project_location_id = lambda **attr: dummy("project_location_id"),
-                    )
+        return dict(project_location_id = project_location_id,
+                    project_location_represent = lambda v, row=None: ""
+                   )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3423,11 +3069,9 @@ class S3ProjectOrganisationModel(S3Model):
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
                                  fact = report_fields,
-                                 #methods = ["sum"],
-                                 defaults = Storage(rows = "organisation.organisation_id",
-                                                    cols = "organisation.currency",
-                                                    fact = "organisation.amount",
-                                                    aggregate = "sum",
+                                 defaults = Storage(rows = "organisation_id",
+                                                    cols = "currency",
+                                                    fact = "sum(amount)",
                                                     totals = False
                                                     )
                                  )
@@ -4086,8 +3730,8 @@ class S3ProjectDRRModel(S3Model):
 
         T = current.T
 
-        project_hfa_opts = self.project_hfa_opts()
-        hfa_opts = dict([(opt, "HFA %s" % opt) for opt in project_hfa_opts])
+        hfa_opts = project_hfa_opts()
+        hfa_opts = dict([(opt, "HFA %s" % opt) for opt in hfa_opts])
 
         tablename = "project_drr"
         self.define_table(tablename,
@@ -4099,7 +3743,7 @@ class S3ProjectDRRModel(S3Model):
                                             multiple = True)),
                                 widget = S3GroupedOptionsWidget(
                                             cols=1,
-                                            help_field=project_hfa_opts
+                                            help_field=hfa_opts
                                          ),
                                 represent = S3Represent(options=hfa_opts,
                                                         multiple=True),
@@ -6726,4 +6370,323 @@ def project_task_controller():
                                    hide_filter=hide_filter,
                                    )
 
+# =============================================================================
+def project_theme_options():
+    """ Provide the options for the Theme filter """
+
+    table = current.s3db.project_theme
+    rows = current.db(table.deleted == False).select(table.id,
+                                                     table.name,
+                                                     orderby=table.name)
+    T = current.T
+    translated = lambda string: T(string) if string else ""
+    options = OrderedDict()
+    for row in rows:
+        options[row.id] = translated(row.name)
+    return options
+
+# =============================================================================
+def project_theme_help_fields(options):
+    """
+        Provide the tooltips for the Theme filter
+        
+        @param options: the options to generate tooltips for, from
+                        S3GroupedOptionsWidget: list of tuples (key, represent)
+    """
+
+    table = current.s3db.project_theme
+    keys = dict(options).keys()
+    rows = current.db(table.id.belongs(keys)).select(table.id,
+                                                     table.comments)
+    T = current.T
+    translated = lambda string: T(string) if string else ""
+    tooltips = {}
+    for row in rows:
+        tooltips[row.id] = translated(row.comments)
+    return tooltips
+
+# =============================================================================
+def project_hazard_options():
+    """ Provide the options for the Hazard filter """
+
+    table = current.s3db.project_hazard
+    rows = current.db(table.deleted == False).select(table.id,
+                                                     table.name,
+                                                     orderby=table.name)
+
+    T = current.T
+    translated = lambda string: T(string) if string else ""
+    options = OrderedDict()
+    for row in rows:
+        options[row.id] = translated(row.name)
+    return options
+
+# =============================================================================
+def project_hazard_help_fields(options):
+    """
+        Provide the tooltips for the Hazard filter
+
+        @param options: the options to generate tooltips for, from
+                        S3GroupedOptionsWidget: list of tuples (key, represent)
+    """
+
+    table = current.s3db.project_hazard
+    keys = dict(options).keys()
+    rows = current.db(table.id.belongs(keys)).select(table.id,
+                                                     table.comments)
+
+    T = current.T
+    translated = lambda string: T(string) if string else ""
+    tooltips = {}
+    for row in rows:
+        tooltips[row.id] = translated(row.comments)
+    return tooltips
+
+# =============================================================================
+def project_hfa_opts():
+    """
+        Provide the options for the HFA filter
+
+        HFA: Hyogo Framework Agreement
+    """
+
+    T = current.T
+    return {
+        1: T("HFA1: Ensure that disaster risk reduction is a national and a local priority with a strong institutional basis for implementation."),
+        2: T("HFA2: Identify, assess and monitor disaster risks and enhance early warning."),
+        3: T("HFA3: Use knowledge, innovation and education to build a culture of safety and resilience at all levels."),
+        4: T("HFA4: Reduce the underlying risk factors."),
+        5: T("HFA5: Strengthen disaster preparedness for effective response at all levels."),
+    }
+
+# =============================================================================
+def project_jnap_opts():
+    """
+        Provide the options for the JNAP filter (currently unused)
+
+        JNAP (Joint National Action Plan for Disaster Risk Management
+        and Climate Change Adaptation): applies to Cook Islands only
+    """
+
+    T = current.T
+    return {
+        1: T("JNAP-1: Strategic Area 1: Governance"),
+        2: T("JNAP-2: Strategic Area 2: Monitoring"),
+        3: T("JNAP-3: Strategic Area 3: Disaster Management"),
+        4: T("JNAP-4: Strategic Area 4: Risk Reduction and Climate Change Adaptation"),
+    }
+
+# =============================================================================
+def project_pifacc_opts():
+    """
+        Provide the options for the PIFACC filter (currently unused)
+
+        PIFACC (Pacific Islands Framework for Action on Climate Change):
+        applies to Pacific countries only
+    """
+
+    T = current.T
+    return {
+        1: T("PIFACC-1: Implementing Tangible, On-Ground Adaptation Measures"),
+        2: T("PIFACC-2: Governance and Decision Making"),
+        3: T("PIFACC-3: Improving our understanding of climate change"),
+        4: T("PIFACC-4: Education, Training and Awareness"),
+        5: T("PIFACC-5: Mitigation of Global Greenhouse Gas Emissions"),
+        6: T("PIFACC-6: Partnerships and Cooperation"),
+    }
+
+# =============================================================================
+def project_rfa_opts():
+    """
+        Provide the options for the RFA filter
+
+        RFA: applies to Pacific countries only
+    """
+
+    T = current.T
+    return {
+        1: T("RFA1: Governance-Organisational, Institutional, Policy and Decision Making Framework"),
+        2: T("RFA2: Knowledge, Information, Public Awareness and Education"),
+        3: T("RFA3: Analysis and Evaluation of Hazards, Vulnerabilities and Elements at Risk"),
+        4: T("RFA4: Planning for Effective Preparedness, Response and Recovery"),
+        5: T("RFA5: Effective, Integrated and People-Focused Early Warning Systems"),
+        6: T("RFA6: Reduction of Underlying Risk Factors"),
+    }
+
+# =============================================================================
+def project_project_filters(org_label):
+    """
+        Filter widgets for project_project
+
+        @param org_label: the label to use for organisation_id
+    """
+
+    T = current.T
+    settings = current.deployment_settings
+    
+    filter_widgets = [
+        S3TextFilter(["name",
+                      "code",
+                      "description",
+                     ],
+                     label = T("Description"),
+                     comment = T("Search for a Project by name, code, or description."),
+                    ),
+        S3OptionsFilter("status_id",
+                        label = T("Status"),
+                        cols = 4,
+                       ),
+        S3OptionsFilter("organisation_id",
+                        label = org_label,
+                        cols = 3,
+                        hidden = True,
+                       ),
+        S3LocationFilter("location.location_id",
+                         levels=["L0", "L1", "L2"],
+                         widget="multiselect",
+                         hidden = True,
+                        )
+    ]
+
+    append_filter = filter_widgets.append
+    
+    if settings.get_project_sectors():
+        if settings.get_ui_label_cluster():
+            sector = T("Cluster")
+        else:
+            sector = T("Sector")
+        append_filter(
+            S3OptionsFilter("sector.id",
+                            label = sector,
+                            options = current.s3db.org_sector_opts,
+                            cols = 4,
+                            hidden = True,
+                           )
+        )
+        
+    mode_drr = settings.get_project_mode_drr()
+    if mode_drr:
+        append_filter(
+            S3OptionsFilter("hazard.id",
+                            label = T("Hazard"),
+                            options = project_hazard_options,
+                            help_field = project_hazard_help_fields,
+                            cols = 4,
+                            hidden = True,
+                           )
+        )
+        
+    if settings.get_project_mode_3w():
+        append_filter(
+            S3OptionsFilter("theme.id",
+                            label = T("Theme"),
+                            options = project_theme_options,
+                            help_field = project_theme_help_fields,
+                            cols = 4,
+                            hidden = True,
+                           )
+        )
+    
+    if mode_drr:
+        hfa_opts = project_hfa_opts()
+        options = dict((key, "HFA %s" % key) for key in hfa_opts)
+        #options[None] = current.messages["NONE"] # to search NO HFA
+        append_filter(
+            S3OptionsFilter("drr.hfa",
+                            label = T("HFA"),
+                            options = options,
+                            help_field = hfa_opts,
+                            cols = 5,
+                            hidden = True,
+                           )
+        )
+
+    if settings.get_project_multiple_organisations():
+        append_filter(
+            S3OptionsFilter("partner.organisation_id",
+                            label = T("Partners"),
+                            cols = 3,
+                            hidden = True,
+                           )
+        )
+        append_filter(
+            S3OptionsFilter("donor.organisation_id",
+                            label = T("Donors"),
+                            cols = 3,
+                            hidden = True,
+                           )
+        )
+                
+    return filter_widgets
+    
+# =============================================================================
+def project_location_filters():
+    """ Filter widgets for project_location """
+
+    T = current.T
+    settings = current.deployment_settings
+
+    # Search Method
+    if settings.get_project_community():
+        filter_widgets = [
+            S3TextFilter(["location_id$L0",
+                          "location_id$L1",
+                          "location_id$L2",
+                          "location_id$L3",
+                          "location_id$L4",
+                          #"location_id$L5",
+                         ],
+                         label = T("Name"),
+                         comment = T("Search for a Project Community by name."),
+            )
+        ]
+    else:
+        filter_widgets = [
+            S3TextFilter(["location_id$L0",
+                          "location_id$L1",
+                          "location_id$L2",
+                          "location_id$L3",
+                          "location_id$L4",
+                          #"location_id$L5",
+                          "project_id$name",
+                          "project_id$code",
+                          "project_id$description",
+                         ],
+                         label = T("Text"),
+                         comment = T("Search for a Project by name, code, location, or description."),
+            )
+        ]
+    append_filter = filter_widgets.append
+
+    if settings.get_project_sectors():
+        append_filter(
+            S3OptionsFilter("project_id$sector.name",
+                            label = T("Sector"),
+                            cols = 3,
+                            hidden = True,
+                           )
+        )
+        
+    filter_widgets.extend([
+        # This is only suitable for deployments with a few projects
+        #S3OptionsFilter("project_id",
+        #                label = T("Project"),
+        #                cols = 3,
+        #                hidden=True,
+        #               ),
+        S3OptionsFilter("project_id$theme_project.theme_id",
+                        label = T("Theme"),
+                        options = project_theme_options,
+                        cols = 1,
+                        hidden = True,
+                       ),
+        S3LocationFilter("location_id",
+                         levels = ["L0", "L1", "L2", "L3"],
+                         widget = "multiselect",
+                         hidden = True,
+                        ),
+    ])
+
+    return filter_widgets
+    
 # END =========================================================================

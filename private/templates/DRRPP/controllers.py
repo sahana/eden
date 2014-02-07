@@ -676,6 +676,8 @@ class login():
 class mypage():
     """
         Custom page for a User to manage their Saved Search & Subscriptions
+
+        @todo: pr_saved_search no longer supported (S3Search deprecated)
     """
 
     def __call__(self):

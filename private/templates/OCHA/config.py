@@ -128,7 +128,7 @@ settings.project.codes = True
 #settings.project.community = True
 # Uncomment this to enable Hazards in 3W projects
 #settings.project.hazards = True
- Uncomment this to enable Themes in 3W projects
+# Uncomment this to enable Themes in 3W projects
 settings.project.themes = True
 # Uncomment this to use multiple Budgets per project
 settings.project.multiple_budgets = True
