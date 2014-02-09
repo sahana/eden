@@ -81,18 +81,18 @@ class S3ProcurementModel(S3Model):
         tablename = "proc_plan"
         table = define_table(tablename,
                              self.super_link("site_id", "org_site",
-                                              #label = T("Inventory"),
-                                              label = T("Office"),
-                                              default = auth.user.site_id if auth.is_logged_in() else None,
-                                              readable = True,
-                                              writable = True,
-                                              empty = False,
-                                              # Comment these to use a Dropdown & not an Autocomplete
-                                              #widget = S3SiteAutocompleteWidget(),
-                                              #comment = DIV(_class="tooltip",
-                                              #              _title="%s|%s" % (T("Inventory"),
-                                              #                                T("Enter some characters to bring up a list of possible matches"))),
-                                              represent=self.org_site_represent),
+                                             #label = T("Inventory"),
+                                             label = T("Office"),
+                                             default = auth.user.site_id if auth.is_logged_in() else None,
+                                             readable = True,
+                                             writable = True,
+                                             empty = False,
+                                             # Comment these to use a Dropdown & not an Autocomplete
+                                             #widget = S3SiteAutocompleteWidget(),
+                                             #comment = DIV(_class="tooltip",
+                                             #              _title="%s|%s" % (T("Inventory"),
+                                             #                                T("Enter some characters to bring up a list of possible matches"))),
+                                             represent=self.org_site_represent),
                               # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
                               #project_id(),
                               s3_date("order_date",
@@ -134,8 +134,7 @@ class S3ProcurementModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Redirect to the Items tabs after creation
-        plan_item_url = URL(c="default", f="plan", args=["[id]",
-                                                         "plan_item"])
+        plan_item_url = URL(f="plan", args=["[id]", "plan_item"])
         configure(tablename,
                   # @ToDo: Move these to controller r.interactive?
                   create_next = plan_item_url,
@@ -168,11 +167,11 @@ class S3ProcurementModel(S3Model):
                              Field("quantity", "double", notnull = True,
                                    label = T("Quantity"),
                                    ),
-                             # @ToDo: Move this into a Currency Widget for the pack_value field
-                             s3_currency(
-                                         readable=False,
+                             # @ToDo: Move this into a Currency Widget
+                             #        for the pack_value field
+                             s3_currency(readable=False,
                                          writable=False
-                                         ),
+                                        ),
                              Field("pack_value", "double",
                                    readable=False,
                                    writable=False,
@@ -204,59 +203,47 @@ class S3ProcurementModel(S3Model):
         # ---------------------------------------------------------------------
         # Item Search Method
         #
-        plan_item_search = S3Search(
-            # Advanced Search only
-            advanced=(S3SearchSimpleWidget(
-                        name="proc_plan_item_search_text",
-                        label=T("Search"),
-                        comment=T("Search for an item by text."),
-                        field=[ "item_id$name",
-                                #"item_id$category_id$name",
-                                # Requires VirtualFields
-                                #"site_id$name"
-                                ]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="proc_plan_search_organisation",
-                        label=T("Supplier"),
-                        field="organisation_id$name",
-                        comment=T("If none are selected, then all are searched."),
-                        cols = 2
-                      ),
-                      # Requires options for VirtualField
-                      #S3SearchOptionsWidget(
-                      #  name="proc_plan_search_site",
-                      #  label=T("Facility"),
-                      #  field="site_id",
-                      #  represent ="%(name)s",
-                      #  comment=T("If none are selected, then all are searched."),
-                      #  cols = 2
-                      #),
-                      #S3SearchMinMaxWidget(
-                      #  name="proc_plan_search_order_date",
-                      #  method="range",
-                      #  label=T("Order Date"),
-                      #  field="order_date"
-                      #),
-                      #S3SearchMinMaxWidget(
-                      #  name="proc_plan_search_eta",
-                      #  method="range",
-                      #  label=T("Date Expected"),
-                      #  field="eta"
-                      #)
-            ))
+        filter_widgets = [
+            S3TextFilter(["item_id$name",
+                          #"item_id$category_id$name",
+                          #"plan_id$site_id$name"
+                         ],
+                         label=T("Search"),
+                         comment=T("Search for an item by text."),
+                        ),
+            S3OptionsFilter("plan_id$organisation_id$name",
+                            label=T("Supplier"),
+                            comment=T("If none are selected, then all are searched."),
+                            cols = 2,
+                            hidden = True,
+                           ),
+            #S3OptionsFilter("plan_id$site_id",
+            #                label=T("Facility"),
+            #                represent ="%(name)s",
+            #                comment=T("If none are selected, then all are searched."),
+            #                cols = 2,
+            #                hidden = True,
+            #               ),
+            #S3DateFilter("plan_id$order_date",
+            #             label=T("Order Date"),
+            #             hidden = True,
+            #            ),
+            #S3DateFilter("plan_id$eta",
+            #             label=T("Date Expected"),
+            #             hidden = True,
+            #            ),
+        ]
 
         configure(tablename,
                   super_entity = "supply_item_entity",
-                  search_method = plan_item_search,
+                  filter_widgets = filter_widgets,
                   #report_groupby = db.proc_plan.site_id,
                   report_hide_comments = True)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            )
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod

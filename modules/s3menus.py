@@ -1537,15 +1537,13 @@ class S3OptionsMenu(object):
         """ PROC / Procurement """
 
         return M(c="proc")(
-                    M("Home", f="index"),
                     M("Procurement Plans", f="plan")(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
+                        #M("List All"),
                     ),
                     M("Suppliers", f="supplier")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("List All"),
                     ),
                 )
 
