@@ -5139,7 +5139,7 @@ def pr_delete_role(role_id):
         @param role_id: the role ID
     """
 
-    resource = s3db.resource("pr_role", role_id)
+    resource = s3db.resource("pr_role", id=role_id)
     return resource.delete()
 
 # =============================================================================

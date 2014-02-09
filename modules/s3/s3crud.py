@@ -837,9 +837,6 @@ class S3CRUD(S3Method):
             r.error(403, r.ERROR.NOT_PERMITTED,
                     next=r.url(method=""))
 
-        # Get callback
-        ondelete = config("ondelete")
-
         # Get the target record ID
         record_id = self.record_id
 
@@ -867,8 +864,7 @@ class S3CRUD(S3Method):
         elif r.interactive and (r.http == "POST" or
                                 r.http == "GET" and record_id):
             # Delete the records, notify success and redirect to the next view
-            numrows = self.resource.delete(ondelete=ondelete,
-                                           format=r.representation)
+            numrows = self.resource.delete(format=r.representation)
             if numrows > 1:
                 message = "%s %s" % (numrows, current.T("records deleted"))
             elif numrows == 1:
@@ -882,8 +878,7 @@ class S3CRUD(S3Method):
 
         elif r.http == "DELETE":
             # Delete the records and return a JSON message
-            numrows = self.resource.delete(ondelete=ondelete,
-                                           format=r.representation)
+            numrows = self.resource.delete(format=r.representation)
             if numrows > 1:
                 message = "%s %s" % (numrows, current.T("records deleted"))
             elif numrows == 1:
@@ -2772,9 +2767,6 @@ class S3CRUD(S3Method):
             if not authorised:
                 r.unauthorised()
 
-            # Callback
-            ondelete = dresource.get_config("ondelete")
-
             # Delete it
             uid = None
             if UID in dresource.table:
@@ -2784,8 +2776,7 @@ class S3CRUD(S3Method):
                                         as_rows=True)
                 if rows:
                     uid = rows[0][UID]
-            numrows = dresource.delete(ondelete=ondelete,
-                                       format=r.representation)
+            numrows = dresource.delete(format=r.representation)
             if numrows > 1:
                 message = "%s %s" % (numrows,
                                      current.T("records deleted"))

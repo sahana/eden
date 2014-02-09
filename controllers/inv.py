@@ -554,8 +554,9 @@ def inv_item():
                                 (stable.organisation_id == otable.id) & \
                                 (itable.site_id == stable.id)
                         resource = s3db.resource("inv_inv_item", filter=query)
-                        ondelete = s3db.get_config("inv_inv_item", "ondelete")
-                        resource.delete(ondelete=ondelete, format="xml")
+                        # Use cascade=True so that the deletion gets
+                        # rolled back if the import fails:
+                        resource.delete(format="xml", cascade=True)
             resource.skip_import = True
     s3mgr.import_prep = import_prep
     # Upload for configuration (add replace option)

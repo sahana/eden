@@ -548,9 +548,8 @@ def person():
                         query = (otable.name == org_name) & \
                                 (htable.organisation_id == otable.id) & \
                                 (htable.type == group)
-                        resource = s3base.S3Resource("hrm_human_resource", filter=query)
-                        ondelete = s3db.get_config("hrm_human_resource", "ondelete")
-                        resource.delete(ondelete=ondelete, format="xml", cascade=True)
+                        resource = s3db.resource("hrm_human_resource", filter=query)
+                        resource.delete(format="xml", cascade=True)
     s3mgr.import_prep = import_prep
 
     # CRUD pre-process

@@ -2413,10 +2413,9 @@ class S3ImportItem(object):
             if not self.skip and not self.conflict:
 
                 resource = s3db.resource(tablename, id=self.id)
-
-                ondelete = s3db.get_config(tablename, "ondelete")
-                success = resource.delete(ondelete=ondelete,
-                                          cascade=True)
+                # Use cascade=True so that the deletion can be
+                # rolled back (e.g. trial phase, subsequent failure)
+                success = resource.delete(cascade=True)
                 if resource.error:
                     self.error = resource.error
                     self.skip = True

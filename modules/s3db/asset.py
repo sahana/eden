@@ -689,7 +689,7 @@ S3OptionsFilter({
             aitable = db.asset_item
             ids = db(aitable.asset_id == asset_id).select(aitable.id).as_list()
             if ids:
-                resource = current.s3db.resource("asset_item", ids)
+                resource = current.s3db.resource("asset_item", id=ids)
                 resource.delete()
 
         return

@@ -3823,6 +3823,20 @@ class ResourceDeleteTests(unittest.TestCase):
         s3db.update_super(master_table, {"id": master_id})
         self.master_id = master_id
 
+        self.master_deleted = 0
+        self.super_deleted = 0
+        self.component_deleted = 0
+
+        # Configure callbacks
+        s3db.configure("del_master",
+                       ondelete = self.master_ondelete)
+
+        s3db.configure("del_super",
+                       ondelete = self.super_ondelete)
+
+        s3db.configure("del_component",
+                       ondelete = self.component_ondelete)
+
         current.db.commit()
         current.auth.override = True
 
@@ -3836,6 +3850,27 @@ class ResourceDeleteTests(unittest.TestCase):
         db.commit()
         
         current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def master_ondelete(self, row):
+        """ Dummy ondelete-callback """
+
+        self.master_deleted = row.id
+        return
+        
+    # -------------------------------------------------------------------------
+    def super_ondelete(self, row):
+        """ Dummy ondelete-callback """
+
+        self.super_deleted = row.id
+        return
+
+    # -------------------------------------------------------------------------
+    def component_ondelete(self, row):
+        """ Dummy ondelete-callback """
+
+        self.component_deleted = row.id
+        return
 
     # -------------------------------------------------------------------------
     def testArchiveSimple(self):
@@ -3856,6 +3891,11 @@ class ResourceDeleteTests(unittest.TestCase):
         table = s3db.del_master
         record = table[master_id]
         self.assertTrue(record.deleted)
+
+        # Check callbacks
+        self.assertEqual(self.master_deleted, master_id)
+        self.assertEqual(self.super_deleted, 0)
+        self.assertEqual(self.component_deleted, 0)
 
     # -------------------------------------------------------------------------
     def testArchiveCascade(self):
@@ -3900,6 +3940,11 @@ class ResourceDeleteTests(unittest.TestCase):
             component_record = component[component_id]
             self.assertTrue(component_record.deleted)
             self.assertEqual(component_record.del_master_id, None)
+
+            # Check callbacks
+            self.assertEqual(self.master_deleted, master_id)
+            self.assertEqual(self.super_deleted, 0)
+            self.assertEqual(self.component_deleted, component_id)
 
         finally:
             component.drop()
@@ -3949,6 +3994,11 @@ class ResourceDeleteTests(unittest.TestCase):
             self.assertFalse(component_record.deleted)
             self.assertEqual(component_record.del_master_id, None)
             
+            # Check callbacks
+            self.assertEqual(self.master_deleted, master_id)
+            self.assertEqual(self.super_deleted, 0)
+            self.assertEqual(self.component_deleted, 0)
+
         finally:
             component.drop()
             del current.model.components["del_master"]["component"]
@@ -3998,6 +4048,11 @@ class ResourceDeleteTests(unittest.TestCase):
             self.assertFalse(component_record.deleted)
             self.assertEqual(component_record.del_master_id, master_id)
 
+            # Check callbacks
+            self.assertEqual(self.master_deleted, 0)
+            self.assertEqual(self.super_deleted, 0)
+            self.assertEqual(self.component_deleted, 0)
+
         finally:
             component.drop()
             del current.model.components["del_master"]["component"]
@@ -4032,6 +4087,11 @@ class ResourceDeleteTests(unittest.TestCase):
         stable = s3db.del_super
         srecord = stable[super_id]
         self.assertTrue(srecord.deleted)
+
+        # Check callbacks
+        self.assertEqual(self.master_deleted, master_id)
+        self.assertEqual(self.super_deleted, super_id)
+        self.assertEqual(self.component_deleted, 0)
 
     # -------------------------------------------------------------------------
     def testArchiveSuperCascade(self):
@@ -4087,6 +4147,11 @@ class ResourceDeleteTests(unittest.TestCase):
             self.assertTrue(crecord.deleted)
             self.assertEqual(crecord.del_super_id, None)
             
+            # Check callbacks
+            self.assertEqual(self.master_deleted, master_id)
+            self.assertEqual(self.super_deleted, super_id)
+            self.assertEqual(self.component_deleted, component_id)
+
         finally:
             component.drop()
             del current.model.components["del_super"]["component"]
@@ -4145,6 +4210,11 @@ class ResourceDeleteTests(unittest.TestCase):
             self.assertFalse(crecord.deleted)
             self.assertEqual(crecord.del_super_id, None)
             
+            # Check callbacks
+            self.assertEqual(self.master_deleted, master_id)
+            self.assertEqual(self.super_deleted, super_id)
+            self.assertEqual(self.component_deleted, 0)
+
         finally:
             component.drop()
             del current.model.components["del_super"]["component"]
@@ -4203,6 +4273,11 @@ class ResourceDeleteTests(unittest.TestCase):
             self.assertFalse(crecord.deleted)
             self.assertEqual(crecord.del_super_id, super_id)
             
+            # Check callbacks
+            self.assertEqual(self.master_deleted, 0)
+            self.assertEqual(self.super_deleted, 0)
+            self.assertEqual(self.component_deleted, 0)
+
         finally:
             component.drop()
             del current.model.components["del_super"]["component"]

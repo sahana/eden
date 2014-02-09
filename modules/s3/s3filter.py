@@ -2152,8 +2152,7 @@ class S3Filter(S3Method):
             r.error(501, r.ERROR.BAD_RECORD)
             
         resource = s3db.resource("pr_filter", id=record_id)
-        success = resource.delete(ondelete=resource.get_config("ondelete"),
-                                 format=r.representation)
+        success = resource.delete(format=r.representation)
 
         if not success:
             raise(400, current.manager.error)

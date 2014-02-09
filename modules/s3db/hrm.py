@@ -2964,8 +2964,7 @@ def hrm_training_onaccept(form):
             ptable = s3db.hrm_programme_hours
             query = (ptable.training_id == id)
             if delete:
-                resource = s3db.resource("hrm_programme_hours")
-                resource.add_filter(query)
+                resource = s3db.resource("hrm_programme_hours", filter=query)
                 # Automatically propagates to Active Status
                 resource.delete()
             else:
@@ -5688,8 +5687,9 @@ def hrm_person_controller(**attr):
                                 (htable.organisation_id == otable.id) & \
                                 (htable.type == group)
                         resource = s3db.resource("hrm_human_resource", filter=query)
-                        ondelete = s3db.get_config("hrm_human_resource", "ondelete")
-                        resource.delete(ondelete=ondelete, format="xml", cascade=True)
+                        # Use cascade=True so that the deletion gets
+                        # rolled back if the import fails:
+                        resource.delete(format="xml", cascade=True)
 
     current.manager.import_prep = import_prep
 

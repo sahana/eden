@@ -1141,8 +1141,7 @@ class S3Model(object):
 
             # Delete the super record
             sresource = define_resource(sname, id=value)
-            ondelete = get_config(sname, "ondelete")
-            success = sresource.delete(ondelete=ondelete, cascade=True)
+            success = sresource.delete(cascade=True)
 
             if not success:
                 # Restore the super key

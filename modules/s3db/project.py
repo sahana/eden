@@ -5043,8 +5043,7 @@ class S3ProjectTaskModel(S3Model):
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
             links = s3db.resource("project_task_project", filter=filter)
-            ondelete = s3db.get_config("project_task_project", "ondelete")
-            links.delete(ondelete=ondelete)
+            links.delete()
 
         if "activity_id" in vars:
             ltable = db.project_task_activity
@@ -5069,8 +5068,7 @@ class S3ProjectTaskModel(S3Model):
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
             links = s3db.resource("project_task_activity", filter=filter)
-            ondelete = s3db.get_config("project_task_activity", "ondelete")
-            links.delete(ondelete=ondelete)
+            links.delete()
 
         if "milestone_id" in vars:
             ltable = db.project_task_milestone
@@ -5095,8 +5093,7 @@ class S3ProjectTaskModel(S3Model):
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
             links = s3db.resource("project_task_milestone", filter=filter)
-            ondelete = s3db.get_config("project_task_milestone", "ondelete")
-            links.delete(ondelete=ondelete)
+            links.delete()
 
         # Notify Assignee
         task_notify(form)

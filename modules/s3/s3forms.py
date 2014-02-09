@@ -2174,10 +2174,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         if not authorized:
                             continue
                         c = s3db.resource(tablename, id=record_id)
-                        ondelete = s3db.get_config(tablename, "ondelete")
                         # Audit happens inside .delete()
-                        success = c.delete(ondelete=ondelete,
-                                           cascade=True, format="html")
+                        # Use cascade=True so that the deletion gets
+                        # rolled back in case subsequent items fail:
+                        success = c.delete(cascade=True, format="html")
 
                     # ...or update?
                     else:

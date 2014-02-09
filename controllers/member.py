@@ -139,8 +139,9 @@ def person():
                         query = (otable.name == org_name) & \
                                 (mtable.organisation_id == otable.id)
                         resource = s3db.resource("member_membership", filter=query)
-                        ondelete = s3db.get_config("member_membership", "ondelete")
-                        resource.delete(ondelete=ondelete, format="xml", cascade=True)
+                        # Use cascade=True so that the deletion gets
+                        # rolled back if the import fails:
+                        resource.delete(format="xml", cascade=True)
 
     s3mgr.import_prep = import_prep
 

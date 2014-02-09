@@ -630,7 +630,7 @@ class S3ContentModel(S3Model):
                                       limitby=(0, 1)
                                       ).first()
             if exists and not exists.deleted:
-                resource = current.s3db.resource("cms_tag_post", exists.id)
+                resource = current.s3db.resource("cms_tag_post", id=exists.id)
                 resource.delete()
 
         output = current.xml.json_message(True, 200, "Tag Removed")
@@ -703,7 +703,7 @@ class S3ContentModel(S3Model):
                                   limitby=(0, 1)
                                   ).first()
         if exists and not exists.deleted:
-            resource = current.s3db.resource("cms_post_user", exists.id)
+            resource = current.s3db.resource("cms_post_user", id=exists.id)
             resource.delete()
 
         output = current.xml.json_message(True, 200, "Bookmark Removed")

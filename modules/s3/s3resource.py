@@ -1234,14 +1234,12 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def delete(self,
-               ondelete=None,
                format=None,
                cascade=False,
                replaced_by=None):
         """
             Delete all (deletable) records in this resource
 
-            @param ondelete: on-delete callback
             @param format: the representation format of the request (optional)
             @param cascade: this is a cascade delete (prevents rollbacks/commits)
             @param replaced_by: used by record merger
@@ -1377,8 +1375,7 @@ class S3Resource(object):
                         rresource = define_resource(tn,
                                                     filter=query,
                                                     unapproved=True)
-                        rondelete = rresource.get_config("ondelete")
-                        rresource.delete(ondelete=rondelete, cascade=True)
+                        rresource.delete(cascade=True)
                         if manager.error:
                             break
                     elif rfield.ondelete == "SET NULL":
@@ -1426,8 +1423,7 @@ class S3Resource(object):
                                 linked = define_resource(linked_table,
                                                          filter=query,
                                                          unapproved=True)
-                                ondelete = linked.get_config("ondelete")
-                                linked.delete(ondelete=ondelete, cascade=True)
+                                linked.delete(cascade=True)
                     # Pull back prior error status
                     manager.error = error
                     error = None
@@ -1461,6 +1457,7 @@ class S3Resource(object):
                     audit("delete", prefix, name,
                           record=record_id, representation=format)
                     # On-delete hook
+                    ondelete = get_config("ondelete")
                     if ondelete:
                         callback(ondelete, row)
                     # Commit after each row to not have it rolled back by
@@ -1496,6 +1493,7 @@ class S3Resource(object):
                     audit("delete", prefix, name,
                           record=row[pkey], representation=format)
                     # On-delete hook
+                    ondelete = get_config("ondelete")
                     if ondelete:
                         callback(ondelete, row)
                     # Commit after each row to not have it rolled back by
@@ -6957,9 +6955,7 @@ class S3RecordMerger(object):
         if replaced_by is not None:
             replaced_by = {str(id): replaced_by}
         resource = s3db.resource(table, id=id)
-        ondelete = s3db.get_config(resource.tablename, "ondelete")
-        success = resource.delete(ondelete=ondelete,
-                                  replaced_by=replaced_by,
+        success = resource.delete(replaced_by=replaced_by,
                                   cascade=True)
         if not success:
             self.raise_error("Could not delete %s.%s (%s)" %
