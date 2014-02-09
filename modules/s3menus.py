@@ -429,27 +429,23 @@ class S3OptionsMenu(object):
         return M(c="assess")(
                     M("Building Assessments", f="building")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
+                        #M("List All"),
                         M("Map", m="map"),
                     ),
                     M("Canvassing", f="canvass")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
+                        #M("List All"),
                         M("Map", m="map"),
                     ),
                     #M("Rapid Assessments", f="rat")(
                     #    M("New", m="create"),
-                    #    M("List All"),
-                    #    #M("Search", m="search"),
+                    #    #M("List All"),
                     #),
                     #M("Impact Assessments", f="assess")(
                     #    #M("New", m="create"),
                     #    M("New", f="basic_assess", p="create"),
-                    #    M("List All"),
+                    #    #M("List All"),
                     #    M("Mobile", f="mobile_basic_assess"),
-                    #    #M("Search", m="search"),
                     #),
                     ##M("Baseline Data")(
                     #    #M("Population", f="population"),

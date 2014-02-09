@@ -666,50 +666,40 @@ class S3AssessBuildingModel(S3Model):
             msg_list_empty = T("No Assessments found")
         )
 
-        search_method = S3Search(
-            simple=(),
-            advanced=(S3SearchSimpleWidget(
-                        name="building_search_advanced",
-                        label=T("Name, and/or ID"),
-                        comment=T("To search for a building assessment, enter the name or ID. You may use % as wildcard. Press 'Search' without input to list all assessments."),
-                        field=["name",
-                               "database_id",
-                               ]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="building_search_status",
-                        label=T("Status"),
-                        field="status",
-                        options = assess_status_opts,
-                        cols = 4
-                      ),
-                      S3SearchOptionsWidget(
-                        name="building_search_status_gutting",
-                        label=T("Gutting Status"),
-                        field="status_gutting",
-                        options = assess_status2_opts,
-                        cols = 4
-                      ),
-                      S3SearchOptionsWidget(
-                        name="building_search_status_mold",
-                        label=T("Mold Status"),
-                        field="status_mold",
-                        options = assess_status2_opts,
-                        cols = 4
-                      ),
-                      S3SearchOptionsWidget(
-                        name="building_search_priority",
-                        label=T("Priority"),
-                        field="priority",
-                        options = assess_priority_opts,
-                        cols = 3
-                      ),
-                      )
-            )
+        # Filter Widgets
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "database_id",
+                         ],
+                         label = T("Name, and/or ID"),
+                         comment = T("To search for a building assessment, enter the name or ID. You may use % as wildcard. Press 'Search' without input to list all assessments."),
+                        ),
+            S3OptionsFilter("status",
+                            label = T("Status"),
+                            options = assess_status_opts,
+                            cols = 4,
+                           ),
+            S3OptionsFilter("status_gutting",
+                            label = T("Gutting Status"),
+                            options = assess_status2_opts,
+                            cols = 4,
+                           ),
+            S3OptionsFilter("status_mold",
+                            label = T("Mold Status"),
+                            options = assess_status2_opts,
+                            cols = 4,
+                           ),
+            S3OptionsFilter("priority",
+                            label = T("Priority"),
+                            options = assess_priority_opts,
+                            cols = 3,
+                           ),
+        ]
 
+        # Configuration
         self.configure(tablename,
                        onvalidation = self.assess_building_onvalidation,
-                       search_method = search_method,
+                       filter_widgets = filter_widgets,
                        subheadings = {
                         T("Damages"): "electricity",
                         }
@@ -723,9 +713,8 @@ class S3AssessBuildingModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                assess_building_rheader = self.assess_building_rheader
-            )
+        return dict(assess_building_rheader = self.assess_building_rheader,
+                   )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1003,32 +992,28 @@ class S3AssessCanvassModel(S3Model):
             msg_list_empty = T("No Assessments found")
         )
 
-        canvass_search = S3Search(
-            advanced=(S3SearchSimpleWidget(
-                        name="canvass_search_advanced",
-                        label=T("Building Name or Address"),
-                        comment=T("To search for a building canvass assessment, enter the Building Name or Addresss. You may use % as wildcard. Press 'Search' without input to list all assessments."),
-                        field=["location_id$name",
-                               "location_id$addr_street",
-                               ]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="canvass_search_status",
-                        label=T("Status"),
-                        field="status",
-                        options = status_opts,
-                        cols = 3
-                      ))
-            )
+        filter_widgets = [
+            S3TextFilter(["location_id$name",
+                          "location_id$addr_street",
+                         ],
+                         label=T("Building Name or Address"),
+                         comment=T("To search for a building canvass assessment, enter the Building Name or Addresss. You may use % as wildcard. Press 'Search' without input to list all assessments."),
+                        ),
+            S3OptionsFilter("status",
+                            label=T("Status"),
+                            options = status_opts,
+                            cols = 3,
+                           ),
+        ]
 
         self.configure(tablename,
-                       search_method = canvass_search,
-                       )
+                       filter_widgets = filter_widgets,
+                      )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return {}
 
 # =============================================================================
 def assess_multi_type_represent(ids, opts):

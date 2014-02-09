@@ -94,8 +94,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Stock Counts", c="inv", f="adj"),
                 MM("Shipments", c="inv", f="send")
             ),
-             MM("Cases", c="assess", f="building", m="search")(
-                MM("Building Assessments", f="building", m="search"),
+             MM("Cases", c="assess", f="building")(
+                MM("Building Assessments", f="building"),
                 MM("Canvass", f="canvass"), 
             ),  
             MM("Survey", c="survey")(
