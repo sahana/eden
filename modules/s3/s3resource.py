@@ -124,6 +124,7 @@ class S3Resource(object):
                  linktable=None,
                  alias=None,
                  components=None,
+                 filter_component=None,
                  include_deleted=False,
                  approved=True,
                  unapproved=False,
@@ -142,6 +143,9 @@ class S3Resource(object):
 
             @param components: list of component aliases
                                to load for this resource
+            @param filter_component: alias of the component the URL filters
+                                     apply for (filters for this component
+                                     must be handled separately)
 
             @param alias: the alias for this resource (internal use only)
             @param parent: the parent resource (internal use only)
@@ -292,7 +296,11 @@ class S3Resource(object):
             [attach(alias, hooks[alias]) for alias in hooks]
 
             # Build query
-            self.build_query(id=id, uid=uid, filter=filter, vars=vars)
+            self.build_query(id=id,
+                             uid=uid,
+                             filter=filter,
+                             vars=vars,
+                             filter_component=filter_component)
             if context:
                 self.add_filter(s3db.context)
 
@@ -427,7 +435,12 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     # Query handling
     # -------------------------------------------------------------------------
-    def build_query(self, id=None, uid=None, filter=None, vars=None):
+    def build_query(self,
+                    id=None,
+                    uid=None,
+                    filter=None,
+                    vars=None,
+                    filter_component=None):
         """
             Query builder
 
@@ -435,6 +448,9 @@ class S3Resource(object):
             @param uid: record UID or list of record UIDs to include
             @param filter: filtering query (DAL only)
             @param vars: dict of URL query variables
+            @param filter_component: the alias of the component the URL
+                                     filters apply for (filters for this
+                                     component must be handled separately)
         """
 
         # Reset the rows counter
@@ -444,7 +460,8 @@ class S3Resource(object):
                                         id=id,
                                         uid=uid,
                                         filter=filter,
-                                        vars=vars)
+                                        vars=vars,
+                                        filter_component=filter_component)
         return self.rfilter
 
     # -------------------------------------------------------------------------
@@ -6433,7 +6450,13 @@ class S3URLQuery(object):
 class S3ResourceFilter(object):
     """ Class representing a resource filter """
 
-    def __init__(self, resource, id=None, uid=None, filter=None, vars=None):
+    def __init__(self,
+                 resource,
+                 id=None,
+                 uid=None,
+                 filter=None,
+                 vars=None,
+                 filter_component=None):
         """
             Constructor
 
@@ -6442,6 +6465,9 @@ class S3ResourceFilter(object):
             @param uid: the record UID (or list of record UIDs)
             @param filter: a filter query (Query or S3ResourceQuery)
             @param vars: the dict of GET vars (URL filters)
+            @param filter_component: the alias of the component the URL
+                                     filters apply for (filters for this
+                                     component must be handled separately)
         """
 
         self.resource = resource
@@ -6516,8 +6542,13 @@ class S3ResourceFilter(object):
                 # Filters
                 add_filter = self.add_filter
                 queries = S3URLQuery.parse(resource, vars)
-                [add_filter(q) for alias in queries
-                               for q in queries[alias]]
+                for alias in queries:
+                    if filter_component == alias:
+                        for q in queries[alias]:
+                            add_filter(q, component=alias, master=False)
+                    else:
+                        for q in queries[alias]:
+                            add_filter(q)
                 self.cfilters = queries
         else:
             # Parent filter
