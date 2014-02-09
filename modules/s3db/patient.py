@@ -101,7 +101,7 @@ class S3PatientModel(S3Model):
 
         # CRUD strings
         ADD_PATIENT = T("New Patient")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_PATIENT,
             title_display = T("Patient Details"),
             title_list = T("Patients"),
@@ -123,6 +123,33 @@ class S3PatientModel(S3Model):
                                                           self.patient_represent),
                                      represent = self.patient_represent,
                                      ondelete = "RESTRICT")
+
+        # Search method
+        filter_widgets = [
+            S3TextFilter(["person_id$first_name",
+                          "person_id$middle_name",
+                          "person_id$last_name",
+                          "person_id$local_name",
+                         ],
+                         label = T("Search"),
+                         comment=T("To search for a patient, enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all patients."),
+                        ),
+            S3OptionsFilter("country",
+                            label = messages.COUNTRY,
+                            cols = 2,
+                            hidden = True,
+                           ),
+            S3OptionsFilter("hospital_id",
+                            label = T("Hospital"),
+                            cols = 2,
+                            hidden = True,
+                           ),
+        ]
+
+        # Configuration
+        self.configure(tablename,
+                       filter_widgets = filter_widgets,
+                      )
 
         # Components
         add_components(tablename,

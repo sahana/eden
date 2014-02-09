@@ -1506,8 +1506,7 @@ class S3OptionsMenu(object):
         return M(c="patient")(
                     M("Patients", f="patient")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search")
+                        #M("List All"),
                     )
                 )
 

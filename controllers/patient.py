@@ -41,42 +41,7 @@ def patient():
     # Load Models
     s3db.table("patient_patient")
 
-    # Search method
-    patient_search = s3base.S3Search(
-        simple = s3base.S3SearchSimpleWidget(
-            name="patient_search_simple",
-            label = T("Search"),
-            comment=T("To search for a patient, enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all patients."),
-            field = [ "person_id$first_name",
-                      "person_id$middle_name",
-                      "person_id$last_name",
-                      "person_id$local_name"]),
-        advanced = (s3base.S3SearchSimpleWidget(
-                    name="patient_search_simple",
-                    label = T("Search"),
-                    comment=T("To search for a patient, enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all patients."),
-                    field = [ "person_id$first_name",
-                              "person_id$middle_name",
-                              "person_id$last_name",
-                              "person_id$local_name"]),
-                    s3base.S3SearchOptionsWidget(
-                        name = "patient_search_country",
-                        label = COUNTRY,
-                        field = "country",
-                        cols = 2
-                    ),
-                    s3base.S3SearchOptionsWidget(
-                        name = "patient_search_hospital",
-                        label = T("Hospital"),
-                        field = "hospital_id",
-                        cols = 2
-                    ),
-        )
-    )
-
-
     s3db.configure(tablename,
-                   search_method=patient_search,
                    create_next = URL(args=["[id]", "relative"]))
     # Pre-process
     def prep(r):
@@ -97,7 +62,8 @@ def patient():
             (T("Accompanying Relative"), "relative"),
             (T("Home"), "home")]
     rheader = lambda r: patient_rheader(r, tabs=tabs)
-    output = s3_rest_controller(rheader=rheader)
+    output = s3_rest_controller(rheader = rheader,
+                                hide_filter = False)
 
     return output
 
