@@ -19,511 +19,7 @@ resourcename = request.function
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# -----------------------------------------------------------------------------
-# Define the Model
-# @ToDo: Move to modules/s3db/budget.py
-# - here it isn't visible to s3db.load_all_models() or Sync
-# -----------------------------------------------------------------------------
-# Load the models we depend on
-project_id = s3db.project_project_id
-
-s3_deletion_status = s3base.s3_deletion_status
-s3_timestamp = s3base.s3_timestamp
-s3_uid = s3base.s3_uid
-
-module = "budget"
-
-# Parameters
-# Only record 1 is used
-resourcename = "parameter"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("shipping", "double", default=15.00, notnull=True),
-                        Field("logistics", "double", default=0.00, notnull=True),
-                        Field("admin", "double", default=0.00, notnull=True),
-                        Field("indirect", "double", default=7.00, notnull=True),
-
-                        *(s3_timestamp() + s3_uid()))
-
-table.shipping.requires = IS_FLOAT_IN_RANGE(0, 100)
-table.logistics.requires = IS_FLOAT_IN_RANGE(0, 100)
-table.admin.requires = IS_FLOAT_IN_RANGE(0, 100)
-table.indirect.requires = IS_FLOAT_IN_RANGE(0, 100)
-
-# Items
-budget_cost_type_opts = {
-    1:T("One-time"),
-    2:T("Recurring")
-    }
-cost_type = S3ReusableField("cost_type", "integer",
-                            notnull=True,
-                            requires = IS_IN_SET(budget_cost_type_opts,
-                                                zero=None),
-                            # default = 1,
-                            label = T("Cost Type"),
-                            represent = lambda opt: \
-                                budget_cost_type_opts.get(opt, UNKNOWN_OPT))
-
-budget_category_type_opts = {
-    1:T("Consumable"),
-    2:T("Satellite"),
-    3:"HF",
-    4:"VHF",
-    5:T("Telephony"),
-    6:"WLAN",
-    7:T("Network"),
-    8:T("Generator"),
-    9:T("Electrical"),
-    10:T("Vehicle"),
-    11:"GPS",
-    12:T("Tools"),
-    13:"IT",
-    14:"ICT",
-    15:"TC",
-    16:T("Stationery"),
-    17:T("Relief"),
-    18:T("Miscellaneous"),
-    19:T("Running Cost")
-    }
-category_type = S3ReusableField("category_type", "integer", notnull=True,
-                                requires = IS_IN_SET(budget_category_type_opts, zero=None),
-                                # default = 1,
-                                label = T("Category"),
-                                represent = lambda opt: budget_category_type_opts.get(opt, UNKNOWN_OPT))
-resourcename = "item"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        category_type(),
-                        Field("code", length=128, notnull=True, unique=True),
-                        Field("description", notnull=True),
-                        cost_type(),
-                        Field("unit_cost", "double", default=0.00),
-                        Field("monthly_cost", "double", default=0.00),
-                        Field("minute_cost", "double", default=0.00),
-                        Field("megabyte_cost", "double", default=0.00),
-                        s3_comments(),
-
-                        *(s3_timestamp() + s3_uid() + s3_deletion_status()))
-
-table.code.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "%s.code" % table)]
-table.description.requires = IS_NOT_EMPTY()
-
-def item_cascade(form):
-    """
-    When an Item is updated, then also need to update all Kits, Bundles & Budgets which contain this item
-    Called as an onaccept from the RESTlike controller
-    """
-    # Check if we're an update form
-    if form.vars.id:
-        item = form.vars.id
-        # Update Kits containing this Item
-        table = db.budget_kit_item
-        query = table.item_id==item
-        rows = db(query).select()
-        for row in rows:
-            kit = row.kit_id
-            kit_totals(kit)
-            # Update Bundles containing this Kit
-            table = db.budget_bundle_kit
-            query = (table.kit_id == kit)
-            rows = db(query).select()
-            for row in rows:
-                bundle = row.bundle_id
-                bundle_totals(bundle)
-                # Update Budgets containing this Bundle (tbc)
-        # Update Bundles containing this Item
-        table = db.budget_bundle_item
-        query = (table.item_id == item)
-        rows = db(query).select()
-        for row in rows:
-            bundle = row.bundle_id
-            bundle_totals(bundle)
-            # Update Budgets containing this Bundle (tbc)
-    return
-
-s3db.configure(tablename,
-                onaccept=item_cascade)
-
-# Kits
-resourcename = "kit"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("code", length=128, notnull=True, unique=True),
-                        Field("description"),
-                        Field("total_unit_cost", "double", writable=False),
-                        Field("total_monthly_cost", "double", writable=False),
-                        Field("total_minute_cost", "double", writable=False),
-                        Field("total_megabyte_cost", "double", writable=False),
-                        s3_comments(),
-
-                        *(s3_timestamp() + s3_uid() + s3_deletion_status()))
-
-table.code.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "%s.code" % table)]
-
-def kit_totals(kit):
-    "Calculate Totals for a Kit"
-    table = db.budget_kit_item
-    query = table.kit_id == kit
-    items = db(query).select()
-    total_unit_cost = 0
-    total_monthly_cost = 0
-    total_minute_cost = 0
-    total_megabyte_cost = 0
-    for item in items:
-        query = (table.kit_id == kit) & (table.item_id == item.item_id)
-        quantity = db(query).select(table.quantity, limitby=(0, 1)).first().quantity
-        row = db(db.budget_item.id == item.item_id).select(db.budget_item.unit_cost, db.budget_item.monthly_cost, db.budget_item.minute_cost, db.budget_item.megabyte_cost, limitby=(0, 1)).first()
-        total_unit_cost += row.unit_cost * quantity
-        total_monthly_cost += row.monthly_cost * quantity
-        total_minute_cost += row.minute_cost * quantity
-        total_megabyte_cost += row.megabyte_cost * quantity
-    db(db.budget_kit.id == kit).update(total_unit_cost=total_unit_cost, total_monthly_cost=total_monthly_cost, total_minute_cost=total_minute_cost, total_megabyte_cost=total_megabyte_cost)
-    audit("update", module, "kit", record=kit, representation="html")
-
-
-def kit_total(form):
-    "Calculate Totals for the Kit specified by Form"
-    if "kit_id" in form.vars:
-        # called by kit_item()
-        kit = form.vars.kit_id
-    else:
-        # called by kit()
-        kit = form.vars.id
-    kit_totals(kit)
-
-s3db.configure(tablename,
-                onaccept=kit_total)
-
-# Kit<>Item Many2Many
-resourcename = "kit_item"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("kit_id", db.budget_kit),
-                        Field("item_id", db.budget_item, ondelete="RESTRICT"),
-                        Field("quantity", "integer", default=1, notnull=True),
-
-                        *(s3_timestamp() + s3_uid() + s3_deletion_status()))
-
-table.kit_id.requires = IS_ONE_OF(db, "budget_kit.id", "%(code)s")
-table.item_id.requires = IS_ONE_OF(db, "budget_item.id", "%(description)s")
-table.quantity.requires = IS_NOT_EMPTY()
-
-# Bundles
-resourcename = "bundle"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("name", length=128, notnull=True, unique=True),
-                        Field("description"),
-                        Field("total_unit_cost", "double", writable=False),
-                        Field("total_monthly_cost", "double", writable=False),
-                        s3_comments(),
-
-                        *(s3_timestamp() + s3_uid() + s3_deletion_status()))
-
-table.name.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "%s.name" % table)]
-
-def bundle_totals(bundle):
-    "Calculate Totals for a Bundle"
-    total_unit_cost = 0
-    total_monthly_cost = 0
-
-    table = db.budget_bundle_kit
-    query = (table.bundle_id == bundle)
-    kits = db(query).select()
-    for kit in kits:
-        query = (table.bundle_id == bundle) & (table.kit_id == kit.kit_id)
-        row = db(query).select(table.quantity, table.minutes, table.megabytes, limitby=(0, 1)).first()
-        quantity = row.quantity
-        row2 = db(db.budget_kit.id == kit.kit_id).select(db.budget_kit.total_unit_cost, db.budget_kit.total_monthly_cost, db.budget_kit.total_minute_cost, db.budget_kit.total_megabyte_cost, limitby=(0, 1)).first()
-        total_unit_cost += row2.total_unit_cost * quantity
-        total_monthly_cost += row2.total_monthly_cost * quantity
-        total_monthly_cost += row2.total_minute_cost * quantity * row.minutes
-        total_monthly_cost += row2.total_megabyte_cost * quantity * row.megabytes
-
-    table = db.budget_bundle_item
-    query = (table.bundle_id == bundle)
-    items = db(query).select()
-    for item in items:
-        query = (table.bundle_id == bundle) & (table.item_id == item.item_id)
-        row = db(query).select(table.quantity, table.minutes, table.megabytes, limitby=(0, 1)).first()
-        quantity = row.quantity
-        row2 = db(db.budget_item.id == item.item_id).select(db.budget_item.unit_cost, db.budget_item.monthly_cost, db.budget_item.minute_cost, db.budget_item.megabyte_cost, limitby=(0, 1)).first()
-        total_unit_cost += row2.unit_cost * quantity
-        total_monthly_cost += row2.monthly_cost * quantity
-        total_monthly_cost += row2.minute_cost * quantity * row.minutes
-        total_monthly_cost += row2.megabyte_cost * quantity * row.megabytes
-
-    db(db.budget_bundle.id == bundle).update(total_unit_cost=total_unit_cost, total_monthly_cost=total_monthly_cost)
-    audit("update", module, "bundle", record=bundle, representation="html")
-
-
-def bundle_total(form):
-    "Calculate Totals for the Bundle specified by Form"
-    if "bundle_id" in form.vars:
-        # called by bundle_kit_item()
-        bundle = form.vars.bundle_id
-    else:
-        # called by bundle()
-        bundle = form.vars.id
-    bundle_totals(bundle)
-
-s3db.configure(tablename,
-                onaccept=bundle_total)
-
-# Bundle<>Kit Many2Many
-resourcename = "bundle_kit"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("bundle_id", db.budget_bundle),
-                        Field("kit_id", db.budget_kit, ondelete="RESTRICT"),
-                        Field("quantity", "integer", default=1, notnull=True),
-                        Field("minutes", "integer", default=0, notnull=True),
-                        Field("megabytes", "integer", default=0, notnull=True),
-
-                        *(s3_timestamp() + s3_deletion_status()))
-
-table.bundle_id.requires = IS_ONE_OF(db, "budget_bundle.id", "%(description)s")
-table.kit_id.requires = IS_ONE_OF(db, "budget_kit.id", "%(code)s")
-table.quantity.requires = IS_NOT_EMPTY()
-table.minutes.requires = IS_NOT_EMPTY()
-table.megabytes.requires = IS_NOT_EMPTY()
-
-# Bundle<>Item Many2Many
-resourcename = "bundle_item"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("bundle_id", db.budget_bundle),
-                        Field("item_id", db.budget_item, ondelete="RESTRICT"),
-                        Field("quantity", "integer", default=1, notnull=True),
-                        Field("minutes", "integer", default=0, notnull=True),
-                        Field("megabytes", "integer", default=0, notnull=True),
-
-                        *(s3_timestamp() + s3_deletion_status()))
-
-table.bundle_id.requires = IS_ONE_OF(db, "budget_bundle.id", "%(description)s")
-table.item_id.requires = IS_ONE_OF(db, "budget_item.id", "%(description)s")
-table.quantity.requires = IS_NOT_EMPTY()
-table.minutes.requires = IS_NOT_EMPTY()
-table.megabytes.requires = IS_NOT_EMPTY()
-
-# Staff Types
-resourcename = "staff"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("name", length=128, notnull=True, unique=True),
-                        Field("grade", notnull=True),
-                        Field("salary", "integer", notnull=True),
-                        s3base.s3_currency(),
-                        Field("travel", "integer", default=0),
-                        # Shouldn't be grade-dependent, but purely location-dependent
-                        #Field("subsistence", "double", default=0.00),
-                        # Location-dependent
-                        #Field("hazard_pay", "double", default=0.00),
-                        s3_comments(),
-
-                        *(s3_timestamp() + s3_uid() + s3_deletion_status()))
-
-table.name.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "%s.name" % table)]
-table.grade.requires = IS_NOT_EMPTY()
-table.salary.requires = IS_NOT_EMPTY()
-
-# Locations
-resourcename = "location"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("code", length=3, notnull=True, unique=True),
-                        Field("description"),
-                        Field("subsistence", "double", default=0.00),
-                        Field("hazard_pay", "double", default=0.00),
-                        s3_comments(),
-
-                        *(s3_timestamp() + s3_uid() + s3_deletion_status()))
-
-table.code.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "%s.code" % table)]
-
-# Budgets
-resourcename = "budget"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("name", length=128, notnull=True, unique=True),
-                        Field("description"),
-                        Field("total_onetime_costs", "double", writable=False),
-                        Field("total_recurring_costs", "double", writable=False),
-                        s3_comments(),
-
-                        *(s3_timestamp() + s3_uid() + s3_deletion_status()))
-
-table.name.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "%s.name" % table)]
-
-# Budget<>Bundle Many2Many
-resourcename = "budget_bundle"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("budget_id", db.budget_budget),
-                        project_id(),
-                        Field("location_id", db.budget_location),
-                        Field("bundle_id", db.budget_bundle, ondelete="RESTRICT"),
-                        Field("quantity", "integer", default=1, notnull=True),
-                        Field("months", "integer", default=3, notnull=True),
-
-                        *(s3_timestamp() + s3_deletion_status()))
-
-table.budget_id.requires = IS_ONE_OF(db, "budget_budget.id", "%(name)s")
-table.location_id.requires = IS_ONE_OF(db, "budget_location.id", "%(code)s")
-table.bundle_id.requires = IS_ONE_OF(db, "budget_bundle.id", "%(name)s")
-table.quantity.requires = IS_NOT_EMPTY()
-table.months.requires = IS_NOT_EMPTY()
-
-# Budget<>Staff Many2Many
-resourcename = "budget_staff"
-tablename = "%s_%s" % (module, resourcename)
-table = db.define_table(tablename,
-                        Field("budget_id", db.budget_budget),
-                        project_id(),
-                        Field("location_id", db.budget_location),
-                        Field("staff_id", db.budget_staff, ondelete="RESTRICT"),
-                        Field("quantity", "integer", default=1, notnull=True),
-                        Field("months", "integer", default=3, notnull=True),
-
-                        *(s3_timestamp() + s3_deletion_status()))
-
-table.budget_id.requires = IS_ONE_OF(db, "budget_budget.id", "%(name)s")
-table.location_id.requires = IS_ONE_OF(db, "budget_location.id", "%(code)s")
-table.staff_id.requires = IS_ONE_OF(db, "budget_staff.id", "%(name)s")
-table.quantity.requires = IS_NOT_EMPTY()
-table.months.requires = IS_NOT_EMPTY()
-
-# Options used in multiple functions
-# @ToDo: integrate into db.define_table()
-table = db.budget_item
-table.code.label = T("Code")
-table.description.label = T("Description")
-table.unit_cost.label = T("Unit Cost")
-table.monthly_cost.label = T("Monthly Cost")
-table.minute_cost.label = T("Cost per Minute")
-table.megabyte_cost.label = T("Cost per Megabyte")
-table.comments.label = T("Comments")
-
-table = db.budget_kit
-table.code.label = T("Code")
-table.description.label = T("Description")
-table.total_unit_cost.label = T("Total Unit Cost")
-table.total_monthly_cost.label = T("Total Monthly Cost")
-table.total_minute_cost.label = T("Total Cost per Minute")
-table.total_megabyte_cost.label = T("Total Cost per Megabyte")
-table.comments.label = T("Comments")
-
-table = db.budget_kit_item
-table.kit_id.label = T("Kit")
-table.kit_id.represent = lambda kit_id: \
-    db(db.budget_kit.id == kit_id).select(db.budget_kit.code,
-                                          limitby=(0, 1)).first().code
-table.item_id.label = T("Item")
-table.item_id.represent = lambda item_id: \
-    db(db.budget_item.id == item_id).select(db.budget_item.description,
-                                            limitby=(0, 1)).first().description
-table.quantity.label = T("Quantity")
-
-table = db.budget_bundle
-table.name.label = T("Name")
-table.description.label = T("Description")
-table.total_unit_cost.label = T("One time cost")
-table.total_monthly_cost.label = T("Recurring cost")
-table.comments.label = T("Comments")
-
-table = db.budget_bundle_kit
-table.bundle_id.label = T("Bundle")
-table.bundle_id.represent = lambda bundle_id: \
-    db(db.budget_bundle.id == bundle_id).select(db.budget_bundle.description,
-                                                limitby=(0, 1)).first().description
-table.kit_id.label = T("Kit")
-table.kit_id.represent = lambda kit_id: \
-    db(db.budget_kit.id == kit_id).select(db.budget_kit.code,
-                                          limitby=(0, 1)).first().code
-table.quantity.label = T("Quantity")
-table.minutes.label = T("Minutes per Month")
-table.megabytes.label = T("Megabytes per Month")
-
-table = db.budget_bundle_item
-table.bundle_id.label = T("Bundle")
-table.bundle_id.represent = lambda bundle_id: \
-    db(db.budget_bundle.id == bundle_id).select(db.budget_bundle.description,
-                                                limitby=(0, 1)).first().description
-table.item_id.label = T("Item")
-table.item_id.represent = lambda item_id: \
-    db(db.budget_item.id == item_id).select(db.budget_item.description,
-                                            limitby=(0, 1)).first().description
-table.quantity.label = T("Quantity")
-table.minutes.label = T("Minutes per Month")
-table.megabytes.label = T("Megabytes per Month")
-
-table = db.budget_staff
-table.name.label = T("Name")
-table.grade.label = T("Grade")
-table.salary.label = T("Monthly Salary")
-table.travel.label = T("Travel Cost")
-table.comments.label = T("Comments")
-
-table = db.budget_location
-table.code.label = T("Code")
-table.description.label = T("Description")
-table.subsistence.label = T("Subsistence Cost")
-# UN terminology
-#table.subsistence.label = "DSA"
-table.hazard_pay.label = T("Hazard Pay")
-table.comments.label = T("Comments")
-
-#table = db.budget_project
-#table.code.label = T("Code")
-#table.title.label = T("Title")
-#table.comments.label = T("Comments")
-
-table = db.budget_budget
-table.name.label = T("Name")
-table.description.label = T("Description")
-table.total_onetime_costs.label = T("Total One-time Costs")
-table.total_recurring_costs.label = T("Total Recurring Costs")
-table.comments.label = T("Comments")
-
-table = db.budget_budget_bundle
-table.budget_id.label = T("Budget")
-table.budget_id.represent = lambda budget_id: \
-    db(db.budget_budget.id == budget_id).select(db.budget_budget.name,
-                                                limitby=(0, 1)).first().name
-#table.project_id.label = T("Project")
-#table.project_id.represent = lambda project_id: db(db.budget_project.id == project_id).select(db.budget_project.code, limitby=(0, 1)).first().code
-table.location_id.label = T("Location")
-table.location_id.represent = lambda location_id: \
-    db(db.budget_location.id == location_id).select(db.budget_location.code,
-                                                    limitby=(0, 1)).first().code
-table.bundle_id.label = T("Bundle")
-table.bundle_id.represent = lambda bundle_id: \
-    db(db.budget_bundle.id == bundle_id).select(db.budget_bundle.name,
-                                                limitby=(0, 1)).first().name
-table.quantity.label = T("Quantity")
-table.months.label = T("Months")
-
-table = db.budget_budget_staff
-table.budget_id.label = T("Budget")
-table.budget_id.represent = lambda budget_id: \
-    db(db.budget_budget.id == budget_id).select(db.budget_budget.name,
-                                                limitby=(0, 1)).first().name
-#table.project_id.label = T("Project")
-#table.project_id.represent = lambda project_id: db(db.budget_project.id == project_id).select(db.budget_project.code, limitby=(0, 1)).first().code
-table.location_id.label = T("Location")
-table.location_id.represent = lambda location_id: \
-    db(db.budget_location.id == location_id).select(db.budget_location.code,
-                                                    limitby=(0, 1)).first().code
-table.staff_id.label = T("Staff")
-table.staff_id.represent = lambda bundle_id: \
-    db(db.budget_staff.id == staff_id).select(db.budget_staff.description,
-                                              limitby=(0, 1)).first().description
-table.quantity.label = T("Quantity")
-table.months.label = T("Months")
-
-# -----------------------------------------------------------------------------
-# Controllers
-# -----------------------------------------------------------------------------
+# =============================================================================
 def index():
     """ Module's Home Page """
 
@@ -531,6 +27,104 @@ def index():
     response.title = module_name
     return dict(module_name=module_name)
 
+# =============================================================================
+def budget():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(rheader=s3db.budget_rheader)
+
+# =============================================================================
+def parameter():
+    """ RESTful CRUD controller """
+
+    s3db.configure("budget_parameter", deletable=False)
+    return s3_rest_controller()
+
+# =============================================================================
+def location():
+    """
+        RESTful CRUD controller for budget_location
+        
+        @todo: This should be deprecated & replaced with
+               a link to gis_location.
+    """
+
+    return s3_rest_controller(main="code")
+
+# =============================================================================
+def item():
+    """ RESTful CRUD controller """
+
+    s3.formats.pdf = URL(f="item_export_pdf")
+
+    return s3_rest_controller()
+
+# =============================================================================
+def kit():
+    """ RESTful CRUD controller """
+
+    s3.formats.pdf = URL(f="kit_export_pdf")
+    s3.formats.xls = URL(f="kit_export_xls")
+
+    if len(request.args) == 2:
+        s3db.configure("budget_kit",
+                       update_next=URL(f="kit_item", args=request.args[1]))
+
+    return s3_rest_controller(rheader=s3db.budget_rheader,
+                              main="code")
+
+# =============================================================================
+def bundle():
+    """ RESTful CRUD controller """
+
+    if len(request.args) == 2:
+        s3db.configure("budget_bundle",
+            update_next=URL(f="bundle_kit_item", args=request.args[1]))
+
+    return s3_rest_controller(rheader=s3db.budget_rheader)
+
+# =============================================================================
+def staff():
+    """
+        RESTful CRUD controller for budget_staff
+
+        @todo: This should be deprecated & replaced with
+               a link to hrm_human_resource.
+    """
+
+    return s3_rest_controller()
+
+# =============================================================================
+def budget_staff():
+    """
+        REST controller to retrieve budget_budget_staff field options
+    """
+
+    s3.prep = lambda r: r.representation == "s3json"
+    return s3_rest_controller()
+
+# =============================================================================
+def project():
+    """ RESTful CRUD controller """
+
+    #tablename = "project_%s" % (resourcename)
+    #table = db[tablename]
+
+    tabs = [(T("Basic Details"), None),
+            (T("Staff"), "staff"),
+            (T("Tasks"), "task"),
+           #(T("Donors"), "organisation"),
+           #(T("Facilities"), "site"),   # Ticket 195
+           ]
+    rheader = lambda r: s3db.project_rheader(r, tabs=tabs)
+
+    output = s3_rest_controller("project", resourcename,
+                                rheader=rheader)
+
+    return output
+
+
+# =============================================================================
 def parameters():
     """ Select which page to go to depending on login status """
     table = db.budget_parameter
@@ -540,192 +134,8 @@ def parameters():
     else:
         redirect (URL(f="parameter", args=[1, "read"]))
 
-def parameter():
-    """ RESTful CRUD controller """
-    tablename = "budget_parameter"
-    table = db[tablename]
-
-    # Model Options
-    table.shipping.label = "Shipping cost"
-    table.logistics.label = "Procurement & Logistics cost"
-    table.admin.label = "Administrative support cost"
-    table.indirect.label = "Indirect support cost HQ"
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Parameters"),
-        title_display = T("Parameters"))
-
-    s3db.configure(tablename, deletable=False)
-    return s3_rest_controller()
-
-def item():
-    """ RESTful CRUD controller """
-    tablename = "budget_item"
-    table = db[tablename]
-
-    # Model options used in multiple controllers so defined at the top of the file
-
-    # CRUD Strings
-    ADD_ITEM = T("Add Item")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_ITEM,
-        title_display = T("Item Details"),
-        title_list = T("Items"),
-        title_update = T("Edit Item"),
-        title_search = T("Search Items"),
-        subtitle_create = T("Add New Item"),
-        label_list_button = T("List Items"),
-        label_create_button = ADD_ITEM,
-        label_delete_button = T("Delete Item"),
-        label_search_button = T("Search Items"),
-        msg_record_created = T("Item added"),
-        msg_record_modified = T("Item updated"),
-        msg_record_deleted = T("Item deleted"),
-        msg_list_empty = T("No Items currently registered"))
-
-    s3.formats.pdf = URL(f="item_export_pdf")
-
-    s3db.configure(tablename,
-                    main="code",
-                    extra="description",
-                    orderby=db.budget_item.category_type)
-
-    return s3_rest_controller()
-
-def item_export_pdf():
-    """
-        Export a list of Items in Adobe PDF format
-        Uses Geraldo Grouping Report
-        @ToDo: Use S3PDF Method
-    """
-    try:
-        from reportlab.lib.units import cm
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-    except ImportError:
-        session.error = REPORTLAB_ERROR
-        redirect(URL(c="item"))
-    try:
-        from geraldo import Report, ReportBand, ReportGroup, Label, ObjectValue, SystemField, landscape, BAND_WIDTH
-        from geraldo.generators import PDFGenerator
-    except ImportError:
-        session.error = GERALDO_ERROR
-        redirect(URL(c="item"))
-
-    table = db.budget_item
-    objects_list = db(table.id > 0).select(orderby=table.category_type)
-    if not objects_list:
-        session.warning = T("No data in this table - cannot create PDF!")
-        redirect(URL(f="item"))
-
-    import cStringIO
-    output = cStringIO.StringIO()
-
-    class MyReport(Report):
-        def __init__(self, queryset=None, T=None):
-            " Initialise parent class & make any necessary modifications "
-            Report.__init__(self, queryset)
-            self.T = T
-        def _T(self, rawstring):
-            return self.T(rawstring)
-        # can't use T() here!
-        #title = _T("Items")
-        title = "Items"
-        page_size = landscape(A4)
-        class band_page_header(ReportBand):
-            height = 1.3*cm
-            elements = [
-                SystemField(expression="%(report_title)s", top=0.1*cm,
-                    left=0, width=BAND_WIDTH, style={"fontName": "Helvetica-Bold",
-                    "fontSize": 14, "alignment": TA_CENTER}
-                    ),
-                Label(text="Code", top=0.8*cm, left=0.2*cm),
-                Label(text="Description", top=0.8*cm, left=3*cm),
-                Label(text="Unit Cost", top=0.8*cm, left=13*cm),
-                Label(text="per Month", top=0.8*cm, left=15*cm),
-                Label(text="per Minute", top=0.8*cm, left=17*cm),
-                Label(text="per Megabyte", top=0.8*cm, left=19*cm),
-                Label(text="Comments", top=0.8*cm, left=21*cm),
-            ]
-            borders = {"bottom": True}
-        class band_page_footer(ReportBand):
-            height = 0.5*cm
-            elements = [
-                Label(text="%s" % request.utcnow.date(), top=0.1*cm, left=0),
-                SystemField(expression="Page # %(page_number)d of %(page_count)d", top=0.1*cm,
-                    width=BAND_WIDTH, style={"alignment": TA_RIGHT}),
-            ]
-            borders = {"top": True}
-        class band_detail(ReportBand):
-            height = 0.5*cm
-            auto_expand_height = True
-            elements = (
-                    ObjectValue(attribute_name="code", left=0.2*cm, width=2.8*cm),
-                    ObjectValue(attribute_name="description", left=3*cm, width=10*cm),
-                    ObjectValue(attribute_name="unit_cost", left=13*cm, width=2*cm),
-                    ObjectValue(attribute_name="monthly_cost", left=15*cm, width=2*cm),
-                    ObjectValue(attribute_name="minute_cost", left=17*cm, width=2*cm),
-                    ObjectValue(attribute_name="megabyte_cost", left=19*cm, width=2*cm),
-                    ObjectValue(attribute_name="comments", left=21*cm, width=6*cm),
-                    )
-        groups = [
-        ReportGroup(attribute_name="category_type",
-            band_header=ReportBand(
-                height=0.7*cm,
-                elements=[
-                    ObjectValue(attribute_name="category_type", left=0, top=0.1*cm,
-                        get_value=lambda instance: instance.category_type and budget_category_type_opts[instance.category_type],
-                        style={"fontName": "Helvetica-Bold", "fontSize": 12})
-                ],
-                borders={"bottom": True},
-            ),
-        ),
-    ]
-
-    #report = MyReport(queryset=objects_list)
-    report = MyReport(queryset=objects_list, T=T)
-    report.generate_by(PDFGenerator, filename=output)
-
-    output.seek(0)
-    import gluon.contenttype
-    response.headers["Content-Type"] = gluon.contenttype.contenttype(".pdf")
-    filename = "%s_items.pdf" % (request.env.server_name)
-    response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
-    return output.read()
-
-def kit():
-    """ RESTful CRUD controller """
-    tablename = "budget_kit"
-    table = db[tablename]
-
-    # Model options used in multiple controllers so defined at the top of the file
-
-    # CRUD Strings
-    ADD_KIT = T("Add Kit")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_KIT,
-        title_display = T("Kit Details"),
-        title_list = T("Kits"),
-        title_update = T("Edit Kit"),
-        title_search = T("Search Kits"),
-        subtitle_create = T("Add New Kit"),
-        label_list_button = T("List Kits"),
-        label_create_button = ADD_KIT,
-        label_delete_button = T("Delete Kit"),
-        msg_record_created = T("Kit added"),
-        msg_record_modified = T("Kit updated"),
-        msg_record_deleted = T("Kit deleted"),
-        msg_list_empty = T("No Kits currently registered"))
-
-    s3.formats.pdf = URL(f="kit_export_pdf")
-    s3.formats.xls = URL(f="kit_export_xls")
-    if len(request.args) == 2:
-        s3db.configure(tablename,
-            update_next=URL(f="kit_item", args=request.args[1]))
-
-    return s3_rest_controller(main="code")
-
+# =============================================================================
+# @todo: replace by link-table component
 def kit_item():
     """ Many to Many CRUD Controller """
     format = request.vars.get("format", None)
@@ -842,6 +252,7 @@ def kit_item():
         output.update(dict(items=items, add_btn=add_btn))
     return output
 
+# =============================================================================
 def kit_dupes(form):
     """ Checks for duplicate Item before adding to DB """
     kit = form.vars.kit_id
@@ -855,6 +266,7 @@ def kit_dupes(form):
     else:
         return
 
+# =============================================================================
 def kit_update_items():
     """ Update a Kit's items (Quantity & Delete) """
 
@@ -887,6 +299,7 @@ def kit_update_items():
         session.error = T("Not authorised!")
     redirect(URL(f="kit_item", args=[kit]))
 
+# =============================================================================
 def kit_export_xls():
     """
         Export a list of Kits in Excel XLS format
@@ -972,6 +385,7 @@ def kit_export_xls():
     response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
     return output.read()
 
+# =============================================================================
 def kit_export_pdf():
     """
         Export a list of Kits in Adobe PDF format
@@ -1087,6 +501,7 @@ def kit_export_pdf():
     response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
     return output.read()
 
+# =============================================================================
 def kit_export_csv():
     """
         Export kits in CSV format
@@ -1112,6 +527,7 @@ def kit_export_csv():
     response.headers["Content-disposition"] = "attachment; filename=%s" % filename
     return output
 
+# =============================================================================
 def budget_import_csv(file, table=None):
     """ Import CSV file into Database """
 
@@ -1122,6 +538,7 @@ def budget_import_csv(file, table=None):
         db.import_from_csv_file(file)
         db.commit()
 
+# =============================================================================
 def kit_import_csv():
     """
         Import kits in CSV format
@@ -1137,36 +554,7 @@ def kit_import_csv():
         session.error = T("Unable to parse CSV file!")
     redirect(URL(f="kit"))
 
-def bundle():
-    """ RESTful CRUD controller """
-    tablename = "budget_bundle"
-    table = db[tablename]
-
-    # Model options used in multiple controllers so defined at the top of the file
-
-    # CRUD Strings
-    ADD_BUNDLE = T("Add Bundle")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_BUNDLE,
-        title_display = T("Bundle Details"),
-        title_list = T("Bundles"),
-        title_update = T("Edit Bundle"),
-        title_search = T("Search Bundles"),
-        subtitle_create = T("Add New Bundle"),
-        label_list_button = T("List Bundles"),
-        label_create_button = ADD_BUNDLE,
-        label_delete_button = T("Delete Bundle"),
-        msg_record_created = T("Bundle added"),
-        msg_record_modified = T("Bundle updated"),
-        msg_record_deleted = T("Bundle deleted"),
-        msg_list_empty = T("No Bundles currently registered"))
-
-    if len(request.args) == 2:
-        s3db.configure(tablename,
-            update_next=URL(f="bundle_kit_item", args=request.args[1]))
-
-    return s3_rest_controller()
-
+# =============================================================================
 def bundle_kit_item():
     """ Many to Many CRUD Controller """
 
@@ -1355,6 +743,7 @@ def bundle_kit_item():
         output.update(dict(items=items, add_btn=add_btn))
     return output
 
+# =============================================================================
 def bundle_dupes(form):
     """ Checks for duplicate Kit/Item before adding to DB """
     bundle = form.vars.bundle_id
@@ -1376,6 +765,7 @@ def bundle_dupes(form):
     else:
         return
 
+# =============================================================================
 def bundle_update_items():
     """ Update a Bundle's items (Quantity, Minutes, Megabytes & Delete) """
 
@@ -1440,106 +830,7 @@ def bundle_update_items():
         session.error = T("Not authorised!")
     redirect(URL(f="bundle_kit_item", args=[bundle]))
 
-# This should be deprecated & replaced with a link to hrm_human_resource
-def staff():
-    """ RESTful CRUD controller """
-    tablename = "budget_staff"
-    #table = db[tablename]
-
-    # Model options used in multiple controllers so defined at the top of the file
-
-    # CRUD Strings
-    ADD_STAFF_TYPE = T("Add Staff Type")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_STAFF_TYPE,
-        title_display = T("Staff Type Details"),
-        title_list = T("Staff Types"),
-        title_update = T("Edit Staff Type"),
-        title_search = T("Search Staff Types"),
-        subtitle_create = T("Add New Staff Type"),
-        label_list_button = T("List Staff Types"),
-        label_create_button = ADD_STAFF_TYPE,
-        label_delete_button = T("Delete Staff Type"),
-        msg_record_created = T("Staff Type added"),
-        msg_record_modified = T("Staff Type updated"),
-        msg_record_deleted = T("Staff Type deleted"),
-        msg_list_empty = T("No Staff Types currently registered"))
-
-    return s3_rest_controller()
-
-# This should be deprecated & replaced with a link to gis_location
-def location():
-    """ RESTful CRUD controller """
-    tablename = "budget_location"
-    #table = db[tablename]
-
-    # Model options used in multiple controllers so defined at the top of the file
-
-    # CRUD Strings
-    ADD_LOCATION = T("Add Location")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_LOCATION,
-        title_display = T("Location Details"),
-        title_list = T("Locations"),
-        title_update = T("Edit Location"),
-        title_search = T("Search Locations"),
-        subtitle_create = T("Add New Location"),
-        label_list_button = T("List Locations"),
-        label_create_button = ADD_LOCATION,
-        label_delete_button = T("Delete Location"),
-        msg_record_created = T("Location added"),
-        msg_record_modified = T("Location updated"),
-        msg_record_deleted = T("Location deleted"),
-        msg_list_empty = T("No Locations currently registered"))
-
-    return s3_rest_controller(main="code")
-
-def project():
-    """ RESTful CRUD controller """
-
-    #tablename = "project_%s" % (resourcename)
-    #table = db[tablename]
-
-    tabs = [(T("Basic Details"), None),
-            (T("Staff"), "staff"),
-            (T("Tasks"), "task"),
-           #(T("Donors"), "organisation"),
-           #(T("Facilities"), "site"),   # Ticket 195
-           ]
-    rheader = lambda r: s3db.project_rheader(r, tabs=tabs)
-
-    output = s3_rest_controller("project", resourcename,
-                                rheader=rheader)
-
-    return output
-
-
-def budget():
-    """ RESTful CRUD controller """
-    tablename = "budget_budget"
-    #table = db[tablename]
-
-    # Model options used in multiple controllers so defined at the top of the file
-
-    # CRUD Strings
-    ADD_BUDGET = T("Add Budget")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_BUDGET,
-        title_display = T("Budget Details"),
-        title_list = T("Budgets"),
-        title_update = T("Edit Budget"),
-        title_search = T("Search Budgets"),
-        subtitle_create = T("Add New Budget"),
-        label_list_button = T("List Budgets"),
-        label_create_button = ADD_BUDGET,
-        label_delete_button = T("Delete Budget"),
-        msg_record_created = T("Budget added"),
-        msg_record_modified = T("Budget updated"),
-        msg_record_deleted = T("Budget deleted"),
-        msg_list_empty = T("No Budgets currently registered"))
-
-    return s3_rest_controller()
-
+# =============================================================================
 def budget_staff_bundle():
     """ Many to Many CRUD Controller """
 
@@ -1721,6 +1012,7 @@ def budget_staff_bundle():
         output.update(dict(items=items, add_btn=add_btn))
     return output
 
+# =============================================================================
 def budget_dupes(form):
     """ Checks for duplicate staff/bundle before adding to DB """
     budget = form.vars.budget_id
@@ -1742,52 +1034,7 @@ def budget_dupes(form):
     else:
         return
 
-def budget_total(form):
-    """ Calculate Totals for the budget specified by Form """
-    if "budget_id" in form.vars:
-        # called by budget_staff_bundle()
-        budget = form.vars.budget_id
-    else:
-        # called by budget()
-        budget = form.vars.id
-    budget_totals(budget)
-
-def budget_totals(budget):
-    """ Calculate Totals for a budget """
-    total_onetime_cost = 0
-    total_recurring_cost = 0
-
-    table = db.budget_budget_staff
-    query = (table.budget_id == budget)
-    staffs = db(query).select()
-    for staff in staffs:
-        query = (table.budget_id == budget) & (table.staff_id == staff.staff_id)
-        row = db(query).select(table.quantity, table.months, limitby=(0, 1)).first()
-        quantity = row.quantity
-        months = row.months
-        row2 = db(db.budget_staff.id == staff.staff_id).select(db.budget_staff.travel, db.budget_staff.salary, limitby=(0, 1)).first()
-        row3 = db(db.budget_location.id == staff.location_id).select(db.budget_location.subsistence, db.budget_location.hazard_pay, limitby=(0, 1)).first()
-        total_onetime_cost += row2.travel * quantity
-        total_recurring_cost += row2.salary * quantity * months
-        total_recurring_cost += row3.subsistence * quantity * months
-        total_recurring_cost += row3.hazard_pay * quantity * months
-
-    table = db.budget_budget_bundle
-    query = (table.budget_id == budget)
-    bundles = db(query).select()
-    for bundle in bundles:
-        query = (table.budget_id == budget) & (table.bundle_id == bundle.bundle_id)
-        row = db(query).select(table.quantity, table.months, limitby=(0, 1)).first()
-        quantity = row.quantity
-        months = row.months
-        row2 = db(db.budget_bundle.id == bundle.bundle_id).select(db.budget_bundle.total_unit_cost, db.budget_bundle.total_monthly_cost, limitby=(0, 1)).first()
-        total_onetime_cost += row2.total_unit_cost * quantity
-        total_recurring_cost += row2.total_monthly_cost * quantity * months
-
-    db(db.budget_budget.id == budget).update(total_onetime_costs=total_onetime_cost, total_recurring_costs=total_recurring_cost)
-    audit("update", module, "budget", record=budget, representation="html")
-
-
+# =============================================================================
 def budget_update_items():
     """ Update a Budget's items (Quantity, Months & Delete) """
 
@@ -1841,6 +1088,108 @@ def budget_update_items():
     else:
         session.error = T("Not authorised!")
     redirect(URL(f="budget_staff_bundle", args=[budget]))
+
+# =============================================================================
+def item_export_pdf():
+    """
+        Export a list of Items in Adobe PDF format
+        Uses Geraldo Grouping Report
+        @ToDo: Use S3PDF Method
+    """
+    try:
+        from reportlab.lib.units import cm
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    except ImportError:
+        session.error = REPORTLAB_ERROR
+        redirect(URL(c="item"))
+    try:
+        from geraldo import Report, ReportBand, ReportGroup, Label, ObjectValue, SystemField, landscape, BAND_WIDTH
+        from geraldo.generators import PDFGenerator
+    except ImportError:
+        session.error = GERALDO_ERROR
+        redirect(URL(c="item"))
+
+    table = db.budget_item
+    objects_list = db(table.id > 0).select(orderby=table.category_type)
+    if not objects_list:
+        session.warning = T("No data in this table - cannot create PDF!")
+        redirect(URL(f="item"))
+
+    import cStringIO
+    output = cStringIO.StringIO()
+
+    class MyReport(Report):
+        def __init__(self, queryset=None, T=None):
+            " Initialise parent class & make any necessary modifications "
+            Report.__init__(self, queryset)
+            self.T = T
+        def _T(self, rawstring):
+            return self.T(rawstring)
+        # can't use T() here!
+        #title = _T("Items")
+        title = "Items"
+        page_size = landscape(A4)
+        class band_page_header(ReportBand):
+            height = 1.3*cm
+            elements = [
+                SystemField(expression="%(report_title)s", top=0.1*cm,
+                    left=0, width=BAND_WIDTH, style={"fontName": "Helvetica-Bold",
+                    "fontSize": 14, "alignment": TA_CENTER}
+                    ),
+                Label(text="Code", top=0.8*cm, left=0.2*cm),
+                Label(text="Description", top=0.8*cm, left=3*cm),
+                Label(text="Unit Cost", top=0.8*cm, left=13*cm),
+                Label(text="per Month", top=0.8*cm, left=15*cm),
+                Label(text="per Minute", top=0.8*cm, left=17*cm),
+                Label(text="per Megabyte", top=0.8*cm, left=19*cm),
+                Label(text="Comments", top=0.8*cm, left=21*cm),
+            ]
+            borders = {"bottom": True}
+        class band_page_footer(ReportBand):
+            height = 0.5*cm
+            elements = [
+                Label(text="%s" % request.utcnow.date(), top=0.1*cm, left=0),
+                SystemField(expression="Page # %(page_number)d of %(page_count)d", top=0.1*cm,
+                    width=BAND_WIDTH, style={"alignment": TA_RIGHT}),
+            ]
+            borders = {"top": True}
+        class band_detail(ReportBand):
+            height = 0.5*cm
+            auto_expand_height = True
+            elements = (
+                    ObjectValue(attribute_name="code", left=0.2*cm, width=2.8*cm),
+                    ObjectValue(attribute_name="description", left=3*cm, width=10*cm),
+                    ObjectValue(attribute_name="unit_cost", left=13*cm, width=2*cm),
+                    ObjectValue(attribute_name="monthly_cost", left=15*cm, width=2*cm),
+                    ObjectValue(attribute_name="minute_cost", left=17*cm, width=2*cm),
+                    ObjectValue(attribute_name="megabyte_cost", left=19*cm, width=2*cm),
+                    ObjectValue(attribute_name="comments", left=21*cm, width=6*cm),
+                    )
+        groups = [
+        ReportGroup(attribute_name="category_type",
+            band_header=ReportBand(
+                height=0.7*cm,
+                elements=[
+                    ObjectValue(attribute_name="category_type", left=0, top=0.1*cm,
+                        get_value=lambda instance: instance.category_type and budget_category_type_opts[instance.category_type],
+                        style={"fontName": "Helvetica-Bold", "fontSize": 12})
+                ],
+                borders={"bottom": True},
+            ),
+        ),
+    ]
+
+    #report = MyReport(queryset=objects_list)
+    report = MyReport(queryset=objects_list, T=T)
+    report.generate_by(PDFGenerator, filename=output)
+
+    output.seek(0)
+    import gluon.contenttype
+    response.headers["Content-Type"] = gluon.contenttype.contenttype(".pdf")
+    filename = "%s_items.pdf" % (request.env.server_name)
+    response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
+    return output.read()
 
 # END =========================================================================
 
