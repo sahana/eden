@@ -113,10 +113,6 @@ h2.summary {
 .ui-tabs .ui-tabs-nav li {
     float: right;
 }
-.ui-tabs .ui-tabs-nav li a,
-.ui-tabs .ui-tabs-nav li.ui-tabs-active a {
-    border-color: #B2B2B2 #B2B2B2 white #B2B2B2
-}
 
 #summary-common { 
     float: left;
@@ -141,20 +137,13 @@ h2.summary {
     z-index: 1000; /* Push above alert-space */
 }
 
-#summary-tabs .ui-tabs-nav {
-    border: none;
-    margin: 0 10px 0 0;
-}
+
 #summary-tabs.ui-widget-content {
     width: 100%;
-    background: none;
     float: left;
     margin: -33px;
-    border: none;
 }
-#summary-tabs .x-panel-body {
-    border: none;
-}
+
 #summary-tabs #filter-form {
     margin: 0 20px 0 50px;
     position: absolute;
