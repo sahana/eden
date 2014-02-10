@@ -5121,6 +5121,35 @@ def hrm_group_controller():
                 if r.representation == "xls":
                     # Modify Title of Report to show Team Name
                     s3.crud_strings.pr_group_membership.title_list = r.record.name
+                    # Make it match Import sheets
+                    tablename = "pr_group_membership"
+                    list_fields = s3db.get_config(tablename, "list_fields")
+                    # Remove "id" as XLS exporter doesn't like this not being first & has complicated skipping routines
+                    try:
+                        list_fields.remove("id")
+                    except ValueError:
+                        pass
+                    # Separate Facility Type from Facility Name
+                    s3db.hrm_human_resource.site_id.represent = s3db.org_SiteRepresent(show_type = False)
+                    i = 0
+                    for f in list_fields:
+                        i += 1
+                        if f == "site_id":
+                            break
+
+                    list_fields.insert(i,
+                                       (T("Facility Type"),
+                                        "person_id$human_resource.site_id$instance_type"))
+                    # Split person_id into first/middle/last
+                    try:
+                        list_fields.remove("person_id")
+                    except ValueError:
+                        pass
+                    list_fields = ["person_id$first_name",
+                                   "person_id$middle_name",
+                                   "person_id$last_name",
+                                   ] + list_fields
+                    s3db.configure(tablename, list_fields=list_fields)
 
         return True
     s3.prep = prep
@@ -6285,37 +6314,18 @@ def hrm_configure_pr_group_membership():
     else:
         table.group_head.label = T("Group Leader")
 
-    phone_label = settings.get_ui_label_mobile_phone()
-    site_label = settings.get_org_site_label()
     if function in ("group", "group_membership"):
-        db = current.db
-        ptable = db.pr_person
-        controller = request.controller
-        def hrm_person_represent(id, row=None):
-            if row:
-                id = row.id
-            elif id:
-                row = db(ptable.id == id).select(ptable.first_name,
-                                                 limitby=(0, 1)
-                                                 ).first()
-            else:
-                return current.messages["NONE"]
-
-            return A(row.first_name,
-                     _href=URL(c=controller, f="person", args=id))
-
         # Don't create Persons here as they need to be HRMs
         table.person_id.comment = None
-        table.person_id.represent = hrm_person_represent
+        phone_label = settings.get_ui_label_mobile_phone()
+        site_label = settings.get_org_site_label()
         list_fields = ["id",
-                       (T("First Name"), "person_id"),
-                       "person_id$middle_name",
-                       "person_id$last_name",
+                       "person_id",
                        "group_head",
                        (T("Email"), "person_id$email.value"),
                        (phone_label, "person_id$phone.value"),
                        (current.messages.ORGANISATION,
-                        "person_id$human_resource.organisation_id"),
+                       "person_id$human_resource.organisation_id"),
                        (site_label, "person_id$human_resource.site_id"),
                        ]
         orderby = "pr_person.first_name"
@@ -6328,8 +6338,9 @@ def hrm_configure_pr_group_membership():
                        ]
         orderby = table.group_id
     s3db.configure("pr_group_membership",
-                   list_fields=list_fields,
-                   orderby=orderby)
+                   list_fields = list_fields,
+                   orderby = orderby,
+                   )
 
 # =============================================================================
 def hrm_render_competency(list_id, item_id, resource, rfields, record):

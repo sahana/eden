@@ -865,7 +865,8 @@ class S3Model(object):
                                       default=False),
                                 Field("instance_type",
                                       represent = lambda opt: \
-                                        types.get(opt, opt),
+                                        types.get(opt, opt) or \
+                                            current.messages["NONE"],
                                       readable=False,
                                       writable=False),
                                 Field("uuid", length=128,

@@ -4015,10 +4015,10 @@ class org_SiteRepresent(S3Represent):
     """ Representation of Sites """
 
     def __init__(self,
-                 translate=False,
-                 show_link=False,
-                 multiple=False,
-                 show_type=True,
+                 translate = False,
+                 show_link = False,
+                 multiple = False,
+                 show_type = True,
                  ):
 
         self.show_type = show_type
