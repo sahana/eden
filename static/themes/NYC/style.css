@@ -149,36 +149,6 @@ a.btn-primary:visited {
     color: #FFFFFF;
 }
 
-button,
-.button,
-.button:visited,
-.button:active {
-    background: none repeat scroll 0 0 #222222;
-    border: 0 none;
-    border-radius: 4px 4px 4px 4px;
-    box-shadow: 0 0 0 0 #000000;
-    color: #FFFFFF;
-    cursor: pointer;
-    display: inline-block;
-    font-family: 'Open Sans','Lucida Grande','Lucida Sans',sans-serif;
-    font-style: normal;
-    font-weight: bold;
-    letter-spacing: 1px;
-    line-height: 1.2em;
-    padding: 10px 15px;
-    text-align: center;
-    text-decoration: none;
-    text-shadow: none;
-    text-transform: uppercase;
-}
-button:hover,
-.button:hover,
-.button:visited:hover,
-.button:active:hover {
-    background: #da521f;
-    color: #ffffff;
-}
-
 #list-add h3 {
     background: none;
     border: none;
@@ -202,34 +172,7 @@ b.red {
     /* If set to float right
     margin-right: 20px;*/
 }
-.ui-widget-content {
-    background: #ffffff !important;
-    border:0!important;
-    -moz-box-shadow:0 0 5px 0 #555555;
-    -webkit-box-shadow:0 0 5px 0 #555555;
-    box-shadow:0 0 5px 0 #555555;
-    behavior:url(../js/PIE.htc);
-}
-.ui-widget-header {
-    border-color:#ffffff !important;
-    background:#da521f !important;
-}
-.ui-state-default,
-.ui-widget-content .ui-state-default,
-.ui-widget-header .ui-state-default {
-    border-color: #ffffff !important;
-    background: #F6F6F6!important;
-}
-.ui-state-hover,
-.ui-widget-content .ui-state-hover,
-.ui-widget-header .ui-state-hover,
-.ui-state-focus,
-.ui-widget-content .ui-state-focus,
-.ui-widget-header .ui-state-focus {
-    border-color: #ffcd67 !important;
-    background: #ffcd67 !important;
-    color: #222222 !important;
-}
+
 .ui-datepicker-trigger {
     margin-left: 10px;
 }
