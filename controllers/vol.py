@@ -231,16 +231,16 @@ def volunteer():
             list_fields = ["person_id$first_name",
                            "person_id$middle_name",
                            "person_id$last_name",
-                          ]
+                           ]
         else:
             list_fields = ["person_id",
-                          ]
+                           ]
         list_fields.extend(["job_title_id",
                             "organisation_id",
                             (settings.get_ui_label_mobile_phone(), "phone.value"),
                             (T("Email"), "email.value"),
                             "location_id",
-                           ])
+                            ])
         if settings.get_hrm_use_trainings():
             list_fields.append("person_id$training.course_id")
         if settings.get_hrm_use_certificates():

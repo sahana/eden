@@ -145,6 +145,9 @@ a:active:hover,
 a:visited:hover {
     color: #555555;
 }
+a.btn-primary:visited {
+    color: #FFFFFF;
+}
 
 button,
 .button,

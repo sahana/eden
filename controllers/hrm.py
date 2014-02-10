@@ -112,7 +112,6 @@ def staff():
                                 args="import",
                                 vars={"group": "staff"}))
                 elif not r.component and r.method != "delete":
-                    table = r.table
                     # Configure site_id
                     field = table.site_id
                     site_id = get_vars.get("site_id", None)
@@ -138,14 +137,33 @@ def staff():
                     s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972,
                                                                        future=-192)
         elif r.representation == "xls":
-            # Split person_id into first/middle/last to
-            # make it match Import sheets
+            # Make it match Import sheets
             list_fields = s3db.get_config(tablename, "list_fields")
-            list_fields.remove("person_id")
+            # Remove "id" as XLS exporter doesn't like this not being first & has complicated skipping routines
+            try:
+                list_fields.remove("id")
+            except ValueError:
+                pass
+            # Separate Facility Type from Facility Name
+            table.site_id.represent = s3db.org_SiteRepresent(show_type = False)
+            i = 0
+            for f in list_fields:
+                i += 1
+                if f == "site_id":
+                    break
+
+            list_fields.insert(i,
+                               (T("Facility Type"),
+                                "person_id$human_resource.site_id$instance_type"))
+            # Split person_id into first/middle/last
+            try:
+                list_fields.remove("person_id")
+            except ValueError:
+                pass
             list_fields = ["person_id$first_name",
                            "person_id$middle_name",
                            "person_id$last_name",
-                          ] + list_fields
+                           ] + list_fields
             s3db.configure(tablename, list_fields=list_fields)
         return True
     s3.prep = prep

@@ -5,20 +5,8 @@
     <!-- **********************************************************************
          IFRC Standard Catalog & Emergency Item Catalog (EIC) - CSV Import Stylesheet
 
-         2011-06-20 / Michael Howden <michael AT aidiq DOT com>
-
          - use for import to supply/item resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be supply/item/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
 
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
          item code.......................
          item description................
@@ -45,7 +33,6 @@
     <!-- ****************************************************************** -->
 
     <xsl:variable name="OrgName">International Federation of Red Cross and Red Crescent Societies</xsl:variable>
-    <xsl:variable name="OrgAcronym">IFRC</xsl:variable>
     <xsl:variable name="IFRCStandard">IFRC Standard Catalog</xsl:variable>
     <xsl:variable name="EIC">EIC</xsl:variable>
 
@@ -58,10 +45,9 @@
         <s3xml>
             <resource name="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgAcronym"/>
+                    <xsl:value-of select="$OrgName"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$OrgName"/></data>
-                <data field="acronym"><xsl:value-of select="$OrgAcronym"/></data>
             </resource>
 
             <resource name="supply_catalog">
@@ -76,7 +62,6 @@
                     <xsl:value-of select="$EIC"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$EIC"/></data>
-
             </resource>
 
             <!-- Generate parent categories -->
