@@ -2980,6 +2980,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
     // Used by addPopup and onFeatureSelect
     var loadDetails = function(url, id, popup) {
+        // Open the earthquake summary pages in a new window
+        if (url.indexOf('http://earthquake.usgs.gov/earthquakes/eventpage/') != -1) {
+            window.open(url, '_blank');
+            closeAllPopups(popup.map);
+            return;
+        }    
         // Load the Popup Details via AJAX
         if (url.indexOf('http://') === 0) {
             // Use Proxy for remote popups
@@ -3222,6 +3228,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             delete feature.popup;
         }
     };
+        
+    var closeAllPopups = function(map) {
+        // Unselect all features
+        map.s3.popupControl.unselectAll();
+        // Close all popups
+        while (map.popups.length) {
+            map.removePopup(map.popups[0]);
+        }
+    }
+    
     var onPopupClose = function(event) {
         var map = this.map;
         // Unselect the associated feature
@@ -3240,13 +3256,22 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
     // Replace Cluster Popup contents with selected Feature Popup
     var loadClusterPopup = function(map_id, url, id) {
-        // Show Throbber whilst waiting for Popup to show
         var selector = '#' + id + '_contentDiv';
         var div = $(selector);
         var contents = i18n.gis_loading + "...<div class='throbber'></div>";
+        var map = S3.gis.maps[map_id];
+        
+        // Open earthquake info in another page
+        if (url.indexOf('http://earthquake.usgs.gov/earthquakes/eventpage/') != -1) {
+            window.open(url, '_blank');
+            closeAllPopups(map)
+            // Prevent get call
+            return;
+        }
+        
+        // Show Throbber whilst waiting for Popup to show
         div.html(contents);
         // Load data into Popup
-        var map = S3.gis.maps[map_id];
         $.getS3(
             url,
             function(data) {
