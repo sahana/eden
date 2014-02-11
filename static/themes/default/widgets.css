@@ -1249,6 +1249,20 @@ ul.x-tree-root-ct {
     border-top: 0;
 }
 
+/* Vertical arrangement of multi-button multi-select filter widgets */
+.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    clear: left;
+    float: left;
+    min-width: 220px;
+}
+.ui-multiselect-menu {
+    min-width: 220px;
+}
+body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    clear: right;
+    float: right;
+}
+
 .widget-org-hierarchy-menu {
     overflow:auto;
     height:10em;
