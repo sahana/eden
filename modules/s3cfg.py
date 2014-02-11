@@ -868,6 +868,7 @@ class S3Config(Storage):
                                                        ("es", "Español"),
                                                        ("it", "Italiano"),
                                                        ("ja", "日本語"),
+                                                       ("km", "ភាសាខ្មែរ"),
                                                        ("ko", "한국어"),
                                                        ("pt", "Português"),
                                                        ("pt-br", "Português (Brasil)"),

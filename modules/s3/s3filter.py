@@ -917,6 +917,8 @@ class S3LocationFilter(S3FilterWidget):
             if joined:
                 if "$" in selector:
                     selector = "%s.%s" % (rfield.field.tablename, selector.split("$", 1)[1])
+                elif "." in selector:
+                    selector = "%s.%s" % (rfield.field.tablename, selector.split(".", 1)[1])
                 else:
                     selector = "%s.%s" % (resource.tablename, selector)
             for row in rows:
