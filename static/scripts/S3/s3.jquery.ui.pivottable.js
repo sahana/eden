@@ -1151,12 +1151,12 @@
             if (!pivotdata.length) {
                 return;
             }
+            $el.find('.pt-throbber').show();
             if (options || filters) {
                 needs_reload = this._updateAjaxURL(options, filters);
             }
             if (needs_reload || force) {
                 var ajaxURL = this.options.ajaxURL;
-                $el.find('.pt-throbber').show();
                 $el.find('.pt-empty').hide();
                 $.ajax({
                     'url': ajaxURL,
@@ -1173,7 +1173,6 @@
                     console.log(msg);
                 });
             } else {
-                $el.find('.pt-throbber').show();
                 pt.refresh();
             }
         },

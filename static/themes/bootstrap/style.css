@@ -119,9 +119,14 @@ div.dl {
     margin-bottom: 0;
 }
 
-/* Need long form to override widgets.css on margin */
-.form-container form button.ui-datepicker-trigger {
+/* Need short form for Modals */
+.ui-datepicker-trigger {
     background-image: url(../../img/bootstrap/calendar.gif);
+    margin-left: 10px;
+    width: 6px;
+}
+/* Need long form to override widgets.css on normal button margin */
+.form-container form button.ui-datepicker-trigger {
     margin-left: 10px;
 }
 
@@ -411,10 +416,6 @@ a.action-btn:hover {
     color: #ffffff;
     background-color: #bd362f;
     *background-color: #a9302a;
-}
-
-.ui-datepicker-trigger {
-    margin-left: 10px;
 }
 
 /* Required Fields */

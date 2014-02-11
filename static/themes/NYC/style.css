@@ -173,9 +173,6 @@ b.red {
     margin-right: 20px;*/
 }
 
-.ui-datepicker-trigger {
-    margin-left: 10px;
-}
 .ui-datepicker-calendar th {
     font-family: 'LeagueGothicRegular','Arial Narrow','Lucida Grande','Lucida Sans',Arial,sans-serif;
     font-weight: 400;
@@ -188,7 +185,6 @@ b.red {
 .ui-datepicker-header {
     height: 31px;
 }
-
 /* Needs to be done via popup.maxWidth
 .olPopup {
     max-width: 750px;

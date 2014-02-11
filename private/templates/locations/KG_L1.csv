@@ -1,10 +1,10 @@
-"Country","L0","L1 KV:PCode","L1 L10n:ru","L1 L10n:latin","L1","L1 KV:Place Type (ru)","L1 KV:Place Type "
-"KG","41700 000 000 00 0","41702 000 000 00 0","Иссык-Кульская Область","Issyk-Kul–Skaya Oblast","Issyk-Kul","oblast","province"
-"KG","41700 000 000 00 0","41703 000 000 00 0","Джалал-Абадская Область","Djalal-Abadskaya Oblast","Djalal-Abad","oblast","province"
-"KG","41700 000 000 00 0","41704 000 000 00 0","Нарынская Область","Narynskaya Oblast","Naryn","oblast","province"
-"KG","41700 000 000 00 0","41705 000 000 00 0","Баткенская Область","Batkenskaya Oblast","Batken","oblast","province"
-"KG","41700 000 000 00 0","41706 000 000 00 0","Ошская Область","Oshskaya Oblast","Osh","oblast","province"
-"KG","41700 000 000 00 0","41707 000 000 00 0","Таласская Область","Talasskaya Oblast","Talas","oblast","province"
-"KG","41700 000 000 00 0","41708 000 000 00 0","Чуйская Область","Chuiskaya Oblast","Chui","oblast","province"
-"KG","41700 000 000 00 0","41711 000 000 00 0","Бишкек","Bishkek","Bishkek","Independentcity","Independent city"
-"KG","41700 000 000 00 0","41721 000 000 00 0","Ош","Osh","Osh","Independentcity","Independent city"
+Country,L1,L1 KV:PCode,L1 L10n:ru,L1 KV:Name (latin),L1 KV:Place Type (ru),L1 KV:Place Type
+KG,Issyk-Kul,41702 000 000 00 0,Иссык-Кульская Область,Issyk-Kul–Skaya Oblast,oblast,province
+KG,Djalal-Abad,41703 000 000 00 0,Джалал-Абадская Область,Djalal-Abadskaya Oblast,oblast,province
+KG,Naryn,41704 000 000 00 0,Нарынская Область,Narynskaya Oblast,oblast,province
+KG,Batken,41705 000 000 00 0,Баткенская Область,Batkenskaya Oblast,oblast,province
+KG,Osh,41706 000 000 00 0,Ошская Область,Oshskaya Oblast,oblast,province
+KG,Talas,41707 000 000 00 0,Таласская Область,Talasskaya Oblast,oblast,province
+KG,Chui,41708 000 000 00 0,Чуйская Область,Chuiskaya Oblast,oblast,province
+KG,Bishkek,41711 000 000 00 0,Бишкек,,,Independent city
+KG,Osh,41721 000 000 00 0,Ош,,,Independent city

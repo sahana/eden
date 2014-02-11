@@ -198,7 +198,6 @@
     background: url(img/dispatch.png) no-repeat;
     margin-right: 10px;
 }
-button,
 .button,
 .button:visited,
 .button:active {
@@ -220,7 +219,6 @@ button,
     text-shadow: none;
     text-transform: uppercase;
 }
-button:hover,
 .button:hover,
 .button:visited:hover,
 .button:active:hover {

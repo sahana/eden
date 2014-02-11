@@ -467,6 +467,7 @@ class S3OptionsMenu(object):
                     M("Assets", f="asset")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         M("Report", m="report2"),
                         M("Import", m="import", p="create"),
                     ),

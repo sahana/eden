@@ -845,7 +845,7 @@ class S3Config(Storage):
 
     def get_gis_lookup_pcode(self):
         """
-            Should the gis_location deduplication look up location names as PCodes? 
+            Should the gis_location deduplication try PCodes as well as names?
         """
         return self.gis.get("lookup_pcode", False)
 

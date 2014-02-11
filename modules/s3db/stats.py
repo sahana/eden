@@ -352,14 +352,16 @@ class S3StatsDemographicModel(S3Model):
             msg_list_empty = T("No demographic data currently defined"))
 
         filter_widgets = [S3OptionsFilter("parameter_id",
-                                          label=T("Type"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
+                                          label = T("Type"),
+                                          # Not translateable
+                                          #represent = "%(name)s",
+                                          widget = "multiselect",
                                           ),
                           S3OptionsFilter("location_id$level",
-                                          label=T("Level"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
+                                          label = T("Level"),
+                                          # Not translateable
+                                          #represent = "%(name)s",
+                                          widget = "multiselect",
                                           ),
                           ]
 
@@ -371,8 +373,8 @@ class S3StatsDemographicModel(S3Model):
 
         filter_widgets.insert(0,
             S3LocationFilter("location_id",
-                             levels=levels,
-                             widget="multiselect"
+                             levels = levels,
+                             widget = "multiselect"
                              ))
 
         fieldnames = ["location_id"]
@@ -393,11 +395,11 @@ class S3StatsDemographicModel(S3Model):
             )
 
         configure(tablename,
-                  super_entity = "stats_data",
+                  deduplicate = self.stats_demographic_data_duplicate,
                   filter_widgets = filter_widgets,
                   report_options = report_options,
-                  deduplicate = self.stats_demographic_data_duplicate,
-                  requires_approval=True,
+                  requires_approval = True,
+                  super_entity = "stats_data",
                   )
 
         #----------------------------------------------------------------------

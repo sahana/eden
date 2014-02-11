@@ -15,7 +15,8 @@
          Asset No........................number
          Type............................type
          Category........................supply_catalog_item.item_category_id
-         Name............................supply_item.name
+         Item Code.......................supply_item.code (useful to ensure explicit matching to existing Catalog items)
+         Item Name.......................supply_item.name (alternative to code useful for adding new items on-the-fly)
          Room............................asset_log.room_id
          Assigned To.....................pr_person.first_name
          Brand...........................supply_brand.name
@@ -60,7 +61,8 @@
     <xsl:key name="catalogs" match="row" use="col[@field='Catalog']/text()"/>
     <xsl:key name="categories" match="row" use="concat(col[@field='Catalog']/text(), '|',
                                                        col[@field='Category']/text())"/>
-    <xsl:key name="supply_items" match="row" use="concat(col[@field='Name'], ', ',
+    <xsl:key name="supply_items" match="row" use="concat(col[@field='Item Code'], ', ',
+                                                         col[@field='Item Name'], ', ',
                                                          col[@field='Model'], ', ',
                                                          col[@field='Brand'])"/>
     <xsl:key name="supplier_organisation" match="row" use="col[@field='Supplier/Donor']"/>
@@ -132,7 +134,8 @@
             <!-- SupplyItems -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('supply_items',
-                                                        concat(col[@field='Name'], ', ',
+                                                        concat(col[@field='Item Code'], ', ',
+                                                               col[@field='Item Name'], ', ',
                                                                col[@field='Model'], ', ',
                                                                col[@field='Brand']))[1])]">
                 <xsl:call-template name="SupplyItem"/>
@@ -156,19 +159,11 @@
         <xsl:variable name="FacilityCode" select="col[@field='Facility Code']/text()"/>
         <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
         <xsl:variable name="FacilityTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType)"/>
-        <xsl:variable name="RoomName" select="col[@field='Room']/text()"/>
-        <xsl:variable name="RoomTUID" select="concat($OrgName, '|', $FacilityName, '|', $FacilityCode, '|', $FacilityType, '|', $RoomName)"/>
-
-        <xsl:variable name="CatalogName" select="col[@field='Catalog']/text()"/>
-        <xsl:variable name="CategoryName" select="col[@field='Category']/text()"/>
-        <xsl:variable name="ItemCode" select="concat(col[@field='Name'], ', ',
+        <xsl:variable name="ItemTUID" select="concat(col[@field='Item Code'], ', ',
+                                                     col[@field='Item Name'], ', ',
                                                      col[@field='Model'], ', ',
                                                      col[@field='Brand'])"/>
 
-        <xsl:variable name="Name" select="col[@field='Name']/text()"/>
-        <xsl:variable name="BrandName" select="col[@field='Brand']/text()"/>
-        <xsl:variable name="Model" select="col[@field='Model']/text()"/>
-        <xsl:variable name="PersonName" select="col[@field='Assigned To']/text()"/>
         <xsl:variable name="AssetNumber" select="col[@field='Asset No']/text()"/>
         <xsl:variable name="Date" select="col[@field='Date']/text()"/>
 
@@ -185,9 +180,6 @@
 
         <!-- Asset  -->
         <resource name="asset_asset">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="col[@field='id']/text()"/>
-            </xsl:attribute>
             <xsl:if test="$AssetNumber != ''">
                 <data field="number"><xsl:value-of select="$AssetNumber"/></data>
             </xsl:if>
@@ -216,8 +208,8 @@
                     <xsl:value-of select="col[@field='Supplier/Donor']/text()"/>
                 </xsl:attribute>
             </reference>
-            <xsl:if test="col[@field='Date'] != ''">
-                <data field="purchase_date"><xsl:value-of select="col[@field='Date']"/></data>
+            <xsl:if test="$Date!=''">
+                <data field="purchase_date"><xsl:value-of select="$Date"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Price'] != ''">
                 <data field="purchase_price"><xsl:value-of select="col[@field='Price']"/></data>
@@ -227,7 +219,7 @@
             </xsl:if>
             <reference field="item_id" resource="supply_item">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$ItemCode"/>
+                    <xsl:value-of select="$ItemTUID"/>
                 </xsl:attribute>
             </reference>
             <!-- Org -->
@@ -335,11 +327,11 @@
     <xsl:template name="SupplyItemCategory">
         <xsl:variable name="CatalogName" select="col[@field='Catalog']/text()"/>
         <xsl:variable name="CategoryName" select="col[@field='Category']/text()"/>
-        <xsl:variable name="CategoryID" select="concat($CatalogName, '|', $CategoryName)"/>
+        <xsl:variable name="CategoryTUID" select="concat($CatalogName, '|', $CategoryName)"/>
 
         <resource name="supply_item_category">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$CategoryID"/>
+                <xsl:value-of select="$CategoryTUID"/>
             </xsl:attribute>
             <data field="code"><xsl:value-of select="substring($CategoryName,1,16)"/></data>
             <data field="name"><xsl:value-of select="$CategoryName"/></data>
@@ -358,20 +350,29 @@
 
         <xsl:variable name="CatalogName" select="col[@field='Catalog']/text()"/>
         <xsl:variable name="CategoryName" select="col[@field='Category']/text()"/>
-        <xsl:variable name="CategoryID" select="concat($CatalogName, '|', $CategoryName)"/>
+        <xsl:variable name="CategoryTUID" select="concat($CatalogName, '|', $CategoryName)"/>
         <xsl:variable name="BrandName" select="col[@field='Brand']/text()"/>
-        <xsl:variable name="ItemCode" select="concat(col[@field='Name'], ', ',
-                                                     col[@field='Model'], ', ',
-                                                     col[@field='Brand'])"/>
-        <xsl:variable name="Name" select="col[@field='Name']/text()"/>
+        <xsl:variable name="ItemCode" select="col[@field='Item Code']/text()"/>
+        <xsl:variable name="ItemName" select="col[@field='Item Name']/text()"/>
         <xsl:variable name="Model" select="col[@field='Model']/text()"/>
+        <xsl:variable name="ItemTUID" select="concat($ItemCode, ', ',
+                                                     $ItemName, ', ',
+                                                     $Model, ', ',
+                                                     $BrandName)"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$ItemCode"/>
+                <xsl:value-of select="$ItemTUID"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Name"/></data>
-            <data field="model"><xsl:value-of select="$Model"/></data>
+            <xsl:if test="$ItemCode!=''">
+                <data field="code"><xsl:value-of select="$ItemCode"/></data>
+            </xsl:if>
+            <xsl:if test="$ItemName!=''">
+                <data field="name"><xsl:value-of select="$ItemName"/></data>
+            </xsl:if>
+            <xsl:if test="$Model!=''">
+                <data field="model"><xsl:value-of select="$Model"/></data>
+            </xsl:if>
             <data field="um">piece</data>
             <!-- Link to Supply Catalog -->
             <reference field="catalog_id" resource="supply_catalog">
@@ -382,7 +383,7 @@
             <!-- Link to Supply Item Category -->
             <reference field="item_category_id" resource="supply_item_category">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$CategoryID"/>
+                    <xsl:value-of select="$CategoryTUID"/>
                 </xsl:attribute>
             </reference>
             <xsl:if test="$BrandName!=''">
@@ -395,7 +396,7 @@
             <!-- Nest to Supply Catalog -->
             <resource name="supply_catalog_item">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$ItemCode"/>
+                    <xsl:value-of select="$ItemTUID"/>
                 </xsl:attribute>
                 <!-- Link to Supply Catalog -->
                 <reference field="catalog_id" resource="supply_catalog">
@@ -406,7 +407,7 @@
                 <!-- Link to Supply Item Category -->
                 <reference field="item_category_id" resource="supply_item_category">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="$CategoryID"/>
+                        <xsl:value-of select="$CategoryTUID"/>
                     </xsl:attribute>
                 </reference>
             </resource>

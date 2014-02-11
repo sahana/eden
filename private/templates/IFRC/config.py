@@ -307,12 +307,18 @@ def ns_only(f, required=True, branches=True, updateable=True):
         f.label = T("National Society / Branch")
     else:
         f.label = T("National Society")
+
     # Requires
     db = current.db
     ttable = db.org_organisation_type
-    type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
-                                                                   limitby=(0, 1)
-                                                                   ).first().id
+    try:
+        type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
+                                                                       limitby=(0, 1)
+                                                                       ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        return
+
     if branches:
         not_filterby = None
         not_filter_opts = []
@@ -888,11 +894,16 @@ def customize_inv_warehouse(**attr):
     db = current.db
     s3db = current.s3db
     otable = s3db.org_organisation
-    ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
-                                                             limitby=(0, 1)
-                                                             ).first().id
-    if current.auth.root_org() == ausrc:
-        settings.inv.direct_stock_edits = False
+    try:
+        ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
+                                                                 limitby=(0, 1)
+                                                                 ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        pass
+    else:
+        if current.auth.root_org() == ausrc:
+            settings.inv.direct_stock_edits = False
 
     return attr
 
@@ -1053,13 +1064,18 @@ def customize_pr_contact(**attr):
     db = current.db
     s3db = current.s3db
     otable = s3db.org_organisation
-    vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
-                                                          limitby=(0, 1),
-                                                          cache=s3db.cache,
-                                                          ).first().id
-    if current.auth.root_org() == vnrc:
-        # Hard to translate in Vietnamese
-        s3db.pr_contact.value.label = ""
+    try:
+        vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
+                                                              limitby=(0, 1),
+                                                              cache=s3db.cache,
+                                                              ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        pass
+    else:
+        if current.auth.root_org() == vnrc:
+            # Hard to translate in Vietnamese
+            s3db.pr_contact.value.label = ""
 
     return attr
 
@@ -1091,30 +1107,35 @@ def customize_pr_person(**attr):
     db = current.db
     s3db = current.s3db
     otable = s3db.org_organisation
-    vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
-                                                          limitby=(0, 1),
-                                                          cache=s3db.cache,
-                                                          ).first().id
-    root_org = current.auth.root_org()
-    if root_org == vnrc:
-        vnrc = True
-        settings.hrm.use_skills = True
-        settings.hrm.vol_experience = "both"
-        try:
-            settings.modules.pop("asset")
-        except:
-            # Must be already removed
-            pass
-    else:
+    try:
+        vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
+                                                              limitby=(0, 1),
+                                                              cache=s3db.cache,
+                                                              ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
         vnrc = False
-        idrc = db(otable.name == "Indonesian Red Cross Society (Pelang Merah Indonesia)").select(otable.id,
-                                                                                                 limitby=(0, 1),
-                                                                                                 cache=s3db.cache,
-                                                                                                 ).first().id
-        if root_org == idrc:
+    else:
+        root_org = current.auth.root_org()
+        if root_org == vnrc:
+            vnrc = True
             settings.hrm.use_skills = True
-            settings.hrm.staff_experience = "experience"
             settings.hrm.vol_experience = "both"
+            try:
+                settings.modules.pop("asset")
+            except:
+                # Must be already removed
+                pass
+        else:
+            vnrc = False
+            idrc = db(otable.name == "Indonesian Red Cross Society (Pelang Merah Indonesia)").select(otable.id,
+                                                                                                     limitby=(0, 1),
+                                                                                                     cache=s3db.cache,
+                                                                                                     ).first().id
+            if root_org == idrc:
+                settings.hrm.use_skills = True
+                settings.hrm.staff_experience = "experience"
+                settings.hrm.vol_experience = "both"
 
     if current.request.controller == "deploy":
         # Replace default title in imports:
