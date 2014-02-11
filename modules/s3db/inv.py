@@ -29,8 +29,8 @@
 
 __all__ = ["S3WarehouseModel",
            "S3InventoryModel",
-           "S3TrackingModel",
-           "S3AdjustModel",
+           "S3InventoryTrackingModel",
+           "S3InventoryAdjustModel",
            "inv_tabs",
            "inv_rheader",
            "inv_rfooter",
@@ -257,35 +257,7 @@ class S3WarehouseModel(S3Model):
             msg_record_deleted = T("Warehouse deleted"),
             msg_list_empty = T("No Warehouses currently registered"))
 
-        # Search Method
-        search_method = S3Search(
-            simple=(),
-            advanced=(S3SearchSimpleWidget(
-                        name="warehouse_search_text",
-                        label=T("Search"),
-                        comment=T("Search for warehouse by text."),
-                        field=["name", "comments", "email"]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="warehouse_search_org",
-                        label=messages.ORGANISATION,
-                        comment=T("Search for warehouse by organization."),
-                        field="organisation_id",
-                        represent ="%(name)s",
-                        cols = 3
-                      ),
-                      S3SearchOptionsWidget(
-                        name="warehouse_search_location",
-                        field="location_id$L1",
-                        location_level="L1",
-                        cols = 3
-                      ),
-                      S3SearchLocationWidget(
-                        name="warehouse_search_map",
-                        label=T("Map"),
-                      ),
-            ))
-
+        # Filter widgets
         filter_widgets = [
                 S3TextFilter(["name",
                               "code",
@@ -349,8 +321,6 @@ class S3WarehouseModel(S3Model):
                                       "recv",
                                       "address",
                                       ],
-                  # @ToDo: Deprecate
-                  search_method = search_method,
                   super_entity = ("pr_pentity", "org_site"),
                   update_realm = True,
                   )
@@ -575,6 +545,57 @@ S3OptionsFilter({
  'fncRepresent':S3.supply.fncRepresentItem
 })''')
 
+        # Filter widgets
+        filter_widgets = [
+            S3TextFilter(["item_id$name",
+                          "item_pack_id$name",
+                         ],
+                         label=T("Item name"),
+                         comment=T("Search for items with this text in the name."),
+                        ),
+            S3OptionsFilter("site_id",
+                            label=T("Facility"),
+                            cols = 2,
+                            hidden = True,
+                           ),
+            S3OptionsFilter("status",
+                            label=T("Status"),
+                            cols = 2,
+                            hidden = True,
+                           ),
+            S3RangeFilter("quantity",
+                          label=T("Quantity range"),
+                          comment=T("Include only items where quantity is in this range."),
+                          ge=10,
+                          hidden = True,
+                         ),
+            S3DateFilter("purchase_date",
+                         label=T("Purchase date"),
+                         comment=T("Include only items purchased within the specified dates."),
+                         hidden = True,
+                        ),
+            S3DateFilter("other_date",
+                         label=T("Expiry date"),
+                         comment=T("Include only items that expire within the specified dates."),
+                         hidden = True,
+                        ),
+            S3OptionsFilter("owner_org_id",
+                            label=T("Owning organization"),
+                            comment=T("Search for items by owning organization."),
+                            represent="%(name)s",
+                            cols=2,
+                            hidden = True,
+                           ),
+            S3OptionsFilter("supply_org_id",
+                            label=T("Donating Organization"),
+                            comment=T("Search for items by donating organization."),
+                            represent="%(name)s",
+                            cols=2,
+                            hidden = True,
+                           ),
+        ]
+
+        # Report options
         if track_pack_values:
             rows = ["item_id", "item_id$item_category_id", "currency"]
             cols = ["site_id", "owner_org_id", "supply_org_id", "currency"]
@@ -583,86 +604,20 @@ S3OptionsFilter({
             rows = ["item_id", "item_id$item_category_id"]
             cols = ["site_id", "owner_org_id", "supply_org_id"]
             fact = ["quantity"]
-
-        # @ToDo: Deprecate
-        search_widgets = [
-                S3SearchSimpleWidget(
-                    name="inv_item_search_text",
-                    label=T("Search"),
-                    comment=T("Search for an item by text."),
-                    field=[
-                        "item_id$name",
-                        #"item_id$category_id$name",
-                        #"site_id$name"
-                    ]
-                ),
-                S3SearchOptionsWidget(
-                    name="inv_item_search_site",
-                    label=T("Facility"),
-                    field="site_id",
-                    represent="%(name)s",
-                    comment=T("If none are selected, then all are searched."),
-                    cols = 2
-                ),
-                S3SearchOptionsWidget(
-                    name="inv_item_search_status",
-                    label=T("Status"),
-                    field="status",
-                    represent="%(name)s",
-                    comment=T("If none are selected, then all are searched."),
-                    cols = 2
-                ),
-                S3SearchOptionsWidget(
-                    name="owner_org_seach",
-                    label=T("Owning Organization"),
-                    field="owner_org_id",
-                    represent="%(name)s",
-                    comment=T("If none are selected, then all are searched."),
-                    cols = 2
-                ),
-                S3SearchOptionsWidget(
-                    name="supply_org_seach",
-                    label=T("Donating Organization"),
-                    field="supply_org_id",
-                    represent="%(name)s",
-                    comment=T("If none are selected, then all are searched."),
-                    cols = 2
-                ),
-                # NotImplemented yet
-                # S3SearchOptionsWidget(
-                    # name="inv_item_search_category",
-                    # label=T("Category"),
-                    # field="item_category",
-                    ##represent="%(name)s",
-                    # comment=T("If none are selected, then all are searched."),
-                    # cols = 2
-                # ),
-                S3SearchMinMaxWidget(
-                    name="inv_item_search_expiry_date",
-                    method="range",
-                    label=T("Expiry Date"),
-                    field="expiry_date"
-                )
-            ]
         report_options = Storage(
-            search=search_widgets,
             rows=rows,
             cols=cols,
             fact=fact,
             methods=["sum"],
-            defaults=Storage(rows="inv_item.item_id",
-                             cols="inv_item.site_id",
-                             fact="inv_item.quantity",
-                             aggregate="sum"),
+            defaults=Storage(rows="item_id",
+                             cols="site_id",
+                             fact="sum(quantity)",
+                            ),
             groupby=self.inv_inv_item.site_id,
             hide_comments=True,
         )
 
-        # Item Search Method (Advanced Search only)
-        search_method = S3Search(simple=(),
-                                 advanced=search_widgets)
-
-        direct_stock_edits = settings.get_inv_direct_stock_edits()
+        # List fields
         if track_pack_values:
             list_fields = ["id",
                            "site_id",
@@ -690,7 +645,12 @@ S3OptionsFilter({
                            "supply_org_id",
                            "status",
                            ]
+
+        # Configuration
+        direct_stock_edits = settings.get_inv_direct_stock_edits()
         self.configure(tablename,
+                       super_entity = "supply_item_entity",
+                       list_fields = list_fields,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
                        create = direct_stock_edits,
@@ -698,33 +658,41 @@ S3OptionsFilter({
                        editable = direct_stock_edits,
                        listadd = direct_stock_edits,
                        deduplicate = self.inv_item_duplicate,
-                       extra_fields = ["quantity", "pack_value", "item_pack_id"],
-                       filter_widgets = [
-                          S3TextFilter(["item_id$name", "item_pack_id$name"],
-                                       label=T("Item name"),
-                                       comment=T("Search for items with this text in the name.")),
-                          S3RangeFilter("quantity",
-                                        label=T("Quantity range"),
-                                        comment=T("Include only items where quantity is in this range."),
-                                        ge=10),
-                          S3DateFilter("purchase_date",
-                                       label=T("Purchase date"),
-                                       comment=T("Include only items purchased within the specified dates.")),
-                          S3DateFilter("other_date",
-                                       label=T("Expiry date"),
-                                       comment=T("Include only items that expire within the specified dates.")),
-                          S3OptionsFilter("owner_org_id",
-                                          label=T("Owning organization"),
-                                          comment=T("Search for items by owning organization."),
-                                          represent="%(name)s",
-                                          cols=2)
-                       ],
-                       list_fields = list_fields,
-                       onvalidation = self.inv_inv_item_onvalidate,
+                       extra_fields = ["quantity",
+                                       "pack_value",
+                                       "item_pack_id",
+                                      ],
+                       filter_widgets = filter_widgets,
+                       # @todo: where is this config used?
+                       #filter_widgets = [
+                       #   S3TextFilter(["item_id$name",
+                       #                 "item_pack_id$name",
+                       #                ],
+                       #                label=T("Item name"),
+                       #                comment=T("Search for items with this text in the name."),
+                       #               ),
+                       #   S3RangeFilter("quantity",
+                       #                 label=T("Quantity range"),
+                       #                 comment=T("Include only items where quantity is in this range."),
+                       #                 ge=10,
+                       #                ),
+                       #   S3DateFilter("purchase_date",
+                       #                label=T("Purchase date"),
+                       #                comment=T("Include only items purchased within the specified dates."),
+                       #               ),
+                       #   S3DateFilter("other_date",
+                       #                label=T("Expiry date"),
+                       #                comment=T("Include only items that expire within the specified dates."),
+                       #               ),
+                       #   S3OptionsFilter("owner_org_id",
+                       #                   label=T("Owning organization"),
+                       #                   comment=T("Search for items by owning organization."),
+                       #                   represent="%(name)s",
+                       #                   cols=2,
+                       #                  )
+                       #],
                        report_options = report_options,
-                       # @ToDo: Deprecate
-                       search_method = search_method,
-                       super_entity = "supply_item_entity",
+                       onvalidation = self.inv_inv_item_onvalidate,
                        )
 
         # ---------------------------------------------------------------------
@@ -965,7 +933,7 @@ S3OptionsFilter({
                     job.data.quantity = table[id].quantity
 
 # =============================================================================
-class S3TrackingModel(S3Model):
+class S3InventoryTrackingModel(S3Model):
     """
         A module to manage the shipment of inventory items
         - Sent Items
@@ -1178,75 +1146,47 @@ class S3TrackingModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        # Search Method
-        # @ToDo: Deprecate
-        search_method = S3Search(
-                simple=(S3SearchSimpleWidget(
-                          name="send_search_text_simple",
-                          label=T("Search"),
-                          comment=T("Search for an item by text."),
-                          field=["sender_id$first_name",
-                                 "sender_id$middle_name",
-                                 "sender_id$last_name",
-                                 "site_id$name",
-                                 "comments",
-                                 "from_site_id$name",
-                                 "send_ref",
-                                 "recipient_id$first_name",
-                                 "recipient_id$middle_name",
-                                 "recipient_id$last_name"
-                                ]
-                        )),
-                advanced=(S3SearchSimpleWidget(
-                            name="send_search_text_advanced",
-                            label=T("Search"),
-                            comment=T("Search for an item by text."),
-                            field=["sender_id$first_name",
-                                   "sender_id$middle_name",
-                                   "sender_id$last_name",
-                                   "side_id$name",
-                                   "comments",
-                                   "from_site_id$name",
-                                   "site_id$name",
-                                   "send_ref",
-                                   "recipient_id$first_name",
-                                   "recipient_id$middle_name",
-                                   "recipient_id$last_name"
-                                   ]
-                         ),
-                         S3SearchOptionsWidget(
-                           name="send_search_org",
-                           label=T("To Organization"),
-                           comment=T("If none are selected, then all are searched."),
-                           field="to_site_id",
-                           cols=2
-                         ),
-                         S3SearchSimpleWidget(
-                           name="send_search_shipment_type",
-                           label=T("Shipment Type"),
-                           field="type"
-                         ),
-                         S3SearchSimpleWidget(
-                           name="send_search_transport_type",
-                           label=T("Type of Transport"),
-                           field="transport_type" 
-                         ),
-                         S3SearchMinMaxWidget(
-                           name="recv_search_date",
-                           method="range",
-                           label=T("Date Sent"),
-                           comment=T("Search for a shipment sent between these dates."),
-                           field="date"
-                         ),
-                         S3SearchMinMaxWidget(
-                           name="recv_search_delivery_date",
-                           method="range",
-                           label=T("Estimated Delivery Date"),
-                           comment=T("Search for a shipment which has an estimated delivery between these dates."),
-                           field="delivery_date"
-                   )
-           ))
-
+        # Filter Widgets
+        filter_widgets = [
+            S3TextFilter(["sender_id$first_name",
+                          "sender_id$middle_name",
+                          "sender_id$last_name",
+                          "comments",
+                          "site_id$name",
+                          "send_ref",
+                          "recipient_id$first_name",
+                          "recipient_id$middle_name",
+                          "recipient_id$last_name",
+                         ],
+                         label = T("Search"),
+                         comment = T("Search for an item by text."),
+                        ),
+            S3OptionsFilter("to_site_id",
+                            label = T("To Organization"),
+                            comment = T("If none are selected, then all are searched."),
+                            cols = 2,
+                            hidden = True,
+                           ),
+            S3TextFilter("type",
+                         label = T("Shipment Type"),
+                         hidden = True,
+                        ),
+            S3TextFilter("transport_type",
+                         label = T("Type of Transport"),
+                         hidden = True,
+                        ),
+            S3DateFilter("date",
+                         label = T("Date Sent"),
+                         comment = T("Search for a shipment sent between these dates."),
+                         hidden = True,
+                        ),
+            S3DateFilter("delivery_date",
+                         label = T("Estimated Delivery Date"),
+                         comment = T("Search for a shipment which has an estimated delivery between these dates."),
+                         hidden = True,
+                        ),
+        ]
+        
         # CRUD strings
         ADD_SEND = T("Send New Shipment")
         crud_strings[tablename] = Storage(
@@ -1324,15 +1264,15 @@ class S3TrackingModel(S3Model):
         configure(tablename,
                   # It shouldn't be possible for the user to delete a send item
                   # unless *maybe* if it is pending and has no items referencing it
-                  deletable=False,
-                  search_method = search_method,
+                  deletable = False,
+                  filter_widgets = filter_widgets,
                   onaccept = self.inv_send_onaccept,
                   onvalidation = self.inv_send_onvalidation,
                   create_next = send_item_url,
                   update_next = send_item_url,
                   list_fields = list_fields,
-                  orderby=~table.date,
-                  sortby=[[5, "desc"], [1, "asc"]],
+                  orderby = ~table.date,
+                  sortby = [[5, "desc"], [1, "asc"]],
                   )
 
         # ---------------------------------------------------------------------
@@ -1488,71 +1428,50 @@ class S3TrackingModel(S3Model):
             recv_search_comment = T("Search for a shipment by looking for text in any field.")
             recv_search_date_field = "date"
             recv_search_date_comment = T("Search for a shipment received between these dates")
-        search_method = S3Search(
-            simple=(S3SearchSimpleWidget(
-                        name="recv_search_text_simple",
-                        label=T("Search"),
-                        comment=recv_search_comment,
-                        field=["sender_id$first_name",
-                               "sender_id$middle_name",
-                               "sender_id$last_name",
-                               "comments",
-                               "from_site_id$name",
-                               "recipient_id$first_name",
-                               "recipient_id$middle_name",
-                               "recipient_id$last_name",
-                               "site_id$name",
-                               "recv_ref",
-                               "send_ref",
-                               "purchase_ref",
-                               ]
-                      )),
-            advanced=(S3SearchSimpleWidget(
-                        name="recv_search_text_advanced",
-                        label=T("Search"),
-                        comment=recv_search_comment,
-                        field=["from_person",
-                               "comments",
-                               "from_site_id$name",
-                               "recipient_id$first_name",
-                               "recipient_id$middle_name",
-                               "recipient_id$last_name",
-                               "site_id$name"
-                               ]
-                      ),
-                      S3SearchMinMaxWidget(
-                        name="recv_search_date",
-                        method="range",
-                        label=table[recv_search_date_field].label,
-                        comment=recv_search_date_comment,
-                        field=recv_search_date_field
-                      ),
-                      S3SearchOptionsWidget(
-                        name="recv_search_site",
-                        label=SITE_LABEL,
-                        field="site_id",
-                        represent ="%(name)s",
-                        cols = 2
-                      ),
-                      S3SearchOptionsWidget(
-                        name="recv_search_status",
-                        label=T("Status"),
-                        field="status",
-                        cols = 2
-                      ),
-                      #S3SearchOptionsWidget(
-                      #  name="recv_search_grn",
-                      #  label=T("GRN Status"),
-                      #  field="grn_status",
-                      #  cols = 2
-                      #),
-                      #S3SearchOptionsWidget(
-                      #  name="recv_search_cert",
-                      #  label=T("Certificate Status"),
-                      #  field="grn_status",
-                      #  cols = 2
-                      #),
-            ))
+
+        filter_widgets = [
+            S3TextFilter(["sender_id$first_name",
+                          "sender_id$middle_name",
+                          "sender_id$last_name",
+                          "comments",
+                          "from_site_id$name",
+                          "recipient_id$first_name",
+                          "recipient_id$middle_name",
+                          "recipient_id$last_name",
+                          "site_id$name",
+                          "recv_ref",
+                          "send_ref",
+                          "purchase_ref",
+                         ],
+                         label = T("Search"),
+                         comment = recv_search_comment,
+                        ),
+            S3DateFilter(recv_search_date_field,
+                         label = table[recv_search_date_field].label,
+                         comment = recv_search_date_comment,
+                         hidden = True,
+                        ),
+            S3OptionsFilter("site_id",
+                            label = SITE_LABEL,
+                            cols = 2,
+                            hidden = True,
+                           ),
+            S3OptionsFilter("status",
+                            label = T("Status"),
+                            cols = 2,
+                            hidden = True,
+                           ),
+            #S3OptionsFilter("grn_status",
+                            #label = T("GRN Status"),
+                            #cols = 2,
+                            #hidden = True,
+                           #),
+            #S3OptionsFilter("cert_status",
+                            #label = T("Certificate Status"),
+                            #cols = 2,
+                            #hidden = True,
+                           #),
+        ]
 
         # Redirect to the Items tabs after creation
         recv_item_url = URL(c="inv", f="recv", args=["[id]",
@@ -1579,7 +1498,7 @@ class S3TrackingModel(S3Model):
                   mark_required = ["from_site_id", "organisation_id"],
                   onvalidation = self.inv_recv_onvalidation,
                   onaccept = self.inv_recv_onaccept,
-                  search_method = search_method,
+                  filter_widgets = filter_widgets,
                   create_next = recv_item_url,
                   update_next = recv_item_url,
                   orderby=~table.date,
@@ -1838,38 +1757,24 @@ S3OptionsFilter({
             msg_record_deleted = T("Shipment Item deleted"),
             msg_list_empty = T("No Shipment Items"))
 
-        search_method = S3Search(
-            simple=(S3SearchSimpleWidget(
-                        name="track_search_text_simple",
-                        label=T("Search"),
-                        #comment=recv_search_comment,
-                        field=["item_id$name",
-                               "send_id$site_id$name",
-                               "recv_id$site_id$name",
-                              ]
-                      )),
-            advanced=(S3SearchSimpleWidget(
-                        name="track_search_text_advanced",
-                        label=T("Search"),
-                        #comment=recv_search_comment,
-                        field=["item_id$name",
-                               "send_id$site_id$name",
-                               "recv_id$site_id$name",
-                              ]
-                      ),
-                      S3SearchMinMaxWidget(
-                        name="send_search_date",
-                        method="range",
-                        label=T("Sent date"),
-                        field="send_id$date"
-                      ),
-                      S3SearchMinMaxWidget(
-                        name="recv_search_date",
-                        method="range",
-                        label=T("Received date"),
-                        field="recv_id$date"
-                      ),
-            ))
+        # Filter Widgets
+        filter_widgets = [
+            S3TextFilter(["item_id$name",
+                          "send_id$site_id$name",
+                          "recv_id$site_id$name",
+                         ],
+                         label = T("Search"),
+                         #comment = recv_search_comment,
+                        ),
+            S3DateFilter("send_id$date",
+                         label = T("Sent date"),
+                         hidden = True,
+                        ),
+            S3DateFilter("recv_id$date",
+                         label = T("Received date"),
+                         hidden = True,
+                        ),
+        ]
 
         # Resource configuration
         configure(tablename,
@@ -1891,7 +1796,7 @@ S3OptionsFilter({
                                  "owner_org_id",
                                  "supply_org_id",
                                  ],
-                  search_method = search_method,
+                  filter_widgets = filter_widgets,
                   onaccept = self.inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidate,
                   extra_fields = ["quantity", "pack_value", "item_pack_id"],
@@ -2373,6 +2278,7 @@ S3OptionsFilter({
         s3.prep = prep
         output = current.rest_controller("inv", "send",
                                          rheader = inv_send_rheader,
+                                         hide_filter = False,
                                          )
         return output
 
@@ -3961,7 +3867,7 @@ def inv_recv_pdf_footer(r):
     return None
 
 # =============================================================================
-class S3AdjustModel(S3Model):
+class S3InventoryAdjustModel(S3Model):
     """
         A module to manage the shipment of inventory items
         - Sent Items

@@ -71,7 +71,7 @@ class S3MainMenu(default.S3MainMenu):
             ),
             MM("Locations", c="gis")(
                 MM("Facilities", c="org", f="facility", m="search"),
-                #MM("Warehouses", c="inv", f="warehouse", m="search"),
+                #MM("Warehouses", c="inv", f="warehouse"),
                 MM("Create a Facility", c="org", f="facility", m="create")
             ),
             MM("Contacts", c="hrm", f="staff")(
@@ -83,7 +83,7 @@ class S3MainMenu(default.S3MainMenu):
             ),                
             MM("Resources", url="http://occupysandy.net/resources/coordination/")(
                 MM("Assets", c="asset", f="asset", m="search"),
-                MM("Inventory", c="inv", f="inv_item", m="search"),
+                MM("Inventory", c="inv", f="inv_item"),
                 MM("Stock Counts", c="inv", f="adj"),
                 MM("Shipments", c="inv", f="send")
             ),
@@ -134,13 +134,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M()(
                     M("Facilities", c="inv", f="facility")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
                         M("Import", m="import")
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
-                        M("Search", f="inv_item", m="search"),
+                        #M("Search"),
                         #M("Search Shipped Items", f="track_item", m="search"),
                         M("Stock Count", f="adj"),
                         #M("Kitting", f="kit"),
@@ -149,38 +148,35 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Reports", c="inv", f="inv_item")(
                         M("Warehouse Stock", f="inv_item",m="report"),
                         M("Expiration Report", c="inv", f="track_item",
-                          m="search", vars=dict(report="exp")),
+                          vars=dict(report="exp")),
                         #M("Monetization Report", c="inv", f="inv_item",
-                        #  m="search", vars=dict(report="mon")),
+                        #  vars=dict(report="mon")),
                         #M("Utilization Report", c="inv", f="track_item",
-                        #  m="search", vars=dict(report="util")),
+                        #  vars=dict(report="util")),
                         #M("Summary of Incoming Supplies", c="inv", f="track_item",
-                        #  m="search", vars=dict(report="inc")),
+                        #  vars=dict(report="inc")),
                         #M("Summary of Releases", c="inv", f="track_item",
-                        #  m="search", vars=dict(report="rel")),
+                        #  vars=dict(report="rel")),
                     ),
                     #M(inv_recv_list, c="inv", f="recv")(
                     #    M("New", m="create"),
-                    #    M("List All"),
-                    #    M("Search", m="search"),
+                    #    #M("Search"),
                     #),
                     M("Sent Shipments", c="inv", f="send")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
-                        M("Search Shipped Items", f="track_item", m="search"),
+                        #M("Search"),
+                        M("Search Shipped Items", f="track_item"),
                     ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
+                        #M("Search"),
                         M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                 )
 

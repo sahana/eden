@@ -1600,7 +1600,7 @@ class S3DateTimeWidget(FormWidget):
  onClose:%(onclose)s
 });
 var clear_button=$('<input id="%(selector)s_clear" type="button" value="%(clear)s"/>').click(function(){
- $('#%(selector)s').val('');%(onclear)s
+ $('#%(selector)s').val('');%(onclear)s;$('#%(selector)s').closest('.filter-form').trigger('optionChanged')
 });
 if($('#%(selector)s_clear').length==0){
  $('#%(selector)s').after(clear_button)

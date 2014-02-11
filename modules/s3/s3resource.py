@@ -6276,7 +6276,12 @@ class S3URLQuery(object):
 
             # Append to query
             if len(selectors) > 1:
-                alias = resource.alias
+                aliases = [s.split(".", 1)[0] for s in selectors]
+                if len(set(aliases)) == 1:
+                    alias = aliases[0]
+                else:
+                    alias = resource.alias
+                #alias = resource.alias
             else:
                 alias = selectors[0].split(".", 1)[0]
             if alias == "~":
@@ -6541,7 +6546,20 @@ class S3ResourceFilter(object):
 
                 # Filters
                 add_filter = self.add_filter
+                
+                # Current concept:
+                # Interpret all URL filters in the context of master
                 queries = S3URLQuery.parse(resource, vars)
+                
+                # @todo: Alternative concept (inconsistent?):
+                # Interpret all URL filters in the context of filter_component:
+                #if filter_component and \
+                   #filter_component in resource.components:
+                    #context = resource.components[filter_component]
+                #else:
+                    #context = resource
+                #queries = S3URLQuery.parse(context, vars)
+
                 for alias in queries:
                     if filter_component == alias:
                         for q in queries[alias]:
