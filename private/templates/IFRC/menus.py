@@ -180,7 +180,7 @@ class S3MainMenu(default.S3MainMenu):
                    text = "Stocks and relief items."),
                 DB("Assets", c="asset", f="index",
                    image = "graphic_assets.png",
-                   title = "Assests",
+                   title = "Assets",
                    text = "Manage office inventories and assets."),
                 DB("Assessments", c="survey", f="index",
                    image = "graphic_assessments.png",
@@ -556,9 +556,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         def use_adjust(i):
             db = current.db
             otable = s3db.org_organisation
-            ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
-                                                                     limitby=(0, 1)
-                                                                     ).first().id
+            try:
+                ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
+                                                                         limitby=(0, 1)
+                                                                         ).first().id
+            except:
+                # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+                return False
             if current.auth.root_org() == ausrc:
                 # AusRC use proper Logistics workflow
                 return True

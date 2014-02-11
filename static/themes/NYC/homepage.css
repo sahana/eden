@@ -198,3 +198,30 @@
     background: url(img/dispatch.png) no-repeat;
     margin-right: 10px;
 }
+.button,
+.button:visited,
+.button:active {
+    background: none repeat scroll 0 0 #222222;
+    border: 0 none;
+    border-radius: 4px 4px 4px 4px;
+    box-shadow: 0 0 0 0 #000000;
+    color: #FFFFFF;
+    cursor: pointer;
+    display: inline-block;
+    font-family: 'Open Sans','Lucida Grande','Lucida Sans',sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    letter-spacing: 1px;
+    line-height: 1.2em;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: none;
+    text-transform: uppercase;
+}
+.button:hover,
+.button:visited:hover,
+.button:active:hover {
+    background: #da521f;
+    color: #ffffff;
+}

@@ -834,7 +834,12 @@ class S3LocationFilter(S3FilterWidget):
             for level in opts["levels"]:
                 levels[level] = hierarchy.get(level, level)
         else:
-            # @ToDo: Do this dynamically from the data?
+            if len(current.deployment_settings.get_gis_countries()) == 1 or \
+                current.response.s3.gis.config.region_location_id:
+                try:
+                    del hierarchy["L0"]
+                except KeyError:
+                    pass
             for level in hierarchy:
                 levels[level] = hierarchy.get(level, level)
         # Pass to data_element
@@ -1054,7 +1059,10 @@ class S3LocationFilter(S3FilterWidget):
         if "levels" in self.opts:
             levels = self.opts.levels
         else:
-            levels = current.gis.hierarchy_level_keys
+            levels = current.gis.get_location_hierarchy().keys()
+            if len(current.deployment_settings.get_gis_countries()) == 1 or \
+                current.response.s3.gis.config.region_location_id:
+                levels.remove("L0")
 
         fields = ["%s$%s" % (fields, level) for level in levels]
         if resource:

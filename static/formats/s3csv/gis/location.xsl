@@ -6,7 +6,8 @@
          Location - CSV Import Stylesheet
 
          CSV fields:
-         L0.................L0 Name
+         ISO2...............ISO2 country code - only for use with Countries, where it is required
+         L0.................L0 Name or ISO2 code (latter preferred except when importing countries)
          L0 KV:XX...........L0 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L0 L10n:XX.........L0 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L1.................L1 Name

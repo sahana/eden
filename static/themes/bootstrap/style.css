@@ -119,9 +119,14 @@ div.dl {
     margin-bottom: 0;
 }
 
-/* Need long form to override widgets.css on margin */
-.form-container form button.ui-datepicker-trigger {
+/* Need short form for Modals */
+.ui-datepicker-trigger {
     background-image: url(../../img/bootstrap/calendar.gif);
+    margin-left: 10px;
+    width: 6px;
+}
+/* Need long form to override widgets.css on normal button margin */
+.form-container form button.ui-datepicker-trigger {
     margin-left: 10px;
 }
 
@@ -221,7 +226,10 @@ a i.icon.icon-plus-sign.big-add:hover {
 .form-container form.form-horizontal,
 #datalist-filter-form,
 #datatable-filter-form,
-#datatable_wrapper {  
+#summary-filter-form,
+#summary-sections,
+#datatable_wrapper,
+#pivottable {  
     background-color: #fff;
     border-radius: 4px;
     border: 1px solid #9e9b9b;
@@ -238,6 +246,39 @@ form#datalist-filter-form,
 form#datatable-filter-form {
     padding-top: 7px;
     padding-left: 9px;
+}
+
+#summary-tabs {
+    margin-top: 10px;
+}
+
+#summary-tab-headers .ui-tabs-nav {
+    border: none;
+    margin: 0 10px;
+}
+
+#summary-tab-headers a {
+    border-color: #B2B2B2;
+}
+
+#summary-tab-headers .ui-tabs-active a {
+    border-bottom: 1px solid white;
+}
+
+#summary-tab-headers li {
+    margin-right: 5px;
+    box-shadow: none;
+}
+
+#summary-tabs.ui-widget-content {
+    background: none;
+    border: none;
+}
+
+/* Fit Summary Map Inside Summary Section */
+#summary-sections .x-panel-body {
+    border: none;
+    border-radius: 4px;
 }
 
 /*
@@ -377,10 +418,6 @@ a.action-btn:hover {
     *background-color: #a9302a;
 }
 
-.ui-datepicker-trigger {
-    margin-left: 10px;
-}
-
 /* Required Fields */
 /* Better solution will be to use inline 'Optional' hints:
 http://www.usabilitycounts.com/2009/11/18/form-design-and-the-fallacy-of-the-required-field/
@@ -479,18 +516,15 @@ form table.embeddedComponent td {
     border: none;
 }
 
-table.embeddedComponent .edit-row td,
-table.embeddedComponent .read-row td {
+table.embeddedComponent td {
     /* Hide the table */
     border-bottom: none;
     padding: 0;
+    vertical-align: top;
 }
 
 table.embeddedComponent .add-row td {
-    /* Hide the table */
-    border-bottom: none;
-    padding: 0 5px 0 0;
-    vertical-align: top;
+    padding-top: 5px;
 }
 .inline-add {
     background-image: url(../../img/bootstrap/add.png);
@@ -908,7 +942,8 @@ span.toggle-text i {
 /* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
 .throbber,
 .layer_throbber,
-.map_loader {
+.map_loader
+{
     background-image: url(../../img/bootstrap/ajax-loader.gif);
 }
 .throbber,

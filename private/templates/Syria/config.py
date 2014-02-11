@@ -1352,7 +1352,7 @@ def customize_project_activity(**attr):
         filter_widgets = [
             S3LocationFilter("location_id",
                              #levels = levels,
-                             level = ("L0", "L1"),
+                             levels = ("L0", "L1"),
                              widget = "multiselect"
                              ),
             S3OptionsFilter("sector_activity.sector_id",

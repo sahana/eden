@@ -997,25 +997,28 @@ S3OptionsFilter({
                     item.id = row.id
                     item.method = item.METHOD.UPDATE
                     return
+            else:
+                name = data.get("name", None)
+                if not name:
+                    # No way to match
+                    return
+                um = data.get("um", None)
+                if not um:
+                    # Try to extract UM from Name
+                    name, um = item_um_from_name(name)
+                if name:
+                    query = query & (table.name.lower() == name.lower())
+                if um:
+                    query = query & (table.um.lower() == um.lower())
+                catalog_id = data.get("catalog_id", None)
+                if catalog_id:
+                    query = query & (table.catalog_id == catalog_id)
 
-            name = data.get("name", None)
-            um = data.get("um", None)
-            if not um:
-                # Try to extract UM from Name
-                name, um = item_um_from_name(name)
-            if name:
-                query = query & (table.name.lower() == name.lower())
-            if um:
-                query = query & (table.um.lower() == um.lower())
-            catalog_id = data.get("catalog_id", None)
-            if catalog_id:
-                query = query & (table.catalog_id == catalog_id)
-
-            row = db(query).select(table.id,
-                                   limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+                row = db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+                if row:
+                    item.id = row.id
+                    item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

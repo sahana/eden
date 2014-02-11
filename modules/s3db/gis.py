@@ -634,13 +634,11 @@ class S3LocationModel(S3Model):
 
           Rules for finding a duplicate:
            - Don't do deduplication if there is no level
-           - Look for a record with the same name, ignopring case
+           - Look for a record with the same name, ignoring case
            - If no match, also check name_l10n
            - If parent exists in the import, the same parent
            - If start_date exists in the import, the same start_date
            - If end_date exists in the import, the same end_date
-
-            @ToDo: Use codes that we know are unique
 
             @ToDo: Check soundex? (only good in English)
                    http://eden.sahanafoundation.org/ticket/481
@@ -665,6 +663,25 @@ class S3LocationModel(S3Model):
                 job.method = None
                 return
 
+            if current.deployment_settings.get_gis_lookup_pcode() and data.name[0].isdigit():
+                # The name is a PCode
+                kv_table = current.s3db.gis_location_tag
+                query = (kv_table.tag == "PCode") & \
+                        (kv_table.value == data.name) & \
+                        (kv_table.location_id == table.id)
+                duplicate = current.db(query).select(table.id,
+                                                      table.name,
+                                                      orderby=~table.end_date,
+                                                      limitby=(0, 1)).first()
+                
+                if duplicate:
+                    # @ToDo: Import Log
+                    #s3_debug("Location PCode Match")
+                    data.name = duplicate.name # Don't update the name
+                    job.id = duplicate.id
+                    job.method = job.METHOD.UPDATE
+                    return
+
             parent = data.get("parent", None)
             start_date = data.get("start_date", None)
             end_date = data.get("end_date", None)
@@ -685,14 +702,16 @@ class S3LocationModel(S3Model):
             if start_date:
                 query &= (table.start_date == start_date)
 
-            _duplicate = current.db(query).select(table.id,
-                                                  orderby=~table.end_date,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
+            duplicate = current.db(query).select(table.id,
+                                                 orderby=~table.end_date,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
                 # @ToDo: Import Log
                 #s3_debug("Location Match")
-                job.id = _duplicate.id
+                job.id = duplicate.id
                 job.method = job.METHOD.UPDATE
+                return
+
             elif current.deployment_settings.get_L10n_translate_gis_location():
                 # See if this a name_l10n
                 ltable = current.s3db.gis_location_name
@@ -706,15 +725,15 @@ class S3LocationModel(S3Model):
                 if start_date:
                     query &= (table.start_date == start_date)
 
-                _duplicate = current.db(query).select(table.id,
+                duplicate = current.db(query).select(table.id,
                                                       table.name,
                                                       orderby=~table.end_date,
-                                                      limitby=(0, 1)).last()
-                if _duplicate:
+                                                      limitby=(0, 1)).first()
+                if duplicate:
                     # @ToDo: Import Log
                     #s3_debug("Location l10n Match")
-                    data.name = _duplicate.name # Don't update the name
-                    job.id = _duplicate.id
+                    data.name = duplicate.name # Don't update the name
+                    job.id = duplicate.id
                     job.method = job.METHOD.UPDATE
                 else:
                     # @ToDo: Import Log

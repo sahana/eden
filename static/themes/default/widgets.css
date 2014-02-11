@@ -1325,7 +1325,8 @@ table.report .pt-cell-zoom.opened {
     background-image: url(../../img/silk/magnifier_zoom_out.png);
 }
 
-.form-container form button.ui-datepicker-trigger {
+/* Short form for Modals */
+.ui-datepicker-trigger {
 	background-image: url(../../img/jquery-ui/calendar.gif);
     background-repeat: no-repeat;
     height: 15px;
@@ -1333,10 +1334,14 @@ table.report .pt-cell-zoom.opened {
     margin-left: 3px;
     /* Make it not like a button */
     border: 0;
-    padding: 0;
+    /*padding: 0;*/
     -moz-box-sizing: content-box;
     -webkit-box-sizing: content-box;
     box-sizing: content-box;
+}
+/* Long form to override normal button margin */
+.form-container form button.ui-datepicker-trigger {
+    margin-left: 3px;
 }
 
 td .icon {
