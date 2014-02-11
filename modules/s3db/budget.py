@@ -146,7 +146,9 @@ class S3BudgetModel(S3Model):
                                      },
                       )
 
-        # @todo: budget_budget_onaccept?
+        # Configuration
+        configure(tablename,
+                  onaccept = self.budget_budget_onaccept)
 
         # ---------------------------------------------------------------------
         # Parameters (unused?)
@@ -254,8 +256,9 @@ class S3BudgetModel(S3Model):
                                 ondelete = "CASCADE",
                              )
 
-        # @todo: have an onaccept to update all budgets with
-        #        staff at this location
+        # Configuration
+        configure(tablename,
+                  update_onaccept = self.budget_location_onaccept)
 
         # ---------------------------------------------------------------------
         # Staff Types
@@ -336,8 +339,9 @@ class S3BudgetModel(S3Model):
                                 ondelete = "RESTRICT",
                           )
 
-        # @todo: have an onaccept to update totals of all
-        #        budgets with this staff type
+        # Configuration
+        configure(tablename,
+                  update_onaccept = self.budget_staff_onaccept)
 
         # ---------------------------------------------------------------------
         # Budget<>Staff Many2Many  @todo: cleanup
@@ -362,7 +366,10 @@ class S3BudgetModel(S3Model):
                                   ),
                              *s3_meta_fields())
 
-        # @todo: have an onaccept to update the totals in the budget
+        # Configuration
+        configure(tablename,
+                  onaccept = self.budget_budget_staff_onaccept,
+                  ondelete = self.budget_budget_staff_ondelete)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -392,6 +399,100 @@ class S3BudgetModel(S3Model):
                     budget_location_id = budget_location_id,
                     budget_staff_id=budget_staff_id,
                    )
+                   
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_budget_onaccept(form):
+        """
+            Calculate totals for the budget
+        """
+
+        try:
+            budget_id = form.vars.id
+        except:
+            return
+        budget_budget_totals(budget_id)
+        return
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_staff_onaccept(form):
+        """
+            Staff type has been updated => update totals of all budgets with
+            this staff type
+        """
+
+        try:
+            record_id = form.vars.id
+        except:
+            return
+        linktable = current.s3db.budget_budget_staff
+        budget_id = linktable.budget_id
+        rows = current.db(linktable.staff_id == record_id).select(budget_id,
+                                                          groupby=budget_id)
+        for row in rows:
+            budget_budget_totals(row.budget_id)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_location_onaccept(form):
+        """
+            Location has been updated => update totals of all budgets with
+            staff at this location
+        """
+
+        try:
+            record_id = form.vars.id
+        except:
+            return
+        linktable = current.s3db.budget_budget_staff
+        budget_id = linktable.budget_id
+        rows = current.db(linktable.location_id == record_id).select(budget_id,
+                                                             groupby=budget_id)
+        for row in rows:
+            budget_budget_totals(row.budget_id)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_budget_staff_onaccept(form):
+        """
+            Budget staff has been updated => update totals of the budget
+        """
+
+        try:
+            record_id = form.vars.id
+        except:
+            return
+        table = current.s3db.budget_budget_staff
+        row = current.db(table.id == record_id).select(table.budget_id,
+                                                       limitby=(0, 1)).first()
+        if record:
+            budget_budget_totals(row.budget_id)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_budget_staff_ondelete(row):
+        """
+            Budget staff has been deleted => update totals of the budget
+        """
+
+        db = current.db
+        linktable = current.s3db.budget_budget_staff
+        try:
+            record_id = row.id
+        except:
+            return
+        link = db(linktable.id == record_id).select(linktable.deleted_fk,
+                                                    limitby=(0, 1)).first()
+        if link:
+            deleted_fk = json.loads(link.deleted_fk)
+            budget_id = deleted_fk.get("budget_id")
+            if budget_id:
+                budget_budget_totals(budget_id)
+        return
 
 # =============================================================================
 class S3BudgetKitModel(S3Model):
@@ -940,10 +1041,14 @@ class S3BudgetBundleModel(S3Model):
         """
 
         try:
-            bundle_id = form.vars.bundle_id
+            record_id = form.vars.id
         except:
             return
-        budget_bundle_totals(bundle_id)
+        table = current.s3db.budget_bundle_item
+        row = current.db(table.id == record_id).select(table.bundle_id,
+                                                       limitby=(0, 1)).first()
+        if record:
+            budget_bundle_totals(row.bundle_id)
         return
 
     # -------------------------------------------------------------------------
@@ -976,10 +1081,14 @@ class S3BudgetBundleModel(S3Model):
         """
 
         try:
-            bundle_id = form.vars.bundle_id
+            record_id = form.vars.id
         except:
             return
-        budget_bundle_totals(bundle_id)
+        table = current.s3db.budget_bundle_kit
+        row = current.db(table.id == record_id).select(table.bundle_id,
+                                                       limitby=(0, 1)).first()
+        if record:
+            budget_bundle_totals(row.bundle_id)
         return
 
     # -------------------------------------------------------------------------
@@ -1012,10 +1121,14 @@ class S3BudgetBundleModel(S3Model):
         """
 
         try:
-            budget_id = form.vars.budget_id
+            record_id = form.vars.id
         except:
             return
-        budget_budget_totals(budget_id)
+        table = current.s3db.budget_budget_bundle
+        row = current.db(table.id == record_id).select(table.budget_id,
+                                                       limitby=(0, 1)).first()
+        if record:
+            budget_budget_totals(row.budget_id)
         return
 
     # -------------------------------------------------------------------------
@@ -1039,20 +1152,6 @@ class S3BudgetBundleModel(S3Model):
             if budget_id:
                 budget_budget_totals(budget_id)
         return
-
-# =============================================================================
-def budget_budget_total(form):
-    """ Calculate Totals for the budget specified by Form """
-
-    # @todo: rename into budget_budget_onaccept, move into model
-
-    if "budget_id" in form.vars:
-        # called by budget_staff_bundle()
-        budget = form.vars.budget_id
-    else:
-        # called by budget()
-        budget = form.vars.id
-    budget_totals(budget)
 
 # =============================================================================
 def budget_kit_onaccept(form):
