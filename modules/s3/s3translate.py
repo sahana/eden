@@ -867,7 +867,11 @@ class TranslateReadFiles:
 
                         # Consider it for translation (csv[3])
                         csv_path = csv[3]
-                        data = read_csv(csv_path)
+                        try:
+                            data = read_csv(csv_path)
+                        except IOError:
+                            # Phantom
+                            continue
                         title_row = data[0]
                         idx = 0
                         idxlist = []
