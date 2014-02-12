@@ -109,6 +109,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         // If we were instantiated with bounds, use these now
         if (bounds) {
+            bounds.transform(proj4326, projection_current);
             map.zoomToExtent(bounds);
         }
 
