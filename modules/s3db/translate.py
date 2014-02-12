@@ -29,6 +29,8 @@
 
 __all__ = ["S3TranslateModel"]
 
+import sys
+
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
@@ -55,11 +57,18 @@ class S3TranslateModel(S3Model):
 
         tablename = "translate_language"
         table = define_table(tablename,
-                             Field("code", length=10, notnull=True,
+                             Field("code", length=10,
+                                   notnull=True,
                                    requires = IS_IN_SET(langlist),
-                                   label = T("Language Code")),
-                             Field("file", "upload", notnull=True,
-                                   label = T("Translated File")),
+                                   label = T("Language Code"),
+                                   ),
+                             Field("file", "upload",
+                                   notnull=True,
+                                   requires = IS_UPLOAD_FILENAME(
+                                                   extension = "csv",
+                                                   error_message = T("CSV file required")),
+                                   label = T("Translated File")
+                                   ),
                              *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -67,6 +76,7 @@ class S3TranslateModel(S3Model):
             msg_record_created = T("File uploaded"))
 
         self.configure(tablename,
+                       onvalidation = self.translate_language_onvalidation,
                        onaccept = self.translate_language_onaccept,
                        )
 
@@ -88,15 +98,39 @@ class S3TranslateModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def translate_language_onvalidation(form):
+        """
+            Check CSV file before upload
+        """
+        
+        import csv
+        
+        T = current.T
+        try:
+            csvfile = form.vars.file.file
+        except:
+            form.errors["file"] = T("No file uploaded.")
+            return
+        try:
+            dialect = csv.Sniffer().sniff(csvfile.read(1024))
+        except csv.Error:
+            error = T("Error reading file (invalid format?): %(msg)s")
+            form.errors["file"] = error % {"msg": sys.exc_info()[1]}
+        csvfile.seek(0)
+        return
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
     def translate_language_onaccept(form):
         """
             Merge the uploaded CSV file with existing language file
             & mark translation percentages as dirty
         """
 
+        import csv
         import os
         from ..s3.s3translate import Strings
-
+        
         form_vars = form.vars
         lang_code = form_vars.code
 
@@ -104,7 +138,13 @@ class S3TranslateModel(S3Model):
         csvfilename = os.path.join(current.request.folder, "uploads",
                                    form_vars.file)
         S = Strings()
-        S.write_w2p([csvfilename], lang_code, "m")
+        try:
+            S.write_w2p([csvfilename], lang_code, "m")
+        except (csv.Error, SyntaxError):
+            current.session.error = \
+                current.T("Error reading file (invalid format?): %(msg)s") % \
+                {"msg": sys.exc_info()[1]}
+            return
 
         # Mark the percentages as dirty
         ptable = current.s3db.translate_percentage

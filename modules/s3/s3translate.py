@@ -1185,8 +1185,7 @@ class Strings:
                 # Test: 2 cols or 3?
                 cols = len(newdata[0])
                 if cols == 1:
-                    current.session.error = T("CSV file needs to have at least 2 columns!")
-                    redirect(URL(c="admin", f="translate"))
+                    raise SyntaxError("CSV file needs to have at least 2 columns!")
                 elif cols == 2:
                     # 1st column is source, 2nd is target
                     for row in newdata:
