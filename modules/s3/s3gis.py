@@ -4206,7 +4206,11 @@ class GIS(object):
             rows = db(query).select(*fields)
             update_location_tree = GIS.update_location_tree
             for row in rows:
-                update_location_tree(row)
+                try:
+                    update_location_tree(row)
+                except RuntimeError:
+                    s3_debug("Cannot propagate inherited latlon to child %s of L1 location ID %s: too much recursion" % \
+                        (row.id, id))
             return _path
 
         # L2
@@ -4340,7 +4344,11 @@ class GIS(object):
             rows = db(query).select(*fields)
             update_location_tree = GIS.update_location_tree
             for row in rows:
-                update_location_tree(row)
+                try:
+                    update_location_tree(row)
+                except RuntimeError:
+                    s3_debug("Cannot propagate inherited latlon to child %s of L2 location ID %s: too much recursion" % \
+                        (row.id, id))
             return _path
 
         # L3
@@ -4512,7 +4520,11 @@ class GIS(object):
             rows = db(query).select(*fields)
             update_location_tree = GIS.update_location_tree
             for row in rows:
-                update_location_tree(row)
+                try:
+                    update_location_tree(row)
+                except RuntimeError:
+                    s3_debug("Cannot propagate inherited latlon to child %s of L3 location ID %s: too much recursion" % \
+                        (row.id, id))
             return _path
 
         # L4
@@ -4718,7 +4730,11 @@ class GIS(object):
             rows = db(query).select(*fields)
             update_location_tree = GIS.update_location_tree
             for row in rows:
-                update_location_tree(row)
+                try:
+                    update_location_tree(row)
+                except RuntimeError:
+                    s3_debug("Cannot propagate inherited latlon to child %s of L4 location ID %s: too much recursion" % \
+                        (row.id, id))
             return _path
 
         # L5
@@ -4962,7 +4978,11 @@ class GIS(object):
             rows = db(query).select(*fields)
             update_location_tree = GIS.update_location_tree
             for row in rows:
-                update_location_tree(row)
+                try:
+                    update_location_tree(row)
+                except RuntimeError:
+                    s3_debug("Cannot propagate inherited latlon to child %s of L5 location ID %s: too much recursion" % \
+                        (row.id, id))
             return _path
 
         # Specific Location
