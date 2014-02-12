@@ -221,7 +221,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         });
                         strategies = layer.strategies;
                         jlen = strategies.length;
-                        // Disable Clustering to get correct bounds
+                        // Disable BBOX and Clustering to get correct bounds
                         for (j=0; j < jlen; j++) {
                             strategy = strategies[j];
                             if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
@@ -233,8 +233,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             // Reload the layer
                             for (j=0; j < jlen; j++) {
                                 strategy = strategies[j];
-                                if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                                    strategy.refresh();
+                                if (strategy.CLASS_NAME == 'OpenLayers.Strategy.BBOX') {
+                                    // Set bounds to maxExtent so that filter doesn't apply
+                                    strategy.bounds = null;
+                                    strategy.triggerRead();
                                     break;
                                 }
                             }
