@@ -57,7 +57,7 @@ __all__ = ["single_phone_number_pattern",
            "IS_UTC_DATETIME",
            "IS_UTC_OFFSET",
            "QUANTITY_INV_ITEM",
-           "IS_MOBILE_PHONE_NUMBER",
+           "IS_PHONE_NUMBER",
            ]
 
 import re
