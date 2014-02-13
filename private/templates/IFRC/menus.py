@@ -263,6 +263,27 @@ class S3OptionsMenu(default.S3OptionsMenu):
     """ Custom Controller Menus """
 
     # -------------------------------------------------------------------------
+    def admin(self):
+        """ ADMIN menu """
+
+        menu = super(S3OptionsMenu, self).admin()
+        gis_item = M("Map Settings", c="gis", f="config")
+        menu.append(gis_item)
+
+        return menu
+
+    # -------------------------------------------------------------------------
+    def gis(self):
+        """ GIS / GIS Controllers """
+
+        if current.request.function == "index":
+            # Empty so as to leave maximum space for the Map
+            # - functionality accessible via the Admin menu instead
+            return None
+        else:
+            return super(S3OptionsMenu, self).gis()
+
+    # -------------------------------------------------------------------------
     def hrm(self):
         """ HRM Human Resource Management """
 

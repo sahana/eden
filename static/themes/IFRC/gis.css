@@ -1,7 +1,9 @@
 @charset "UTF-8";
 
 .map_home {
-    margin: 10px -15px 0 -16px;
+    /* With side menu
+    margin: 10px -15px 0 -16px; */
+    margin: 0;
 }
 
 /* Over-ride Ext */

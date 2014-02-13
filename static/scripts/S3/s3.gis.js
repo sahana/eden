@@ -939,7 +939,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
             for (dir in folders) {
                 _dir = folders[dir];
-                children = []
+                children = [];
                 // @ToDo: Recursive (currently just 1 layer)
                 for (sub in _dir) {
                     baseAttrs = {
