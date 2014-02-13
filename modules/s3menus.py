@@ -508,25 +508,25 @@ class S3OptionsMenu(object):
                     M("Budgets", f="budget")(
                         M("New", m="create"),
                     ),
-                    M("Parameters", f="parameters"),
-                    M("Items", f="item")(
-                        M("New", m="create"),
-                    ),
-                    M("Kits", f="kit")(
-                        M("New", m="create"),
-                    ),
-                    M("Bundles", f="bundle")(
-                        M("New", m="create"),
-                    ),
                     M("Staff", f="staff")(
-                        M("New", m="create"),
-                    ),
-                    M("Locations", f="location")(
                         M("New", m="create"),
                     ),
                     M("Projects", f="project")(
                         M("New", m="create"),
                     ),
+                    M("Locations", f="location")(
+                        M("New", m="create"),
+                    ),
+                    M("Bundles", f="bundle")(
+                        M("New", m="create"),
+                    ),
+                    M("Kits", f="kit")(
+                        M("New", m="create"),
+                    ),
+                    M("Items", f="item")(
+                        M("New", m="create"),
+                    ),
+                    M("Parameters", f="parameter"),
                 )
 
     # -------------------------------------------------------------------------

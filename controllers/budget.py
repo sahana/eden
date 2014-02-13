@@ -34,34 +34,28 @@ def budget():
     return s3_rest_controller(rheader=s3db.budget_rheader)
 
 # =============================================================================
-def parameter():
-    """ RESTful CRUD controller """
-
-    s3db.configure("budget_parameter", deletable=False)
-    return s3_rest_controller()
-
-# =============================================================================
 def location():
     """
-        RESTful CRUD controller for budget_location
-        
-        @todo: This should be deprecated & replaced with
-               a link to gis_location.
+        REST controller for budget_location
     """
+
+    # @todo: link to gis_location
 
     return s3_rest_controller(main="code")
 
 # =============================================================================
 def item():
-    """ RESTful CRUD controller """
+    """ REST controller for items """
 
+    # @todo: link to supply items
+    
     s3.formats.pdf = URL(f="item_export_pdf")
 
     return s3_rest_controller()
 
 # =============================================================================
 def kit():
-    """ RESTful CRUD controller """
+    """ REST controller for kits """
 
     s3.formats.pdf = URL(f="kit_export_pdf")
     s3.formats.xls = URL(f="kit_export_xls")
@@ -75,7 +69,7 @@ def kit():
 
 # =============================================================================
 def bundle():
-    """ RESTful CRUD controller """
+    """ REST controller for bundles """
 
     if len(request.args) == 2:
         s3db.configure("budget_bundle",
@@ -86,11 +80,10 @@ def bundle():
 # =============================================================================
 def staff():
     """
-        RESTful CRUD controller for budget_staff
-
-        @todo: This should be deprecated & replaced with
-               a link to hrm_human_resource.
+        REST controller for budget_staff
     """
+
+    # @todo: link to hrm_job_title (?)
 
     return s3_rest_controller()
 
@@ -141,34 +134,41 @@ def kit_item():
 
 # =============================================================================
 def project():
-    """ RESTful CRUD controller """
-
-    #tablename = "project_%s" % (resourcename)
-    #table = db[tablename]
+    """ REST controller for projects """
 
     tabs = [(T("Basic Details"), None),
             (T("Staff"), "staff"),
             (T("Tasks"), "task"),
            #(T("Donors"), "organisation"),
-           #(T("Facilities"), "site"),   # Ticket 195
+           #(T("Facilities"), "site"),
            ]
     rheader = lambda r: s3db.project_rheader(r, tabs=tabs)
 
-    output = s3_rest_controller("project", resourcename,
+    output = s3_rest_controller("project", "project",
                                 rheader=rheader)
 
     return output
 
-
 # =============================================================================
-def parameters():
-    """ Select which page to go to depending on login status """
-    table = db.budget_parameter
-    authorised = s3_has_permission("update", table)
-    if authorised:
-        redirect (URL(f="parameter", args=[1, "update"]))
+def parameter():
+    """ REST controller for budget parameters """
+
+    s3db.configure("budget_parameter", deletable=False)
+    table = s3db.budget_parameter
+    record = db().select(table.id, limitby=(0, 1)).first()
+    if not record:
+        record_id = table.insert()
     else:
-        redirect (URL(f="parameter", args=[1, "read"]))
+        record_id = record.id
+
+    def postp(r, output):
+        if isinstance(output, dict) and "buttons" in output:
+            output["buttons"].pop("list_btn", None)
+        return output
+    s3.postp = postp
+    
+    r = s3_request(args=[str(record_id)])
+    return r()
 
 # =============================================================================
 def kit_export_xls():

@@ -153,7 +153,9 @@ class S3BudgetModel(S3Model):
                   onaccept = self.budget_budget_onaccept)
 
         # ---------------------------------------------------------------------
-        # Parameters (unused?)
+        # Parameters (currently unused)
+        #
+        # @todo: take into account when calculating totals
         #
         tablename = "budget_parameter"
         table = define_table(tablename,
@@ -831,6 +833,8 @@ class S3BudgetKitModel(S3Model):
             rows = db(linktable.kit_id.belongs(kit_ids)).select(bundle_id,
                                                                 groupby=bundle_id)
             already_updated = [row.bundle_id for row in rows]
+        else:
+            already_updated = None
 
         # Update totals of all remaining bundles with this item
         linktable = s3db.budget_bundle_item
