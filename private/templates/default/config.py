@@ -267,6 +267,8 @@ settings.L10n.decimal_separator = "."
 # Messaging Settings
 # If you wish to use a parser.py in another folder than "default"
 #settings.msg.parser = "mytemplatefolder"
+# Uncomment to turn off enforcement of E.123 international phone number notation
+#settings.msg.require_international_phone_numbers = False
 
 # Use 'soft' deletes
 #settings.security.archive_not_delete = False

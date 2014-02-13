@@ -112,9 +112,8 @@ def person():
     # Import pre-process
     def import_prep(data):
         """
-            Deletes all Member records of the organisation
-            before processing a new data import, used for the import_prep
-            hook in s3mgr
+            Deletes all Member records of the organisation/branch
+            before processing a new data import
         """
         resource, tree = data
         xml = current.xml

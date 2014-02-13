@@ -380,8 +380,8 @@ class S3OptionsMenu(object):
         settings_messaging = self.settings_messaging()
         translate = current.deployment_settings.has_module("translate")
 
-        # ATTN: Do not specify a controller for the main menu to allow
-        #       re-use of this menu by other controllers
+        # NB: Do not specify a controller for the main menu to allow
+        #     re-use of this menu by other controllers
         return M(restrict=[ADMIN])(
                     M("Settings", c="admin", f="setting")(
                         settings_messaging,
@@ -508,25 +508,25 @@ class S3OptionsMenu(object):
                     M("Budgets", f="budget")(
                         M("New", m="create"),
                     ),
-                    M("Parameters", f="parameters"),
-                    M("Items", f="item")(
-                        M("New", m="create"),
-                    ),
-                    M("Kits", f="kit")(
-                        M("New", m="create"),
-                    ),
-                    M("Bundles", f="bundle")(
-                        M("New", m="create"),
-                    ),
                     M("Staff", f="staff")(
-                        M("New", m="create"),
-                    ),
-                    M("Locations", f="location")(
                         M("New", m="create"),
                     ),
                     M("Projects", f="project")(
                         M("New", m="create"),
                     ),
+                    M("Locations", f="location")(
+                        M("New", m="create"),
+                    ),
+                    M("Bundles", f="bundle")(
+                        M("New", m="create"),
+                    ),
+                    M("Kits", f="kit")(
+                        M("New", m="create"),
+                    ),
+                    M("Items", f="item")(
+                        M("New", m="create"),
+                    ),
+                    M("Parameters", f="parameter"),
                 )
 
     # -------------------------------------------------------------------------
@@ -870,10 +870,10 @@ class S3OptionsMenu(object):
             return ["create"]
 
         return M(c="gis")(
-                    M("Fullscreen Map", f="map_viewing_client"),
+                    M("Fullscreen Map", c="gis", f="map_viewing_client"),
                     # Currently not got geocoding support
                     #M("Bulk Uploader", c="doc", f="bulk_upload"),
-                    M("Locations", f="location")(
+                    M("Locations", c="gis", f="location")(
                         M("Add Location", m="create"),
                         #M("Add Location Group", m="create", vars={"group": 1}),
                         M("List All"),
@@ -882,15 +882,15 @@ class S3OptionsMenu(object):
                           restrict=[MAP_ADMIN]),
                         #M("Geocode", f="geocode_manual"),
                     ),
-                    M("PoIs", f="poi", check=[pois])(),
+                    M("PoIs", c="gis", f="poi", check=[pois])(),
                     #M("Population Report", f="location", m="report",
                     #  vars=dict(rows="name",
                     #            fact="population",
                     #            aggregate="sum")),
-                    M("Configuration", f="config", args=config_args(),
+                    M("Configuration", c="gis", f="config", args=config_args(),
                       _id="gis_menu_config",
                       check=config_menu),
-                    M("Admin", restrict=[MAP_ADMIN])(
+                    M("Admin", c="gis", restrict=[MAP_ADMIN])(
                         M("Hierarchy", f="hierarchy"),
                         M("Layers", f="catalog"),
                         M("Markers", f="marker"),

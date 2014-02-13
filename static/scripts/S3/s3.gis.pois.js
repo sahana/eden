@@ -45,6 +45,8 @@
         var url = S3.Ap.concat('/gis/poi/create.popup?refresh_layer=' + gis.pois_layer + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
         // Convert geometry back for the marker
         centerPoint.transform(proj4326, current_projection);
+        // Collapse the LayerTree to give more space for the Popup
+        gis.maps['default_map'].s3.westPanelContainer.collapse();
         // Create a popup with an iframe inside
         gis.addPopup(feature, url, undefined, undefined, true);
     };

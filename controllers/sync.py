@@ -23,10 +23,15 @@ def config():
     else:
         record_id = record.id
 
+    def postp(r, output):
+        if isinstance(output, dict) and "buttons" in output:
+            output["buttons"].pop("list_btn", None)
+        return output
+    s3.postp = postp
+    
     # Can't do anything else than update here
     r = s3_request(args=[str(record_id), "update"], extension="html")
-
-    return r(list_btn=None)
+    return r()
 
 # -----------------------------------------------------------------------------
 def repository():

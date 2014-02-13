@@ -649,25 +649,30 @@ S3OptionsFilter({
             After DB I/O
         """
 
+        if current.response.s3.bulk:
+            # Import or Sync
+            return
+
+        db = current.db
+        atable = db.asset_asset
         form_vars = form.vars
         kit = form_vars.get("kit", None)
         site_id = form_vars.get("site_id", None)
         if site_id:
-            db = current.db
-            atable = db.asset_asset
             stable = db.org_site
             asset_id = form_vars.id
             # Set the Base Location
-            tracker = S3Tracker()
-            asset_tracker = tracker(atable, asset_id)
             location_id = db(stable.site_id == site_id).select(stable.location_id,
                                                                limitby=(0, 1)
                                                                ).first().location_id
+            tracker = S3Tracker()
+            asset_tracker = tracker(atable, asset_id)
             asset_tracker.set_base_location(location_id)
             if kit:
                 # Also populate location_id field in component items
                 aitable = db.asset_item
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
+
             # Add a log entry for this
             ltable = db.asset_log
             ltable.insert(asset_id = asset_id,
@@ -705,28 +710,42 @@ S3OptionsFilter({
         get_vars = request.get_vars
         status = get_vars.get("status", None)
         if not status:
-            # e.g. Import or Record merger
-            return
+            if not current.response.s3.asset_import:
+                # e.g. Record merger or Sync
+                return
+            # Import
+            db = current.db
+            form_vars = form.vars
+            asset_id = form_vars.asset_id
+            status = int(form_vars.status)
+            if status == ASSET_LOG_ASSIGN:
+                # Only type supported right now
+                # @ToDo: Support more types
+                type == "person"
+            new = True
+        else:
+            # Interactive
+            form_vars = form.vars
+            status = int(form_vars.status or status)
 
-        form_vars = form.vars
-        status = int(form_vars.status or status)
+            db = current.db
+            ltable = db.asset_log
+            row = db(ltable.id == form_vars.id).select(ltable.asset_id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+            try:
+                asset_id = row.asset_id
+            except:
+                return
 
-        db = current.db
-        ltable = db.asset_log
-        row = db(ltable.id == form_vars.id).select(ltable.asset_id,
-                                                   limitby=(0, 1)
-                                                   ).first()
-        try:
-            asset_id = row.asset_id
-        except:
-            return
+            current_log = asset_get_current_log(asset_id)
 
-        current_log = asset_get_current_log(asset_id)
+            type = get_vars.get("type", None)
+            log_time = current_log.datetime
+            current_time = form_vars.get("datetime", None).replace(tzinfo=None)
+            new = log_time <= current_time
 
-        type = get_vars.get("type", None)
-        log_time = current_log.datetime
-        current_time = form_vars.get("datetime", None).replace(tzinfo=None)
-        if log_time <= current_time:
+        if new:
             # This is a current assignment
             atable = db.asset_asset
             aitable = db.asset_item
@@ -745,7 +764,7 @@ S3OptionsFilter({
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
 
             elif status == ASSET_LOG_ASSIGN:
-                if type == "person":#
+                if type == "person":
                     if form_vars.check_in_to_person:
                         asset_tracker.check_in(db.pr_person, form_vars.person_id,
                                                timestmp = request.utcnow)
@@ -1088,6 +1107,48 @@ def asset_controller():
 
         return True
     s3.prep = prep
+
+    # Import pre-process
+    def import_prep(data):
+        """
+            Flag that this is an Import (to distinguish from Sync)
+            @ToDo: Find Person records from their email addresses
+        """
+
+        current.response.s3.asset_import = True
+        return
+        # @ToDo: get this working
+        s3db = current.s3db
+        ctable = s3db.pr_contact
+        ptable = s3db.pr_person
+
+        resource, tree = data
+        elements = tree.getroot().xpath("/s3xml//resource[@name='pr_person']/data[@field='first_name']")
+        persons = {}
+        for element in elements:
+            email = element.text
+            if email in persons:
+                # Replace email with uuid
+                element.text = persons[email]["uuid"]
+                # Don't check again
+                continue
+
+            query = (ctable.value == email) & \
+                    (ctable.pe_id == ptable.pe_id)
+            person = db(query).select(ptable.uuid,
+                                      limitby=(0, 1)
+                                      ).first()
+            if person:
+                # Replace email with uuid
+                uuid = person.uuid
+            else:
+                # Blank it
+                uuid = ""
+            element.text = uuid
+            # Store in case we get called again with same value
+            persons[email] = dict(uuid=uuid)
+
+    current.manager.import_prep = import_prep
 
     # Post-processor
     def postp(r, output):

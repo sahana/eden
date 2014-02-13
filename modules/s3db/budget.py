@@ -82,10 +82,12 @@ class S3BudgetModel(S3Model):
                                    label = T("Description"),
                                   ),
                              Field("total_onetime_costs", "double",
+                                   default = 0.0,
                                    label = T("Total One-time Costs"), 
                                    writable = False,
                                   ),
                              Field("total_recurring_costs", "double",
+                                   default = 0.0,
                                    label = T("Total Recurring Costs"),
                                    writable = False,
                                   ),
@@ -151,7 +153,9 @@ class S3BudgetModel(S3Model):
                   onaccept = self.budget_budget_onaccept)
 
         # ---------------------------------------------------------------------
-        # Parameters (unused?)
+        # Parameters (currently unused)
+        #
+        # @todo: take into account when calculating totals
         #
         tablename = "budget_parameter"
         table = define_table(tablename,
@@ -265,27 +269,28 @@ class S3BudgetModel(S3Model):
         #
         tablename = "budget_staff"
         table = define_table(tablename,
-                             Field("name", length=128,
-                                   notnull=True,
-                                   unique=True,
+                             Field("name",
+                                   length = 128,
+                                   notnull = True,
+                                   unique = True,
                                    #requires = [IS_NOT_EMPTY(),
                                                #IS_NOT_ONE_OF(db, "%s.name" % tablename),
                                               #],
                                    label = T("Name"),
                                   ),
                              Field("grade",
-                                   notnull=True,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Grade"),
                                   ),
                              Field("salary", "integer",
-                                   notnull=True,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Monthly Salary"),
                                   ),
                              s3_currency(),
                              Field("travel", "integer",
-                                   default=0,
+                                   default = 0,
                                    label = T("Travel Cost"),
                                   ),
                              # Shouldn't be grade-dependent, but purely
@@ -344,7 +349,7 @@ class S3BudgetModel(S3Model):
                   update_onaccept = self.budget_staff_onaccept)
 
         # ---------------------------------------------------------------------
-        # Budget<>Staff Many2Many  @todo: cleanup
+        # Budget<>Staff Many2Many
         #
         tablename = "budget_budget_staff"
         table = define_table(tablename,
@@ -355,14 +360,14 @@ class S3BudgetModel(S3Model):
                              Field("quantity", "integer",
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Quantity"),
-                                   default=1,
-                                   notnull=True,
+                                   default = 1,
+                                   notnull = True,
                                   ),
                              Field("months", "integer",
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Months"),
-                                   default=3,
-                                   notnull=True,
+                                   default = 3,
+                                   notnull = True,
                                   ),
                              *s3_meta_fields())
 
@@ -386,18 +391,18 @@ class S3BudgetModel(S3Model):
         """
 
         budget_budget_id = S3ReusableField("budget_id", "integer",
-                                           readable=False,
-                                           writable=False)
+                                           readable = False,
+                                           writable = False)
         budget_location_id = S3ReusableField("location_id", "integer",
-                                             readable=False,
-                                             writable=False)
+                                             readable = False,
+                                             writable = False)
         budget_staff_id = S3ReusableField("staff_id", "integer",
-                                          readable=False,
-                                          writable=False)
+                                          readable = False,
+                                          writable = False)
                                              
         return dict(budget_budget_id = budget_budget_id,
                     budget_location_id = budget_location_id,
-                    budget_staff_id=budget_staff_id,
+                    budget_staff_id = budget_staff_id,
                    )
                    
     # -------------------------------------------------------------------------
@@ -524,9 +529,9 @@ class S3BudgetKitModel(S3Model):
         tablename = "budget_kit"
         table = define_table(tablename,
                              Field("code",
-                                   length=128,
-                                   notnull=True,
-                                   unique=True,
+                                   length = 128,
+                                   notnull = True,
+                                   unique = True,
                                    #requires = [IS_NOT_EMPTY(),
                                                #IS_NOT_ONE_OF(db, "%s.code" % tablename),
                                               #],
@@ -536,19 +541,23 @@ class S3BudgetKitModel(S3Model):
                                    label = T("Description"),
                                   ),
                              Field("total_unit_cost", "double",
-                                   writable=False,
+                                   default = 0.0,
+                                   writable = False,
                                    label = T("Total Unit Cost"),
                                   ),
                              Field("total_monthly_cost", "double",
-                                   writable=False,
+                                   default = 0.0,
+                                   writable = False,
                                    label = T("Total Monthly Cost"),
                                   ),
                              Field("total_minute_cost", "double",
-                                   writable=False,
+                                   default = 0.0,
+                                   writable = False,
                                    label = T("Total Cost per Minute"),
                                   ),
                              Field("total_megabyte_cost", "double",
-                                   writable=False,
+                                   default = 0.0,
+                                   writable = False,
                                    label = T("Total Cost per Megabyte"),
                                   ),
                              s3_comments(),
@@ -592,6 +601,11 @@ class S3BudgetKitModel(S3Model):
                                 ondelete = "RESTRICT",
                              )
 
+        # Configuration
+        configure(tablename,
+                  onaccept = self.budget_kit_onaccept,
+                 )
+
         # Components
         add_components(tablename,
                        # Items
@@ -603,7 +617,7 @@ class S3BudgetKitModel(S3Model):
                       )
 
         # ---------------------------------------------------------------------
-        # Items @todo: cleanup
+        # Items
         #
         budget_cost_type_opts = {1:T("One-time"),
                                  2:T("Recurring"),
@@ -633,7 +647,7 @@ class S3BudgetKitModel(S3Model):
         tablename = "budget_item"
         table = define_table(tablename,
                              Field("category_type", "integer",
-                                   notnull=True,
+                                   notnull = True,
                                    requires = IS_IN_SET(budget_category_type_opts, zero=None),
                                    #default = 1,
                                    label = T("Category"),
@@ -641,21 +655,21 @@ class S3BudgetKitModel(S3Model):
                                                budget_category_type_opts.get(opt, UNKNOWN_OPT)
                                   ),
                              Field("code",
-                                   length=128,
-                                   notnull=True,
-                                   unique=True,
+                                   length = 128,
+                                   notnull = True,
+                                   unique = True,
                                    #requires = [IS_NOT_EMPTY(),
                                                #IS_NOT_ONE_OF(db, "%s.code" % tablename),
                                               #],
                                    label = T("Code"),
                                   ),
                              Field("description",
-                                   notnull=True,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Description"),
                                   ),
                              Field("cost_type", "integer",
-                                   notnull=True,
+                                   notnull = True,
                                    requires = IS_IN_SET(budget_cost_type_opts,
                                                         zero=None),
                                    #default = 1,
@@ -664,19 +678,19 @@ class S3BudgetKitModel(S3Model):
                                                budget_cost_type_opts.get(opt, UNKNOWN_OPT)
                                   ),
                              Field("unit_cost", "double",
-                                   default=0.00,
+                                   default = 0.00,
                                    label = T("Unit Cost"),
                                   ),
                              Field("monthly_cost", "double",
-                                   default=0.00,
+                                   default = 0.00,
                                    label = T("Monthly Cost"),
                                   ),
                              Field("minute_cost", "double",
-                                   default=0.00,
+                                   default = 0.00,
                                    label = T("Cost per Minute"),
                                   ),
                              Field("megabyte_cost", "double",
-                                   default=0.00,
+                                   default = 0.00,
                                    label = T("Cost per Megabyte"),
                                   ),
                              s3_comments(),
@@ -701,14 +715,6 @@ class S3BudgetKitModel(S3Model):
             msg_list_empty = T("No Items currently registered"),
         )
 
-        # Configuration
-        configure(tablename,
-                  onaccept=budget_kit_onaccept,
-                  main="code",
-                  extra="description",
-                  orderby=table.category_type,
-                 )
-
         # Represent
         budget_item_represent = S3Represent(lookup=tablename,
                                             fields=["description"])
@@ -730,7 +736,13 @@ class S3BudgetKitModel(S3Model):
                                 ondelete = "RESTRICT",
                              )
 
-        # @todo: have an onaccept to update all kits and bundles with this item
+        # Configuration
+        configure(tablename,
+                  onaccept = self.budget_item_onaccept,
+                  main = "code",
+                  extra = "description",
+                  orderby = table.category_type,
+                 )
 
         # ---------------------------------------------------------------------
         # Kit<>Item Many2Many
@@ -740,15 +752,16 @@ class S3BudgetKitModel(S3Model):
                              budget_kit_id(),
                              budget_item_id(),
                              Field("quantity", "integer",
-                                   default=1,
-                                   notnull=True,
+                                   default = 1,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Quantity"),
                                   ),
                              *s3_meta_fields())
 
         configure(tablename,
-                  onaccept = self.kit_item_onaccept,
+                  onaccept = self.budget_kit_item_onaccept,
+                  ondelete = self.budget_kit_item_ondelete,
                  )
 
         # ---------------------------------------------------------------------
@@ -759,48 +772,119 @@ class S3BudgetKitModel(S3Model):
                    )
 
     # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        budget_kit_id = S3ReusableField("kit_id", "integer",
+                                        readable = False,
+                                        writable = False)
+        budget_item_id = S3ReusableField("item_id", "integer",
+                                         readable = False,
+                                         writable = False)
+
+        return dict(budget_kit_id = budget_kit_id,
+                    budget_item_id = budget_item_id,
+                   )
+
+    # -------------------------------------------------------------------------
     @staticmethod
-    def kit_item_onaccept(form):
+    def budget_kit_onaccept(form):
         """
-            When an Item is updated, then also need to update all Kits,
-            Bundles & Budgets which contain this item
-
-            @todo: cleanup, rename into item_onaccept
+            Calculate totals for the kit
         """
+        try:
+            kit_id = form.vars.id
+        except:
+            return
+        budget_kit_totals(kit_id)
+        return
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_item_onaccept(form):
+        """
+            Calculate totals for all kits and bundles with this item
+        """
         db = current.db
         s3db = current.s3db
         
-        # Check if we're an update form
-        if form.vars.id:
-            item = form.vars.id
+        try:
+            item_id = form.vars.id
+        except:
+            return
             
-            # Update Kits containing this Item
-            table = s3db.budget_kit_item
-            query = table.item_id==item
-            rows = db(query).select()
-            
-            for row in rows:
-                kit = row.kit_id
-                budget_kit_totals(kit)
-                
-                # Update Bundles containing this Kit
-                table = s3db.budget_bundle_kit
-                query = (table.kit_id == kit)
-                rows = db(query).select()
-                for row in rows:
-                    bundle = row.bundle_id
-                    budget_bundle_totals(bundle)
-                    # Update Budgets containing this Bundle (tbc)
-                    
-            # Update Bundles containing this Item
-            table = s3db.budget_bundle_item
-            query = (table.item_id == item)
-            rows = db(query).select()
-            for row in rows:
-                bundle = row.bundle_id
-                budget_bundle_totals(bundle)
-                # Update Budgets containing this Bundle (tbc)
+        # Update totals of all kits with this item
+        linktable = s3db.budget_kit_item
+        kit_id = linktable.kit_id
+        rows = db(linktable.item_id == item_id).select(kit_id,
+                                                       groupby=kit_id)
+        kit_ids = set()
+        for row in rows:
+            kit_id = row.kit_id
+            budget_kit_totals(kit_id)
+            kit_ids.add(kit_id)
+
+        # Find all bundles which have just been updated by budget_kit_totals
+        if kit_ids:
+            linktable = s3db.budget_bundle_kit
+            bundle_id = linktable.bundle_id
+            rows = db(linktable.kit_id.belongs(kit_ids)).select(bundle_id,
+                                                                groupby=bundle_id)
+            already_updated = [row.bundle_id for row in rows]
+        else:
+            already_updated = None
+
+        # Update totals of all remaining bundles with this item
+        linktable = s3db.budget_bundle_item
+        bundle_id = linktable.bundle_id
+        query = (linktable.item_id == item_id)
+        if already_updated:
+            query &= ~(linktable.bundle_id.belongs(already_updated))
+        rows = db(query).select(bundle_id, groupby=bundle_id)
+        for row in rows:
+            budget_bundle_totals(kit_id)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_kit_item_onaccept(form):
+        """
+            Kit item has been updated => update totals of the kit
+        """
+
+        try:
+            record_id = form.vars.id
+        except:
+            return
+        table = current.s3db.budget_kit_item
+        row = current.db(table.id == record_id).select(table.kit_id,
+                                                       limitby=(0, 1)).first()
+        if row:
+            budget_kit_totals(row.kit_id)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_kit_item_ondelete(row):
+        """
+            Kit item has been deleted => update totals of the kit
+        """
+
+        db = current.db
+        linktable = current.s3db.budget_kit_item
+        try:
+            record_id = row.id
+        except:
+            return
+        link = db(linktable.id == record_id).select(linktable.deleted_fk,
+                                                    limitby=(0, 1)).first()
+        if link:
+            deleted_fk = json.loads(link.deleted_fk)
+            kit_id = deleted_fk.get("kit_id")
+            if kit_id:
+                budget_kit_totals(kit_id)
         return
 
 # =============================================================================
@@ -832,9 +916,9 @@ class S3BudgetBundleModel(S3Model):
         tablename = "budget_bundle"
         table = define_table(tablename,
                              Field("name",
-                                   length=128,
-                                   notnull=True,
-                                   unique=True,
+                                   length = 128,
+                                   notnull = True,
+                                   unique = True,
                                    #requires = [IS_NOT_EMPTY(),
                                                #IS_NOT_ONE_OF(db, "%s.name" % tablename),
                                               #],
@@ -844,11 +928,13 @@ class S3BudgetBundleModel(S3Model):
                                    label = T("Description"),
                                   ),
                              Field("total_unit_cost", "double",
-                                   writable=False,
+                                   default = 0.0,
+                                   writable = False,
                                    label = T("One time cost"),
                                   ),
                              Field("total_monthly_cost", "double",
-                                   writable=False,
+                                   default = 0.0,
+                                   writable = False,
                                    label = T("Recurring cost"),
                                   ),
                              s3_comments(),
@@ -921,20 +1007,20 @@ class S3BudgetBundleModel(S3Model):
                              budget_bundle_id(),
                              self.budget_kit_id(),
                              Field("quantity", "integer",
-                                   default=1,
-                                   notnull=True,
+                                   default = 1,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Quantity"),
                                   ),
                              Field("minutes", "integer",
-                                   default=0,
-                                   notnull=True,
+                                   default = 0,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Minutes per Month"),
                                   ),
                              Field("megabytes", "integer",
-                                   default=0,
-                                   notnull=True,
+                                   default = 0,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Megabytes per Month"),
                                   ),
@@ -955,20 +1041,20 @@ class S3BudgetBundleModel(S3Model):
                              budget_bundle_id(),
                              self.budget_item_id(),
                              Field("quantity", "integer",
-                                   default=1,
-                                   notnull=True,
+                                   default = 1,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Quantity"),
                                   ),
                              Field("minutes", "integer",
-                                   default=0,
-                                   notnull=True,
+                                   default = 0,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Minutes per Month"),
                                   ),
                              Field("megabytes", "integer",
-                                   default=0,
-                                   notnull=True,
+                                   default = 0,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Megabytes per Month"),
                                   ),
@@ -991,14 +1077,14 @@ class S3BudgetBundleModel(S3Model):
                              self.budget_location_id(),
                              budget_bundle_id(),
                              Field("quantity", "integer",
-                                   default=1,
-                                   notnull=True,
+                                   default = 1,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Quantity"),
                                   ),
                              Field("months", "integer",
-                                   default=3,
-                                   notnull=True,
+                                   default = 3,
+                                   notnull = True,
                                    requires = IS_NOT_EMPTY(),
                                    label = T("Months"),
                                   ),
@@ -1014,11 +1100,21 @@ class S3BudgetBundleModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(budget_bundle_id=budget_bundle_id,
+        return dict(budget_bundle_id = budget_bundle_id,
                    )
 
     # -------------------------------------------------------------------------
-    # @todo: safe defaults
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        budget_bundle_id = S3ReusableField("bundle_id", "integer",
+                                           readable = False,
+                                           writable = False)
+
+        return dict(budget_bundle_id = budget_bundle_id,
+                   )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1047,7 +1143,7 @@ class S3BudgetBundleModel(S3Model):
         table = current.s3db.budget_bundle_item
         row = current.db(table.id == record_id).select(table.bundle_id,
                                                        limitby=(0, 1)).first()
-        if record:
+        if row:
             budget_bundle_totals(row.bundle_id)
         return
 
@@ -1087,7 +1183,7 @@ class S3BudgetBundleModel(S3Model):
         table = current.s3db.budget_bundle_kit
         row = current.db(table.id == record_id).select(table.bundle_id,
                                                        limitby=(0, 1)).first()
-        if record:
+        if row:
             budget_bundle_totals(row.bundle_id)
         return
 
@@ -1127,7 +1223,7 @@ class S3BudgetBundleModel(S3Model):
         table = current.s3db.budget_budget_bundle
         row = current.db(table.id == record_id).select(table.budget_id,
                                                        limitby=(0, 1)).first()
-        if record:
+        if row:
             budget_budget_totals(row.budget_id)
         return
 
@@ -1152,20 +1248,6 @@ class S3BudgetBundleModel(S3Model):
             if budget_id:
                 budget_budget_totals(budget_id)
         return
-
-# =============================================================================
-def budget_kit_onaccept(form):
-    """
-        Calculate Totals for the Kit specified by Form
-    """
-    # @todo: move into model
-    if "kit_id" in form.vars:
-        # called by kit_item()
-        kit = form.vars.kit_id
-    else:
-        # called by kit()
-        kit = form.vars.id
-    budget_kit_totals(kit)
 
 # =============================================================================
 def budget_kit_totals(kit_id):
@@ -1274,10 +1356,10 @@ def budget_bundle_totals(bundle_id):
     rows = db(query).select(linktable.quantity,
                             linktable.minutes,
                             linktable.megabytes,
-                            itable.total_unit_cost,
-                            itable.total_monthly_cost,
-                            itable.total_minute_cost,
-                            itable.total_megabyte_cost,
+                            itable.unit_cost,
+                            itable.monthly_cost,
+                            itable.minute_cost,
+                            itable.megabyte_cost,
                             left=left)
     for row in rows:
         item = row[itable]
@@ -1285,12 +1367,12 @@ def budget_bundle_totals(bundle_id):
         quantity = link.quantity
 
         # One-time costs
-        total_unit_cost += item.total_unit_cost * quantity
+        total_unit_cost += item.unit_cost * quantity
 
         # Monthly costs
-        monthly_cost = item.total_monthly_cost + \
-                       item.total_minute_cost * link.minutes + \
-                       item.total_megabyte_cost * link.megabytes
+        monthly_cost = item.monthly_cost + \
+                       item.minute_cost * link.minutes + \
+                       item.megabyte_cost * link.megabytes
         total_monthly_cost += monthly_cost * quantity
 
     # Update the bundle

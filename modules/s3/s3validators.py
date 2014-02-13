@@ -57,6 +57,7 @@ __all__ = ["single_phone_number_pattern",
            "IS_UTC_DATETIME",
            "IS_UTC_OFFSET",
            "QUANTITY_INV_ITEM",
+           "IS_PHONE_NUMBER",
            ]
 
 import re
@@ -3072,5 +3073,56 @@ class IS_TIME_INTERVAL_WIDGET(Validator):
             return (0, None)
         seconds = val * mul
         return (seconds, None)
+
+# =============================================================================
+class IS_PHONE_NUMBER(Validator):
+    """
+        Validator for single phone numbers with option to
+        enforce E.123 international notation (with leading +
+        and no punctuation or spaces).
+    """
+
+    def __init__(self,
+                 international = False,
+                 error_message = "invalid phone number!"):
+        """
+            Constructor
+
+            @param international: enforce E.123 international notation,
+                                  no effect if turned off globally in
+                                  deployment settings
+            @param error_message: alternative error message
+        """
+
+        self.international = international
+        self.error_message = error_message
+
+    def __call__(self, value):
+        """
+            Validation of a value
+
+            @param value: the value
+            @return: tuple (value, error), where error is None if value
+                     is valid. With international=True, the value returned
+                     is converted into E.123 international notation.
+        """
+
+        number = str(value).strip()
+
+        number, error = s3_single_phone_requires(number)
+        if not error:
+            if self.international and \
+               current.deployment_settings \
+                      .get_msg_require_international_phone_numbers():
+                # Require E.123 international format
+                number = "".join(re.findall("[\d+]+", number))
+                match = re.match("(\+)([1-9]\d+)$", number)
+                #match = re.match("(\+|00|\+00)([1-9]\d+)$", number)
+                if match:
+                    number = "+%s" % match.groups()[1]
+                    return (number, None)
+            else:
+                return (number, None)
+        return (value, self.error_message)
 
 # END =========================================================================
