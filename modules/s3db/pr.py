@@ -4496,10 +4496,9 @@ def pr_contacts(r, **attr):
         r.error(405, current.manager.ERROR.BAD_METHOD)
 
     T = current.T
-    #auth = current.auth
     db = current.db
     s3db = current.s3db
-    crud = r.resource.crud
+    has_permission = current.auth.s3_has_permission
 
     person = r.record
 
@@ -4562,10 +4561,7 @@ def pr_contacts(r, **attr):
 
     contacts_wrapper = DIV(H2(T("Contacts")))
 
-    r.component = Storage()
-    r.component.table = ctable
-    r.component_id = None
-    if crud._permitted(method="create"):
+    if has_permission("create", ctable):
         add_btn = DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
                       DIV(_id="contact-add_throbber",
                           _class="throbber hide"),
@@ -4590,13 +4586,12 @@ def pr_contacts(r, **attr):
     items.sort(key=mysort)
     opts = current.msg.CONTACT_OPTS
 
-    def action_buttons(id):
-        r.component_id = id
-        if crud._permitted(method="update"):
+    def action_buttons(table, id):
+        if has_permission("update", ctable, record_id = id):
             edit_btn = A(T("Edit"), _class="editBtn action-btn fright")
         else:
             edit_btn = DIV()
-        if crud._permitted(method="delete"):
+        if has_permission("delete", ctable, record_id = id):
             delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
         else:
             delete_btn = DIV()
@@ -4606,7 +4601,7 @@ def pr_contacts(r, **attr):
         contacts_wrapper.append(H3(opts[contact_type]))
         for detail in details:
             id = detail.id
-            (edit_btn, delete_btn) = action_buttons(id)
+            (edit_btn, delete_btn) = action_buttons(ctable, id)
             contacts_wrapper.append(
                 P(
                   SPAN(detail.value),
@@ -4627,9 +4622,7 @@ def pr_contacts(r, **attr):
 
     emergency_wrapper = DIV(H2(T("Emergency Contacts")))
 
-    r.component.table = etable
-    r.component_id = None
-    if crud._permitted(method="create"):
+    if has_permission("create", etable):
         add_btn = DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
                       DIV(_id="emergency-add_throbber",
                           _class="throbber hide"),
@@ -4644,7 +4637,7 @@ def pr_contacts(r, **attr):
         if relationship:
             relationship = "%s, "% relationship
         id = contact.id
-        (edit_btn, delete_btn) = action_buttons(id)
+        (edit_btn, delete_btn) = action_buttons(etable, id)
         emergency_wrapper.append(
             P(
               SPAN("%s%s%s" % (name, relationship, contact.phone)),
