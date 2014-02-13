@@ -3088,7 +3088,9 @@ class IS_PHONE_NUMBER(Validator):
         """
             Constructor
 
-            @param international: enforce E.123 international notation
+            @param international: enforce E.123 international notation,
+                                  no effect if turned off globally in
+                                  deployment settings
             @param error_message: alternative error message
         """
 
@@ -3109,7 +3111,9 @@ class IS_PHONE_NUMBER(Validator):
 
         number, error = s3_single_phone_requires(number)
         if not error:
-            if self.international:
+            if self.international and \
+               current.deployment_settings \
+                      .get_msg_require_international_phone_numbers():
                 # Require E.123 international format
                 number = "".join(re.findall("[\d+]+", number))
                 match = re.match("(\+)([1-9]\d+)$", number)

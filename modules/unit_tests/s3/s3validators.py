@@ -9,6 +9,7 @@ import unittest
 from gluon import current
 from gluon.dal import Query
 from s3.s3fields import *
+from s3.s3validators import *
 
 # =============================================================================
 class ISLatTest(unittest.TestCase):
@@ -136,6 +137,127 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
         current.db.rollback()
 
 # =============================================================================
+class IS_PHONE_NUMBER_Tests(unittest.TestCase):
+    """ Test IS_PHONE_NUMBER single phone number validator """
+
+    def testStandardNotationRequirement(self):
+        """ Test phone number validation with standard notation requirement """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        validate = IS_PHONE_NUMBER(international=False)
+
+        number = "(021) 3847589"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "(021) 3847589")
+
+        number = "0049-681-5049321"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "0049-681-5049321")
+
+        number = " 1-992-883742"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "1-992-883742")
+
+        number = "1.123.736489"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "1.123.736489")
+
+        number = "+44848958493 "
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "+44848958493")
+
+        number = "(021) 3ADF589"
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        number = "Test"
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        # @todo: this is still recognized as valid, as is "-1"
+        #number = "1"
+        #value, error = validate(number)
+        #assertNotEqual(error, None)
+
+        number = "+44848958493/+44736282167"
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        number = None
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        number = ""
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+    def testInternationalFormat(self):
+        """ Test phone number validation with international notation requirement """
+
+        # Store current setting
+        settings = current.deployment_settings
+        current_setting = settings.get_msg_require_international_phone_numbers()
+        
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        validate = IS_PHONE_NUMBER(international=True)
+
+        # Turn on notation requirement globally
+        settings.msg.require_international_phone_numbers = True
+        
+        number = "+46-73-3847589"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "+46733847589")
+
+        number = "+49.681.5049321"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "+496815049321")
+
+        number = "+1992883742"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "+1992883742")
+
+        number = "(021) 36374589"
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        number = "Test"
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        number = "1-364-283745"
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        number = None
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        number = ""
+        value, error = validate(number)
+        assertNotEqual(error, None)
+
+        # Turn off notation requirement globally
+        settings.msg.require_international_phone_numbers = False
+
+        number = "1-364-283745"
+        value, error = validate(number)
+        assertEqual(error, None)
+        assertEqual(value, "1-364-283745")
+
+        # Restore current setting
+        settings.msg.require_international_phone_numbers = current_setting
+        
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -154,6 +276,7 @@ if __name__ == "__main__":
         ISLatTest,
         ISLonTest,
         ISONEOFLazyRepresentationTests,
+        IS_PHONE_NUMBER_Tests,
     )
 
 # END ========================================================================

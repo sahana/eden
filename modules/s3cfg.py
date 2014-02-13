@@ -1275,6 +1275,17 @@ class S3Config(Storage):
         """
         return self.msg.get("notify_renderer", None)
 
+    # -------------------------------------------------------------------------
+    # SMS
+    #
+    def get_msg_require_international_phone_numbers(self):
+        """
+            Requires the E.123 international phone number
+            notation where needed (e.g. SMS)
+        """
+
+        return self.msg.get("require_international_phone_numbers", True)
+    
     # =========================================================================
     # Search
 
