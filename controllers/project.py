@@ -101,8 +101,8 @@ def project():
                         field.readable = field.writable = False
 
                 if r.id:
-                    r.table.human_resource_id.represent = lambda id: \
-                        s3db.hrm_human_resource_represent(id, show_link=True)
+                    r.table.human_resource_id.represent = \
+                        s3db.hrm_HumanResourceRepresent(show_link=True)
                     
                 elif r.get_vars.get("project.status_id", None):
                     stable = s3db.project_status
