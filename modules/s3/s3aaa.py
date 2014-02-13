@@ -1444,7 +1444,7 @@ S3OptionsFilter({
                                                              T("Will create and link your user account to the following records")))
 
     # -------------------------------------------------------------------------
-    def s3_import_prep(self, data, group=None):
+    def s3_import_prep(self, data):
         """
             Called when users are imported from CSV
 

@@ -520,9 +520,8 @@ def inv_item():
     # Import pre-process
     def import_prep(data):
         """
-            Deletes all Stock records of the organisation
-            before processing a new data import, used for the import_prep
-            hook in s3mgr
+            Deletes all Stock records of the organisation/branch
+            before processing a new data import
         """
         request = current.request
         resource, tree = data
