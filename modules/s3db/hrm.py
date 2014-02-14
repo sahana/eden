@@ -33,7 +33,7 @@ __all__ = ["S3HRModel",
            "S3HRAppraisalModel",
            "S3HRExperienceModel",
            "S3HRProgrammeModel",
-           "hrm_human_resource_represent",
+           "hrm_HumanResourceRepresent",
            #"hrm_position_represent",
            "hrm_vars",
            "hrm_compose",
@@ -88,6 +88,7 @@ class S3HRModel(S3Model):
              "hrm_human_resource",
              "hrm_human_resource_id",
              "hrm_type_opts",
+             "hrm_human_resource_represent",
              ]
 
     def model(self):
@@ -491,6 +492,8 @@ class S3HRModel(S3Model):
             msg_record_deleted = T("Volunteer deleted"),
             msg_list_empty = T("No Volunteers currently registered"))
 
+        hrm_human_resource_represent = hrm_HumanResourceRepresent()
+        
         if group == "staff":
             label = STAFF
             crud_strings[tablename] = crud_strings["hrm_staff"]
@@ -798,6 +801,7 @@ class S3HRModel(S3Model):
                     hrm_job_title_id = job_title_id,
                     hrm_human_resource_id = human_resource_id,
                     hrm_type_opts = hrm_type_opts,
+                    hrm_human_resource_represent = hrm_human_resource_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -3751,61 +3755,118 @@ def hrm_vars():
         hrm_vars.mode = "personal"
     return
 
-# -------------------------------------------------------------------------
-def hrm_human_resource_represent(id, row=None, show_link=False):
-    """
-        Representation of human resource records
-        - @ToDo: Subclass S3Represent instead
-    """
+# =============================================================================
+class hrm_HumanResourceRepresent(S3Represent):
+    """ Representation of human resource IDs """
 
-    if row:
-        id = row.id
-    elif not id:
-        return current.messages["NONE"]
+    def __init__(self, show_link=False):
+        """
+            Constructor
 
-    s3db = current.s3db
-    htable = s3db.hrm_human_resource
-    ptable = s3db.pr_person
+            @param show_link: whether to add a URL to representations
+        """
 
-    query = (htable.id == id) & \
-            (htable.person_id == ptable.id)
-    row = current.db(query).select(htable.job_title_id,
-                                   htable.organisation_id,
-                                   htable.type,
-                                   ptable.first_name,
-                                   ptable.middle_name,
-                                   ptable.last_name,
-                                   limitby=(0, 1)).first()
+        super(hrm_HumanResourceRepresent, self).__init__(
+                                        lookup = "hrm_human_resource",
+                                        show_link = show_link)
 
-    try:
-        hr = row["hrm_human_resource"]
-    except:
-        return current.messages.UNKNOWN_OPT
+        self.job_title_represent = S3Represent(lookup = "hrm_job_title")
+        self.types = {}
 
-    suffix = ""
-    if hr.organisation_id and \
-       current.deployment_settings.get_hrm_show_organisation():
-        suffix = ", %s" % s3db.org_OrganisationRepresent()(hr.organisation_id)
-    if hr.job_title_id:
-        suffix = ", %s%s" % (S3Represent(lookup="hrm_job_title")(hr.job_title_id), suffix)
-    person = row["pr_person"]
-    representation = "%s%s" % (s3_unicode(s3_fullname(person)), suffix)
-    if show_link:
-        if hr.type == 1:
-            controller = "hrm"
-            function = "staff"
+    # -------------------------------------------------------------------------
+    def link(self, k, v, rows=None):
+        """
+            Represent a (key, value) as hypertext link
+
+            @param k: the key (hrm_human_resource.id)
+            @param v: the representation of the key
+            @param rows: unused (retained for API compatibility)
+        """
+
+        # Link to specific controller for type
+        types = self.types
+        if types.get(k) == 1:
+            url = URL(c="hrm", f="staff", args=[k])
         else:
-            controller = "vol"
-            function = "volunteer"
-        current.request.extension = "html"
-        return A(representation,
-                 _href = URL(c = controller,
-                             f = function,
-                             args = [id]
-                             )
-                 )
-    return representation
+            url = URL(c="vol", f="volunteer", args=[k])
+        return A(v, _href = url)
 
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+
+        htable = s3db.hrm_human_resource
+        ptable = s3db.pr_person
+
+        left = ptable.on(ptable.id == htable.person_id)
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(htable.id,
+                                        htable.job_title_id,
+                                        htable.organisation_id,
+                                        htable.type,
+                                        ptable.first_name,
+                                        ptable.middle_name,
+                                        ptable.last_name,
+                                        left = left)
+        self.queries += 1
+
+        # Remember HR types
+        types = self.types
+        for row in rows:
+            types[row["hrm_human_resource.id"]] = row["hrm_human_resource.type"]
+            
+        # Bulk-represent job_title_ids
+        job_title_id = str(htable.job_title_id)
+        job_title_ids = [row[job_title_id] for row in rows]
+        if job_title_ids:
+            self.job_title_represent.bulk(job_title_ids)
+
+        # Bulk-represent organisation_ids
+        if current.deployment_settings.get_hrm_show_organisation():
+            organisation_id = str(htable.organisation_id)
+            organisation_ids = [row[organisation_id] for row in rows]
+            if organisation_ids:
+                htable.organisation_id.represent.bulk(organisation_ids)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        # Start with the person name
+        representation = [s3_unicode(s3_fullname(row.pr_person))]
+        append = representation.append
+
+        hr = row.hrm_human_resource
+        
+        # Append the job title if present
+        if hr.job_title_id:
+            append(self.job_title_represent(hr.job_title_id))
+            
+        # Append the organisation if present (and configured)
+        if hr.organisation_id and \
+           current.deployment_settings.get_hrm_show_organisation():
+            htable = current.s3db.hrm_human_resource
+            append(htable.organisation_id.represent(hr.organisation_id))
+
+        return ", ".join(representation)
+        
 # =============================================================================
 def hrm_training_event_represent(id, row=None):
     """
@@ -3879,103 +3940,6 @@ def hrm_training_event_represent(id, row=None):
 #    except:
 #        return current.messages["NONE"]
 #    return represent
-
-# =============================================================================
-class org_OrganisationRepresent(S3Represent):
-    """ Representation of Organisations """
-
-    def __init__(self,
-                 translate=False,
-                 show_link=False,
-                 parent=True,
-                 acronym=True,
-                 multiple=False):
-
-        self.acronym = acronym
-
-        if parent and current.deployment_settings.get_org_branches():
-            # Need a custom lookup
-            self.parent = True
-            self.lookup_rows = self.custom_lookup_rows
-            fields = ["org_organisation.name",
-                      "org_organisation.acronym",
-                      "org_parent_organisation.name",
-                      ]
-        else:
-            # Can use standard lookup of fields
-            self.parent = False
-            fields = ["name", "acronym"]
-
-        super(org_OrganisationRepresent,
-              self).__init__(lookup="org_organisation",
-                             fields=fields,
-                             show_link=show_link,
-                             translate=translate,
-                             multiple=multiple)
-
-    # -------------------------------------------------------------------------
-    def custom_lookup_rows(self, key, values, fields=[]):
-        """
-            Custom lookup method for organisation rows, does a
-            left join with the parent organisation. Parameters
-            key and fields are not used, but are kept for API
-            compatibility reasons.
-
-            @param values: the organisation IDs
-        """
-
-        db = current.db
-        s3db = current.s3db
-        otable = s3db.org_organisation
-        btable = s3db.org_organisation_branch
-        ptable = db.org_organisation.with_alias("org_parent_organisation")
-
-        left = [btable.on(btable.branch_id == otable.id),
-                ptable.on(ptable.id == btable.organisation_id)]
-
-        qty = len(values)
-        if qty == 1:
-            query = (otable.id == values[0])
-            limitby = (0, 1)
-        else:
-            query = (otable.id.belongs(values))
-            limitby = (0, qty)
-
-        rows = db(query).select(otable.id,
-                                otable.name,
-                                otable.acronym,
-                                ptable.name,
-                                left=left,
-                                limitby=limitby)
-        self.queries += 1
-        return rows
-
-    # -------------------------------------------------------------------------
-    def represent_row(self, row):
-        """
-            Represent a single Row
-
-            @param row: the org_organisation Row
-        """
-
-        if self.parent:
-            # Custom Row (with the parent left-joined)
-            name = row["org_organisation.name"]
-            acronym = row["org_organisation.acronym"]
-            parent = row["org_parent_organisation.name"]
-        else:
-            # Standard row (from fields)
-            name = row["name"]
-            acronym = row["acronym"]
-
-        if not name:
-            return self.default
-        if self.acronym and acronym:
-            name = "%s (%s)" % (name, acronym)
-        if self.parent and parent:
-            name = "%s > %s" % (parent, name)
-        return s3_unicode(name)
-
 # =============================================================================
 def hrm_human_resource_onaccept(form):
     """ On-accept for HR records """
@@ -4521,7 +4485,7 @@ def hrm_rheader(r, tabs=[],
         vars = request.get_vars
         hr = vars.get("human_resource.id", None)
         if hr:
-            name = hrm_human_resource_represent(hr)
+            name = current.s3db.hrm_human_resource_represent(hr)
         else:
             name = s3_fullname(record)
         group = vars.get("group", None)
