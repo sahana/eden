@@ -4756,11 +4756,30 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
     """
 
     def __init__(self,
-                 filter = True, # Only works if header is not False (can be "" though)
+                 filter = True,
                  header = True,
                  selectedList = 3,
                  noneSelectedText = "Select"
                  ):
+        """
+            Constructor
+
+            @param filter: show an input field in the widget to filter for options,
+                           can be:
+                                - True (always show filter field)
+                                - False (never show the filter field)
+                                - "auto" (show filter if more than 15 options)
+                                - <number> (show filter if more than <number> options)
+            @param header: show a header for the options list, can be:
+                                - True (show the default Select All/Deselect All header)
+                                - False (don't show a header unless required for filter)
+            @param selectedList: maximum number of individual selected options to show
+                                 on the widget button (before collapsing into "<number>
+                                 selected")
+            @param noneSelectedText: text to show on the widget button when no option is
+                                     selected (automatic l10n, no T() required)
+        """
+                     
         self.filter = filter
         self.header = header
         self.selectedList = selectedList
@@ -4775,37 +4794,52 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         else:
             selector = field.name.replace(".", "_")
 
-        # Options:
-        # * Show Selected List
-        if self.header is True:
-            header = '''checkAllText:'%s',uncheckAllText:"%s"''' % \
-                (T("Select all"),
-                 T("Clear all"))
-        elif self.header is False:
-            header = '''header:false'''
-        else:
-            header = '''header:"%s"''' % self.header
-        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
-            (selector,
-             T("All selected"),
-             T("# selected"),
-             header,
-             self.selectedList,
-             T(self.noneSelectedText))
-        if self.filter:
-            script = '''%s.multiselectfilter()''' % script
-        current.response.s3.jquery_ready.append(script)
-
+        # Widget
         _class = attr.get("_class", None)
         if _class:
             if "multiselect-widget" not in _class:
                 attr["_class"] = "%s multiselect-widget" % _class
         else:
             attr["_class"] = "multiselect-widget"
+        widget = TAG[""](MultipleOptionsWidget.widget(field, value, **attr),
+                         requires = field.requires)
 
-        return TAG[""](MultipleOptionsWidget.widget(field, value, **attr),
-                       requires = field.requires
-                       )
+        # Filter and header for multiselect options list
+        filter_opt = self.filter
+        header_opt = self.header
+        if filter_opt == "auto" or isinstance(filter_opt, (int, long)):
+            max_options = 15 if filter_opt == "auto" else filter_opt
+            if len(widget[0]) > max_options:
+                filter_opt = True
+            else:
+                filter_opt = False
+        if filter_opt is True and header_opt is False:
+            # Must have at least "" as header to show the filter
+            header_opt = ""
+            
+        # Other options:
+        # * Show Selected List
+        if header_opt is True:
+            header = '''checkAllText:'%s',uncheckAllText:"%s"''' % \
+                     (T("Select all"),
+                      T("Clear all"))
+        elif header_opt is False:
+            header = '''header:false'''
+        else:
+            header = '''header:"%s"''' % header_opt
+        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
+                 (selector,
+                  T("All selected"),
+                  T("# selected"),
+                  header,
+                  self.selectedList,
+                  T(self.noneSelectedText))
+
+        if filter_opt:
+            script = '''%s.multiselectfilter()''' % script
+        current.response.s3.jquery_ready.append(script)
+
+        return widget
 
 # =============================================================================
 class S3OptionsMatrixWidget(FormWidget):
