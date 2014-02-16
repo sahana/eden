@@ -309,11 +309,19 @@ def customize_org_facility(**attr):
             tablename = "org_facility"
             table = s3db[tablename]
 
-            if r.method in ("create", "update"):
+            if r.component_name == "human_resource":
+                from s3.s3validators import IS_ADD_PERSON_WIDGET2
+                from s3.s3widgets import S3AddPersonWidget2
+                pfield = r.component.table.person_id
+                pfield.requires = IS_ADD_PERSON_WIDGET2()
+                pfield.widget = S3AddPersonWidget2(controller="pr")
+
+            elif r.method in (None, "create", "update"):
                 from s3.s3validators import IS_LOCATION_SELECTOR2
                 from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
                 field = table.location_id
-                field.label = "" # Gets replaced by widget
+                if r.method in ("create", "update"):
+                    field.label = "" # Gets replaced by widget
                 levels = ("L2", "L3")
                 field.requires = IS_LOCATION_SELECTOR2(levels=levels)
                 field.widget = S3LocationSelectorWidget2(levels=levels,

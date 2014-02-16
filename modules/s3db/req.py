@@ -2977,19 +2977,10 @@ class S3CommitItemModel(S3Model):
                                   req_table.req_ref,
                                   limitby=(0, 1)).first()
 
-        # Convert the HR to a Person
-        hrtable = s3db.hrm_human_resource
-        requester_id = record.req_req.requester_id
-        if requester_id:
-            recipient_id = db(hrtable.id == requester_id).select(hrtable.person_id,
-                                                                 limitby=(0, 1)
-                                                                 ).first().person_id
-        else:
-            recipient_id = None
         # Create an inv_send and link to the commit
         vars = Storage(sender_id = record.req_commit.committer_id,
                        site_id = record.req_commit.site_id,
-                       recipient_id = recipient_id,
+                       recipient_id = record.req_req.requester_id,
                        to_site_id = record.req_req.site_id,
                        req_ref = record.req_req.req_ref,
                        status = 0)

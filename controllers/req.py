@@ -674,8 +674,8 @@ def requester_represent(id, show_link=True):
     ptable = s3db.pr_person
     ctable = s3db.pr_contact
 
-    query = (htable.id == id) & \
-            (htable.person_id == ptable.id)
+    query = (htable.person_id == ptable.id) & \
+            (ptable.id == id)
     left = ctable.on((ctable.pe_id == ptable.pe_id) & \
                      (ctable.contact_method == "SMS"))
     row = db(query).select(htable.type,
@@ -697,17 +697,13 @@ def requester_represent(id, show_link=True):
     if show_link:
         if hr.type == 1:
             controller = "hrm"
-            group = "staff"
         else:
             controller = "vol"
-            group = "volunteer"
         request.extension = "html"
         return A(repr,
                  _href = URL(c = controller,
                              f = "person",
-                             args = ["contacts"],
-                             vars = {"group": group,
-                                     "human_resource.id": id}
+                             args = [id, "contacts"]
                              )
                  )
     return repr
