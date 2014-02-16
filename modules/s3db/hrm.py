@@ -4054,7 +4054,7 @@ def hrm_human_resource_onaccept(form):
             try:
                 data.location_id = location_id = site.location_id
             except:
-                s3_debug("Can't find site with site_id", site_id)
+                current.log.warning("Can't find site with site_id", site_id)
             else:
                 # Set Base Location
                 hrm_tracker = tracker(htable, id)
@@ -4089,7 +4089,7 @@ def hrm_human_resource_onaccept(form):
                                           pe_id = pe.pe_id,
                                           location_id = location_id)
             except:
-                s3_debug("Can't find person with id", person_id)
+                current.log.warning("Can't find person with id", person_id)
         else:
             location_id = None
         if location_id:

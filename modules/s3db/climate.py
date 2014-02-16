@@ -673,7 +673,7 @@ http://rpy.sourceforge.net/rpy2/doc-dev/html/overview.html
         # Report errors and stop.
         prefix = "\n%s: " % current.T("ACTION REQUIRED")
         msg = prefix + prefix.join(errors)
-        s3_debug(msg)
+        current.log.critical(msg)
         raise HTTP(500, body=msg)
 
     db = current.db

@@ -1560,7 +1560,7 @@ class S3SupplyDistributionModel(S3Model):
             end_date = record.end_date
         except:
             # Exit Gracefully
-            s3_debug("Cannot find Distribution: %s" % record_id)
+            current.log.warning("Cannot find Distribution: %s" % record_id)
             return
 
         activity_id = record.activity_id
@@ -1581,7 +1581,7 @@ class S3SupplyDistributionModel(S3Model):
             a_end_date = activity.end_date
         except:
             # Exit Gracefully
-            s3_debug("Cannot find Activity: %s" % activity_id)
+            current.log.warning("Cannot find Activity: %s" % activity_id)
             return
 
         data = {}

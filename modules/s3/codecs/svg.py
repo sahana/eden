@@ -139,9 +139,7 @@ class S3SVG(S3Codec):
         # @ToDo: Support multiple records
         wkt = items[0]["gis_location.wkt"]
         if not wkt:
-            error = "No Geometry!"
-            from ..s3utils import s3_debug
-            s3_debug(error)
+            current.log.error("No Geometry!")
         
         # Convert to SVG
         title = attr.get("title", resource._ids[0])
@@ -179,16 +177,14 @@ class S3SVG(S3Codec):
             from shapely import speedups
             speedups.enable()
         except:
-            from ..s3utils import s3_debug
-            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+            current.log.info("S3GIS",
+                             "Upgrade Shapely for Performance enhancements")
 
         shape = wkt_loads(wkt)
 
         geom_type = shape.geom_type
         if geom_type not in ("MultiPolygon", "Polygon"):
-            error = "Unsupported Geometry: %s" % geom_type
-            from ..s3utils import s3_debug
-            s3_debug(error)
+            current.log.error("Unsupported Geometry", geom_type)
             return
 
         # Scale Points & invert Y axis

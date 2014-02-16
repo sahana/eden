@@ -67,11 +67,12 @@ def index():
                             (appname, settings.get_template())
         try:
             exec("import %s as custom" % controller)
-        except ImportError, e:
+        except ImportError:
             # No Custom Page available, continue with the default
             page = "private/templates/%s/controllers.py" % \
                         settings.get_template()
-            s3base.s3_debug("File not loadable: %s, %s" % (page, e.message))
+            current.log.warning("File not loadable",
+                                "%s, %s" % (page, sys.exc_info[1]))
         else:
             if "." in page:
                 # Remove extension
@@ -90,10 +91,11 @@ def index():
                             (appname, settings.get_template())
         try:
             exec("import %s as custom" % controller)
-        except ImportError, e:
+        except ImportError:
             # No Custom Page available, continue with the default
             # @ToDo: cache this result in session
-            s3base.s3_debug("Custom homepage cannot be loaded: %s" % e.message)
+            current.log.warning("Custom homepage cannot be loaded",
+                                sys.exc_info[1])
         else:
             if "index" in custom.__dict__:
                 output = custom.index()()

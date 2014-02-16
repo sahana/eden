@@ -67,7 +67,7 @@ from gluon.tools import callback, fetch
 
 from s3rest import S3Method
 from s3resource import S3Resource
-from s3utils import s3_debug, s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
+from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3xml import S3XML
 
 DEBUG = False
@@ -2100,8 +2100,8 @@ class S3ImportItem(object):
                 callback(onvalidation, form, tablename=tablename)
             except Exception, e:
                 from traceback import format_exc
-                s3_debug("S3Import %s onvalidation exception:" % tablename)
-                s3_debug(format_exc(10))
+                current.log.error("S3Import %s onvalidation exception:" % tablename)
+                current.log.debug(format_exc(10))
         self.accepted = True
         if form.errors:
             for k in form.errors:
@@ -3812,8 +3812,7 @@ class S3BulkImporter(object):
                 # older Python
                 msg = "%s import job completed in %s" % (csvName, duration)
             self.resultList.append(msg)
-            if response.s3.debug:
-                s3_debug(msg)
+            current.log.debug(msg)
 
     # -------------------------------------------------------------------------
     def execute_special_task(self, task):
@@ -3849,8 +3848,7 @@ class S3BulkImporter(object):
                 # older Python
                 msg = "%s import job completed in %s" % (fun, duration)
             self.resultList.append(msg)
-            if s3.debug:
-                s3_debug(msg)
+            current.log.debug(msg)
 
     # -------------------------------------------------------------------------
     def import_role(self, filename):
@@ -4023,7 +4021,7 @@ class S3BulkImporter(object):
                     imagepath= os.path.join(path, image)
                     openFile = open(imagepath, "rb")
                 except IOError:
-                    s3_debug("Unable to open image file %s" % image)
+                    current.log.error("Unable to open image file %s" % image)
                     continue
                 image_source = StringIO(openFile.read())
                 # Get the id of the resource
@@ -4033,7 +4031,7 @@ class S3BulkImporter(object):
                 try:
                     record_id = record.id
                 except:
-                    s3_debug("Unable to get record %s of the resource %s to attach the image file to" % (id, tablename))
+                    current.log.error("Unable to get record %s of the resource %s to attach the image file to" % (id, tablename))
                     continue
                 # Create and accept the form
                 form = SQLFORM(table, record, fields=["id", imagefield])
@@ -4060,7 +4058,7 @@ class S3BulkImporter(object):
                     callback(onaccept, form, tablename=tablename)
                 else:
                     for (key, error) in form.errors.items():
-                        s3_debug("error importing logo %s: %s %s" % (image, key, error))
+                        current.log.error("error importing logo %s: %s %s" % (image, key, error))
 
     # -------------------------------------------------------------------------
     def import_remote_csv(self, url, prefix, resource, stylesheet):
@@ -4068,7 +4066,7 @@ class S3BulkImporter(object):
 
         extension = url.split(".")[-1]
         if extension not in ("csv", "zip"):
-            s3_debug("error importing remote file %s: invalid extension" % (url))
+            current.log.error("error importing remote file %s: invalid extension" % (url))
             return
 
         # Copy the current working directory to revert back to later
@@ -4084,7 +4082,7 @@ class S3BulkImporter(object):
             try:
                 os.mkdir(tempPath)
             except OSError:
-                s3_debug("Unable to create temp folder %s!" % tempPath)
+                current.log.error("Unable to create temp folder %s!" % tempPath)
                 return
 
         # Set the current working directory
@@ -4093,7 +4091,7 @@ class S3BulkImporter(object):
         try:
             file = fetch(url)
         except urllib2.URLError, exception:
-            s3_debug(exception)
+            current.log.error(exception)
             # Revert back to the working directory as before.
             os.chdir(cwd)
             return

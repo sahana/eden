@@ -39,8 +39,6 @@ from gluon.compileapp import build_environment
 from gluon.restricted import restricted
 from gluon.storage import Storage
 
-from s3.s3utils import s3_debug
-
 class S3Migration(object):
     """
         Database Migration Toolkit
@@ -195,7 +193,7 @@ class S3Migration(object):
                 try:
                     vars = {fieldname : int(val)}
                 except:
-                    s3_debug("S3Migrate: Unable to convert %s to an integer - skipping" % val)
+                    current.log.warning("S3Migrate: Unable to convert %s to an integer - skipping" % val)
                 else:
                     db(newtable.id == id).update(**vars)
 

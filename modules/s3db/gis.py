@@ -455,7 +455,7 @@ class S3LocationModel(S3Model):
                 results = gis.geocode(addr_street, postcode, Lx_ids, geocoder)
                 if isinstance(results, basestring):
                     # Error
-                    s3_debug(results)
+                    current.log.error(results)
                     form.errors["addr_street"] = results
                     return
                 else:
@@ -556,7 +556,7 @@ class S3LocationModel(S3Model):
                                 error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
                                     dict(parent=parent_name)
                             response.error = error
-                            s3_debug(error)
+                            current.log.error(error)
                             return
 
                         # @ToDo: Precise (GIS function)
@@ -588,11 +588,11 @@ class S3LocationModel(S3Model):
                             else:
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
                             response.error = error
-                            s3_debug(error)
+                            current.log.error(error)
                             lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
                                                           str(lat_min), str(lat_max))
                             form.errors["lat"] = lat_error
-                            s3_debug(lat_error)
+                            current.log.error(lat_error)
                             return
                         elif (lon > lon_max) or (lon < lon_min):
                             if name:
@@ -601,11 +601,11 @@ class S3LocationModel(S3Model):
                             else:
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
                             response.error = error
-                            s3_debug(error)
+                            current.log.error(error)
                             lon_error = "%s: %s & %s" % (T("Longitude should be between"),
                                                          str(lon_min), str(lon_max))
                             form.errors["lon"] = lon_error
-                            s3_debug(lon_error)
+                            current.log.error(lon_error)
                             return
 
         # Add the WKT, bounds (& Centroid for Polygons)
@@ -676,7 +676,7 @@ class S3LocationModel(S3Model):
                 
                 if duplicate:
                     # @ToDo: Import Log
-                    #s3_debug("Location PCode Match")
+                    #current.log.debug("Location PCode Match")
                     data.name = duplicate.name # Don't update the name
                     job.id = duplicate.id
                     job.method = job.METHOD.UPDATE
@@ -707,7 +707,7 @@ class S3LocationModel(S3Model):
                                                  limitby=(0, 1)).first()
             if duplicate:
                 # @ToDo: Import Log
-                #s3_debug("Location Match")
+                #current.log.debug("Location Match")
                 job.id = duplicate.id
                 job.method = job.METHOD.UPDATE
                 return
@@ -731,14 +731,13 @@ class S3LocationModel(S3Model):
                                                       limitby=(0, 1)).first()
                 if duplicate:
                     # @ToDo: Import Log
-                    #s3_debug("Location l10n Match")
+                    #current.log.debug("Location l10n Match")
                     data.name = duplicate.name # Don't update the name
                     job.id = duplicate.id
                     job.method = job.METHOD.UPDATE
                 else:
                     # @ToDo: Import Log
-                    #s3_debug("No Match:")
-                    #s3_debug(name)
+                    #current.log.debug("No Match", name)
                     pass
 
     # -------------------------------------------------------------------------
@@ -4063,7 +4062,7 @@ class S3MapModel(S3Model):
             try:
                 shapefile = table.shape.retrieve(row.gis_layer_shapefile.shape)
             except:
-                s3_debug("No Shapefile found in layer %s!" % id)
+                current.log.error("No Shapefile found in layer %s!" % id)
                 return
             (fileName, fp) = shapefile
             layerName = fileName.rsplit(".", 1)[0] # strip the .zip extension
@@ -4080,7 +4079,7 @@ class S3MapModel(S3Model):
                 try:
                     os.mkdir(tempPath)
                 except OSError:
-                    s3_debug("Unable to create temp folder %s!" % tempPath)
+                    current.log.error("Unable to create temp folder %s!" % tempPath)
                     return
             # Set the current working directory
             os.chdir(tempPath)
@@ -4093,7 +4092,7 @@ class S3MapModel(S3Model):
                 try:
                     file = myfile.read(fileName)
                 except KeyError:
-                    s3_debug("%s.zip doesn't contain a file %s" % (layerName, fileName))
+                    current.log.error("%s.zip doesn't contain a file %s" % (layerName, fileName))
                 else:
                     f = open(fileName, "wb")
                     f.write(file)

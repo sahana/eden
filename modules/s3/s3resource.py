@@ -3592,10 +3592,8 @@ class S3Resource(object):
         except:
             # Oops - something went wrong in the validator:
             # write out a debug message, and continue anyway
-            if current.response.s3.debug:
-                from s3utils import s3_debug
-                s3_debug("Validate %s: %s (ignored)" %
-                         (field, sys.exc_info()[1]))
+            current.log.error("Validate %s: %s (ignored)" %
+                              (field, sys.exc_info()[1]))
             return (None, None)
         else:
             return (value, error)
@@ -4824,9 +4822,7 @@ class S3FieldSelector(object):
             try:
                 value = value()
             except:
-                if current.response.s3.debug:
-                    from s3utils import s3_debug
-                    s3_debug(sys.exc_info()[1])
+                current.log.error(sys.exc_info()[1])
                 value = None
 
         if hasattr(field, "expr"):
@@ -5345,9 +5341,7 @@ class S3ResourceField(object):
             try:
                 value = value()
             except:
-                if current.response.s3.debug:
-                    from s3utils import s3_debug
-                    s3_debug(sys.exc_info()[1])
+                current.log.error(sys.exc_info()[1])
                 value = None
 
         if represent:
@@ -5781,9 +5775,7 @@ class S3ResourceQuery(object):
             l = extract(lfield)
             r = extract(rfield)
         except (KeyError, SyntaxError):
-            if current.response.s3.debug:
-                from s3utils import s3_debug
-                s3_debug(sys.exc_info()[1])
+            current.log.error(sys.exc_info()[1])
             return None
 
         if isinstance(left, S3FieldSelector):
@@ -6431,9 +6423,7 @@ class S3URLQuery(object):
             try:
                 rquery = S3ResourceQuery(op, f, v)
             except SyntaxError:
-                if current.response.s3.debug:
-                    from s3utils import s3_debug
-                    s3_debug("Invalid URL query operator: %s (sub-query ignored)" % op)
+                current.log.error("Invalid URL query operator: %s (sub-query ignored)" % op)
                 q = None
                 break
 

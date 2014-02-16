@@ -1147,7 +1147,8 @@ def facility_onaccept(form):
                     from shapely import speedups
                     speedups.enable()
                 except:
-                    s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+                    current.log.info("S3GIS",
+                                     "Upgrade Shapely for Performance enhancements")
                 pnt = point.Point(location.lon, location.lat)
                 for p in polygons:
                     wkt = p[gtable].wkt
