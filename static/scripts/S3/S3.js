@@ -477,6 +477,20 @@ S3.hideAlerts = function() {
     $('#alert-space').empty();
 };
 
+/**
+ * Display an Error next to a Field
+ *
+ *  To display an alert:
+ *  S3.fieldError(selector, error)
+ *    selector - string - selector for the field to display the error against
+ *    error - string - message to display
+ */
+S3.fieldError = function(selector, error) {
+    // @ToDo: Are we using a Bootstrap or normal Theme?
+    // Display the Error
+    $(selector).after('<div class="error" style="display: block;">' + error + '</div>');
+}
+
 // ============================================================================
 var s3_viewMap = function(feature_id) {
     // Display a Feature on a BaseMap within an iframe
@@ -909,7 +923,7 @@ S3.slider = function(fieldname, min, max, step, value) {
                   .after('<p>' + i18n.slider_help + '</p>');
     }
     // Enable the field before form is submitted
-    $('form').submit(function() {
+    real_input.closest('form').submit(function() {
         real_input.prop('disabled', false);
         // Normal Submit
         return true;

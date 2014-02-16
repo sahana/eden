@@ -599,15 +599,20 @@ def customize_org_group(**attr):
         if r.interactive:
             if not r.component:
                 from gluon.html import DIV, INPUT
+                from gluon.validators import IS_NULL_OR
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2
-                field = s3db.org_group.location_id
-                field.label = "" # Gets replaced by widget
-                field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
-                field.widget = S3LocationSelectorWidget2(levels=("L2",),
-                                                         polygons=True,
-                                                         )
+                if r.method != "read":
+                    from s3.s3validators import IS_LOCATION_SELECTOR2
+                    from s3.s3widgets import S3LocationSelectorWidget2
+                    field = s3db.org_group.location_id
+                    field.label = "" # Gets replaced by widget
+                    #field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
+                    field.requires = IS_NULL_OR(
+                                        IS_LOCATION_SELECTOR2(levels=("L2",))
+                                        )
+                    field.widget = S3LocationSelectorWidget2(levels=("L2",),
+                                                             polygons=True,
+                                                             )
                 s3db.pr_contact.value.label = ""
                 s3db.doc_document.url.label = ""
                 crud_form = S3SQLCustomForm(

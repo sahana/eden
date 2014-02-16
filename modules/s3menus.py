@@ -804,20 +804,6 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
-    def flood(self):
-        """ FLOOD """
-
-        return M(c="flood")(
-                    M("Gauges", f="gauge")(
-                        M("New", m="create"),
-                        M("List All"),
-                        M("Map", m="map"),
-                        #M("Search", m="search"),
-                        M("Import", m="import"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
     def gis(self):
         """ GIS / GIS Controllers """
 
@@ -1818,6 +1804,37 @@ class S3OptionsMenu(object):
                         M("Import", m="import"),
                         M("List All"),
                         #M("Search", m="search"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    def water(self):
+        """ Water: Floods, etc """
+
+        return M(c="water")(
+                    M("Gauges", f="gauge")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Map", m="map"),
+                        M("Import", m="import"),
+                    ),
+                    M("Rivers", f="river")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Map", m="map"),
+                        #M("Import", m="import"),
+                    ),
+                    M("Zones", f="zone")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Map", m="map"),
+                        #M("Import", m="import"),
+                    ),
+                    M("Zone Types", f="zone_type")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Map", m="map"),
+                        #M("Import", m="import"),
                     ),
                 )
 

@@ -149,23 +149,231 @@
         }
 
         // Listen events
-        $(selector + '_L0').change(function() {
+        var L0_select = $(selector + '_L0');
+        L0_select.change(function() {
             lx_select(fieldname, 0);
         });
-        $(selector + '_L1').change(function() {
+        var L1_select = $(selector + '_L1');
+        L1_select.change(function() {
             lx_select(fieldname, 1);
         });
-        $(selector + '_L2').change(function() {
+        var L2_select = $(selector + '_L2');
+        L2_select.change(function() {
             lx_select(fieldname, 2);
         });
-        $(selector + '_L3').change(function() {
+        var L3_select = $(selector + '_L3');
+        L3_select.change(function() {
             lx_select(fieldname, 3);
         });
-        $(selector + '_L4').change(function() {
+        var L4_select = $(selector + '_L4');
+        L4_select.change(function() {
             lx_select(fieldname, 4);
         });
-        $(selector + '_L5').change(function() {
+        var L5_select = $(selector + '_L5');
+        L5_select.change(function() {
             lx_select(fieldname, 5);
+        });
+
+        // Form submission
+        real_input.closest('form').submit(function() {
+            // Client-side validation
+            // Do we have a value to submit?
+            var current_value = real_input.val();
+            if (current_value) {
+                if (!l[current_value]) {
+                    // Must be a specific location => OK
+                    // Normal Submit
+                    return true;
+                }
+                var current_level = l[current_value].l;
+                // Is a higher-level required? If so, then prevent submission
+                // Is the value for a hidden, optional field? If so, then blank it, as it must be an optional default
+                switch(current_level) {
+                    case 0:
+                        if ($(selector + '_address').hasClass('required')) {
+                            S3.fieldError(selector + '_address', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L5_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L5', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L4_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L4', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L3_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L3', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L2_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L2', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L1_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L1', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else {
+                            var hidden_L0 = $('input#' + fieldname + '_L0');
+                            if (hidden_L0.length && !hidden_L0.hasClass('required')) {
+                                // Return NULL
+                                real_input.val('');
+                            }
+                            // Normal Submit
+                            return true;
+                        }
+                    case 1:
+                        if ($(selector + '_address').hasClass('required')) {
+                            S3.fieldError(selector + '_address', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L5_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L5', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L4_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L4', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L3_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L3', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L2_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L2', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else {
+                            var hidden_L1 = $('input#' + fieldname + '_L1');
+                            if (hidden_L1.length && !hidden_L1.hasClass('required')) {
+                                // Return NULL
+                                real_input.val('');
+                            }
+                            // Normal Submit
+                            return true;
+                        }
+                    case 2:
+                        if ($(selector + '_address').hasClass('required')) {
+                            S3.fieldError(selector + '_address', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L5_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L5', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L4_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L4', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L3_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L3', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else {
+                            var hidden_L2 = $('input#' + fieldname + '_L2');
+                            if (hidden_L2.length && !hidden_L2.hasClass('required')) {
+                                // Return NULL
+                                real_input.val('');
+                            }
+                            // Normal Submit
+                            return true;
+                        }
+                    case 3:
+                        if ($(selector + '_address').hasClass('required')) {
+                            S3.fieldError(selector + '_address', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L5_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L5', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L4_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L4', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else {
+                            var hidden_L3 = $('input#' + fieldname + '_L3');
+                            if (hidden_L3.length && !hidden_L3.hasClass('required')) {
+                                // Return NULL
+                                real_input.val('');
+                            }
+                            // Normal Submit
+                            return true;
+                        }
+                    case 4:
+                        if ($(selector + '_address').hasClass('required')) {
+                            S3.fieldError(selector + '_address', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else if (L5_select.hasClass('required')) {
+                            S3.fieldError(selector + '_L5', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else {
+                            var hidden_L4 = $('input#' + fieldname + '_L4');
+                            if (hidden_L4.length && !hidden_L4.hasClass('required')) {
+                                // Return NULL
+                                real_input.val('');
+                            }
+                            // Normal Submit
+                            return true;
+                        }
+                    case 5:
+                        if ($(selector + '_address').hasClass('required')) {
+                            S3.fieldError(selector + '_address', i18n.enter_value);
+                            // Prevent Submit
+                            return false;
+                        } else {
+                            var hidden_L5 = $('input#' + fieldname + '_L5');
+                            if (hidden_L5.length && !hidden_L5.hasClass('required')) {
+                                // Return NULL
+                                real_input.val('');
+                            }
+                            // Normal Submit
+                            return true;
+                        }
+                    default:
+                        // Something has gone wrong!
+                        S3.showAlert('LocationSelector cannot validate!', 'error');
+                        return false;
+                }
+            } else {
+                // Do we have any required levels?
+                // Report error at lowest-level
+                if ($(selector + '_address').hasClass('required')) {
+                    S3.fieldError(selector + '_address', i18n.enter_value);
+                    // Prevent Submit
+                    return false;
+                } else if (L5_select.hasClass('required')) {
+                    S3.fieldError(selector + '_L5', i18n.enter_value);
+                    // Prevent Submit
+                    return false;
+                } else if (L4_select.hasClass('required')) {
+                    S3.fieldError(selector + '_L4', i18n.enter_value);
+                    // Prevent Submit
+                    return false;
+                } else if (L3_select.hasClass('required')) {
+                    S3.fieldError(selector + '_L3', i18n.enter_value);
+                    // Prevent Submit
+                    return false;
+                } else if (L2_select.hasClass('required')) {
+                    S3.fieldError(selector + '_L2', i18n.enter_value);
+                    // Prevent Submit
+                    return false;
+                } else if (L1_select.hasClass('required')) {
+                    S3.fieldError(selector + '_L1', i18n.enter_value);
+                    // Prevent Submit
+                    return false;
+                } else if (L0_select.hasClass('required')) {
+                    S3.fieldError(selector + '_L0', i18n.enter_value);
+                    // Prevent Submit
+                    return false;
+                } else {
+                    // Normal Submit
+                    return true;
+                }
+            }
         });
     }
 
@@ -228,16 +436,14 @@
             var i,
                 lev,
                 label,
-                label_row,
                 levels = ['1', '2', '3', '4', '5'];
             for (i=0; i < 5; i++) {
                 lev = levels[i];
                 label = hi[lev] || d[lev];
-                label_row = $(selector + '_L' + lev + '__row label');
-                if (label_row.hasClass('required')) {
-                    label_row.html('<div>' + label + ':<span class="req"> *</span></div>');
+                if ($(selector + '_L' + lev).hasClass('required')) {
+                    $(selector + '_L' + lev + '__row label').html('<div>' + label + ':<span class="req"> *</span></div>');
                 } else {
-                    label_row.html(label + ':');
+                    $(selector + '_L' + lev + '__row label').html(label + ':');
                 }
             }
         }

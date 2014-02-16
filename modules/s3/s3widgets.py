@@ -3987,6 +3987,10 @@ class S3LocationSelectorWidget2(FormWidget):
             _levels = ("L0", "L1", "L2")
         elif "L1" in levels:
             _levels = ("L0", "L1")
+        elif "L0" in levels:
+            _levels = ("L0",)
+        else:
+            _levels = ()
 
         default = field.default
         if not default:
@@ -4292,55 +4296,65 @@ class S3LocationSelectorWidget2(FormWidget):
         if "L0" not in levels and \
            "L0" in _levels:
             # Have a hidden L0 input
-            # - used for Geocoder
+            # - used for Geocoder & client-side validation
             L0_input = INPUT(_name="L0",
                              _id="%s_L0" % fieldname,
                              fvalue=default_L0,
                              )
+            if required:
+                L0_input.add_class("required")
         else:
             L0_input = ""
 
         if "L1" not in levels and \
            "L1" in _levels:
             # Have a hidden L1 input
-            # - used for Geocoder
+            # - used for Geocoder & client-side validation
             L1_input = INPUT(_name="L1",
                              _id="%s_L1" % fieldname,
                              value=default_L1,
                              )
+            if required:
+                L1_input.add_class("required")
         else:
             L1_input = ""
 
         if "L2" not in levels and \
            "L2" in _levels:
             # Have a hidden L2 input
-            # - used for Geocoder & to attach Street Addresses to
+            # - used for Geocoder & client-side validation & to attach Street Addresses to
             L2_input = INPUT(_name="L2",
                              _id="%s_L2" % fieldname,
                              value=default_L2,
                              )
+            if required:
+                L2_input.add_class("required")
         else:
             L2_input = ""
 
         if "L3" not in levels and \
            "L3" in _levels:
             # Have a hidden L3 input
-            # - used for Geocoder & to attach Street Addresses to
+            # - used for Geocoder & client-side validation & to attach Street Addresses to
             L3_input = INPUT(_name="L3",
                              _id="%s_L3" % fieldname,
                              value=default_L3,
                              )
+            if required:
+                L3_input.add_class("required")
         else:
             L3_input = ""
 
         if "L4" not in levels and \
            "L4" in _levels:
             # Have a hidden L4 input
-            # - used for Geocoder & to attach Street Addresses to
+            # - used for Geocoder & client-side validation & to attach Street Addresses to
             L4_input = INPUT(_name="L4",
                              _id="%s_L4" % fieldname,
                              value=default_L4,
                              )
+            if required:
+                L4_input.add_class("required")
         else:
             L4_input = ""
 
@@ -4359,6 +4373,8 @@ class S3LocationSelectorWidget2(FormWidget):
                            _id=id,
                            value=address,
                            )
+            # @ToDo: Option to Flag this as required
+            #widget.add_class("required")
             hidden = not address
             if formstyle == "bootstrap":
                 # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
@@ -4472,12 +4488,12 @@ class S3LocationSelectorWidget2(FormWidget):
                 # -> Elements moved via JS after page load
                 label = LABEL("%s:" % label, _class="control-label",
                                              _for=id)
-                if required:
-                    label.add_class("required")
-                    # Only top-level required
-                    # @ToDo: More control
-                    required = False
                 widget.add_class("input-xlarge")
+                if required:
+                    widget.add_class("required")
+                    if (int(level[1:]) + 1) not in levels:
+                        # This is the highest level which is required
+                        required = False
                 # Currently unused, so remove if this remains so
                 #from gluon.html import BUTTON
                 #comment = BUTTON(comment,
@@ -4490,14 +4506,15 @@ class S3LocationSelectorWidget2(FormWidget):
             elif callable(formstyle):
                 # @ToDo: Test
                 if required:
+                    widget.add_class("required")
                     # @ToDo: DRY this setting with s3_mark_required
-                    # @ToDo: How to patch row that coems out of formstyle?
+                    # @ToDo: How to patch row that comes out of formstyle?
                     #        - this label will get wiped by the L0-specific labels
                     label = DIV("%s:" % label,
                                 SPAN(" *", _class="req"))
-                    # Only top-level required
-                    # @ToDo: More control
-                    required = False
+                    if (int(level[1:]) + 1) not in levels:
+                        # This is the highest level which is required
+                        required = False
                 row = formstyle(id, label, widget, comment, hidden=hidden)
             else:
                 # Unsupported
@@ -4687,9 +4704,13 @@ class S3LocationSelectorWidget2(FormWidget):
                                )
             icon_id = "%s_map_icon" % fieldname
             row_id = "%s_map_icon__row" % fieldname
+            if polygons:
+                label = T("Draw on Map")
+            else:
+                label = T("Find on Map")
             if formstyle == "bootstrap":
                 map_icon = DIV(DIV(BUTTON(I(_class="icon-map"),
-                                          T("Find on Map"),
+                                          label,
                                           _id=icon_id,
                                           _class="btn gis_loc_select_btn",
                                           ),
@@ -4701,9 +4722,10 @@ class S3LocationSelectorWidget2(FormWidget):
             else:
                 # @ToDo: Icon in default CSS
                 # @ToDo: Test
-                label = LABEL(I(_class="icon-map",
-                                _id=icon_id,
-                                ))
+                label = LABEL(I(_class="icon-map"),
+                              label,
+                              _id=icon_id,
+                              )
                 widget = ""
                 comment = ""
                 map_icon = formstyle(row_id, label, widget, comment)

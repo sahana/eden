@@ -55,6 +55,7 @@ class S3SecurityModel(S3Model):
 
         # -----------------------------------------------------------
         # Security Zone Types
+        #
         tablename = "security_zone_type"
         table = define_table(tablename,
                              Field("name",
@@ -88,6 +89,7 @@ class S3SecurityModel(S3Model):
 
         # -----------------------------------------------------------
         # Security Zones
+        #
         tablename = "security_zone"
         table = define_table(tablename,
                              Field("name",
@@ -134,6 +136,7 @@ class S3SecurityModel(S3Model):
 
         # -----------------------------------------------------------
         # Security Staff Types
+        #
         tablename = "security_staff_type"
         table = define_table(tablename,
                              Field("name",
@@ -163,6 +166,7 @@ class S3SecurityModel(S3Model):
 
         # -----------------------------------------------------------
         # Security Staff
+        #
         tablename = "security_staff"
         table = define_table(tablename,
                              self.hrm_human_resource_id(),
@@ -218,7 +222,7 @@ class S3SecurityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
