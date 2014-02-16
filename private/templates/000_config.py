@@ -72,6 +72,15 @@ settings.base.migrate = True
 # ?debug=1
 settings.base.debug = False
 
+# Configure the log level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"), None = turn off logging
+#settings.log.level = "WARNING"
+# Uncomment to write log messages to the console (sys.stderr)
+#settings.log.console = True
+# Configure a log file (file name)
+#settings.log.logfile = None
+# Uncomment to get detailed caller information
+#settings.log.caller_info = True
+
 # Uncomment to use Content Delivery Networks to speed up Internet-facing sites
 #settings.base.cdn = True
 
