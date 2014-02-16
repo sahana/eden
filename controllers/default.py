@@ -72,7 +72,7 @@ def index():
             page = "private/templates/%s/controllers.py" % \
                         settings.get_template()
             current.log.warning("File not loadable",
-                                "%s, %s" % (page, sys.exc_info[1]))
+                                "%s, %s" % (page, sys.exc_info()[1]))
         else:
             if "." in page:
                 # Remove extension
@@ -95,7 +95,7 @@ def index():
             # No Custom Page available, continue with the default
             # @ToDo: cache this result in session
             current.log.warning("Custom homepage cannot be loaded",
-                                sys.exc_info[1])
+                                sys.exc_info()[1])
         else:
             if "index" in custom.__dict__:
                 output = custom.index()()
