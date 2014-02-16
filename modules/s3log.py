@@ -132,6 +132,7 @@ class S3Log(object):
         logger = logging.getLogger(__name__)
         logger.propagate = False
         logger.setLevel(self.log_level)
+        logger.handlers = []
 
         m_format = "%(asctime)s %(caller)s %(levelname)s: %(message)s"
         d_format = "%Y-%m-%d %H:%M:%S"
