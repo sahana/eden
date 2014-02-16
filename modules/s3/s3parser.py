@@ -93,8 +93,7 @@ class S3Parsing(object):
         try:
             fn = getattr(S3Parser, function_name)
         except:
-            from s3utils import s3_debug
-            s3_debug("Parser not found: %s" % function_name)
+            current.log.error("Parser not found: %s" % function_name)
             return None
 
         reply = fn(message, **kwargs) or reply

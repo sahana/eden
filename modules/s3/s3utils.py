@@ -825,7 +825,7 @@ def s3_populate_browser_compatibility(request):
     try:
         from pywurfl.algorithms import TwoStepAnalysis
     except ImportError:
-        s3_debug("pywurfl python module has not been installed, browser compatibility listing will not be populated. Download pywurfl from http://pypi.python.org/pypi/pywurfl/")
+        current.log.warning("pywurfl python module has not been installed, browser compatibility listing will not be populated. Download pywurfl from http://pypi.python.org/pypi/pywurfl/")
         return False
     import wurfl
     device = wurfl.devices.select_ua(unicode(request.env.http_user_agent),
@@ -1452,7 +1452,7 @@ class S3DateTime(object):
             except:
                 # e.g. dates < 1900
                 date = date.isoformat()
-                s3_debug("Date cannot be formatted - using isoformat", date)
+                current.log.warning("Date cannot be formatted - using isoformat", date)
                 return date
         else:
             return current.messages["NONE"]

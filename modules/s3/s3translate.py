@@ -103,8 +103,7 @@ class TranslateAPI:
             if module in d.keys():
                 fileList = d[module]
             else:
-                from s3.s3utils import s3_debug
-                s3_debug("Module '%s' doesn't exist!" % module)
+                current.log.warning("Module '%s' doesn't exist!" % module)
                 return []
 
             modlist = grp.modlist
@@ -702,8 +701,7 @@ class TranslateReadFiles:
                             try:
                                 obj = getattr(obj, atr)()
                             except:
-                                from s3.s3utils import s3_debug
-                                s3_debug("Can't find this deployment_setting, maybe a crud.settings", atr)
+                                current.log.warning("Can't find this deployment_setting, maybe a crud.settings", atr)
                             else:
                                 s = obj
                                 fsappend((loc, s))
@@ -893,8 +891,7 @@ class TranslateReadFiles:
                                             loc = "%s:%s" % (csv_path, line_number)
                                             database_strings.append((loc, row[idx]))
                                     except:
-                                        from s3.s3utils import s3_debug
-                                        s3_debug("CSV row incomplete", csv_path)
+                                        current.log.error("CSV row incomplete", csv_path)
 
             return database_strings
 
@@ -1221,8 +1218,6 @@ class Strings:
 
             from gluon.contenttype import contenttype
 
-            from s3.s3utils import s3_debug
-
             # Define spreadsheet properties
             wbk = xlwt.Workbook("utf-8")
             sheet = wbk.add_sheet("Translate")
@@ -1244,7 +1239,7 @@ class Strings:
                 try:
                     sheet.write(row_num, 1, d1, style)
                 except:
-                    s3_debug("Invalid source string!", loc)
+                    current.log.warning("Invalid source string!", loc)
                     sheet.write(row_num, 1, "", style)
                 sheet.write(row_num, 2, d2, style)
                 row_num += 1
@@ -1301,8 +1296,7 @@ class Pootle:
 
             username = settings.get_L10n_pootle_username()
             if username is False:
-                from s3.s3utils import s3_debug
-                s3_debug("No login information found")
+                current.log.error("No login information found")
                 return
 
             pootle_url = settings.get_L10n_pootle_url()
@@ -1310,8 +1304,7 @@ class Pootle:
             try:
                 br.open(login_url)
             except:
-                from s3.s3utils import s3_debug
-                s3_debug("Connecton Error")
+                current.log.error("Connecton Error")
                 return
 
             br.select_form("loginform")
@@ -1322,8 +1315,7 @@ class Pootle:
 
             current_url = br.geturl()
             if current_url.endswith("login/"):
-                from s3.s3utils import s3_debug
-                s3_debug("Login Error")
+                current.log.error("Login Error")
                 return
 
             pattern = "<option value=(.+?)>%s.po" % lang_code
@@ -1349,8 +1341,7 @@ class Pootle:
                 br.form.add_file(open(filename), "text/plain", file_name)
                 br.submit()
             except:
-                from s3.s3utils import s3_debug
-                s3_debug("Error in Uploading form")
+                current.log.error("Error in Uploading form")
                 return
 
         # ---------------------------------------------------------------------
@@ -1379,8 +1370,7 @@ class Pootle:
             try:
                 r = requests.get(link)
             except:
-                from s3.s3utils import s3_debug
-                s3_debug("Connection Error")
+                current.log.error("Connection Error")
                 return False		
 
             zipf = zipfile.ZipFile(StringIO.StringIO(r.content))

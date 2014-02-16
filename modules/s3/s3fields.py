@@ -652,9 +652,7 @@ class S3Represent(object):
                     fields = [ogetattr(table, f) for f in self.fields]
                 except AttributeError:
                     # Ok - they are not: provide debug output and filter fields
-                    if current.response.s3.debug:
-                        from s3utils import s3_debug
-                        s3_debug(sys.exc_info()[1])
+                    current.log.error(sys.exc_info()[1])
                     fields = [ogetattr(table, f)
                               for f in self.fields if hasattr(table, f)]
             else:

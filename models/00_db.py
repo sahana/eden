@@ -115,6 +115,10 @@ else:
 if not session.s3:
     session.s3 = Storage()
 
+# Set up logger (before any module attempts to use it!)
+import s3log
+s3log.S3Log.setup()
+    
 # AAA
 current.auth = auth = s3base.AuthS3()
 

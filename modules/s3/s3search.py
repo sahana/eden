@@ -831,8 +831,7 @@ class S3SearchLocationWidget(S3SearchWidget):
         try:
             from shapely.wkt import loads as wkt_loads
         except ImportError:
-            from s3utils import s3_debug
-            s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
+            current.log.warning("%s: Shapely GIS library not installed" % __name__)
             return None
 
         T = current.T
@@ -890,8 +889,7 @@ class S3SearchLocationWidget(S3SearchWidget):
             try:
                 shape = wkt_loads(value)
             except:
-                from s3utils import s3_debug
-                s3_debug("WARNING: S3Search: Invalid WKT")
+                current.log.warning("S3Search: Invalid WKT")
                 return None
 
             bounds = shape.bounds

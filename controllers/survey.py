@@ -740,13 +740,13 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                   style
                                   )
             except Exception as msg:
-                s3_debug = s3base.s3_debug
-                s3_debug(msg)
-                s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
-                    (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                log = current.log
+                log.error(msg)
+                log.debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                          (cell.row, cell.mergeV, cell.col, cell.mergeH))
                 posn = "%s,%s" % (cell.row, cell.col)
                 if matrix.matrix[posn]:
-                    s3_debug(matrix.matrix[posn])
+                    log.debug(matrix.matrix[posn])
             rows = math.ceil((len(text) / characters_in_cell) / (1 + cell.mergeH))
         else:
             sheet.write(cell.row,
@@ -928,7 +928,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     maxCol = 0
     for cell in matrix.matrix.values():
         if cell.col + cell.mergeH > 255:
-            s3base.s3_debug("Cell (%s,%s) - (%s,%s) ignored" % \
+            current.log.warning("Cell (%s,%s) - (%s,%s) ignored" % \
                 (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV))
             continue
         if cell.col + cell.mergeH > maxCol:
@@ -960,13 +960,13 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                        joinedStyle
                                        )
                 except Exception as msg:
-                    s3_debug = s3base.s3_debug
-                    s3_debug(msg)
-                    s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
-                        (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                    log = current.log
+                    log.error(msg)
+                    log.debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                              (cell.row, cell.mergeV, cell.col, cell.mergeH))
                     posn = "%s,%s" % (cell.row, cell.col)
                     if matrix.matrix[posn]:
-                        s3_debug(matrix.matrix[posn])
+                        log.debug(matrix.matrix[posn])
             else:
                 sheet1.write(cell.row,
                              cell.col,
@@ -1232,7 +1232,7 @@ def complete():
             import xlrd
             from xlwt.Utils import cell_to_rowcol2
         except ImportError:
-            s3base.s3_debug("ERROR: xlrd & xlwt modules are needed for importing spreadsheets")
+            current.log.error("ERROR: xlrd & xlwt modules are needed for importing spreadsheets")
             return None
         workbook = xlrd.open_workbook(file_contents=uploadFile)
         try:

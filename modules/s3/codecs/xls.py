@@ -143,9 +143,8 @@ class S3XLS(S3Codec):
                 current.session.error = self.ERROR.XLWT_ERROR
                 redirect(URL(extension=""))
             else:
-                from ..s3utils import s3_debug
                 error = self.ERROR.XLWT_ERROR
-                s3_debug(error)
+                current.log.error(error)
                 return error
         try:
             from xlrd.xldate import xldate_from_date_tuple, \
@@ -156,9 +155,8 @@ class S3XLS(S3Codec):
                 current.session.error = self.ERROR.XLRD_ERROR
                 redirect(URL(extension=""))
             else:
-                from ..s3utils import s3_debug
                 error = self.ERROR.XLRD_ERROR
-                s3_debug(error)
+                current.log.error(error)
                 return error
 
         # The xlwt library supports a maximum of 182 characters in a single cell
@@ -184,13 +182,12 @@ class S3XLS(S3Codec):
                                                                           list_fields)
         report_groupby = lfields[group] if group else None
         if len(rows) > 0 and len(headers) != len(rows[0]):
-            from ..s3utils import s3_debug
             msg = """modules/s3/codecs/xls: There is an error in the list_items, a field doesn't exist"
 requesting url %s
 Headers = %d, Data Items = %d
 Headers     %s
 List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fields)
-            s3_debug(msg)
+            current.log.error(msg)
         groupby_label = headers[report_groupby] if report_groupby else None
 
         # Date/Time formats from L10N deployment settings

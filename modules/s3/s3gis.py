@@ -82,7 +82,7 @@ from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
 from s3track import S3Trackable
-from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext, s3_unicode
+from s3utils import s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext, s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -629,7 +629,8 @@ class GIS(object):
                                 from shapely import speedups
                                 speedups.enable()
                             except:
-                                s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+                                current.log.info("S3GIS",
+                                                 "Upgrade Shapely for Performance enhancements")
                             test = point.Point(lon, lat)
                             shape = wkt_loads(wkt)
                             ok = test.intersects(shape)
@@ -1677,7 +1678,8 @@ class GIS(object):
             from shapely import speedups
             speedups.enable()
         except:
-            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+            current.log.info("S3GIS",
+                             "Upgrade Shapely for Performance enhancements")
 
         db = current.db
         s3db = current.s3db
@@ -1704,7 +1706,7 @@ class GIS(object):
                     lat_max = location.lat_max
 
                 else:
-                    s3_debug("Location searched within isn't a Polygon!")
+                    current.log.error("Location searched within isn't a Polygon!")
                     return None
         except: # @ToDo: need specific exception
             wkt = location
@@ -1712,20 +1714,20 @@ class GIS(object):
                 # ok
                 lon_min = None
             else:
-                s3_debug("This isn't a Polygon!")
+                current.log.error("This isn't a Polygon!")
                 return None
 
         try:
             polygon = wkt_loads(wkt)
         except: # @ToDo: need specific exception
-            s3_debug("Invalid Polygon!")
+            current.log.error("Invalid Polygon!")
             return None
 
         table = s3db[tablename]
 
         if "location_id" not in table.fields():
             # @ToDo: Add any special cases to be able to find the linked location
-            s3_debug("This table doesn't have a location_id!")
+            current.log.error("This table doesn't have a location_id!")
             return None
 
         query = (table.location_id == locations.id)
@@ -1759,10 +1761,8 @@ class GIS(object):
                         # Save Record
                         output.records.append(row)
                 except ReadingError:
-                    s3_debug(
-                        "Error reading wkt of location with id",
-                        value=row.id
-                    )
+                    current.log.error("Error reading wkt of location with id",
+                                      value=row.id)
         else:
             # 1st check for Features included within the bbox (faster)
             def in_bbox(row):
@@ -1789,11 +1789,8 @@ class GIS(object):
                         # Save Record
                         output.records.append(row)
                 except ReadingError:
-                    s3_debug(
-                        "Error reading wkt of location with id",
-                        value = row.id,
-                    )
-
+                    current.log.error("Error reading wkt of location with id",
+                                      value = row.id)
         return output
 
     # -------------------------------------------------------------------------
@@ -2569,7 +2566,8 @@ class GIS(object):
             from shapely import speedups
             speedups.enable()
         except:
-            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+            current.log.info("S3GIS",
+                             "Upgrade Shapely for Performance enhancements")
 
         name = feature.name
 
@@ -2585,7 +2583,7 @@ class GIS(object):
             shape = wkt_loads(wkt)
         except:
             error = "Invalid WKT: %s" % name
-            s3_debug(error)
+            current.log.error(error)
             return error
 
         geom_type = shape.geom_type
@@ -2595,7 +2593,7 @@ class GIS(object):
             polygons = [shape]
         else:
             error = "Unsupported Geometry: %s, %s" % (name, geom_type)
-            s3_debug(error)
+            current.log.error(error)
             return error
         if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp
             TEMP = os.path.join(os.getcwd(), "temp")
@@ -2677,7 +2675,8 @@ class GIS(object):
                     from shapely import speedups
                     speedups.enable()
                 except:
-                    s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+                    current.log.info("S3GIS",
+                                     "Upgrade Shapely for Performance enhancements")
 
         folder = os.path.join(current.request.folder, "static", "cache")
 
@@ -2802,7 +2801,7 @@ class GIS(object):
                     File.write(json.dumps(data, separators=SEPARATORS))
                     File.close()
                 else:
-                    s3_debug("No L1 features in %s" % _id)
+                    current.log.debug("No L1 features in %s" % _id)
 
         if "L2" in levels:
             if "L0" not in levels and "L1" not in levels:
@@ -2863,7 +2862,7 @@ class GIS(object):
                         File.write(json.dumps(data, separators=SEPARATORS))
                         File.close()
                     else:
-                        s3_debug("No L2 features in %s" % l1.id)
+                        current.log.debug("No L2 features in %s" % l1.id)
 
         if "L3" in levels:
             if "L0" not in levels and "L1" not in levels and "L2" not in levels:
@@ -2927,7 +2926,7 @@ class GIS(object):
                             File.write(json.dumps(data, separators=SEPARATORS))
                             File.close()
                         else:
-                            s3_debug("No L3 features in %s" % l2.id)
+                            current.log.debug("No L3 features in %s" % l2.id)
 
         if "L4" in levels:
             if "L0" not in levels and "L1" not in levels and "L2" not in levels and "L3" not in levels:
@@ -2994,7 +2993,7 @@ class GIS(object):
                                 File.write(json.dumps(data, separators=SEPARATORS))
                                 File.close()
                             else:
-                                s3_debug("No L4 features in %s" % l3.id)
+                                current.log.debug("No L4 features in %s" % l3.id)
 
     # -------------------------------------------------------------------------
     def import_admin_areas(self,
@@ -3017,7 +3016,7 @@ class GIS(object):
             try:
                 from osgeo import ogr
             except:
-                s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
+                current.log.error("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
                 return
 
             if "L0" in levels:
@@ -3027,13 +3026,13 @@ class GIS(object):
             if "L2" in levels:
                 self.import_gadm1(ogr, "L2", countries=countries)
 
-            s3_debug("All done!")
+            current.log.debug("All done!")
 
         elif source == "gadmv1":
             try:
                 from osgeo import ogr
             except:
-                s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
+                current.log.error("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
                 return
 
             if "L0" in levels:
@@ -3043,10 +3042,10 @@ class GIS(object):
             if "L2" in levels:
                 self.import_gadm2(ogr, "L2", countries=countries)
 
-            s3_debug("All done!")
+            current.log.debug("All done!")
 
         else:
-            s3_debug("Only GADM is currently supported")
+            current.log.warning("Only GADM is currently supported")
             return
 
         return
@@ -3090,7 +3089,7 @@ class GIS(object):
             try:
                 os.mkdir(tempPath)
             except OSError:
-                s3_debug("Unable to create temp folder %s!" % tempPath)
+                current.log.error("Unable to create temp folder %s!" % tempPath)
                 return
 
         # Set the current working directory
@@ -3104,19 +3103,19 @@ class GIS(object):
             # Download the file
             from gluon.tools import fetch
             url = layer["url"]
-            s3_debug("Downloading %s" % url)
+            current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
             except urllib2.URLError, exception:
-                s3_debug(exception)
+                current.log.error(exception)
                 return
             fp = StringIO(file)
         else:
-            s3_debug("Using existing file %s" % fileName)
+            current.log.debug("Using existing file %s" % fileName)
             fp = open(fileName)
 
         # Unzip it
-        s3_debug("Unzipping %s" % layerName)
+        current.log.debug("Unzipping %s" % layerName)
         import zipfile
         myfile = zipfile.ZipFile(fp)
         for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
@@ -3128,10 +3127,10 @@ class GIS(object):
         myfile.close()
 
         # Use OGR to read Shapefile
-        s3_debug("Opening %s.shp" % layerName)
+        current.log.debug("Opening %s.shp" % layerName)
         ds = ogr.Open("%s.shp" % layerName)
         if ds is None:
-            s3_debug("Open failed.\n")
+            current.log.error("Open failed.\n")
             return
 
         lyr = ds.GetLayerByName(layerName)
@@ -3185,10 +3184,10 @@ class GIS(object):
                         #              tag = "area",
                         #              value = area)
                     except db._adapter.driver.OperationalError, exception:
-                        s3_debug(exception)
+                        current.log.error(sys.exc_info[1])
 
             else:
-                s3_debug("No geometry\n")
+                current.log.debug("No geometry\n")
 
         # Close the shapefile
         ds.Destroy()
@@ -3242,7 +3241,7 @@ class GIS(object):
                 "parentEdenCodeField" : "GADM1",
             }
         else:
-            s3_debug("Level %s not supported!" % level)
+            current.log.warning("Level %s not supported!" % level)
             return
 
         import csv
@@ -3287,7 +3286,7 @@ class GIS(object):
             try:
                 os.mkdir(tempPath)
             except OSError:
-                s3_debug("Unable to create temp folder %s!" % tempPath)
+                current.log.error("Unable to create temp folder %s!" % tempPath)
                 return
 
         # Set the current working directory
@@ -3308,21 +3307,21 @@ class GIS(object):
             # Download the file
             from gluon.tools import fetch
             url = layer["url"]
-            s3_debug("Downloading %s" % url)
+            current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
             except urllib2.URLError, exception:
-                s3_debug(exception)
+                current.log.error(exception)
                 # Revert back to the working directory as before.
                 os.chdir(cwd)
                 return
             fp = StringIO(file)
         else:
-            s3_debug("Using existing file %s" % fileName)
+            current.log.debug("Using existing file %s" % fileName)
             fp = open(fileName)
 
         # Unzip it
-        s3_debug("Unzipping %s" % layerName)
+        current.log.debug("Unzipping %s" % layerName)
         myfile = zipfile.ZipFile(fp)
         for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
             fileName = "%s.%s" % (layerName, ext)
@@ -3333,7 +3332,7 @@ class GIS(object):
         myfile.close()
 
         # Convert to CSV
-        s3_debug("Converting %s.shp to CSV" % layerName)
+        current.log.debug("Converting %s.shp to CSV" % layerName)
         # Simplified version of generic Shapefile Importer:
         # http://svn.osgeo.org/gdal/trunk/gdal/swig/python/samples/ogr2ogr.py
         bSkipFailures = False
@@ -3405,7 +3404,7 @@ class GIS(object):
                 if poDstFeature.SetFromWithMap(poFeature, 1, panMap) != 0:
                     if nGroupTransactions > 0:
                         outputLayer.CommitTransaction()
-                    s3_debug("Unable to translate feature %d from layer %s" % \
+                    current.log.error("Unable to translate feature %d from layer %s" % \
                                 (poFeature.GetFID(), inputFDefn.GetName()))
                     # Revert back to the working directory as before.
                     os.chdir(cwd)
@@ -3436,10 +3435,10 @@ class GIS(object):
         os.removedirs("CSV")
 
         # Use OGR to read SHP for geometry
-        s3_debug("Opening %s.shp" % layerName)
+        current.log.debug("Opening %s.shp" % layerName)
         ds = ogr.Open("%s.shp" % layerName)
         if ds is None:
-            s3_debug("Open failed.\n")
+            current.log.debug("Open failed.\n")
             # Revert back to the working directory as before.
             os.chdir(cwd)
             return
@@ -3449,7 +3448,7 @@ class GIS(object):
         lyr.ResetReading()
 
         # Use CSV for Name
-        s3_debug("Opening %s.csv" % layerName)
+        current.log.debug("Opening %s.csv" % layerName)
         rows = latin_dict_reader(open("%s.csv" % layerName))
 
         nameField = layer["namefield"]
@@ -3474,7 +3473,7 @@ class GIS(object):
                                       cache=cache).first()
             if not parent:
                 # Skip locations for which we don't have a valid parent
-                s3_debug("Skipping - cannot find parent with key: %s, value: %s" % \
+                current.log.warning("Skipping - cannot find parent with key: %s, value: %s" % \
                             (parentEdenCodeField, parentCode))
                 count += 1
                 continue
@@ -3483,7 +3482,7 @@ class GIS(object):
                 # Skip the countries which we're not interested in
                 if level == "L1":
                     if parent["gis_location_tag"].value not in countries:
-                        #s3_debug("Skipping %s as not in countries list" % parent["gis_location_tag"].value)
+                        #current.log.warning("Skipping %s as not in countries list" % parent["gis_location_tag"].value)
                         count += 1
                         continue
                 else:
@@ -3544,7 +3543,7 @@ class GIS(object):
                                   # tag = "area",
                                   # value = area)
             else:
-                s3_debug("No geometry\n")
+                current.log.debug("No geometry\n")
 
             count += 1
 
@@ -3553,13 +3552,13 @@ class GIS(object):
 
         db.commit()
 
-        s3_debug("Updating Location Tree...")
+        current.log.debug("Updating Location Tree...")
         try:
             self.update_location_tree()
         except MemoryError:
             # If doing all L2s, it can break memory limits
             # @ToDo: Check now that we're doing by level
-            s3_debug("Memory error when trying to update_location_tree()!")
+            current.log.critical("Memory error when trying to update_location_tree()!")
 
         db.commit()
 
@@ -3605,7 +3604,7 @@ class GIS(object):
             parent = "L1"
             parentCode = "code"
         else:
-            s3_debug("Level %s not supported!" % level)
+            current.log.error("Level %s not supported!" % level)
             return
 
         db = current.db
@@ -3642,19 +3641,19 @@ class GIS(object):
         if not os.path.isfile(fileName):
             # Download the file
             from gluon.tools import fetch
-            s3_debug("Downloading %s" % url)
+            current.log.debug("Downloading %s" % url)
             try:
                 file = fetch(url)
             except urllib2.URLError, exception:
-                s3_debug(exception)
+                current.log.error(exception)
                 return
             fp = StringIO(file)
         else:
-            s3_debug("Using existing file %s" % fileName)
+            current.log.debug("Using existing file %s" % fileName)
             fp = open(fileName)
 
         # Unzip it
-        s3_debug("Unzipping %s" % layerName)
+        current.log.debug("Unzipping %s" % layerName)
         import zipfile
         myfile = zipfile.ZipFile(fp)
         for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
@@ -3666,10 +3665,10 @@ class GIS(object):
         myfile.close()
 
         # Use OGR to read Shapefile
-        s3_debug("Opening %s.shp" % layerName)
+        current.log.debug("Opening %s.shp" % layerName)
         ds = ogr.Open("%s.shp" % layerName)
         if ds is None:
-            s3_debug("Open failed.\n")
+            current.log.debug("Open failed.\n")
             return
 
         lyr = ds.GetLayerByName(layerName)
@@ -3714,10 +3713,10 @@ class GIS(object):
                                          #code2=code2,
                                          #area=area
                     except db._adapter.driver.OperationalError, exception:
-                        s3_debug(exception)
+                        current.log.error(exception)
 
             else:
-                s3_debug("No geometry\n")
+                current.log.debug("No geometry\n")
 
         # Close the shapefile
         ds.Destroy()
@@ -3755,7 +3754,8 @@ class GIS(object):
             from shapely import speedups
             speedups.enable()
         except:
-            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+            current.log.info("S3GIS",
+                             "Upgrade Shapely for Performance enhancements")
 
         db = current.db
         s3db = current.s3db
@@ -3775,7 +3775,7 @@ class GIS(object):
         else:
             cached = False
             if not os.access(cachepath, os.W_OK):
-                s3_debug("Folder not writable", cachepath)
+                current.log.error("Folder not writable", cachepath)
                 return
 
         if not cached:
@@ -3785,11 +3785,11 @@ class GIS(object):
                 f = fetch(url)
             except (urllib2.URLError,):
                 e = sys.exc_info()[1]
-                s3_debug("URL Error", e)
+                current.log.error("URL Error", e)
                 return
             except (urllib2.HTTPError,):
                 e = sys.exc_info()[1]
-                s3_debug("HTTP Error", e)
+                current.log.error("HTTP Error", e)
                 return
 
             # Unzip File
@@ -3804,7 +3804,7 @@ class GIS(object):
                     myfile.extract(filename, cachepath)
                     myfile.close()
                 except IOError:
-                    s3_debug("Zipfile contents don't seem correct!")
+                    current.log.error("Zipfile contents don't seem correct!")
                     myfile.close()
                     return
 
@@ -3916,7 +3916,7 @@ class GIS(object):
                             # Should be just a single parent
                             break
                     except ReadingError:
-                        s3_debug("Error reading wkt of location with id", row.id)
+                        current.log.error("Error reading wkt of location with id", row.id)
 
                 # Add entry to database
                 new_id = table.insert(name=name,
@@ -3935,7 +3935,7 @@ class GIS(object):
             else:
                 continue
 
-        s3_debug("All done!")
+        current.log.debug("All done!")
         return
 
     # -------------------------------------------------------------------------
@@ -4209,7 +4209,7 @@ class GIS(object):
                 try:
                     update_location_tree(row)
                 except RuntimeError:
-                    s3_debug("Cannot propagate inherited latlon to child %s of L1 location ID %s: too much recursion" % \
+                    current.log.error("Cannot propagate inherited latlon to child %s of L1 location ID %s: too much recursion" % \
                         (row.id, id))
             return _path
 
@@ -4266,7 +4266,7 @@ class GIS(object):
                     L0_name = Lx.name
                     L1_name = None
                 else:
-                    s3_debug("Parent of L2 Location ID %s has invalid level: %s is %s" % \
+                    current.log.error("Parent of L2 Location ID %s has invalid level: %s is %s" % \
                                 (id, parent, Lx.level))
                     #raise ValueError
                     return "%s/%s" % (parent, id)
@@ -4347,7 +4347,7 @@ class GIS(object):
                 try:
                     update_location_tree(row)
                 except RuntimeError:
-                    s3_debug("Cannot propagate inherited latlon to child %s of L2 location ID %s: too much recursion" % \
+                    current.log.error("Cannot propagate inherited latlon to child %s of L2 location ID %s: too much recursion" % \
                         (row.id, id))
             return _path
 
@@ -4438,7 +4438,7 @@ class GIS(object):
                     L1_name = None
                     L2_name = None
                 else:
-                    s3_debug("Parent of L3 Location ID %s has invalid level: %s is %s" % \
+                    current.log.error("Parent of L3 Location ID %s has invalid level: %s is %s" % \
                                 (id, parent, Lx.level))
                     #raise ValueError
                     return "%s/%s" % (parent, id)
@@ -4523,7 +4523,7 @@ class GIS(object):
                 try:
                     update_location_tree(row)
                 except RuntimeError:
-                    s3_debug("Cannot propagate inherited latlon to child %s of L3 location ID %s: too much recursion" % \
+                    current.log.error("Cannot propagate inherited latlon to child %s of L3 location ID %s: too much recursion" % \
                         (row.id, id))
             return _path
 
@@ -4643,7 +4643,7 @@ class GIS(object):
                     L2_name = None
                     L3_name = None
                 else:
-                    s3_debug("Parent of L4 Location ID %s has invalid level: %s is %s" % \
+                    current.log.error("Parent of L4 Location ID %s has invalid level: %s is %s" % \
                                 (id, parent, Lx.level))
                     #raise ValueError
                     return "%s/%s" % (parent, id)
@@ -4733,7 +4733,7 @@ class GIS(object):
                 try:
                     update_location_tree(row)
                 except RuntimeError:
-                    s3_debug("Cannot propagate inherited latlon to child %s of L4 location ID %s: too much recursion" % \
+                    current.log.error("Cannot propagate inherited latlon to child %s of L4 location ID %s: too much recursion" % \
                         (row.id, id))
             return _path
 
@@ -4887,7 +4887,7 @@ class GIS(object):
                     L3_name = None
                     L4_name = None
                 else:
-                    s3_debug("Parent of L5 Location ID %s has invalid level: %s is %s" % \
+                    current.log.error("Parent of L5 Location ID %s has invalid level: %s is %s" % \
                                 (id, parent, Lx.level))
                     #raise ValueError
                     return "%s/%s" % (parent, id)
@@ -4981,7 +4981,7 @@ class GIS(object):
                 try:
                     update_location_tree(row)
                 except RuntimeError:
-                    s3_debug("Cannot propagate inherited latlon to child %s of L5 location ID %s: too much recursion" % \
+                    current.log.error("Cannot propagate inherited latlon to child %s of L5 location ID %s: too much recursion" % \
                         (row.id, id))
             return _path
 
@@ -5408,7 +5408,8 @@ class GIS(object):
             from shapely import speedups
             speedups.enable()
         except:
-            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+            current.log.info("S3GIS",
+                             "Upgrade Shapely for Performance enhancements")
 
         table = current.s3db.gis_location
         in_bbox = current.gis.query_features_by_bbox(*shape.bounds)
@@ -5420,7 +5421,7 @@ class GIS(object):
                 if location_shape.intersects(shape):
                     yield loc
             except ReadingError:
-                s3_debug("Error reading wkt of location with id", loc.id)
+                current.log.error("Error reading wkt of location with id", loc.id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5484,7 +5485,7 @@ class GIS(object):
                 try :
                     shape = wkt_loads(location.wkt)
                 except:
-                    s3_debug("Error reading WKT", location.wkt)
+                    current.log.error("Error reading WKT", location.wkt)
                     continue
                 bounds = shape.bounds
                 table[location.id] = dict(lon_min = bounds[0],
@@ -5530,13 +5531,14 @@ class GIS(object):
             from shapely import speedups
             speedups.enable()
         except:
-            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+            current.log.info("S3GIS",
+                             "Upgrade Shapely for Performance enhancements")
 
         try:
             shape = wkt_loads(wkt)
         except:
             wkt = wkt[10] if wkt else wkt
-            s3_debug("Invalid Shape: %s" % wkt)
+            current.log.error("Invalid Shape: %s" % wkt)
             return None
 
         if not tolerance:
@@ -5582,7 +5584,7 @@ class GIS(object):
             y = float(format(shape.y, formatter))
             shape = Point(x, y)
         else:
-            s3_debug("Cannot yet shrink Geometry: %s" % geom_type)
+            current.log.info("Cannot yet shrink Geometry: %s" % geom_type)
 
         # Output
         if output == "wkt":
@@ -7392,7 +7394,7 @@ class LayerGeoRSS(Layer):
                                 (cachetable.modified_on < cutoff)
                         db(query).delete()
                 except Exception, exception:
-                    s3_debug("GeoRSS %s download error" % url, exception)
+                    current.log.error("GeoRSS %s download error" % url, exception)
                     # Feed down
                     if existing_cached_copy:
                         # Use cached copy
@@ -7605,8 +7607,8 @@ class LayerKML(Layer):
             try:
                 os.mkdir(cachepath)
             except OSError, os_error:
-                s3_debug("GIS: KML layers cannot be cached: %s %s" % \
-                            (cachepath, os_error))
+                current.log.error("GIS: KML layers cannot be cached: %s %s" % \
+                                  (cachepath, os_error))
                 cacheable = False
             else:
                 cacheable = True
@@ -8575,7 +8577,7 @@ class S3ImportPOI(S3Method):
                         # Python < 2.7
                         error = subprocess.call(cmd, shell=True)
                         if error:
-                            s3_debug(cmd)
+                            current.log.debug(cmd)
                             current.session.error = T("OSM file generation failed!")
                             redirect(URL(args=r.id))
                     try:

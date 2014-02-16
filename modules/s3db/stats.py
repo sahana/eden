@@ -666,7 +666,7 @@ class S3StatsDemographicModel(S3Model):
             parameter_id = record["parameter_id"]
             # Skip if either the location or the parameter is not valid
             if not location_id or not parameter_id:
-                s3_debug("Skipping bad stats_demographic_data record with data_id %s " % data_id)
+                current.log.warning("Skipping bad stats_demographic_data record with data_id %s " % data_id)
                 continue
             if total_id and parameter_id not in param_total_dict:
                 param_total_dict[parameter_id] = total_id

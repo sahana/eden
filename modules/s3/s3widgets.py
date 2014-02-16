@@ -4592,7 +4592,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 if level:
                     level = int(level[1])
                 else:
-                    s3_debug("Location Hierarchy not setup properly")
+                    current.log.warning("Location Hierarchy not setup properly")
                     continue
                 data = dict(n=l.name,
                             l=level)
@@ -5965,7 +5965,8 @@ def s3_grouped_checkboxes_widget(field,
             widget = s3_checkboxes_widget(field, value, **attributes)
         except:
             # some versions of gluon/sqlhtml.py don't support non-integer keys
-            if s3_debug:
+            current.log.critical("Widget creation failed")
+            if current.response.s3.debug:
                 raise
             else:
                 return None

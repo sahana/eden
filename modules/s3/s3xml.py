@@ -1795,9 +1795,8 @@ class S3XML(S3Codec):
                             stripper = S3MarkupStripper()
                             stripper.feed(comment)
                             comment = stripper.stripped()
-                        except Exception, e:
-                            from s3utils import s3_debug
-                            s3_debug("S3XML.get_fields()", e)
+                        except Exception:
+                            current.log.error(sys.exc_info()[1])
                     if comment:
                         set_attribute(ATTRIBUTE.comment, comment)
         return fields

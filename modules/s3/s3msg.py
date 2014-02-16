@@ -71,7 +71,7 @@ from gluon.html import *
 from s3codec import S3Codec
 from s3crud import S3CRUD
 from s3forms import S3SQLDefaultForm
-from s3utils import s3_debug, s3_unicode
+from s3utils import s3_unicode
 from s3validators import IS_IN_SET, IS_ONE_OF, IS_ONE_OF_EMPTY
 from s3widgets import S3PentityAutocompleteWidget
 
@@ -590,7 +590,7 @@ class S3Msg(object):
 
             entity_type = row["pr_pentity"].instance_type
             if not entity_type:
-                s3_debug("s3msg", "Entity type unknown")
+                current.log.warning("s3msg", "Entity type unknown")
                 continue
 
             row = row["msg_outbox"]
@@ -697,7 +697,7 @@ class S3Msg(object):
         settings = current.deployment_settings
         default_sender = settings.get_mail_sender()
         if not default_sender:
-            s3_debug("Email sending disabled until the Sender address has been set in models/000_config.py")
+            current.log.warning("Email sending disabled until the Sender address has been set in models/000_config.py")
             return False
 
         limit = settings.get_mail_limit()
@@ -879,7 +879,7 @@ class S3Msg(object):
         if clickatell:
             text_len = len(text)
             if text_len > 480:
-                s3_debug("Clickatell messages cannot exceed 480 chars")
+                current.log.error("Clickatell messages cannot exceed 480 chars")
                 return False
             elif text_len > 320:
                 post_data["concat"] = 3
@@ -895,14 +895,14 @@ class S3Msg(object):
         try:
             result = urllib2.urlopen(request, query)
         except urllib2.HTTPError, e:
-            s3_debug("SMS message send failed: %s" % e)
+            current.log.error("SMS message send failed: %s" % e)
             return False
         else:
             # Parse result
             output = result.read()
             if clickatell:
                 if output.startswith("ERR"):
-                    s3_debug("Clickatell message send failed: %s" % output)
+                    current.log.error("Clickatell message send failed: %s" % output)
                     return False
                 elif message_id and output.startswith("ID"):
                     # Store ID from Clickatell to be able to followup
@@ -913,7 +913,7 @@ class S3Msg(object):
                 # Good = <response success="true"></response>
                 # Bad = <response success="false"><errror id="id" message="message"></response>
                 if "error" in output:
-                    s3_debug("Mobile Commons message send failed: %s" % output)
+                    current.log.error("Mobile Commons message send failed: %s" % output)
                     return False
 
             return True
@@ -934,7 +934,7 @@ class S3Msg(object):
             self.modem.send_sms(mobile, text)
             return True
         except KeyError:
-            s3_debug("s3msg", "Modem not available: need to have the cron/sms_handler_modem.py script running")
+            current.log.error("s3msg", "Modem not available: need to have the cron/sms_handler_modem.py script running")
             return False
 
     # -------------------------------------------------------------------------
@@ -1090,7 +1090,7 @@ class S3Msg(object):
         try:
             import tweepy
         except ImportError:
-            s3_debug("s3msg", "Tweepy not available, so non-Tropo Twitter support disabled")
+            current.log.error("s3msg", "Tweepy not available, so non-Tropo Twitter support disabled")
             return None
 
         table = current.s3db.msg_twitter_channel
@@ -1180,7 +1180,7 @@ class S3Msg(object):
                                          )
 
                     except tweepy.TweepError:
-                        s3_debug("Unable to Tweet DM")
+                        current.log.error("Unable to Tweet DM")
             else:
                 prefix = "@%s " % recipient
                 chunks = self._break_to_chunks(text,
@@ -1189,14 +1189,14 @@ class S3Msg(object):
                     try:
                         twitter_api.update_status(prefix + c)
                     except tweepy.TweepError:
-                        s3_debug("Unable to Tweet @mention")
+                        current.log.error("Unable to Tweet @mention")
         else:
             chunks = self._break_to_chunks(text, TWITTER_MAX_CHARS)
             for c in chunks:
                 try:
                     twitter_api.update_status(c)
                 except tweepy.TweepError:
-                    s3_debug("Unable to Tweet")
+                    current.log.error("Unable to Tweet")
 
         return True
 
@@ -1213,7 +1213,7 @@ class S3Msg(object):
             fn = getattr(S3Msg, function_name)
         except:
             error = "Unsupported Channel: %s" % channel_type
-            s3_debug(error)
+            current.log.error(error)
             return error
 
         result = fn(channel_id)
@@ -1353,7 +1353,7 @@ class S3Msg(object):
                     p = poplib.POP3(host, port)
             except socket.error, e:
                 error = "Cannot connect: %s" % e
-                s3_debug(error)
+                current.log.error(error)
                 # Store status in the DB
                 sinsert(channel_id=channel_id,
                         status=error)
@@ -1369,7 +1369,7 @@ class S3Msg(object):
                     p.pass_(password)
                 except poplib.error_proto, e:
                     error = "Login failed: %s" % e
-                    s3_debug(error)
+                    current.log.error(error)
                     # Store status in the DB
                     sinsert(channel_id=channel_id,
                             status=error)
@@ -1399,7 +1399,7 @@ class S3Msg(object):
                     M = imaplib.IMAP4(host, port)
             except socket.error, e:
                 error = "Cannot connect: %s" % e
-                s3_debug(error)
+                current.log.error(error)
                 # Store status in the DB
                 sinsert(channel_id=channel_id,
                         status=error)
@@ -1409,7 +1409,7 @@ class S3Msg(object):
                 M.login(username, password)
             except M.error, e:
                 error = "Login failed: %s" % e
-                s3_debug(error)
+                current.log.error(error)
                 # Store status in the DB
                 sinsert(channel_id=channel_id,
                         status=error)
@@ -1556,7 +1556,7 @@ class S3Msg(object):
             smspage = urllib2.urlopen(url)
         except urllib2.HTTPError, e:
             error = "Error: %s" % e.code
-            s3_debug(error)
+            current.log.error(error)
             # Store status in the DB
             db(table.channel_id == channel_id).update(status=error)
             return error
@@ -1742,7 +1742,7 @@ class S3Msg(object):
                 messages = twitter_api.direct_messages()
         except tweepy.TweepError as e:
             error = e.message[0]["message"]
-            s3_debug("Unable to get the Tweets for the user: %s" % error)
+            current.log.error("Unable to get the Tweets for the user: %s" % error)
             return False
 
         messages.reverse()
@@ -1773,7 +1773,7 @@ class S3Msg(object):
             import TwitterSearch
         except ImportError:
             error = "Unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries"
-            s3_debug("s3msg", error)
+            current.log.error("s3msg", error)
             current.session.error = error
             redirect(URL(f="index"))
 
@@ -1791,7 +1791,7 @@ class S3Msg(object):
 
         if not settings:
             error = "Twitter Search requires an account configuring"
-            s3_debug("s3msg", error)
+            current.log.error("s3msg", error)
             current.session.error = error
             redirect(URL(f="twitter_channel"))
 

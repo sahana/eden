@@ -57,7 +57,7 @@ except ImportError:
 from gluon import current, HTTP, IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3utils import s3_debug, S3DateTime
+from s3utils import S3DateTime
 from s3validators import IS_TIME_INTERVAL_WIDGET, IS_UTC_DATETIME
 from s3widgets import S3DateTimeWidget, S3TimeIntervalWidget
 
@@ -356,7 +356,7 @@ class S3Task(object):
 
         if not ignore_duplicate and self._duplicate_task_exists(task, args, vars):
             # if duplicate task exists, do not insert a new one
-            s3_debug("Duplicate Task, Not Inserted", value=task)
+            current.log.warning("Duplicate Task, Not Inserted", value=task)
             return False
 
         auth = current.auth

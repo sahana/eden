@@ -614,9 +614,8 @@ class S3SQLDefaultForm(S3SQLForm):
             try:
                 callback(onaccept, form, tablename=tablename)
             except:
-                from s3utils import s3_debug
                 error = "onaccept failed: %s" % onaccept
-                s3_debug(error)
+                current.log.error(error)
                 current.manager.error = error
                 # This is getting swallowed
                 raise
@@ -929,9 +928,8 @@ class S3SQLCustomForm(S3SQLForm):
                 try:
                     callback(postprocess, form, tablename=tablename)
                 except:
-                    from s3utils import s3_debug
                     error = "postprocess failed: %s" % postprocess
-                    s3_debug(error)
+                    current.log.error(error)
                     current.manager.error = error
                     raise
             response.confirmation = message
@@ -966,9 +964,8 @@ class S3SQLCustomForm(S3SQLForm):
             try:
                 callback(onvalidation, form, tablename=self.tablename)
             except:
-                from s3utils import s3_debug
                 error = "onvalidation failed: %s" % onvalidation
-                s3_debug(error)
+                current.log.error(error)
                 current.manager.error = error
                 raise
 
@@ -1005,9 +1002,8 @@ class S3SQLCustomForm(S3SQLForm):
                     callback(subonvalidation, subform,
                              tablename = subtable._tablename)
                 except:
-                    from s3utils import s3_debug
                     error = "onvalidation failed: %s" % subonvalidation
-                    s3_debug(error)
+                    current.log.error(error)
                     current.manager.error = error
                     raise
                 for fn in subform.errors:
@@ -1207,9 +1203,8 @@ class S3SQLCustomForm(S3SQLForm):
             try:
                 callback(onaccept, form, tablename=tablename)
             except:
-                from s3utils import s3_debug
                 error = "onaccept failed: %s" % onaccept
-                s3_debug(error)
+                current.log.error(error)
                 current.manager.error = error
                 # This is getting swallowed
                 raise
