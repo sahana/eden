@@ -3476,6 +3476,7 @@
 'Program added': 'Chương trình đã được thêm vào',
 'Program deleted': 'Chương trình đã xóa',
 'Program Details': 'Thông tin về chương trình',
+'Program Hours': 'Thời gian hoạt động trong chương trình',
 'Program Hours (Month)': 'Thời gian tham gia chương trình (Tháng)',
 'Program Hours (Year)': 'Thời gian tham gia chương trình (Năm)',
 'Program updated': 'Chương trình được cập nhật',

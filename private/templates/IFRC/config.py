@@ -779,13 +779,50 @@ def customize_hrm_human_resource(**attr):
         Customize hrm_human_resource controller
     """
 
+    s3db = current.s3db
+
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.hrm_human_resource.organisation_id,
+    ns_only(s3db.hrm_human_resource.organisation_id,
             required=True,
             branches=True,
             )
 
     s3 = current.response.s3
+
+    if current.request.controller == "vol":
+        # Special cases for Viet Nam Red Cross
+        db = current.db
+        otable = s3db.org_organisation
+        try:
+            vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
+                                                                  limitby=(0, 1),
+                                                                  cache=s3db.cache,
+                                                                  ).first().id
+        except:
+            # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+            vnrc = False
+        else:
+            root_org = current.auth.root_org()
+            if root_org == vnrc:
+                vnrc = True
+    else:
+        vnrc = False
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if vnrc:
+            field = r.table.job_title_id
+            field.readable = field.writable = False
+
+        return result
+    s3.prep = custom_prep
 
     # Custom postp
     standard_postp = s3.postp
@@ -794,9 +831,15 @@ def customize_hrm_human_resource(**attr):
         if callable(standard_postp):
             output = standard_postp(r, output)
 
-        if r.controller == "deploy" and \
-           isinstance(output, dict) and "title" in output:
-            output["title"] = T("RDRT Members")
+        if isinstance(output, dict):
+            if r.controller == "deploy" and \
+               "title" in output:
+                output["title"] = T("RDRT Members")
+            elif vnrc and (r.controller == "vol" or \
+                           r.component_name == "human_resource"):
+                # Remove the injected Programme field
+                del output["form"][0].components[4]
+                del output["form"][0].components[4]
 
         return output
     s3.postp = custom_postp
@@ -1175,7 +1218,12 @@ def customize_pr_person(**attr):
                                        )
 
         if vnrc:
-            if r.component_name == "address":
+            if r.method == "record" or \
+               r.component_name == "human_resource":
+                field = s3db.hrm_human_resource.job_title_id
+                field.readable = field.writable = False
+
+            elif r.component_name == "address":
                 settings.gis.building_name = False
                 settings.gis.latlon_selector = False
                 settings.gis.map_selector = False

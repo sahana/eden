@@ -1058,6 +1058,10 @@ class S3OrganisationGroupModel(S3Model):
                                     #catalog_layers=True,
                                     polygon=True
                                     )),
+                             Field("website",
+                                   label=T("Website"),
+                                   requires=IS_NULL_OR(IS_URL()),
+                                   represent=s3_url_represent),
                              s3_comments(),
                              *s3_meta_fields())
 

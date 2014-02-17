@@ -6175,8 +6175,8 @@ def hrm_record(r, **attr):
                 # Exclude records which are just to link to Programme & also Training Hours
                 filter = (S3FieldSelector("hours") != None) & \
                          (S3FieldSelector("programme_id") != None)
-                hours_widget = dict(label = "Programme Hours",
-                                    title_create = "Add Programme Hours",
+                hours_widget = dict(label = "Program Hours",
+                                    title_create = "Add Program Hours",
                                     type = "datatable",
                                     actions = dt_row_actions("hours"),
                                     tablename = "hrm_programme_hours",
