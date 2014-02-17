@@ -646,7 +646,7 @@ def customize_org_group(**attr):
                                         options = "EMAIL"
                                         )
                     ),
-                    #"website",
+                    "website",
                     S3SQLInlineComponent(
                         "contact",
                         comment = DIV(INPUT(_type="checkbox",
