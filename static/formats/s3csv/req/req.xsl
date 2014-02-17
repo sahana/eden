@@ -207,7 +207,7 @@
                     <data field="date_required"><xsl:value-of select="col[@field='Date Required']"/></data>
                     <data field="date_recv"><xsl:value-of select="col[@field='Date Delivered']"/></data>
                     <xsl:if test="col[@field='Approved By']!=''">
-                        <reference field="requester_id" resource="pr_person">
+                        <reference field="approved_by_id" resource="pr_person">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="concat('Person:', col[@field='Approved By'])"/>
                             </xsl:attribute>
@@ -219,7 +219,7 @@
                         </reference>-->
                     </xsl:if>
                     <xsl:if test="col[@field='Received By']!=''">
-                        <reference field="requester_id" resource="pr_person">
+                        <reference field="recv_by_id" resource="pr_person">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="concat('Person:', col[@field='Received By'])"/>
                             </xsl:attribute>
@@ -245,7 +245,7 @@
                 </reference>-->
             </xsl:if>
             <xsl:if test="col[@field='Assigned To']!=''">
-                <reference field="requester_id" resource="pr_person">
+                <reference field="assigned_to_id" resource="pr_person">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('Person:', col[@field='Assigned To'])"/>
                     </xsl:attribute>
@@ -257,7 +257,7 @@
                 </reference>-->
             </xsl:if>
             <xsl:if test="col[@field='Requested For']!=''">
-                <reference field="requester_id" resource="pr_person">
+                <reference field="request_for_id" resource="pr_person">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('Person:', col[@field='Requested For'])"/>
                     </xsl:attribute>
