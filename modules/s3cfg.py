@@ -538,7 +538,8 @@ class S3Config(Storage):
             Minimum severity level for logger: "DEBUG", "INFO", "WARNING",
             "ERROR", "CRITICAL". None = turn off logging
         """
-        return self.log.get("level", None)
+        return "DEBUG" if self.base.get("debug") \
+                       else self.log.get("level", None)
 
     def get_log_console(self):
         """
