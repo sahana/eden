@@ -207,41 +207,66 @@
                     <data field="date_required"><xsl:value-of select="col[@field='Date Required']"/></data>
                     <data field="date_recv"><xsl:value-of select="col[@field='Date Delivered']"/></data>
                     <xsl:if test="col[@field='Approved By']!=''">
-                        <reference field="approved_by_id" resource="hrm_human_resource">
+                        <reference field="requester_id" resource="pr_person">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('Person:', col[@field='Approved By'])"/>
+                            </xsl:attribute>
+                        </reference>
+<!--                        <reference field="approved_by_id" resource="hrm_human_resource">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="concat('HR:', col[@field='Approved By'])"/>
                             </xsl:attribute>
-                        </reference>
+                        </reference>-->
                     </xsl:if>
                     <xsl:if test="col[@field='Received By']!=''">
-                        <reference field="recv_by_id" resource="hrm_human_resource">
+                        <reference field="requester_id" resource="pr_person">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('Person:', col[@field='Received By'])"/>
+                            </xsl:attribute>
+                        </reference>
+<!--                        <reference field="recv_by_id" resource="hrm_human_resource">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="concat('HR:', col[@field='Received By'])"/>
                             </xsl:attribute>
-                        </reference>
+                        </reference>-->
                     </xsl:if>
                 </xsl:otherwise>
             </xsl:choose>
             <xsl:if test="col[@field='Requester']!=''">
-                <reference field="requester_id" resource="hrm_human_resource">
+                <reference field="requester_id" resource="pr_person">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Person:', col[@field='Requester'])"/>
+                    </xsl:attribute>
+                </reference>
+<!--                <reference field="requester_id" resource="hrm_human_resource">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('HR:', col[@field='Requester'])"/>
                     </xsl:attribute>
-                </reference>
+                </reference>-->
             </xsl:if>
             <xsl:if test="col[@field='Assigned To']!=''">
-                <reference field="assigned_to_id" resource="hrm_human_resource">
+                <reference field="requester_id" resource="pr_person">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Person:', col[@field='Assigned To'])"/>
+                    </xsl:attribute>
+                </reference>
+<!--                <reference field="assigned_to_id" resource="hrm_human_resource">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('HR:', col[@field='Assigned To'])"/>
                     </xsl:attribute>
-                </reference>
+                </reference>-->
             </xsl:if>
             <xsl:if test="col[@field='Requested For']!=''">
-                <reference field="request_for_id" resource="hrm_human_resource">
+                <reference field="requester_id" resource="pr_person">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Person:', col[@field='Requested For'])"/>
+                    </xsl:attribute>
+                </reference>
+<!--                <reference field="request_for_id" resource="hrm_human_resource">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('HR:', col[@field='Requested For'])"/>
                     </xsl:attribute>
-                </reference>
+                </reference>-->
             </xsl:if>
             <data field="purpose"><xsl:value-of select="col[@field='Purpose']"/></data>
             <data field="transport_req"><xsl:value-of select="col[@field='Transportation Required']"/></data>

@@ -3351,6 +3351,7 @@ class S3ImportJob():
                 
             error = item.error
             if error:
+                current.log.error(error)
                 self.error = error
                 element = item.element
                 if element is not None:
