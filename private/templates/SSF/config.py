@@ -67,6 +67,10 @@ settings.auth.always_notify_approver = True
 settings.base.system_name = T("The Sahana Sunflower: A Community Portal")
 settings.base.system_name_short = T("Sahana Sunflower")
 
+# Assign the new users the permission to read.
+settings.auth.registration_roles = {"organisation_id": ["PROJECT_READ"],
+                                    }
+
 # L10n settings
 settings.L10n.languages = OrderedDict([
     ("ar", "العربية"),
@@ -186,7 +190,8 @@ settings.security.archive_not_delete = True
 # 6: Apply Controller, Function, Table & Organisation ACLs
 # 7: Apply Controller, Function, Table, Organisation & Facility ACLs
 #
-#settings.security.policy = 6 # Organisation-ACLs
+
+settings.security.policy = 5
 #acl = settings.aaa.acl
 #settings.aaa.default_uacl =  acl.READ   # User ACL
 #settings.aaa.default_oacl =  acl.CREATE | acl.READ | acl.UPDATE # Owner ACL
