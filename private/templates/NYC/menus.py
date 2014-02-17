@@ -465,14 +465,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Items", c="supply", f="item",
                       restrict=[SUPER])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Report", m="report2"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[SUPER])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                 )
 

@@ -421,47 +421,10 @@ def customize_org_organisation(**attr):
                                 #hidden=True,
                                 ),
                 ]
-            from s3.s3search import S3Search, S3SearchSimpleWidget, S3SearchOptionsWidget
-            search_method = S3Search(
-                simple=(),
-                advanced=(
-                    S3SearchSimpleWidget(
-                        name="org_search_text_advanced",
-                        label=T("Name"),
-                        comment=T("Search for an Organization by name or acronym"),
-                        field=["name", "acronym"]
-                    ),
-                    S3SearchOptionsWidget(
-                        name="org_search_network",
-                        label=T("Network"),
-                        field="group.name",
-                        cols=2
-                    ),
-                    S3SearchOptionsWidget(
-                        name="org_search_location",
-                        label=T("Neighborhood"),
-                        field="location.L4",
-                        location_level="L4",
-                        cols=2
-                    ),
-                    S3SearchOptionsWidget(
-                        name="org_search_service",
-                        label=T("Services"),
-                        field="service.name",
-                        cols=2
-                    ),
-                    S3SearchOptionsWidget(
-                        name="org_search_type",
-                        label=T("Type"),
-                        field="organisation_type_id",
-                        cols=2
-                    ),
-                ))
+                
             s3db.configure("org_organisation",
                            crud_form=crud_form,
-                           # @ToDo: Style & Enable
-                           #filter_widgets = filter_widgets,
-                           search_method=search_method,
+                           filter_widgets = filter_widgets,
                            )
 
         return result

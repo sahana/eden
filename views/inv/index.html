@@ -23,8 +23,8 @@
 <div class='col2right'>
 <h4>{{=T("Warehouse Stock")}}:</h4>
 <ul>
-  <li><a href='{{=URL(c="inv", f="inv_item", args="search")}}'>{{=T("Search")}}</a>
-  <li><a href='{{=URL(c="inv", f="track_item", args="search")}}'>{{=T("Search Shipped Items")}}</a>
+  <li><a href='{{=URL(c="inv", f="inv_item")}}'>{{=T("Search Items")}}</a>
+  <li><a href='{{=URL(c="inv", f="track_item")}}'>{{=T("Search Shipped Items")}}</a>
   <li><a href='{{=URL(c="inv", f="adj")}}'>{{=T("Adjust Stock Levels")}}</a>
   <li><a href='{{=URL(c="inv", f="inv_item", args="import")}}'>{{=T("Import")}}</a>
 </ul>
@@ -33,11 +33,11 @@
 <h3>{{=T("Reports")}}:</h3>
 <ul>
   <li><a href='{{=URL(c="inv", f="inv_item", args="report")}}'>{{=T("Warehouse Stock")}}</a>
-  <li><a href='{{=URL(c="inv", f="inv_item", args="search", vars=dict(report="mon"))}}'>{{=T("Monetization")}}</a>
-  <li><a href='{{=URL(c="inv", f="inv_item", args="search", vars=dict(report="rel"))}}'>{{=T("Summary of Releases")}}</a>
-  <li><a href='{{=URL(c="inv", f="inv_item", args="search", vars=dict(report="inc"))}}'>{{=T("Summary of Incoming Supplies")}}</a>
-  <li><a href='{{=URL(c="inv", f="inv_item", args="search", vars=dict(report="util"))}}'>{{=T("Utilization Report")}}</a>
-  <li><a href='{{=URL(c="inv", f="inv_item", args="search", vars=dict(report="exp"))}}'>{{=T("Expiration Report")}}</a>
+  <li><a href='{{=URL(c="inv", f="inv_item", vars=dict(report="mon"))}}'>{{=T("Monetization")}}</a>
+  <li><a href='{{=URL(c="inv", f="inv_item", vars=dict(report="rel"))}}'>{{=T("Summary of Releases")}}</a>
+  <li><a href='{{=URL(c="inv", f="inv_item", vars=dict(report="inc"))}}'>{{=T("Summary of Incoming Supplies")}}</a>
+  <li><a href='{{=URL(c="inv", f="inv_item", vars=dict(report="util"))}}'>{{=T("Utilization Report")}}</a>
+  <li><a href='{{=URL(c="inv", f="inv_item", vars=dict(report="exp"))}}'>{{=T("Expiration Report")}}</a>
 </ul>
 </div>
 <h3>{{=T("Shipments")}}:</h3>
@@ -45,23 +45,20 @@
 <h4>{{=T("Orders") if settings.get_inv_shipment_name() == "order" else T("Receive/Incoming")}}</h4>
 <ul>
   <li><a href='{{=URL(c="inv", f="recv", args="create")}}'>{{=T("Add")}}</a>
-  <li><a href='{{=URL(c="inv", f="recv")}}'>{{=T("List All")}}</a>
-  <li><a href='{{=URL(c="inv", f="recv", args="search")}}'>{{=T("Search")}}</a>
+  <li><a href='{{=URL(c="inv", f="recv")}}'>{{=T("Search")}}</a>
 </ul>
 </div>
 <div class='col2right'>
 <h4>{{=T("Sent")}}</h4>
 <ul>
   <li><a href='{{=URL(c="inv", f="send", args="create")}}'>{{=T("New")}}</a>
-  <li><a href='{{=URL(c="inv", f="send")}}'>{{=T("List All")}}</a>
-  <li><a href='{{=URL(c="inv", f="send", args="search")}}'>{{=T("Search")}}</a>
+  <li><a href='{{=URL(c="inv", f="send")}}'>{{=T("Search")}}</a>
 </div>
 <div class='col2left'>
 <h3>{{=T("Items")}}:</h3>
 <ul>
   <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("New")}}</a>
-  <li><a href='{{=URL(c="supply", f="item")}}'>{{=T("List All")}}</a>
-  <li><a href='{{=URL(c="supply", f="item", args="search")}}'>{{=T("Search")}}</a>
+  <li><a href='{{=URL(c="supply", f="item")}}'>{{=T("Search")}}</a>
       {{try:}}{{=XML(supply_items)}}{{except:}}{{pass}}
 </ul>
 <h4>{{=T("Catalogs")}}</h4>

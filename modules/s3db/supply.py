@@ -563,59 +563,50 @@ S3OptionsFilter({
             msg_no_match = T("No Matching Catalog Items")
             )
 
-        # Search Method
-        def catalog_item_search_simple_widget(type):
-            return S3SearchSimpleWidget(
-                name="catalog_item_search_simple_%s" % type,
-                label=T("Search"),
-                comment= T("Search for an item by its code, name, model and/or comment."),
-                field=[#"comments", # Causes a major Join which kills servers
-                       #"item_category_id$code", #These lines are causing issues...very slow - perhaps broken
-                       #"item_category_id$name",
-                       #"item_id$brand_id$name",
-                       #"item_category_id$parent_item_category_id$code"
-                       #"item_category_id$parent_item_category_id$name"
-                       "item_id$code",
-                       "item_id$name",
-                       "item_id$model",
-                       "item_id$comments"
-                       ],
-                )
-
-        search_method = S3Search(
-            simple=(catalog_item_search_simple_widget("simple")),
-            advanced=(catalog_item_search_simple_widget("advanced"),
-                      S3SearchOptionsWidget(
-                         name="catalog_item_search_catalog",
-                         label=T("Catalog"),
-                         comment=T("Search for an item by catalog."),
-                         field="catalog_id",
-                         represent ="%(name)s",
-                         cols = 3
-                       ),
-                       S3SearchOptionsWidget(
-                         name="catalog_item_search_category",
-                         label=T("Category"),
-                         comment=T("Search for an item by category."),
-                         field="item_category_id",
-                         represent = item_category_represent_nocodes,
-                         cols = 3
-                       ),
-                       S3SearchOptionsWidget(
-                         name="catalog_item_search_brand",
-                         label=T("Brand"),
-                         comment=T("Search for an item by brand."),
-                         field="item_id$brand_id",
-                         represent ="%(name)s",
-                         cols = 3
-                       ),
-                     )
-            )
+        # Filter Widgets
+        filter_widgets = [
+            S3TextFilter([#These lines are causing issues...very slow - perhaps broken
+                          #"comments",
+                          #"item_category_id$code", 
+                          #"item_category_id$name",
+                          #"item_id$brand_id$name",
+                          #"item_category_id$parent_item_category_id$code"
+                          #"item_category_id$parent_item_category_id$name"
+                          "item_id$code",
+                          "item_id$name",
+                          "item_id$model",
+                          "item_id$comments"
+                         ],
+                         label=T("Search"),
+                         comment= T("Search for an item by its code, name, model and/or comment."),
+                        ),
+            S3OptionsFilter("catalog_id",
+                            label=T("Catalog"),
+                            comment=T("Search for an item by catalog."),
+                            #represent ="%(name)s",
+                            cols = 3,
+                            hidden = True,
+                           ),
+            S3OptionsFilter("item_category_id",
+                            label=T("Category"),
+                            comment=T("Search for an item by category."),
+                            represent = item_category_represent_nocodes,
+                            cols = 3,
+                            hidden = True,
+                           ),
+            S3OptionsFilter("item_id$brand_id",
+                            label=T("Brand"),
+                            comment=T("Search for an item by brand."),
+                            #represent ="%(name)s",
+                            cols = 3,
+                            hidden = True,
+                           ),
+        ]
 
         configure(tablename,
                   deduplicate = self.supply_catalog_item_duplicate,
-                  search_method = search_method,
-                  )
+                  filter_widgets = filter_widgets,
+                 )
 
         # =====================================================================
         # Item Pack
@@ -790,7 +781,7 @@ S3OptionsFilter({
                                   *s3_ownerstamp()
                                   )
 
-        # ---------------------------------------------------------------------
+        # Reusable Field
         item_id = super_link("item_entity_id", "supply_item_entity",
                              #writable = True,
                              #readable = True,
@@ -803,13 +794,9 @@ S3OptionsFilter({
                              #                                T("Enter some characters to bring up a list of possible matches")))
                              )
 
-        # ---------------------------------------------------------------------
-        # Item Search Method
-        #
-        search_method = S3Search(
-            # Advanced Search only
-            simple=(),
-            advanced=(S3SearchSimpleWidget(
+        # Filter Widgets
+        filter_widgets = [
+            S3TextFilter(
                         name="item_entity_search_text",
                         label=T("Search"),
                         comment=T("Search for an item by text."),
@@ -818,27 +805,24 @@ S3OptionsFilter({
                                 #"site_id$name"
                                 ]
                       ),
-                      S3SearchOptionsWidget(
-                        name="item_entity_search_category",
-                        label=T("Code Share"),
-                        field="item_id$item_category_id",
-                        represent ="%(name)s",
-                        comment=T("If none are selected, then all are searched."),
-                        cols = 2
-                      ),
-                      #S3SearchOptionsWidget(
-                      #  name="item_entity_search_country",
-                      #  label=current.messages.COUNTRY,
-                      #  field="country",
-                      #  represent ="%(name)s",
-                      #  comment=T("If none are selected, then all are searched."),
-                      #  cols = 2
-                      #),
-            ))
-
-        # ---------------------------------------------------------------------
+            S3OptionsFilter("item_id$item_category_id",
+                            label=T("Code Share"),
+                            comment=T("If none are selected, then all are searched."),
+                            #represent ="%(name)s",
+                            cols = 2,
+                           ),
+            #S3OptionsFilter("country",
+            #                label=current.messages.COUNTRY,
+            #                comment=T("If none are selected, then all are searched."),
+            #                #represent ="%(name)s",
+            #                cols = 2,
+            #               ),
+        ]
+        
+        # Configuration
         configure(tablename,
-                  search_method = search_method)
+                  filter_widgets = filter_widgets,
+                 )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2325,7 +2309,8 @@ def supply_item_entity_controller():
     """
         RESTful CRUD controller
         - consolidated report of inv_item, recv_item & proc_plan_item
-        @ToDo: Migrate JS to Static as part of migrating this to an S3Search Widget
+        @ToDo: Migrate JS to Static as part of migrating this to an
+               S3Search Widget
     """
 
     T = current.T
@@ -2435,18 +2420,20 @@ def supply_item_entity_controller():
             # @ToDo: Assets & Req_Items
             # @ToDo: Try to do this as a Join?
             if settings.has_module("inv"):
-                iquery = query & (db.inv_inv_item.site_id == table.site_id)
-                isites = db(iquery).select(distinct=True,
-                                           *fields)
-                rquery = query & (s3db.inv_track_item.send_inv_item_id == db.inv_recv.id) & \
-                                 (db.inv_recv.site_id == table.site_id)
-                rsites = db(rquery).select(distinct=True,
-                                           *fields)
+                inv_itable = s3db.inv_inv_item
+                iquery = query & (inv_itable.site_id == table.site_id)
+                isites = db(iquery).select(distinct=True, *fields)
+                inv_ttable = s3db.inv_track_item
+                inv_rtable = s3db.inv_recv
+                rquery = query & (inv_ttable.send_inv_item_id == inv_rtable.id) & \
+                                 (inv_rtable.site_id == table.site_id)
+                rsites = db(rquery).select(distinct=True, *fields)
             if settings.has_module("proc"):
-                pquery = query & (db.proc_plan_item.plan_id == db.proc_plan.id) & \
-                                 (db.proc_plan.site_id == table.site_id)
-                psites = db(pquery).select(distinct=True,
-                                           *fields)
+                proc_ptable = s3db.proc_plan
+                proc_itable = s3db.proc_plan_item
+                pquery = query & (proc_itable.plan_id == proc_ptable.id) & \
+                                 (proc_ptable.site_id == table.site_id)
+                psites = db(pquery).select(distinct=True, *fields)
             sites = []
             for site in isites:
                 if site not in sites:
@@ -2566,7 +2553,9 @@ $('#organisation_dropdown').change(function(){
         return output
     s3.postp = postp
 
-    output = current.rest_controller("supply", "item_entity")
+    output = current.rest_controller("supply", "item_entity",
+                                     #hide_filter = False,
+                                    )
     return output
 
 # -------------------------------------------------------------------------

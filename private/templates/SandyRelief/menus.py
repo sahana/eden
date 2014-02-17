@@ -70,14 +70,14 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Request People", f="req", m="create", vars={"type": 3})
             ),
             MM("Locations", c="gis")(
-                MM("Facilities", c="org", f="facility", m="search"),
+                MM("Facilities", c="org", f="facility"),
                 #MM("Warehouses", c="inv", f="warehouse"),
                 MM("Create a Facility", c="org", f="facility", m="create")
             ),
             MM("Contacts", c="hrm", f="staff")(
                 MM("Staff", c="hrm", f="staff"),
                 MM("Groups", c="hrm", f="group"),
-                MM("Organizations", c="org", f="organisation", m="search"),
+                MM("Organizations", c="org", f="organisation"),
                 MM("Networks", c="org", f="group"),
                 #MM("People Registry", c="pr", f="index")
             ),                
@@ -140,7 +140,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
                         #M("Search"),
-                        #M("Search Shipped Items", f="track_item", m="search"),
+                        #M("Search Shipped Items", f="track_item"),
                         M("Stock Count", f="adj"),
                         #M("Kitting", f="kit"),
                         M("Import", f="inv_item", m="import", p="create"),
@@ -170,7 +170,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report"),
+                        M("Report", m="report2"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
@@ -271,16 +271,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="org")(
                     M("Facilities", f="facility")(
                         M("New", m="create"),
-                        M("List All"),
                         #M("Review/Approve New", m="review"),
+                        M("Search"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
                         M("Import", m="import")
                     ),
                     M("Organizations", f="organisation")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
+                        M("Search"),
                         M("Import", m="import")
                     ),
                     M("Facility Types", f="facility_type",
@@ -344,15 +342,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Items", c="supply", f="item",
                       restrict=[SUPER])(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
-                        M("Report", m="report"),
+                        #M("Search"),
+                        M("Report", m="report2"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[SUPER])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                 )
 
