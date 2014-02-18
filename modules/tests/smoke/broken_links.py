@@ -268,13 +268,15 @@ class BrokenLinkTest(Web2UnitTest):
     
     def report(self):
         self.reporter("%d URLs visited" % self.totalLinks)
-        self.brokenReport()
+        count = self.brokenReport()
         self.timeReport()
         if self.config.record_timings:
             if not self.reportOnly:
                 self.record_timings()
             self.scatterplot()
         self.depthReport()
+        # If there are any broken links, report failed test.
+        self.assertIs(count, 0, "Broken Links Found");
 
     def record_timings(self):
         import_error = ""
@@ -470,7 +472,7 @@ class BrokenLinkTest(Web2UnitTest):
     def brokenReport(self):
         self.reporter("Broken Links")
         as_html = current.test_config.html
-        n = 1
+        broken_links_count = 0
         for (url, rd_obj) in self.results.items():
             if as_html:
                 print_url = "<a href=%s%s target=\"_blank\">%s</a>" % (self.homeURL, url, url)
@@ -488,16 +490,15 @@ class BrokenLinkTest(Web2UnitTest):
                             parent = "<a href=%s%s target=\"_blank\">Parent</a>" % (self.homeURL, parent)
                     except:
                         parent = "unknown"
-                    msg = "%3d. (%s - %s) %s called from %s" % (n,
+                    msg = "%3d. (%s - %s) %s called from %s" % (broken_links_count,
                                                                 http_code,
                                                                 ticket,
                                                                 print_url,
                                                                 parent
                                                                 )
                 self.reporter(msg)
-                n += 1
-        # If there are any broken links, report failed test.
-        self.assertTrue(n == 1, "Found Broken Links")
+                broken_links_count += 1
+        return broken_links_count
 
     def timeReport(self):
         from operator import itemgetter
