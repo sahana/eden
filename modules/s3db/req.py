@@ -1714,6 +1714,27 @@ S3OptionsFilter({
         list_fields.append("quantity_fulfil")
         list_fields.append("comments")
 
+        filter_widgets = [
+            S3OptionsFilter("req_id$fulfil_status",
+                            label=T("Status"),
+                            options = self.req_status_opts,
+                            cols = 3,
+                           ),
+            S3OptionsFilter("req_id$priority",
+                            label=T("Priority"),
+                            options = self.req_priority_opts,
+                            cols = 3,
+                           ),
+            S3LocationFilter("req_id$site_id$location_id",
+                             levels = [#"L1",
+                                       #"L2",
+                                       "L3",
+                                       "L4",
+                                      ],
+                             widget = "multiselect",
+                            ),
+        ]
+
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        onaccept = req_item_onaccept,
@@ -1722,6 +1743,7 @@ S3OptionsFilter({
                        deletable = settings.get_req_multiple_req_items(),
                        deduplicate = self.req_item_duplicate,
                        list_fields = list_fields,
+                       filter_widgets = filter_widgets,
                        extra_fields = ["item_pack_id"],
                        )
 

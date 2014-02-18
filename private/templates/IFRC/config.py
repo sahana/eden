@@ -835,8 +835,11 @@ def customize_hrm_human_resource(**attr):
             if r.controller == "deploy" and \
                "title" in output:
                 output["title"] = T("RDRT Members")
-            elif vnrc and (r.controller == "vol" or \
-                           r.component_name == "human_resource"):
+            elif vnrc and \
+                 r.method not in ("report", "report2") and \
+                 "form" in output and \
+                 (r.controller == "vol" or \
+                  r.component_name == "human_resource"):
                 # Remove the injected Programme field
                 del output["form"][0].components[4]
                 del output["form"][0].components[4]
