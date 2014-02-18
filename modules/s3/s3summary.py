@@ -166,7 +166,7 @@ class S3Summary(S3Method):
                                           visible=visible,
                                           **attr)
                     else:
-                        r.error(405, r.ERROR.BAD_METHOD)
+                        r.error(405, current.ERROR.BAD_METHOD)
 
                 # Add content to section
                 if isinstance(content, dict):
@@ -303,7 +303,7 @@ class S3Summary(S3Method):
                                              widget_id=widget_id,
                                              **attr)
                         else:
-                            r.error(405, r.ERROR.BAD_METHOD)
+                            r.error(405, current.ERROR.BAD_METHOD)
                     return output
                 i += 1
 

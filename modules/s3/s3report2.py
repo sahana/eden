@@ -67,7 +67,7 @@ class S3Report2(S3Method):
         if r.http == "GET":
             output = self.report(r, **attr)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -210,7 +210,7 @@ class S3Report2(S3Method):
             output = json.dumps(pivotdata)
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
             
         return output
 
@@ -322,7 +322,7 @@ class S3Report2(S3Method):
                                                  widget_id = widget_id)
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 

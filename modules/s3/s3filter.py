@@ -2068,13 +2068,13 @@ class S3Filter(S3Method):
                     # Save a filter
                     return self._save(r, **attr)
             else:
-                r.error(405, r.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
                 
         elif representation == "html":
             return self._form(r, **attr)
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _form(self, r, **attr):
@@ -2087,7 +2087,7 @@ class S3Filter(S3Method):
             @param attr: additional controller parameters
         """
 
-        r.error(501, r.ERROR.NOT_IMPLEMENTED)
+        r.error(501, current.ERROR.NOT_IMPLEMENTED)
 
     # -------------------------------------------------------------------------
     def _options(self, r, **attr):
@@ -2146,7 +2146,7 @@ class S3Filter(S3Method):
             data = json.load(source)
         except ValueError:
             # Syntax error: no JSON data
-            r.error(501, r.ERROR.BAD_SOURCE)
+            r.error(501, current.ERROR.BAD_SOURCE)
 
         # Try to find the record
         db = current.db
@@ -2159,7 +2159,7 @@ class S3Filter(S3Method):
             query = (table.id == record_id) & (table.pe_id == pe_id)
             record = db(query).select(table.id, limitby=(0, 1)).first()
         if not record:
-            r.error(501, r.ERROR.BAD_RECORD)
+            r.error(501, current.ERROR.BAD_RECORD)
             
         resource = s3db.resource("pr_filter", id=record_id)
         success = resource.delete(format=r.representation)
@@ -2195,7 +2195,7 @@ class S3Filter(S3Method):
         try:
             data = json.load(source)
         except ValueError:
-            r.error(501, r.ERROR.BAD_SOURCE)
+            r.error(501, current.ERROR.BAD_SOURCE)
 
         # Try to find the record
         db = current.db
@@ -2208,7 +2208,7 @@ class S3Filter(S3Method):
             query = (table.id == record_id) & (table.pe_id == pe_id)
             record = db(query).select(table.id, limitby=(0, 1)).first()
             if not record:
-                r.error(404, r.ERROR.BAD_RECORD)
+                r.error(404, current.ERROR.BAD_RECORD)
 
         # Build new record
         filter_data = {

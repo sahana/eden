@@ -71,7 +71,7 @@ class S3Report(S3CRUD):
         if r.http in ("GET", "POST"):
             output = self.report(r, **attr)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -354,7 +354,7 @@ class S3Report(S3CRUD):
                 output["sortby"] = [[0, "asc"]]
 
             else:
-                r.error(501, current.manager.ERROR.BAD_FORMAT)
+                r.error(501, current.ERROR.BAD_FORMAT)
 
         elif representation in ("html", "iframe"):
            
@@ -364,7 +364,7 @@ class S3Report(S3CRUD):
                           json_data = """{}""")
 
         else:
-            r.error(501, current.manager.ERROR.BAD_METHOD)
+            r.error(501, current.ERROR.BAD_METHOD)
 
         # Complete the page
         if representation in ("html", "iframe"):

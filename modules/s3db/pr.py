@@ -4493,7 +4493,7 @@ def pr_contacts(r, **attr):
     from itertools import groupby
 
     if r.http != "GET":
-        r.error(405, current.manager.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     T = current.T
     db = current.db

@@ -972,7 +972,7 @@ class S3CMS(S3Method):
         """
 
         # Not Implemented
-        r.error(405, r.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def widget(self, r, method="cms", widget_id=None, **attr):

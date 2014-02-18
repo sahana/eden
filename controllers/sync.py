@@ -129,7 +129,7 @@ def sync():
             output = r()
             return output
 
-    raise HTTP(400, body=s3mgr.ERROR.BAD_REQUEST)
+    raise HTTP(400, body=current.ERROR.BAD_REQUEST)
 
 # -----------------------------------------------------------------------------
 def log():

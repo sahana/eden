@@ -291,7 +291,7 @@ class S3Importer(S3Method):
             if upload_id != None:
                 output = self.delete_job(upload_id)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         return output
 
@@ -1732,7 +1732,6 @@ class S3ImportItem(object):
         """
 
         self.job = job
-        self.ERROR = current.manager.ERROR
 
         # Locking and error handling
         self.lock = False
@@ -1819,7 +1818,7 @@ class S3ImportItem(object):
             tablename = element.get(xml.ATTRIBUTE["name"], None)
             table = s3db.table(tablename)
             if table is None:
-                self.error = self.ERROR.BAD_RESOURCE
+                self.error = current.ERROR.BAD_RESOURCE
                 element.set(ERROR, str(self.error))
                 return False
 
@@ -1837,7 +1836,7 @@ class S3ImportItem(object):
                           validate=current.manager.validate)
 
         if data is None:
-            self.error = self.ERROR.VALIDATION_ERROR
+            self.error = current.ERROR.VALIDATION_ERROR
             self.accepted = False
             if not element.get(ERROR, False):
                 element.set(ERROR, str(self.error))
@@ -2114,7 +2113,7 @@ class S3ImportItem(object):
                 else:
                     e = e[0]
                 e.set(ERROR, str(form.errors[k]).decode("utf-8"))
-            self.error = self.ERROR.VALIDATION_ERROR
+            self.error = current.ERROR.VALIDATION_ERROR
             self.accepted = False
 
         return self.accepted
@@ -2160,6 +2159,7 @@ class S3ImportItem(object):
         UID = xml.UID
         MCI = xml.MCI
         MTIME = xml.MTIME
+        VALIDATION_ERROR = current.ERROR.VALIDATION_ERROR
 
         # Make item mtime TZ-aware
         self.mtime = xml.as_utc(self.mtime)
@@ -2184,7 +2184,7 @@ class S3ImportItem(object):
             # if the user deliberately chose to import it despite error.
             parent = self.parent
             if parent is not None:
-                parent.error = self.ERROR.VALIDATION_ERROR
+                parent.error = VALIDATION_ERROR
                 element = parent.element
                 if not element.get(ATTRIBUTE.error, False):
                     element.set(ATTRIBUTE.error, str(parent.error))
@@ -2203,7 +2203,7 @@ class S3ImportItem(object):
                     component.skip = True
                     # Skip this item on any component validation errors
                     self.skip = True
-                    self.error = self.ERROR.VALIDATION_ERROR
+                    self.error = VALIDATION_ERROR
                     return ignore_errors
 
         elif self.method in (MERGE, DELETE) and not self.accepted:
@@ -2214,7 +2214,7 @@ class S3ImportItem(object):
         # Authorize item
         if not self.authorize():
             _debug("Not authorized - skip")
-            self.error = manager.ERROR.NOT_PERMITTED
+            self.error = current.ERROR.NOT_PERMITTED
             self.skip = True
             return ignore_errors
 
@@ -2228,7 +2228,7 @@ class S3ImportItem(object):
             strategy = [strategy]
         if method not in strategy:
             _debug("Method not in strategy - skip")
-            self.error = manager.ERROR.NOT_PERMITTED
+            self.error = current.ERROR.NOT_PERMITTED
             self.skip = True
             return True
 
@@ -2781,7 +2781,7 @@ class S3ImportItem(object):
         try:
             table = s3db[tablename]
         except:
-            self.error = self.ERROR.BAD_RESOURCE
+            self.error = current.ERROR.BAD_RESOURCE
             return False
         else:
             self.table = table

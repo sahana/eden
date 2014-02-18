@@ -61,6 +61,24 @@ for u in messages:
     if isinstance(messages[u], str):
         globals()[u] = T(messages[u])
 
+# Error Messages
+ERROR["BAD_RECORD"] = messages["BADRECORD"]
+ERROR["BAD_METHOD"] = messages["BADMETHOD"]
+ERROR["METHOD_DISABLED"] = "Method disabled"
+ERROR["BAD_FORMAT"] = messages["BADFORMAT"]
+ERROR["BAD_REQUEST"] = "Invalid request"
+ERROR["BAD_TEMPLATE"] = "XSLT stylesheet not found"
+ERROR["BAD_RESOURCE"] = "Nonexistent or invalid resource"
+ERROR["PARSE_ERROR"] = "XML parse error"
+ERROR["TRANSFORMATION_ERROR"] = "XSLT transformation error"
+ERROR["BAD_SOURCE"] = "Invalid source"
+ERROR["NO_MATCH"] = "No matching element found in the data source"
+ERROR["VALIDATION_ERROR"] = "Validation error"
+ERROR["DATA_IMPORT_ERROR"] = "Data import error"
+ERROR["NOT_PERMITTED"] = "Operation not permitted"
+ERROR["NOT_IMPLEMENTED"] = "Not implemented"
+ERROR["INTEGRITY_ERROR"] = "Integrity error: record can not be deleted while it is referenced by other records"
+        
 # Pass to CRUD
 s3mgr.LABEL["READ"] = READ
 s3mgr.LABEL["UPDATE"] = UPDATE

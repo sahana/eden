@@ -135,7 +135,7 @@ class S3CRUD(S3Method):
             else:
                 output = self.unapproved(r, **attr)
         else:
-            r.error(405, r.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         return output
 
@@ -196,7 +196,7 @@ class S3CRUD(S3Method):
         insertable = _config("insertable", True)
         if not insertable:
             if native:
-                r.error(405, resource.ERROR.METHOD_DISABLED)
+                r.error(405, current.ERROR.METHOD_DISABLED)
             else:
                 return dict(form=None)
 
@@ -274,13 +274,13 @@ class S3CRUD(S3Method):
                     from_table, from_record = from_record.split(".", 1)
                     from_table = current.db.get(from_table, None)
                     if not from_table:
-                        r.error(404, resource.ERROR.BAD_RESOURCE)
+                        r.error(404, current.ERROR.BAD_RESOURCE)
                 else:
                     from_table = table
                 try:
                     from_record = long(from_record)
                 except:
-                    r.error(404, resource.ERROR.BAD_RECORD)
+                    r.error(404, current.ERROR.BAD_RECORD)
                 authorised = current.auth.s3_has_permission("read",
                                                     from_table._tablename,
                                                     from_record)
@@ -425,7 +425,7 @@ class S3CRUD(S3Method):
             return results
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -635,7 +635,7 @@ class S3CRUD(S3Method):
             return exporter(resource)
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -670,14 +670,14 @@ class S3CRUD(S3Method):
         # Get the target record ID
         record_id = self.record_id
         if r.interactive and not record_id:
-            r.error(404, resource.ERROR.BAD_RECORD)
+            r.error(404, current.ERROR.BAD_RECORD)
 
         # Check if editable
         if not editable:
             if r.interactive:
                 return self.read(r, **attr)
             else:
-                r.error(405, resource.ERROR.METHOD_DISABLED)
+                r.error(405, current.ERROR.METHOD_DISABLED)
 
         # Check permission for update
         authorised = self._permitted(method="update")
@@ -810,7 +810,7 @@ class S3CRUD(S3Method):
             return self.import_url(r)
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -834,7 +834,7 @@ class S3CRUD(S3Method):
 
         # Check if deletable
         if not deletable:
-            r.error(403, r.ERROR.NOT_PERMITTED,
+            r.error(403, current.ERROR.NOT_PERMITTED,
                     next=r.url(method=""))
 
         # Get the target record ID
@@ -891,7 +891,7 @@ class S3CRUD(S3Method):
             output.update(item=item)
 
         else:
-            r.error(405, r.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         return output
 
@@ -1132,10 +1132,10 @@ class S3CRUD(S3Method):
                 from s3notify import S3Notifications
                 return S3Notifications.send(r, resource)
             else:
-                r.error(405, r.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
             
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _datatable(self, r, **attr):
@@ -1337,7 +1337,7 @@ class S3CRUD(S3Method):
                          '"aaData":[]}' % (totalrows, list_id, sEcho)
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1448,7 +1448,7 @@ class S3CRUD(S3Method):
             if "delete" in get_vars:
                 return {"item": self._dl_ajax_delete(r, resource)}
             else:
-                r.error(405, r.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
 
         if representation in ("html", "dl", "popup"):
 
@@ -1516,7 +1516,7 @@ class S3CRUD(S3Method):
             #    dl.insert(0, DIV(empty, _class="empty"))
             data = dl
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
 
         if representation == "html":
@@ -1753,7 +1753,7 @@ class S3CRUD(S3Method):
                          '"aaData": []}' % (totalrows, list_id, sEcho)
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1843,7 +1843,7 @@ class S3CRUD(S3Method):
             current.response.view = "review.html"
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1887,7 +1887,7 @@ class S3CRUD(S3Method):
         """
 
         if r.representation != "json":
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         output = Storage()
         resource = self.resource
@@ -1904,12 +1904,12 @@ class S3CRUD(S3Method):
                 resource = current.s3db.resource(tablename,
                                                  components=components)
             except:
-                r.error(404, r.ERROR.BAD_RESOURCE)
+                r.error(404, current.ERROR.BAD_RESOURCE)
         if alias:
             if alias in resource.components:
                 component = resource.components[alias]
             else:
-                r.error(404, r.ERROR.BAD_RESOURCE)
+                r.error(404, current.ERROR.BAD_RESOURCE)
         else:
             component = resource
 
@@ -1919,7 +1919,7 @@ class S3CRUD(S3Method):
         try:
             data = json.load(source)
         except ValueError:
-            r.error(501, r.ERROR.BAD_SOURCE)
+            r.error(501, current.ERROR.BAD_SOURCE)
 
         if not isinstance(data, list):
             single = True
@@ -2758,7 +2758,7 @@ class S3CRUD(S3Method):
             # Deleting in this resource allowed at all?
             deletable = dresource.get_config("deletable", True)
             if not deletable:
-                r.error(403, r.ERROR.NOT_PERMITTED)
+                r.error(403, current.ERROR.NOT_PERMITTED)
                 
             # Permitted to delete this record?
             authorised = current.auth.s3_has_permission("delete",
@@ -2791,6 +2791,6 @@ class S3CRUD(S3Method):
             current.response.view = "xml.html"
             return current.xml.json_message(message=message, uuid=uid)
         else:
-            r.error(404, r.ERROR.BAD_RECORD)
+            r.error(404, current.ERROR.BAD_RECORD)
 
 # END =========================================================================
