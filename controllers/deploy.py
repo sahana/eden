@@ -312,7 +312,7 @@ def training():
     return s3db.hrm_training_controller()
 
 # -----------------------------------------------------------------------------
-def person_search():
+def hr_search():
     """
         Human Resource REST controller
         - limited to just search_ac for use in Autocompletes
@@ -325,6 +325,21 @@ def person_search():
     s3.prep = lambda r: r.method == "search_ac"
 
     return s3_rest_controller("hrm", "human_resource")
+
+# -----------------------------------------------------------------------------
+def person_search():
+    """
+        Person REST controller
+        - limited to just search_ac for use in Autocompletes
+        - allows differential access permissions
+    """
+
+    # Filter to just deployables (RDRT Members)
+    s3.filter = s3base.S3FieldSelector("application.active") == True
+
+    s3.prep = lambda r: r.method == "search_ac"
+
+    return s3_rest_controller("pr", "person")
 
 # =============================================================================
 def alert_create_script():

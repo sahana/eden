@@ -2142,13 +2142,13 @@ class S3HRSkillModel(S3Model):
         # Components
         add_components(tablename,
                        # Participants
-                       pr_person={"name": "participant",
-                                  "link": "hrm_training",
-                                  "joinby": "training_event_id",
-                                  "key": "person_id",
-                                  "actuate": "hide",
-                                 },
-                      )
+                       pr_person = {"name": "participant",
+                                    "link": "hrm_training",
+                                    "joinby": "training_event_id",
+                                    "key": "person_id",
+                                    "actuate": "hide",
+                                    },
+                       )
 
         # =====================================================================
         # Training Participations
