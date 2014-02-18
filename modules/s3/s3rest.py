@@ -343,16 +343,16 @@ class S3RequestManager(object):
                 if isinstance(text, DIV):
                     text = str(text)
                 elif not isinstance(text, basestring):
-                    text = unicode(text)
+                    text = s3_unicode(text)
         else:
             if val is None:
                 text = NONE
             elif fname == "comments" and not extended_comments:
-                ur = unicode(text)
+                ur = s3_unicode(text)
                 if len(ur) > 48:
                     text = "%s..." % ur[:45].encode("utf8")
             else:
-                text = unicode(text)
+                text = s3_unicode(text)
 
         # Strip away markup from text
         if strip_markup and "<" in text:

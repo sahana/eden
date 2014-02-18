@@ -715,64 +715,12 @@ def req_item():
         @ToDo: Filter out fulfilled Items?
     """
 
-    if not s3.filter:
-        # Filter out Template Items
-        ritable = s3db.req_req_item
-        rtable = db.req_req
-        s3.filter = (rtable.is_template == False) & \
-                    (rtable.id == ritable.req_id)
-
-    # Search method
-    # @ToDo: Migrate to S3Filter
-    search_method = s3db.get_config("req_req_item", "search_method")
-    if not search_method:
-        S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
-        req_item_search = (
-            S3SearchOptionsWidget(
-                name="req_search_fulfil_status",
-                label=T("Status"),
-                field="req_id$fulfil_status",
-                options = s3.req_status_opts,
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name="req_search_priority",
-                label=T("Priority"),
-                field="req_id$priority",
-                options = s3.req_priority_opts,
-                cols = 3,
-            ),
-            #S3SearchOptionsWidget(
-            #  name="req_search_L1",
-            #  field="req_id$site_id$location_id$L1",
-            #  location_level="L1",
-            #  cols = 3,
-            #),
-            #S3SearchOptionsWidget(
-            #  name="req_search_L2",
-            #  field="req_id$site_id$location_id$L2",
-            #  location_level="L2",
-            #  cols = 3,
-            #),
-            S3SearchOptionsWidget(
-                name="req_search_L3",
-                field="req_id$site_id$location_id$L3",
-                location_level="L3",
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name="req_search_L4",
-                field="req_id$site_id$location_id$L4",
-                location_level="L4",
-                cols = 3,
-            ),
-        )
-        s3db.configure("req_req_item",
-                       search_method = s3base.S3Search(advanced=req_item_search),
-                       )
+    # Filter out Template Items
+    s3.filter = (s3base.S3FieldSelector("req_id$is_template") == False)
 
     def prep(r):
-        if r.interactive:
+        
+        if r.interactive or r.representation == "aadata":
 
             list_fields = s3db.get_config("req_req_item", "list_fields")
             list_fields.insert(1, "req_id$site_id")
@@ -793,7 +741,7 @@ def req_item():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("req", "req_item")
+    output = s3_rest_controller("req", "req_item", hide_filter = False)
 
     if settings.get_req_prompt_match():
         req_item_inv_item_btn = dict(url = URL(c="req", f="req_item_inv_item",

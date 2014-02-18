@@ -4584,15 +4584,27 @@ class S3LeftJoins(object):
         accessible_query = current.auth.s3_accessible_query
 
         if tablenames is None:
-            tablenames = list(set(self.tables))
+            tablenames = set(self.tables)
         else:
-            tablenames = list(set(tablenames))
-
+            tablenames = set(tablenames)
+        
         joins = self.joins
 
-        joins_dict = {}
+        # Resolve dependencies
+        required_tables = set()
+        get_tables = current.db._adapter.tables
         for tablename in tablenames:
+            if tablename not in joins or tablename == self.tablename:
+                continue
+            required_tables.add(tablename)
+            for join in joins[tablename]:
+                dependencies = get_tables(join.second)
+                if dependencies:
+                    required_tables |= set(dependencies)
 
+        # Collect joins
+        joins_dict = {}
+        for tablename in required_tables:
             if tablename not in joins or tablename == self.tablename:
                 continue
             for join in joins[tablename]:
@@ -4608,6 +4620,8 @@ class S3LeftJoins(object):
                     if aquery is not None:
                         j = join.first.on(join.second & aquery)
                 joins_dict[tname] = j
+
+        # Sort joins (if possible)
         try:
             return self.sort(joins_dict.values())
         except RuntimeError:
