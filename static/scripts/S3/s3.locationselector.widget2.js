@@ -476,14 +476,15 @@
                 for (var i in l) {
                     if (l[i].f == id) {
                         read = false;
-                        continue;
+                        break;
                     }
                 }
                 if (read) {
                     // AJAX Read extra hierarchy options
                     readHierarchy(fieldname, level, id);
                 }
-                var values = [];
+                var v,
+                    values = [];
                 for (var i in l) {
                     v = l[i];
                     if ((v['l'] == level) && (v['f'] == id)) {

@@ -607,9 +607,9 @@ def customize_org_group(**attr):
         if r.interactive:
             if not r.component:
                 from gluon.html import DIV, INPUT
-                from gluon.validators import IS_NULL_OR
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
                 if r.method != "read":
+                    from gluon.validators import IS_NULL_OR
                     from s3.s3validators import IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3LocationSelectorWidget2
                     field = s3db.org_group.location_id
@@ -621,6 +621,16 @@ def customize_org_group(**attr):
                     field.widget = S3LocationSelectorWidget2(levels=("L2",),
                                                              polygons=True,
                                                              )
+                    # Default location to Manhattan
+                    db = current.db
+                    gtable = db.gis_location
+                    query = (gtable.name == "New York") & \
+                            (gtable.level == "L2")
+                    manhattan = db(query).select(gtable.id,
+                                                 limitby=(0, 1)).first()
+                    if manhattan:
+                        field.default = manhattan.id
+
                 s3db.pr_contact.value.label = ""
                 s3db.doc_document.url.label = ""
                 crud_form = S3SQLCustomForm(

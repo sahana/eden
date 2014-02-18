@@ -4074,7 +4074,7 @@ class S3LocationSelectorWidget2(FormWidget):
                     l = int(_level[1:])
                     if len(path) > l:
                         id = path[l]
-                        values[_level] = id
+                        values[_level] = int(id)
                         if _level == "L0" and not default_L0_bounds or \
                            _level == "L1" and not default_L1_bounds or \
                            _level == "L2" and not default_L2_bounds or \
@@ -4232,7 +4232,7 @@ class S3LocationSelectorWidget2(FormWidget):
                         l = int(_level[1:])
                         if len(path) > l:
                             id = path[l]
-                            values[_level] = id
+                            values[_level] = int(id)
                 else:
                     # Retrieve all records in the path to match them up to their Lx
                     rows = db(gtable.id.belongs(path)).select(gtable.id,
