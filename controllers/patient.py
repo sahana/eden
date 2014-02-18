@@ -62,8 +62,7 @@ def patient():
             (T("Accompanying Relative"), "relative"),
             (T("Home"), "home")]
     rheader = lambda r: patient_rheader(r, tabs=tabs)
-    output = s3_rest_controller(rheader = rheader,
-                                hide_filter = False)
+    output = s3_rest_controller(rheader = rheader)
 
     return output
 

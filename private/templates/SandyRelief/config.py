@@ -450,7 +450,6 @@ def customize_org_organisation(**attr):
         return output
     s3.postp = custom_postp
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation

@@ -97,7 +97,7 @@ def index():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("pr", "person", hide_filter=False)
+    output = s3_rest_controller("pr", "person")
     response.view = "pr/index.html"
     response.title = module_name
     return output
@@ -208,8 +208,7 @@ def person():
     output = s3_rest_controller(main="first_name",
                                 extra="last_name",
                                 rheader=lambda r: \
-                                        s3db.pr_rheader(r, tabs=tabs),
-                                hide_filter=False)
+                                        s3db.pr_rheader(r, tabs=tabs))
 
     return output
 

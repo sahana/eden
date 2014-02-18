@@ -105,8 +105,7 @@ def mission():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(hide_filter=False,
-                              # Remove the title if we have a component
+    return s3_rest_controller(# Remove the title if we have a component
                               # (rheader includes the title)
                               notitle=lambda r: {"title": ""} \
                                              if r.component else None,
@@ -279,7 +278,7 @@ def assignment():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def competency():
@@ -505,8 +504,11 @@ def alert():
     s3.postp = postp
 
     return s3_rest_controller(rheader=s3db.deploy_rheader,
+                              # Show filter only on recipient tab
                               hide_filter={"recipient": False,
-                                           "_default": True})
+                                           "_default": True,
+                                          }
+                             )
 
 # -----------------------------------------------------------------------------
 def email_inbox():

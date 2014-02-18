@@ -581,7 +581,6 @@ def customize_org_organisation(**attr):
         return output
     s3.postp = custom_postp
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
@@ -1080,7 +1079,6 @@ def customize_hrm_human_resource(**attr):
         return result
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
@@ -1273,7 +1271,6 @@ def customize_project_project(**attr):
         return result
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_project = customize_project_project

@@ -4717,7 +4717,6 @@ def org_organisation_controller():
                                      # Need to be explicit since can also come from Project controller
                                      csv_stylesheet = ("org", "organisation.xsl"),
                                      csv_template = ("org", "organisation"),
-                                     hide_filter = False,
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native = False,
                                      rheader = org_rheader,
@@ -4912,7 +4911,6 @@ def org_office_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "office",
-                                     hide_filter = False,
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native = False,
                                      rheader = org_rheader,
@@ -5126,9 +5124,7 @@ def org_facility_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "facility",
-                                     hide_filter = False,
-                                     rheader = s3db.org_rheader,
-                                     )
+                                     rheader = s3db.org_rheader)
     return output
 
 # =============================================================================

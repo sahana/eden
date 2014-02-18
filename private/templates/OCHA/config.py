@@ -206,7 +206,6 @@ def customize_org_office(**attr):
         return result
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_office = customize_org_office
@@ -304,7 +303,6 @@ def customize_org_organisation(**attr):
         return result
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
@@ -378,7 +376,6 @@ def customize_project_project(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_project = customize_project_project
@@ -477,7 +474,6 @@ def customize_project_location(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_location = customize_project_location
@@ -556,7 +552,6 @@ def customize_project_organisation(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_organisation = customize_project_organisation

@@ -1167,9 +1167,7 @@ def asset_controller():
     s3.postp = postp
 
     output = current.rest_controller("asset", "asset",
-                                     hide_filter = False,
-                                     rheader = asset_rheader,
-                                     )
+                                     rheader = asset_rheader)
     return output
 
 # END =========================================================================

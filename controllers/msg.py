@@ -1479,7 +1479,7 @@ def twitter_result():
                    report_options=report_options,
                    )
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def sender():

@@ -77,10 +77,7 @@ def membership():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(hide_filter = False,
-                                rheader = s3db.member_rheader,
-                                )
-    return output
+    return s3_rest_controller(rheader = s3db.member_rheader)
 
 # =============================================================================
 def person():

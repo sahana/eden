@@ -2277,9 +2277,7 @@ S3OptionsFilter({
 
         s3.prep = prep
         output = current.rest_controller("inv", "send",
-                                         rheader = inv_send_rheader,
-                                         hide_filter = False,
-                                         )
+                                         rheader = inv_send_rheader)
         return output
 
     # ---------------------------------------------------------------------

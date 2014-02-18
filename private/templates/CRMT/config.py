@@ -1062,7 +1062,6 @@ def customize_org_organisation(**attr):
     # Remove rheader
     attr["rheader"] = None
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
@@ -1626,8 +1625,6 @@ def customize_stats_people(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
-
     return attr
 
 settings.ui.customize_stats_people = customize_stats_people
@@ -1794,8 +1791,6 @@ def customize_vulnerability_evac_route(**attr):
 
         return True
     s3.prep = custom_prep
-
-    attr["hide_filter"] = False
 
     return attr
 
@@ -1994,7 +1989,6 @@ def customize_vulnerability_risk(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     attr["rheader"] = None
 
     return attr

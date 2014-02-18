@@ -3937,8 +3937,6 @@ def customize_project_project(**attr):
         return output
     s3.postp = custom_postp
 
-    #attr["hide_filter"] = False
-
     return attr
 
 settings.ui.customize_project_project = customize_project_project
@@ -4088,8 +4086,6 @@ def customize_project_beneficiary(**attr):
 
         return output
     s3.postp = custom_postp
-
-    attr["hide_filter"] = False
 
     return attr
 

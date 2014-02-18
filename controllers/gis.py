@@ -484,7 +484,6 @@ def location():
                                     gis.get_country(code, key_type="code") or UNKNOWN_OPT)
 
     output = s3_rest_controller(rheader=s3db.gis_rheader,
-                                hide_filter = False,
                                 # CSV column headers, so no T()
                                 csv_extra_fields = [
                                     dict(label="Country",
@@ -1101,9 +1100,7 @@ def config():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader,
-                                hide_filter = False,
-                                )
+    output = s3_rest_controller(rheader=s3db.gis_rheader)
     return output
 
 # -----------------------------------------------------------------------------

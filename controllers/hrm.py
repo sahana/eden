@@ -193,7 +193,7 @@ def staff():
         return output
     s3.postp = postp
 
-    return s3_rest_controller("hrm", "human_resource", hide_filter=False)
+    return s3_rest_controller("hrm", "human_resource")
 
 # -----------------------------------------------------------------------------
 def person():
@@ -371,7 +371,6 @@ def group_membership():
     s3.prep = prep
 
     output = s3_rest_controller("pr", "group_membership",
-                                hide_filter=False,
                                 csv_template="group_membership",
                                 csv_stylesheet=("hrm", "group_membership.xsl"),
                                 )

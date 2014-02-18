@@ -1671,21 +1671,21 @@ class S3OptionsMenu(object):
         return M(c="req")(
                     M("Requests", f="req")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("List Recurring Requests", f="req_template"),
                         M("Map", m="map"),
                         M("Report", m="report"),
                         M("Search All Requested Items", f="req_item",
-                          m="search", check=req_skills),
+                          check=req_skills),
                         M("Search All Requested Skills", f="req_skill",
-                          m="search", check=req_skills),
+                          check=req_skills),
                     ),
                     M("Commitments", f="commit", check=use_commit)(
-                        M("List All")
+                        #M("Search")
                     ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Report", m="report2"),
                         M("Import", m="import", p="create"),
                     ),
@@ -1696,13 +1696,12 @@ class S3OptionsMenu(object):
                     #),
                     M("Catalogs", c="supply", f="catalog")(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
+                        #M("Search"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                 )
 

@@ -197,8 +197,7 @@ def human_resource():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("hrm", "human_resource", hide_filter=False)
-    return output
+    return s3_rest_controller("hrm", "human_resource")
 
 # -----------------------------------------------------------------------------
 def volunteer():
@@ -394,9 +393,7 @@ def volunteer():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("hrm", "human_resource",
-                                hide_filter=False)
-    return output
+    return s3_rest_controller("hrm", "human_resource")
 
 # -----------------------------------------------------------------------------
 def person():
@@ -723,18 +720,17 @@ def person():
     else:
         orgname = None
 
-    output = s3_rest_controller("pr", resourcename,
-                                csv_template = ("hrm", "volunteer"),
-                                csv_stylesheet = ("hrm", "person.xsl"),
-                                csv_extra_fields = [
-                                    dict(label="Type",
-                                         field=s3db.hrm_human_resource.type)
-                                                  ],
-                                orgname = orgname,
-                                replace_option = T("Remove existing data before import"),
-                                rheader = s3db.hrm_rheader,
-                                )
-    return output
+    return s3_rest_controller("pr", resourcename,
+                              csv_template = ("hrm", "volunteer"),
+                              csv_stylesheet = ("hrm", "person.xsl"),
+                              csv_extra_fields = [
+                                  dict(label="Type",
+                                       field=s3db.hrm_human_resource.type)
+                                                ],
+                              orgname = orgname,
+                              replace_option = T("Remove existing data before import"),
+                              rheader = s3db.hrm_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def hr_search():
@@ -824,12 +820,10 @@ def group_membership():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("pr", "group_membership",
-                                hide_filter=False,
-                                csv_template=("hrm", "group_membership"),
-                                csv_stylesheet=("hrm", "group_membership.xsl"),
-                                )
-    return output 
+    return s3_rest_controller("pr", "group_membership",
+                              csv_template=("hrm", "group_membership"),
+                              csv_stylesheet=("hrm", "group_membership.xsl"),
+                              )
 
 # =============================================================================
 # Jobs
@@ -847,8 +841,7 @@ def department():
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_department)
 
-    output = s3_rest_controller("hrm", resourcename)
-    return output
+    return s3_rest_controller("hrm", resourcename)
 
 # -----------------------------------------------------------------------------
 def job_title():
@@ -866,11 +859,10 @@ def job_title():
     if not auth.s3_has_role(ADMIN):
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
-    output = s3_rest_controller("hrm", resourcename,
-                                csv_template=("hrm", "job_title"),
-                                csv_stylesheet=("hrm", "job_title.xsl"),
-                                )
-    return output
+    return s3_rest_controller("hrm", resourcename,
+                              csv_template=("hrm", "job_title"),
+                              csv_stylesheet=("hrm", "job_title.xsl"),
+                              )
 
 # =============================================================================
 # Skills
@@ -883,11 +875,10 @@ def skill():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename,
-                                csv_template=("hrm", "skill"),
-                                csv_stylesheet=("hrm", "skill.xsl"),
-                                )
-    return output
+    return s3_rest_controller("hrm", resourcename,
+                              csv_template=("hrm", "skill"),
+                              csv_stylesheet=("hrm", "skill.xsl"),
+                              )
 
 # -----------------------------------------------------------------------------
 def skill_type():
@@ -898,8 +889,7 @@ def skill_type():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename)
-    return output
+    return s3_rest_controller("hrm", resourcename)
 
 # -----------------------------------------------------------------------------
 def competency_rating():
@@ -910,11 +900,10 @@ def competency_rating():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename,
-                                csv_template=("hrm", "competency_rating"),
-                                csv_stylesheet=("hrm", "competency_rating.xsl"),
-                                )
-    return output
+    return s3_rest_controller("hrm", resourcename,
+                              csv_template=("hrm", "competency_rating"),
+                              csv_stylesheet=("hrm", "competency_rating.xsl"),
+                              )
 
 # -----------------------------------------------------------------------------
 def skill_provision():
@@ -925,8 +914,7 @@ def skill_provision():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename)
-    return output
+    return s3_rest_controller("hrm", resourcename)
 
 # -----------------------------------------------------------------------------
 def course():
@@ -940,12 +928,11 @@ def course():
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
-    output = s3_rest_controller("hrm", resourcename,
-                                rheader=s3db.hrm_rheader,
-                                csv_template=("hrm", "course"),
-                                csv_stylesheet=("hrm", "course.xsl"),
-                                )
-    return output
+    return s3_rest_controller("hrm", resourcename,
+                              rheader=s3db.hrm_rheader,
+                              csv_template=("hrm", "course"),
+                              csv_stylesheet=("hrm", "course.xsl"),
+                              )
 
 # -----------------------------------------------------------------------------
 def course_certificate():
@@ -956,8 +943,7 @@ def course_certificate():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename)
-    return output
+    return s3_rest_controller("hrm", resourcename)
 
 # -----------------------------------------------------------------------------
 def certificate():
@@ -974,12 +960,11 @@ def certificate():
        not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
-    output = s3_rest_controller("hrm", resourcename,
-                                rheader=s3db.hrm_rheader,
-                                csv_template=("hrm", "certificate"),
-                                csv_stylesheet=("hrm", "certificate.xsl"),
-                                )
-    return output
+    return s3_rest_controller("hrm", resourcename,
+                              rheader=s3db.hrm_rheader,
+                              csv_template=("hrm", "certificate"),
+                              csv_stylesheet=("hrm", "certificate.xsl"),
+                              )
 
 # -----------------------------------------------------------------------------
 def certificate_skill():
@@ -990,8 +975,7 @@ def certificate_skill():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename)
-    return output
+    return s3_rest_controller("hrm", resourcename)
 
 # -----------------------------------------------------------------------------
 def training():
@@ -1100,12 +1084,11 @@ def programme():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("hrm", resourcename,
-                                rheader=s3db.hrm_rheader,
-                                csv_stylesheet = ("hrm", "programme.xsl"),
-                                csv_template = ("hrm", "programme")
-                                )
-    return output
+    return s3_rest_controller("hrm", resourcename,
+                              rheader=s3db.hrm_rheader,
+                              csv_stylesheet = ("hrm", "programme.xsl"),
+                              csv_template = ("hrm", "programme")
+                              )
 
 # -----------------------------------------------------------------------------
 def programme_hours():
@@ -1119,12 +1102,10 @@ def programme_hours():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller("hrm", resourcename,
-                                hide_filter = False,
-                                csv_stylesheet=("hrm", "programme_hours.xsl"),
-                                csv_template=("hrm", "programme_hours")
-                                )
-    return output
+    return s3_rest_controller("hrm", resourcename,
+                              csv_stylesheet=("hrm", "programme_hours.xsl"),
+                              csv_template=("hrm", "programme_hours")
+                              )
 
 # =============================================================================
 def award():

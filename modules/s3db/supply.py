@@ -2300,7 +2300,6 @@ def supply_item_controller():
     s3.prep = prep
 
     return current.rest_controller("supply", "item",
-                                   hide_filter = False,
                                    rheader = supply_item_rheader,
                                    )
 
@@ -2554,7 +2553,7 @@ $('#organisation_dropdown').change(function(){
     s3.postp = postp
 
     output = current.rest_controller("supply", "item_entity",
-                                     #hide_filter = False,
+                                     hide_filter = True,
                                     )
     return output
 

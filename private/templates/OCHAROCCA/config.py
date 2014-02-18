@@ -162,7 +162,6 @@ settings.gis.lookup_pcode = True
 
 # -----------------------------------------------------------------------------
 def customize_stats_demographic_data(**attr):
-    attr["hide_filter"] = False
     #attr["rheader"] = None
     return attr
 

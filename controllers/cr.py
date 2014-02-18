@@ -223,9 +223,7 @@ def shelter():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader = s3db.cr_shelter_rheader,
-                                hide_filter = False,
-                                )
+    output = s3_rest_controller(rheader = s3db.cr_shelter_rheader)
 
     return output
 

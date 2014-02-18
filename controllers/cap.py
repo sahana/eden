@@ -171,8 +171,7 @@ def alert():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader = s3db.cap_alert_rheader,
-                                hide_filter = False)
+    output = s3_rest_controller(rheader = s3db.cap_alert_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -264,8 +263,7 @@ def template():
     s3.postp = postp
 
     output = s3_rest_controller("cap", "alert",
-                                rheader=s3db.cap_template_rheader,
-                                hide_filter=False)
+                                rheader=s3db.cap_template_rheader)
     return output
 
 # -----------------------------------------------------------------------------

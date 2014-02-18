@@ -2018,6 +2018,30 @@ class S3RequestSkillModel(S3Model):
                        ]
         if use_commit:
             list_fields.insert(3, "quantity_commit")
+            
+        # Filter Widgets
+        filter_widgets = [
+            S3OptionsFilter("req_id$fulfil_status",
+                            label=T("Status"),
+                            options = self.req_status_opts,
+                            cols = 3,
+                           ),
+            S3OptionsFilter("req_id$priority",
+                            label=T("Priority"),
+                            options = self.req_priority_opts,
+                            cols = 3,
+                           ),
+            S3LocationFilter("req_id$site_id$location_id",
+                             levels = [#"L1",
+                                       #"L2",
+                                       "L3",
+                                       "L4",
+                                      ],
+                             widget = "multiselect",
+                            ),
+        ]
+
+        # Configuration
         self.configure(tablename,
                        onaccept=req_skill_onaccept,
                        # @ToDo: Produce a custom controller like req_item_inv_item?
@@ -2025,7 +2049,8 @@ class S3RequestSkillModel(S3Model):
                        #                  args=["[id]"]),
                        deletable = settings.get_req_multiple_req_items(),
                        list_fields = list_fields,
-                       )
+                       filter_widgets = filter_widgets,
+                      )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

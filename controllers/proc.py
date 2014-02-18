@@ -36,8 +36,8 @@ def supplier():
 def plan():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(rheader=s3db.proc_rheader,
-                              #hide_filter=False,
+    return s3_rest_controller(rheader = s3db.proc_rheader,
+                              hide_filter = True,
                              )
 
 # END =========================================================================

@@ -35,9 +35,7 @@ def index_alt():
 def group():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(hide_filter = False,
-                              rheader = s3db.org_rheader,
-                              )
+    return s3_rest_controller(rheader = s3db.org_rheader)
 
 # -----------------------------------------------------------------------------
 def region():

@@ -6356,11 +6356,11 @@ def project_task_controller():
         return output
     s3.postp = postp
 
-    if "mine" in vars or \
-       "project" in vars:
+    if "mine" in vars or "project" in vars:
+        # Show no filters in pre-filtered views
         hide_filter = True
     else:
-        hide_filter = False
+        hide_filter = None
 
     return current.rest_controller("project", "task",
                                    rheader=s3db.project_rheader,

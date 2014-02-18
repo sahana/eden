@@ -1966,21 +1966,6 @@ class S3Method(object):
                 else:
                     self.method = "list"
 
-            ## In interactive single-record CRUD, open the
-            ## instance record instead of a super-entity record
-            #if r.interactive and \
-               #self.record_id and \
-               #self.method in ("read", "update") and \
-               #self.resource.table._id.name != "id":
-                #record = self.resource[self.record_id]
-                #tablename = record.instance_type
-                #resource = current.s3db.resource(tablename
-                                                 #uid=record.uuid)
-                #resource.load()
-                #if resource.count() == 1:
-                    #self.resource = resource
-                    #self.record_id = resource.records().first()[resource.table._id]
-
         self.prefix = resource.prefix
         self.name = resource.name
         self.tablename = resource.tablename
@@ -1991,18 +1976,34 @@ class S3Method(object):
             return None
 
         if r.interactive:
-            hide_filter = attr.get("hide_filter", None)
+            # hide_filter policy:
+            #
+            #   None            show filters on master,
+            #                   hide for components (default)
+            #   False           show all filters (on all tabs)
+            #   True            hide all filters (on all tabs)
+            #
+            #   dict(alias=setting)     setting per component, alias
+            #                           None means master resource,
+            #                           use special alias _default
+            #                           to specify an alternative
+            #                           default
+            #   
+            hide_filter = attr.get("hide_filter")
             if isinstance(hide_filter, dict):
-                hide_filter = hide_filter.get(r.component_name,
-                              hide_filter.get("_default", None))
+                component_name = r.component_name
+                if component_name in hide_filter:
+                    hide_filter = hide_filter[component_name]
+                elif "_default" in hide_filter:
+                    hide_filter = hide_filter["_default"]
+                else:
+                    hide_filter = None
             if hide_filter is None:
-                # Hide by default until fully migrated:
-                hide_filter = True
-                #hide_filter = r.component is not None
+                hide_filter = r.component is not None
             self.hide_filter = hide_filter
         else:
             self.hide_filter = True
-                          
+
         # Apply method
         if widget_id and hasattr(self, "widget"):
             output = self.widget(r,

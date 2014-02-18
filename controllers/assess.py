@@ -89,14 +89,12 @@ def building():
         return True
     s3.prep = prep
 
-    return s3_rest_controller(rheader = s3db.assess_building_rheader,
-                              hide_filter = False,
-                             )
+    return s3_rest_controller(rheader = s3db.assess_building_rheader)
 
 # -----------------------------------------------------------------------------
 def canvass():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(hide_filter = False)
+    return s3_rest_controller()
 
 # END =========================================================================

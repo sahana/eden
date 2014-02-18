@@ -381,8 +381,7 @@ def warehouse():
 
     output = s3_rest_controller(module, resourcename,
                                 rheader=s3db.inv_rheader,
-                                hide_filter = {None: False,
-                                               "inv_item": False,
+                                hide_filter = {"inv_item": False,
                                                "_default": True,
                                               },
                                 csv_template = resourcename,
@@ -565,7 +564,6 @@ def inv_item():
                                 pdf_table_autogrow = "B",
                                 pdf_groupby = "site_id, item_id",
                                 pdf_orderby = "expiry_date, supply_org_id",
-                                hide_filter = False,
                                 )
     if "add_btn" in output and not settings.get_inv_direct_stock_edits():
         del output["add_btn"]
@@ -1061,8 +1059,7 @@ def recv():
                            listadd = False,
                            )
 
-    output = s3_rest_controller(rheader=s3db.inv_recv_rheader,
-                                hide_filter=False)
+    output = s3_rest_controller(rheader=s3db.inv_recv_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1434,8 +1431,7 @@ def track_item():
                         )
         s3.filter = (s3base.S3FieldSelector("expiry_date") != None)
 
-    output = s3_rest_controller(rheader=s3db.inv_rheader,
-                                hide_filter=False)
+    output = s3_rest_controller(rheader=s3db.inv_rheader)
     return output
 
 # =============================================================================

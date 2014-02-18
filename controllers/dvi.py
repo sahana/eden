@@ -149,7 +149,7 @@ def body():
                                 ["age_group"],
                                ],
                                tabs=dvi_tabs)
-    return s3_rest_controller(rheader=rheader, hide_filter=False)
+    return s3_rest_controller(rheader=rheader)
 
 # -----------------------------------------------------------------------------
 def person():

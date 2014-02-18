@@ -38,7 +38,7 @@ def catalog():
 def catalog_item():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(hide_filter = False)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def distribution():
@@ -59,7 +59,7 @@ def distribution():
     #    return True
     #s3.prep = prep
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def distribution_report():
@@ -73,8 +73,7 @@ def distribution_report():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("supply", "distribution",
-                              hide_filter=False)
+    return s3_rest_controller("supply", "distribution")
 
 # -----------------------------------------------------------------------------
 def distribution_item():

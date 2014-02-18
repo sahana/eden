@@ -4889,7 +4889,6 @@ def hrm_competency_controller():
     s3.postp = postp
 
     return current.rest_controller("hrm", "competency",
-                                   hide_filter=False,
                                    # @ToDo: Create these if-required
                                    #csv_stylesheet = ("hrm", "competency.xsl"),
                                    #csv_template = ("hrm", "competency"),
@@ -4956,7 +4955,6 @@ def hrm_experience_controller():
                                      # @ToDo: Create these if-required
                                      #csv_stylesheet = ("hrm", "experience.xsl"),
                                      #csv_template = ("hrm", "experience"),
-                                     hide_filter = False,
                                      )
     return output
 
@@ -5155,7 +5153,6 @@ def hrm_group_controller():
     output = current.rest_controller("pr", "group",
                                      csv_stylesheet = ("hrm", "group.xsl"),
                                      csv_template = "group",
-                                     hide_filter = False,
                                      rheader = lambda r: \
                                         s3db.pr_rheader(r, tabs=tabs)
                                      )
@@ -5509,8 +5506,7 @@ def hrm_human_resource_controller(extra_filter=None):
         return output
     s3.postp = postp
 
-    output = current.rest_controller("hrm", "human_resource",
-                                     hide_filter=False)
+    output = current.rest_controller("hrm", "human_resource")
     return output
 
 # =============================================================================
@@ -5895,7 +5891,6 @@ def hrm_training_controller():
     output = current.rest_controller("hrm", "training",
                                      csv_stylesheet = ("hrm", "training.xsl"),
                                      csv_template = ("hrm", "training"),
-                                     hide_filter = False,
                                      )
     return output
 
@@ -5970,9 +5965,7 @@ def hrm_training_event_controller():
     s3.postp = postp
 
     output = current.rest_controller("hrm", "training_event",
-                                     hide_filter = False,
-                                     rheader = hrm_rheader,
-                                     )
+                                     rheader = hrm_rheader)
     return output
 
 # =============================================================================

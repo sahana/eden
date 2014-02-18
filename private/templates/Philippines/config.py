@@ -2170,7 +2170,6 @@ def customize_org_facility(**attr):
         return output
     s3.postp = custom_postp
 
-    attr["hide_filter"] = False
     # @ToDo: Don't just hide but prevent building
     #attr["rheader"] = None
     return attr
@@ -2484,7 +2483,6 @@ def customize_org_organisation(**attr):
         return output
     s3.postp = custom_postp
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
@@ -2968,7 +2966,6 @@ def customize_req_req(**attr):
     # Disable postp
     s3.postp = None
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_req_req = customize_req_req
@@ -2999,7 +2996,6 @@ def customize_req_commit(**attr):
     # Disable postp
     s3.postp = None
 
-    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_req_commit = customize_req_commit
