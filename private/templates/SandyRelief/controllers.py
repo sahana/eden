@@ -63,7 +63,7 @@ class index():
                         A(DIV(T("Fulfill Requests"),
                               _class = "menu-btn-r"),
                           _class = "menu-btn-l",
-                          _href=URL(c="req", f="req", args=["search"])
+                          _href=URL(c="req", f="req")
                           ),
                         _id = "sit_dec_res_box",
                         _class = "menu_box fleft swidth")

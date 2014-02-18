@@ -711,7 +711,8 @@ def req_item():
     """
 
     # Filter out Template Items
-    s3.filter = (s3base.S3FieldSelector("req_id$is_template") == False)
+    if request.function != "fema":
+        s3.filter = (s3base.S3FieldSelector("req_id$is_template") == False)
 
     def prep(r):
         
@@ -1570,22 +1571,16 @@ def fema():
                 (ritable.deleted != True) & \
                 (ritable.item_id.belongs(fema_item_ids))
 
-    # Search method
-    # @ToDo: Migrate to S3Filter
-    req_item_search = [
-        s3base.S3SearchOptionsWidget(
-            name="req_search_site",
-            field="req_id$site_id",
-            label = T("Facility"),
-            cols = 3,
-        ),
-        ]
-    s3db.configure("req_req_item",
-                   search_method = s3base.S3Search(advanced=req_item_search),
-                   )
+    # Filter Widgets
+    filter_widgets = [
+        s3base.S3OptionsFilter("req_id$site_id",
+                               label = T("Facility"),
+                               cols = 3,
+                              ),
+    ]
+    s3db.configure("req_req_item", filter_widgets = filter_widgets)
 
-    output = req_item()
-    return output
+    return req_item()
 
 # -----------------------------------------------------------------------------
 def organisation_needs():

@@ -440,27 +440,25 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Request Supplies", m="create", vars={"type": 1}),
                         M("Request People", m="create", vars={"type": 3}),
                         M("Fulfill Requests"),
-                        #M("List All"),
                         M("List Recurring Requests", f="req_template"),
-                        #M("Search", m="search"),
                         #M("Map", m="map"),
                         M("Report", m="report"),
-                        M("FEMA Items Required", f="fema", m="search",
+                        M("FEMA Items Required", f="fema",
                           restrict=[SUPER]),
-                        M("Search All Requested Items", f="req_item", m="search"),
-                        M("Search All Requested Skills", f="req_skill", m="search"),
+                        M("Search All Requested Items", f="req_item"),
+                        M("Search All Requested Skills", f="req_skill"),
                     ),
                     #M("Priority Items", f="summary_option")(
                     #    M("New", m="create"),
-                    #    M("List All"),
+                    #    M("Search"),
                     #),
                     M("Commitments", f="commit")(
-                        M("List All")
+                        #M("Search")
                     ),
                     M("Sent Shipments", f="send")(
                         #M("New", m="create"),
-                        M("List All"),
-                        #M("Search Shipped Items", f="track_item", m="search"),
+                        #M("Search"),
+                        #M("Search Shipped Items", f="track_item"),
                     ),
                     M("Items", c="supply", f="item",
                       restrict=[SUPER])(

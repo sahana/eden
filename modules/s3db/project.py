@@ -6132,13 +6132,13 @@ def project_task_form_inject(r, output, project=True):
     row = s3_formstyle(row_id, label, widget, comment)
     try:
         output["form"][0].insert(0, row[1])
-    except:
-        # A non-standard formstyle with just a single row
-        pass
-    try:
         output["form"][0].insert(0, row[0])
     except:
-        pass
+        # A non-standard formstyle with just a single row
+        try:
+            output["form"][0].insert(0, row[0])
+        except:
+            pass
 
     # Milestones
     if settings.get_project_milestones():
@@ -6181,11 +6181,10 @@ def project_task_form_inject(r, output, project=True):
             output["form"][0].insert(14, row[0])
         except:
             # A non-standard formstyle with just a single row
-            pass
-        try:
-            output["form"][0].insert(7, row[0])
-        except:
-            pass
+            try:
+                output["form"][0].insert(7, row[0])
+            except:
+                pass
 
     if project:
         vars = current.request.get_vars
@@ -6214,13 +6213,13 @@ def project_task_form_inject(r, output, project=True):
             row = s3_formstyle(row_id, label, widget, comment)
         try:
             output["form"][0].insert(0, row[1])
-        except:
-            # A non-standard formstyle with just a single row
-            pass
-        try:
             output["form"][0].insert(0, row[0])
         except:
-            pass
+            # A non-standard formstyle with just a single row
+            try:
+                output["form"][0].insert(0, row[0])
+            except:
+                pass
 
     return output
 
@@ -6287,16 +6286,9 @@ def project_task_controller():
             except:
                 current.session.error = T("Project not Found")
                 redirect(URL(args=None, vars=None))
-            if r.method == "search":
-                # @ToDo: get working
-                r.get_vars = {"task_search_project": name,
-                              "task_search_status": ",".join([str(status) for status in statuses])
-                              }
-            else:
-                ltable = s3db.project_task_project
-                s3.filter = (ltable.project_id == project) & \
-                            (ltable.task_id == table.id) & \
-                            (table.status.belongs(statuses))
+            s3.filter = (S3FieldSelector("task_id:project_task_project"
+                                         ".project_id") == project) & \
+                        (S3FieldSelector("status").belongs(statuses))
             crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
             crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
             crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
@@ -6343,16 +6335,14 @@ def project_task_controller():
     # Post-process
     def postp(r, output):
         if r.interactive:
-            if not r.component and \
-                   r.method != "import":
+            if not r.component and r.method != "import":
+                
                 update_url = URL(args=["[id]"], vars=vars)
-                current.manager.crud.action_buttons(r,
-                                                    update_url=update_url)
-                if not r.method in ("search", "report") and \
+                S3CRUD.action_buttons(r, update_url=update_url)
+                if r.method not in ("search", "report", "report2") and \
                    "form" in output:
-                    # Insert fields to control the Project, Activity & Milestone
+                    # Insert fields to control Project, Activity & Milestone
                     output = project_task_form_inject(r, output)
-
         return output
     s3.postp = postp
 
