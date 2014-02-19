@@ -21,7 +21,7 @@ def s3_menu_postp():
         newreq = dict()
     selreq = {"req.hospital_id__ne":"NONE"}
     menu_selected = []
-    hospital_id = s3mgr.get_session("hms", "hospital")
+    hospital_id = s3base.s3_get_last_record_id("hms_hospital")
     if hospital_id:
         hospital = s3db.hms_hospital
         query = (hospital.id == hospital_id)

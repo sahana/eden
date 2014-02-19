@@ -61,6 +61,14 @@ for u in messages:
     if isinstance(messages[u], str):
         globals()[u] = T(messages[u])
 
+# CRUD Labels
+s3.crud_labels = Storage(READ=READ,
+                         UPDATE=UPDATE,
+                         DELETE=DELETE,
+                         COPY=COPY,
+                         NONE=NONE,
+                         )
+
 # Error Messages
 ERROR["BAD_RECORD"] = messages["BADRECORD"]
 ERROR["BAD_METHOD"] = messages["BADMETHOD"]
@@ -79,13 +87,6 @@ ERROR["NOT_PERMITTED"] = "Operation not permitted"
 ERROR["NOT_IMPLEMENTED"] = "Not implemented"
 ERROR["INTEGRITY_ERROR"] = "Integrity error: record can not be deleted while it is referenced by other records"
         
-# Pass to CRUD
-s3mgr.LABEL["READ"] = READ
-s3mgr.LABEL["UPDATE"] = UPDATE
-s3mgr.LABEL["DELETE"] = DELETE
-s3mgr.LABEL["COPY"] = COPY
-s3mgr.LABEL["NONE"] = NONE
-
 # To get included in <HEAD>
 s3.stylesheets = []
 s3.external_stylesheets = []
@@ -326,7 +327,7 @@ s3mgr.search = s3base.S3Search
 # Content Type Headers, default is application/xml for XML formats
 # and text/x-json for JSON formats, other content types must be
 # specified here:
-s3mgr.content_type = Storage(
+s3.content_type = Storage(
     tc = "application/atom+xml", # TableCast feeds
     rss = "application/rss+xml", # RSS
     georss = "application/rss+xml", # GeoRSS
@@ -334,12 +335,13 @@ s3mgr.content_type = Storage(
 )
 
 # JSON Formats
-s3mgr.json_formats = ["geojson", "s3json"]
+s3.json_formats = ["geojson", "s3json"]
 
 # CSV Formats
-s3mgr.csv_formats = ["hrf", "s3csv"]
+s3.csv_formats = ["hrf", "s3csv"]
 
-s3mgr.ROWSPERPAGE = 20
+# Datatables default number of rows per page
+s3.ROWSPERPAGE = 20
 
 # Valid Extensions for Image Upload fields
 s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]

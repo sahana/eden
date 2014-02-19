@@ -3179,13 +3179,13 @@ def customize_project_activity(**attr):
 
     s3db = current.s3db
 
-    #current.manager.LABEL = Storage({"READ": I(_class = "icon-pencil"),
-    #                                 "UPDATE": I(_class = "icon-pencil"),
-    #                                 "DELETE": I(_class = "icon-trash")
-    #                                 })
+    s3 = current.response.s3
+    #s3.crud_labels = Storage({"READ": I(_class = "icon-pencil"),
+    #                          "UPDATE": I(_class = "icon-pencil"),
+    #                          "DELETE": I(_class = "icon-trash")
+    #                         })
 
     # Custom PreP
-    s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
         # Call standard prep

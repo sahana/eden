@@ -243,6 +243,10 @@ Thank you
                                       inv_warehouse = T("Warehouse"),
                                       )
 
+        # Name prefixes of tables which must not be manipulated from remote,
+        # CLI can override with auth.override=True
+        self.PROTECTED = ("admin",)
+
     # -------------------------------------------------------------------------
     def define_tables(self, migrate=True, fake_migrate=False):
         """

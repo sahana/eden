@@ -1,7 +1,7 @@
 {{extend "layout.html"}}
 {{include "_create.html"}}
 {{try:}}
-{{incident = s3mgr.get_session("irs", "ireport")}}
+{{incident = s3base.s3_get_last_record_id("irs_ireport")}}
 <script type="text/javascript">//<![CDATA[
 $(function() {
     //$('#assess_assess_incident_id').val({{=incident}});

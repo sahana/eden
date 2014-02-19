@@ -180,8 +180,8 @@ current.sync = sync
 # -----------------------------------------------------------------------------
 def s3_clear_session():
 
-    # S3ResourceManager last seen records (rcvars)
-    s3mgr.clear_session()
+    # CRUD last opened records (rcvars)
+    s3base.s3_remove_last_record_id()
 
     # Session-owned records
     if "owned_records" in session:

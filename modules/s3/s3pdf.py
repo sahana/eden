@@ -79,7 +79,7 @@ except ImportError:
     raise
 
 from s3rest import S3Method
-from s3utils import S3DateTime
+from s3utils import S3DateTime, s3_validate, s3_represent_value
 import s3codec
 
 try:
@@ -485,17 +485,16 @@ class S3PDF(S3Method):
                             fields = [table.id]
                         label_fields = [f.label for f in fields]
 
-                        represent = current.manager.represent
                         for record in records:
                             data = []
                             for field in fields:
                                 value = record[field.name]
-                                text = represent(field,
-                                                 value=value,
-                                                 strip_markup=True,
-                                                 non_xml_output=True,
-                                                 extended_comments=True
-                                                 )
+                                text = s3_represent_value(field,
+                                                          value=value,
+                                                          strip_markup=True,
+                                                          non_xml_output=True,
+                                                          extended_comments=True
+                                                          )
                                 data.append(text)
                             raw_data.append(data)
                         self.addTable(raw_data = raw_data,
@@ -1237,7 +1236,6 @@ class S3PDF(S3Method):
                     errordict = {}
 
                     _record = current.xml.record
-                    validate = current.manager.validate
                     s3record_dict = Storage()
                     for tablename in s3xml_etree_dict.keys():
                         record = _record(db[tablename],
@@ -1274,9 +1272,9 @@ class S3PDF(S3Method):
                             table = db[resourcename]
                             for field in datadict[resourcename].keys():
                                 if not table[field].type.startswith("reference "):
-                                    value, error = validate(table,
-                                                            None, field,
-                                                            datadict[resourcename][field])
+                                    value, error = s3_validate(table,
+                                                               field,
+                                                               datadict[resourcename][field])
                                     if error:
                                         errordict["%s-%s" % (resourcename, field)] = str(error)
 
@@ -1294,9 +1292,9 @@ class S3PDF(S3Method):
                                     for field in datadict[resourcename].keys():
                                         if not table[field].type.startswith("reference "):
                                             value, error =\
-                                                validate(table,
-                                                         None, field,
-                                                         datadict[resourcename][field])
+                                                s3_validate(table,
+                                                            field,
+                                                            datadict[resourcename][field])
                                             if error:
                                                 errordict["%s-%s" % (resourcename, field)] = str(error)
 
@@ -3204,7 +3202,6 @@ class S3PDFDataSource:
             rows by fields
         """
 
-        represent = current.manager.represent
         # Build the data list
         data = []
         currentGroup = None
@@ -3215,11 +3212,11 @@ class S3PDFDataSource:
             if self.report_groupby != None:
                 # @ToDo: non-XML output should use Field.represent
                 # - this saves the extra parameter
-                groupData = represent(self.report_groupby,
-                                      record=item,
-                                      strip_markup=True,
-                                      non_xml_output=True
-                                      )
+                groupData = s3_represent_value(self.report_groupby,
+                                               record=item,
+                                               strip_markup=True,
+                                               non_xml_output=True
+                                               )
                 if groupData != currentGroup:
                     currentGroup = groupData
                     data.append([groupData])
@@ -3231,12 +3228,12 @@ class S3PDFDataSource:
                     if field.label == self.report_groupby.label:
                         continue
                 if field.field:
-                    text = represent(field.field,
-                                     record=item,
-                                     strip_markup=True,
-                                     non_xml_output=True,
-                                     extended_comments=True
-                                     )
+                    text = s3_represent_value(field.field,
+                                              record=item,
+                                              strip_markup=True,
+                                              non_xml_output=True,
+                                              extended_comments=True
+                                              )
                 if text == "" or not field.field:
                     # some represents replace the data with an image which will
                     # then be lost by the strip_markup, so get back what we can
