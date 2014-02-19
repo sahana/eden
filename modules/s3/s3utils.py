@@ -68,7 +68,9 @@ else:
 
 URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
-    
+
+RCVARS = "rcvars"
+                           
 # =============================================================================
 def s3_debug(message, value=None):
     """
@@ -89,6 +91,126 @@ def s3_debug(message, value=None):
     except:
         # Unicode string
         print >> sys.stderr, "Debug crashed"
+
+# =============================================================================
+def s3_get_last_record_id(tablename):
+    """
+        Reads the last record ID for a resource from a session
+
+        @param table: the the tablename
+    """
+
+    session = current.session
+
+    if RCVARS in session and tablename in session[RCVARS]:
+        return session[RCVARS][tablename]
+    else:
+        return None
+
+# -------------------------------------------------------------------------
+def s3_store_last_record_id(tablename, record_id):
+    """
+        Stores a record ID for a resource in a session
+
+        @param tablename: the tablename
+        @param record_id: the record ID to store
+    """
+
+    session = current.session
+    
+    if RCVARS not in session:
+        session[RCVARS] = Storage({tablename: record_id})
+    else:
+        session[RCVARS][tablename] = record_id
+    return True
+
+# -------------------------------------------------------------------------
+def s3_remove_last_record_id(tablename=None):
+    """
+        Clears one or all last record IDs stored in a session
+
+        @param tablename: the tablename, None to remove all last record IDs
+    """
+
+    session = current.session
+    
+    if tablename:
+        if RCVARS in session and tablename in session[RCVARS]:
+            del session[RCVARS][tablename]
+    else:
+        if RCVARS in session:
+            del session[RCVARS]
+    return True
+    
+# =============================================================================
+def s3_validate(table, field, value, record=None):
+    """
+        Validates a value for a field
+
+        @param fieldname: name of the field
+        @param value: value to validate
+        @param record: the existing database record, if available
+
+        @return: tuple (value, error)
+    """
+
+    default = (value, None)
+
+    if isinstance(field, basestring):
+        fieldname = field
+        if fieldname in table.fields:
+            field = table[fieldname]
+        else:
+            return default
+    else:
+        fieldname = field.name
+
+    self_id = None
+
+    if record is not None:
+
+        try:
+            v = record[field]
+        except KeyError:
+            v = None
+        if v and v == value:
+            return default
+
+        try:
+            self_id = record[table._id]
+        except KeyError:
+            pass
+
+    requires = field.requires
+
+    if field.unique and not requires:
+        # Prevent unique-constraint violations
+        field.requires = IS_NOT_IN_DB(current.db, str(field))
+        if self_id:
+            field.requires.set_self_id(self_id)
+
+    elif self_id:
+
+        # Initialize all validators for self_id
+        if not isinstance(requires, (list, tuple)):
+            requires = [requires]
+        for r in requires:
+            if hasattr(r, "set_self_id"):
+                r.set_self_id(self_id)
+            if hasattr(r, "other") and \
+                hasattr(r.other, "set_self_id"):
+                r.other.set_self_id(self_id)
+
+    try:
+        value, error = field.validate(value)
+    except:
+        # Oops - something went wrong in the validator:
+        # write out a debug message, and continue anyway
+        current.log.error("Validate %s: %s (ignored)" %
+                          (field, sys.exc_info()[1]))
+        return (None, None)
+    else:
+        return (value, error)
 
 # =============================================================================
 def s3_dev_toolbar():

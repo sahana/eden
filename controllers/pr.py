@@ -14,7 +14,7 @@ resourcename = request.function
 def s3_menu_postp():
     # @todo: rewrite this for new framework
     menu_selected = []
-    group_id = s3mgr.get_session("pr", "group")
+    group_id = s3base.s3_get_last_record_id("pr_group")
     if group_id:
         group = s3db.pr_group
         query = (group.id == group_id)
@@ -24,7 +24,7 @@ def s3_menu_postp():
             menu_selected.append(["%s: %s" % (T("Group"), name), False,
                                   URL(f="group",
                                       args=[record.id])])
-    person_id = s3mgr.get_session("pr", "person")
+    person_id = s3base.s3_get_last_record_id("pr_person")
     if person_id:
         person = s3db.pr_person
         query = (person.id == person_id)

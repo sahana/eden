@@ -56,7 +56,7 @@ from gluon.tools import callback
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
-from s3utils import s3_unicode
+from s3utils import s3_unicode, s3_validate
 from s3widgets import S3EmbedComponentWidget
 
 # =============================================================================
@@ -1931,7 +1931,6 @@ class S3CRUD(S3Method):
         pkey = table._id.name
 
         manager = current.manager
-        validate = manager.validate
         represent = manager.represent
 
         get_config = current.s3db.get_config
@@ -1997,7 +1996,7 @@ class S3CRUD(S3Method):
 
                 # Validate and format the value
                 try:
-                    value, error = validate(table, original, fname, value)
+                    value, error = s3_validate(table, fname, value, original)
                 except AttributeError:
                     error = "invalid field"
 
@@ -2307,9 +2306,9 @@ class S3CRUD(S3Method):
         """
 
         s3crud = S3CRUD
-        labels = current.manager.LABEL
-
         s3 = current.response.s3
+        labels = s3.crud_labels
+
         custom_actions = s3.actions
         s3.actions = None
 
@@ -2458,7 +2457,7 @@ class S3CRUD(S3Method):
                     else:
                         data.text = value
                     element.append(data)
-        tree = xml.tree([element], domain=manager.domain)
+        tree = xml.tree([element], domain=xml.domain)
 
         # Import data
         result = Storage(committed=False)

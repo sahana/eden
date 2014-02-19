@@ -617,8 +617,7 @@ class S3CAPModel(S3Model):
 
         # Format: prefix-time+-timezone+sequence-suffix
         settings = current.deployment_settings
-        prefix = settings.get_cap_identifier_prefix() \
-                    or current.manager.domain
+        prefix = settings.get_cap_identifier_prefix() or current.xml.domain
         suffix = settings.get_cap_identifier_suffix()
 
         return "%s-%s-%d%s%s" % \
@@ -635,7 +634,7 @@ class S3CAPModel(S3Model):
         except AttributeError:
             return ""
 
-        return "%s/%d" % (current.manager.domain, user_id)
+        return "%s/%d" % (current.xml.domain, user_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
