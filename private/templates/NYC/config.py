@@ -394,169 +394,176 @@ def customize_org_organisation(**attr):
                            list_fields = list_fields)
             
         if r.interactive:
-            from gluon.html import DIV, INPUT
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
-            s3db.pr_address.comments.label = ""
-            s3db.pr_contact.value.label = ""
-            s3db.doc_document.url.label = ""
-            crud_form = S3SQLCustomForm(
-                "name",
-                "acronym",
-                "organisation_type_id",
-                S3SQLInlineComponentMultiSelectWidget(
-                    "service",
-                    label = T("Services"),
-                    field = "service_id",
-                    cols = 4,
-                ),
-                S3SQLInlineComponentMultiSelectWidget(
-                    "group",
-                    label = T("Network"),
-                    field = "group_id",
-                    cols = 3,
-                ),
-                S3SQLInlineComponent(
-                    "address",
-                    label = T("Address"),
-                    multiple = False,
-                    # This is just Text - put into the Comments box for now
-                    # Ultimately should go into location_id$addr_street
-                    fields = ["comments"],
-                ),
-                S3SQLInlineComponentMultiSelectWidget(
-                    "location",
-                    label = T("Neighborhoods Served"),
-                    field = "location_id",
-                    filterby = dict(field = "level",
-                                    options = "L4"
-                                    ),
-                    # @ToDo: GroupedCheckbox Widget or Hierarchical MultiSelectWidget
-                    cols = 5,
-                ),
-                "phone",
-                S3SQLInlineComponent(
-                    "contact",
-                    name = "phone2",
-                    label = T("Phone2"),
-                    multiple = False,
-                    fields = ["value"],
-                    filterby = dict(field = "contact_method",
-                                    options = "WORK_PHONE"
-                                    )
-                ),
-                S3SQLInlineComponent(
-                    "contact",
-                    name = "email",
-                    label = T("Email"),
-                    multiple = False,
-                    fields = ["value"],
-                    filterby = dict(field = "contact_method",
-                                    options = "EMAIL"
-                                    )
-                ),
-                "website",
-                S3SQLInlineComponent(
-                    "contact",
-                    comment = DIV(INPUT(_type="checkbox",
-                                        _name="rss_no_import"),
-                                  T("Don't Import Feed")),
-                    name = "rss",
-                    label = T("RSS"),
-                    multiple = False,
-                    fields = ["value"],
-                    filterby = dict(field = "contact_method",
-                                    options = "RSS"
-                                    )
-                ),
-                S3SQLInlineComponent(
-                    "document",
-                    name = "iCal",
-                    label = "iCAL",
-                    multiple = False,
-                    fields = ["url",
-                              ],
-                    filterby = dict(field = "name",
-                                    options="iCal"
-                                    )
-                ),                                                                
-                S3SQLInlineComponent(
-                    "document",
-                    name = "data",
-                    label = T("Data"),
-                    multiple = False,
-                    fields = ["url",
-                              ],
-                    filterby = dict(field = "name",
-                                    options="Data"
-                                    )
-                ),                                                                
-                S3SQLInlineComponent(
-                    "contact",
-                    name = "twitter",
-                    label = T("Twitter"),
-                    multiple = False,
-                    fields = ["value"],
-                    filterby = dict(field = "contact_method",
-                                    options = "TWITTER"
-                                    )
-                ),
-                S3SQLInlineComponent(
-                    "contact",
-                    name = "facebook",
-                    label = T("Facebook"),
-                    multiple = False,
-                    fields = ["value"],
-                    filterby = dict(field = "contact_method",
-                                    options = "FACEBOOK"
-                                    )
-                ),
-                "comments",
-            )
-            
-            from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
-            filter_widgets = [
-                S3TextFilter(["name", "acronym"],
-                             label=T("Name"),
-                             _class="filter-search",
-                             ),
-                S3OptionsFilter("group_membership.group_id",
-                                label=T("Network"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
-                                ),
-                S3LocationFilter("organisation_location.location_id",
-                                 label=T("Neighborhood"),
-                                 levels=["L3", "L4"],
-                                 widget="multiselect",
-                                 cols=3,
-                                 #hidden=True,
+            if not r.component:
+                from gluon.html import DIV, INPUT
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+                s3db.pr_address.comments.label = ""
+                s3db.pr_contact.value.label = ""
+                s3db.doc_document.url.label = ""
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "acronym",
+                    "organisation_type_id",
+                    S3SQLInlineComponentMultiSelectWidget(
+                        "service",
+                        label = T("Services"),
+                        field = "service_id",
+                        cols = 4,
+                    ),
+                    S3SQLInlineComponentMultiSelectWidget(
+                        "group",
+                        label = T("Network"),
+                        field = "group_id",
+                        cols = 3,
+                    ),
+                    S3SQLInlineComponent(
+                        "address",
+                        label = T("Address"),
+                        multiple = False,
+                        # This is just Text - put into the Comments box for now
+                        # Ultimately should go into location_id$addr_street
+                        fields = ["comments"],
+                    ),
+                    S3SQLInlineComponentMultiSelectWidget(
+                        "location",
+                        label = T("Neighborhoods Served"),
+                        field = "location_id",
+                        filterby = dict(field = "level",
+                                        options = "L4"
+                                        ),
+                        # @ToDo: GroupedCheckbox Widget or Hierarchical MultiSelectWidget
+                        cols = 5,
+                    ),
+                    "phone",
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "phone2",
+                        label = T("Phone2"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "WORK_PHONE"
+                                        )
+                    ),
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "email",
+                        label = T("Email"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "EMAIL"
+                                        )
+                    ),
+                    "website",
+                    S3SQLInlineComponent(
+                        "contact",
+                        comment = DIV(INPUT(_type="checkbox",
+                                            _name="rss_no_import"),
+                                      T("Don't Import Feed")),
+                        name = "rss",
+                        label = T("RSS"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "RSS"
+                                        )
+                    ),
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "iCal",
+                        label = "iCAL",
+                        multiple = False,
+                        fields = ["url",
+                                  ],
+                        filterby = dict(field = "name",
+                                        options="iCal"
+                                        )
+                    ),                                                                
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "data",
+                        label = T("Data"),
+                        multiple = False,
+                        fields = ["url",
+                                  ],
+                        filterby = dict(field = "name",
+                                        options="Data"
+                                        )
+                    ),                                                                
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "twitter",
+                        label = T("Twitter"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "TWITTER"
+                                        )
+                    ),
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "facebook",
+                        label = T("Facebook"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "FACEBOOK"
+                                        )
+                    ),
+                    "comments",
+                )
+                
+                from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
+                filter_widgets = [
+                    S3TextFilter(["name", "acronym"],
+                                 label=T("Name"),
+                                 _class="filter-search",
                                  ),
-                S3OptionsFilter("service_organisation.service_id",
-                                label=T("Service"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
-                                ),
-                S3OptionsFilter("organisation_type_id",
-                                label=T("Type"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
-                                ),
-                ]
+                    S3OptionsFilter("group_membership.group_id",
+                                    label=T("Network"),
+                                    represent="%(name)s",
+                                    widget="multiselect",
+                                    cols=3,
+                                    #hidden=True,
+                                    ),
+                    S3LocationFilter("organisation_location.location_id",
+                                     label=T("Neighborhood"),
+                                     levels=["L3", "L4"],
+                                     widget="multiselect",
+                                     cols=3,
+                                     #hidden=True,
+                                     ),
+                    S3OptionsFilter("service_organisation.service_id",
+                                    label=T("Service"),
+                                    represent="%(name)s",
+                                    widget="multiselect",
+                                    cols=3,
+                                    #hidden=True,
+                                    ),
+                    S3OptionsFilter("organisation_type_id",
+                                    label=T("Type"),
+                                    represent="%(name)s",
+                                    widget="multiselect",
+                                    cols=3,
+                                    #hidden=True,
+                                    ),
+                    ]
 
-            s3db.configure("org_organisation",
-                           crud_form = crud_form,
-                           filter_widgets = filter_widgets,
-                           )
+                s3db.configure("org_organisation",
+                               crud_form = crud_form,
+                               filter_widgets = filter_widgets,
+                               )
 
-            s3db.configure("pr_contact",
-                           onaccept = pr_contact_onaccept,
-                           )
+                s3db.configure("pr_contact",
+                               onaccept = pr_contact_onaccept,
+                               )
+            elif r.component_name == "human_resource":
+                from s3.s3validators import IS_ADD_PERSON_WIDGET2
+                from s3.s3widgets import S3AddPersonWidget2
+                field = s3db.hrm_human_resource.person_id
+                field.widget = S3AddPersonWidget2(controller="pr")
+                field.requires = IS_ADD_PERSON_WIDGET2()
 
         return result
     s3.prep = custom_prep
