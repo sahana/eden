@@ -5725,12 +5725,12 @@ def hrm_person_controller(**attr):
                         # rolled back if the import fails:
                         resource.delete(format="xml", cascade=True)
 
-    current.manager.import_prep = import_prep
+    s3.import_prep = import_prep
 
     # CRUD pre-process
     def prep(r):
         if r.representation == "s3json":
-            current.manager.show_ids = True
+            current.xml.show_ids = True
         elif r.interactive and r.method != "import":
             if not r.component:
                 table = r.table

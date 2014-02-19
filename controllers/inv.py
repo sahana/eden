@@ -60,7 +60,7 @@ def index2():
                 if orderby is None:
                     orderby = default_orderby
             start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-            limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
+            limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
             data = resource.select(list_fields,
                                    start=start,
                                    limit=limit,
@@ -139,7 +139,7 @@ def index2():
                 if isinstance(orderby, bool):
                     orderby = [table.site_id, stable.name, ~table.quantity]
                 start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-                limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
+                limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
                 data = resource.select(list_fields,
                                        orderby=orderby,
                                        start=start,
@@ -355,18 +355,18 @@ def warehouse():
             # Change Action buttons to open Stock Tab by default
             read_url = URL(f="warehouse", args=["[id]", "inv_item"])
             update_url = URL(f="warehouse", args=["[id]", "inv_item"])
-            s3mgr.crud.action_buttons(r,
-                                      read_url=read_url,
-                                      update_url=update_url)
+            s3_action_buttons(r,
+                              read_url=read_url,
+                              update_url=update_url)
         else:
             cname = r.component_name
             if cname == "human_resource":
                 # Modify action button to open staff instead of human_resource
                 read_url = URL(c="hrm", f="staff", args=["[id]"])
                 update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                s3mgr.crud.action_buttons(r, read_url=read_url,
-                                          #delete_url=delete_url,
-                                          update_url=update_url)
+                s3_action_buttons(r, read_url=read_url,
+                                  #delete_url=delete_url,
+                                  update_url=update_url)
 
         if "add_btn" in output:
             del output["add_btn"]
@@ -552,7 +552,7 @@ def inv_item():
                         # rolled back if the import fails:
                         resource.delete(format="xml", cascade=True)
             resource.skip_import = True
-    s3mgr.import_prep = import_prep
+    s3.import_prep = import_prep
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 

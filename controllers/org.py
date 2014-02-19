@@ -190,7 +190,7 @@ def person():
             # Do not serve other representations here
             return False
         else:
-            s3mgr.show_ids = True
+            current.xml.show_ids = True
         return True
     s3.prep = prep
 

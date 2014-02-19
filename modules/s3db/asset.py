@@ -1148,7 +1148,7 @@ def asset_controller():
             # Store in case we get called again with same value
             persons[email] = dict(uuid=uuid)
 
-    current.manager.import_prep = import_prep
+    s3.import_prep = import_prep
 
     # Post-processor
     def postp(r, output):

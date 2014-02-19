@@ -1301,7 +1301,7 @@ def commit_req():
                                             )
 
             # Update the req_item.commit_quantity & req.commit_status
-            s3mgr.store_session("req", "commit_item", commit_item_id)
+            s3base.s3_store_last_record_id("req_commit_item", commit_item_id)
             form = Storage()
             form.vars = Storage(
                     req_item_id = req_item_id

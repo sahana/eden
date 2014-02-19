@@ -1278,7 +1278,7 @@ class S3Importer(S3Method):
             sEcho = int(vars.sEcho or 0)
         else: # catch all
             start = 0
-            limit = current.manager.ROWSPERPAGE
+            limit = s3.ROWSPERPAGE
         if limit is not None:
             try:
                 start = int(start)
@@ -1832,8 +1832,7 @@ class S3ImportItem(object):
         data = xml.record(table, element,
                           files=files,
                           original=original,
-                          postprocess=postprocess,
-                          validate=current.manager.validate)
+                          postprocess=postprocess)
 
         if data is None:
             self.error = current.ERROR.VALIDATION_ERROR
@@ -1943,8 +1942,11 @@ class S3ImportItem(object):
         if not self.table:
             return False
 
-        prefix = self.tablename.split("_", 1)[0]
-        if prefix in current.manager.PROTECTED:
+        auth = current.auth
+        tablename = self.tablename
+
+        # Check whether self.table is protected
+        if not auth.override and tablename.split("_", 1)[0] in auth.PROTECTED:
             return False
 
         xml = current.xml
@@ -1981,7 +1983,7 @@ class S3ImportItem(object):
         authorize = current.auth.s3_has_permission
         if authorize:
             self.permitted = authorize(self.method,
-                                       self.tablename,
+                                       tablename,
                                        record_id=self.id)
         else:
             self.permitted = True
@@ -2140,7 +2142,6 @@ class S3ImportItem(object):
         xml = current.xml
         ATTRIBUTE = xml.ATTRIBUTE
         s3db = current.s3db
-        manager = current.manager
 
         # Methods
         METHOD = self.METHOD
@@ -2244,10 +2245,11 @@ class S3ImportItem(object):
                 this_mci = this[MCI]
 
         # Detect conflicts
+        job = self.job
         this_modified = True
         self.modified = True
         self.conflict = False
-        last_sync = xml.as_utc(self.job.last_sync)
+        last_sync = xml.as_utc(job.last_sync)
         if last_sync:
             if this_mtime and this_mtime < last_sync:
                 this_modified = False
@@ -2257,8 +2259,8 @@ class S3ImportItem(object):
                 self.conflict = True
         if self.conflict and method in (UPDATE, DELETE, MERGE):
             _debug("Conflict: %s" % self)
-            if self.job.onconflict:
-                self.job.onconflict(self)
+            if job.onconflict:
+                job.onconflict(self)
 
         if self.data is not None:
             data = table._filter_fields(self.data, id=True)
@@ -2282,8 +2284,8 @@ class S3ImportItem(object):
                 return p
 
         # Log this item
-        if manager.log is not None:
-            manager.log(self)
+        if callable(job.log):
+            job.log(self)
 
         tablename = self.tablename
 
@@ -2858,6 +2860,8 @@ class S3ImportJob():
         self.updated = [] # IDs of updated records
         self.deleted = [] # IDs of deleted records
 
+        self.log = None
+
         # Import strategy
         if strategy is None:
             METHOD = S3ImportItem.METHOD
@@ -3306,12 +3310,14 @@ class S3ImportJob():
         return True
 
     # -------------------------------------------------------------------------
-    def commit(self, ignore_errors=False):
+    def commit(self, ignore_errors=False, log_items=None):
         """
             Commit the import job to the DB
 
             @param ignore_errors: skip any items with errors
                                   (does still report the errors)
+            @param log_items: callback function to log import items
+                              before committing them
         """
 
         ATTRIBUTE = current.xml.ATTRIBUTE
@@ -3332,7 +3338,8 @@ class S3ImportJob():
         updated = []
         deleted = []
         tablename = self.table._tablename
-        
+
+        self.log = log_items
         failed = False
         for item_id in import_list:
             item = items[item_id]
@@ -3944,7 +3951,7 @@ class S3BulkImporter(object):
     def import_user(self, csv_filename):
         """ Import Users from CSV """
 
-        current.manager.import_prep = current.auth.s3_import_prep
+        current.response.s3.import_prep = current.auth.s3_import_prep
         user_task = [1,
                      "auth",
                      "user",

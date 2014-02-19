@@ -68,7 +68,9 @@ else:
 
 URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
-    
+
+RCVARS = "rcvars"
+                           
 # =============================================================================
 def s3_debug(message, value=None):
     """
@@ -89,6 +91,231 @@ def s3_debug(message, value=None):
     except:
         # Unicode string
         print >> sys.stderr, "Debug crashed"
+
+# =============================================================================
+def s3_get_last_record_id(tablename):
+    """
+        Reads the last record ID for a resource from a session
+
+        @param table: the the tablename
+    """
+
+    session = current.session
+
+    if RCVARS in session and tablename in session[RCVARS]:
+        return session[RCVARS][tablename]
+    else:
+        return None
+
+# =============================================================================
+def s3_store_last_record_id(tablename, record_id):
+    """
+        Stores a record ID for a resource in a session
+
+        @param tablename: the tablename
+        @param record_id: the record ID to store
+    """
+
+    session = current.session
+    
+    if RCVARS not in session:
+        session[RCVARS] = Storage({tablename: record_id})
+    else:
+        session[RCVARS][tablename] = record_id
+    return True
+
+# =============================================================================
+def s3_remove_last_record_id(tablename=None):
+    """
+        Clears one or all last record IDs stored in a session
+
+        @param tablename: the tablename, None to remove all last record IDs
+    """
+
+    session = current.session
+    
+    if tablename:
+        if RCVARS in session and tablename in session[RCVARS]:
+            del session[RCVARS][tablename]
+    else:
+        if RCVARS in session:
+            del session[RCVARS]
+    return True
+    
+# =============================================================================
+def s3_validate(table, field, value, record=None):
+    """
+        Validates a value for a field
+
+        @param fieldname: name of the field
+        @param value: value to validate
+        @param record: the existing database record, if available
+
+        @return: tuple (value, error)
+    """
+
+    default = (value, None)
+
+    if isinstance(field, basestring):
+        fieldname = field
+        if fieldname in table.fields:
+            field = table[fieldname]
+        else:
+            return default
+    else:
+        fieldname = field.name
+
+    self_id = None
+
+    if record is not None:
+
+        try:
+            v = record[field]
+        except KeyError:
+            v = None
+        if v and v == value:
+            return default
+
+        try:
+            self_id = record[table._id]
+        except KeyError:
+            pass
+
+    requires = field.requires
+
+    if field.unique and not requires:
+        # Prevent unique-constraint violations
+        field.requires = IS_NOT_IN_DB(current.db, str(field))
+        if self_id:
+            field.requires.set_self_id(self_id)
+
+    elif self_id:
+
+        # Initialize all validators for self_id
+        if not isinstance(requires, (list, tuple)):
+            requires = [requires]
+        for r in requires:
+            if hasattr(r, "set_self_id"):
+                r.set_self_id(self_id)
+            if hasattr(r, "other") and \
+               hasattr(r.other, "set_self_id"):
+                r.other.set_self_id(self_id)
+
+    try:
+        value, error = field.validate(value)
+    except:
+        # Oops - something went wrong in the validator:
+        # write out a debug message, and continue anyway
+        current.log.error("Validate %s: %s (ignored)" %
+                          (field, sys.exc_info()[1]))
+        return (None, None)
+    else:
+        return (value, error)
+
+# =============================================================================
+def s3_represent_value(field,
+                       value=None,
+                       record=None,
+                       linkto=None,
+                       strip_markup=False,
+                       xml_escape=False,
+                       non_xml_output=False,
+                       extended_comments=False):
+    """
+        Represent a field value
+
+        @param field: the field (Field)
+        @param value: the value
+        @param record: record to retrieve the value from
+        @param linkto: function or format string to link an ID column
+        @param strip_markup: strip away markup from representation
+        @param xml_escape: XML-escape the output
+        @param non_xml_output: Needed for output such as pdf or xls
+        @param extended_comments: Typically the comments are abbreviated
+    """
+
+    xml_encode = current.xml.xml_encode
+
+    NONE = current.response.s3.crud_labels["NONE"]
+    cache = current.cache
+    fname = field.name
+
+    # Get the value
+    if record is not None:
+        tablename = str(field.table)
+        if tablename in record and isinstance(record[tablename], Row):
+            text = val = record[tablename][field.name]
+        else:
+            text = val = record[field.name]
+    else:
+        text = val = value
+
+    # Always XML-escape content markup if it is intended for xml output
+    # This code is needed (for example) for a data table that includes a link
+    # Such a table can be seen at inv/inv_item
+    # where the table displays a link to the warehouse
+    if not non_xml_output:
+        if not xml_escape and val is not None:
+            ftype = str(field.type)
+            if ftype in ("string", "text"):
+                val = text = xml_encode(s3_unicode(val))
+            elif ftype == "list:string":
+                val = text = [xml_encode(s3_unicode(v)) for v in val]
+
+    # Get text representation
+    if field.represent:
+        try:
+            key = "%s_repr_%s" % (field, val)
+            unicode(key)
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            text = field.represent(val)
+        else:
+            text = cache.ram(key,
+                             lambda: field.represent(val),
+                             time_expire=60)
+            if isinstance(text, DIV):
+                text = str(text)
+            elif not isinstance(text, basestring):
+                text = s3_unicode(text)
+    else:
+        if val is None:
+            text = NONE
+        elif fname == "comments" and not extended_comments:
+            ur = s3_unicode(text)
+            if len(ur) > 48:
+                text = "%s..." % ur[:45].encode("utf8")
+        else:
+            text = s3_unicode(text)
+
+    # Strip away markup from text
+    if strip_markup and "<" in text:
+        try:
+            stripper = S3MarkupStripper()
+            stripper.feed(text)
+            text = stripper.stripped()
+        except:
+            pass
+
+    # Link ID field
+    if fname == "id" and linkto:
+        id = str(val)
+        try:
+            href = linkto(id)
+        except TypeError:
+            href = linkto % id
+        href = str(href).replace(".aadata", "")
+        return A(text, _href=href).xml()
+
+    # XML-escape text
+    elif xml_escape:
+        text = xml_encode(text)
+
+    try:
+        text = text.decode("utf-8")
+    except:
+        pass
+
+    return text
 
 # =============================================================================
 def s3_dev_toolbar():

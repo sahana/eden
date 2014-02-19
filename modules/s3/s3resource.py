@@ -76,7 +76,7 @@ from gluon.tools import callback
 
 from s3data import S3DataTable, S3DataList, S3PivotTable
 from s3fields import S3Represent, S3RepresentLazy, s3_all_meta_field_names
-from s3utils import s3_has_foreign_key, s3_flatlist, s3_get_foreign_key, s3_unicode, S3MarkupStripper, S3TypeConverter
+from s3utils import s3_has_foreign_key, s3_flatlist, s3_get_foreign_key, s3_unicode, S3MarkupStripper, S3TypeConverter, s3_get_last_record_id, s3_remove_last_record_id
 from s3validators import IS_ONE_OF
 from s3xml import S3XMLFormat
 
@@ -92,6 +92,7 @@ osetattr = object.__setattr__
 ogetattr = object.__getattribute__
 
 TEXTTYPES = ("string", "text")
+MAXDEPTH = 10
 
 # =============================================================================
 class S3Resource(object):
@@ -162,7 +163,6 @@ class S3Resource(object):
 
         s3db = current.s3db
         auth = current.auth
-        manager = current.manager
 
         # Names ---------------------------------------------------------------
 
@@ -180,8 +180,7 @@ class S3Resource(object):
                     self._alias = self.table._tablename
                     tablename = tablename.tablename
                 else:
-                    error = manager.error = \
-                        "%s is not a valid type for a tablename" % tablename
+                    error = "%s is not a valid type for a tablename" % tablename
                     raise SyntaxError(error)
             if "_" in tablename:
                 prefix, name = tablename.split("_", 1)
@@ -206,11 +205,7 @@ class S3Resource(object):
         # Table ---------------------------------------------------------------
 
         if self.table is None:
-            try:
-                self.table = s3db[tablename]
-            except:
-                manager.error = "Undefined table: %s" % tablename
-                raise # KeyError(manager.error)
+            self.table = s3db[tablename]
         table = self.table
 
         # Set default approver
@@ -331,7 +326,8 @@ class S3Resource(object):
         # Standard methods ----------------------------------------------------
 
         # CRUD
-        self.crud = manager.crud()
+        from s3crud import S3CRUD
+        self.crud = S3CRUD()
         self.crud.resource = self
 
     # -------------------------------------------------------------------------
@@ -344,15 +340,16 @@ class S3Resource(object):
         tablename = self.tablename
         search = current.s3db.get_config(tablename, "search_method")
         if not search:
+            from s3search import S3Search
             if "name" in self.table:
                 T = current.T
-                search = current.manager.search(
+                search = S3Search(
                     name="%s_search_simple" % tablename,
                     label=T("Name"),
                     comment=T("Enter a name to search for. You may use % as wildcard. Press 'Search' without input to list all items."),
                     field=["name"])
             else:
-                search = current.manager.search()
+                search = S3Search()
 
         return search
 
@@ -1264,8 +1261,7 @@ class S3Resource(object):
         s3db = current.s3db
         
         # Reset error
-        manager = current.manager
-        manager.error = None
+        self.error = None
 
         table = self.table
         get_config = self.get_config
@@ -1305,14 +1301,13 @@ class S3Resource(object):
         prefix = self.prefix
         name = self.name
         
-        get_session = manager.get_session
-        clear_session = manager.clear_session
-        
         define_resource = s3db.resource
         delete_super = s3db.delete_super
         
         DELETED = current.xml.DELETED
         INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
+        
+        tablename = self.tablename
         
         if current.deployment_settings.get_security_archive_not_delete() and \
            DELETED in table:
@@ -1349,14 +1344,15 @@ class S3Resource(object):
                 if not has_permission("delete", table, record_id=record_id):
                     continue
                 
-                error = manager.error
-                manager.error = None
+                error = self.error
+                self.error = None
 
                 # Run custom ondelete_cascade first
                 if ondelete_cascade:
-                    callback(ondelete_cascade, row, tablename=self.tablename)
-                    if manager.error:
-                        # Row is not deletable (custom RESTRICT)
+                    try:
+                        callback(ondelete_cascade, row, tablename=tablename)
+                    except:
+                        # Custom RESTRICT or cascade failure: row not deletable
                         continue
                     if record_id not in deletable:
                         # Check deletability again
@@ -1377,7 +1373,7 @@ class S3Resource(object):
 
                 if record_id not in deletable:
                     # Row is not deletable
-                    manager.error = INTEGRITY_ERROR
+                    self.error = INTEGRITY_ERROR
                     continue
 
                 # Run automatic ondelete-cascade
@@ -1390,26 +1386,26 @@ class S3Resource(object):
                                                     filter=query,
                                                     unapproved=True)
                         rresource.delete(cascade=True)
-                        if manager.error:
+                        if rresource.error:
                             break
                     elif rfield.ondelete == "SET NULL":
                         try:
                             db(query).update(**{fn:None})
                         except:
-                            manager.error = INTEGRITY_ERROR
+                            self.error = INTEGRITY_ERROR
                             break
                     elif rfield.ondelete == "SET DEFAULT":
                         try:
                             db(query).update(**{fn:rfield.default})
                         except:
-                            manager.error = INTEGRITY_ERROR
+                            self.error = INTEGRITY_ERROR
                             break
 
                 # Unlink all super-records
-                if not manager.error and not delete_super(table, row):
-                    manager.error = INTEGRITY_ERROR
+                if not self.error and not delete_super(table, row):
+                    self.error = INTEGRITY_ERROR
                     
-                if manager.error:
+                if self.error:
                     # Error in deletion cascade: roll back + skip row
                     if not cascade:
                         db.rollback()
@@ -1439,7 +1435,7 @@ class S3Resource(object):
                                                          unapproved=True)
                                 linked.delete(cascade=True)
                     # Pull back prior error status
-                    manager.error = error
+                    self.error = error
                     error = None
                     # "Park" foreign keys to resolve constraints, "un-delete"
                     # would then restore any still-valid FKs from this field!
@@ -1465,8 +1461,8 @@ class S3Resource(object):
                     db(table._id == record_id).update(**fields)
                     numrows += 1
                     # Clear session
-                    if get_session(prefix=prefix, name=name) == record_id:
-                        clear_session(prefix=prefix, name=name)
+                    if s3_get_last_record_id(tablename) == record_id:
+                        s3_remove_last_record_id(tablename)
                     # Audit
                     audit("delete", prefix, name,
                           record=record_id, representation=format)
@@ -1485,24 +1481,27 @@ class S3Resource(object):
                 # Check permission to delete this row
                 if not has_permission("delete", table, record_id=record_id):
                     continue
+                
+                # @ToDo: ondelete_cascade?
+
                 # Delete super-entity
                 success = delete_super(table, row)
                 if not success:
-                    manager.error = INTEGRITY_ERROR
+                    self.error = INTEGRITY_ERROR
                     continue
                 # Delete the row
                 try:
                     del table[record_id]
                 except:
                     # Row is not deletable
-                    manager.error = INTEGRITY_ERROR
+                    self.error = INTEGRITY_ERROR
                     continue
                 else:
                     # Successfully deleted
                     numrows += 1
                     # Clear session
-                    if get_session(prefix=prefix, name=name) == record_id:
-                        clear_session(prefix=prefix, name=name)
+                    if s3_get_last_record_id(tablename) == record_id:
+                        s3_remove_last_record_id(tablename)
                     # Audit
                     audit("delete", prefix, name,
                           record=row[pkey], representation=format)
@@ -1517,7 +1516,7 @@ class S3Resource(object):
 
         if numrows == 0 and not deletable:
             # No deletable rows found
-            manager.error = INTEGRITY_ERROR
+            self.error = INTEGRITY_ERROR
 
         return numrows
 
@@ -1582,11 +1581,7 @@ class S3Resource(object):
         db = current.db
         s3db = current.s3db
 
-        manager = current.manager
-
         define_resource = s3db.resource
-        get_session = manager.get_session
-        clear_session = manager.clear_session
         DELETED = current.xml.DELETED
 
         INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
@@ -1620,8 +1615,8 @@ class S3Resource(object):
 
             for row in rows:
 
-                error = manager.error
-                manager.error = None
+                error = self.error
+                self.error = None
 
                 # On-delete-cascade
                 if ondelete_cascade:
@@ -1641,31 +1636,31 @@ class S3Resource(object):
                     if rfield.ondelete in ("CASCADE", "RESTRICT"):
                         rresource = define_resource(tn, filter=query, unapproved=True)
                         rresource.reject(cascade=True)
-                        if manager.error:
+                        if rresource.error:
                             break
                     elif rfield.ondelete == "SET NULL":
                         try:
                             db(query).update(**{fn:None})
                         except:
-                            manager.error = INTEGRITY_ERROR
+                            self.error = INTEGRITY_ERROR
                             break
                     elif rfield.ondelete == "SET DEFAULT":
                         try:
                             db(query).update(**{fn:rfield.default})
                         except:
-                            manager.error = INTEGRITY_ERROR
+                            self.error = INTEGRITY_ERROR
                             break
 
-                if not manager.error and not delete_super(table, row):
-                    manager.error = INTEGRITY_ERROR
+                if not self.error and not delete_super(table, row):
+                    self.error = INTEGRITY_ERROR
 
-                if manager.error:
+                if self.error:
                     db.rollback()
                     raise RuntimeError("Reject failed for %s.%s" %
-                                      (self.tablename, row[self.table._id]))
+                                      (tablename, row[table._id]))
                 else:
                     # Pull back prior error status
-                    manager.error = error
+                    self.error = error
                     error = None
 
                     # On-reject hook
@@ -1691,8 +1686,8 @@ class S3Resource(object):
                     db(table._id == row[pkey]).update(**fields)
 
                     # Clear session
-                    if get_session(prefix=prefix, name=name) == row[pkey]:
-                        clear_session(prefix=prefix, name=name)
+                    if s3_get_last_record_id(tablename) == row[pkey]:
+                        s3_remove_last_record_id(tablename)
 
                     # On-delete hook
                     if ondelete:
@@ -1714,13 +1709,13 @@ class S3Resource(object):
                     del table[row[pkey]]
                 except:
                     # Row is not deletable
-                    manager.error = INTEGRITY_ERROR
+                    self.error = INTEGRITY_ERROR
                     db.rollback()
                     raise
                 else:
                     # Clear session
-                    if get_session(prefix=prefix, name=name) == row[pkey]:
-                        clear_session(prefix=prefix, name=name)
+                    if s3_get_last_record_id(tablename) == row[pkey]:
+                        s3_remove_last_record_id(tablename)
 
                     # Delete super-entity
                     delete_super(table, row)
@@ -2316,6 +2311,7 @@ class S3Resource(object):
                    msince=None,
                    fields=None,
                    dereference=True,
+                   maxdepth=MAXDEPTH,
                    mcomponents=[],
                    rcomponents=None,
                    references=None,
@@ -2349,7 +2345,6 @@ class S3Resource(object):
             @param args: dict of arguments to pass to the XSLT stylesheet
         """
 
-        manager = current.manager
         xml = current.xml
 
         output = None
@@ -2367,6 +2362,7 @@ class S3Resource(object):
                                 msince=msince,
                                 fields=fields,
                                 dereference=dereference,
+                                maxdepth=maxdepth,
                                 mcomponents=mcomponents,
                                 rcomponents=rcomponents,
                                 references=references,
@@ -2386,8 +2382,8 @@ class S3Resource(object):
             #    _start = datetime.datetime.now()
             import uuid
             tfmt = xml.ISOFORMAT
-            args.update(domain=manager.domain,
-                        base_url=manager.s3.base_url,
+            args.update(domain=xml.domain,
+                        base_url=current.response.s3.base_url,
                         prefix=self.prefix,
                         name=self.name,
                         utcnow=datetime.datetime.utcnow().strftime(tfmt),
@@ -2428,6 +2424,7 @@ class S3Resource(object):
                     fields=None,
                     references=None,
                     dereference=True,
+                    maxdepth=MAXDEPTH,
                     mcomponents=None,
                     rcomponents=None,
                     filters=None,
@@ -2455,10 +2452,9 @@ class S3Resource(object):
         """
 
         xml = current.xml
-        manager = current.manager
 
-        if manager.show_urls:
-            base_url = manager.s3.base_url
+        if xml.show_urls:
+            base_url = current.response.s3.base_url
         else:
             base_url = None
 
@@ -2584,7 +2580,7 @@ class S3Resource(object):
 
         define_resource = current.s3db.resource
 
-        depth = dereference and manager.MAX_DEPTH or 0
+        depth = maxdepth if dereference else 0
         while reference_map and depth:
             depth -= 1
             load_map = dict()
@@ -2627,8 +2623,8 @@ class S3Resource(object):
                                             components=[],
                                             vars=filter_vars)
                 table = rresource.table
-                if manager.s3.base_url:
-                    url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
+                if base_url:
+                    url = "%s/%s/%s" % (base_url, prefix, name)
                 else:
                     url = "/%s/%s" % (prefix, name)
                 rfields, dfields = rresource.split_fields(data=fields,
@@ -2679,7 +2675,7 @@ class S3Resource(object):
         # Complete the tree
         tree = xml.tree(None,
                         root=root,
-                        domain=manager.domain,
+                        domain=xml.domain,
                         url=base_url,
                         results=results,
                         start=start,
@@ -2891,7 +2887,6 @@ class S3Resource(object):
             @param locations: the locations for GIS encoding
         """
 
-        manager = current.manager
         xml = current.xml
 
         tablename = self.tablename
@@ -2955,7 +2950,7 @@ class S3Resource(object):
 
         # Add the references
         xml.add_references(element, rmap,
-                           show_ids=manager.show_ids, lazy=lazy)
+                           show_ids=current.xml.show_ids, lazy=lazy)
 
         # GIS-encode the element
         xml.gis_encode(self, record, element, rmap,
@@ -3032,8 +3027,6 @@ class S3Resource(object):
             @param args: parameters to pass to the transformation stylesheet
         """
 
-        manager = current.manager
-
         # Check permission for the resource
         has_permission = current.auth.s3_has_permission
         authorised = has_permission("create", self.table) and \
@@ -3054,8 +3047,8 @@ class S3Resource(object):
             # Additional stylesheet parameters
             tfmt = xml.ISOFORMAT
             utcnow = datetime.datetime.utcnow().strftime(tfmt)
-            domain = manager.domain
-            base_url = manager.s3.base_url
+            domain = xml.domain
+            base_url = current.response.s3.base_url
             args.update(domain=domain,
                         base_url=base_url,
                         prefix=prefix,
@@ -3238,7 +3231,7 @@ class S3Resource(object):
 
             # Call the import pre-processor to prepare tables
             # and cleanup the tree as necessary
-            import_prep = current.manager.import_prep
+            import_prep = current.response.s3.import_prep
             if import_prep:
                 tree = import_job.get_tree()
                 callback(import_prep,
@@ -3264,7 +3257,7 @@ class S3Resource(object):
 
             # Call the import pre-processor to prepare tables
             # and cleanup the tree as necessary
-            import_prep = current.manager.import_prep
+            import_prep = current.response.s3.import_prep
             if import_prep:
                 if not isinstance(tree, etree._ElementTree):
                     tree = etree.ElementTree(tree)
@@ -3334,7 +3327,8 @@ class S3Resource(object):
 
         # Commit the import job
         auth.rollback = not commit_job
-        success = import_job.commit(ignore_errors=ignore_errors)
+        success = import_job.commit(ignore_errors=ignore_errors,
+                                    log_items = self.get_config("oncommit_import_item"))
         auth.rollback = False
         self.error = import_job.error
         self.import_count += import_job.count
@@ -3476,7 +3470,6 @@ class S3Resource(object):
             @param as_json: convert into JSON after transformation
         """
 
-        manager = current.manager
         xml = current.xml
 
         # Get the structure of the main resource
@@ -3503,8 +3496,8 @@ class S3Resource(object):
         tree = etree.ElementTree(root)
         if stylesheet is not None:
             tfmt = xml.ISOFORMAT
-            args = dict(domain=manager.domain,
-                        base_url=manager.s3.base_url,
+            args = dict(domain=xml.domain,
+                        base_url=current.response.s3.base_url,
                         prefix=self.prefix,
                         name=self.name,
                         utcnow=datetime.datetime.utcnow().strftime(tfmt))
@@ -3525,76 +3518,6 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     # Data Model Helpers
-    # -------------------------------------------------------------------------
-    def validate(self, field, value, record=None):
-        """
-            Validates a value for a field
-
-            @param fieldname: name of the field
-            @param value: value to validate
-            @param record: the existing database record, if available
-        """
-
-        table = self.table
-
-        default = (value, None)
-
-        if isinstance(field, str):
-            fieldname = field
-            if fieldname in table.fields:
-                field = table[fieldname]
-            else:
-                return default
-        else:
-            fieldname = field.name
-
-        self_id = None
-
-        if record is not None:
-
-            try:
-                v = record[field]
-            except KeyError:
-                v = None
-            if v and v == value:
-                return default
-
-            try:
-                self_id = record[table._id]
-            except KeyError:
-                pass
-
-        requires = field.requires
-
-        if field.unique and not requires:
-            # Prevent unique-constraint violations
-            field.requires = IS_NOT_IN_DB(current.db, str(field))
-            if self_id:
-                field.requires.set_self_id(self_id)
-
-        elif self_id:
-
-            # Initialize all validators for self_id
-            if not isinstance(requires, (list, tuple)):
-                requires = [requires]
-            for r in requires:
-                if hasattr(r, "set_self_id"):
-                    r.set_self_id(self_id)
-                if hasattr(r, "other") and \
-                    hasattr(r.other, "set_self_id"):
-                    r.other.set_self_id(self_id)
-
-        try:
-            value, error = field.validate(value)
-        except:
-            # Oops - something went wrong in the validator:
-            # write out a debug message, and continue anyway
-            current.log.error("Validate %s: %s (ignored)" %
-                              (field, sys.exc_info()[1]))
-            return (None, None)
-        else:
-            return (value, error)
-
     # -------------------------------------------------------------------------
     @classmethod
     def original(cls, table, record, mandatory=None):
@@ -3867,7 +3790,7 @@ class S3Resource(object):
             IGNORE_FIELDS = xml.IGNORE_FIELDS
             FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
 
-            show_ids = current.manager.show_ids
+            show_ids = current.xml.show_ids
             rfields = []
             dfields = []
             table = self.table
@@ -3935,7 +3858,7 @@ class S3Resource(object):
         if start is None:
             start = 0
         if limit == 0:
-            limit = current.manager.ROWSPERPAGE
+            limit = current.response.s3.ROWSPERPAGE
 
         if limit <= 0:
             limit = 1
@@ -6992,9 +6915,10 @@ class S3RecordMerger(object):
             self.raise_error("Could not update %s.%s" %
                             (table._tablename, id))
         else:
-            current.s3db.update_super(table, form.vars)
+            s3db = current.s3db
+            s3db.update_super(table, form.vars)
             current.auth.s3_set_record_owner(table, row[table._id], force_update=True)
-            current.manager.onaccept(table, form, method="update")
+            s3db.onaccept(table, form, method="update")
         return form.vars
 
     # -------------------------------------------------------------------------
@@ -7009,7 +6933,7 @@ class S3RecordMerger(object):
                                   cascade=True)
         if not success:
             self.raise_error("Could not delete %s.%s (%s)" %
-                            (resource.tablename, id, manager.error))
+                            (resource.tablename, id, resource.error))
         return success
 
     # -------------------------------------------------------------------------

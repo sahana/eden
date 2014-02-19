@@ -79,7 +79,7 @@ except ImportError:
     raise
 
 from s3rest import S3Method
-from s3utils import S3DateTime
+from s3utils import S3DateTime, s3_validate, s3_represent_value
 import s3codec
 
 try:
@@ -485,17 +485,16 @@ class S3PDF(S3Method):
                             fields = [table.id]
                         label_fields = [f.label for f in fields]
 
-                        represent = current.manager.represent
                         for record in records:
                             data = []
                             for field in fields:
                                 value = record[field.name]
-                                text = represent(field,
-                                                 value=value,
-                                                 strip_markup=True,
-                                                 non_xml_output=True,
-                                                 extended_comments=True
-                                                 )
+                                text = s3_represent_value(field,
+                                                          value=value,
+                                                          strip_markup=True,
+                                                          non_xml_output=True,
+                                                          extended_comments=True
+                                                          )
                                 data.append(text)
                             raw_data.append(data)
                         self.addTable(raw_data = raw_data,
@@ -568,7 +567,7 @@ class S3PDF(S3Method):
                     try:
                         jobuuid = r.vars["jobuuid"]
                     except(KeyError):
-                        r.error(501, current.manager.ERROR.BAD_REQUEST)
+                        r.error(501, current.ERROR.BAD_REQUEST)
 
                     # Check if operation is valid on the given job_uuid
                     current.s3db.table("ocr_meta")
@@ -636,7 +635,7 @@ class S3PDF(S3Method):
                                                limitby=(0, 1)).first()
 
                         if not row:
-                            r.error(501, current.manager.ERROR.BAD_RECORD)
+                            r.error(501, current.ERROR.BAD_RECORD)
 
                         s3ocrdataxml_filename = row.data_file
                         f = open(os.path.join(r.folder,
@@ -662,7 +661,7 @@ class S3PDF(S3Method):
                         resource_table = r.vars["resource_table"]
                         field_name = r.vars["field_name"]
                     except(KeyError):
-                        r.error(501, current.manager.ERROR.BAD_REQUEST)
+                        r.error(501, current.ERROR.BAD_REQUEST)
 
                     try:
                         value = r.vars["value"]
@@ -671,7 +670,7 @@ class S3PDF(S3Method):
                         try:
                             sequence = r.vars["sequence"]
                         except(KeyError):
-                            r.error(501, current.manager.ERROR.BAD_REQUEST)
+                            r.error(501, current.ERROR.BAD_REQUEST)
 
                     # Load ocr tables
                     current.s3db.table("ocr_meta")
@@ -691,7 +690,7 @@ class S3PDF(S3Method):
                         row = db(query).select(table.image_file,
                                                limitby=(0, 1)).first()
                     if not row:
-                        r.error(501, current.manager.ERROR.BAD_RECORD)
+                        r.error(501, current.ERROR.BAD_RECORD)
 
                     format = row.image_file[-4:]
                     image_file = open(os.path.join(r.folder,
@@ -715,7 +714,7 @@ class S3PDF(S3Method):
                     try:
                         setuuid = r.vars["setuuid"]
                     except(KeyError):
-                        r.error(501, current.manager.ERROR.BAD_REQUEST)
+                        r.error(501, current.ERROR.BAD_REQUEST)
 
                     # Check if operation is valid on the given set_uuid
                     statustable = s3db.ocr_form_status
@@ -749,7 +748,7 @@ class S3PDF(S3Method):
                                                                      limitby=(0, 1)
                                                                      ).first()
                     if not row:
-                        r.error(501, current.manager.ERROR.BAD_RECORD)
+                        r.error(501, current.ERROR.BAD_RECORD)
 
                     data_file = open(os.path.join(r.folder,
                                                   "uploads",
@@ -941,7 +940,7 @@ class S3PDF(S3Method):
                         try:
                             numpages = self.__getNumPages(formuuid)
                         except:
-                            r.error(501, current.manager.ERROR.BAD_RECORD)
+                            r.error(501, current.ERROR.BAD_RECORD)
 
                         if not numpages:
                             r.error(501, self.ERROR.EMPTY_OCR_FORM)
@@ -963,7 +962,7 @@ class S3PDF(S3Method):
                                                 uploadformat=uploadformat))
 
             else:
-                r.error(405, current.manager.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
 
         elif r.http == "POST":
             if method == "create":
@@ -1237,7 +1236,6 @@ class S3PDF(S3Method):
                     errordict = {}
 
                     _record = current.xml.record
-                    validate = current.manager.validate
                     s3record_dict = Storage()
                     for tablename in s3xml_etree_dict.keys():
                         record = _record(db[tablename],
@@ -1274,9 +1272,9 @@ class S3PDF(S3Method):
                             table = db[resourcename]
                             for field in datadict[resourcename].keys():
                                 if not table[field].type.startswith("reference "):
-                                    value, error = validate(table,
-                                                            None, field,
-                                                            datadict[resourcename][field])
+                                    value, error = s3_validate(table,
+                                                               field,
+                                                               datadict[resourcename][field])
                                     if error:
                                         errordict["%s-%s" % (resourcename, field)] = str(error)
 
@@ -1294,9 +1292,9 @@ class S3PDF(S3Method):
                                     for field in datadict[resourcename].keys():
                                         if not table[field].type.startswith("reference "):
                                             value, error =\
-                                                validate(table,
-                                                         None, field,
-                                                         datadict[resourcename][field])
+                                                s3_validate(table,
+                                                            field,
+                                                            datadict[resourcename][field])
                                             if error:
                                                 errordict["%s-%s" % (resourcename, field)] = str(error)
 
@@ -1349,10 +1347,10 @@ class S3PDF(S3Method):
                                        "error": errordict})
 
             else:
-                r.error(405, current.manager.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_REQUEST)
+            r.error(501, current.ERROR.BAD_REQUEST)
 
     # -------------------------------------------------------------------------
     def __parse_job_error_tree(self, tree):
@@ -2457,7 +2455,7 @@ class S3PDF(S3Method):
                                 append(DateBoxes(s3ocr_layout_field_etree))
 
                     else:
-                        self.r.error(501, current.manager.PARSE_ERROR)
+                        self.r.error(501, current.ERROR.PARSE_ERROR)
                         print sys.stderr("%s :invalid field type: %s" % \
                                              (get("name"),
                                               fieldtype))
@@ -3169,7 +3167,7 @@ class S3PDFDataSource:
         self.fields = fields
         # Better to return a PDF, even if it has no records
         #if not self.records:
-        #    current.session.warning = current.manager.ERROR.NO_RECORDS
+        #    current.session.warning = current.ERROR.NO_RECORDS
         #    redirect(URL(extension=""))
 
     # -------------------------------------------------------------------------
@@ -3204,7 +3202,6 @@ class S3PDFDataSource:
             rows by fields
         """
 
-        represent = current.manager.represent
         # Build the data list
         data = []
         currentGroup = None
@@ -3215,11 +3212,11 @@ class S3PDFDataSource:
             if self.report_groupby != None:
                 # @ToDo: non-XML output should use Field.represent
                 # - this saves the extra parameter
-                groupData = represent(self.report_groupby,
-                                      record=item,
-                                      strip_markup=True,
-                                      non_xml_output=True
-                                      )
+                groupData = s3_represent_value(self.report_groupby,
+                                               record=item,
+                                               strip_markup=True,
+                                               non_xml_output=True
+                                               )
                 if groupData != currentGroup:
                     currentGroup = groupData
                     data.append([groupData])
@@ -3231,12 +3228,12 @@ class S3PDFDataSource:
                     if field.label == self.report_groupby.label:
                         continue
                 if field.field:
-                    text = represent(field.field,
-                                     record=item,
-                                     strip_markup=True,
-                                     non_xml_output=True,
-                                     extended_comments=True
-                                     )
+                    text = s3_represent_value(field.field,
+                                              record=item,
+                                              strip_markup=True,
+                                              non_xml_output=True,
+                                              extended_comments=True
+                                              )
                 if text == "" or not field.field:
                     # some represents replace the data with an image which will
                     # then be lost by the strip_markup, so get back what we can
