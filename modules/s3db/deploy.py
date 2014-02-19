@@ -1421,9 +1421,9 @@ def deploy_apply(r, **attr):
             return items
 
         else:
-            r.error(501, resource.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
     else:
-        r.error(405, r.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 def deploy_alert_select_recipients(r, **attr):
@@ -1433,7 +1433,7 @@ def deploy_alert_select_recipients(r, **attr):
 
     alert_id = r.id
     if r.representation not in ("html", "aadata") or not alert_id or not r.component:
-        r.error(405, r.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     T = current.T
     s3db = current.s3db
@@ -1611,7 +1611,7 @@ def deploy_alert_select_recipients(r, **attr):
         return items
 
     else:
-        r.error(501, resource.ERROR.BAD_FORMAT)
+        r.error(501, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 def deploy_response_select_mission(r, **attr):
@@ -1621,7 +1621,7 @@ def deploy_response_select_mission(r, **attr):
 
     message_id = r.record.message_id if r.record else None
     if r.representation not in ("html", "aadata") or not message_id or not r.component:
-        r.error(405, r.ERROR.BAD_METHOD)
+        r.error(405, current.ERROR.BAD_METHOD)
 
     T = current.T
     db = current.db
@@ -1878,7 +1878,7 @@ def deploy_response_select_mission(r, **attr):
         return items
 
     else:
-        r.error(501, resource.ERROR.BAD_FORMAT)
+        r.error(501, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 class deploy_MissionProfileLayout(S3DataListLayout):

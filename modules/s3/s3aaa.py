@@ -6440,7 +6440,7 @@ class S3RoleManager(S3Method):
         elif method == "users":
             output = self._users(r, **attr)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         if r.http == "GET" and method not in ("create", "update", "delete"):
             current.session.s3.cancel = r.url()
@@ -6634,10 +6634,10 @@ class S3RoleManager(S3Method):
 
         elif r.representation == "xls":
             # Not implemented yet
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -7073,7 +7073,7 @@ class S3RoleManager(S3Method):
             current.response.view = "admin/role_edit.html"
 
         else:
-            r.error(501, current.manager.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -7131,7 +7131,7 @@ class S3RoleManager(S3Method):
             else:
                 session.error = T("No role to delete")
         else:
-            r.error(501, current.manager.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         redirect(URL(c="admin", f="role", vars=request.get_vars))
 
@@ -7360,10 +7360,10 @@ class S3RoleManager(S3Method):
 
                 current.response.view = "admin/membership_manage.html"
             else:
-                r.error(501, current.manager.BAD_FORMAT)
+                r.error(501, current.ERROR.BAD_FORMAT)
 
         else:
-            r.error(404, self.resource.ERROR.BAD_RECORD)
+            r.error(404, current.ERROR.BAD_RECORD)
 
         return output
 
@@ -7623,9 +7623,9 @@ class S3RoleManager(S3Method):
                               add_btn=add_btn)
                 current.response.view = "admin/membership_manage.html"
             else:
-                r.error(501, current.manager.BAD_FORMAT)
+                r.error(501, current.ERROR.BAD_FORMAT)
         else:
-            r.error(404, self.resource.ERROR.BAD_RECORD)
+            r.error(404, current.ERROR.BAD_RECORD)
 
         return output
 
@@ -7792,7 +7792,7 @@ class S3EntityRoleManager(S3Method):
            (r.tablename in self.ENTITY_TYPES + ["pr_person"]):
             context = self.get_context_data(r, **attr)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         return context
 
     # -------------------------------------------------------------------------

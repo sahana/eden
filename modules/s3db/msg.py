@@ -1939,7 +1939,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             return output
 
         else:
-            r.error(405, r.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 # =============================================================================
 class S3XFormsModel(S3Model):
     """

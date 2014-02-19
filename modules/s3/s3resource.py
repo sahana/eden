@@ -234,10 +234,7 @@ class S3Resource(object):
 
         # Hooks ---------------------------------------------------------------
 
-        self.ERROR = manager.ERROR
-
         # Authorization hooks
-        self.permit = auth.s3_has_permission
         self.accessible_query = auth.s3_accessible_query
 
         # Filter --------------------------------------------------------------
@@ -1229,7 +1226,7 @@ class S3Resource(object):
         """
 
         # Check permission
-        authorised = self.permit("create", self.tablename)
+        authorised = current.auth.s3_has_permission("create", self.tablename)
         if not authorised:
             raise IOError("Operation not permitted: INSERT INTO %s" %
                             self.tablename)
@@ -1302,7 +1299,7 @@ class S3Resource(object):
         numrows = 0
 
         db = current.db
-        permitted = current.auth.s3_has_permission
+        has_permission = current.auth.s3_has_permission
         
         audit = current.audit
         prefix = self.prefix
@@ -1314,8 +1311,8 @@ class S3Resource(object):
         define_resource = s3db.resource
         delete_super = s3db.delete_super
         
-        DELETED = manager.DELETED
-        INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
+        DELETED = current.xml.DELETED
+        INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
         
         if current.deployment_settings.get_security_archive_not_delete() and \
            DELETED in table:
@@ -1349,7 +1346,7 @@ class S3Resource(object):
                 record_id = row[pkey]
 
                 # Check permission to delete this record
-                if not permitted("delete", table, record_id=record_id):
+                if not has_permission("delete", table, record_id=record_id):
                     continue
                 
                 error = manager.error
@@ -1486,7 +1483,7 @@ class S3Resource(object):
             for row in rows:
                 record_id = row[pkey]
                 # Check permission to delete this row
-                if not permitted("delete", table, record_id=record_id):
+                if not has_permission("delete", table, record_id=record_id):
                     continue
                 # Delete super-entity
                 success = delete_super(table, row)
@@ -1590,10 +1587,10 @@ class S3Resource(object):
         define_resource = s3db.resource
         get_session = manager.get_session
         clear_session = manager.clear_session
-        DELETED = manager.DELETED
+        DELETED = current.xml.DELETED
 
-        INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
-        permit = self.permit
+        INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
+        has_permission = current.auth.s3_has_permission
         #audit = current.audit
         prefix = self.prefix
         name = self.name
@@ -3038,9 +3035,9 @@ class S3Resource(object):
         manager = current.manager
 
         # Check permission for the resource
-        permit = manager.permit
-        authorised = permit("create", self.table) and \
-                     permit("update", self.table)
+        has_permission = current.auth.s3_has_permission
+        authorised = has_permission("create", self.table) and \
+                     has_permission("update", self.table)
         if not authorised:
             raise IOError("Insufficient permissions")
 
@@ -3194,7 +3191,7 @@ class S3Resource(object):
         db = current.db
         xml = current.xml
         auth = current.auth
-        permit = auth.s3_has_permission
+        has_permission = auth.s3_has_permission
         tablename = self.tablename
         table = self.table
 
@@ -3212,7 +3209,7 @@ class S3Resource(object):
                                          last_sync=last_sync,
                                          onconflict=onconflict)
             except:
-                self.error = self.ERROR.BAD_SOURCE
+                self.error = current.ERROR.BAD_SOURCE
                 return False
 
             # Delete the job?
@@ -3258,7 +3255,7 @@ class S3Resource(object):
             # Create a new job from an element tree
             # Do not import into tables without "id" field
             if "id" not in table.fields:
-                self.error = self.ERROR.BAD_RESOURCE
+                self.error = current.ERROR.BAD_RESOURCE
                 return False
 
             # Reset error and error tree
@@ -3311,7 +3308,7 @@ class S3Resource(object):
                         first.set(UID, uids[0])
                         matches = [first]
                 if not matches:
-                    self.error = self.ERROR.NO_MATCH
+                    self.error = current.ERROR.NO_MATCH
                     return False
                 else:
                     elements = matches
@@ -3961,7 +3958,7 @@ class S3Resource(object):
         pkey = self.pkey
         fkey = self.fkey
 
-        DELETED = current.manager.DELETED
+        DELETED = current.xml.DELETED
 
         if self.linked:
             return self.linked.get_join()
@@ -3999,7 +3996,7 @@ class S3Resource(object):
         pkey = self.pkey
         fkey = self.fkey
 
-        DELETED = current.manager.DELETED
+        DELETED = current.xml.DELETED
 
         if self.linked:
             return self.linked.get_left_join()
@@ -5164,7 +5161,7 @@ class S3FieldPath(object):
         elif "_" in alias:
 
             # Is a free join
-            DELETED = current.manager.DELETED
+            DELETED = current.xml.DELETED
 
             table = resource.table
             tablename = resource.tablename

@@ -741,7 +741,7 @@ class S3SQLCustomForm(S3SQLForm):
         data = None
         noupdate = []
         forbidden = []
-        permit = resource.permit
+        has_permission = current.auth.s3_has_permission
 
         rcomponents = resource.components
 
@@ -767,17 +767,17 @@ class S3SQLCustomForm(S3SQLForm):
                 ctname = component.tablename
                 if not row:
                     component = rcomponents[alias]
-                    permitted = permit("create", ctname)
+                    permitted = has_permission("create", ctname)
                     if not permitted:
                         forbidden.append(alias)
                     continue
                 else:
                     cid = row[component.table._id]
-                    permitted = permit("read", ctname, cid)
+                    permitted = has_permission("read", ctname, cid)
                     if not permitted:
                         forbidden.append(alias)
                         continue
-                    permitted = permit("update", ctname, cid)
+                    permitted = has_permission("update", ctname, cid)
                     if not permitted:
                         noupdate.append(alias)
 
@@ -810,7 +810,7 @@ class S3SQLCustomForm(S3SQLForm):
                     component = rcomponents[alias]
                 else:
                     continue
-                permitted = permit("create", component.tablename)
+                permitted = has_permission("create", component.tablename)
                 if not permitted:
                     forbidden.append(alias)
 
@@ -1574,7 +1574,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         component = resource.components[selector]
 
         # Check permission
-        permitted = component.permit("read", component.tablename)
+        permitted = current.auth.s3_has_permission("read",
+                                                   component.tablename)
         if not permitted:
             return (None, None, None)
 
@@ -1694,7 +1695,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         for rfield in rfields if rfield.fname != pkey]
 
             items = []
-            permit = resource.permit
+            has_permission = current.auth.s3_has_permission
             for record in records:
 
                 row = record["_row"]
@@ -1702,7 +1703,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                 item = {"_id": row_id}
 
-                permitted = permit("update", tablename, row_id)
+                permitted = has_permission("update", tablename, row_id)
                 if not permitted:
                     item["_readonly"] = True
 
@@ -1837,7 +1838,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         prefix = component.prefix
         name = component.name
         audit = current.audit
-        permit = component.permit
+        has_permission = current.auth.s3_has_permission
         tablename = component.tablename
 
         get_config = current.s3db.get_config
@@ -1858,11 +1859,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 record_id = item["_id"]
                 # Check permissions to edit this item
                 if _editable:
-                    editable = permit("update", tablename, record_id)
+                    editable = has_permission("update", tablename, record_id)
                 else:
                     editable = False
                 if _deletable:
-                    deletable = permit("delete", tablename, record_id)
+                    deletable = has_permission("delete", tablename, record_id)
                 else:
                     deletable = False
             else:
@@ -1913,7 +1914,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if insertable is None:
             insertable = True
         if insertable:
-            insertable = permit("create", tablename)
+            insertable = has_permission("create", tablename)
         if insertable:
             _class = "add-row inline-form"
             if not multiple and has_rows:
@@ -2122,7 +2123,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             manager = current.manager
 
             # Process each item
-            permit = component.permit
+            has_permission = current.auth.s3_has_permission
             audit = current.audit
             validate = manager.validate
             onaccept = manager.onaccept
@@ -2165,7 +2166,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                     # Delete..?
                     if "_delete" in item:
-                        authorized = permit("delete", tablename, record_id)
+                        authorized = has_permission("delete", tablename, record_id)
                         if not authorized:
                             continue
                         c = s3db.resource(tablename, id=record_id)
@@ -2176,7 +2177,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                     # ...or update?
                     else:
-                        authorized = permit("update", tablename, record_id)
+                        authorized = has_permission("update", tablename, record_id)
                         if not authorized:
                             continue
                         values[table._id.name] = record_id
@@ -2198,7 +2199,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             onaccept(table, Storage(vars=values), method="update")
                 else:
                     # Create a new record
-                    authorized = permit("create", tablename)
+                    authorized = has_permission("create", tablename)
                     if not authorized:
                         continue
 
@@ -2749,17 +2750,17 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                 rows = current.db(query).select(*qfields)
 
                 iappend = items.append
-                permit = resource.permit
+                has_permission = current.auth.s3_has_permission
                 represent = current.manager.represent
                 for row in rows:
                     row_id = row[pkey]
                     item = {"_id": row_id}
 
                     cid = row[component.table._id]
-                    permitted = permit("read", tablename, row_id)
+                    permitted = has_permission("read", tablename, row_id)
                     if not permitted:
                         continue
-                    permitted = permit("update", tablename, row_id)
+                    permitted = has_permission("update", tablename, row_id)
                     if not permitted:
                         item["_readonly"] = True
 
@@ -3041,7 +3042,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             # For link-table components, check the link table permissions
             # rather than the component
             component = component.link
-        creatable = component.permit("create", component.tablename)
+        creatable = current.auth.s3_has_permission("create", component.tablename)
         options = OrderedDict()
         for r in rows:
             options[r.id] = dict(name=r.name,

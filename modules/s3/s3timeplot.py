@@ -65,7 +65,7 @@ class S3TimePlot(S3Method):
         if r.http == "GET":
             output = self.timeplot(r, **attr)
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -199,7 +199,7 @@ class S3TimePlot(S3Method):
             output = items
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 

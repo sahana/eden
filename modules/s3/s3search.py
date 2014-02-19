@@ -1088,7 +1088,7 @@ class S3Search(S3CRUD):
 
         # Not supported
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 

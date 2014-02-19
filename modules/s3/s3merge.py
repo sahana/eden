@@ -95,9 +95,9 @@ class S3Merge(S3Method):
             elif r.http == "DELETE":
                 output = self.unmark(r, **attr)
             else:
-                r.error(405, r.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
         else:
-            r.error(405, r.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         return output
 
@@ -360,7 +360,7 @@ class S3Merge(S3Method):
             response.view = self._view(r, "list.html")
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -416,7 +416,7 @@ class S3Merge(S3Method):
         rows = current.db(query).select(orderby=orderby,
                                         limitby=(0, 2))
         if len(rows) != 2:
-            r.error(404, r.ERROR.BAD_RECORD, next = r.url(id=0, vars={}))
+            r.error(404, current.ERROR.BAD_RECORD, next = r.url(id=0, vars={}))
         original = rows[0]
         duplicate = rows[1]
 
@@ -582,7 +582,7 @@ class S3Merge(S3Method):
             except current.auth.permission.error:
                 r.unauthorized()
             except KeyError:
-                r.error(404, r.ERROR.BAD_RECORD)
+                r.error(404, current.ERROR.BAD_RECORD)
             except:
                 r.error(424,
                         T("Could not merge records. (Internal Error: %s)") %

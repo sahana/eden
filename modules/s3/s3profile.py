@@ -69,7 +69,7 @@ class S3Profile(S3CRUD):
                 # Redirect to the List View
                 redirect(r.url(method=""))
         else:
-            r.error(405, r.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -354,7 +354,7 @@ class S3Profile(S3CRUD):
             if "delete" in r.get_vars:
                 return self._dl_ajax_delete(r, resource)
             else:
-                r.error(405, r.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
 
         # dataList
         datalist, numrows, ids = resource.datalist(fields=list_fields,
@@ -677,7 +677,7 @@ class S3Profile(S3CRUD):
             
         else:
             # Really raise an exception here?
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _form(self, r, widget, **attr):

@@ -8051,7 +8051,7 @@ class S3Map(S3Method):
                 return self.page(r, **attr)
 
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     def page(self, r, **attr):
@@ -8121,7 +8121,7 @@ class S3Map(S3Method):
             return output
 
         else:
-            r.error(501, r.ERROR.BAD_FORMAT)
+            r.error(501, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def widget(self,
@@ -8228,7 +8228,7 @@ class S3ExportPOI(S3Method):
         if r.http == "GET":
             output = self.export(r, **attr)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         return output
 

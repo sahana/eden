@@ -805,7 +805,7 @@ def sync_now(r, **attr):
         if r.http in ("GET", "POST"):
             repository = r.record
             if not repository:
-                r.error(404, current.manager.ERROR.BAD_RECORD)
+                r.error(404, current.ERROR.BAD_RECORD)
             form = FORM(TABLE(
                         TR(TD(T("Click 'Start' to synchronize with this repository now:"))),
                         TR(TD(INPUT(_type="submit", _value=T("Start"))))))
@@ -822,9 +822,9 @@ def sync_now(r, **attr):
                     sync.set_status(manual=True)
                     response.flash = T("Manual synchronization started in the background.")
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
     else:
-        r.error(501, current.manager.ERROR.BAD_FORMAT)
+        r.error(501, current.ERROR.BAD_FORMAT)
 
     status = sync.get_status()
     if status.running:

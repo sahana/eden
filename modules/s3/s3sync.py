@@ -96,7 +96,7 @@ class S3Sync(S3Method):
                 output = self.__receive(r, **attr)
 
             else:
-                r.error(405, current.manager.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
 
         elif r.name == "repository" and r.method == "register":
 
@@ -105,10 +105,10 @@ class S3Sync(S3Method):
                 output = self.__register(r, **attr)
 
             else:
-                r.error(405, current.manager.ERROR.BAD_METHOD)
+                r.error(405, current.ERROR.BAD_METHOD)
 
         else:
-            r.error(405, current.manager.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         return output
 
@@ -413,7 +413,7 @@ class S3Sync(S3Method):
                 repository = row
         if not repository.id or \
            not repository.accept_push:
-            r.error(403, current.manager.ERROR.NOT_PERMITTED)
+            r.error(403, current.ERROR.NOT_PERMITTED)
 
         # Get strategy and policy
         default_update_policy = S3ImportItem.POLICY.NEWER
@@ -689,7 +689,7 @@ class S3SyncLog(S3Method):
                 output = r(subtitle=None,
                            rheader=self.rheader)
             else:
-                r.error(501, current.manager.ERROR.BAD_FORMAT)
+                r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
 

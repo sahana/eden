@@ -228,7 +228,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                             echo)
         else:
             from gluon.http import HTTP
-            raise HTTP(501, resource.ERROR.BAD_FORMAT)
+            raise HTTP(501, current.ERROR.BAD_FORMAT)
         return items
 
 # END =========================================================================

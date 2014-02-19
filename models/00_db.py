@@ -105,6 +105,9 @@ from gluon.storage import Messages
 messages = Messages(T)
 current.messages = messages
 
+ERROR = Messages(T)
+current.ERROR = ERROR
+
 # Import the S3 Framework
 if update_check_needed:
     # Reload the Field definitions
