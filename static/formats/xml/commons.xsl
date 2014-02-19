@@ -8,7 +8,7 @@
          include into other stylesheets with:
             <xsl:include href="../xml/commons.xsl"/>
 
-         Copyright (c) 2010-12 Sahana Software Foundation
+         Copyright (c) 2010-14 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation

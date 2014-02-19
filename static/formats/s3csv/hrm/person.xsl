@@ -17,8 +17,9 @@
          Office Lon.....................optional.....office longitude
          Office Street address..........optional.....office street address
          Office Postcode................optional.....office postcode
-         Department.....................optional.....human_resource department
-         Job Title......................optional.....human_resource job title
+         Department.....................optional.....human_resource.department
+         Job Title......................optional.....human_resource.job_title
+         Status.........................optional.....human_resource.status
          Start Date.....................optional.....human_resource start date
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
@@ -606,6 +607,13 @@
                         <xsl:with-param name="BranchName" select="$BranchName"/>
                         <xsl:with-param name="OfficeName" select="col[@field='Office']/text()"/>
                         <xsl:with-param name="FacilityType" select="col[@field='Facility Type']/text()"/>
+                        <xsl:with-param name="Status">
+                            <xsl:call-template name="lowercase">
+                                <xsl:with-param name="string">
+                                   <xsl:value-of select="col[@field='Status']"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:with-param>
                         <xsl:with-param name="type" select="$type"/>
                     </xsl:call-template>
                 </xsl:otherwise>
@@ -726,6 +734,7 @@
         <xsl:param name="BranchName"/>
         <xsl:param name="OfficeName"/>
         <xsl:param name="FacilityType"/>
+        <xsl:param name="Status"/>
         <xsl:param name="type"/>
 
         <resource name="hrm_human_resource">
@@ -737,6 +746,20 @@
             <xsl:if test="$type!=0 or $type!=''">
                 <data field="type"><xsl:value-of select="$type"/></data>
             </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$Status='obsolete'">
+                    <data field="status">2</data>
+                </xsl:when>
+                <xsl:when test="$Status='retired'">
+                    <data field="status">2</data>
+                </xsl:when>
+                <xsl:when test="$Status='resigned'">
+                    <data field="status">2</data>
+                </xsl:when>
+                <xsl:default>
+                    <!-- Leave XML blank to default to 'Active' -->
+                </xsl:default>
+            </xsl:choose>
 
             <!-- Link to Department -->
             <xsl:call-template name="Department">
