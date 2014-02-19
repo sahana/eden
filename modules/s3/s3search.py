@@ -51,7 +51,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
 from s3resource import S3FieldSelector
-from s3utils import s3_get_foreign_key, s3_unicode, S3DateTime
+from s3utils import s3_get_foreign_key, s3_unicode, S3DateTime, s3_represent_value
 from s3validators import *
 from s3widgets import S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 
@@ -1190,8 +1190,6 @@ i18n.edit_saved_search="%s"
             @param r: S3Request object
         """
 
-        represent = current.manager.represent
-
         # Saved search is optional, but used to filter results and
         # put save search name into the output
         search_subscription = current.request.get_vars.get("search_subscription", None)
@@ -1232,7 +1230,7 @@ i18n.edit_saved_search="%s"
             rappend = row_cells.append
 
             for f in fields:
-                rep_value = represent(f, record=row)
+                rep_value = s3_represent_value(f, record=row)
 
                 # Hyperlink the text in the first
                 # cell to the record page

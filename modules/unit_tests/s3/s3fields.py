@@ -985,7 +985,7 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
         table.location_id.represent = loc_id_renderer
 
         # Export with IDs
-        current.manager.show_ids = True
+        current.xml.show_ids = True
         tree = resource.export_tree(dereference=False)
         root = tree.getroot()
 

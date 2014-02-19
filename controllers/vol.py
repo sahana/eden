@@ -553,7 +553,7 @@ def person():
     # CRUD pre-process
     def prep(r):
         if r.representation == "s3json":
-            s3mgr.show_ids = True
+            current.xml.show_ids = True
         elif r.interactive and r.method != "import":
             if not r.component:
                 table = r.table

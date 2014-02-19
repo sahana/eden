@@ -1278,7 +1278,7 @@ class S3Importer(S3Method):
             sEcho = int(vars.sEcho or 0)
         else: # catch all
             start = 0
-            limit = current.manager.ROWSPERPAGE
+            limit = s3.ROWSPERPAGE
         if limit is not None:
             try:
                 start = int(start)
@@ -1832,8 +1832,7 @@ class S3ImportItem(object):
         data = xml.record(table, element,
                           files=files,
                           original=original,
-                          postprocess=postprocess,
-                          validate=current.manager.validate)
+                          postprocess=postprocess)
 
         if data is None:
             self.error = current.ERROR.VALIDATION_ERROR
@@ -1943,8 +1942,11 @@ class S3ImportItem(object):
         if not self.table:
             return False
 
-        prefix = self.tablename.split("_", 1)[0]
-        if prefix in current.manager.PROTECTED:
+        auth = current.auth
+        tablename = self.tablename
+
+        # Check whether self.table is protected
+        if not auth.override and tablename.split("_", 1)[0] in auth.PROTECTED:
             return False
 
         xml = current.xml
@@ -1981,7 +1983,7 @@ class S3ImportItem(object):
         authorize = current.auth.s3_has_permission
         if authorize:
             self.permitted = authorize(self.method,
-                                       self.tablename,
+                                       tablename,
                                        record_id=self.id)
         else:
             self.permitted = True
