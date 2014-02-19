@@ -79,7 +79,7 @@ except ImportError:
     raise
 
 from s3rest import S3Method
-from s3utils import S3DateTime
+from s3utils import S3DateTime, s3_validate
 import s3codec
 
 try:
@@ -1237,7 +1237,6 @@ class S3PDF(S3Method):
                     errordict = {}
 
                     _record = current.xml.record
-                    validate = current.manager.validate
                     s3record_dict = Storage()
                     for tablename in s3xml_etree_dict.keys():
                         record = _record(db[tablename],
@@ -1274,9 +1273,9 @@ class S3PDF(S3Method):
                             table = db[resourcename]
                             for field in datadict[resourcename].keys():
                                 if not table[field].type.startswith("reference "):
-                                    value, error = validate(table,
-                                                            None, field,
-                                                            datadict[resourcename][field])
+                                    value, error = s3_validate(table,
+                                                               field,
+                                                               datadict[resourcename][field])
                                     if error:
                                         errordict["%s-%s" % (resourcename, field)] = str(error)
 
@@ -1294,9 +1293,9 @@ class S3PDF(S3Method):
                                     for field in datadict[resourcename].keys():
                                         if not table[field].type.startswith("reference "):
                                             value, error =\
-                                                validate(table,
-                                                         None, field,
-                                                         datadict[resourcename][field])
+                                                s3_validate(table,
+                                                            field,
+                                                            datadict[resourcename][field])
                                             if error:
                                                 errordict["%s-%s" % (resourcename, field)] = str(error)
 

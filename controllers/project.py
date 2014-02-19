@@ -272,7 +272,7 @@ def open_tasks_for_project():
     def prep(r):
         tablename = "project_project"
         s3.crud_strings[tablename].title_list = T("Open Tasks for Project")
-        s3mgr.LABEL.READ = s3mgr.LABEL.UPDATE = T("Select")
+        s3.crud_labels.READ = s3.crud_labels.UPDATE = T("Select")
         s3db.configure(tablename,
                        deletable=False,
                        listadd=False,

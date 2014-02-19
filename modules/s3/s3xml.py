@@ -59,7 +59,7 @@ from gluon.storage import Storage
 
 from s3codec import S3Codec
 from s3fields import S3Represent, S3RepresentLazy
-from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper
+from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper, s3_validate
 
 ogetattr = object.__getattribute__
 
@@ -207,9 +207,12 @@ class S3XML(S3Codec):
     def __init__(self):
         """ Constructor """
 
-        self.domain = current.manager.domain
+        self.domain = current.request.env.server_name
         self.error = None
         self.filter_mci = False # Set to true to suppress export at MCI<0
+        
+        self.show_ids = False
+        self.show_urls = True
 
     # XML+XSLT tools ==========================================================
     #
@@ -517,7 +520,6 @@ class S3XML(S3Codec):
             return reference_map
 
         db = current.db
-        show_ids = current.manager.show_ids
 
         UID = self.UID
         MCI = self.MCI
@@ -599,7 +601,7 @@ class S3XML(S3Codec):
                 
                 if ktablename == tablename and \
                    UID in record and ogetattr(record, UID) == uid and \
-                   not show_ids:
+                   not self.show_ids:
                     # Super key in the main instance record, never export
                     continue
                 
@@ -1340,7 +1342,6 @@ class S3XML(S3Codec):
     def record(cls, table, element,
                original=None,
                files=[],
-               validate=None,
                skip=[],
                postprocess=None):
         """
@@ -1353,7 +1354,6 @@ class S3XML(S3Codec):
             @param original: the original record
             @param files: list of attached upload files
             @param postprocess: post-process hook (xml_post_parse)
-            @param validate: validate hook (function to validate fields)
             @param skip: fields to skip
         """
 
@@ -1437,9 +1437,9 @@ class S3XML(S3Codec):
                     if field_type in ("datetime", "date", "time"):
                         (value, error) = cls._dtparse(v,
                                                       field_type=field_type)
-                    elif validate is not None:
+                    else:
                         try:
-                            (value, error) = validate(table, original, f, v)
+                            (value, error) = s3_validate(table, f, v, original)
                         except AttributeError:
                             # No such field
                             continue
@@ -1543,7 +1543,7 @@ class S3XML(S3Codec):
                     except:
                         error = sys.exc_info()[1]
 
-                if validate is not None and not skip_validation:
+                if not skip_validation:
                     if not isinstance(value, (basestring, list, tuple)):
                         v = str(value)
                     elif isinstance(value, basestring):
@@ -1563,13 +1563,12 @@ class S3XML(S3Codec):
                             if not error:
                                 dummy = Storage({"filename": filename,
                                                  "file": stream})
-                                (dummy, error) = validate(table, original, f,
-                                                          dummy)
+                                (dummy, error) = s3_validate(table, f, dummy, original)
                         elif field_type == "password":
                             v = value
-                            (value, error) = validate(table, None, f, v)
+                            (value, error) = s3_validate(table, f, v)
                         else:
-                            (value, error) = validate(table, original, f, v)
+                            (value, error) = s3_validate(table, f, v, original)
                     except AttributeError:
                         # No such field
                         continue

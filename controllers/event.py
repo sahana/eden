@@ -92,15 +92,15 @@ def incident():
                     s3db.configure("event_human_resource",
                                    list_fields=["human_resource_id"])
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"] = T("Remove")
+                    s3.crud_labels["DELETE"] = T("Remove")
                 elif r.component.name == "asset":
                     s3db.configure("event_asset",
                                    list_fields=["asset_id"])
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"] = T("Remove")
+                    s3.crud_labels["DELETE"] = T("Remove")
                 else:
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"] = T("Remove")
+                    s3.crud_labels["DELETE"] = T("Remove")
 
             elif r.method != "update" and r.method != "read":
                 # Create or ListCreate
@@ -222,7 +222,7 @@ def person():
             # Do not serve other representations here
             return False
         else:
-            s3mgr.show_ids = True
+            current.xml.show_ids = True
         return True
     s3.prep = prep
 

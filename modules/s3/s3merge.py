@@ -233,7 +233,8 @@ class S3Merge(S3Method):
             @param attr: the controller attributes for the request
         """
 
-        s3 = current.session.s3
+        s3 = current.response.s3
+        session_s3 = current.session.s3
 
         resource = self.resource
         tablename = self.tablename
@@ -244,8 +245,8 @@ class S3Merge(S3Method):
         # Bookmarks
         record_ids = []
         DEDUPLICATE = self.DEDUPLICATE
-        if DEDUPLICATE in s3:
-            bookmarks = s3[DEDUPLICATE]
+        if DEDUPLICATE in session_s3:
+            bookmarks = session_s3[DEDUPLICATE]
             if tablename in bookmarks:
                 record_ids = bookmarks[tablename]
         query = S3FieldSelector(resource._id.name).belongs(record_ids)
@@ -265,7 +266,7 @@ class S3Merge(S3Method):
             sEcho = int(vars.sEcho or 0)
         else: # catch all
             start = 0
-            limit = current.manager.ROWSPERPAGE
+            limit = s3.ROWSPERPAGE
         if limit is not None:
             try:
                 start = int(start)
@@ -275,8 +276,8 @@ class S3Merge(S3Method):
                 limit = None # use default
         else:
             start = None # use default
-        if current.response.s3.dataTable_iDisplayLength:
-            display_length = current.response.s3.dataTable_iDisplayLength
+        if s3.dataTable_iDisplayLength:
+            display_length = s3.dataTable_iDisplayLength
         else:
             display_length = 25
         if limit is None:
@@ -340,9 +341,11 @@ class S3Merge(S3Method):
                                                  "merge", "pair-action")])
 
             output["items"] = items
-            response.s3.actions = [{"label": str(T("View")),
-                                    "url": r.url(target="[id]", method="read"),
-                                    "_class": "action-btn"}]
+            s3.actions = [{"label": str(T("View")),
+                           "url": r.url(target="[id]", method="read"),
+                           "_class": "action-btn",
+                           },
+                          ]
 
             if len(record_ids) < 2:
                 output["add_btn"] = DIV(
@@ -356,7 +359,7 @@ class S3Merge(S3Method):
                     SPAN(T("Select 2 records from this list, then click 'Merge'.")),
                 )
 
-            response.s3.dataTableID = [datatable_id]
+            s3.dataTableID = [datatable_id]
             response.view = self._view(r, "list.html")
 
         else:

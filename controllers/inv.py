@@ -60,7 +60,7 @@ def index2():
                 if orderby is None:
                     orderby = default_orderby
             start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-            limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
+            limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
             data = resource.select(list_fields,
                                    start=start,
                                    limit=limit,
@@ -139,7 +139,7 @@ def index2():
                 if isinstance(orderby, bool):
                     orderby = [table.site_id, stable.name, ~table.quantity]
                 start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-                limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
+                limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
                 data = resource.select(list_fields,
                                        orderby=orderby,
                                        start=start,

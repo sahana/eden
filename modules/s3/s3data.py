@@ -554,15 +554,16 @@ class S3DataTable(object):
 
         from s3crud import S3CRUD
 
+        s3 = current.response.s3
         auth = current.auth
-        actions = current.response.s3.actions
+        actions = s3.actions
 
         table = resource.table
         actions = None
         has_permission = auth.s3_has_permission
         ownership_required = auth.permission.ownership_required
 
-        labels = current.manager.LABEL
+        labels = s3.crud_labels
         args = ["[id]"]
 
         # Choose controller/function to link to
@@ -683,8 +684,7 @@ class S3DataTable(object):
         config.lengthMenu = attr.get("dt_lengthMenu",
                                      [[ 25, 50, -1], [ 25, 50, str(current.T("All"))]]
                                      )
-        config.displayLength = attr.get("dt_displayLength",
-                                        current.manager.ROWSPERPAGE)
+        config.displayLength = attr.get("dt_displayLength", s3.ROWSPERPAGE)
         config.sDom = attr.get("dt_sDom", 'fril<"dataTable_table"t>pi')
         config.pagination = attr.get("dt_pagination", "true")
         config.paginationType = attr.get("dt_pagination_type", "full_numbers")
