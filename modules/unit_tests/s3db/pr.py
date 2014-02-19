@@ -11,6 +11,8 @@ import datetime
 from gluon import *
 from gluon.storage import Storage
 
+from lxml import etree
+
 from s3db.pr import S3SavedSearch
 
 # =============================================================================
@@ -495,6 +497,165 @@ class SavedSearchTests(unittest.TestCase):
         self.pe_id = None
         self.person_id = None
 
+# =============================================================================
+class ContactValidationTests(unittest.TestCase):
+    """ Test validation of mobile phone numbers in pr_contact_onvalidation """
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+        self.current_setting = current.deployment_settings \
+                                      .get_msg_require_international_phone_numbers()
+        
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        settings = current.deployment_settings
+        current.deployment_settings \
+               .msg.require_international_phone_numbers = self.current_setting
+
+        current.db.rollback()
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testMobilePhoneNumberValidationStandard(self):
+        """ Test that validator for mobile phone number is applied """
+
+        current.deployment_settings \
+               .msg.require_international_phone_numbers = False
+        
+        from s3db.pr import S3ContactModel
+        onvalidation = S3ContactModel.pr_contact_onvalidation
+
+        form = Storage(
+            vars = Storage(
+                contact_method = "SMS",
+            )
+        )
+
+        # valid
+        form.errors = Storage()
+        form.vars.value = "0368172634"
+        onvalidation(form)
+        self.assertEqual(form.vars.value, "0368172634")
+        self.assertFalse("value" in form.errors)
+
+        # invalid
+        form.errors = Storage()
+        form.vars.value = "036-ASBKD"
+        onvalidation(form)
+        self.assertEqual(form.vars.value, "036-ASBKD")
+        self.assertTrue("value" in form.errors)
+
+    # -------------------------------------------------------------------------
+    def testMobilePhoneNumberValidationInternational(self):
+        """ Test that validator for mobile phone number is applied """
+
+        current.deployment_settings \
+               .msg.require_international_phone_numbers = True
+               
+        from s3db.pr import S3ContactModel
+        onvalidation = S3ContactModel.pr_contact_onvalidation
+
+        form = Storage(
+            vars = Storage(
+                contact_method = "SMS",
+            )
+        )
+
+        # valid
+        form.errors = Storage()
+        form.vars.value = "+46-73-3847589"
+        onvalidation(form)
+        self.assertEqual(form.vars.value, "+46733847589")
+        self.assertFalse("value" in form.errors)
+
+        # invalid
+        form.errors = Storage()
+        form.vars.value = "0368172634"
+        onvalidation(form)
+        self.assertEqual(form.vars.value, "0368172634")
+        self.assertTrue("value" in form.errors)
+
+    # -------------------------------------------------------------------------
+    def testMobilePhoneNumberImportValidationStandard(self):
+        """ Test that validator for mobile phone number is applied during import """
+
+        s3db = current.s3db
+        current.deployment_settings \
+               .msg.require_international_phone_numbers = False
+               
+        xmlstr = """
+<s3xml>
+    <resource name="pr_person" uuid="CONTACTVALIDATORTESTPERSON1">
+        <data field="first_name">ContactValidatorTestPerson1</data>
+        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT1">
+            <data field="contact_method">SMS</data>
+            <data field="value">0368172634</data>
+        </resource>
+        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT2">
+            <data field="contact_method">SMS</data>
+            <data field="value">036-ASBKD</data>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        resource = s3db.resource("pr_person")
+        result = resource.import_xml(xmltree, ignore_errors=True)
+
+        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT1")
+        self.assertEqual(resource.count(), 1)
+        row = resource.select(["value"], as_rows=True).first()
+        self.assertNotEqual(row, None)
+        self.assertEqual(row.value, "0368172634")
+
+        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT2")
+        self.assertEqual(resource.count(), 0)
+        row = resource.select(["value"], as_rows=True).first()
+        self.assertEqual(row, None)
+    
+    # -------------------------------------------------------------------------
+    def testMobilePhoneNumberImportValidationInternational(self):
+        """ Test that validator for mobile phone number is applied during import """
+
+        s3db = current.s3db
+        current.deployment_settings \
+               .msg.require_international_phone_numbers = True
+
+        xmlstr = """
+<s3xml>
+    <resource name="pr_person" uuid="CONTACTVALIDATORTESTPERSON2">
+        <data field="first_name">ContactValidatorTestPerson2</data>
+        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT1">
+            <data field="contact_method">SMS</data>
+            <data field="value">0368172634</data>
+        </resource>
+        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT2">
+            <data field="contact_method">SMS</data>
+            <data field="value">+46-73-3847589</data>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        resource = s3db.resource("pr_person")
+        result = resource.import_xml(xmltree, ignore_errors=True)
+
+        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT1")
+        self.assertEqual(resource.count(), 0)
+        row = resource.select(["value"], as_rows=True).first()
+        self.assertEqual(row, None)
+
+        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT2")
+        self.assertEqual(resource.count(), 1)
+        row = resource.select(["value"], as_rows=True).first()
+        self.assertNotEqual(row, None)
+        self.assertEqual(row.value, "+46733847589")
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -515,6 +676,7 @@ if __name__ == "__main__":
         PRTests,
         PersonDeduplicateTests,
         SavedSearchTests,
+        ContactValidationTests,
     )
 
 # END ========================================================================

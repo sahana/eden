@@ -2057,7 +2057,7 @@ class ResourceImportTests(unittest.TestCase):
 
         <resource name="pr_contact">
             <data field="contact_method">SMS</data>
-            <data field="value">123456789</data>
+            <data field="value">+123456789</data>
         </resource>
 
     </resource>
@@ -2071,7 +2071,7 @@ class ResourceImportTests(unittest.TestCase):
         
         from gluon.contrib import simplejson as json
         msg = json.loads(msg)
-        
+
         self.assertEqual(msg["status"], "success")
         self.assertEqual(msg["statuscode"], "200")
         self.assertEqual(msg["records"], 1)
