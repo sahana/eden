@@ -4220,9 +4220,12 @@ class S3LocationSelectorWidget2(FormWidget):
                     # Specific location
                     # Only use a specific Lat/Lon when they are not inherited
                     if not record.inherited:
-                        lat = record.lat
-                        lon = record.lon
-                        wkt = record.wkt if polygons else ""
+                        if polygons:
+                            wkt = record.wkt
+                        else:
+                            lat = record.lat
+                            lon = record.lon
+                            wkt = ""
                     address = record.addr_street
                     postcode = record.addr_postcode
                     values["specific"] = value
@@ -4245,9 +4248,12 @@ class S3LocationSelectorWidget2(FormWidget):
             elif not level:
                 # Only use a specific Lat/Lon when they are not inherited
                 if not record.inherited:
-                    lat = record.lat
-                    lon = record.lon
-                    wkt = record.wkt if polygons else ""
+                    if polygons:
+                        wkt = record.wkt
+                    else:
+                        lat = record.lat
+                        lon = record.lon
+                        wkt = ""
                 address = record.addr_street
                 postcode = record.addr_postcode
                 values["specific"] = value

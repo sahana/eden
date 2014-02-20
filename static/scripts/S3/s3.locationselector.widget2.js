@@ -1049,8 +1049,12 @@
                                 //}
                             } else {
                                 // Polygon
-                                var WKT = geometry.transform(map.getProjectionObject(), gis.proj4326).toString();
-                                wktfield.val(WKT);
+                                var out_options = {
+                                    'internalProjection': map.getProjectionObject(),
+                                    'externalProjection': gis.proj4326
+                                    };
+                                wkt = new OpenLayers.Format.WKT(out_options).write(feature);
+                                wktfield.val(wkt);
                             }
                             // Update the Hidden Fields
                             resetHidden(fieldname);

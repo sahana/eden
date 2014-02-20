@@ -4019,17 +4019,17 @@ class GIS(object):
             form.vars = feature
             form.errors = Storage()
             wkt_centroid(form)
-            vars = form.vars
-            if "lat_max" in vars:
-                wkt = vars.wkt
-                _vars = dict(gis_feature_type = vars.gis_feature_type,
-                             lat = vars.lat,
-                             lon = vars.lon,
+            form_vars = form.vars
+            if "lat_max" in form_vars:
+                wkt = form_vars.wkt
+                _vars = dict(gis_feature_type = form_vars.gis_feature_type,
+                             lat = form_vars.lat,
+                             lon = form_vars.lon,
                              wkt = wkt,
-                             lat_max = vars.lat_max,
-                             lat_min = vars.lat_min,
-                             lon_min = vars.lon_min,
-                             lon_max = vars.lon_max)
+                             lat_max = form_vars.lat_max,
+                             lat_min = form_vars.lat_min,
+                             lon_min = form_vars.lon_min,
+                             lon_max = form_vars.lon_max)
                 if wkt:
                     if not wkt.startswith("POI"):
                         # Polygons aren't inherited
@@ -5243,7 +5243,8 @@ class GIS(object):
             db(table.id == id).update(**vars)
 
         # Also do the Bounds/Centroid/WKT
-        vars.update(gis_feature_type="1")
+        if not wkt or wkt.startswith("POI"):
+            vars.update(gis_feature_type="1")
         feature.update(**vars)
         bounds_centroid_wkt(feature)
 
@@ -5260,106 +5261,106 @@ class GIS(object):
         """
 
         messages = current.messages
-        vars = form.vars
+        form_vars = form.vars
 
-        if vars.get("gis_feature_type", None) == "1":
+        if form_vars.get("gis_feature_type", None) == "1":
             # Point
-            if (vars.lon is None and vars.lat is None) or \
-               (vars.lon == "" and vars.lat == ""):
+            if (form_vars.lon is None and form_vars.lat is None) or \
+               (form_vars.lon == "" and form_vars.lat == ""):
                 # No Geometry available
                 # Don't clobber existing records (e.g. in Prepop)
-                #vars.gis_feature_type = "0"
+                #form_vars.gis_feature_type = "0"
                 # Cannot create WKT, so Skip
                 return
-            elif vars.lat is None or vars.lat == "":
+            elif form_vars.lat is None or form_vars.lat == "":
                 # Can't just have lon without lat
                 form.errors["lat"] = messages.lat_empty
-            elif vars.lon is None or vars.lon == "":
+            elif form_vars.lon is None or form_vars.lon == "":
                 form.errors["lon"] = messages.lon_empty
             else:
-                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
-                if "lon_min" not in vars or vars.lon_min is None:
-                    vars.lon_min = vars.lon
-                if "lon_max" not in vars or vars.lon_max is None:
-                    vars.lon_max = vars.lon
-                if "lat_min" not in vars or vars.lat_min is None:
-                    vars.lat_min = vars.lat
-                if "lat_max" not in vars or vars.lat_max is None:
-                    vars.lat_max = vars.lat
+                form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
+                if "lon_min" not in form_vars or form_vars.lon_min is None:
+                    form_vars.lon_min = form_vars.lon
+                if "lon_max" not in form_vars or form_vars.lon_max is None:
+                    form_vars.lon_max = form_vars.lon
+                if "lat_min" not in form_vars or form_vars.lat_min is None:
+                    form_vars.lat_min = form_vars.lat
+                if "lat_max" not in form_vars or form_vars.lat_max is None:
+                    form_vars.lat_max = form_vars.lat
 
-        elif vars.get("wkt", None):
+        elif form_vars.get("wkt", None):
             # Parse WKT for LineString, Polygon, etc
             from shapely.wkt import loads as wkt_loads
             try:
-                shape = wkt_loads(vars.wkt)
+                shape = wkt_loads(form_vars.wkt)
             except:
                 try:
                     # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
-                    linestring = "LINESTRING%s" % vars.wkt[8:-1]
+                    linestring = "LINESTRING%s" % form_vars.wkt[8:-1]
                     shape = wkt_loads(linestring)
-                    vars.wkt = linestring
+                    form_vars.wkt = linestring
                 except:
                     form.errors["wkt"] = messages.invalid_wkt
                 return
             gis_feature_type = shape.type
             if gis_feature_type == "Point":
-                vars.gis_feature_type = 1
+                form_vars.gis_feature_type = 1
             elif gis_feature_type == "LineString":
-                vars.gis_feature_type = 2
+                form_vars.gis_feature_type = 2
             elif gis_feature_type == "Polygon":
-                vars.gis_feature_type = 3
+                form_vars.gis_feature_type = 3
             elif gis_feature_type == "MultiPoint":
-                vars.gis_feature_type = 4
+                form_vars.gis_feature_type = 4
             elif gis_feature_type == "MultiLineString":
-                vars.gis_feature_type = 5
+                form_vars.gis_feature_type = 5
             elif gis_feature_type == "MultiPolygon":
-                vars.gis_feature_type = 6
+                form_vars.gis_feature_type = 6
             elif gis_feature_type == "GeometryCollection":
-                vars.gis_feature_type = 7
+                form_vars.gis_feature_type = 7
             try:
                 centroid_point = shape.centroid
-                vars.lon = centroid_point.x
-                vars.lat = centroid_point.y
+                form_vars.lon = centroid_point.x
+                form_vars.lat = centroid_point.y
                 bounds = shape.bounds
                 if gis_feature_type != "Point" or \
-                   "lon_min" not in vars or vars.lon_min is None or \
-                   vars.lon_min == vars.lon_max:
+                   "lon_min" not in form_vars or form_vars.lon_min is None or \
+                   form_vars.lon_min == form_vars.lon_max:
                     # Update bounds unless we have a 'Point' which has already got wider Bounds specified (such as a country)
-                    vars.lon_min = bounds[0]
-                    vars.lat_min = bounds[1]
-                    vars.lon_max = bounds[2]
-                    vars.lat_max = bounds[3]
+                    form_vars.lon_min = bounds[0]
+                    form_vars.lat_min = bounds[1]
+                    form_vars.lon_max = bounds[2]
+                    form_vars.lat_max = bounds[3]
             except:
                 form.errors.gis_feature_type = messages.centroid_error
 
-        elif (vars.lon is None and vars.lat is None) or \
-             (vars.lon == "" and vars.lat == ""):
+        elif (form_vars.lon is None and form_vars.lat is None) or \
+             (form_vars.lon == "" and form_vars.lat == ""):
             # No Geometry available
             # Don't clobber existing records (e.g. in Prepop)
-            #vars.gis_feature_type = "0"
+            #form_vars.gis_feature_type = "0"
             # Cannot create WKT, so Skip
             return
         else:
             # Point
-            vars.gis_feature_type = "1"
-            if vars.lat is None or vars.lat == "":
+            form_vars.gis_feature_type = "1"
+            if form_vars.lat is None or form_vars.lat == "":
                 form.errors["lat"] = messages.lat_empty
-            elif vars.lon is None or vars.lon == "":
+            elif form_vars.lon is None or form_vars.lon == "":
                 form.errors["lon"] = messages.lon_empty
             else:
-                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
-                if "lon_min" not in vars or vars.lon_min is None:
-                    vars.lon_min = vars.lon
-                if "lon_max" not in vars or vars.lon_max is None:
-                    vars.lon_max = vars.lon
-                if "lat_min" not in vars or vars.lat_min is None:
-                    vars.lat_min = vars.lat
-                if "lat_max" not in vars or vars.lat_max is None:
-                    vars.lat_max = vars.lat
+                form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
+                if "lon_min" not in form_vars or form_vars.lon_min is None:
+                    form_vars.lon_min = form_vars.lon
+                if "lon_max" not in form_vars or form_vars.lon_max is None:
+                    form_vars.lon_max = form_vars.lon
+                if "lat_min" not in form_vars or form_vars.lat_min is None:
+                    form_vars.lat_min = form_vars.lat
+                if "lat_max" not in form_vars or form_vars.lat_max is None:
+                    form_vars.lat_max = form_vars.lat
 
         if current.deployment_settings.get_gis_spatialdb():
             # Also populate the spatial field
-            vars.the_geom = vars.wkt
+            form_vars.the_geom = form_vars.wkt
 
         return
 
