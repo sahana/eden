@@ -52,7 +52,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 
-from s3utils import s3_flatlist, s3_has_foreign_key, s3_orderby_fields, s3_truncate, s3_unicode, S3MarkupStripper
+from s3utils import s3_flatlist, s3_has_foreign_key, s3_orderby_fields, s3_truncate, s3_unicode, S3MarkupStripper, s3_represent_value
 from s3validators import IS_NUMBER
 
 DEBUG = False
@@ -554,15 +554,16 @@ class S3DataTable(object):
 
         from s3crud import S3CRUD
 
+        s3 = current.response.s3
         auth = current.auth
-        actions = current.response.s3.actions
+        actions = s3.actions
 
         table = resource.table
         actions = None
         has_permission = auth.s3_has_permission
         ownership_required = auth.permission.ownership_required
 
-        labels = current.manager.LABEL
+        labels = s3.crud_labels
         args = ["[id]"]
 
         # Choose controller/function to link to
@@ -683,8 +684,7 @@ class S3DataTable(object):
         config.lengthMenu = attr.get("dt_lengthMenu",
                                      [[ 25, 50, -1], [ 25, 50, str(current.T("All"))]]
                                      )
-        config.displayLength = attr.get("dt_displayLength",
-                                        current.manager.ROWSPERPAGE)
+        config.displayLength = attr.get("dt_displayLength", s3.ROWSPERPAGE)
         config.sDom = attr.get("dt_sDom", 'fril<"dataTable_table"t>pi')
         config.pagination = attr.get("dt_pagination", "true")
         config.paginationType = attr.get("dt_pagination_type", "full_numbers")
@@ -2657,8 +2657,8 @@ class S3PivotTable(object):
 
             if rfield.field:
                 def repr_method(value):
-                    return current.manager.represent(rfield.field, value,
-                                                     strip_markup=True)
+                    return s3_represent_value(rfield.field, value,
+                                              strip_markup=True)
 
             elif rfield.virtual:
                 stripper = S3MarkupStripper()

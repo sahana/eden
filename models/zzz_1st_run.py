@@ -271,10 +271,6 @@ if len(pop_list) > 0:
     s3.import_image = bi.import_image
     s3.import_remote_csv = bi.import_remote_csv
 
-    # Disable table protection
-    protected = s3mgr.PROTECTED
-    s3mgr.PROTECTED = []
-
     # Relax strict email-matching rule for import updates of person records
     email_required = settings.get_pr_import_update_requires_email()
     settings.pr.import_update_requires_email = False
@@ -333,9 +329,6 @@ if len(pop_list) > 0:
                 except:
                     pass
             print >> sys.stderr, _errorLine
-
-    # Restore table protection
-    s3mgr.PROTECTED = protected
 
     # Restore setting for strict email-matching
     settings.pr.import_update_requires_email = email_required

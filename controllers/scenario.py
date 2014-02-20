@@ -38,7 +38,7 @@ def scenario():
         if r.interactive and r.component:
             if r.component.name != "config":
                 s3.crud.submit_button = T("Assign")
-                s3mgr.LABEL["DELETE"] = T("Remove")
+                s3.crud_labels["DELETE"] = T("Remove")
             if r.component_name == "site":
                 field = db.scenario_site
                 field.readable = field.writable = True
@@ -90,7 +90,7 @@ def person():
             # Do not serve other representations here
             return False
         else:
-            s3mgr.show_ids = True
+            current.xml.show_ids = True
         return True
     s3.prep = prep
 

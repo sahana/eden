@@ -92,15 +92,15 @@ def incident():
                     s3db.configure("event_human_resource",
                                    list_fields=["human_resource_id"])
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"] = T("Remove")
+                    s3.crud_labels["DELETE"] = T("Remove")
                 elif r.component.name == "asset":
                     s3db.configure("event_asset",
                                    list_fields=["asset_id"])
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"] = T("Remove")
+                    s3.crud_labels["DELETE"] = T("Remove")
                 else:
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"] = T("Remove")
+                    s3.crud_labels["DELETE"] = T("Remove")
 
             elif r.method != "update" and r.method != "read":
                 # Create or ListCreate
@@ -123,12 +123,12 @@ def incident():
             if r.component:
                 if r.component.name == "human_resource":
                     update_url = URL(c="hrm", f="human_resource", args=["[id]"])
-                    s3.crud.action_buttons(r, update_url=update_url)
+                    s3_action_buttons(r, update_url=update_url)
                     if "msg" in settings.modules:
-                        s3.crud.action_button(url = URL(f="compose",
-                                                        vars = {"hrm_id": "[id]"}),
-                                              _class = "action-btn send",
-                                              label = str(T("Send Notification")))
+                        s3base.S3CRUD.action_button(url = URL(f="compose",
+                                                              vars = {"hrm_id": "[id]"}),
+                                                    _class = "action-btn send",
+                                                    label = str(T("Send Notification")))
         return output
     s3.postp = postp
 
@@ -222,7 +222,7 @@ def person():
             # Do not serve other representations here
             return False
         else:
-            s3mgr.show_ids = True
+            current.xml.show_ids = True
         return True
     s3.prep = prep
 

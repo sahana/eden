@@ -2165,7 +2165,7 @@ class S3Filter(S3Method):
         success = resource.delete(format=r.representation)
 
         if not success:
-            raise(400, current.manager.error)
+            raise(400, resource.error)
         else:
             current.response.headers["Content-Type"] = "application/json"
             return current.xml.json_message(deleted=record_id)

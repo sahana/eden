@@ -1111,8 +1111,7 @@ class S3SyncRepository(object):
             if not success:
                 result = log.FATAL
                 if not message:
-                    error = current.manager.error
-                    message = "%s" % error
+                    message = "%s" % resource.error
                 output = xml.json_message(False, 400, message)
                 mtime = None
 
@@ -1440,8 +1439,7 @@ class S3SyncCiviCRM(S3SyncRepository):
                 if not success:
                     result = log.FATAL
                     if not message:
-                        error = current.manager.error
-                        message = "%s" % error
+                        message = "%s" % resource.error
                     output = xml.json_message(False, 400, message)
                     mtime = None
 

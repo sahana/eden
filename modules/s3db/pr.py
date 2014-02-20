@@ -3091,7 +3091,6 @@ class S3SavedSearch(S3Model):
         from s3.s3xml import S3XML
         import urlparse
 
-        represent = current.manager.represent
         resource = S3Resource(tablename)
 
         if tablename == "project_hazard":
@@ -3146,9 +3145,9 @@ class S3SavedSearch(S3Model):
                                 value = int(value)
                             except ValueError:
                                 pass
-                        rep_value = represent(rfield.field,
-                                              value,
-                                              strip_markup=True)
+                        rep_value = s3_represent_value(rfield.field,
+                                                       value,
+                                                       strip_markup=True)
                         values[index] = rep_value
 
             # Join the nice labels back together

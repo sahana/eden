@@ -8222,7 +8222,6 @@ class S3ExportPOI(S3Method):
             @param attr: controller options for this request
         """
 
-        manager = current.manager
         output = dict()
 
         if r.http == "GET":
@@ -8266,7 +8265,7 @@ class S3ExportPOI(S3Method):
         current_lx = r.record
         if not current_lx: # or not current_lx.level:
             # Must have a location
-            r.error(400, current.manager.error.BAD_REQUEST)
+            r.error(400, current.ERROR.BAD_REQUEST)
         else:
             self.lx = current_lx.id
 
@@ -8308,25 +8307,26 @@ class S3ExportPOI(S3Method):
                                          update_feed=update_feed)
 
         xml = current.xml
-        manager = current.manager
 
         # Set response headers
-        headers = current.response.headers
+        response = current.response
+        s3 = response.s3
+        headers = response.headers
         representation = r.representation
-        if r.representation in manager.json_formats:
+        if r.representation in s3.json_formats:
             as_json = True
             default = "application/json"
         else:
             as_json = False
             default = "text/xml"
-        headers["Content-Type"] = manager.content_type.get(representation,
-                                                           default)
+        headers["Content-Type"] = s3.content_type.get(representation,
+                                                      default)
 
         # Find XSLT stylesheet and transform
         stylesheet = r.stylesheet()
         if tree and stylesheet is not None:
-            args = Storage(domain=manager.domain,
-                           base_url=manager.s3.base_url,
+            args = Storage(domain=xml.domain,
+                           base_url=s3.base_url,
                            utcnow=datetime.datetime.utcnow().strftime(tfmt))
             tree = xml.transform(tree, stylesheet, **args)
         if tree:
