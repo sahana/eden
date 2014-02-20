@@ -511,6 +511,7 @@ class S3AddPersonWidget(FormWidget):
         if settings.get_pr_request_gender():
             fields.append(ptable.gender)
 
+        # Determine validation rule for email address
         if controller == "hrm":
             emailRequired = settings.get_hrm_email_required()
         elif controller == "vol":
@@ -519,62 +520,64 @@ class S3AddPersonWidget(FormWidget):
         else:
             emailRequired = False
         if emailRequired:
-            validator = IS_EMAIL()
+            email_requires = IS_EMAIL()
         else:
-            validator = IS_NULL_OR(IS_EMAIL())
+            email_requires = IS_NULL_OR(IS_EMAIL())
 
+        # Determine validation rule for mobile phone number
+        if settings.get_msg_require_international_phone_numbers():
+            error_message = current.T("Enter phone number in international format like +46783754957")
+        else:
+            error_message = current.T("Enter a valid phone number")
+        mobile_phone_requires = IS_EMPTY_OR(IS_PHONE_NUMBER(
+                                            international = True,
+                                            error_message = error_message))
+
+        # Add fields for email and mobile phone number
         fields.extend([Field("email",
                              notnull=emailRequired,
-                             requires=validator,
+                             requires=email_requires,
                              label=T("Email Address")),
                        Field("mobile_phone",
                              label=T("Mobile Phone Number"),
-                             # requires=None to work around a web2py bug
-                             requires=None)
+                             requires=mobile_phone_requires),
                        ])
 
         labels, required = s3_mark_required(fields)
         if required:
             s3.has_required = True
 
-        if request.env.request_method == "POST" and not value:
-            # Read the POST vars:
-            post_vars = request.post_vars
-            values = Storage(ptable._filter_fields(post_vars))
-            values["email"] = post_vars["email"]
-            values["mobile_phone"] = post_vars["mobile_phone"]
+        record_id = value if value else 0
 
-            # Use the validators to convert the POST vars into
-            # internal format (not validating here):
-            data = Storage()
-            for f in fields:
-                fname = f.name
-                if fname in values:
-                    v, error = values[fname], None
-                    requires = f.requires
-                    if requires:
-                        if not isinstance(requires, (list, tuple)):
-                            requires = [requires]
-                        for validator in requires:
-                            v, error = validator(v)
-                            if error:
-                                break
-                    if not error:
-                        data[fname] = v
-
-            record_id = 0
-        else:
-            data = None
-            record_id = value
-
+        # Generate embedded form
+        formname = "person_embedded"
         form = SQLFORM.factory(table_name="pr_person",
-                               record=data,
                                labels=labels,
                                formstyle=formstyle,
                                upload="default/download",
                                separator = "",
                                record_id = record_id,
                                *fields)
+                               
+        if request.env.request_method == "POST":
+            # Read POST data
+            post_vars = request.post_vars
+            values = Storage(ptable._filter_fields(post_vars))
+            values["email"] = post_vars["email"]
+            values["mobile_phone"] = post_vars["mobile_phone"]
+            # Validate form
+            values["_formname"] = formname
+            valid = form.validate(request_vars=values,
+                                  session=None,
+                                  keepvalues=True,
+                                  hideerror=False,
+                                  formname=formname,
+                                  onsuccess=None,
+                                  onfailure=None,
+                                  onchange=None)
+
+        # Re-package the child elements of the FORM into a DIV,
+        # so that they can get embedded as widget in the outer FORM
         trs = []
         for tr in form[0]:
             if "_id" in tr.attributes:
