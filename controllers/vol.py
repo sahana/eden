@@ -514,7 +514,7 @@ def person():
         """
             Deletes all HR records (of the given group) of the organisation
             before processing a new data import, used for the import_prep
-            hook in s3mgr
+            hook in response.s3
         """
         resource, tree = data
         xml = current.xml
@@ -548,12 +548,12 @@ def person():
                                 (htable.type == group)
                         resource = s3db.resource("hrm_human_resource", filter=query)
                         resource.delete(format="xml", cascade=True)
-    s3mgr.import_prep = import_prep
+    s3.import_prep = import_prep
 
     # CRUD pre-process
     def prep(r):
         if r.representation == "s3json":
-            s3mgr.show_ids = True
+            current.xml.show_ids = True
         elif r.interactive and r.method != "import":
             if not r.component:
                 table = r.table

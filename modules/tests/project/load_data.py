@@ -40,7 +40,6 @@ from gluon.storage import Storage
 db = current.db
 s3db = current.s3db
 auth = current.auth
-s3mgr = current.manager
 request = current.request
 
 #----------------------------------------------------------------------

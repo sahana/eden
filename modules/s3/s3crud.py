@@ -56,7 +56,7 @@ from gluon.tools import callback
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
-from s3utils import s3_unicode
+from s3utils import s3_unicode, s3_validate, s3_represent_value
 from s3widgets import S3EmbedComponentWidget
 
 # =============================================================================
@@ -871,7 +871,7 @@ class S3CRUD(S3Method):
                 message = self.crud_string(self.tablename,
                                            "msg_record_deleted")
             else:
-                r.error(404, current.manager.error, next=r.url(method=""))
+                r.error(404, self.resource.error, next=r.url(method=""))
             current.response.confirmation = message
             r.http = "DELETE" # must be set for immediate redirect
             self.next = delete_next or r.url(method="")
@@ -885,7 +885,7 @@ class S3CRUD(S3Method):
                 message = self.crud_string(self.tablename,
                                            "msg_record_deleted")
             else:
-                r.error(404, current.manager.error, next=r.url(method=""))
+                r.error(404, self.resource.error, next=r.url(method=""))
             item = current.xml.json_message(message=message)
             current.response.view = "xml.html"
             output.update(item=item)
@@ -1930,10 +1930,6 @@ class S3CRUD(S3Method):
         table = component.table
         pkey = table._id.name
 
-        manager = current.manager
-        validate = manager.validate
-        represent = manager.represent
-
         get_config = current.s3db.get_config
         tablename = component.tablename
         onvalidation = get_config(tablename, "onvalidation")
@@ -1997,7 +1993,7 @@ class S3CRUD(S3Method):
 
                 # Validate and format the value
                 try:
-                    value, error = validate(table, original, fname, value)
+                    value, error = s3_validate(table, fname, value, original)
                 except AttributeError:
                     error = "invalid field"
 
@@ -2009,7 +2005,7 @@ class S3CRUD(S3Method):
                     validated["_error"] = s3_unicode(error)
                 else:
                     try:
-                        text = represent(field, value = value)
+                        text = s3_represent_value(field, value = value)
                     except:
                         text = s3_unicode(value)
                     validated["text"] = text
@@ -2307,9 +2303,9 @@ class S3CRUD(S3Method):
         """
 
         s3crud = S3CRUD
-        labels = current.manager.LABEL
-
         s3 = current.response.s3
+        labels = s3.crud_labels
+
         custom_actions = s3.actions
         s3.actions = None
 
@@ -2414,7 +2410,6 @@ class S3CRUD(S3Method):
             @todo: re-integrate into S3Importer
         """
 
-        manager = current.manager
         xml = current.xml
 
         prefix, name, table, tablename = r.target()
@@ -2458,19 +2453,21 @@ class S3CRUD(S3Method):
                     else:
                         data.text = value
                     element.append(data)
-        tree = xml.tree([element], domain=manager.domain)
+        tree = xml.tree([element], domain=xml.domain)
 
         # Import data
         result = Storage(committed=False)
-        manager.log = lambda job, result=result: result.update(job=job)
+        def log(item):
+            result["item"] = item
+        resource.configure(oncommit_import_item = log)
         try:
             success = resource.import_xml(tree)
         except SyntaxError:
             pass
 
         # Check result
-        if result.job:
-            result = result.job
+        if result.item:
+            result = result.item
 
         # Build response
         if success and result.committed:
@@ -2784,7 +2781,7 @@ class S3CRUD(S3Method):
                 message = cls.crud_string(dresource.tablename,
                                           "msg_record_deleted")
             else:
-                r.error(404, current.manager.error)
+                r.error(404, dresource.error)
 
             # Return a JSON message
             # @note: make sure the view doesn't get overridden afterwards!

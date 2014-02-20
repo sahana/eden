@@ -52,7 +52,7 @@ from gluon.tools import callback
 from gluon.validators import Validator
 
 from s3resource import S3FieldSelector
-from s3utils import s3_mark_required, s3_unicode
+from s3utils import s3_mark_required, s3_unicode, s3_store_last_record_id, s3_validate, s3_represent_value
 
 # =============================================================================
 class S3SQLForm(object):
@@ -289,7 +289,7 @@ class S3SQLDefaultForm(S3SQLForm):
         record = None
         labels = None
 
-        download_url = current.manager.s3.download_url
+        download_url = s3.download_url
 
         self.record_id = record_id
 
@@ -608,7 +608,7 @@ class S3SQLDefaultForm(S3SQLForm):
                                                       force_update=True)
                 # Store session vars
                 self.resource.lastid = str(vars.id)
-                current.manager.store_session(prefix, name, vars.id)
+                s3_store_last_record_id(tablename, vars.id)
 
             # Execute onaccept
             try:
@@ -616,7 +616,6 @@ class S3SQLDefaultForm(S3SQLForm):
             except:
                 error = "onaccept failed: %s" % onaccept
                 current.log.error(error)
-                current.manager.error = error
                 # This is getting swallowed
                 raise
 
@@ -930,7 +929,6 @@ class S3SQLCustomForm(S3SQLForm):
                 except:
                     error = "postprocess failed: %s" % postprocess
                     current.log.error(error)
-                    current.manager.error = error
                     raise
             response.confirmation = message
 
@@ -966,7 +964,6 @@ class S3SQLCustomForm(S3SQLForm):
             except:
                 error = "onvalidation failed: %s" % onvalidation
                 current.log.error(error)
-                current.manager.error = error
                 raise
 
         # Validate against all subtables
@@ -1004,7 +1001,6 @@ class S3SQLCustomForm(S3SQLForm):
                 except:
                     error = "onvalidation failed: %s" % subonvalidation
                     current.log.error(error)
-                    current.manager.error = error
                     raise
                 for fn in subform.errors:
                     dummy = "sub_%s_%s" % (alias, fn)
@@ -1197,7 +1193,7 @@ class S3SQLCustomForm(S3SQLForm):
 
             # Store session vars
             component.lastid = str(accept_id)
-            current.manager.store_session(prefix, name, accept_id)
+            s3_store_last_record_id(tablename, accept_id)
 
             # Execute onaccept
             try:
@@ -1205,7 +1201,6 @@ class S3SQLCustomForm(S3SQLForm):
             except:
                 error = "onaccept failed: %s" % onaccept
                 current.log.error(error)
-                current.manager.error = error
                 # This is getting swallowed
                 raise
 
@@ -2120,13 +2115,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
             db = current.db
             s3db = current.s3db
             auth = current.auth
-            manager = current.manager
 
             # Process each item
             has_permission = current.auth.s3_has_permission
             audit = current.audit
-            validate = manager.validate
-            onaccept = manager.onaccept
+            onaccept = s3db.onaccept
             for item in data:
 
                 if not "_changed" in item and not "_delete" in item:
@@ -2155,7 +2148,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             # in order to post-process widget output properly (e.g. UTC
                             # offset subtraction)
                             try:
-                                value, error = validate(table, None, f, d["value"])
+                                value, error = s3_validate(table, f, d["value"])
                             except AttributeError:
                                 continue
                             if not error:
@@ -2359,7 +2352,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
         data = dict()
         formfields = []
         formname = self._formname()
-        validate = current.manager.validate
         for f in fields:
             fname = f["name"]
             idxname = "%s_i_%s_%s_%s" % (formname, fname, rowtype, index)
@@ -2398,7 +2390,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     data[idxname] = filename
                 else:
                     value = item[fname]["value"]
-                    value, error = validate(table, None, fname, value)
+                    value, error = s3_validate(table, fname, value)
                     if error:
                         value = None
                     data[idxname] = value
@@ -2751,7 +2743,6 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
 
                 iappend = items.append
                 has_permission = current.auth.s3_has_permission
-                represent = current.manager.represent
                 for row in rows:
                     row_id = row[pkey]
                     item = {"_id": row_id}
@@ -2767,10 +2758,10 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     if fieldname in row:
                         value = row[fieldname]
                         try:
-                            text = represent(field,
-                                             value = value,
-                                             strip_markup = True,
-                                             xml_escape = True)
+                            text = s3_represent_value(field,
+                                                      value = value,
+                                                      strip_markup = True,
+                                                      xml_escape = True)
                         except:
                             text = s3_unicode(value)
                     else:

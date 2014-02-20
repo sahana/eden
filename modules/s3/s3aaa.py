@@ -243,6 +243,10 @@ Thank you
                                       inv_warehouse = T("Warehouse"),
                                       )
 
+        # Name prefixes of tables which must not be manipulated from remote,
+        # CLI can override with auth.override=True
+        self.PROTECTED = ("admin",)
+
     # -------------------------------------------------------------------------
     def define_tables(self, migrate=True, fake_migrate=False):
         """
@@ -2295,7 +2299,7 @@ S3OptionsFilter({
                 if organisation_id:
                     record["id"] = organisation_id
                     s3db.update_super(otable, record)
-                    current.manager.onaccept(otable, record, method="create")
+                    s3db.onaccept(otable, record, method="create")
                     self.s3_set_record_owner(otable, organisation_id)
 
                 # Update user record
@@ -2415,8 +2419,7 @@ S3OptionsFilter({
             if hr_id:
                 record["id"] = hr_id
                 s3db.update_super(htable, record)
-                current.manager.onaccept(htablename, record,
-                                         method="create")
+                s3db.onaccept(htablename, record, method="create")
 
         return hr_id
 

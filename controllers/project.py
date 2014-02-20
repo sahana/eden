@@ -238,9 +238,9 @@ def project():
                 if mode_task:
                     read_url = URL(args=["[id]", "task"])
                     update_url = URL(args=["[id]", "task"])
-                    s3mgr.crud.action_buttons(r,
-                                              read_url=read_url,
-                                              update_url=update_url)
+                    s3_action_buttons(r,
+                                      read_url=read_url,
+                                      update_url=update_url)
                                               
             elif r.component_name == "beneficiary":
                 # Set the minimum end_date to the same as the start_date
@@ -272,7 +272,7 @@ def open_tasks_for_project():
     def prep(r):
         tablename = "project_project"
         s3.crud_strings[tablename].title_list = T("Open Tasks for Project")
-        s3mgr.LABEL.READ = s3mgr.LABEL.UPDATE = T("Select")
+        s3.crud_labels.READ = s3.crud_labels.UPDATE = T("Select")
         s3db.configure(tablename,
                        deletable=False,
                        listadd=False,
@@ -284,10 +284,10 @@ def open_tasks_for_project():
     def postp(r, output):
         if r.interactive and not r.component:
             tasklist_url = URL(f="task", vars={"project":"[id]"})
-            s3base.S3CRUD.action_buttons(r,
-                                         deletable=False,
-                                         read_url=tasklist_url,
-                                         update_url=tasklist_url)
+            s3_action_buttons(r,
+                              deletable=False,
+                              read_url=tasklist_url,
+                              update_url=tasklist_url)
         return output
     s3.postp = postp
     

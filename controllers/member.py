@@ -139,7 +139,7 @@ def person():
                         # rolled back if the import fails:
                         resource.delete(format="xml", cascade=True)
 
-    s3mgr.import_prep = import_prep
+    s3.import_prep = import_prep
 
     # CRUD pre-process
     def prep(r):

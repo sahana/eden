@@ -36,6 +36,7 @@ from gluon.dal import Table
 #from gluon.dal import Field
 #from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
+from gluon.tools import callback
 
 from s3navigation import S3ScriptItem
 from s3resource import S3Resource
@@ -420,6 +421,54 @@ class S3Model(object):
             else:
                 [config[tn].pop(k, None) for k in keys]
         return
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def onaccept(cls, table, record, method="create"):
+        """
+            Helper to run the onvalidation routine for a record
+
+            @param table: the Table
+            @param record: the FORM or the Row to validate
+            @param method: the method
+        """
+
+        if hasattr(table, "_tablename"):
+            tablename = table._tablename
+        else:
+            tablename = table
+
+        onaccept = cls.get_config(tablename, "%s_onaccept" % method,
+                   cls.get_config(tablename, "onaccept"))
+        if "vars" not in record:
+            record = Storage(vars=record, errors=Storage())
+        if onaccept:
+            callback(onaccept, record, tablename=tablename)
+        return
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def onvalidation(cls, table, record, method="create"):
+        """
+            Helper to run the onvalidation routine for a record
+
+            @param table: the Table
+            @param record: the FORM or the Row to validate
+            @param method: the method
+        """
+
+        if hasattr(table, "_tablename"):
+            tablename = table._tablename
+        else:
+            tablename = table
+
+        onvalidation = cls.get_config(tablename, "%s_onvalidation" % method,
+                       cls.get_config(tablename, "onvalidation"))
+        if "vars" not in record:
+            record = Storage(vars=record, errors=Storage())
+        if onvalidation:
+            callback(onvalidation, record, tablename=tablename)
+        return record.errors
 
     # -------------------------------------------------------------------------
     # Resource components

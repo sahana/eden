@@ -3885,7 +3885,7 @@ class ResourceDeleteTests(unittest.TestCase):
         resource = s3db.resource("del_master", id=master_id)
         success = resource.delete()
         self.assertEqual(success, 1)
-        self.assertEqual(current.manager.error, None)
+        self.assertEqual(resource.error, None)
 
         # Master record is deleted
         table = s3db.del_master
@@ -3929,7 +3929,7 @@ class ResourceDeleteTests(unittest.TestCase):
             resource = s3db.resource("del_master", id=master_id)
             success = resource.delete()
             self.assertEqual(success, 1)
-            self.assertEqual(current.manager.error, None)
+            self.assertEqual(resource.error, None)
 
             # Master record is deleted
             table = s3db.del_master
@@ -3982,7 +3982,7 @@ class ResourceDeleteTests(unittest.TestCase):
             resource = s3db.resource("del_master", id=master_id)
             success = resource.delete()
             self.assertEqual(success, 1)
-            self.assertEqual(current.manager.error, None)
+            self.assertEqual(resource.error, None)
 
             # Master record is deleted
             table = s3db.del_master
@@ -4036,7 +4036,7 @@ class ResourceDeleteTests(unittest.TestCase):
             resource = s3db.resource("del_master", id=master_id)
             success = resource.delete()
             self.assertEqual(success, 0)
-            self.assertEqual(current.manager.error, current.ERROR.INTEGRITY_ERROR)
+            self.assertEqual(resource.error, current.ERROR.INTEGRITY_ERROR)
 
             # Master record is not deleted
             table = s3db.del_master
@@ -4076,7 +4076,7 @@ class ResourceDeleteTests(unittest.TestCase):
         resource = s3db.resource("del_master", id=master_id)
         success = resource.delete()
         self.assertEqual(success, 1)
-        self.assertEqual(current.manager.error, None)
+        self.assertEqual(resource.error, None)
 
         # Master record is deleted
         record = table[master_id]
@@ -4130,7 +4130,7 @@ class ResourceDeleteTests(unittest.TestCase):
             resource = s3db.resource("del_master", id=master_id)
             success = resource.delete()
             self.assertEqual(success, 1)
-            self.assertEqual(current.manager.error, None)
+            self.assertEqual(resource.error, None)
 
             # Master record is deleted
             record = table[master_id]
@@ -4193,7 +4193,7 @@ class ResourceDeleteTests(unittest.TestCase):
             resource = s3db.resource("del_master", id=master_id)
             success = resource.delete()
             self.assertEqual(success, 1)
-            self.assertEqual(current.manager.error, None)
+            self.assertEqual(resource.error, None)
 
             # Master record is deleted
             record = table[master_id]
@@ -4256,7 +4256,7 @@ class ResourceDeleteTests(unittest.TestCase):
             resource = s3db.resource("del_master", id=master_id)
             success = resource.delete()
             self.assertEqual(success, 0)
-            self.assertEqual(current.manager.error, current.ERROR.INTEGRITY_ERROR)
+            self.assertEqual(resource.error, current.ERROR.INTEGRITY_ERROR)
 
             # Master record is not deleted
             record = table[master_id]

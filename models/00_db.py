@@ -160,9 +160,7 @@ from s3.s3data import *
 gis = s3base.GIS()
 current.gis = gis
 
-# S3RequestManager
-s3mgr = s3base.S3RequestManager()
-current.manager = s3mgr
+# s3_request
 s3_request = s3base.s3_request
 
 # S3XML
@@ -180,8 +178,8 @@ current.sync = sync
 # -----------------------------------------------------------------------------
 def s3_clear_session():
 
-    # S3ResourceManager last seen records (rcvars)
-    s3mgr.clear_session()
+    # CRUD last opened records (rcvars)
+    s3base.s3_remove_last_record_id()
 
     # Session-owned records
     if "owned_records" in session:

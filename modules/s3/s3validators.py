@@ -80,7 +80,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import Validator
 
-from s3utils import S3DateTime, s3_orderby_fields, s3_unicode
+from s3utils import S3DateTime, s3_orderby_fields, s3_unicode, s3_validate
     
 def translate(text):
     if text is None:
@@ -2114,7 +2114,6 @@ class IS_ADD_PERSON_WIDGET(Validator):
                     error = T("Invalid phone number")
                     return (person_id, error)
 
-            validate = current.manager.validate
             if person_id:
                 # Filter out location_id (location selector form values
                 # being processed only after this widget has been validated)
@@ -2125,7 +2124,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 query = (ptable.id == person_id)
                 data = Storage()
                 for f in ptable._filter_fields(_vars):
-                    value, error = validate(ptable, None, f, _vars[f])
+                    value, error = s3_validate(ptable, f, _vars[f])
                     if error:
                         return (person_id, error)
                     if value:
@@ -2201,7 +2200,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
-                    value, error = validate(ptable, None, f, _vars[f])
+                    value, error = s3_validate(ptable, f, _vars[f])
                     if error:
                         return (None, error)
                     elif f == "date_of_birth" and \
@@ -2373,7 +2372,6 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                     error = T("Invalid phone number")
                     return (person_id, error)
 
-            validate = current.manager.validate
             if person_id:
                 # Filter out location_id (location selector form values
                 # being processed only after this widget has been validated)
@@ -2390,7 +2388,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 query = (ptable.id == person_id)
                 data = Storage()
                 for f in ptable._filter_fields(_vars):
-                    value, error = validate(ptable, None, f, _vars[f])
+                    value, error = s3_validate(ptable, f, _vars[f])
                     if error:
                         return (person_id, error)
                     if value:
@@ -2486,7 +2484,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
-                    value, error = validate(ptable, None, f, _vars[f])
+                    value, error = s3_validate(ptable, f, _vars[f])
                     if error:
                         return (None, None)
                     elif f == "date_of_birth" and \

@@ -40,7 +40,7 @@ from s3rest import S3Method
 from s3resource import S3FieldSelector
 from s3widgets import *
 from s3validators import *
-from s3utils import s3_unicode
+from s3utils import s3_unicode, s3_represent_value
 from s3data import S3DataTable
 
 # =============================================================================
@@ -233,7 +233,8 @@ class S3Merge(S3Method):
             @param attr: the controller attributes for the request
         """
 
-        s3 = current.session.s3
+        s3 = current.response.s3
+        session_s3 = current.session.s3
 
         resource = self.resource
         tablename = self.tablename
@@ -244,8 +245,8 @@ class S3Merge(S3Method):
         # Bookmarks
         record_ids = []
         DEDUPLICATE = self.DEDUPLICATE
-        if DEDUPLICATE in s3:
-            bookmarks = s3[DEDUPLICATE]
+        if DEDUPLICATE in session_s3:
+            bookmarks = session_s3[DEDUPLICATE]
             if tablename in bookmarks:
                 record_ids = bookmarks[tablename]
         query = S3FieldSelector(resource._id.name).belongs(record_ids)
@@ -265,7 +266,7 @@ class S3Merge(S3Method):
             sEcho = int(vars.sEcho or 0)
         else: # catch all
             start = 0
-            limit = current.manager.ROWSPERPAGE
+            limit = s3.ROWSPERPAGE
         if limit is not None:
             try:
                 start = int(start)
@@ -275,8 +276,8 @@ class S3Merge(S3Method):
                 limit = None # use default
         else:
             start = None # use default
-        if current.response.s3.dataTable_iDisplayLength:
-            display_length = current.response.s3.dataTable_iDisplayLength
+        if s3.dataTable_iDisplayLength:
+            display_length = s3.dataTable_iDisplayLength
         else:
             display_length = 25
         if limit is None:
@@ -340,9 +341,11 @@ class S3Merge(S3Method):
                                                  "merge", "pair-action")])
 
             output["items"] = items
-            response.s3.actions = [{"label": str(T("View")),
-                                    "url": r.url(target="[id]", method="read"),
-                                    "_class": "action-btn"}]
+            s3.actions = [{"label": str(T("View")),
+                           "url": r.url(target="[id]", method="read"),
+                           "_class": "action-btn",
+                           },
+                          ]
 
             if len(record_ids) < 2:
                 output["add_btn"] = DIV(
@@ -356,7 +359,7 @@ class S3Merge(S3Method):
                     SPAN(T("Select 2 records from this list, then click 'Merge'.")),
                 )
 
-            response.s3.dataTableID = [datatable_id]
+            s3.dataTableID = [datatable_id]
             response.view = self._view(r, "list.html")
 
         else:
@@ -428,7 +431,6 @@ class S3Merge(S3Method):
         keep_d = KEEP.d in post_vars and post_vars[KEEP.d]
 
         trs = []
-        represent = current.manager.represent
         init_requires = self.init_requires
         for f in formfields:
 
@@ -441,14 +443,14 @@ class S3Merge(S3Method):
                 owidget = self.widget(f, original[f], _name=oid, _id=oid)
             else:
                 try:
-                    owidget = represent(f, value=original[f])
+                    owidget = s3_represent_value(f, value=original[f])
                 except:
                     owidget = s3_unicode(original[f])
             if keep_d or not any((keep_o, keep_d)):
                 dwidget = self.widget(f, duplicate[f], _name=did, _id=did)
             else:
                 try:
-                    dwidget = represent(f, value=duplicate[f])
+                    dwidget = s3_represent_value(f, value=duplicate[f])
                 except:
                     dwidget = s3_unicode(duplicate[f])
 
@@ -643,8 +645,7 @@ class S3Merge(S3Method):
                 fname = key.split("_", 1)[1]
                 data[fname] = form.vars[key]
 
-        errors = current.manager.onvalidation(tablename, data,
-                                              method="update")
+        errors = current.s3db.onvalidation(tablename, data, method="update")
         if errors:
             for fname in errors:
                 form.errors["%s%s" % (prefix, fname)] = errors[fname]

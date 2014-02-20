@@ -845,7 +845,7 @@ S3OptionsFilter({
                 T = current.T
                 req_submit_button = {1:T("Save and add Items"),
                                      3:T("Save and add People")}
-                current.manager.s3.crud.submit_button = req_submit_button[default_type]
+                current.response.s3.crud.submit_button = req_submit_button[default_type]
 
         return
 
@@ -2559,7 +2559,7 @@ class S3CommitModel(S3Model):
             Copy the request_type to the commitment
         """
 
-        req_id = current.manager.get_session("req", "req")
+        req_id = s3_get_last_record_id("req_req")
         if req_id:
             rtable = current.s3db.req_req
             query = (rtable.id == req_id)
@@ -3141,7 +3141,6 @@ class S3CommitPersonModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        s3mgr = current.manager
         table = db.req_commit_person
         rstable = s3db.req_req_skill
 
@@ -3150,7 +3149,7 @@ class S3CommitPersonModel(S3Model):
         if form:
             req_skill_id = form.vars.get("req_skill_id", None)
         if not req_skill_id:
-            commit_skill_id = s3mgr.get_session("req", "commit_skill")
+            commit_skill_id = s3_get_last_record_id("req_commit_skill")
             r_commit_skill = table[commit_skill_id]
             req_skill_id = r_commit_skill.req_skill_id
 
@@ -3165,7 +3164,7 @@ class S3CommitPersonModel(S3Model):
         rstable[req_skill_id] = dict(quantity_commit = quantity_commit)
 
         # Update status_commit of the req record
-        s3mgr.store_session("req", "req_skill", r_req_skill.id)
+        s3_store_last_record_id("req_req_skill", r_req_skill.id)
         req_skill_onaccept(None)
 
 # =============================================================================
@@ -3292,7 +3291,7 @@ def req_item_onaccept(form):
 
     req_id = form.vars.get("req_id", None)
     if not req_id:
-        req_id = current.manager.get_session("req", "req")
+        req_id = s3_get_last_record_id("req_req")
     if not req_id:
         raise HTTP(500, "can not get req_id")
 
@@ -3409,7 +3408,7 @@ def req_skill_onaccept(form):
     if form and form.vars.req_id:
         req_id = form.vars.req_id
     else:
-        req_id = current.manager.get_session("req", "req")
+        req_id = s3_get_last_record_id("req_req")
     if not req_id:
         raise HTTP(500, "can not get req_id")
 
