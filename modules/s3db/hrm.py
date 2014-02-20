@@ -5004,20 +5004,6 @@ def hrm_experience_controller():
                                      )
     return output
 
-## =============================================================================
-#def hrm_skill_simple_search_widget(type):
-
-    #T = current.T
-    #return s3search.S3SearchSimpleWidget(
-                #name = "human_competency_%s" % type,
-                #label = T("Name"),
-                #comment = T("You can search by job title or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-                #field = ["person_id$first_name",
-                         #"person_id$middle_name",
-                         #"person_id$last_name",
-                         #"person_id$hrm_human_resource.job_title_id$name",
-                        #])
-
 # =============================================================================
 def hrm_group_controller():
     """
@@ -5459,7 +5445,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                        },
                                       {"name": "report",
                                        "label": "Report",
-                                       "widgets": [{"method": "report2",
+                                       "widgets": [{"method": "report",
                                                     "ajax_init": True}]
                                        },
                                       {"name": "map",

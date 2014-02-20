@@ -347,7 +347,7 @@ def customize_project_project(**attr):
         resource.configure(list_fields = list_fields)
 
         # Customize report_options
-        if r.method == "report2":
+        if r.method == "report":
             report_fields = ["name",
                              (T("Countries"), "location.location_id"),
                              (T("Hazards"), "hazard.name"),
@@ -822,11 +822,11 @@ def customize_pr_person(**attr):
                     _class = "action-btn"
                     ),
                 A(T("Matrix"),
-                    _href = url.replace("search", "report2"),
+                    _href = url.replace("search", "report"),
                     _class = "action-btn"
                     ),
                 A(T("Chart"),
-                    _href = url.replace("search", "report2?chart=breakdown%3Arows"),
+                    _href = url.replace("search", "report?chart=breakdown%3Arows"),
                     _class = "action-btn"
                     ),
                 A(T("Map"),

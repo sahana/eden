@@ -2970,7 +2970,7 @@ class S3FacilityModel(S3Model):
                               },
                              {"name": "report",
                               "label": "Report",
-                              "widgets": [{"method": "report2",
+                              "widgets": [{"method": "report",
                                            "ajax_init": True}]
                               },
                              {"name": "map",

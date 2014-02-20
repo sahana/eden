@@ -197,7 +197,7 @@ settings.ui.summary = [{"common": True,
                         },
                        {"name": "charts",
                         "label": "Charts",
-                        "widgets": [{"method": "report2", "ajax_init": True}]
+                        "widgets": [{"method": "report", "ajax_init": True}]
                         },
                        {"name": "map",
                         "label": "Map",
@@ -624,7 +624,7 @@ def customize_project_activity(**attr):
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
-            if method in ("summary", "report2"):
+            if method in ("summary", "report"):
                 from s3.s3filter import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
                                                   represent="%(name)s",
@@ -856,7 +856,7 @@ def customize_org_organisation(**attr):
             s3.crud_strings[tablename].title_update = T("Update Organization")
             table.logo.readable = table.logo.writable = False 
 
-            if method in ("summary", "report2"):
+            if method in ("summary", "report"):
                 from s3.s3filter import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "group_membership.group_id",
@@ -1248,7 +1248,7 @@ def customize_org_facility(**attr):
                 msg_record_deleted = T("Place removed"),
                 msg_list_empty = T("No Places currently recorded"))
 
-            if method in ("summary", "report2"):
+            if method in ("summary", "report"):
                 from s3.s3filter import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "site_org_group.group_id",
@@ -1490,7 +1490,7 @@ def customize_stats_people(**attr):
                 msg_record_deleted = T("People removed"),
                 msg_list_empty = T("No People currently recorded"))
             
-            if method in ("summary", "report2"):
+            if method in ("summary", "report"):
                 from s3.s3filter import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "people_group.group_id",
@@ -1690,7 +1690,7 @@ def customize_vulnerability_evac_route(**attr):
 
             table.location_id.readable = False
 
-            if method in ("summary", "report2"):
+            if method in ("summary", "report"):
                 from s3.s3filter import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "evac_route_group.group_id",
@@ -1872,7 +1872,7 @@ def customize_vulnerability_risk(**attr):
                 msg_record_deleted = T("Hazard removed"),
                 msg_list_empty = T("No Hazards currently recorded"))
             
-            if method in ("summary", "report2"):
+            if method in ("summary", "report"):
                 # Not needed now that Risk data is moved to WMS
                 # Filter out data not associated with any Coalition
                 #from s3.s3resource import S3FieldSelector

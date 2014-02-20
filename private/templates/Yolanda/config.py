@@ -168,7 +168,7 @@ settings.ui.summary = [#{"common": True,
                         },
                        {"name": "charts",
                         "label": "Reports",
-                        "widgets": [{"method": "report2", "ajax_init": True}]
+                        "widgets": [{"method": "report", "ajax_init": True}]
                         },
                        ]
 

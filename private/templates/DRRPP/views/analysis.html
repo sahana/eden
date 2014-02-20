@@ -11,11 +11,11 @@
     <p>Cross examine different project data and filter criteria.</p>
     <p>
       {{=A(IMG(_src="/%s/static/themes/DRRPP/img/matrix_img.png" % appname),
-           _href=URL(c="project", f="project", args=["report2"]),
+           _href=URL(c="project", f="project", args=["report"]),
            _title="Project Matrix Report")}}
     </p>
     <p>
-      {{=A(T("Go to matrix analysis"), _href=URL(c="project", f="project", args=["report2"]))}}
+      {{=A(T("Go to matrix analysis"), _href=URL(c="project", f="project", args=["report"]))}}
     </p>
 </div>
 <div id='project_analysis_graph' class='page_column'>
@@ -23,12 +23,12 @@
     <p>Develop your customised bar chart to identify gaps and find trends in the implementation of DRR Projects.</p>
     <p>
       {{=A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname),
-           _href=URL(c="project", f="project", args=["report2"],
+           _href=URL(c="project", f="project", args=["report"],
                      vars=dict(chart="breakdown:rows")),
           _title="Project Graphs")}}
     </p>
     <p>
-      {{=A(T("Go to graph analysis"), _href=URL(c="project", f="project", args=["report2"], vars=dict(chart="breakdown:rows")))}}
+      {{=A(T("Go to graph analysis"), _href=URL(c="project", f="project", args=["report"], vars=dict(chart="breakdown:rows")))}}
     </p>
   </div>
   <div id='project_analysis_map' class='page_column'>

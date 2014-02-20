@@ -262,22 +262,6 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
-    # Reports
-    print "Compressing Reports"
-    sourceDirectory = ".."
-    configFilename = "sahana.js.report.cfg"
-    outputFilename = "s3.report.min.js"
-    merged = mergejs.run(sourceDirectory,
-                         None,
-                         configFilename)
-    minimized = minimize(merged)
-    open(outputFilename, "w").write(minimized)
-    try:
-        os.remove("../S3/%s" % outputFilename)
-    except:
-        pass
-    shutil.move(outputFilename, "../S3")
-
     # Guided Tour
     print "Compressing Guided Tour"
     sourceDirectory = ".."

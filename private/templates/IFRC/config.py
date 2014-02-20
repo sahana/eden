@@ -836,7 +836,7 @@ def customize_hrm_human_resource(**attr):
                "title" in output:
                 output["title"] = T("RDRT Members")
             elif vnrc and \
-                 r.method not in ("report", "report2") and \
+                 r.method != "report" and \
                  "form" in output and \
                  (r.controller == "vol" or \
                   r.component_name == "human_resource"):

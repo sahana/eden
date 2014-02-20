@@ -429,22 +429,22 @@ class S3OptionsMenu(object):
         return M(c="assess")(
                     M("Building Assessments", f="building")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                     ),
                     M("Canvassing", f="canvass")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                     ),
                     #M("Rapid Assessments", f="rat")(
                     #    M("New", m="create"),
-                    #    #M("List All"),
+                    #    #M("Search"),
                     #),
                     #M("Impact Assessments", f="assess")(
                     #    #M("New", m="create"),
                     #    M("New", f="basic_assess", p="create"),
-                    #    #M("List All"),
+                    #    #M("Search"),
                     #    M("Mobile", f="mobile_basic_assess"),
                     #),
                     ##M("Baseline Data")(
@@ -466,36 +466,35 @@ class S3OptionsMenu(object):
         return M(c="asset")(
                     M("Assets", f="asset")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        M("Report", m="report2"),
+                        M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
                     #M("Brands", f="brand",
                     #  restrict=[ADMIN])(
                     #    M("New", m="create"),
-                    #    M("List All"),
+                    #    M("Search"),
                     #),
                     M("Items", f="item")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Report", m="report2"),
+                        #M("Search"),
+                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", f="item_category",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Catalogs", f="catalog",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
+                        #M("Search"),
                     ),
                     M("Suppliers", f="supplier")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
                 )
@@ -538,13 +537,11 @@ class S3OptionsMenu(object):
                         M("Submit New (triage)", m="create",
                           vars={"triage":1}),
                         M("Submit New (full form)", m="create"),
-                        M("List"),
-                        M("Search", m="search"),
+                        #M("Search"),
                     ),
                     M("NZSEE Level 2", f="nzseel2")(
                         M("Submit New", m="create"),
-                        M("List"),
-                        M("Search", m="search"),
+                        M("Search"),
                     ),
                     M("Report", f="index")(
                         M("Snapshot", f="report"),
@@ -564,11 +561,11 @@ class S3OptionsMenu(object):
 
         return M(c="cap")(
                     M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
-                        M("List All", f="alert", vars={'alert.is_template': 'false'}),
+                        M("Search", f="alert", vars={'alert.is_template': 'false'}),
                         M("Create Alert", f="alert", m="create"),
                     ),
                     M("Templates", f="template", vars={'alert.is_template': 'true'})(
-                        M("List All", f="template", vars={'alert.is_template': 'true'}),
+                        M("Search", f="template", vars={'alert.is_template': 'true'}),
                         M("Create Template", f="template", m="create"),
                     ),
                     #M("CAP Profile", f="profile")(
@@ -592,10 +589,9 @@ class S3OptionsMenu(object):
         return M(c="cr")(
                     M(shelter, f="shelter")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        #M("Search", m="search"),
-                        M("Report", m="report2"),
+                        M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
                     M(types, restrict=[ADMIN])(
@@ -611,12 +607,12 @@ class S3OptionsMenu(object):
         return M(c="cms")(
                     M("Series", f="series")(
                         M("New", m="create"),
-                        M("List All"),
+                        M("Search"),
                         M("View as Pages", f="blog"),
                     ),
                     M("Posts", f="post")(
                         M("New", m="create"),
-                        M("List All"),
+                        M("Search"),
                         M("View as Pages", f="page"),
                     ),
                 )
@@ -630,11 +626,11 @@ class S3OptionsMenu(object):
         return M(c="delphi")(
                     M("Active Problems", f="problem")(
                         M("New", m="create"),
-                        M("List All"),
+                        M("Search"),
                     ),
                     M("Groups", f="group")(
                         M("New", m="create"),
-                        M("List All"),
+                        M("Search"),
                     ),
                     #M("Solutions", f="solution"),
                     #M("Administration", restrict=[ADMIN])(
@@ -682,14 +678,12 @@ class S3OptionsMenu(object):
         return M(c="doc")(
                     M("Documents", f="document")(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search")
+                        #M("Search"),
                     ),
                     M("Photos", f="image")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         #M("Bulk Uploader", f="bulk_upload"),
-                        #M("Search", m="search")
                     )
                 )
 
@@ -719,7 +713,7 @@ class S3OptionsMenu(object):
                     ),
                     M("Morgues", f="morgue")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Dashboard", f="index"),
                 )
@@ -731,8 +725,7 @@ class S3OptionsMenu(object):
         return M(c="dvr")(
                     M("Cases", f="case")(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search")
+                        #M("Search"),
                     ),
                 )
 
@@ -768,37 +761,32 @@ class S3OptionsMenu(object):
         return M(c="fire")(
                     M("Fire Stations", f="station")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
                         M("Import Stations", m="import"),
                         M("Import Vehicles", f="station_vehicle", m="import"),
                     ),
                     M("Fire Zones", f="zone")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         #M("Map", m="map"),
-                        #M("Search", m="search"),
                         #M("Import", m="import"),
                     ),
                     M("Zone Types", f="zone_type")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         #M("Map", m="map"),
-                        #M("Search", m="search"),
                         #M("Import", m="import"),
                     ),
                     M("Water Sources", f="water_source")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
                         M("Import", m="import"),
                     ),
                     M("Hazard Points", f="hazard_point")(
                         M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
+                        #M("Search"),
                         M("Import", m="import"),
                     )
                 )
@@ -862,7 +850,7 @@ class S3OptionsMenu(object):
                     M("Locations", c="gis", f="location")(
                         M("Add Location", m="create"),
                         #M("Add Location Group", m="create", vars={"group": 1}),
-                        M("List All"),
+                        #M("Search"),
                         M("Import from CSV", m="import", restrict=[MAP_ADMIN]),
                         M("Import from OpenStreetMap", m="import_poi",
                           restrict=[MAP_ADMIN]),
@@ -896,12 +884,11 @@ class S3OptionsMenu(object):
         #s3 = current.response.s3
 
         return M(c="hms")(
-                    M("Hospitals", f="hospital", m="search")(
+                    M("Hospitals", f="hospital")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        #M("Search", m="search"),
-                        M("Report", m="report2"),
+                        M("Report", m="report"),
                         M("Import", m="import", p="create"),
                         #SEP(),
                         #M("Show Map", c="gis", f="map_viewing_client",
@@ -932,7 +919,7 @@ class S3OptionsMenu(object):
                     M(settings.get_hrm_staff_label(), f="staff",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Search by Skills", f="competency"),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
@@ -943,51 +930,51 @@ class S3OptionsMenu(object):
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("Department Catalog", f="department",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Job Title Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Skill Catalog", f="skill",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
-                    M("Reports", f="staff", m="report2",
+                    M("Reports", f="staff", m="report",
                       check=manager_mode)(
-                        M("Staff Report", m="report2"),
+                        M("Staff Report", m="report"),
                         M("Expiring Staff Contracts Report",
                           vars=dict(expiring=1)),
-                        M("Training Report", f="training", m="report2"),
+                        M("Training Report", f="training", m="report"),
                     ),
                     M("Personal Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
@@ -1025,7 +1012,7 @@ class S3OptionsMenu(object):
                     M("Volunteers", f="volunteer",
                       check=[manager_mode])(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Search by skills", f="competency"),
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
@@ -1036,65 +1023,65 @@ class S3OptionsMenu(object):
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("Department Catalog", f="department",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Skill Catalog", f="skill",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Programs", f="programme",
                       check=[manager_mode, show_programmes])(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
                     M("Reports", f="volunteer", m="report",
                       check=manager_mode)(
                         M("Volunteer Report", m="report"),
-                        M("Hours by Role Report", f="programme_hours", m="report2",
+                        M("Hours by Role Report", f="programme_hours", m="report",
                           vars=Storage(rows="job_title_id",
                                        cols="month",
                                        fact="sum(hours)"),
                           check=show_programmes),
-                        M("Hours by Program Report", f="programme_hours", m="report2",
+                        M("Hours by Program Report", f="programme_hours", m="report",
                           vars=Storage(rows="programme_id",
                                        cols="month",
                                        fact="sum(hours)"),
                           check=show_programmes),
-                        M("Training Report", f="training", m="report2"),
+                        M("Training Report", f="training", m="report"),
                     ),
                     M("My Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
@@ -1141,7 +1128,7 @@ class S3OptionsMenu(object):
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
-                        M("Warehouse Stock", f="inv_item", m="report2"),
+                        M("Warehouse Stock", f="inv_item", m="report"),
                         M("Expiration Report", c="inv", f="track_item",
                           vars=dict(report="exp")),
                         M("Monetization Report", c="inv", f="inv_item",
@@ -1155,19 +1142,19 @@ class S3OptionsMenu(object):
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Timeline", args="timeline"),
                     ),
                     M("Sent Shipments", c="inv", f="send")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Search Shipped Items", f="track_item"),
                         M("Timeline", args="timeline"),
                     ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
-                        #M("List All"),
-                        M("Report", m="report2"),
+                        #M("Search"),
+                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories
@@ -1178,38 +1165,38 @@ class S3OptionsMenu(object):
                     #M("Brands", c="supply", f="brand",
                     #  restrict=[ADMIN])(
                     #    M("New", m="create"),
-                    #    M("List All"),
+                    #    M("Search"),
                     #),
                     M("Catalogs", c="supply", f="catalog")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Suppliers", c="inv", f="supplier")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Facilities", c="inv", f="facility")(
                         M("New", m="create", t="org_facility"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Facility Types", c="inv", f="facility_type",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Requests", c="req", f="req")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Requested Items", f="req_item"),
                     ),
                     M("Commitments", c="req", f="commit", check=use_commit)(
-                        #M("List All")
+                        #M("Search")
                     ),
                 )
 
@@ -1222,16 +1209,16 @@ class S3OptionsMenu(object):
         return M(c="irs")(
                     M("Incident Reports", f="ireport")(
                         M("Add Incident Report", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Open Incidents", vars={"open":1}),
                         M("Map", m="map"),
                         M("Timeline", args="timeline"),
                         M("Import", m="import"),
-                        M("Report", m="report2")
+                        M("Report", m="report")
                     ),
                     M("Incident Categories", f="icategory", restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Ushahidi Import", f="ireport", restrict=[ADMIN],
                       args="ushahidi")
@@ -1246,12 +1233,11 @@ class S3OptionsMenu(object):
         return M(c="security")(
                     M("Incident Reports", c="irs", f="ireport")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Open Incidents", vars={"open":1}),
                         M("Map", m="map"),
                         M("Timeline", args="timeline"),
                         M("Import", m="import"),
-                        M("Search", m="search"),
                         M("Report", m="report",
                           vars=dict(rows="L1",
                                     cols="category",
@@ -1261,33 +1247,33 @@ class S3OptionsMenu(object):
                     M("Incident Categories", c="irs", f="icategory",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Facilities", c="org", f="facility", m="summary")(
                         M("New", m="create"),
-                        M("List All", m="summary"),
+                        #M("Search", m="summary"),
                     ),
                     M("Facility Types", c="org", f="facility_type",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Zones", f="zone")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Zone Types", f="zone_type", restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Personnel", f="staff")(
                         M("New", m="create"),
                         M("List All Security-related Staff"),
-                        M("List All Essential Staff", f="essential", m="search"),
+                        M("List All Essential Staff", f="essential"),
                     ),
                     M("Security Staff Types", f="staff_type", restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     #M("Ushahidi Import", c="irs", f="ireport", restrict=[ADMIN],
                     #  args="ushahidi")
@@ -1330,19 +1316,19 @@ class S3OptionsMenu(object):
         return M(c="survey")(
                     M("Assessment Templates", f="template")(
                         M("Add Assessment Templates", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     #M("Section", f="section")(
                     #    M("New", args="create"),
-                    #    M("List All"),
+                    #    M("Search"),
                     #),
                     M("Disaster Assessments", f="series")(
                         M("Add Disaster Assessments", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Administration", f="admin", restrict=[ADMIN])(
                         #M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Import Templates", f="question_list",
                           m="import", p="create"),
                         M("Import Template Layout", f="formatter",
@@ -1359,13 +1345,13 @@ class S3OptionsMenu(object):
         return M(c="member")(
                     M("Members", f="membership")(
                         M("Add Member", m="create"),
-                        #M("List All"),
-                        M("Report", m="report2"),
+                        #M("Search"),
+                        M("Report", m="report"),
                         M("Import", f="person", m="import"),
                     ),
                     M("Membership Types", f="membership_type")(
                         M("Add Membership Type", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         #M("Import", m="import"),
                     ),
                 )
@@ -1377,8 +1363,7 @@ class S3OptionsMenu(object):
         return M(c="mpr")(
                     M("Missing Persons", f="person")(
                         M("New", m="create"),
-                        M("Search", f="index"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                 )
 
@@ -1437,38 +1422,38 @@ class S3OptionsMenu(object):
         return M(c="org")(
                     M("Organizations", f="organisation")(
                         M("Add Organization", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Import", m="import")
                     ),
                     M("Offices", f="office")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                         M("Import", m="import")
                     ),
                     M("Facilities", f="facility", m="summary")(
                         M("New", m="create"),
-                        M("List All", m="summary"),
+                        #M("Search", m="summary"),
                         M("Import", m="import")
                     ),
                     M("Organization Types", f="organisation_type",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Office Types", f="office_type",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Facility Types", f="facility_type",
                       restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M(SECTORS, f="sector", restrict=[ADMIN])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                 )
 
@@ -1479,7 +1464,7 @@ class S3OptionsMenu(object):
         return M(c="patient")(
                     M("Patients", f="patient")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     )
                 )
 
@@ -1490,13 +1475,13 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="pr", restrict=ADMIN)(
-                    M("Person", f="person")(
+                    M("Persons", f="person")(
                         M("Add Person", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Groups", f="group")(
-                        M("New", m="create"),
-                        M("List All"),
+                        M("Add Group", m="create"),
+                        #M("Search"),
                     ),
                 )
 
@@ -1507,11 +1492,11 @@ class S3OptionsMenu(object):
         return M(c="proc")(
                     M("Procurement Plans", f="plan")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                     M("Suppliers", f="supplier")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                     ),
                 )
 
@@ -1534,12 +1519,12 @@ class S3OptionsMenu(object):
                 menu(
                      M("Projects", f="project")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                      ),
                      M("Communities", f="location")(
                         # Better created from tab (otherwise Activity Type filter won't work)
                         #M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                         M("List Community Contacts", f="location_contact"),
                      ),
@@ -1548,18 +1533,18 @@ class S3OptionsMenu(object):
                 menu(
                      M("Projects", f="project")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                         M("Map", f="location", m="map"),
                      )
                     )
             stats = lambda i: settings.has_module("stats")
             menu(
-                 M("Reports", f="location", m="report2")(
-                    M("3W", f="location", m="report2"),
-                    M("Beneficiaries", f="beneficiary", m="report2",
+                 M("Reports", f="location", m="report")(
+                    M("3W", f="location", m="report"),
+                    M("Beneficiaries", f="beneficiary", m="report",
                       check = stats,
                       ),
-                    M("Funding", f="organisation", m="report2"),
+                    M("Funding", f="organisation", m="report"),
                  ),
                  M("Import", f="project", m="import", p="create")(
                     M("Import Projects", m="import", p="create"),
@@ -1570,26 +1555,26 @@ class S3OptionsMenu(object):
                  ),
                 M("Partner Organizations",  f="partners")(
                     M("New", m="create"),
-                    #M("List All"),
+                    #M("Search"),
                     M("Import", m="import", p="create"),
                 ),
                  M("Themes", f="theme")(
                     M("New", m="create"),
-                    #M("List All"),
+                    #M("Search"),
                  ),
                  M("Activity Types", f="activity_type")(
                     M("New", m="create"),
-                    #M("List All"),
+                    #M("Search"),
                  ),
                  M("Beneficiary Types", f="beneficiary_type",
                    check = stats,)(
                     M("New", m="create"),
-                    #M("List All"),
+                    #M("Search"),
                  ),
                  M("Demographics", f="demographic",
                    check = stats,)(
                     M("New", m="create"),
-                    #M("List All"),
+                    #M("Search"),
                  ),
                 )
 
@@ -1597,14 +1582,14 @@ class S3OptionsMenu(object):
                 menu(
                      M("Hazards", f="hazard")(
                         M("New", m="create"),
-                        #M("List All"),
+                        #M("Search"),
                      )
                     )
             #if settings.get_project_sectors():
             #    menu(
             #         M("Sectors", c="org", f="sector")(
             #            M("New", m="create"),
-            #            #M("List All"),
+            #            #M("Search"),
             #         )
             #        )
 
@@ -1612,7 +1597,7 @@ class S3OptionsMenu(object):
             menu(
                  M("Projects", f="project")(
                     M("New", m="create"),
-                    #M("List All"),
+                    #M("Search"),
                     M("Open Tasks for Project", vars={"tasks":1}),
                  ),
                  M("Tasks", f="task")(
@@ -1632,25 +1617,25 @@ class S3OptionsMenu(object):
                         M("Import Tasks", f="task", m="import", p="create"),
                      ),
                      M("Reports", f="report")(
-                        M("Activity Report", f="activity", m="report2"),
-                        M("Last Week's Work", f="time", m="report2",
+                        M("Activity Report", f="activity", m="report"),
+                        M("Last Week's Work", f="time", m="report",
                           vars=Storage(rows="person_id",
                                        cols="day",
                                        fact="sum(hours)",
                                        week=1)),
-                        M("Last Month's Work", f="time", m="report2",
+                        M("Last Month's Work", f="time", m="report",
                           vars=Storage(rows="person_id",
                                        cols="week",
                                        fact="sum(hours)",
                                        month=1)),
-                        M("Project Time Report", f="time", m="report2"),
+                        M("Project Time Report", f="time", m="report"),
                      ),
                     )
         else:
             menu(
                  M("Projects", f="project")(
                     M("New", m="create"),
-                    #M("List All"),
+                    #M("Search"),
                     M("Import", m="import", p="create"),
                  ),
                 )
@@ -1686,7 +1671,7 @@ class S3OptionsMenu(object):
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report2"),
+                        M("Report", m="report"),
                         M("Import", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories
@@ -1712,14 +1697,12 @@ class S3OptionsMenu(object):
         return M(c="stats")(
                     M("Demographics", f="demographic")(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
+                        #M("Search"),
                     ),
                     M("Demographic Data", f="demographic_data")(
                         M("New", m="create"),
+                        #M("Search"),
                         M("Import", m="import"),
-                        M("List All"),
-                        #M("Search", m="search"),
                     ),
                 )
 
@@ -1738,7 +1721,7 @@ class S3OptionsMenu(object):
 
         return M(c="tour")(
                     M("Configuration", f="config", restrict=[ADMIN])(
-                        M("List All"),
+                        #M("Search"),
                         M("Import", m="import", restrict=[ADMIN]),
                         ),
                     M("Detail", f="details", restrict=[ADMIN]),
@@ -1755,17 +1738,15 @@ class S3OptionsMenu(object):
         return M(c="transport")(
                     M("Airports", f="airport")(
                         M("New", m="create"),
-                        M("Import", m="import", restrict=[ADMIN]),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        #M("Search", m="search"),
+                        M("Import", m="import", restrict=[ADMIN]),
                     ),
                     M("Seaports", f="seaport")(
                         M("New", m="create"),
-                        M("Import", m="import", restrict=[ADMIN]),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        #M("Search", m="search"),
+                        M("Import", m="import", restrict=[ADMIN]),
                     ),
                 )
 
@@ -1776,13 +1757,12 @@ class S3OptionsMenu(object):
         return M(c="vehicle")(
                     M("Vehicles", f="vehicle")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
                     ),
                     M("Vehicle Types", f="item")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                 )
 
@@ -1793,14 +1773,12 @@ class S3OptionsMenu(object):
         return M(c="vulnerability")(
                     M("Indicators", f="indicator")(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search"),
+                        #M("Search"),
                     ),
                     M("Data", f="data")(
                         M("New", m="create"),
+                        #M("Search"),
                         M("Import", m="import"),
-                        M("List All"),
-                        #M("Search", m="search"),
                     ),
                 )
 
@@ -1811,25 +1789,25 @@ class S3OptionsMenu(object):
         return M(c="water")(
                     M("Gauges", f="gauge")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                         M("Import", m="import"),
                     ),
                     M("Rivers", f="river")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                         #M("Import", m="import"),
                     ),
                     M("Zones", f="zone")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                         #M("Import", m="import"),
                     ),
                     M("Zone Types", f="zone_type")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Map", m="map"),
                         #M("Import", m="import"),
                     ),

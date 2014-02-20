@@ -33,7 +33,7 @@ from gluon.http import redirect
 from gluon.storage import Storage
 
 from s3crud import S3CRUD
-from s3report2 import S3Report2
+from s3report import S3Report
 from s3resource import S3FieldSelector
 
 # =============================================================================
@@ -961,7 +961,7 @@ class S3Profile(S3CRUD):
         widget_id = "profile-report-%s-%s" % (tablename, widget["index"])
 
         # Define the Pivot Table
-        report = S3Report2()
+        report = S3Report()
         report.resource = resource
         ajaxurl = widget.get("ajaxurl", None)
         contents = report.widget(r,

@@ -4509,7 +4509,6 @@ class S3Permission(object):
         "delete": DELETE,
         "search": READ,
         "report": READ,
-        "report2": READ,
         "map": READ,
         "import": CREATE,
         "review": REVIEW,

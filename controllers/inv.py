@@ -511,7 +511,7 @@ def inv_item():
         s3.filter = (table.quantity != 0)
 
     def prep(r):
-        if r.method not in ("report", "report2"):
+        if r.method != "report":
             s3.dataTable_group = 1
         return True
     s3.prep = prep

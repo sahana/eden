@@ -144,7 +144,7 @@ def human_resource():
                                        },
                                       {"name": "report",
                                        "label": "Report",
-                                       "widgets": [{"method": "report2",
+                                       "widgets": [{"method": "report",
                                                     "ajax_init": True}]
                                        },
                                       {"name": "map",
@@ -348,7 +348,7 @@ def volunteer():
 
             # Insert field to set the Programme
             if vol_experience in ("programme", "both") and \
-               r.method not in ("search", "report", "import", "report2") and \
+               r.method not in ("search", "report", "import", "report") and \
                "form" in output:
                 # @ToDo: Re-implement using
                 # http://eden.sahanafoundation.org/wiki/S3SQLForm

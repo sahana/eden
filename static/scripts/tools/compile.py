@@ -28,9 +28,7 @@ if theme != "default":
                  "popup.html",
                  "profile.html",
                  "report.html",
-                 "report2.html",
                  #"review.html",
-                 "search.html",
                  "summary.html",
                  "update.html",
                  ]:

@@ -6339,8 +6339,7 @@ def project_task_controller():
                 
                 update_url = URL(args=["[id]"], vars=vars)
                 S3CRUD.action_buttons(r, update_url=update_url)
-                if r.method not in ("search", "report", "report2") and \
-                   "form" in output:
+                if r.method != "report" and "form" in output:
                     # Insert fields to control Project, Activity & Milestone
                     output = project_task_form_inject(r, output)
         return output

@@ -279,18 +279,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M(settings.get_hrm_staff_label(), c="hrm", f="staff",
                       check=manager_mode)(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
                     M(teams, c="hrm", f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Facilities", c="org", f="facility", m="summary")(
                         M("New", m="create"),
-                        M("List All", m="summary"),
+                        #M("Search", m="summary"),
                         #M("Review/Approve New", m="review"),
                         M("Import", m="import")
                     ),
@@ -298,11 +298,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN]
                       )(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Organizations", c="org", f="organisation")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Review/Approve New", m="review"),
                         M("Import", m="import")
                     ),
@@ -310,28 +310,28 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN]
                       )(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Networks", c="org", f="group",
                       #restrict=[ADMIN]
                       )(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     #M("Department Catalog", c="hrm", f="department",
                     #  check=manager_mode)(
                     #    M("New", m="create"),
-                    #    M("List All"),
+                    #    M("Search"),
                     #),
                     M("Job Title Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                     ),
                     M("Skill Catalog", c="hrm", f="skill",
                       check=manager_mode)(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Personal Profile", c="hrm", f="person",
@@ -358,7 +358,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M()(
                     M("Facilities", c="inv", f="facility", m="summary")(
                         M("New", m="create"),
-                        M("List All", m="summary"),
+                        #M("Search", m="summary"),
                         M("Import", m="import")
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
@@ -369,7 +369,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
-                        M("Warehouse Stock", f="inv_item",m="report2"),
+                        M("Warehouse Stock", f="inv_item",m="report"),
                         M("Expiration Report", c="inv", f="track_item",
                           vars=dict(report="exp")),
                         #M("Monetization Report", c="inv", f="inv_item",
@@ -393,7 +393,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report2"),
+                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
@@ -417,7 +417,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         menu = M(c="project")(
                     M("Projects", f="project")(
                         M("New", m="create"),
-                        M("List All"),
+                        #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
                 )
@@ -464,7 +464,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[SUPER])(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report2"),
+                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",

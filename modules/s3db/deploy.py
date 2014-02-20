@@ -308,7 +308,7 @@ class S3DeploymentModel(S3Model):
                               },
                              {"name": "report",
                               "label": "Report",
-                              "widgets": [{"method": "report2",
+                              "widgets": [{"method": "report",
                                            "ajax_init": True}],
                               },
                              {"name": "map",
@@ -444,7 +444,7 @@ class S3DeploymentModel(S3Model):
                       },
                       {"name": "report",
                        "label": "Report",
-                       "widgets": [{"method": "report2",
+                       "widgets": [{"method": "report",
                                     "ajax_init": True}]
                       },
                   ],

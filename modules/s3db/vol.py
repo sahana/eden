@@ -93,7 +93,7 @@ class S3VolunteerModel(S3Model):
         """ Represent the Active status of a Volunteer """
 
         args = current.request.args
-        if "report" in args or "report2" in args:
+        if "report" in args or "report" in args:
             # We can't use a represent
             return opt
 

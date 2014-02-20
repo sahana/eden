@@ -331,29 +331,6 @@ class S3Resource(object):
         self.crud.resource = self
 
     # -------------------------------------------------------------------------
-    def search_method(self):
-        """
-            Return an S3Search method
-            - to be deprecated
-        """
-
-        tablename = self.tablename
-        search = current.s3db.get_config(tablename, "search_method")
-        if not search:
-            from s3search import S3Search
-            if "name" in self.table:
-                T = current.T
-                search = S3Search(
-                    name="%s_search_simple" % tablename,
-                    label=T("Name"),
-                    comment=T("Enter a name to search for. You may use % as wildcard. Press 'Search' without input to list all items."),
-                    field=["name"])
-            else:
-                search = S3Search()
-
-        return search
-
-    # -------------------------------------------------------------------------
     def _attach(self, alias, hook):
         """
             Attach a component

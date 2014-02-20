@@ -69,7 +69,7 @@ def distribution_report():
     """
 
     def prep(r):
-        r.method = "report2"
+        r.method = "report"
         return True
     s3.prep = prep
 

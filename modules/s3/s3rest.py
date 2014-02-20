@@ -565,12 +565,8 @@ class S3Request(object):
                     self.resource.load()
                     self.record = self.resource._rows[0]
                 else:
-                    if hasattr(self.resource.search_method(), "search_interactive"):
-                        redirect(URL(r=self, f=self.name, args="search",
-                                     vars={"_next": self.url(id="[id]")}))
-                    else:
-                        current.session.error = current.ERROR.BAD_RECORD
-                        redirect(URL(r=self, c=self.prefix, f=self.name))
+                    #current.session.error = current.ERROR.BAD_RECORD
+                    redirect(URL(r=self, c=self.prefix, f=self.name))
 
         # Pre-process
         if s3 is not None:
@@ -631,8 +627,6 @@ class S3Request(object):
             # Invoke the method handler
             if handler is not None:
                 output = handler(self, **attr)
-            elif self.method == "search":
-                output = self.resource.search_method()(self, **attr)
             else:
                 # Fall back to CRUD
                 output = self.resource.crud(self, **attr)
@@ -722,14 +716,7 @@ class S3Request(object):
                 request_vars = dict(_next=self._next)
             else:
                 request_vars = {}
-            if self.representation == "html" and \
-               self.resource.search_method().search_interactive:
-                self.next = URL(r=self,
-                                f=self.name,
-                                args="search",
-                                vars=request_vars)
-            else:
-                self.next = URL(r=self, f=self.name)
+            self.next = URL(r=self, f=self.name)
             return lambda r, **attr: None
         elif self.transformable():
             transform = True

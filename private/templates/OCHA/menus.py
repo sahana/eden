@@ -75,10 +75,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 #M("List All"),
                 M("Map", f="location", m="map"),
             ),
-            M("Reports", f="location", m="report2")(
-                M("3W", f="location", m="report2"),
-                M("Beneficiaries", f="beneficiary", m="report2"),
-                M("Funding", f="organisation", m="report2"),
+            M("Reports", f="location", m="report")(
+                M("3W", f="location", m="report"),
+                M("Beneficiaries", f="beneficiary", m="report"),
+                M("Funding", f="organisation", m="report"),
             ),
             M("Import", f="project", m="import", p="create")(
                 M("Import Projects", m="import", p="create"),

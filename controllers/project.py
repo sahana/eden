@@ -249,7 +249,7 @@ def project():
 
             elif r.component_name == "task" and \
                  "form" in output and \
-                 r.method not in ("report", "report2"):
+                 r.method != "report":
                 # Insert fields to control the Activity & Milestone
                 output = s3db.project_task_form_inject(r, output, project=False)
                 
@@ -502,7 +502,7 @@ def beneficiary():
 
     list_btn = A(T("Beneficiary Report"),
                  _href=URL(c="project", f="beneficiary",
-                           args="report2", vars=request.get_vars),
+                           args="report", vars=request.get_vars),
                  _class="action-btn")
 
     #def prep(r):
