@@ -896,12 +896,19 @@ class S3PersonModel(S3Model):
 
         person_represent = pr_PersonRepresent()
 
+        if settings.get_pr_reverse_names():
+            sortby = ["last_name", "first_name", "middle_name"]
+            orderby="pr_person.last_name"
+        else:
+            sortby = ["first_name", "middle_name", "last_name"]
+            orderby="pr_person.first_name"
+            
         person_id = S3ReusableField("person_id", table,
-                                    sortby = ["first_name", "middle_name", "last_name"],
+                                    sortby = sortby,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "pr_person.id",
                                                           person_represent,
-                                                          orderby="pr_person.first_name",
+                                                          orderby=orderby,
                                                           sort=True,
                                                           error_message=T("Person must be specified!"))),
                                     represent = person_represent,
@@ -1245,8 +1252,9 @@ class S3PersonModel(S3Model):
 
         resource.add_filter(query)
 
+        settings = current.deployment_settings
         limit = int(_vars.limit or 0)
-        MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
+        MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
                 dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
@@ -1258,10 +1266,14 @@ class S3PersonModel(S3Model):
                       "last_name",
                       ]
 
+            if settings.get_pr_reverse_names():
+                orderby = "pr_person.last_name"
+            else:
+                orderby = "pr_person.first_name"
             rows = resource.select(fields=fields,
                                    start=0,
                                    limit=limit,
-                                   orderby="pr_person.first_name")["rows"]
+                                   orderby=orderby)["rows"]
 
             if rows:
                 items = [{"id"     : row["pr_person.id"],
@@ -1534,7 +1546,7 @@ class S3GroupModel(S3Model):
         # Components
         self.add_components(tablename,
                             pr_group_membership="group_id",
-                           )
+                            )
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -1619,7 +1631,7 @@ class S3GroupModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(pr_group_id = group_id,
-                    pr_mailing_list_crud_strings = mailing_list_crud_strings
+                    pr_mailing_list_crud_strings = mailing_list_crud_strings,
                     )
 
     # -------------------------------------------------------------------------
@@ -4313,7 +4325,7 @@ class pr_PersonRepresent(S3Represent):
     def __init__(self,
                  lookup="pr_person",
                  key=None,
-                 fields=["first_name", "middle_name", "last_name"],
+                 fields=None,
                  labels=None,
                  options=None,
                  translate=False,
@@ -4339,6 +4351,12 @@ class pr_PersonRepresent(S3Represent):
                 else:
                     controller = "pr"
             linkto = URL(c=controller, f="person", args=["[id]"])
+
+        if not fields:
+            if current.deployment_settings.get_pr_reverse_names():
+                fields = ["last_name", "first_name", "middle_name"]
+            else:
+                fields = ["first_name", "middle_name", "last_name"]
 
         super(pr_PersonRepresent, self).__init__(lookup,
                                                  key,

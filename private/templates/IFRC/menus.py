@@ -422,6 +422,27 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def check_org(org_name):
+        """ Check whether User is of the given Org """
+
+        db = current.db
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        try:
+            org_id = db(otable.name == org_name).select(otable.id,
+                                                        limitby=(0, 1),
+                                                        cache=s3db.cache,
+                                                        ).first().id
+        except:
+            # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+            return False
+        else:
+            root_org = current.auth.root_org()
+            if root_org == org_id:
+                return True
+
+    # -------------------------------------------------------------------------
     def vol(self):
         """ Volunteer Management """
 
@@ -443,6 +464,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                settings.get_project_mode_task()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
+
+        not_vnrc = lambda i: not self.check_org("Viet Nam Red Cross")
 
         check_org_dependent_field = lambda tablename, fieldname: \
             settings.set_org_dependent_field(tablename, fieldname,
@@ -472,7 +495,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    #M("Search"),
                     #),
                     M("Volunteer Role Catalog", f="job_title",
-                      check=manager_mode)(
+                      check=[manager_mode, not_vnrc])(
                         M("New", m="create"),
                         #M("Search"),
                         M("Import", m="import", p="create", check=is_org_admin),

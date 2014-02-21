@@ -505,12 +505,19 @@
             // No Match or too many results
             return item.label;
         }
-        var name = item.first;
-        if (item.middle) {
-            name += ' ' + item.middle;
-        }
-        if (item.last) {
-            name += ' ' + item.last;
+        if (S3.pr_reverse_names) {
+            var name = item.last + ', ' + item.first;
+            if (item.middle) {
+                name += ' ' + item.middle;
+            }
+        } else {
+            var name = item.first;
+            if (item.middle) {
+                name += ' ' + item.middle;
+            }
+            if (item.last) {
+                name += ' ' + item.last;
+            }
         }
         return name;
     }
@@ -804,12 +811,19 @@
             // No Match or too many results
             return item.label;
         }
-        var name = item.first;
-        if (item.middle) {
-            name += ' ' + item.middle;
-        }
-        if (item.last) {
-            name += ' ' + item.last;
+        if (S3.pr_reverse_names) {
+            var name = item.last + ', ' + item.first;
+            if (item.middle) {
+                name += ' ' + item.middle;
+            }
+        } else {
+            var name = item.first;
+            if (item.middle) {
+                name += ' ' + item.middle;
+            }
+            if (item.last) {
+                name += ' ' + item.last;
+            }
         }
         var org = item.org;
         var job = item.job;

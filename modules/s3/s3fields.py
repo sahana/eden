@@ -1081,12 +1081,6 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     if "ondelete" not in attr:
         attr["ondelete"] = "RESTRICT"
 
-    # @ToDo:
-    #if "widget" not in attr:
-    #    attr["widget"] = S3CheckboxesWidget(lookup_table_name = "auth_group",
-    #                                        lookup_field_name = "role",
-    #                                        multiple = True)
-
     f = S3ReusableField(name, "list:reference auth_group",
                         **attr)
     return f()

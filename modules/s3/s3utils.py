@@ -516,32 +516,6 @@ $(document).on('click','.s3-truncate-less',function(event){
     return
 
 # =============================================================================
-def s3_split_multi_value(value):
-    """
-        Converts a series of numbers delimited by |, or already in a
-        string into a list. If value = None, returns []
-
-        @todo: parameter description
-        @todo: is this still used?
-    """
-
-    if not value:
-        return []
-
-    elif isinstance(value, ( str ) ):
-        if "[" in value:
-            #Remove internal lists
-            value = value.replace("[", "")
-            value = value.replace("]", "")
-            value = value.replace("'", "")
-            value = value.replace('"', "")
-            return eval("[" + value + "]")
-        else:
-            return re.compile('[\w\-:]+').findall(str(value))
-    else:
-        return [str(value)]
-
-# =============================================================================
 def s3_filter_staff(r):
     """
         Filter out people which are already staff for this facility
@@ -581,6 +555,7 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
 
     name = ""
     if fname or mname or lname:
+        reverse_order = current.deployment_settings.get_pr_reverse_names()
         if not fname:
             fname = ""
         if not mname:
@@ -592,9 +567,15 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
             mname = "%s" % s3_truncate(mname, 24)
             lname = "%s" % s3_truncate(lname, 24, nice = False)
         if not mname or mname.isspace():
-            name = ("%s %s" % (fname, lname)).rstrip()
+            if reverse_order:
+                name = ("%s, %s" % (lname, fname)).rstrip()
+            else:
+                name = ("%s %s" % (fname, lname)).rstrip()
         else:
-            name = ("%s %s %s" % (fname, mname, lname)).rstrip()
+            if reverse_order:
+                name = ("%s, %s %s" % (lname, fname, mname)).rstrip()
+            else:
+                name = ("%s %s %s" % (fname, mname, lname)).rstrip()
         if truncate:
             name = s3_truncate(name, 24, nice = False)
     return name

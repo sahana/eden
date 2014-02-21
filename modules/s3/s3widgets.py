@@ -1094,151 +1094,6 @@ $('#%s').click(function(){
                        )
 
 # =============================================================================
-class S3CheckboxesWidget(OptionsWidget):
-    """
-        Generates a TABLE tag with <num_column> columns of INPUT
-        checkboxes (multiple allowed)
-
-        help_lookup_table_name_field will display tooltip help
-
-        :param lookup_table_name: int -
-        :param lookup_field_name: int -
-        :param multple: int -
-
-        :param options: list - optional -
-        value,text pairs for the Checkboxs -
-        If options = None,  use options from requires.options().
-        This argument is useful for displaying a sub-set of the requires.options()
-
-        :param num_column: int -
-
-        :param help_lookup_field_name: string - optional -
-
-        :param help_footer: string -
-
-        Currently unused
-    """
-
-    def __init__(self,
-                 lookup_table_name = None,
-                 lookup_field_name = None,
-                 multiple = False,
-                 options = None,
-                 num_column = 1,
-                 help_lookup_field_name = None,
-                 help_footer = None
-                 ):
-
-        self.lookup_table_name = lookup_table_name
-        self.lookup_field_name =  lookup_field_name
-        self.multiple = multiple
-        self.options = options
-        self.num_column = num_column
-        self.help_lookup_field_name = help_lookup_field_name
-        self.help_footer = help_footer
-
-    # -------------------------------------------------------------------------
-    def widget(self,
-               field,
-               value = None
-               ):
-
-        if current.db:
-            db = current.db
-        else:
-            db = field._db
-
-        lookup_table_name = self.lookup_table_name
-        lookup_field_name = self.lookup_field_name
-        if lookup_table_name and lookup_field_name:
-            table = db[lookup_table_name]
-            requires = IS_NULL_OR(IS_IN_DB(db,
-                                   table.id,
-                                   "%(" + lookup_field_name + ")s",
-                                   multiple = multiple))
-        else:
-            requires = self.requires
-
-        options = self.options
-        if not options:
-            if hasattr(requires, "options"):
-                options = requires.options()
-            else:
-                raise SyntaxError, "widget cannot determine options of %s" % field
-
-        values = s3_split_multi_value(value)
-
-        attr = OptionsWidget._attributes(field, {})
-
-        num_column = self.num_column
-        num_row  = len(options) / num_column
-        # Ensure division  rounds up
-        if len(options) % num_column > 0:
-             num_row = num_row +1
-
-        t = TABLE(_id = str(field).replace(".", "_"))
-        append = t.append
-        for i in range(0, num_row):
-            table_row = TR()
-            for j in range(0, num_column):
-                # Check that the index is still within options
-                index = num_row * j + i
-                if index < len(options):
-                    input_options = {}
-                    input_options = dict(requires = attr.get("requires", None),
-                                         _value = str(options[index][0]),
-                                         value = values,
-                                         _type = "checkbox",
-                                         _name = field.name,
-                                         hideerror = True
-                                        )
-                    tip_attr = {}
-                    help_text = ""
-                    if self.help_lookup_field_name:
-                        help_lookup_field_name = self.help_lookup_field_name
-                        row = db(table.id == options[index][0]).select(table[help_lookup_field_name],
-                                                                       limitby=(0, 1)).first()
-                        if row:
-                            help_text = str(P(row[help_lookup_field_name]))
-                    if self.help_footer:
-                        help_text = help_text + str(self.help_footer)
-                    if help_text:
-                        tip_attr = dict(_class = "s3_checkbox_label",
-                                        #_title = options[index][1] + "|" + help_text
-                                        _rel =  help_text
-                                        )
-
-                    #table_row.append(TD(A(options[index][1],**option_attr )))
-                    table_row.append(TD(INPUT(**input_options),
-                                        SPAN(options[index][1], **tip_attr)
-                                        )
-                                    )
-            append(table_row)
-        if self.multiple:
-            append(TR(I("(Multiple selections allowed)")))
-        return t
-
-    # -------------------------------------------------------------------------
-    def represent(self, value):
-
-        db = current.db
-        table = db[self.lookup_table_name]
-        lookup_field_name = self.lookup_field_name
-        list = []
-        lappend = list.append
-        # @ToDo: Optimise if widget ever used! Use belongs
-        for id in s3_split_multi_value(value):
-            if id:
-                row = db(table.id == id).select(table[lookup_field_name],
-                                                limitby=(0, 1)).first()
-                if row:
-                    lappend(row[lookup_field_name])
-        if list and not None in list:
-            return ", ".join(list)
-        else:
-            return None
-
-# =============================================================================
 class S3ColorPickerWidget(FormWidget):
     """
         Displays an <input type="color"> widget to allow the user to pick a
@@ -2463,6 +2318,9 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
                  min_length = self.min_length,
                  )
         current.response.s3.jquery_ready.append(script)
+        if current.deployment_settings.get_pr_reverse_names():
+            current.response.s3.js_global.append('''S3.pr_reverse_names=true''')
+
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent.encode("utf-8")),
@@ -5124,6 +4982,9 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         script = '''%s%s)''' % (script, options)
         current.response.s3.jquery_ready.append(script)
+        if current.deployment_settings.get_pr_reverse_names():
+            current.response.s3.js_global.append('''S3.pr_reverse_names=true''')
+
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent),

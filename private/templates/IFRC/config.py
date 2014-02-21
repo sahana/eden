@@ -781,14 +781,6 @@ def customize_hrm_human_resource(**attr):
 
     s3db = current.s3db
 
-    # Organisation needs to be an NS/Branch
-    ns_only(s3db.hrm_human_resource.organisation_id,
-            required=True,
-            branches=True,
-            )
-
-    s3 = current.response.s3
-
     if current.request.controller == "vol":
         # Special cases for Viet Nam Red Cross
         db = current.db
@@ -805,8 +797,17 @@ def customize_hrm_human_resource(**attr):
             root_org = current.auth.root_org()
             if root_org == vnrc:
                 vnrc = True
+                settings.pr.reverse_names = True
     else:
         vnrc = False
+
+    # Organisation needs to be an NS/Branch
+    ns_only(s3db.hrm_human_resource.organisation_id,
+            required=True,
+            branches=True,
+            )
+
+    s3 = current.response.s3
 
     # Custom prep
     standard_prep = s3.prep
@@ -817,12 +818,12 @@ def customize_hrm_human_resource(**attr):
         else:
             result = True
 
-        if vnrc:
-            field = r.table.job_title_id
-            field.readable = field.writable = False
+        field = r.table.job_title_id
+        field.readable = field.writable = False
 
         return result
-    s3.prep = custom_prep
+    if vnrc:
+        s3.prep = custom_prep
 
     # Custom postp
     standard_postp = s3.postp
@@ -917,19 +918,119 @@ def customize_hrm_programme(**attr):
         Customize hrm_programme controller
     """
 
+    s3db = current.s3db
+
+    # Special cases for Viet Nam Red Cross
+    db = current.db
+    otable = s3db.org_organisation
+    try:
+        vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
+                                                              limitby=(0, 1),
+                                                              cache=s3db.cache,
+                                                              ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        vnrc = False
+    else:
+        root_org = current.auth.root_org()
+        if root_org == vnrc:
+            vnrc = True
+            settings.pr.reverse_names = True
+
+    if vnrc:
+        pass
+        # @ToDo
+        # def vn_age_group(age):
+        # settings.pr.age_group = vn_age_group
+
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.hrm_programme.organisation_id,
+    ns_only(s3db.hrm_programme.organisation_id,
             required=False,
             branches=False,
             )
 
-    # @ToDo: Special cases for Viet Nam Red Cross
-    # def vn_age_group(age):
-    # settings.pr.age_group = vn_age_group
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.component_name == "hours":
+            field = s3db.hrm_programme_hours.job_title_id
+            field.readable = field.writable = False
+
+        return result
+    if vnrc:
+        s3.prep = custom_prep
 
     return attr
 
 settings.ui.customize_hrm_programme = customize_hrm_programme
+
+# -----------------------------------------------------------------------------
+def customize_hrm_programme_hours(**attr):
+    """
+        Customize hrm_programme_hours controller
+    """
+
+    s3db = current.s3db
+
+    # Special cases for Viet Nam Red Cross
+    db = current.db
+    otable = s3db.org_organisation
+    try:
+        vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
+                                                              limitby=(0, 1),
+                                                              cache=s3db.cache,
+                                                              ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        vnrc = False
+    else:
+        root_org = current.auth.root_org()
+        if root_org == vnrc:
+            vnrc = True
+            settings.pr.reverse_names = True
+            field = s3db.hrm_programme_hours.job_title_id
+            field.readable = field.writable = False
+
+    return attr
+
+settings.ui.customize_hrm_programme_hours = customize_hrm_programme_hours
+
+# -----------------------------------------------------------------------------
+def customize_hrm_training(**attr):
+    """
+        Customize hrm_training controller
+    """
+
+    s3db = current.s3db
+
+    # Special cases for Viet Nam Red Cross
+    db = current.db
+    otable = s3db.org_organisation
+    try:
+        vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
+                                                              limitby=(0, 1),
+                                                              cache=s3db.cache,
+                                                              ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        vnrc = False
+    else:
+        root_org = current.auth.root_org()
+        if root_org == vnrc:
+            vnrc = True
+            settings.pr.reverse_names = True
+
+    return attr
+
+settings.ui.customize_hrm_training = customize_hrm_training
 
 # -----------------------------------------------------------------------------
 def customize_inv_warehouse(**attr):
@@ -1134,11 +1235,47 @@ def customize_pr_group(**attr):
         Customize pr_group controller
     """
 
+    s3db = current.s3db
+
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.org_organisation_team.organisation_id,
+    ns_only(s3db.org_organisation_team.organisation_id,
             required=False,
             branches=True,
             )
+    
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.component_name == "group_membership":
+            # Special cases for Viet Nam Red Cross
+            db = current.db
+            otable = s3db.org_organisation
+            try:
+                vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
+                                                                      limitby=(0, 1),
+                                                                      cache=s3db.cache,
+                                                                      ).first().id
+            except:
+                # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+                vnrc = False
+            else:
+                root_org = current.auth.root_org()
+                if root_org == vnrc:
+                    vnrc = True
+                    settings.pr.reverse_names = True
+                    # Update the represent as already set
+                    s3db.pr_group_membership.person_id.represent = s3db.pr_PersonRepresent()
+
+        return result
+    s3.prep = custom_prep
 
     return attr
 
@@ -1166,6 +1303,7 @@ def customize_pr_person(**attr):
         root_org = current.auth.root_org()
         if root_org == vnrc:
             vnrc = True
+            settings.pr.reverse_names = True
             settings.hrm.use_skills = True
             settings.hrm.vol_experience = "both"
             try:
@@ -1200,7 +1338,8 @@ def customize_pr_person(**attr):
         else:
             result = True
 
-        if r.component_name == "appraisal":
+        component_name = r.component_name
+        if component_name == "appraisal":
             atable = r.component.table
             atable.organisation_id.readable = atable.organisation_id.writable = False
             # Organisation needs to be an NS
@@ -1222,17 +1361,19 @@ def customize_pr_person(**attr):
 
         if vnrc:
             if r.method == "record" or \
-               r.component_name == "human_resource":
+               component_name == "human_resource":
                 field = s3db.hrm_human_resource.job_title_id
                 field.readable = field.writable = False
+                field = s3db.hrm_programme_hours.job_title_id
+                field.readable = field.writable = False
 
-            elif r.component_name == "address":
+            elif component_name == "address":
                 settings.gis.building_name = False
                 settings.gis.latlon_selector = False
                 settings.gis.map_selector = False
                 settings.gis.postcode_selector = False
 
-            elif r.component_name == "identity":
+            elif component_name == "identity":
                 table = s3db.pr_identity
                 table.description.readable = False
                 table.description.writable = False
@@ -1243,7 +1384,11 @@ def customize_pr_person(**attr):
                 table.type.requires = IS_IN_SET(pr_id_type_opts,
                                                 zero=None)
 
-            elif r.method == "cv" or r.component_name == "experience":
+            elif component_name == "hours":
+                field = s3db.hrm_programme_hours.job_title_id
+                field.readable = field.writable = False
+
+            elif r.method == "cv" or component_name == "experience":
                 table = s3db.hrm_experience
                 # Use simple free-text variants
                 table.organisation.readable = True

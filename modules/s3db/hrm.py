@@ -904,7 +904,6 @@ class S3HRModel(S3Model):
 
         resource = r.resource
         response = current.response
-        settings = current.deployment_settings
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -943,6 +942,7 @@ class S3HRModel(S3Model):
 
         resource.add_filter(query)
 
+        settings = current.deployment_settings
         limit = int(_vars.limit or 0)
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
@@ -960,10 +960,14 @@ class S3HRModel(S3Model):
             if show_orgs:
                 fields.append("organisation_id$name")
 
+            if settings.get_pr_reverse_names():
+                orderby = "pr_person.last_name"
+            else:
+                orderby = "pr_person.first_name"
             rows = resource.select(fields,
                                    start=0,
                                    limit=limit,
-                                   orderby="pr_person.first_name")["rows"]
+                                   orderby=orderby)["rows"]
 
             items = []
             iappend = items.append
@@ -1108,30 +1112,6 @@ class S3HRModel(S3Model):
 
         current.response.headers["Content-Type"] = "application/json"
         return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_course_opts():
-        """
-            Provide the options for the HRM course search filter
-        """
-
-        table = current.s3db.hrm_course
-        root_org = current.auth.root_org()
-        if root_org:
-            query = (table.deleted == False) & \
-                    ((table.organisation_id == root_org) | \
-                     (table.organisation_id == None))
-        else:
-            query = (table.deleted == False) & \
-                    (table.organisation_id == None)
-
-        opts = current.db(query).select(table.id,
-                                        table.name)
-        _dict = {}
-        for opt in opts:
-            _dict[opt.id] = opt.name
-        return _dict
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2545,9 +2525,13 @@ class S3HRSkillModel(S3Model):
         T = current.T
         s3 = current.response.s3
 
+        if current.request.controller == "vol":
+            controller = "vol"
+        else:
+            controller = "hrm"
         if current.auth.s3_has_role(current.session.s3.system_roles.ADMIN):
             label_create = s3.crud_strings["hrm_competency_rating"].label_create_button
-            comment = S3AddResourceLink(c="hrm",
+            comment = S3AddResourceLink(c=controller,
                                         f="competency_rating",
                                         vars={"child":"competency_id"},
                                         label=label_create,
@@ -2563,10 +2547,10 @@ class S3HRSkillModel(S3Model):
  'triggerName':'skill_id',
  'targetName':'competency_id',
  'lookupResource':'competency',
- 'lookupPrefix':'hrm',
- 'lookupURL':S3.Ap.concat('/hrm/skill_competencies/'),
+ 'lookupURL':S3.Ap.concat('/%s/skill_competencies/'),
  'msgNoRecords':i18n.no_ratings
-})''')
+})''' % controller)
+
         return comment
 
     # -------------------------------------------------------------------------
@@ -3451,8 +3435,8 @@ class S3HRProgrammeModel(S3Model):
         self.add_components(tablename,
                             hrm_programme_hours={"name": "person",
                                                  "joinby": "programme_id",
-                                                },
-                           )
+                                                 },
+                            )
 
         # =========================================================================
         # Programmes <> Persons Link Table
@@ -4531,7 +4515,7 @@ def hrm_rheader(r, tabs=[],
         vars = request.get_vars
         hr = vars.get("human_resource.id", None)
         if hr:
-            name = current.s3db.hrm_human_resource_represent(hr)
+            name = current.s3db.hrm_human_resource_represent(int(hr))
         else:
             name = s3_fullname(record)
         group = vars.get("group", None)
@@ -6185,6 +6169,7 @@ def hrm_record(r, **attr):
             label = "Volunteer Record"
         else:
             label = "Staff Record"
+
         table = s3db.hrm_human_resource
         profile_widgets = [
             dict(label = label,
@@ -6200,6 +6185,13 @@ def hrm_record(r, **attr):
                 # Exclude records which are just to link to Programme & also Training Hours
                 filter = (S3FieldSelector("hours") != None) & \
                          (S3FieldSelector("programme_id") != None)
+                list_fields = ["id",
+                               "date",
+                               "programme_id",
+                               ]
+                if s3db.hrm_programme_hours.job_title_id.readable:
+                    list_fields.append("job_title_id")
+                list_fields.append("hours")
                 hours_widget = dict(label = "Program Hours",
                                     title_create = "Add Program Hours",
                                     type = "datatable",
@@ -6207,12 +6199,7 @@ def hrm_record(r, **attr):
                                     tablename = "hrm_programme_hours",
                                     context = "person",
                                     filter = filter,
-                                    list_fields = ["id",
-                                                   "date",
-                                                   "programme_id",
-                                                   "job_title_id",
-                                                   "hours",
-                                                   ],
+                                    list_fields = list_fields,
                                     create_controller = controller,
                                     create_function = "person",
                                     create_component = "hours",
@@ -6316,7 +6303,10 @@ def hrm_configure_pr_group_membership():
                        "person_id$human_resource.organisation_id"),
                        (site_label, "person_id$human_resource.site_id"),
                        ]
-        orderby = "pr_person.first_name"
+        if settings.get_pr_reverse_names():
+            orderby = "pr_person.last_name"
+        else:
+            orderby = "pr_person.first_name"
     else:
         # Person
         list_fields = ["id",
