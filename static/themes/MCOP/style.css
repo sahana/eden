@@ -1,0 +1,130 @@
+body {
+    padding: 60px 20px 10px 20px; /* Test this with other templates as this should be sufficient to avoid the top nav menu + give side padding */
+}
+
+.navbar-inner {
+    background: #37518b;
+    border: none;
+}
+.navbar .nav > li > a {
+    border-left: 1px solid #8797B9;
+}
+
+.navbar .nav > li:last-child {
+    border-right: 1px solid #8797B9;
+}
+
+.navbar .nav > li > a:hover {
+    background: #5F74A2;
+    box-shadow: none;
+}
+
+/* Homepage -  Could this be made generic?*/
+.title {
+    /* margin: 25px 0 0 50px; */
+    float: left
+}
+
+.btn-login, .btn-register {
+    float: right;
+    margin-top: 10px !important;
+}
+
+.btn-register {
+    clear: right;
+}
+.homepage.row {
+    clear: both;
+}
+
+ h1, h2 {
+    font-family: NeoSans;
+    font-weight: normal;
+    color: #444444;
+    /*text-shadow: 2px 2px 1px black;*/
+}
+
+.title h1, .title h2 {
+    background: url('../../img/semi_white_75.png');
+    display: table;
+}
+.title h1 {
+    font-size: 50px;
+    padding: 15px 10px 5px 10px;
+    margin-bottom: 10px;
+}
+
+.title h2 {
+    font-size: 25px;
+    padding: 10px 10px 0px 10px;
+    margin-bottom: 10px;
+}
+
+h1, h2, h3 {
+    text-shadow: none
+}
+a {
+    color: #444444;
+}
+
+h3 {
+    margin: 0;
+    padding:0;
+    font-family: NeoSans;
+    font-weight: normal;
+    color: #444444;
+    font-size: 25px;
+    line-height: 35px;
+}
+.homepage .link {
+    padding: 5px 10px 5px 10px;
+    margin: 5px 0;
+    background: url('../../img/semi_white_75.png');
+}
+
+.homepage .link:hover {
+    background-color: white;
+}
+.homepage .link:hover h3,
+.homepage .link:hover a {
+    color: #182640;
+    text-decoration:none;
+}
+
+.dl {
+    padding: 5px 2px;
+}
+
+
+
+.thumbnail {
+    background: url('../../img/semi_white_75.png') !important;
+/*
+        border: none ;
+    border-radius: 0;
+    box-shadow: none;
+    */
+}
+
+.thumbnail:hover {
+    background-color: white !important;
+}
+
+.cms-edit {
+    display: none;
+}
+/***********************************************/
+h2, #list-btn-add {
+    float: left
+}
+
+#list-btn-add {
+    margin: 15px 0 0 15px;
+}
+
+#list-add,
+#summary-common,
+#table-container,
+.form-container {
+    clear: both;
+}

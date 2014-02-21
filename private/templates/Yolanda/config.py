@@ -3264,12 +3264,6 @@ def customize_project_activity(**attr):
                 fields = ["organisation_id"],
                 multiple = False,
             ),
-            S3SQLInlineComponent(
-                "activity_activity_type",
-                label = T("Activity Type"),
-                fields = ["activity_type_id"],
-                multiple = False,
-            ),
             "location_id",
             "name",
             "comments",

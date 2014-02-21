@@ -4400,6 +4400,15 @@ class S3ProjectTaskModel(S3Model):
                                          "autocomplete": "name",
                                          "autodelete": False,
                                         },
+                       # Activitie - for S3SQLForm field in sub-Table 
+                       project_task_activity={"link": "project_task_activity",
+                                              "joinby": "task_id",
+                                              "key": "activity_id",
+                                              "actuate": "embed",
+                                              "autocomplete": "name",
+                                              "autodelete": False,
+                                              "multiple": False
+                                              },
                        # Milestones
                        project_milestone={"link": "project_task_milestone",
                                           "joinby": "task_id",

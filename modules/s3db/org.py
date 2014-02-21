@@ -1343,7 +1343,6 @@ class S3OrganisationResourceModel(S3Model):
     def model(self):
 
         if not current.deployment_settings.has_module("stats"):
-            # Organisation Resource Model needs Stats module enabling
             return dict()
 
         T = current.T
@@ -1450,11 +1449,31 @@ class S3OrganisationResourceModel(S3Model):
             msg_record_deleted=T("Resource deleted"),
             msg_list_empty=T("No Resources in Inventory"))
 
+        # Report options
+        report_fields = ["organisation_id",
+                         "parameter_id",
+                         ]
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = ["sum(value)",
+                                         "count(value)",
+                                         ],
+                                 defaults=Storage(rows = "organisation_id",
+                                                  cols = "parameter_id",
+                                                  fact = "sum(value)",
+                                                  totals = True,
+                                                  chart = "barchart:rows",
+                                                  #table = "collapse",
+                                                  )
+                                 )
+
         configure(tablename,
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
                              },
                   list_layout = org_render_org_resources,
+                  report_options = report_options,
                   super_entity = "stats_data",
                   )
 
