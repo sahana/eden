@@ -735,25 +735,24 @@ var S3OptionsFilter = function(settings) {
 
         if (!settings.getWidgetHTML) {
             // URL returns the widget options as JSON
-
-            // Read relevant options
-            if (settings.showEmptyField === 'undefined') {
-                var showEmptyField = true;
-            } else {
-                var showEmptyField = settings.showEmptyField;   
-            }
-            var fncPrep = settings.fncPrep || function(data) { return null; };
-            var fncRepresent = settings.fncRepresent || function(record) { return record.name; };
-            var lookupField = settings.lookupField || 'id';
-            var newValue;
-            var options = '';
-            var prepResult;
-
             S3.JSONRequest[targetField.attr('id')] = $.ajaxS3({
                 url: url,
                 dataType: 'json',
                 // gets moved to .done() inside .ajaxS3
                 success: function(data) {
+                    // Read relevant options
+                    if (settings.showEmptyField === 'undefined') {
+                        var showEmptyField = true;
+                    } else {
+                        var showEmptyField = settings.showEmptyField;   
+                    }
+                    var fncPrep = settings.fncPrep || function(data) { return null; };
+                    var fncRepresent = settings.fncRepresent || function(record) { return record.name; };
+                    var lookupField = settings.lookupField || 'id';
+                    var newValue;
+                    var options = '';
+                    var prepResult;
+
                     // Render options list
                     if (data.length === 0) {
                         // No options available
@@ -791,7 +790,7 @@ var S3OptionsFilter = function(settings) {
                     // Convert IS_ONE_OF_EMPTY INPUT to a SELECT (better to do this server-side where-possible)
                     var html = targetField.parent().html();
                     if (html.slice(1, 6) == 'input') {
-                        html.replace('<input', '<select');
+                        html = html.replace('<input', '<select');
                         targetField.parent().html(html);
 
                         // Re-apply event handlers (tooltips & modals)
