@@ -119,7 +119,10 @@ class S3StatsModel(S3Model):
                                 requires = IS_LOCATION()
                              ),
                              Field("value", "double",
-                                   label = T("Value")),
+                                   label = T("Value"),
+                                   #represent = lambda v: \
+                                   # IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                   ),
                              # @ToDo: This will need to be a datetime for some usecases
                              s3_date(),
                              s3_date("date_end",
@@ -314,13 +317,15 @@ class S3StatsDemographicModel(S3Model):
                                                                     ),
                                         ),
                              location_id(
-                                widget = S3LocationAutocompleteWidget(),
                                 requires = IS_LOCATION(),
                                 required = True,
+                                widget = S3LocationAutocompleteWidget(),
                                 ),
                              Field("value", "double",
-                                   required = True,
                                    label = T("Value"),
+                                   represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                   required = True,
                                    ),
                              s3_date(required = True),
                              # Unused but needed for the stats_data SE
@@ -452,10 +457,14 @@ class S3StatsDemographicModel(S3Model):
                              # Sum is used by Vulnerability as a fallback if we have no data at this level
                              Field("sum", "double",
                                    label = T("Sum"),
+                                   represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
                                    ),
                              # Percentage is used to compare an absolute value against a total
                              Field("percentage", "double",
                                    label = T("Percentage"),
+                                   represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
                                    ),
                              #Field("min", "double",
                              #      label = T("Minimum"),

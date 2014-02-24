@@ -873,11 +873,12 @@ class S3Config(Storage):
         """
         return self.gis.get("zoomcontrol", True)
 
-    def get_gis_lookup_pcode(self):
+    def get_gis_lookup_code(self):
         """
-            Should the gis_location deduplication try PCodes as well as names?
+            Should the gis_location deduplication try codes as well as names?
+            - if-desired, set to the Key of a Key/Value pair (e.g. "PCode")
         """
-        return self.gis.get("lookup_pcode", False)
+        return self.gis.get("lookup_code", False)
 
     # -------------------------------------------------------------------------
     # L10N Settings
