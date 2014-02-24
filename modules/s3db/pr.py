@@ -872,7 +872,6 @@ class S3PersonModel(S3Model):
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = self.person_deduplicate,
-                       extra = "last_name",
                        list_fields = ["id",
                                       "first_name",
                                       "middle_name",
@@ -882,7 +881,9 @@ class S3PersonModel(S3Model):
                                       (T("Age"), "age"),
                                       (messages.ORGANISATION, "human_resource.organisation_id"),
                                       ],
+                       extra_fields = ["date_of_birth"],
                        main = "first_name",
+                       extra = "last_name",
                        onaccept = self.pr_person_onaccept,
                        realm_components = ["presence"],
                        filter_widgets = filter_widgets,
@@ -982,44 +983,27 @@ class S3PersonModel(S3Model):
                     )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_person_age(row):
+    @classmethod
+    def pr_person_age(cls, row):
         """
             Virtual Field to display the Age of a person
+            
+            @param row: a Row containing the person record
         """
 
-        if hasattr(row, "pr_person"):
-            row = row.pr_person
-
-        if "date_of_birth" in row:
-            dob = row.date_of_birth
-        else:
-            # DB lookup :/
-            db = current.db
-            table = db.pr_person
-            dob = db(table.id == row.id).select(table.date_of_birth,
-                                                limitby=(0, 1)
-                                                ).first().date_of_birth
-
-        if not dob:
+        age = cls.pr_age(row)
+        if age is None or age < 0:
             return current.messages["NONE"]
-
-        today = current.request.now.today()
-        try: 
-            birthday = dob.replace(year=today.year)
-        except ValueError:
-            # raised when birth date is February 29 and the current year is not a leap year
-            birthday = dob.replace(year=today.year, day=dob.day-1)
-        if birthday > today.date():
-            return today.year - dob.year - 1
         else:
-            return today.year - dob.year
+            return age
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_person_age_group(row):
+    @classmethod
+    def pr_person_age_group(cls, row):
         """
             Virtual Field to allow Reporting by Age Group
+
+            @param row: a Row containing the person record
 
             @ToDo: This formula might need to be different for different Orgs
                    or Usecases
@@ -1027,38 +1011,41 @@ class S3PersonModel(S3Model):
                    create a 'Named Range' widget for an S3DateTimeFilter field
         """
 
+        age = cls.pr_age(row)
+        if age is None or age < 0:
+            return current.messages.None
+        else:
+            return current.deployment_settings.get_pr_age_group(age)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def pr_age(cls, row):
+        """
+            Compute the age of a person
+
+            @param row: a Row containing the person record
+            @return: age in years (integer)
+        """
+
         if hasattr(row, "pr_person"):
             row = row.pr_person
-
-        if "date_of_birth" in row:
+        if hasattr(row, "date_of_birth"):
             dob = row.date_of_birth
+        elif hasattr(row, "id"):
+            # date_of_birth not in row: reload the record
+            table = current.s3db.pr_person
+            person = current.db(table.id == row.id).select(
+                                                     table.date_of_birth,
+                                                     limitby=(0, 1)).first()
+            dob = person.date_of_birth if person else None
         else:
-            # DB lookup :/
-            # - avoid this by putting this into extra report_fields:
-            #   s3db.configure(report_fields=["person_id$date_of_birth"])
-            db = current.db
-            table = db.pr_person
-            dob = db(table.id == row.id).select(table.date_of_birth,
-                                                limitby=(0, 1)
-                                                ).first().date_of_birth
-
-        if not dob:
-            return current.messages["NONE"]
-
-        today = current.request.now.today()
-        try: 
-            birthday = dob.replace(year=today.year)
-        except ValueError:
-            # raised when birth date is February 29 and the current year is not a leap year
-            birthday = dob.replace(year=today.year, day=dob.day-1)
-        if birthday > today.date():
-            age = today.year - dob.year - 1
+            dob = None
+        if dob:
+            from dateutil.relativedelta import relativedelta
+            return relativedelta(current.request.utcnow.date(), dob).years
         else:
-            age = today.year - dob.year
-
-        result = current.deployment_settings.get_pr_age_group(age)
-        return result
-
+            return None
+            
     # -------------------------------------------------------------------------
     @staticmethod
     def pr_person_onaccept(form):
