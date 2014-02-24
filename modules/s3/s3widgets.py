@@ -5052,9 +5052,9 @@ class S3PentityAutocompleteWidget(FormWidget):
 
         T = current.T
         s3 = current.response.s3
-        script = '''i18n.person="%s"\ni18n.group="%s"''' % (T("Person"),
-                                                            T("Group"),
-                                                            )
+        script = \
+'''i18n.person="%s"\ni18n.group="%s"\ni18n.none_of_the_above="%s"''' % \
+            (T("Person"), T("Group"), T("None of the above"))
         s3.js_global.append(script)
 
         if self.types:

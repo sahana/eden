@@ -3387,7 +3387,10 @@ class S3Resource(object):
                 res = []
                 for row in rows:
                     val = row[req.kfield]
-                    represent = field.represent(val)
+                    if field.represent:
+                        represent = field.represent(val)
+                    else:
+                        represent = s3_unicode(val)
                     if isinstance(represent, A):
                         represent = represent.components[0]
                     res.append({"@value": val, "$": represent})
