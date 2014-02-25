@@ -25,6 +25,7 @@ import s3db.deploy
 import s3db.doc
 import s3db.dvi
 import s3db.dvr
+import s3db.ev
 import s3db.event
 import s3db.fire
 import s3db.gis
