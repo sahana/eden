@@ -1018,8 +1018,8 @@ class S3PersonModel(S3Model):
             return current.deployment_settings.get_pr_age_group(age)
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def pr_age(cls, row):
+    @staticmethod
+    def pr_age(row):
         """
             Compute the age of a person
 

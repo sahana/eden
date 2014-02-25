@@ -8219,13 +8219,16 @@ class S3Map(S3Method):
                               "active"    : False,
                               "marker"    : marker
                               }]
+        settings = current.deployment_settings
+        legend = settings.get_gis_legend()
+        toolbar = settings.get_gis_toolbar()
 
         map = gis.show_map(id = widget_id,
                            feature_resources = feature_resources,
                            #catalogue_layers = True,
                            collapsed = True,
-                           legend = True,
-                           #toolbar = True,
+                           legend = legend,
+                           toolbar = toolbar,
                            #search = True,
                            save = False,
                            callback = callback,
