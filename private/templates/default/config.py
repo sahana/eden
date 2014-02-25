@@ -261,6 +261,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.scaleline = False
 # Uncomment to modify the Simplify Tolerance
 #settings.gis.simplify_tolerance = 0.001
+# Uncomment to Hide the Toolbar from the main Map
+#settings.gis.toolbar = False
 # Uncomment to hide the Zoom control
 #settings.gis.zoomcontrol = False
 

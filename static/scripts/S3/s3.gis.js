@@ -373,7 +373,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         if (options.legend) {
             if (options.legend == 'float') {
                 // Floating
-                addLegendPanel(map); 
+                var legendPanel = addLegendPanel(map); 
             } else {
                 // Integrated in West Panel
                 var legendPanel = new GeoExt.LegendPanel({
@@ -391,6 +391,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 });
                 west_panel_items.push(legendPanel);
             }
+            // Allow us to retrieve the legendPanel
+            mapPanel.legendPanel = legendPanel;
         }
 
         // Plugins
@@ -1151,6 +1153,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
      */
     var reStyle = function(layer) {
         var defaults = layer.s3_style[0];
+
+        // Read the data
         var prop = defaults['prop'];
         var features = layer.features;
         var i,
@@ -1191,13 +1195,34 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             style.push(_style);
         }
 
+        // Build and apply the new rules
         var _layer = {'style': style,
                       'cluster_threshold': 0
                       };
-        layer.styleMap.styles.default.rules = styleRules(_layer);
+        var rules = styleRules(_layer);
+        layer.styleMap.styles['default'].rules = rules;
+
         // Redraw the features with the new styleMap
         for (i = 0; i < features_len; i++) {
             layer.drawFeature(features[i]);
+        }
+
+        // Redraw the Legend
+        var legendPanel = layer.map.s3.mapPanel.legendPanel;
+        if (legendPanel) {
+            // Find the right layerLegend
+            var layerLegend,
+                layerLegends = legendPanel.items.items,
+                s3_layer_id = layer.s3_layer_id;
+            var layerLegends_len = layerLegends.length;
+            for (i=0; i < layerLegends_len; i++) {
+                layerLegend = layerLegends[i];
+                if (layerLegend.layer.s3_layer_id == s3_layer_id) {
+                    layerLegend.rules = rules;
+                    layerLegend.update();
+                    break;
+                }
+            }
         }
     };
 
@@ -3944,7 +3969,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Legend Panel as floating DIV
-    var addLegendPanel = function(map, legendPanel) {
+    var addLegendPanel = function(map) {
         var map_id = map.s3.id;
         var div = '<div class="map_legend_div"><div class="map_legend_tab right"></div><div class="map_legend_panel"></div></div>';
         $('#' + map_id).append(div);
@@ -3967,6 +3992,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 showLegend(map);
             }
         });
+
+        return legendPanel;
     };
     var hideLegend = function(map) {
         var map_id = map.s3.id;
@@ -5310,7 +5337,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             if (undefined != elem.fillOpacity) {
                 fillOpacity = elem.fillOpacity;
             } else {
-                fillOpacity = opacity;
+                fillOpacity = layer.opacity || 1;
             }
             if (undefined != elem.strokeOpacity) {
                 strokeOpacity = elem.strokeOpacity;

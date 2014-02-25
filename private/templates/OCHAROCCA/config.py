@@ -115,6 +115,8 @@ settings.L10n.thousands_separator = ","
 settings.gis.nav_controls = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# Uncomment to Hide the Toolbar from the main Map
+settings.gis.toolbar = False
 
 # Use PCodes for Locations import
 settings.gis.lookup_code = "PCode"
