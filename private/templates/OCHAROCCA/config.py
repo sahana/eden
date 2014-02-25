@@ -83,8 +83,8 @@ settings.ui.formstyle = "bootstrap"
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
+    # Only needed to import the l10n names
     ("ru", "Russian"),
-    ("latin", "Latin"),
 ])
 # Default Language
 settings.L10n.default_language = "en"
@@ -115,6 +115,9 @@ settings.L10n.thousands_separator = ","
 settings.gis.nav_controls = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+
+# Use PCodes for Locations import
+settings.gis.lookup_code = "PCode"
 
 # -----------------------------------------------------------------------------
 # Enable this for a UN-style deployment
@@ -151,13 +154,6 @@ settings.ui.summary = [#{"common": True,
 settings.search.filter_manager = False
 
 # =============================================================================
-# Module Settings
-
-# -----------------------------------------------------------------------------
-# GIS
-# -----------------------------------------------------------------------------
-settings.gis.lookup_pcode = True
-# =============================================================================
 # Custom Controllers
 
 # -----------------------------------------------------------------------------
@@ -166,8 +162,6 @@ def customize_stats_demographic_data(**attr):
     return attr
 
 settings.ui.customize_stats_demographic_data = customize_stats_demographic_data
-
-# -----------------------------------------------------------------------------
 
 # =============================================================================
 # Modules

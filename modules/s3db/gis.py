@@ -663,21 +663,22 @@ class S3LocationModel(S3Model):
                 job.method = None
                 return
 
-            if current.deployment_settings.get_gis_lookup_pcode() and data.name[0].isdigit():
-                # The name is a PCode
+            code = current.deployment_settings.get_gis_lookup_code()
+            if code and name[0].isdigit():
+                # The name is a Code
                 kv_table = current.s3db.gis_location_tag
-                query = (kv_table.tag == "PCode") & \
-                        (kv_table.value == data.name) & \
+                query = (kv_table.tag == code) & \
+                        (kv_table.value == name) & \
                         (kv_table.location_id == table.id)
                 duplicate = current.db(query).select(table.id,
-                                                      table.name,
-                                                      orderby=~table.end_date,
-                                                      limitby=(0, 1)).first()
+                                                     table.name,
+                                                     orderby=~table.end_date,
+                                                     limitby=(0, 1)).first()
                 
                 if duplicate:
                     # @ToDo: Import Log
                     #current.log.debug("Location PCode Match")
-                    data.name = duplicate.name # Don't update the name
+                    data.name = duplicate.name # Don't update the name with the code
                     job.id = duplicate.id
                     job.method = job.METHOD.UPDATE
                     return
@@ -726,9 +727,9 @@ class S3LocationModel(S3Model):
                     query &= (table.start_date == start_date)
 
                 duplicate = current.db(query).select(table.id,
-                                                      table.name,
-                                                      orderby=~table.end_date,
-                                                      limitby=(0, 1)).first()
+                                                     table.name,
+                                                     orderby=~table.end_date,
+                                                     limitby=(0, 1)).first()
                 if duplicate:
                     # @ToDo: Import Log
                     #current.log.debug("Location l10n Match")

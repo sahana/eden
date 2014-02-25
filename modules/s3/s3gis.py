@@ -2214,7 +2214,29 @@ class GIS(object):
                             represent = row[fieldname]
                             if represent and represent != NONE:
                                 # Skip empty fields
-                                fname = fieldname.split(".")[1]
+                                tname, fname = fieldname.split(".")
+                                ftype = db[tname][fname].type
+                                if ftype == "integer":
+                                    # Attributes should be numbers not Strings
+                                    try:
+                                        represent = int(represent.replace(",", ""))
+                                    except:
+                                        # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
+                                        #        (although we *do* want the represent in the tooltips!)
+                                        pass
+                                if ftype == "double":
+                                    # Attributes should be numbers not Strings
+                                    try:
+                                        float_represent = float(represent.replace(",", ""))
+                                        int_represent = int(float_represent)
+                                        if int_represent == float_represent:
+                                            represent = int_represent
+                                        else:
+                                            represent = float_represent
+                                    except:
+                                        # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
+                                        #        (although we *do* want the represent in the tooltips!)
+                                        pass
                                 attribute[fname] = represent
                         attr[record_id] = attribute
 

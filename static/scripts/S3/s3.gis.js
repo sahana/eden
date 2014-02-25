@@ -1133,9 +1133,71 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
     };
     var layer_loadend = function(event) {
-        hideThrobber(event.object);
+        var layer = event.object;
+        hideThrobber(layer);
         if (event.response != undefined && event.response.priv.status == 509) {
             S3.showAlert(i18n.gis_too_many_features, 'warning');
+        } else {
+            // Do we need to re-calculate the style for coloured Polygons?
+            var style = layer.s3_style;
+            if (style && Object.prototype.toString.call(style) === '[object Array]' && style.length == 1) {
+                reStyle(layer);
+            }
+        }
+    };
+
+    /**
+     * Re-style a layer dynamically based on the data contents
+     */
+    var reStyle = function(layer) {
+        var defaults = layer.s3_style[0];
+        var prop = defaults['prop'];
+        var features = layer.features;
+        var i,
+            features_len = features.length,
+            data = [];
+        for (i = 0; i < features_len; i++) {
+            data.push(features[i].attributes[prop]);
+        }
+        data.sort(function(a, b) {
+            return a - b;
+        });
+        var classSize = Math.round(features_len / 5);
+        var step = classSize;
+
+        // Set first value
+        var breaks = [data[0]];
+        for (i = 1; i < 5; i++) {
+            breaks[i] = data[step];
+            step += classSize;
+        }
+        // Set last value
+        breaks.push(data[features_len - 1]);
+
+        var low,
+            high,
+            _style,
+            style = [];
+        // 5-class sequential scheme from ColorBrewer which is colorblind-safe, print-friendly and photocopy-safe
+        var colors = ['ffffb2', 'fecc5c', 'fd8d3c', 'f03b20', 'bd0026'];
+        for (i=0; i < 5; i++) {
+            low = breaks[i];
+            high = breaks[i + 1];
+            _style = $.extend({}, defaults); // Make a copy
+            _style['fill'] = colors[i];
+            _style['low'] = low;
+            _style['high'] = high;
+            _style['label'] = low + ' - ' + high;
+            style.push(_style);
+        }
+
+        var _layer = {'style': style,
+                      'cluster_threshold': 0
+                      };
+        layer.styleMap.styles.default.rules = styleRules(_layer);
+        // Redraw the features with the new styleMap
+        for (i = 0; i < features_len; i++) {
+            layer.drawFeature(features[i]);
         }
     };
 
@@ -4786,6 +4848,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Default to opaque if undefined
         var opacity = layer.opacity || 1;
         var style = layer.style;
+        // If there is a style, is this common to all features or variable?
+        if (Object.prototype.toString.call(style) === '[object Array]') {
+            var style_array = true;
+        } else {
+            var style_array = false;
+        }
 
         // Scale Marker Images if they are too large for this map
         // - especially useful if they are loaded from remote servers (e.g. KML)
@@ -5141,129 +5209,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             styleOptions
         );
 
-        // If there is a style, is this common to all features or variable?
-        if (Object.prototype.toString.call(style) === '[object Array]') {
-            var style_array = true;
-        } else {
-            var style_array = false;
-        }
-
         if (style_array) {
             // Style Features according to rules in JSON style (currently Feature, Shapefile or Theme Layer)
-            // Needs to be uniquely instantiated
-            var rules = [];
-            var prop, rule, symbolizer, value,
-                elseFilter, externalGraphic, graphicHeight,
-                graphicWidth, graphicXOffset, graphicYOffset,
-                fill, fillOpacity, size, strokeOpacity, strokeWidth;
-            $.each(style, function(index, elem) {
-                var options = {};
-                if (undefined != elem.fallback) {
-                    // Fallback Rule
-                    options.title = elem.fallback;
-                    elsefilter = options.elseFilter = true;
-                } else {
-                    if (undefined != elem.prop) {
-                        prop = elem.prop;
-                    } else {
-                        // Default (e.g. for Theme/Stats Layers)
-                        prop = 'value';
-                    }
-                    if (undefined != elem.cat) {
-                        // Category-based style
-                        value = elem.cat;
-                        options.title = elem.label || value;
-                        options.filter = new OpenLayers.Filter.Comparison({
-                            type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                            property: prop,
-                            value: value
-                        });
-                    } else {
-                        // Range-based Style
-                        options.title = elem.label || (elem.low + '-' + elem.high);
-                        options.filter = new OpenLayers.Filter.Comparison({
-                            type: OpenLayers.Filter.Comparison.BETWEEN,
-                            property: prop,
-                            lowerBoundary: elem.low,
-                            upperBoundary: elem.high
-                        });
-                    }
-                }
-                if (undefined != elem.externalGraphic) {
-                    externalGraphic = S3.Ap.concat('/static/' + elem.externalGraphic);
-                    var image = new Image();
-                    //image.onload = scaleImage;
-                    image.src = externalGraphic;
-                    graphicHeight = image.height;
-                    graphicWidth = image.width;
-                    graphicXOffset = -(graphicWidth / 2);
-                    graphicYOffset = -graphicHeight;
-                } else {
-                    externalGraphic = '';
-                    graphicHeight = 1;
-                    graphicWidth = 1;
-                    graphicXOffset = -1;
-                    graphicYOffset = -1;
-                }
-                if (undefined != elem.fill) {
-                    // Polygon/Point
-                    fill = '#' + elem.fill;
-                } else if (undefined != elem.stroke) {
-                    // LineString
-                    fill = '#' + elem.stroke;
-                }
-                if (undefined != elem.fillOpacity) {
-                    fillOpacity = elem.fillOpacity;
-                } else {
-                    fillOpacity = opacity;
-                }
-                if (undefined != elem.strokeOpacity) {
-                    strokeOpacity = elem.strokeOpacity;
-                } else {
-                    strokeOpacity = 1;
-                }
-                if (undefined != elem.graphic) {
-                    graphic = elem.graphic;
-                } else {
-                    // Square better for Legend with Polygons
-                    graphic = 'square';
-                }
-                if (undefined != elem.size) {
-                    size = elem.size;
-                } else {
-                    size = 10;
-                }
-                if (undefined != elem.strokeWidth) {
-                    strokeWidth = elem.strokeWidth;
-                } else {
-                    strokeWidth = 2;
-                }
-                options.symbolizer = {
-                    externalGraphic: externalGraphic,
-                    fillColor: fill, // Used for Legend on LineStrings
-                    fillOpacity: fillOpacity,
-                    strokeColor: fill,
-                    strokeOpacity: strokeOpacity,
-                    strokeWidth: strokeWidth,
-                    graphicName: graphic,
-                    graphicHeight: graphicHeight,
-                    graphicWidth: graphicWidth,
-                    graphicXOffset: graphicXOffset,
-                    graphicYOffset: graphicYOffset,
-                    pointRadius: size
-                }
-
-                rule = new OpenLayers.Rule(options);
-                rules.push(rule);
-            });
-            if (!elseFilter && (layer.cluster_threshold != 0)) {
-                // Default Rule (e.g. for Clusters)
-                rule = new OpenLayers.Rule({
-                    elseFilter: true,
-                    title: ' '
-                });
-                rules.push(rule);
-            }
+            var rules = styleRules(layer);
             featureStyle.addRules(rules);
         }
 
@@ -5285,6 +5233,133 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             'select': selectStyle
         });
         return [featureStyleMap, marker_url];
+    };
+
+    /**
+     * Create a set of Style Rules
+     * 
+     * Parameters:
+     * layer - {Array} (not an OpenLayers.Layer!)
+     *
+     * Returns:
+     * rules - {Array of OpenLayers.Rule}
+     */
+    var styleRules = function(layer) {
+        var style = layer.style;
+        var rules = [];
+        var prop, rule, symbolizer, value,
+            elseFilter, externalGraphic, graphicHeight,
+            graphicWidth, graphicXOffset, graphicYOffset,
+            fill, fillOpacity, size, strokeOpacity, strokeWidth;
+        $.each(style, function(index, elem) {
+            var options = {};
+            if (undefined != elem.fallback) {
+                // Fallback Rule
+                options.title = elem.fallback;
+                elsefilter = options.elseFilter = true;
+            } else {
+                if (undefined != elem.prop) {
+                    prop = elem.prop;
+                } else {
+                    // Default (e.g. for Theme/Stats Layers)
+                    prop = 'value';
+                }
+                if (undefined != elem.cat) {
+                    // Category-based style
+                    value = elem.cat;
+                    options.title = elem.label || value;
+                    options.filter = new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                        property: prop,
+                        value: value
+                    });
+                } else {
+                    // Range-based Style
+                    options.title = elem.label || (elem.low + '-' + elem.high);
+                    options.filter = new OpenLayers.Filter.Comparison({
+                        type: OpenLayers.Filter.Comparison.BETWEEN,
+                        property: prop,
+                        lowerBoundary: elem.low,
+                        upperBoundary: elem.high
+                    });
+                }
+            }
+            if (undefined != elem.externalGraphic) {
+                externalGraphic = S3.Ap.concat('/static/' + elem.externalGraphic);
+                var image = new Image();
+                //image.onload = scaleImage;
+                image.src = externalGraphic;
+                graphicHeight = image.height;
+                graphicWidth = image.width;
+                graphicXOffset = -(graphicWidth / 2);
+                graphicYOffset = -graphicHeight;
+            } else {
+                externalGraphic = '';
+                graphicHeight = 1;
+                graphicWidth = 1;
+                graphicXOffset = -1;
+                graphicYOffset = -1;
+            }
+            if (undefined != elem.fill) {
+                // Polygon/Point
+                fill = '#' + elem.fill;
+            } else if (undefined != elem.stroke) {
+                // LineString
+                fill = '#' + elem.stroke;
+            }
+            if (undefined != elem.fillOpacity) {
+                fillOpacity = elem.fillOpacity;
+            } else {
+                fillOpacity = opacity;
+            }
+            if (undefined != elem.strokeOpacity) {
+                strokeOpacity = elem.strokeOpacity;
+            } else {
+                strokeOpacity = 1;
+            }
+            if (undefined != elem.graphic) {
+                graphic = elem.graphic;
+            } else {
+                // Square better for Legend with Polygons
+                graphic = 'square';
+            }
+            if (undefined != elem.size) {
+                size = elem.size;
+            } else {
+                size = 10;
+            }
+            if (undefined != elem.strokeWidth) {
+                strokeWidth = elem.strokeWidth;
+            } else {
+                strokeWidth = 2;
+            }
+            options.symbolizer = {
+                externalGraphic: externalGraphic,
+                fillColor: fill, // Used for Legend on LineStrings
+                fillOpacity: fillOpacity,
+                strokeColor: fill,
+                strokeOpacity: strokeOpacity,
+                strokeWidth: strokeWidth,
+                graphicName: graphic,
+                graphicHeight: graphicHeight,
+                graphicWidth: graphicWidth,
+                graphicXOffset: graphicXOffset,
+                graphicYOffset: graphicYOffset,
+                pointRadius: size
+            }
+
+            rule = new OpenLayers.Rule(options);
+            rules.push(rule);
+        });
+        if (!elseFilter && (layer.cluster_threshold != 0)) {
+            // Default Rule (e.g. for Clusters)
+            rule = new OpenLayers.Rule({
+                elseFilter: true,
+                title: ' '
+            });
+            rules.push(rule);
+        }
+        return rules;
     };
 
 }());

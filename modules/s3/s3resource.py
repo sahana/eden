@@ -1004,6 +1004,7 @@ class S3Resource(object):
                 # Get the renderer
                 renderer = dfield.represent
                 if not callable(renderer):
+                    # @ToDo: Don't convert unformatted numbers to strings
                     renderer = lambda v: s3_unicode(v) if v is not None else NONE
 
                 # Deactivate linkto if so requested
