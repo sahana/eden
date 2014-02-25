@@ -525,13 +525,8 @@ class S3AddPersonWidget(FormWidget):
             email_requires = IS_NULL_OR(IS_EMAIL())
 
         # Determine validation rule for mobile phone number
-        if settings.get_msg_require_international_phone_numbers():
-            error_message = current.T("Enter phone number in international format like +46783754957")
-        else:
-            error_message = current.T("Enter a valid phone number")
         mobile_phone_requires = IS_EMPTY_OR(IS_PHONE_NUMBER(
-                                            international = True,
-                                            error_message = error_message))
+                                                international = True))
 
         # Add fields for email and mobile phone number
         fields.extend([Field("email",
