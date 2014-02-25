@@ -13,33 +13,33 @@ import s3menus as default
 # - there are also other examples in the other templates folders
 
 # =============================================================================
-#class S3MainMenu(default.S3MainMenu):
-    #"""
-        #Custom Application Main Menu:
+class S3MainMenu(default.S3MainMenu):
+    """
+        Custom Application Main Menu:
 
-        #The main menu consists of several sub-menus, each of which can
-        #be customized separately as a method of this class. The overall
-        #composition of the menu is defined in the menu() method, which can
-        #be customized as well:
+        The main menu consists of several sub-menus, each of which can
+        be customized separately as a method of this class. The overall
+        composition of the menu is defined in the menu() method, which can
+        be customized as well:
 
-        #Function        Sub-Menu                Access to (standard)
+        Function        Sub-Menu                Access to (standard)
 
-        #menu_modules()  the modules menu        the Eden modules
-        #menu_gis()      the GIS menu            GIS configurations
-        #menu_admin()    the Admin menu          System/User Administration
-        #menu_lang()     the Language menu       Selection of the GUI locale
-        #menu_auth()     the User menu           Login, Logout, User Profile
-        #menu_help()     the Help menu           Contact page, About page
+        menu_modules()  the modules menu        the Eden modules
+        menu_gis()      the GIS menu            GIS configurations
+        menu_admin()    the Admin menu          System/User Administration
+        menu_lang()     the Language menu       Selection of the GUI locale
+        menu_auth()     the User menu           Login, Logout, User Profile
+        menu_help()     the Help menu           Contact page, About page
 
-        #The standard uses the MM layout class for main menu items - but you
-        #can of course use a custom layout class which you define in layouts.py.
+        The standard uses the MM layout class for main menu items - but you
+        can of course use a custom layout class which you define in layouts.py.
 
-        #Additional sub-menus can simply be defined as additional functions in
-        #this class, and then be included in the menu() method.
+        Additional sub-menus can simply be defined as additional functions in
+        this class, and then be included in the menu() method.
 
-        #Each sub-menu function returns a list of menu items, only the menu()
-        #function must return a layout class instance.
-    #"""
+        Each sub-menu function returns a list of menu items, only the menu()
+        function must return a layout class instance.
+    """
 
     # -------------------------------------------------------------------------
     #@classmethod
@@ -62,22 +62,21 @@ import s3menus as default
         #return main_menu
 
     # -------------------------------------------------------------------------
-    #@classmethod
-    #def menu_modules(cls):
-        #""" Custom Modules Menu """
+    @classmethod
+    def menu_modules(cls):
+        """ Custom Modules Menu """
 
-        #return [
-            #homepage(),
-            #homepage("gis"),
-            #homepage("pr")(
-                #MM("Persons", f="person"),
-                #MM("Groups", f="group")
-            #),
-            #MM("more", link=False)(
-                #homepage("dvi"),
-                #homepage("irs")
-            #),
-        #]
+        return [
+            homepage(),
+            homepage("gis"),
+            homepage("evr")(
+                MM("Persons", f="person"),
+                MM("Groups", f="group")
+            ),
+            MM("more", link=False)(
+                homepage("cr"),
+            ),
+        ]
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
@@ -112,22 +111,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Import", m="import"),
                     #)
                 #)
-	
-	# -------------------------------------------------------------------------
-    def ev(self):
-        """ Evacuees Menu """
 
-        return M(c="ev")(
-                    M("Evacuee", f="guest")(
+    # -------------------------------------------------------------------------
+    def evr(self):
+        """ EVR / Evacuees Registry """
+
+        return M(c="evr")(
+                    M("Persons", f="person")(
                         M("New", m="create"),
-                        M("List All"),
-                        #M("Search", m="search")
                     ),
-                    M("Group", c="ev", f="group")(
+                    M("Groups", f="group")(
                         M("New", m="create"),
-                        M("List Groups"),
-                        #M("Search", m="search")
-                    )
+                    ),
                 )
 
 # END =========================================================================

@@ -757,79 +757,85 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10
     #    )),
-    ("asset", Storage(
-        name_nice = T("Assets"),
-        #description = "Recording and Assigning Assets",
-        restricted = True,
-        module_type = 5,
-    )),
+    #("asset", Storage(
+        #name_nice = T("Assets"),
+        ##description = "Recording and Assigning Assets",
+        #restricted = True,
+        #module_type = 5,
+    #)),
     # Vehicle depends on Assets
-    ("vehicle", Storage(
-        name_nice = T("Vehicles"),
-        #description = "Manage Vehicles",
-        restricted = True,
-        module_type = 10,
-    )),
+    #("vehicle", Storage(
+        #name_nice = T("Vehicles"),
+        ##description = "Manage Vehicles",
+        #restricted = True,
+        #module_type = 10,
+    #)),
     ("req", Storage(
         name_nice = T("Requests"),
         #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
         restricted = True,
         module_type = 10,
     )),
-    ("project", Storage(
-        name_nice = T("Projects"),
-        #description = "Tracking of Projects, Activities and Tasks",
-        restricted = True,
-        module_type = 2
-    )),
-    ("survey", Storage(
-        name_nice = T("Surveys"),
-        #description = "Create, enter, and manage surveys.",
-        restricted = True,
-        module_type = 5,
-    )),
+    #("project", Storage(
+        #name_nice = T("Projects"),
+        ##description = "Tracking of Projects, Activities and Tasks",
+        #restricted = True,
+        #module_type = 2
+    #)),
+    #("survey", Storage(
+        #name_nice = T("Surveys"),
+        ##description = "Create, enter, and manage surveys.",
+        #restricted = True,
+        #module_type = 5,
+    #)),
     ("cr", Storage(
         name_nice = T("Shelters"),
         #description = "Tracks the location, capacity and breakdown of victims in Shelters",
         restricted = True,
         module_type = 10
     )),
-    ("hms", Storage(
-        name_nice = T("Hospitals"),
-        #description = "Helps to monitor status of hospitals",
-        restricted = True,
-        module_type = 10
+    #("hms", Storage(
+        #name_nice = T("Hospitals"),
+        ##description = "Helps to monitor status of hospitals",
+        #restricted = True,
+        #module_type = 10
+    #)),
+    #("irs", Storage(
+        #name_nice = T("Incidents"),
+        ##description = "Incident Reporting System",
+        #restricted = True,
+        #module_type = 10
+    #)),
+    #("dvi", Storage(
+       #name_nice = T("Disaster Victim Identification"),
+       ##description = "Disaster Victim Identification",
+       #restricted = True,
+       #module_type = 10,
+       ##access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
+    #)),
+    #("dvr", Storage(
+       #name_nice = T("Disaster Victim Registry"),
+       ##description = "Allow affected individuals & households to register to receive compensation and distributions",
+       #restricted = True,
+       #module_type = 10,
+    #)),
+    ("evr", Storage(
+         name_nice = T("Evacuees"),
+         #description = "Evacuees Registry",
+         restricted = True, # use Access Control Lists to see this module
+         module_type = 10
     )),
-    ("irs", Storage(
-        name_nice = T("Incidents"),
-        #description = "Incident Reporting System",
-        restricted = True,
-        module_type = 10
-    )),
-    ("dvi", Storage(
-       name_nice = T("Disaster Victim Identification"),
-       #description = "Disaster Victim Identification",
-       restricted = True,
-       module_type = 10,
-       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    )),
-    ("dvr", Storage(
-       name_nice = T("Disaster Victim Registry"),
-       #description = "Allow affected individuals & households to register to receive compensation and distributions",
-       restricted = True,
-       module_type = 10,
-    )),
-    ("event", Storage(
-        name_nice = T("Events"),
-        #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-        restricted = True,
-        module_type = 10,
-    )),
-    ("transport", Storage(
-       name_nice = T("Transport"),
-       restricted = True,
-       module_type = 10,
-    )),
+    #("event", Storage(
+        #name_nice = T("Events"),
+        ##description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+        #restricted = True,
+        #module_type = 10,
+    #)),
+    #("transport", Storage(
+       #name_nice = T("Transport"),
+       #restricted = True,
+       #module_type = 10,
+    #)),
     #("mpr", Storage(
     #       name_nice = T("Missing Person Registry"),
     #       #description = "Helps to report and search for missing persons",
@@ -944,9 +950,4 @@ settings.modules = OrderedDict([
     #       restricted = False,
     #       module_type = None,
     #   )),
-    ("ev", Storage(
-         name_nice = T("Evacuees Management"),
-         restricted = True, # use Access Control Lists to see this module
-         module_type = 10
-    )),
 ])
