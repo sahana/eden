@@ -1013,7 +1013,7 @@ class S3PersonModel(S3Model):
 
         age = cls.pr_age(row)
         if age is None or age < 0:
-            return current.messages.None
+            return current.messages["NONE"]
         else:
             return current.deployment_settings.get_pr_age_group(age)
 
