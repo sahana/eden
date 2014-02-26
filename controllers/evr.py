@@ -78,20 +78,6 @@ def person():
                                         )
             resource.configure(crud_form=crud_form)
             
-        # Extend pr_person_onaccept to auto-register an
-        # evr_case record upon create ()
-        key = "create_onaccept"
-        onaccept = resource.get_config(key)
-        if not onaccept:
-            key = "onaccept"
-            onaccept = resource.get_config(key)
-        if not onaccept:
-            resource.configure(create_onaccept=evr_person_onaccept)
-        elif isinstance(onaccept, list):
-            onaccept.append(evr_person_onaccept)
-        else:
-            resource.configure(**{key: [onaccept, evr_person_onaccept]})
-            
         return True
     s3.prep = prep
 
@@ -166,27 +152,4 @@ def group():
     
     return output
     
-# -----------------------------------------------------------------------------
-def evr_person_onaccept(form):
-    """
-        Auto-create a evr_case record for persons registered through
-        the evr/person controller, so that they appear in the person
-        list.
-
-        @param form: the CRUD form
-    """
-
-    try:
-        person_id = form.vars.id
-    except:
-        return
-        
-    table = s3db.evr_case
-
-    row = db(table.person_id == person_id).select(table.id,
-                                                  limitby=(0, 1)).first()
-    if not row:
-        table.insert(person_id=person_id)
-    return
-
 # END =========================================================================

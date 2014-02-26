@@ -862,7 +862,7 @@ class S3Resource(object):
                                        limitby=limitby,
                                        cacheable=not as_rows,
                                        *qfields.values())
-
+                                       
         # Restore virtual fields (if they were deactivated before)
         if not virtual:
             osetattr(table, "virtualfields", vf)
@@ -6572,20 +6572,6 @@ class S3ResourceFilter(object):
                 # Add to query
                 query &= self.rfltr.query(self.resource)
 
-        # Add cross-component joins if required
-        parent = resource.parent
-        if parent:
-            pf = parent.rfilter
-            if pf is None:
-                pf = parent.build_query()
-            left = pf.get_left_joins(as_list=False)
-            tablename = resource._alias
-            if left:
-                for tn in left:
-                    if tn != tablename:
-                        for join in left[tn]:
-                            query &= join.second
-                
         self.query = query
         return query
 
@@ -6613,6 +6599,19 @@ class S3ResourceFilter(object):
         for q in self.filters:
             joins, distinct = q.joins(resource, left=True)
             left.update(joins)
+
+        # Add cross-component joins if required
+        parent = resource.parent
+        if parent:
+            pf = parent.rfilter
+            if pf is None:
+                pf = parent.build_query()
+            parent_left = pf.get_left_joins(as_list=False)
+            tablename = resource._alias
+            if parent_left:
+                for tn in parent_left:
+                    if tn not in left and tn != tablename:
+                        left[tn] = parent_left[tn]
 
         if as_list:
             return [j for tablename in left for j in left[tablename]]
