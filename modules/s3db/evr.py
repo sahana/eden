@@ -56,6 +56,14 @@ class S3EVRCaseModel(S3Model):
                                         length=16,
                                         label=T("Fiscal Code")
                                         ),
+                                  # TODO: remove this in favor of Sahana Eden Docs:
+                                  # identitycard, passportnumber and drivinglicense
+                                  Field("identityCard", "string",
+                                        label=T("Identity Card")),
+                                  Field("passportNumber", "string",
+                                        label=T("Passport Number")),
+                                  Field("drivingLicense", "string",
+                                        label=T("Driving License")),
                                   s3_comments(),
                                   *s3_meta_fields())
                                   
