@@ -1447,7 +1447,7 @@ def customize_gis_location(**attr):
                                    layer = "Requests",
                                    # provided by Catalogue Layer
                                    #marker = "request",
-                                   list_layout = s3db.req_render_reqs,
+                                   list_layout = s3db.req_req_list_layout,
                                    )
                 commits_widget = dict(label = "Donations",
                                       title_create = "Add New Donation",
@@ -1461,7 +1461,7 @@ def customize_gis_location(**attr):
                                       #layer = "Donations",
                                       # provided by Catalogue Layer
                                       #marker = "donation",
-                                      list_layout = s3db.req_render_commits,
+                                      list_layout = s3db.req_commit_list_layout,
                                       )
                 #resources_widget = dict(label = "Resources",
                 #                        title_create = "Add New Resource",
@@ -1474,7 +1474,7 @@ def customize_gis_location(**attr):
                 #                        layer = "Resources",
                 #                        # provided by Catalogue Layer
                 #                        #marker = "resource",
-                #                        list_layout = s3db.org_render_org_resources,
+                #                        list_layout = s3db.org_resource_list_layout,
                 #                        )
                 sites_widget = dict(label = "Sites",
                                     title_create = "Add New Site",
@@ -1959,7 +1959,7 @@ def customize_org_facility(**attr):
                                    filter = S3FieldSelector("req_status").belongs([0, 1]),
                                    icon = "icon-flag",
                                    show_on_map = False, # Since they will show within Sites
-                                   list_layout = s3db.req_render_reqs,
+                                   list_layout = s3db.req_req_list_layout,
                                    )
                 commits_widget = dict(label = "Donations",
                                       #title_create = "Add New Donation",
@@ -1972,7 +1972,7 @@ def customize_org_facility(**attr):
                                       #layer = "Donations",
                                       # provided by Catalogue Layer
                                       #marker = "donation",
-                                      list_layout = s3db.req_render_commits,
+                                      list_layout = s3db.req_commit_list_layout,
                                       )
 
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
@@ -2311,7 +2311,7 @@ def customize_org_organisation(**attr):
                                    layer = "Requests",
                                    # provided by Catalogue Layer
                                    #marker = "request",
-                                   list_layout = s3db.req_render_reqs,
+                                   list_layout = s3db.req_req_list_layout,
                                    )
                 #resources_widget = dict(label = "Resources",
                 #                        title_create = "Add New Resource",
@@ -2323,7 +2323,7 @@ def customize_org_organisation(**attr):
                 #                        layer = "Resources",
                 #                        # provided by Catalogue Layer
                 #                        #marker = "resource",
-                #                        list_layout = s3db.org_render_org_resources,
+                #                        list_layout = s3db.org_resource_list_layout,
                 #                        )
                 commits_widget = dict(label = "Donations",
                                       #title_create = "Add New Donation",
@@ -2336,7 +2336,7 @@ def customize_org_organisation(**attr):
                                       #layer = "Donations",
                                       # provided by Catalogue Layer
                                       #marker = "donation",
-                                      list_layout = s3db.req_render_commits,
+                                      list_layout = s3db.req_commit_list_layout,
                                       )
                 sites_widget = dict(label = "Sites",
                                     title_create = "Add New Site",
@@ -2883,7 +2883,7 @@ def customize_req_req(**attr):
                                   #layer = "Donations",
                                   # provided by Catalogue Layer
                                   #marker = "donation",
-                                  list_layout = s3db.req_render_commits,
+                                  list_layout = s3db.req_commit_list_layout,
                                   )
             filter = (S3FieldSelector("obsolete") == False)
             sites_widget = dict(label = "Sites",

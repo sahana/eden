@@ -2143,7 +2143,7 @@ def customize_cms_post(**attr):
 
             get_vars = current.request.get_vars
 
-            field = table.
+            field = table.series_id
             field.label = T("Type")
             
             if r.method == "read":

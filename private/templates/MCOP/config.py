@@ -7,19 +7,15 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from datetime import timedelta
-
-from gluon import current, Field, URL
+from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.validators import IS_NULL_OR, IS_NOT_EMPTY
 
 from s3.s3fields import S3Represent
-from s3.s3resource import S3FieldSelector
-from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2, IS_ONE_OF
+from s3.s3utils import S3DateTime
+from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
 
 T = current.T
@@ -106,6 +102,8 @@ settings.L10n.thousands_separator = ","
 
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["US"]
+# Levels for the LocationSelector
+levels = ("L1", "L2")
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -279,16 +277,6 @@ def customize_org_organisation(**attr):
             crud_form = S3SQLCustomForm("id",
                                         "name",
                                         "organisation_type_id",
-                                         #S3SQLInlineComponentMultiSelectWidget(
-                                         #    "sector",
-                                         #    label = T("Sectors"),
-                                         #    field = "sector_id",
-                                         #),
-                                         #S3SQLInlineComponentMultiSelectWidget(
-                                         #    "service",
-                                         #    label = T("Services"),
-                                         #    field = "service_id",
-                                         #),
                                         "logo",
                                         "phone",
                                         "website",
@@ -299,19 +287,17 @@ def customize_org_organisation(**attr):
 
             s3db.configure("org_organisation",
                            create_next = url_next,
+                           crud_form = crud_form,
                            delete_next = url_next,
-                           update_next = url_next,
                            # We want the Create form to be in a modal, not inline, for consistency
                            #listadd = False,
                            list_fields = list_fields,
-                           list_layout = org_organisations_list_layout,
-                           crud_form = crud_form,
+                           update_next = url_next,
                            )
 
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     # Remove rheader
     attr["rheader"] = None
     return attr
@@ -376,7 +362,6 @@ def customize_org_resource(**attr):
                 location_field.default = location_id
                 # We still want to be able to specify a precise location
                 #location_field.readable = location_field.writable = False    
-            levels = ["L1","L2"]
             location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             location_field.widget = S3LocationSelectorWidget2(levels=levels,
                                                               show_address=True,
@@ -402,7 +387,6 @@ def customize_org_resource(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     # Remove rheader
     attr["rheader"] = None
     return attr
@@ -423,11 +407,10 @@ def customize_cms_post(**attr):
     s3.dl_rowsize = 2
     # CRUD Form
     
-    levels = ["L1","L2"]
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
     table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
-                                                      show_address=True,
-                                                      show_map=True)
+                                                         show_address=True,
+                                                         show_map=True)
     # Don't add new Locations here
     table.location_id.comment = None
 
@@ -469,7 +452,6 @@ def customize_cms_post(**attr):
                    crud_form = crud_form,
                    )
 
-    attr["hide_filter"] = False
     # Remove rheader
     attr["rheader"] = None
     return attr
@@ -501,7 +483,7 @@ def customize_project_task(**attr):
                        "status",
                        "name",
                        "priority",
-                       (T("Project"),"task_activity.activity_id"),
+                       (T("Project"), "task_activity.activity_id"),
                        "date_due",
                        ]
     
@@ -518,11 +500,10 @@ def customize_project_task(**attr):
                         "pe_id",
                         "date_due",
                         )
-    
-        #Filter Widgets
+
+        # Remove Project Filter
         filter_widgets = s3db.get_config("project_task", 
                                          "filter_widgets")
-        # Remove Project Fitler
         filter_widgets.pop(2)
     
         # Report options
@@ -553,7 +534,6 @@ def customize_project_task(**attr):
         return True
     s3.prep = custom_prep
 
-    attr["hide_filter"] = False
     # Remove rheader
     attr["rheader"] = None
     return attr
@@ -561,7 +541,6 @@ def customize_project_task(**attr):
 settings.ui.customize_project_task = customize_project_task
 
 # -----------------------------------------------------------------------------
-
 def customize_project_activity(**attr):
     """
         Customize project_activity controller
@@ -594,8 +573,6 @@ def customize_project_activity(**attr):
                    ]
 
     # Custom Form
-
-    levels = ["L1","L2"]
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
     table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
                                                          show_address=True,
@@ -684,7 +661,6 @@ def customize_project_activity(**attr):
                    report_options = report_options,
                    )
 
-    attr["hide_filter"] = False
     # Remove rheader
     attr["rheader"] = None
     return attr
@@ -702,14 +678,11 @@ def customize_project_project(**attr):
     table = s3db.project_project
     
     # Custom Form
-
-    # Which levels of Hierarchy are we using?
-    levels = ["L1","L2"]
     location_id_field = s3db.project_location.location_id
     location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
     location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                      show_address=True,
-                                                      show_map=True)
+                                                         show_address=True,
+                                                         show_map=True)
     # Don't add new Locations here
     location_id_field.comment = None
 
@@ -741,7 +714,7 @@ def customize_project_project(**attr):
                       S3LocationFilter("location_id",
                                        widget="multiselect",
                                        levels = levels,
-                                        ),
+                                       ),
                       S3OptionsFilter("status_id",
                                       label = T("Status"),
                                       # Doesn't support translation
@@ -772,7 +745,6 @@ def customize_project_project(**attr):
                    #filter_widgets = filter_widgets,
                    )
 
-    attr["hide_filter"] = False
     # Remove rheader
     attr["rheader"] = None
     return attr
@@ -789,12 +761,11 @@ def customize_org_office(**attr):
     s3db = current.s3db
     table = s3db.org_office
 
-    levels = ["L1","L2"]
     location_id_field = table.location_id
     location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
     location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                      show_address=True,
-                                                      show_map=True)
+                                                         show_address=True,
+                                                         show_map=True)
     # Don't add new Locations here
     location_id_field.comment = None
 
@@ -830,7 +801,6 @@ def customize_org_office(**attr):
                    report_options = report_options,
                    )
 
-    attr["hide_filter"] = False
     # Remove rheader
     attr["rheader"] = None
     return attr
@@ -1074,102 +1044,9 @@ def customize_pr_person(**attr):
 
     return attr
 
-# -----------------------------------------------------------------------------
 settings.ui.customize_pr_person = customize_pr_person
-# -----------------------------------------------------------------------------
-# @ToDo: make this more reusable
-def org_organisations_list_layout(list_id, item_id, resource, rfields, record):
-    """
-        Custom dataList item renderer for Organisations on the Stakeholder Selection Page
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-    """
-
-    record_id = record["org_organisation.id"]
-    item_class = "thumbnail" # span6 for 2 cols
-
-    raw = record._row
-    name = record["org_organisation.name"]
-    logo = raw["org_organisation.logo"]
-    phone = raw["org_organisation.phone"] or ""
-    website = raw["org_organisation.website"] or ""
-    if website:
-        website = A(website, _href=website)
-
-    org_url = URL(c="org", f="organisation", args=[record_id, "profile"])
-    if logo:
-        logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
-                     _class="media-object",
-                     ),
-                 _href=org_url,
-                 _class="pull-left",
-                 )
-    else:
-        logo = DIV(IMG(_class="media-object"),
-                   _class="pull-left")
-
-    db = current.db
-    permit = current.auth.s3_has_permission
-    table = db.org_organisation
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="org", f="organisation",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": list_id,
-                                     "record": record_id}),
-                     _class="s3_modal dl-item-edit",
-                     _title=current.response.s3.crud_strings.org_organisation.title_update,
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                      )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-    # Render the item
-    item = DIV(DIV(logo,
-                   DIV(SPAN(A(name,
-                              _href=org_url,
-                              _class="media-heading"
-                              ),
-                            ),
-                       edit_bar,
-                       _class="card-header-select",
-                       ),
-                   DIV(P(I(_class="icon icon-phone"),
-                         " ",
-                         phone,
-                         _class="card_1_line",
-                         ),
-                       P(I(_class="icon icon-map"),
-                         " ",
-                         website,
-                         _class="card_1_line",
-                         ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-
-# For access from custom controllers
-s3.org_organisations_list_layout = org_organisations_list_layout
 # =============================================================================
-
 # Modules
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

@@ -134,24 +134,26 @@ class S3ContentModel(S3Model):
         translate = settings.get_L10n_translate_cms_series()
         represent = S3Represent(lookup=tablename, translate=translate)
         series_id = S3ReusableField("series_id", table,
-                                    label = T("Series"),
+                                    label = T("Type"), # Even if this isn't always the use-case
+                                    ondelete = "CASCADE",
                                     readable = False,
                                     writable = False,
                                     represent = represent,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "cms_series.id",
                                                           represent)),
-                                    ondelete = "CASCADE")
+                                    )
 
         # Resource Configuration
         configure(tablename,
+                  create_next = URL(f="series", args=["[id]", "post"]),
                   onaccept = self.cms_series_onaccept,
-                  create_next=URL(f="series", args=["[id]", "post"]))
+                  )
 
         # Components
         add_components(tablename,
-                       cms_post="series_id",
-                      )
+                       cms_post = "series_id",
+                       )
 
         # ---------------------------------------------------------------------
         # Posts
@@ -226,8 +228,9 @@ class S3ContentModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename)
         post_id = S3ReusableField("post_id", table,
+                                  sortby = "name",
                                   label = T("Post"),
-                                  sortby="name",
+                                  ondelete = "CASCADE",
                                   requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "cms_post.id",
                                                           represent)),
@@ -235,7 +238,7 @@ class S3ContentModel(S3Model):
                                   comment = S3AddResourceLink(c="cms", f="post",
                                                               title=ADD_POST,
                                                               tooltip=T("A block of rich text which could be embedded into a page, viewed as a complete page or viewed as a list of news items.")),
-                                  ondelete = "CASCADE")
+                                  )
 
         filter_widgets = [S3TextFilter(["body"],
                                        label=T("Search"),
@@ -1182,7 +1185,7 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
 # =============================================================================
 def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for CMS Posts on the
+        Default dataList item renderer for CMS Posts on the
         Home & News Feed pages.
 
         @param list_id: the HTML ID of the list

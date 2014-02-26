@@ -118,7 +118,7 @@ $('#login-btn').click(function(){
         resource = s3db.resource("req_req")
         s3db.req_customize_req_fields()
         list_fields = s3db.get_config("req_req", "list_fields")
-        layout = s3db.req_render_reqs
+        layout = s3db.req_req_list_layout
         resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent Request first
         orderby = "date desc"

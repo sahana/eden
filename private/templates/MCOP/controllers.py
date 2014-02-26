@@ -28,7 +28,7 @@ class index(S3CustomController):
                                                    #start=None,
                                                    limit=10,
                                                    #orderby=orderby,
-                                                   layout = s3.org_organisations_list_layout
+                                                   layout = s3db.org_organisation_list_layout
                                                    )
         output["org_organisation_datalist"] = datalist.html()
 
@@ -54,11 +54,14 @@ class index(S3CustomController):
                                                    )
         output["cms_post_datalist"] = datalist.html()
 
-        #Data Buttons
+        # Data Buttons
         # Description of available data
         from s3db.cms import S3CMS
+        resource_content = S3CMS.resource_content
         for item in response.menu:
-            item["cms"] = S3CMS.resource_content(module = item["c"], 
-                                                 resource = item["f"])
+            item["cms"] = resource_content(module = item["c"], 
+                                           resource = item["f"])
 
         return output
+
+# END =========================================================================

@@ -60,7 +60,8 @@ __all__ = ["S3OrganisationModel",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
            "org_customize_org_resource_fields",
-           "org_render_org_resources",
+           "org_organisation_list_layout",
+           "org_resource_list_layout",
            "org_sector_opts",
            ]
 
@@ -415,6 +416,7 @@ class S3OrganisationModel(S3Model):
                                  "organisation_type_id",
                                  "website"
                                  ],
+                  list_layout = org_organisation_list_layout,
                   list_orderby = table.name,
                   onaccept = self.org_organisation_onaccept,
                   ondelete = self.org_organisation_ondelete,
@@ -1343,6 +1345,7 @@ class S3OrganisationResourceModel(S3Model):
     def model(self):
 
         if not current.deployment_settings.has_module("stats"):
+            current.log.warning("Organisation Resource Model needs Stats module enabling")
             return dict()
 
         T = current.T
@@ -1472,7 +1475,7 @@ class S3OrganisationResourceModel(S3Model):
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
                              },
-                  list_layout = org_render_org_resources,
+                  list_layout = org_resource_list_layout,
                   report_options = report_options,
                   super_entity = "stats_data",
                   )
@@ -5411,9 +5414,98 @@ def org_customize_org_resource_fields(method):
                    )
 
 # =============================================================================
-def org_render_org_resources(list_id, item_id, resource, rfields, record):
+def org_organisation_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Resources on the Profile pages
+        Default dataList item renderer for Organisations on the Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["org_organisation.id"]
+    item_class = "thumbnail" # span6 for 2 cols
+
+    raw = record._row
+    name = record["org_organisation.name"]
+    logo = raw["org_organisation.logo"]
+    phone = raw["org_organisation.phone"] or ""
+    website = raw["org_organisation.website"] or ""
+    if website:
+        website = A(website, _href=website)
+
+    org_url = URL(c="org", f="organisation", args=[record_id, "profile"])
+    if logo:
+        logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
+                     _class="media-object",
+                     ),
+                 _href=org_url,
+                 _class="pull-left",
+                 )
+    else:
+        logo = DIV(IMG(_class="media-object"),
+                   _class="pull-left")
+
+    db = current.db
+    permit = current.auth.s3_has_permission
+    table = db.org_organisation
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="org", f="organisation",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id}),
+                     _class="s3_modal dl-item-edit",
+                     _title=current.response.s3.crud_strings.org_organisation.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-trash"),
+                       _class="dl-item-delete",
+                      )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+    # Render the item
+    item = DIV(DIV(logo,
+                   DIV(SPAN(A(name,
+                              _href=org_url,
+                              _class="media-heading"
+                              ),
+                            ),
+                       edit_bar,
+                       _class="card-header-select",
+                       ),
+                   DIV(P(I(_class="icon icon-phone"),
+                         " ",
+                         phone,
+                         _class="card_1_line",
+                         ),
+                       P(I(_class="icon icon-map"),
+                         " ",
+                         website,
+                         _class="card_1_line",
+                         ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
+def org_resource_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        Default dataList item renderer for Resources on the Profile pages
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
