@@ -93,7 +93,7 @@ $('#login-btn').click(function(){
         # Latest 4 Events and Requests
         from s3.s3resource import S3FieldSelector
         s3db = current.s3db
-        layout = s3db.cms_render_posts
+        layout = s3db.cms_post_list_layout
         list_id = "latest_events"
         limit = 4
         list_fields = ["series_id",

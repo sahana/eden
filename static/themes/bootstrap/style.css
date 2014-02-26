@@ -122,8 +122,8 @@ div.dl {
 /* Need short form for Modals */
 .ui-datepicker-trigger {
     background-image: url(../../img/bootstrap/calendar.gif);
+    background-color: transparent;
     margin-left: 10px;
-    width: 6px;
 }
 /* Need long form to override widgets.css on normal button margin */
 .form-container form button.ui-datepicker-trigger {
@@ -170,7 +170,7 @@ div.dl {
     -moz-box-shadow: 0 1px 1px #aaaaa7;
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
-    margin-top: -22px;
+    margin-top: 10px;
     /* restore Bootstrap default to override widgets.css */
     padding: 8px 35px 8px 14px;
 }
@@ -229,7 +229,8 @@ a i.icon.icon-plus-sign.big-add:hover {
 #summary-filter-form,
 #summary-sections,
 #datatable_wrapper,
-#pivottable {  
+#pivottable,
+.thumbnail {  
     background-color: #fff;
     border-radius: 4px;
     border: 1px solid #9e9b9b;
@@ -246,6 +247,10 @@ form#datalist-filter-form,
 form#datatable-filter-form {
     padding-top: 7px;
     padding-left: 9px;
+}
+
+#list-filter {
+    margin-bottom: 0;
 }
 
 #summary-tabs {
@@ -300,7 +305,6 @@ form.form-horizontal.project_project {
 }
 .form-horizontal .control-label {
     font-weight: bold;
-    padding-top: 0;
 }
 body.rtl .form-horizontal .control-label {
     float: right;
@@ -682,10 +686,12 @@ label.ui-corner-all span {
 }
 
 /* DataTable Styling */
-
-#datatable.dataTable.display {
-    background-color: #fff;
+#summary-sections #table {
     margin-top: 10px;
+}
+
+#datatable_wrapper {
+    padding-top:10px;
 }
 
 #datatable_filter label {
@@ -697,18 +703,14 @@ label.ui-corner-all span {
     margin-left: 13px;
 }
 
-#datatable_length label select {
-    width: 75px;
-}
-
-#datatable_length label {
-    font-size: 12px;
-    margin-bottom: -1px;
+.dataTables_info {
+    /*
     position: relative;
-    top: 17px;
-}
-
-#datatable_info.dataTables_info {
+    top: 9px;
+    margin-right: 15px;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 15px;
     font-size: 12px;
     padding-right: 15px;
     color: #D35400;
@@ -716,23 +718,56 @@ label.ui-corner-all span {
     position: relative;
     padding-top: 5px;
     top: 11px;
+    */
 }
 
-#datatable thead tr {
+.dataTables_length label select {
+    width: auto;
+}
+
+.dataTables_info,
+.dataTables_length {
+    float: left !important;
+    font-size: 12px;
+    margin: 0 0 0 20px;
+}
+
+.dataTables_length label {
+    font-size: 12px;
+}
+
+.dataTables_info {
+    margin-top: 7px;
+}
+
+.dataTables_wrapper {
+    clear: none;
+}
+
+.list_formats {
+    margin-right: 20px;
+    top: 10px;
+    font-size: 12px;
+    padding: 0;
+    position: relative;
+    z-index: 1000;
+}
+
+.dataTable thead tr {
     border: none;
 }
 
-#datatable tbody tr.odd {
+.dataTable tbody tr.odd {
     background-color: #eeeeed;
     padding-top: 5px;
 }
 
-#datatable tbody tr.odd td.sorting_1 {
+.dataTable tbody tr.odd td.sorting_1 {
     background-color: rgba(51, 151, 219, 0.35);
     color: #222220;
 }
 
-#datatable tbody tr.even td.sorting_1 {
+. tbody tr.even td.sorting_1 {
     background-color: rgba(51, 151, 219, 0.17);
     color: #222220;
 }
@@ -751,11 +786,11 @@ label.ui-corner-all span {
     font-size: 13px;
 }
 
-#datatable_paginate {
-    margin-top: 15px;
+.dataTables_paginate {
+    margin: 5px 20px 0 0;
 }
 
-#datatable_paginate span a.paginate_button {
+.dataTables_paginate span a.paginate_button {
     background-color: #fff;
     border: 1px solid #b7b7b7;
     border-radius: 4px;
@@ -764,16 +799,16 @@ label.ui-corner-all span {
     
 }
 
-#datatable_paginate span a.paginate_active {
+.dataTables_paginate span a.paginate_active {
     background: #b0cee6;
     font-size: 13px;
     color: #666;
 }
 
-#datatable_previous.previous.paginate_button,
-#datatable_first.first.paginate_button,
-#datatable_last.last.paginate_button,
-#datatable_next.next.paginate_button  {
+.dataTables_paginate .previous.paginate_button,
+.dataTables_paginate .first.paginate_button,
+.dataTables_paginate .paginate_button,
+.dataTables_paginate .next.paginate_button  {
     background-color: #fff;
     border: 1px solid #b7b7b7;
     border-radius: 4px;
@@ -781,13 +816,8 @@ label.ui-corner-all span {
     color: #666;
 }
 
-#datatable_wrapper div.dataTables_info {
-    position: relative;
-    top: 9px;
-    margin-right: 15px;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 15px;
+#datatable_wrapper {
+    padding-bottom: 40px;
 }
 
 /* Login, Registration & Profile screens */
@@ -981,3 +1011,18 @@ span.toggle-text i {
 [id$=full_name__row].box_middle {
     margin-top: -15px;
 } */
+
+/* Report / Pivot Table */
+.pt-form {
+    background-color: white !important;
+    border: none !important;
+    margin-bottom: 0;
+}
+
+#charts {
+    padding: 0 20px;
+}
+
+.pt-form-container {
+    margin-bottom: 0;
+}

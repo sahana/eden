@@ -3,16 +3,7 @@
 /* Cards - common styling for Updates & Profile pages */
 
 .thumbnail {
-    background-color: #fff;
     margin-bottom: 8px;
-    border-radius: 4px;
-    border: 1px solid #9e9b9b;
-    -moz-box-shadow: 0 -1px 3px #d7d7d6;
-    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
-    box-shadow: 0 -1px 3px #d7d7d6;
-    -moz-box-shadow: 0 1px 1px #aaaaa7;
-    -webkit-box-shadow: 0 1px 1px #aaaaa7;
-    box-shadow: 0 1px 1px #aaaaa7;
 }
 	
 .thumbnail:hover {
@@ -123,9 +114,10 @@ a h5.media-heading:hover {
     padding-left: 2px;
 }
 
+.edit-bar a,
 .edit-bar .icon-bookmark:hover,
 .edit-bar .icon-bookmark-empty:hover,
-.edit-bar .icon-edit:hover
+.edit-bar .icon-edit:hover,
 .edit-bar .icon-file-alt:hover,
 .edit-bar .icon-paperclip:hover {
     color: #0095fe;

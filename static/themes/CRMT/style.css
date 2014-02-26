@@ -158,10 +158,6 @@ h2.summary {
     padding: 92px 20px 20px 20px;
 }
 
-#table select {
-    width: auto;
-}
-
 /* Breaks list_formats (hidden on Contacts page, unclickable on Smmary page)
 .dataTables_wrapper {
     clear: none;
