@@ -1440,6 +1440,12 @@ class S3GroupModel(S3Model):
                           3 : T("Relief Team"),
                           4 : T("other"),
                           5 : T("Mailing Lists"),
+                          6 : T("Society"),
+                          7 : T("Company"),
+                          8 : T("Orphanage"),
+                          9 : T("Convent"),
+                          10 : T("Hotel"),
+                          11 : T("Hospital")
                           }
 
         tablename = "pr_group"
