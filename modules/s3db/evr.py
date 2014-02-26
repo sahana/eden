@@ -52,18 +52,13 @@ class S3EVRCaseModel(S3Model):
         tablename = "evr_case"
         table = self.define_table(tablename,
                                   self.pr_person_id(),
-                                  Field("fiscalCode", "string",
+                                  Field("fiscal_code", "string",
                                         length=16,
                                         label=T("Fiscal Code")
+                                        # @todo: provide a tooltip
+                                        # for this field including
+                                        # generator (?)
                                         ),
-                                  # TODO: remove this in favor of Sahana Eden Docs:
-                                  # identitycard, passportnumber and drivinglicense
-                                  Field("identityCard", "string",
-                                        label=T("Identity Card")),
-                                  Field("passportNumber", "string",
-                                        label=T("Passport Number")),
-                                  Field("drivingLicense", "string",
-                                        label=T("Driving License")),
                                   s3_comments(),
                                   *s3_meta_fields())
                                   
@@ -252,6 +247,11 @@ def evr_rheader(r):
     if resourcename == "person":
 
         tabs = [(T("Person"), None),
+                (T("Addresses"), "address"),
+                (T("Contact Data"), "contacts"),
+                # this can be hidden since inline in the main form,
+                # but can enabled to verify the functionality:
+                #(T("Identity Documents"), "identity"),
                 (T("Case Details"), "case"),
                 (T("Physical Description"), "physical_description"),
                 (T("Medical Information"), "medical_details"),
@@ -266,8 +266,14 @@ def evr_rheader(r):
                          
     elif resourcename == "group":
 
-        # @todo
-        return None
+        rheader_fields = [["name"],
+                          ["description"],
+                         ]
+
+        tabs = [("Group Details", None),
+                (T("Contact Data"), "contact"),
+                (T("Members"), "group_membership"),
+                ]
 
     if rheader_fields is not None:
         return S3ResourceHeader(rheader_fields, tabs)(r)
