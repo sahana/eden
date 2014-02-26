@@ -2358,18 +2358,18 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             _vars = request.post_vars
             mobile = _vars["mobile_phone"]
             if mobile:
-                # Validate the phone number
-                regex = re.compile(single_phone_number_pattern)
-                if not regex.match(mobile):
-                    error = T("Invalid phone number")
+                # Validate the mobile phone number
+                validator = IS_PHONE_NUMBER(international = True)
+                mobile, error = validator(mobile)
+                if error:
                     return (person_id, error)
 
             home_phone = _vars.get("home_phone", None)
             if home_phone:
-                # Validate the phone number
-                regex = re.compile(single_phone_number_pattern)
-                if not regex.match(home_phone):
-                    error = T("Invalid phone number")
+                # Validate the home phone number
+                validator = IS_PHONE_NUMBER()
+                mobile, error = validator(mobile)
+                if error:
                     return (person_id, error)
 
             if person_id:
@@ -3087,7 +3087,7 @@ class IS_PHONE_NUMBER(Validator):
 
     def __init__(self,
                  international = False,
-                 error_message = "invalid phone number!"):
+                 error_message = None):
         """
             Constructor
 
@@ -3110,13 +3110,17 @@ class IS_PHONE_NUMBER(Validator):
                      is converted into E.123 international notation.
         """
 
+        T = current.T
+        error_message = self.error_message
+        
         number = str(value).strip()
-
         number, error = s3_single_phone_requires(number)
         if not error:
             if self.international and \
                current.deployment_settings \
                       .get_msg_require_international_phone_numbers():
+                if not error_message:
+                    error_message = T("Enter phone number in international format like +46783754957")
                 # Require E.123 international format
                 number = "".join(re.findall("[\d+]+", number))
                 match = re.match("(\+)([1-9]\d+)$", number)
@@ -3126,6 +3130,10 @@ class IS_PHONE_NUMBER(Validator):
                     return (number, None)
             else:
                 return (number, None)
-        return (value, self.error_message)
+
+        if not error_message:
+            error_message = T("Invalid phone number")
+
+        return (value, error_message)
 
 # END =========================================================================

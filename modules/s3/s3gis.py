@@ -4071,7 +4071,8 @@ class GIS(object):
                       table.path, table.parent]
             update_location_tree = GIS.update_location_tree
             for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
-                features = db(table.level == level).select(*fields)
+                query = (table.level == level) & (table.deleted == False)
+                features = db(query).select(*fields)
                 for feature in features:
                     feature["level"] = level
                     wkt = feature["wkt"]
@@ -4182,6 +4183,10 @@ class GIS(object):
                     vars = dict(inherited=True,
                                 lat=L0_lat,
                                 lon=L0_lon,
+                                L2=None,
+                                L3=None,
+                                L4=None,
+                                L5=None,
                                 )
                     db(table.id == id).update(**vars)
                     # Also do the Bounds/Centroid/WKT
@@ -4191,7 +4196,12 @@ class GIS(object):
             elif inherited and lat == L0_lat and lon == L0_lon:
                 vars = dict(path=_path,
                             L0=L0_name,
-                            L1=name)
+                            L1=name,
+                            L2=None,
+                            L3=None,
+                            L4=None,
+                            L5=None,
+                            )
                 db(table.id == id).update(**vars)
                 if wkt:
                     # No further action required
@@ -4206,9 +4216,14 @@ class GIS(object):
                 vars = dict(path=_path,
                             L0=L0_name,
                             L1=name,
+                            L2=None,
+                            L3=None,
+                            L4=None,
+                            L5=None,
                             inherited=True,
                             lat=L0_lat,
-                            lon=L0_lon)
+                            lon=L0_lon,
+                            )
                 db(table.id == id).update(**vars)
                 # Also do the Bounds/Centroid/WKT
                 vars.update(gis_feature_type="1")
@@ -4316,6 +4331,9 @@ class GIS(object):
                     vars = dict(inherited=True,
                                 lat=Lx_lat,
                                 lon=Lx_lon,
+                                L3=None,
+                                L4=None,
+                                L5=None,
                                 )
                     db(table.id == id).update(**vars)
                     # Also do the Bounds/Centroid/WKT
@@ -4327,6 +4345,9 @@ class GIS(object):
                             L0=L0_name,
                             L1=L1_name,
                             L2=name,
+                            L3=None,
+                            L4=None,
+                            L5=None,
                             )
                 db(table.id == id).update(**vars)
                 if wkt:
@@ -4343,9 +4364,13 @@ class GIS(object):
                             L0=L0_name,
                             L1=L1_name,
                             L2=name,
+                            L3=None,
+                            L4=None,
+                            L5=None,
                             inherited=True,
                             lat=Lx_lat,
-                            lon=Lx_lon)
+                            lon=Lx_lon,
+                            )
                 db(table.id == id).update(**vars)
                 # Also do the Bounds/Centroid/WKT
                 vars.update(gis_feature_type="1")
@@ -4489,6 +4514,8 @@ class GIS(object):
                     vars = dict(inherited=True,
                                 lat=Lx_lat,
                                 lon=Lx_lon,
+                                L4=None,
+                                L5=None,
                                 )
                     db(table.id == id).update(**vars)
                     # Also do the Bounds/Centroid/WKT
@@ -4518,6 +4545,8 @@ class GIS(object):
                             L1=L1_name,
                             L2=L2_name,
                             L3=name,
+                            L4=None,
+                            L5=None,
                             inherited=True,
                             lat=Lx_lat,
                             lon=Lx_lon)
@@ -4532,7 +4561,9 @@ class GIS(object):
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=L2_name,
-                                          L3=name)
+                                          L3=name,
+                                          L4=None,
+                                          L5=None)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) & \
                     (table.inherited == True)
@@ -4696,6 +4727,7 @@ class GIS(object):
                     vars = dict(inherited=True,
                                 lat=Lx_lat,
                                 lon=Lx_lon,
+                                L5=None,
                                 )
                     db(table.id == id).update(**vars)
                     # Also do the Bounds/Centroid/WKT
@@ -4709,6 +4741,7 @@ class GIS(object):
                             L2=L2_name,
                             L3=L3_name,
                             L4=name,
+                            L5=None,
                             )
                 db(table.id == id).update(**vars)
                 if wkt:
@@ -4727,6 +4760,7 @@ class GIS(object):
                             L2=L2_name,
                             L3=L3_name,
                             L4=name,
+                            L5=None,
                             inherited=True,
                             lat=Lx_lat,
                             lon=Lx_lon)
@@ -4742,7 +4776,8 @@ class GIS(object):
                                           L1=L1_name,
                                           L2=L2_name,
                                           L3=L3_name,
-                                          L4=name)
+                                          L4=name,
+                                          L5=None)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) & \
                     (table.inherited == True)
@@ -5031,6 +5066,7 @@ class GIS(object):
                                                 table.L5,
                                                 limitby=(0, 1)).first()
             name = feature.name
+            level = feature.level
             parent = feature.parent
             path = feature.path
             lat = feature.lat
@@ -5092,7 +5128,7 @@ class GIS(object):
                 L2_name = Lx.L2
                 L3_name = Lx.L3
                 L4_name = Lx.name
-                L5_name = None
+                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name and L1_name and L2_name and L3_name:
                     _path = "%s/%s" % (_path, id)
@@ -5117,8 +5153,8 @@ class GIS(object):
                 L1_name = Lx.L1
                 L2_name = Lx.L2
                 L3_name = Lx.name
-                L4_name = None
-                L5_name = None
+                L4_name = name if level == "L4" else None
+                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name and L1_name and L2_name:
                     _path = "%s/%s" % (_path, id)
@@ -5140,9 +5176,9 @@ class GIS(object):
                 L0_name = Lx.L0
                 L1_name = Lx.L1
                 L2_name = Lx.name
-                L3_name = None
-                L4_name = None
-                L5_name = None
+                L3_name = name if level == "L3" else None
+                L4_name = name if level == "L4" else None
+                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name and L1_name:
                     _path = "%s/%s" % (_path, id)
@@ -5161,10 +5197,10 @@ class GIS(object):
             elif Lx.level == "L1":
                 L0_name = Lx.L0
                 L1_name = Lx.name
-                L2_name = None
-                L3_name = None
-                L4_name = None
-                L5_name = None
+                L2_name = name if level == "L2" else None
+                L3_name = name if level == "L3" else None
+                L4_name = name if level == "L4" else None
+                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name:
                     _path = "%s/%s" % (_path, id)
@@ -5181,11 +5217,11 @@ class GIS(object):
             elif Lx.level == "L0":
                 _path = "%s/%s" % (parent, id)
                 L0_name = Lx.name
-                L1_name = None
-                L2_name = None
-                L3_name = None
-                L4_name = None
-                L5_name = None
+                L1_name = name if level == "L1" else None
+                L2_name = name if level == "L2" else None
+                L3_name = name if level == "L3" else None
+                L4_name = name if level == "L4" else None
+                L5_name = name if level == "L5" else None
             else:
                 #raise ValueError
                 return id
@@ -5193,15 +5229,12 @@ class GIS(object):
             Lx_lon = Lx.lon
         else:
             _path = id
-            if feature.level == "L0":
-                L0_name = name
-            else:
-                L0_name = None
-            L1_name = None
-            L2_name = None
-            L3_name = None
-            L4_name = None
-            L5_name = None
+            L0_name = name if level == "L0" else None
+            L1_name = name if level == "L1" else None
+            L2_name = name if level == "L2" else None
+            L3_name = name if level == "L3" else None
+            L4_name = name if level == "L4" else None
+            L5_name = name if level == "L5" else None
             Lx_lat = None
             Lx_lon = None
 
@@ -8219,13 +8252,16 @@ class S3Map(S3Method):
                               "active"    : False,
                               "marker"    : marker
                               }]
+        settings = current.deployment_settings
+        legend = settings.get_gis_legend()
+        toolbar = settings.get_gis_toolbar()
 
         map = gis.show_map(id = widget_id,
                            feature_resources = feature_resources,
                            #catalogue_layers = True,
                            collapsed = True,
-                           legend = True,
-                           #toolbar = True,
+                           legend = legend,
+                           toolbar = toolbar,
                            #search = True,
                            save = False,
                            callback = callback,
