@@ -83,9 +83,9 @@ __all__ = ["S3PersonEntity",
            "pr_image_modify",
            "pr_image_resize",
            "pr_image_format",
-           #"pr_render_address",
-           #"pr_render_contact",
-           #"pr_render_filter",
+           #"pr_address_list_layout",
+           #"pr_contact_list_layout",
+           #"pr_filter_list_layout",
            ]
 
 import os
@@ -1761,7 +1761,7 @@ class S3ContactModel(S3Model):
                                  # Used by list_layout & anyway it's useful
                                  "comments",
                                  ],
-                  list_layout = pr_render_contact,
+                  list_layout = pr_contact_list_layout,
                   onvalidation = self.pr_contact_onvalidation,
                   )
 
@@ -1971,7 +1971,7 @@ class S3AddressModel(S3Model):
                        onaccept = self.pr_address_onaccept,
                        deduplicate = self.pr_address_deduplicate,
                        list_fields = list_fields,
-                       list_layout = pr_render_address,
+                       list_layout = pr_address_list_layout,
                        )
 
         # ---------------------------------------------------------------------
@@ -2751,7 +2751,7 @@ class S3SavedFilterModel(S3Model):
                                       "query",
                                       ],
                        listadd = False,
-                       list_layout = pr_render_filter,
+                       list_layout = pr_filter_list_layout,
                        orderby = "resource",
                        )
 
@@ -5928,9 +5928,9 @@ def pr_image_format(image_file,
                            to_format = to_format)
 
 # =============================================================================
-def pr_render_address(list_id, item_id, resource, rfields, record):
+def pr_address_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Addresses on the HRM Profile
+        Default dataList item renderer for Addresses on the HRM Profile
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -6031,9 +6031,9 @@ def pr_render_address(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def pr_render_contact(list_id, item_id, resource, rfields, record):
+def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Contacts on the HRM Profile
+        Default dataList item renderer for Contacts on the HRM Profile
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -6122,9 +6122,9 @@ def pr_render_contact(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def pr_render_filter(list_id, item_id, resource, rfields, record):
+def pr_filter_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Saved Filters
+        Default dataList item renderer for Saved Filters
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item

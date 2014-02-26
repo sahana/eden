@@ -4365,6 +4365,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 #_controls = DIV(widget, throbber, comment, _class="controls")
                 _controls = DIV(widget, throbber, _class="controls")
                 row = DIV(label, _controls, _class="control-group hide", _id="%s__row" % id)
+                Lx_rows.append(row)
             elif callable(formstyle):
                 # @ToDo: Test
                 if required:
@@ -4377,11 +4378,16 @@ class S3LocationSelectorWidget2(FormWidget):
                     if (int(level[1:]) + 1) not in levels:
                         # This is the highest level which is required
                         required = False
-                row = formstyle(id, label, widget, comment, hidden=hidden)
+                rows = formstyle(id, label, widget, comment, hidden=hidden)
+                try:
+                    Lx_rows.append(rows[0])
+                    Lx_rows.append(rows[1])
+                except:
+                    # Non-std formstyle with just a single row
+                    Lx_rows.append(rows)
             else:
                 # Unsupported
                 raise
-            Lx_rows.append(row)
             # Subsequent levels are hidden by default
             # (client-side JS will open when-needed)
             hidden = hide_lx

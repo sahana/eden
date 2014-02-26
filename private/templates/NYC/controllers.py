@@ -93,7 +93,7 @@ $('#login-btn').click(function(){
         # Latest 4 Events and Requests
         from s3.s3resource import S3FieldSelector
         s3db = current.s3db
-        layout = s3db.cms_render_posts
+        layout = s3db.cms_post_list_layout
         list_id = "latest_events"
         limit = 4
         list_fields = ["series_id",
@@ -118,7 +118,7 @@ $('#login-btn').click(function(){
         resource = s3db.resource("req_req")
         s3db.req_customize_req_fields()
         list_fields = s3db.get_config("req_req", "list_fields")
-        layout = s3db.req_render_reqs
+        layout = s3db.req_req_list_layout
         resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent Request first
         orderby = "date desc"

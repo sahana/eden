@@ -245,7 +245,7 @@ class S3DeploymentModel(S3Model):
                            context = ("~.doc_id", "doc_id"),
                            icon = "icon-paperclip",
                            # Default renderer:
-                           #list_layout = s3db.doc_render_documents,
+                           #list_layout = s3db.doc_document_list_layouts,
                            )
 
         # Table configuration

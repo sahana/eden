@@ -29,7 +29,7 @@
 
 __all__ = ["S3DocumentLibrary",
            "doc_image_represent",
-           "doc_render_document",
+           "doc_document_list_layout",
           ]
 
 import os
@@ -212,7 +212,7 @@ class S3DocumentLibrary(S3Model):
                              "site": "site_id",
                              },
                   deduplicate = self.document_duplicate,
-                  list_layout = doc_render_document,
+                  list_layout = doc_document_list_layout,
                   onaccept = onaccept,
                   ondelete = ondelete,
                   onvalidation = self.document_onvalidation,
@@ -531,9 +531,9 @@ def doc_checksum(docstr):
     return converted
 
 # =============================================================================
-def doc_render_document(list_id, item_id, resource, rfields, record):
+def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Documents, e.g. on the HRM Profile
+        Default dataList item renderer for Documents, e.g. on the HRM Profile
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
