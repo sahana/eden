@@ -57,6 +57,7 @@ def shelter():
     table = s3db.cr_shelter
 
     # Access Presence from Shelters for Check-In/Check-Out
+    # @todo: deprecate
     s3db.add_components("cr_shelter", pr_presence="shelter_id")
 
     s3db.configure("cr_shelter",

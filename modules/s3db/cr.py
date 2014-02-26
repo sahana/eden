@@ -25,6 +25,9 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @todo: add cr_shelter_person linktable to register shelterees,
+           as replacement for pr_presence
 """
 
 __all__ = ["S3CampDataModel",
@@ -498,15 +501,20 @@ class S3CampDataModel(S3Model):
         return Storage(
                 ADD_SHELTER = ADD_SHELTER,
                 SHELTER_LABEL = SHELTER_LABEL,
+                cr_shelter_id = shelter_id,
             )
 
     # -----------------------------------------------------------------------------
     def defaults(self):
-        #cr_shelter_id = S3ReusableField("shelter_id", "integer",
-        #                                readable=False,
-        #                                writable=False)
+        """ Safe defaults in case the module is disabled """
+        
+        cr_shelter_id = S3ReusableField("shelter_id", "integer",
+                                        readable=False,
+                                        writable=False)
 
-        return
+        return Storage(
+                cr_shelter_id = cr_shelter_id,
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod

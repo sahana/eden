@@ -970,6 +970,17 @@ class S3PersonModel(S3Model):
                                            },
                        # Assets
                        asset_asset="assigned_to_id",
+
+                       # Evacuee Registry
+                       evr_case={"joinby": "person_id",
+                                 "multiple": False,
+                                },
+                       evr_medical_details={"joinby": "person_id",
+                                            "multiple": False,
+                                           },
+                       evr_background={"joinby": "person_id",
+                                       "multiple": False,
+                                      },
                       )
 
         # ---------------------------------------------------------------------
