@@ -501,7 +501,7 @@ class S3CampDataModel(S3Model):
         return Storage(
                 ADD_SHELTER = ADD_SHELTER,
                 SHELTER_LABEL = SHELTER_LABEL,
-                cr_shelter_id = cr_shelter_id,
+                cr_shelter_id = shelter_id,
             )
 
     # -----------------------------------------------------------------------------
