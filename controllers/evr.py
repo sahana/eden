@@ -63,9 +63,65 @@ def group():
 
     # @todo: filter groups to families where at least one member
     #        is an EVR case (this can be hard-coded here)
-    # @todo: set group type default to family and hide field in form
 
-    return s3_rest_controller("pr", "group")
+    T = current.T
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    tablename = "pr_group"
+    table = s3db[tablename]
+
+    _group_type = table.group_type
+
+    # Set Defaults
+    _group_type.default = 1  # 'Family'
+
+    # Only show Families
+    # Do not show system groups
+    s3.filter = (table.system == False) & \
+                (_group_type == 1 or
+                 _group_type == 4 or
+                 _group_type == 6 or
+                 _group_type == 7 or
+                 _group_type == 8 or
+                 _group_type == 9 or
+                 _group_type == 10 or
+                 _group_type == 11
+                 )
+
+    s3db.configure(tablename,
+                   # Redirect to member list when a new group has been created
+                   create_next = URL(f="group",
+                                     args=["[id]", "group_membership"]),
+                   list_fields = ["id",
+                                  "name",
+                                  "description",
+                                  "comments",
+                                  ],
+                   )
+    
+    # Post-process
+    def postp(r, output):
+
+        if r.interactive:
+            if not r.component:
+                update_url = URL(args=["[id]", "group_membership"])
+
+        return output
+    s3.postp = postp
+    
+    tabs = [("Group Details", None),
+            (T("Contact Data"), "contact"),
+            (T("Members"), "group_membership"),
+            ]
+
+    output = s3_rest_controller("pr", "group",
+                                hide_filter = False,
+                                rheader = lambda r: \
+                                s3db.pr_rheader(r, tabs=tabs)
+                                )
+    
+    return output
     
 # -----------------------------------------------------------------------------
 def evr_person_onaccept(form):
