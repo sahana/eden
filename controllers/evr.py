@@ -47,6 +47,33 @@ def person():
         
         if r.interactive and not r.component:
 
+            # Filter widgets
+            from s3 import S3TextFilter
+            filter_widgets = [
+                S3TextFilter(["first_name",
+                              "middle_name",
+                              "last_name",
+                              "local_name",
+                              "identity.value",
+                              "case.fiscal_code"
+                              ],
+                              label=T("Name and/or ID"),
+                              comment=T("To search for a person, enter any of the "
+                                        "first, middle or last names and/or an ID "
+                                        "number of a person, separated by spaces. "
+                                        "You may use % as wildcard."),
+                              ),
+            ]
+
+            # List fields
+            list_fields = ["id",
+                           "first_name",
+                           #"middle_name",
+                           "last_name",
+                           "gender",
+                           "date_of_birth",
+                           (T("Age"), "age"),
+                           ]
 
             # Custom Form for Persons
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
@@ -76,7 +103,9 @@ def person():
                                         #"person_details.company",
                                         "comments",
                                         )
-            resource.configure(crud_form=crud_form)
+            resource.configure(crud_form = crud_form,
+                               list_fields = list_fields,
+                               filter_widgets = filter_widgets)
             
         return True
     s3.prep = prep

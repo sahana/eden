@@ -73,9 +73,10 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Persons", f="person"),
                 MM("Groups", f="group")
             ),
-            MM("more", link=False)(
-                homepage("cr"),
-            ),
+            homepage("cr"),
+            homepage("event"),
+            #MM("more", link=False)(
+            #),
         ]
 
 # =============================================================================
