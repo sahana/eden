@@ -33,7 +33,7 @@ settings = current.deployment_settings
 # ["roles", "user"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-#settings.base.prepopulate = 1
+settings.base.prepopulate = ["EVASS"]
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "default"
