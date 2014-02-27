@@ -52,10 +52,8 @@ class S3Summary(S3Method):
         if "w" in r.get_vars:
             # Ajax-request for a specific widget
             return self.ajax(r, **attr)
-
         else:
             # Full page request
-            # @todo: check for proper format + method
             return self.summary(r, **attr)
 
     # -------------------------------------------------------------------------
@@ -154,6 +152,9 @@ class S3Summary(S3Method):
                                      **attr)
                 else:
                     handler = r.get_widget_handler(method)
+                    if handler is None:
+                        # Fall back to CRUD
+                        handler = resource.crud
                     if handler is not None:
                         if method == "datatable":
                             # Assume that we have a FilterForm, so disable Quick Search
@@ -170,6 +171,13 @@ class S3Summary(S3Method):
 
                 # Add content to section
                 if isinstance(content, dict):
+                    if r.http == "POST" and content.get("success"):
+                        # Form successfully processed: behave like the
+                        # primary method handler and redirect to next
+                        next_url = content.get("next")
+                        if next_url:
+                            self.next = next_url
+                            return content
                     for k, v in content.items():
                         if k not in ("tabs", "sections", "widget"):
                             output[k] = v
