@@ -228,6 +228,58 @@ class S3EVRCaseModel(S3Model):
                                         ),
                                   s3_comments(),
                                   *s3_meta_fields())
+        
+# =============================================================================
+# TODO: consider if this can be useful
+# class S3GroupModel(S3Model):
+#     """ Groups """
+# 
+#     names = []
+#     
+#     def model(self):
+#         
+#         T = current.T
+#         messages = current.messages
+#         
+#         # ---------------------------------------------------------------------
+#         # Group
+#         #
+#         evr_group_types = {1 : T("Family"),
+#                           2 : T("other"),
+#                           3 : T("Society"),
+#                           4 : T("Company"),
+#                           5 : T("Orphanage"),
+#                           6 : T("Convent"),
+#                           7 : T("Hotel"),
+#                           8 : T("Hospital")
+#                           }
+#         
+#         tablename = "evr_group"
+#         table = define_table(tablename,
+#                              super_link("pe_id", "pr_pentity"),
+#                              Field("group_type", "integer",
+#                                    requires = IS_IN_SET(evr_group_types,
+#                                                         zero = None
+#                                                         ),
+#                                    default = 1,
+#                                    label=T("Group Type"),
+#                                    represent = lambda opt: \
+#                                        evr_group_types.get(opt, messages.UNKNOWN_OPT)
+#                                    ),
+#                              Field("name",
+#                                    label=T("Group Name"),
+#                                    requires=IS_NOT_EMPTY()
+#                                    ),
+#                              Field("description",
+#                                    label=T("Group Description"),
+#                                    represent = lambda v: v or messages["NONE"],
+#                                    comment = DIV(_class="tooltip",
+#                                                  _title="%s|%s" % (T("Group description"),
+#                                                                    T("A brief description of the group (optional)")))
+#                                    ),
+#                              s3_comments(),
+#                              *s3_meta_fields()
+#                              )
 
 # =============================================================================
 def evr_rheader(r):
@@ -249,15 +301,15 @@ def evr_rheader(r):
         tabs = [(T("Person"), None),
                 (T("Addresses"), "address"),
                 (T("Contact Data"), "contacts"),
-                # this can be hidden since inline in the main form,
+                # these can be hidden since inline in the main form,
                 # but can enabled to verify the functionality:
                 #(T("Identity Documents"), "identity"),
-                (T("Case Details"), "case"),
+                #(T("Case Details"), "case"),
                 (T("Physical Description"), "physical_description"),
                 (T("Medical Information"), "medical_details"),
                 (T("Socio-Economic Background"), "background"),
-                # @todo:
-                #(T("Shelter Registration"), "shelter_person"),
+                #TODO: understand why the shelter tab isn't showing
+                (T("Shelter Registration"), "shelter_person"),
                 ]
 
         rheader_fields = [["first_name", "last_name"],
