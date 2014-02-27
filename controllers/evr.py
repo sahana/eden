@@ -90,40 +90,22 @@ def group():
         REST controller to register families
     """
 
-    # @todo: filter groups to families where at least one member
-    #        is an EVR case (this can be hard-coded here)
-
-    # not needed in controllers:
-    #T = current.T
-    #s3db = current.s3db
-    #s3 = current.response.s3
-
-    #tablename = "pr_group"
-    #table = s3db[tablename]
-
-    #_group_type = table.group_type
-
-    ## Set Defaults
-    #_group_type.default = 1  # 'Family'
-
-    ## Only show Families
-    ## Do not show system groups
-    #s3.filter = (table.system == False) & \
-                #(_group_type == 1 or
-                 #_group_type == 4 or
-                 #_group_type == 6 or
-                 #_group_type == 7 or
-                 #_group_type == 8 or
-                 #_group_type == 9 or
-                 #_group_type == 10 or
-                 #_group_type == 11
-                 #)
+    # Special group types for EVR
+    evr_group_types = {1 : T("Family"),
+                       4 : T("other"),
+                       6 : T("Society"),
+                       7 : T("Company"),
+                       8 : T("Orphanage"),
+                       9 : T("Convent"),
+                       10 : T("Hotel"),
+                       11 : T("Hospital"),
+                       }
 
     query = (s3base.S3FieldSelector("system") == False) & \
-            (s3base.S3FieldSelector("group_type").belongs((1,4,6,7,8,9,10,11)))
+             (s3base.S3FieldSelector("group_type").belongs(evr_group_types.keys()))
     s3.filter = query
 
-    s3db.configure(tablename,
+    s3db.configure("pr_group",
                    # Redirect to member list when a new group has been created
                    create_next = URL(f="group",
                                      args=["[id]", "group_membership"]),
@@ -133,6 +115,16 @@ def group():
                                   "comments",
                                   ],
                    )
+    
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            # Override the options for group_type,
+            # only show evr_group_types
+            r.resource.table.group_type.requires = IS_IN_SET(evr_group_types,
+                                                             zero=None)
+            return True
+    s3.prep = prep
     
     # Post-process
     def postp(r, output):
@@ -145,10 +137,7 @@ def group():
     s3.postp = postp
     
     output = s3_rest_controller("pr", "group",
-                                hide_filter = False,
-                                rheader = lambda r: \
-                                s3db.pr_rheader(r, tabs=tabs)
-                                )
+                                rheader = s3db.evr_rheader)
     
     return output
     

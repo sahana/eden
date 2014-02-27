@@ -1435,6 +1435,7 @@ class S3GroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Group
         #
+        #TODO: move 6,7,8,9,10,11 into EVASS template
         pr_group_types = {1 : T("Family"),
                           2 : T("Tourist Group"),
                           3 : T("Relief Team"),
