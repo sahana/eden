@@ -45,6 +45,7 @@ class S3CampDataModel(S3Model):
              "cr_shelter_service",
              "cr_shelter",
              "cr_shelter_status",
+             "cr_shelter_person"
              ]
 
     # Define a function model() which takes no parameters (except self):
@@ -432,6 +433,7 @@ class S3CampDataModel(S3Model):
                             cr_shelter_status={"name": "status",
                                                "joinby": "shelter_id",
                                               },
+                            cr_shelter_person="shelter_id"
                            )
 
         # -------------------------------------------------------------------------
@@ -496,6 +498,13 @@ class S3CampDataModel(S3Model):
                 msg_list_empty = T("No Shelter Statuses currently registered"),
                 name_nice = T("Shelter Status"),
                 name_nice_plural = T("Shelter Statuses"))
+        
+        #TODO: refine this table and add relevant information
+        tablename = "cr_shelter_person"
+        table = define_table(tablename,
+                             shelter_id(),
+                             self.pr_person_id()
+                             )
 
         # Pass variables back to global scope (response.s3.*)
         return Storage(
@@ -640,7 +649,9 @@ def cr_shelter_rheader(r, tabs=[]):
             if not tabs:
                 tabs = [(T("Basic Details"), None),
                         (T("Status"), "status"),
-                        (T("People"), "presence"),
+                        # the presence tab is the old one
+                        #(T("People"), "presence"),
+                        (T("People"), "shelter_person"),
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
                     ]
