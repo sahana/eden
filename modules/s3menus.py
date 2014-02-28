@@ -916,7 +916,7 @@ class S3OptionsMenu(object):
         vol_enabled = lambda i: settings.has_module("vol")
 
         return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff",
+                    M(settings.get_hrm_staff_label(), f="staff", m="summary",
                       check=manager_mode)(
                         M("New", m="create"),
                         #M("Search"),

@@ -266,7 +266,8 @@ class S3OrgMenuLayout(S3NavigationItem):
 
         if not logo:
             # Default to generic IFRC
-            logo = IMG(_src="/eden/static/themes/IFRC/img/dummy_flag.png",
+            logo = IMG(_src="/%s/static/themes/IFRC/img/dummy_flag.png" %
+                            current.request.application,
                        _alt=current.T("Red Cross/Red Crescent"),
                        _width=60,
                        )
