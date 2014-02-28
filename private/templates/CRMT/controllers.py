@@ -78,7 +78,7 @@ for(var i=0,len=layers.length;i<len;i++){
                            )
         output["map"] = map
 
-        # Description of available Modules
+        # Description of available data
         from s3db.cms import S3CMS
         for item in response.menu:
             item["cms"] = S3CMS.resource_content(module = item["c"], 

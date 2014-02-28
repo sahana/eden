@@ -273,7 +273,14 @@ class S3LocationModel(S3Model):
         location_id = S3ReusableField("location_id", table,
                                       sortby = "name",
                                       label = T("Location"),
+                                      ondelete = "RESTRICT",
                                       represent = gis_location_represent,
+                                      # @ToDo: Switch default once working on non-Bootstrap themes
+                                      #requires = IS_NULL_OR(
+                                      #              IS_LOCATION_SELECTOR2()
+                                      #              ),
+                                      #widget = S3LocationSelectorWidget2(),
+                                      # Alternate LocationSelector for when you don't have the Location Hierarchy available to load
                                       requires = IS_NULL_OR(
                                                     IS_LOCATION_SELECTOR()
                                                     ),
@@ -281,7 +288,7 @@ class S3LocationModel(S3Model):
                                       # Alternate simple Autocomplete (e.g. used by pr_person_presence)
                                       #requires = IS_NULL_OR(IS_LOCATION()),
                                       #widget = S3LocationAutocompleteWidget(),
-                                      ondelete = "RESTRICT")
+                                      )
 
         represent = S3Represent(lookup=tablename, translate=True)
         country_requires = IS_NULL_OR(IS_ONE_OF(db, "gis_location.id",

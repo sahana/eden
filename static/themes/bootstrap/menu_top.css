@@ -61,6 +61,7 @@ i.icon-cog {
 .navbar .nav > li > a {
     color: #fff;
     text-shadow: none;
+    height: 20px;
     -webkit-transition: all 0.2s ease-in-out;
     -moz-transition: all 0.2s ease-in-out;
     -ms-transition: all 0.2s ease-in-out;

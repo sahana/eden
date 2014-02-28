@@ -52,10 +52,10 @@ __all__ = ["S3HRModel",
            "hrm_record",
            "hrm_configure_pr_group_membership",
            "hrm_human_resource_onaccept",
-           #"hrm_render_competency",
-           #"hrm_render_credential",
-           #"hrm_render_experience",
-           #"hrm_render_training",
+           #"hrm_competency_list_layout",
+           #"hrm_credential_list_layout",
+           #"hrm_experience_list_layout",
+           #"hrm_training_list_layout",
            "hrm_human_resource_filters",
            ]
 
@@ -1792,7 +1792,7 @@ class S3HRSkillModel(S3Model):
                                  "competency_id",
                                  "comments",
                                  ],
-                  list_layout = hrm_render_competency,
+                  list_layout = hrm_competency_list_layout,
                   )
 
         # =====================================================================
@@ -1942,7 +1942,7 @@ class S3HRSkillModel(S3Model):
                                  "start_date",
                                  "end_date",
                                  ],
-                  list_layout = hrm_render_credential,
+                  list_layout = hrm_credential_list_layout,
                   )
 
         # =========================================================================
@@ -2262,7 +2262,7 @@ class S3HRSkillModel(S3Model):
                                  "course_id",
                                  "hours",
                                  ],
-                  list_layout = hrm_render_training,
+                  list_layout = hrm_training_list_layout,
                   onaccept = hrm_training_onaccept,
                   ondelete = hrm_training_onaccept,
                   orderby = ~table.date,
@@ -3323,7 +3323,7 @@ class S3HRExperienceModel(S3Model):
                                       "location_id",
                                       "comments",
                                       ],
-                       list_layout = hrm_render_experience,
+                       list_layout = hrm_experience_list_layout,
                        orderby = ~table.start_date,
                        )
 
@@ -5296,7 +5296,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       filter = S3FieldSelector("person_id") == person_id,
                                       icon = "icon-tags",
                                       # Default renderer:
-                                      #list_layout = hrm_render_credential,
+                                      #list_layout = hrm_credential_list_layout,
                                       )
             skills_widget = dict(label = "Skills",
                                  title_create = "Add New Skill",
@@ -5305,7 +5305,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                  filter = S3FieldSelector("person_id") == person_id,
                                  icon = "icon-comment-alt",
                                  # Default renderer:
-                                 #list_layout = hrm_render_competency,
+                                 #list_layout = hrm_competency_list_layout,
                                  )
             trainings_widget = dict(label = "Trainings",
                                     title_create = "Add New Training",
@@ -5314,7 +5314,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     filter = S3FieldSelector("person_id") == person_id,
                                     icon = "icon-wrench",
                                     # Default renderer:
-                                    #list_layout = hrm_render_training,
+                                    #list_layout = hrm_training_list_layout,
                                     )
             experience_widget = dict(label = "Experience",
                                      title_create = "Add New Experience",
@@ -5323,7 +5323,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                      filter = S3FieldSelector("person_id") == person_id,
                                      icon = "icon-truck",
                                      # Default renderer:
-                                     #list_layout = hrm_render_experience,
+                                     #list_layout = hrm_experience_list_layout,
                                      )
             docs_widget = dict(label = "Documents",
                                title_create = "Add New Document",
@@ -5332,7 +5332,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                filter = S3FieldSelector("doc_id") == record.doc_id,
                                icon = "icon-paperclip",
                                # Default renderer:
-                               #list_layout = s3db.doc_render_document,
+                               #list_layout = s3db.doc_document_list_layout,
                                )
             profile_widgets = [contacts_widget,
                                address_widget,
@@ -6321,9 +6321,9 @@ def hrm_configure_pr_group_membership():
                    )
 
 # =============================================================================
-def hrm_render_competency(list_id, item_id, resource, rfields, record):
+def hrm_competency_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Skills on the HRM Profile
+        Default dataList item renderer for Skills on the HRM Profile
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -6413,9 +6413,9 @@ def hrm_render_competency(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def hrm_render_credential(list_id, item_id, resource, rfields, record):
+def hrm_credential_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Item renderer for data list of credentials for an HR
+        Default dataList item renderer for Credentials on the HRM Profile
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -6498,9 +6498,9 @@ def hrm_render_credential(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def hrm_render_experience(list_id, item_id, resource, rfields, record):
+def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Experience on the HRM Profile
+        Default dataList item renderer for Experience on the HRM Profile
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -6683,9 +6683,9 @@ def hrm_render_experience(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def hrm_render_training(list_id, item_id, resource, rfields, record):
+def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Trainings on the HRM Profile
+        Default dataList item renderer for Trainings on the HRM Profile
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item

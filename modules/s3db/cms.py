@@ -35,7 +35,7 @@ __all__ = ["S3ContentModel",
            "cms_index",
            "cms_rheader",
            "cms_customize_post_fields",
-           "cms_render_posts",
+           "cms_post_list_layout",
            "S3CMS",
            ]
 
@@ -134,23 +134,26 @@ class S3ContentModel(S3Model):
         translate = settings.get_L10n_translate_cms_series()
         represent = S3Represent(lookup=tablename, translate=translate)
         series_id = S3ReusableField("series_id", table,
+                                    label = T("Type"), # Even if this isn't always the use-case
+                                    ondelete = "CASCADE",
                                     readable = False,
                                     writable = False,
                                     represent = represent,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "cms_series.id",
                                                           represent)),
-                                    ondelete = "CASCADE")
+                                    )
 
         # Resource Configuration
         configure(tablename,
+                  create_next = URL(f="series", args=["[id]", "post"]),
                   onaccept = self.cms_series_onaccept,
-                  create_next=URL(f="series", args=["[id]", "post"]))
+                  )
 
         # Components
         add_components(tablename,
-                       cms_post="series_id",
-                      )
+                       cms_post = "series_id",
+                       )
 
         # ---------------------------------------------------------------------
         # Posts
@@ -225,8 +228,9 @@ class S3ContentModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename)
         post_id = S3ReusableField("post_id", table,
+                                  sortby = "name",
                                   label = T("Post"),
-                                  sortby="name",
+                                  ondelete = "CASCADE",
                                   requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "cms_post.id",
                                                           represent)),
@@ -234,7 +238,37 @@ class S3ContentModel(S3Model):
                                   comment = S3AddResourceLink(c="cms", f="post",
                                                               title=ADD_POST,
                                                               tooltip=T("A block of rich text which could be embedded into a page, viewed as a complete page or viewed as a list of news items.")),
-                                  ondelete = "CASCADE")
+                                  )
+
+        filter_widgets = [S3TextFilter(["body"],
+                                       label=T("Search"),
+                                       _class="filter-search",
+                                       #_placeholder=T("Search").upper(),
+                                       ),
+                          S3OptionsFilter("series_id",
+                                          label=T("Filter by Type"),
+                                          represent="%(name)s",
+                                          widget="multiselect",
+                                          hidden=True,
+                                          ),
+                          S3LocationFilter("location_id",
+                                           label=T("Filter by Location"),
+                                           widget="multiselect",
+                                           hidden=True,
+                                           ),
+                          S3OptionsFilter("created_by$organisation_id",
+                                          label=T("Filter by Organization"),
+                                          # Can't use this for integers, use field.represent instead
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          hidden=True,
+                                          ),
+                          S3DateFilter("created_on",
+                                       label=T("Filter by Date"),
+                                       hide_time=True,
+                                       hidden=True,
+                                       ),
+                          ]
 
         # Resource Configuration
         configure(tablename,
@@ -256,6 +290,8 @@ class S3ContentModel(S3Model):
                                      "format": "rss",
                                      },
                                     ],
+                  filter_widgets = filter_widgets,
+                  list_layout = cms_post_list_layout,
                   list_orderby = ~table.created_on,
                   onaccept = self.cms_post_onaccept,
                   orderby = ~table.created_on,
@@ -1147,9 +1183,9 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
     return table
     
 # =============================================================================
-def cms_render_posts(list_id, item_id, resource, rfields, record):
+def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for CMS Posts on the
+        Default dataList item renderer for CMS Posts on the
         Home & News Feed pages.
 
         @param list_id: the HTML ID of the list

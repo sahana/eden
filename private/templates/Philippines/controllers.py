@@ -26,7 +26,7 @@ class index(S3CustomController):
         # Latest 4 Requests
         s3db = current.s3db
         list_id = "latest_reqs"
-        layout = s3db.req_render_reqs
+        layout = s3db.req_req_list_layout
         limit = 4
         resource = s3db.resource("req_req")
         s3db.req_customize_req_fields()
@@ -39,7 +39,7 @@ class index(S3CustomController):
 
         # Latest 4 Offers
         list_id = "latest_offers"
-        layout = s3db.req_render_commits
+        layout = s3db.req_commit_list_layout
         #limit = 4
 
         resource = s3db.resource("req_commit")

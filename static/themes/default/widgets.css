@@ -226,6 +226,11 @@ textarea.richtext {
    margin-top: -1px;
    min-width: 640px;
 }
+
+#table-container .empty {
+    margin-left: 10px;
+}
+
 .dataTable thead th {
 /* datatables fixed headers must not be transparent, however those aren't used currently & this removes the Sorting Icons
     background: no-repeat scroll right center #F0F3F4;*/
