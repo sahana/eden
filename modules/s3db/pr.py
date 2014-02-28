@@ -981,6 +981,12 @@ class S3PersonModel(S3Model):
                        evr_background={"joinby": "person_id",
                                        "multiple": False,
                                       },
+                       
+                       # Shelter (Camp) Registry
+                       cr_shelter_person={"joinby": "person_id",
+                                          # A person can be assigned to only one shelter
+                                          "multiple": False,
+                                          },
                       )
 
         # ---------------------------------------------------------------------
@@ -1533,7 +1539,7 @@ class S3GroupModel(S3Model):
         represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", table,
                                    sortby = "name",
-                                   comment = S3AddResourceLink(#c="pr",
+                                   comment = S3AddResourceLink(c="pr",
                                                                f="group",
                                                                label=add_label,
                                                                title=title,
@@ -1551,6 +1557,12 @@ class S3GroupModel(S3Model):
         # Components
         self.add_components(tablename,
                             pr_group_membership="group_id",
+                            
+                            # Shelter (Camp) Registry
+                            cr_shelter_group={"joinby": "group_id",
+                                              # A group can be assigned to only one shelter
+                                              "multiple": False,
+                                              },
                             )
 
         # ---------------------------------------------------------------------
