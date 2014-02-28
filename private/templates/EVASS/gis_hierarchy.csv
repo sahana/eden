@@ -22,3 +22,4 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,TL,"District","SubDistrict","Suco","Aldeia",,
 ,US,"State","County","City","Neighborhood",,False
 ,VN,"Province","District","Commune",,,
+,IT,"Regione","Provincia","Comune",,,
