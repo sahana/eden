@@ -45,7 +45,8 @@ class S3CampDataModel(S3Model):
              "cr_shelter_service",
              "cr_shelter",
              "cr_shelter_status",
-             "cr_shelter_person"
+             "cr_shelter_person",
+             "cr_shelter_group"
              ]
 
     # Define a function model() which takes no parameters (except self):
@@ -522,6 +523,8 @@ class S3CampDataModel(S3Model):
                              self.pr_person_id()
                              )
         
+        #TODO: this link table needs more discussion
+        # maybe use a super-entity?
         tablename = "cr_shelter_group"
         table = define_table(tablename,
                              shelter_id(),
