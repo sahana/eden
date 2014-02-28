@@ -285,7 +285,7 @@ settings.gis.building_name = False
 # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
 # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
-#settings.security.policy = 7 # Organisation-ACLs
+settings.security.policy = 7 # Organisation-ACLs
 
 # Ownership-rule for records without owner:
 # True = not owned by any user (strict ownership, default)
@@ -825,12 +825,12 @@ settings.modules = OrderedDict([
          restricted = True, # use Access Control Lists to see this module
          module_type = 10
     )),
-    #("event", Storage(
-        #name_nice = T("Events"),
-        ##description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-        #restricted = True,
-        #module_type = 10,
-    #)),
+    ("event", Storage(
+        name_nice = T("Events"),
+        #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+        restricted = True,
+        module_type = 10,
+    )),
     #("transport", Storage(
        #name_nice = T("Transport"),
        #restricted = True,

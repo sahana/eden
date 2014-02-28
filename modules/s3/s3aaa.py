@@ -6553,8 +6553,7 @@ class S3RoleManager(S3Method):
 
             # Table body
             trows = []
-            i = 1
-            for role in resource:
+            for i, role in enumerate(resource):
 
                 role_id = role.id
                 role_name = role.role
@@ -6625,20 +6624,25 @@ class S3RoleManager(S3Method):
                 trows.append(TR(tdata, _class=_class))
             tbody = TBODY(trows)
 
-            # Aggregate list
-            items = TABLE(thead, tbody, _class="dataTable display")
-            output.update(items=items)
-
-            # Add-button
-            add_btn = A(T("Add Role"), _href=URL(c="admin", f="role",
-                                                 args=["create"]),
-                                                 _class="action-btn")
-            output.update(add_btn=add_btn)
-
-            response.view = "admin/role_list.html"
+            # Create datatable
+            items = TABLE(thead, tbody, _class="dataTable display", _id="datatable")
             s3 = response.s3
+            s3.no_formats = True
             s3.actions = []
             s3.no_sspag = True
+            
+            from s3data import S3DataTable
+            dt = S3DataTable.htmlConfig(items, "datatable", [[1, "asc"]],
+                                        dt_pagination=False)
+            output["items"] = dt
+
+            # Add-button
+            add_btn = A(T("Add Role"),
+                        _href=URL(c="admin", f="role", args=["create"]),
+                        _class="action-btn")
+            output["add_btn"] = add_btn
+
+            response.view = "admin/role_list.html"
 
         elif r.representation == "xls":
             # Not implemented yet
