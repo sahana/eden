@@ -21,8 +21,8 @@ def index():
         # Go to Personal Profile
         redirect(URL(f="person"))
     else:
-        # Bypass home page & go direct to filterable list of Volunteers
-        redirect(URL(f="volunteer"))
+        # Bypass home page & go direct to Volunteers Summary
+        redirect(URL(f="volunteer", args=["summary"]))
 
 # =============================================================================
 # People
@@ -138,21 +138,6 @@ def human_resource():
                            # Needed for Age Group VirtualField to avoid extra DB calls
                            report_fields = ["person_id$date_of_birth"],
                            report_options = report_options,
-                           summary = [{"name": "table",
-                                       "label": "Table",
-                                       "widgets": [{"method": "datatable"}]
-                                       },
-                                      {"name": "report",
-                                       "label": "Report",
-                                       "widgets": [{"method": "report",
-                                                    "ajax_init": True}]
-                                       },
-                                      {"name": "map",
-                                       "label": "Map",
-                                       "widgets": [{"method": "map",
-                                                    "ajax_init": True}],
-                                       },
-                                      ],
                            )
             s3.filter = None
         else:

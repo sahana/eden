@@ -56,7 +56,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Certificate List", c="hrm", f="certificate"),
             ),
             homepage("vol", name=T("Volunteers"))(
-                MM("Volunteers", c="vol", f="volunteer"),
+                MM("Volunteers", c="vol", f="volunteer", m="summary"),
                 MM("Teams", c="vol", f="group"),
                 MM("Volunteer Roles", c="vol", f="job_title"),
                 MM("Programs", c="vol", f="programme"),

@@ -1009,7 +1009,7 @@ class S3OptionsMenu(object):
         show_staff = lambda i: settings.get_hrm_show_staff()
 
         return M(c="vol")(
-                    M("Volunteers", f="volunteer",
+                    M("Volunteers", f="volunteer", m="summary",
                       check=[manager_mode])(
                         M("New", m="create"),
                         #M("Search"),
