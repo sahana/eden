@@ -1,0 +1,59 @@
+@charset "UTF-8";
+
+/* Logo in Menu */
+.S3menulogo {
+    background: url(../../img/S3menu_logo.png) left top no-repeat;
+    text-shadow: none;
+    padding: none;
+    margin-left: 5px;
+    margin-top: 10px;
+    width: 35px;
+    height: 28px;
+    display: inline-block;
+}
+
+/* Links should ALWAYS be unvisited */
+#contents a {
+    color: #039;
+    text-decoration: underline;
+    outline: 0;
+}
+#contents a:hover {
+    color: #c00;
+    text-decoration: none;
+    background-color: #ffffcc;
+    outline: 0;
+}
+#contents a:active,
+#contents a:focus {
+    outline: 0;
+}
+
+#contents a.help,
+#contents a:link.help {
+    color: #fff;
+    text-decoration: none;
+    margin-right: 10px;
+}
+#contents a:hover.help {
+    background-color: #336699;
+    text-decoration: underline;
+}
+#contents a:visited.help {
+    font-weight: normal;
+    color: #666;
+}
+
+.sidebar {
+    background: none repeat scroll 0 0 #FAFAFA;
+    padding: 10px 10px;
+}
+
+.side-nav .heading {
+    text-transform: uppercase;
+}
+
+.filter-form table tr,
+.filter-form .ui-multiselect {
+    max-width: 60%;
+}

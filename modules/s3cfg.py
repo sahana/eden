@@ -39,13 +39,22 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from gluon import current, URL, TR, TD
+from gluon import current, URL
 from gluon.storage import Storage
+
+from s3theme import *
 
 class S3Config(Storage):
     """
         Deployment Settings Helper Class
     """
+
+    FORMSTYLE = {
+        "foundation": formstyle_foundation,
+        "foundation_inline": formstyle_foundation_inline,
+        "default": formstyle_default,
+        "default_inline": formstyle_default_inline,
+    }
 
     def __init__(self):
         self.auth = Storage()
@@ -1025,38 +1034,27 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # UI Settings
     #
-    @staticmethod
-    def default_formstyle(id, label, widget, comment, hidden=False):
-        """
-            Provide the default Sahana Eden Form Style
-            Label above the Inputs:
-            http://uxmovement.com/design-articles/faster-with-top-aligned-labels
-
-            Things that need to be looked at for custom formstyles:
-            * subheadings (s3forms.py)
-            * S3AddPersonWidget (s3widgets.py)
-            * S3EmbedComponentWidget (s3widgets.py)
-        """
-
-        row = []
-        if hidden:
-            _class = "hide"
-        else:
-            _class = ""
-        # Label on the 1st row
-        row.append(TR(TD(label, _class="w2p_fl"),
-                      TD(""),
-                      _id=id + "1",
-                      _class=_class))
-        # Widget & Comment on the 2nd Row
-        row.append(TR(widget,
-                      TD(comment, _class="w2p_fc"),
-                      _id=id,
-                      _class=_class))
-        return tuple(row)
-
     def get_ui_formstyle(self):
-        return self.ui.get("formstyle", self.default_formstyle)
+        """ Get the current form style """
+
+        setting = self.ui.get("formstyle", "default")
+        if callable(setting):
+            return setting
+        elif setting in self.FORMSTYLE:
+            return self.FORMSTYLE[setting]
+        else:
+            return setting
+
+    def get_ui_filter_formstyle(self):
+        """ Get the current filter form style """
+
+        setting = self.ui.get("filter_formstyle", "default_inline")
+        if callable(setting):
+            return setting
+        elif setting in self.FORMSTYLE:
+            return self.FORMSTYLE[setting]
+        else:
+            return setting
 
     # -------------------------------------------------------------------------
     def get_ui_auth_user_represent(self):

@@ -599,6 +599,9 @@ class S3NavigationItem(object):
             # Foreign application links never match
             return 0
 
+        if self.opts.selectable is False:
+            return 0
+
         # Check hook and enabled
         check = self.check_hook()
         if check:

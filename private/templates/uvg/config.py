@@ -305,6 +305,9 @@ settings.L10n.decimal_separator = "."
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
 
+settings.ui.formstyle = "foundation"
+settings.ui.filter_formstyle = "foundation_inline"
+
 # -----------------------------------------------------------------------------
 # CMS
 # Uncomment to use Bookmarks in Newsfeed

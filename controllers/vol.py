@@ -359,15 +359,20 @@ def volunteer():
                                     _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     programme = s3_formstyle(row_id, label, widget,
                                                 field.comment)
-                    try:
-                        output["form"][0].insert(4, programme[1])
-                    except:
-                        # A non-standard formstyle with just a single row
-                        pass
-                    try:
-                        output["form"][0].insert(4, programme[0])
-                    except:
-                        pass
+                    if isinstance(programme, DIV) and \
+                       "form-row" in programme["_class"]:
+                        # Foundation formstyle
+                        output["form"][0].insert(4, programme)
+                    else:
+                        try:
+                            output["form"][0].insert(4, programme[1])
+                        except:
+                            # A non-standard formstyle with just a single row
+                            pass
+                        try:
+                            output["form"][0].insert(4, programme[0])
+                        except:
+                            pass
                 else:
                     # Unsupported
                     raise
