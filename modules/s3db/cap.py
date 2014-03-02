@@ -576,7 +576,7 @@ class S3CAPModel(S3Model):
                                    label = T("Area description"),
                                    required=True),
                              self.gis_location_id(
-                                widget = S3LocationSelectorWidget(polygon=True)
+                                widget = S3LocationSelectorWidget2(polygons=True)
                              ),
                              Field("circle"),
                              Field("geocode", "text",

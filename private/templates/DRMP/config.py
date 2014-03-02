@@ -9,7 +9,7 @@ except:
 
 from datetime import timedelta
 
-from gluon import current, Field, URL
+from gluon import current, Field
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NULL_OR, IS_NOT_EMPTY

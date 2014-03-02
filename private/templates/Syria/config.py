@@ -1642,7 +1642,7 @@ def customize_project_project(**attr):
                                 widget="multiselect"
                                 ),
                 S3LocationFilter("location.location_id",
-                                 levels=["L0", "L1", "L2", "L3"],
+                                 levels=("L0", "L1", "L2", "L3"),
                                  widget="multiselect"),
                 S3OptionsFilter("partner.organisation_id",
                                 label = T("Partners"),

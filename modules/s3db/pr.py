@@ -315,21 +315,23 @@ class S3PersonEntity(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  onvalidation=self.pr_role_onvalidation)
+                  onvalidation = self.pr_role_onvalidation,
+                  )
 
         # Components
         add_components(tablename,
-                       pr_affiliation="role_id",
-                      )
+                       pr_affiliation = "role_id",
+                       )
 
         # Reusable fields
         pr_role_represent = pr_RoleRepresent()
         role_id = S3ReusableField("role_id", table,
+                                  label = T("Role"),
+                                  ondelete = "CASCADE",
                                   requires = IS_ONE_OF(db, "pr_role.id",
                                                        pr_role_represent),
                                   represent = pr_role_represent,
-                                  label = T("Role"),
-                                  ondelete = "CASCADE")
+                                  )
 
         # ---------------------------------------------------------------------
         # Affiliation
@@ -366,8 +368,9 @@ class S3PersonEntity(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  onaccept=self.pr_affiliation_onaccept,
-                  ondelete=self.pr_affiliation_ondelete)
+                  onaccept = self.pr_affiliation_onaccept,
+                  ondelete = self.pr_affiliation_ondelete,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3323,7 +3326,6 @@ class S3PersonPresence(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       super_entity = "sit_situation",
                        onvalidation = self.presence_onvalidation,
                        onaccept = self.presence_onaccept,
                        ondelete = self.presence_onaccept,
@@ -3336,7 +3338,9 @@ class S3PersonPresence(S3Model):
                                       "dest_id"
                                       ],
                        main="time",
-                       extra="location_details")
+                       extra="location_details",
+                       super_entity = "sit_situation",
+                       )
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
