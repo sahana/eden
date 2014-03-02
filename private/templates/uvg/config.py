@@ -36,7 +36,7 @@ settings = current.deployment_settings
 #settings.base.prepopulate = 1
 
 # Theme (folder to use for views/layout.html)
-#settings.base.theme = "default"
+settings.base.theme = "uvg"
 
 # Enable Guided Tours
 #settings.base.guided_tour = True
