@@ -4556,6 +4556,7 @@ class S3LocationSelectorWidget2(FormWidget):
             if bootstrap:
                 map_icon = DIV(DIV(BUTTON(I(_class="icon-map"),
                                           label,
+                                          _type="button", # defaults to 'submit' otherwise!
                                           _id=icon_id,
                                           _class="btn gis_loc_select_btn",
                                           ),
@@ -4567,6 +4568,7 @@ class S3LocationSelectorWidget2(FormWidget):
             else:
                 map_icon = DIV(DIV(BUTTON(I(_class="icon-globe"),
                                           label,
+                                          _type="button", # defaults to 'submit' otherwise!
                                           _id=icon_id,
                                           _class="btn gis_loc_select_btn",
                                           ),
@@ -4589,7 +4591,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                     DIV(_class="geocode_success hide"),
                                     DIV(_class="geocode_fail hide"),
                                     BUTTON(T("Geocode"),
-                                           _class="hide"),
+                                           _type="button", # defaults to 'submit' otherwise!
+                                          _class="hide",
+                                          ),
                                     _id="%s_geocode" % fieldname,
                                     _class="controls geocode",
                                     ))
@@ -5134,7 +5138,7 @@ class S3SelectChosenWidget(OptionsWidget):
         s3.scripts.append("/%s/static/scripts/%s" % (current.request.application,
                                                      script))
         # @ToDo: Can we not determine a # selector? (faster)
-        script = '''$('[name="%s"]').chosen();''' % field.name
+        script = '''$('[name="%s"]').chosen()''' % field.name
         s3.jquery_ready.append(script)
         return OptionsWidget.widget(field, value, **attributes)
 
