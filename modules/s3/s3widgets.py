@@ -4167,6 +4167,12 @@ class S3LocationSelectorWidget2(FormWidget):
                 if tuple_rows:
                     address_label = address_row[0]
                     address_row = address_row[1]
+                elif "form-row" in address_row["_class"]:
+                    # Foundation formstyle
+                    address_label = address_row[0][0]
+                    address_row = address_row[0][1]
+                #else:
+                    # @todo: what else? (uninitialized variables!)
         else:
             address_row = ""
             address_label = ""
@@ -4197,6 +4203,12 @@ class S3LocationSelectorWidget2(FormWidget):
                 if tuple_rows:
                     postcode_label = postcode_row[0]
                     postcode_row = postcode_row[1]
+                elif "form-row" in postcode_row["_class"]:
+                    # Foundation formstyle
+                    postcode_label = postcode_row[0][0]
+                    postcode_row = postcode_row[0][1]
+                #else:
+                    # @todo: what else? (uninitialized variables!)
         else:
             postcode_row = ""
             postcode_label = ""
