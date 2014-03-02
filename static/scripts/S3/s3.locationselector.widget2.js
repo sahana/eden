@@ -37,45 +37,61 @@
 
         var selector = '#' + fieldname;
         var real_input = $(selector);
+        var real_row = $(selector + '__row');
 
-        // Move the user-visible rows underneath the real (hidden) one
         var error_row = real_input.next('.error_wrapper');
         var L0_row = $(selector + '_L0__row');
-        var L1_row = $(selector + '_L1__row');
-        var L2_row = $(selector + '_L2__row');
-        var L3_row = $(selector + '_L3__row');
-        var L4_row = $(selector + '_L4__row');
-        var L5_row = $(selector + '_L5__row');
-        var address_row = $(selector + '_address__row');
-        var postcode_row = $(selector + '_postcode__row');
         var map_icon_row = $(selector + '_map_icon__row');
-        var map_div = $(selector + '__row .map_wrapper').attr('id', fieldname + '_map_wrapper');
-        if (reverse_lx) {
-            $(selector + '__row').hide()
-                                 .after(map_div)
-                                 .after(map_icon_row)
-                                 .after(L0_row)
-                                 .after(L1_row)
-                                 .after(L2_row)
-                                 .after(L3_row)
-                                 .after(L4_row)
-                                 .after(L5_row)
-                                 .after(postcode_row)
-                                 .after(address_row)
-                                 .after(error_row);
+        var map_div = $(selector + '_map_icon__row .map_wrapper').attr('id', fieldname + '_map_wrapper');
+        var bootstrap = real_row.hasClass('control-group');
+        if (bootstrap) {
+            // Move the user-visible rows underneath the real (hidden) one
+            var L1_row = $(selector + '_L1__row');
+            var L2_row = $(selector + '_L2__row');
+            var L3_row = $(selector + '_L3__row');
+            var L4_row = $(selector + '_L4__row');
+            var L5_row = $(selector + '_L5__row');
+            var address_row = $(selector + '_address__row');
+            var postcode_row = $(selector + '_postcode__row');
+            if (reverse_lx) {
+                real_row.hide()
+                        .after(map_div)
+                        .after(map_icon_row)
+                        .after(L0_row)
+                        .after(L1_row)
+                        .after(L2_row)
+                        .after(L3_row)
+                        .after(L4_row)
+                        .after(L5_row)
+                        .after(postcode_row)
+                        .after(address_row)
+                        .after(error_row);
+            } else {
+                real_row.hide()
+                        .after(map_div)
+                        .after(map_icon_row)
+                        .after(postcode_row)
+                        .after(address_row)
+                        .after(L5_row)
+                        .after(L4_row)
+                        .after(L3_row)
+                        .after(L2_row)
+                        .after(L1_row)
+                        .after(L0_row)
+                        .after(error_row);
+            }
         } else {
-            $(selector + '__row').hide()
-                                 .after(map_div)
-                                 .after(map_icon_row)
-                                 .after(postcode_row)
-                                 .after(address_row)
-                                 .after(L5_row)
-                                 .after(L4_row)
-                                 .after(L3_row)
-                                 .after(L2_row)
-                                 .after(L1_row)
-                                 .after(L0_row)
-                                 .after(error_row);
+            // Hide the main row & move out the Error
+            $(selector + '__row1').hide();
+            real_row.hide()
+                    .after(error_row);
+            if (reverse_lx) {
+                L0_row.after(map_div)
+                      .after(map_icon_row);
+            } else {
+                $(selector + '_postcode__row').after(map_div)
+                                              .after(map_icon_row);
+            }
         }
 
         if (specific) {
@@ -95,11 +111,8 @@
         }
 
         // Initial population of dropdown(s)
-        if (L0) {
-            lx_select(fieldname, 0, L0);
-        } else {
-            // Show the Country row
-            L0_row.removeClass('hide').show();
+        var L0_select = $(selector + '_L0');
+        if (L0_row.length) {
             // Populate with values
             var values = [];
             for (var i in l) {
@@ -111,13 +124,20 @@
             }
             values.sort(nameSort);
             var _id, location, option, selected;
-            var select = $(selector + '_L0');
             for (var i=0, len=values.length; i < len; i++) {
                 location = values[i];
                 _id = location['i'];
                 option = '<option value="' + _id + '">' + location['n'] + '</option>';
-                select.append(option);
+                L0_select.append(option);
             }
+            // Show the Country row
+            L0_row.removeClass('hide').show();
+            if (!bootstrap) {
+                $(selector + '_L0__row1').removeClass('hide').show();
+            }
+        }
+        if (L0) {
+            lx_select(fieldname, 0, L0);
         }
         if (L1) {
             lx_select(fieldname, 1, L1);
@@ -134,8 +154,10 @@
         if (L5) {
             lx_select(fieldname, 5, L5);
         }
+
         // Show Address/Postcode Rows
         showAddress(fieldname);
+
         // Show Map icon
         map_icon_row.removeClass('hide').show();
 
@@ -149,7 +171,6 @@
         }
 
         // Listen events
-        var L0_select = $(selector + '_L0');
         L0_select.change(function() {
             lx_select(fieldname, 0);
         });
@@ -411,12 +432,14 @@
                     success: function(data) {
                         // Copy the elements across
                         hi = {};
-                        for (var prop in n) {
-                            hi[prop] = n[prop];
-                        }
-                        h[id] =  hi;
-                        // Clear the memory
-                        n = null;
+                        try {
+                            for (var prop in n) {
+                                hi[prop] = n[prop];
+                            }
+                            h[id] =  hi;
+                            // Clear the memory
+                            n = null;
+                        } catch(e) {}
                     },
                     error: function(request, status, error) {
                         if (error == 'UNAUTHORIZED') {
@@ -436,15 +459,21 @@
             var i,
                 lev,
                 label,
-                levels = ['1', '2', '3', '4', '5'];
+                levels = ['1', '2', '3', '4', '5'],
+                s;
             for (i=0; i < 5; i++) {
                 lev = levels[i];
                 label = hi[lev] || d[lev];
-                if ($(selector + '_L' + lev).hasClass('required')) {
-                    $(selector + '_L' + lev + '__row label').html('<div>' + label + ':<span class="req"> *</span></div>');
+                s = selector + '_L' + lev;
+                if ($(s).hasClass('required')) {
+                    // @ToDo: Client-side s3_mark_required function
+                    $(s + '__row label').html('<div>' + label + ':<span class="req"> *</span></div>');
+                    $(s + '__row1 label').html('<div>' + label + ':<span class="req"> *</span></div>'); // Non-Bootstrap
                 } else {
-                    $(selector + '_L' + lev + '__row label').html(label + ':');
+                    $(s + '__row label').html(label + ':');
+                    $(s + '__row1 label').html(label + ':'); // Non-Bootstrap
                 }
+                $(s + ' option[value=""]').html(i18n.select + ' ' + label);
             }
         }
         if (id) {
@@ -455,6 +484,7 @@
                 s = selector + '_L' + lev;
                 if (hide_lx) {
                     $(s + '__row').hide();
+                    $(s + '__row1').hide(); // Non-Bootstrap
                 } else {
                     // Hide the limited options
                     $(s + ' option').remove('[value != ""]');
@@ -471,6 +501,7 @@
             var dropdown = $(selector + '_L' + level + '__row');
             if (dropdown.length) {
                 dropdown.removeClass('hide').show();
+                $(selector + '_L' + level + '__row1').removeClass('hide').show();
                 // Do we need to read hierarchy?
                 var read = true; 
                 for (var i in l) {
@@ -535,6 +566,7 @@
                 var s = selector + '_L' + lev;
                 if (hide_lx) {
                     $(s + '__row').hide();
+                    $(s + '__row1').hide(); // Non-Bootstrap
                 } else {
                     // Hide the limited options
                     $(s + ' option').remove('[value != ""]');
@@ -626,7 +658,7 @@
                 return id;
             }
         }
-        // No Lx set at all, so return the default country if-any
+        // No Lx set at all, so return the lowest-level un-selectable Lx if-any
         var d = l['d'];
         return d.id;
     }
@@ -674,7 +706,9 @@
 
         // Display the rows
         $(selector + '_address__row').removeClass('hide').show();
+        $(selector + '_address__row1').removeClass('hide').show(); // Non-Bootstrap
         $(selector + '_postcode__row').removeClass('hide').show();
+        $(selector + '_postcode__row1').removeClass('hide').show(); // Non-Bootstrap
 
         var geocode_button = $(selector + '_geocode button');
         if (geocode_button.length) {

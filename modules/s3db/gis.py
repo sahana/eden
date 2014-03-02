@@ -275,16 +275,18 @@ class S3LocationModel(S3Model):
                                       label = T("Location"),
                                       ondelete = "RESTRICT",
                                       represent = gis_location_represent,
-                                      # @ToDo: Switch default once working on non-Bootstrap themes
-                                      #requires = IS_NULL_OR(
-                                      #              IS_LOCATION_SELECTOR2()
-                                      #              ),
-                                      #widget = S3LocationSelectorWidget2(),
-                                      # Alternate LocationSelector for when you don't have the Location Hierarchy available to load
                                       requires = IS_NULL_OR(
-                                                    IS_LOCATION_SELECTOR()
+                                                    IS_LOCATION_SELECTOR2()
                                                     ),
-                                      widget = S3LocationSelectorWidget(),
+                                      widget = S3LocationSelectorWidget2(show_address=True,
+                                                                         show_map=settings.get_gis_map_selector(),
+                                                                         show_postcode=settings.get_gis_postcode_selector(),
+                                                                         ),
+                                      # Alternate LocationSelector for when you don't have the Location Hierarchy available to load
+                                      #requires = IS_NULL_OR(
+                                      #              IS_LOCATION_SELECTOR()
+                                      #              ),
+                                      #widget = S3LocationSelectorWidget(),
                                       # Alternate simple Autocomplete (e.g. used by pr_person_presence)
                                       #requires = IS_NULL_OR(IS_LOCATION()),
                                       #widget = S3LocationAutocompleteWidget(),

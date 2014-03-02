@@ -1685,7 +1685,8 @@ class IS_LOCATION_SELECTOR(Validator):
 # =============================================================================
 class IS_LOCATION_SELECTOR2(Validator):
     """
-        Designed for use within the S3LocationSelectorWidget2.
+        Designed for use with the S3LocationSelectorWidget2
+
         For Create forms, this will create a new location if there is a Lat/Lon submitted
         For Update forms, this will check that we have a valid location_id FK and update any changes
 
@@ -1693,7 +1694,7 @@ class IS_LOCATION_SELECTOR2(Validator):
     """
 
     def __init__(self,
-                 levels=("L1", "L2", "L3"),
+                 levels = None,
                  error_message = None,
                  ):
 
@@ -1708,7 +1709,8 @@ class IS_LOCATION_SELECTOR2(Validator):
         if not value:
             return (None, self.error_message or current.T("Location Required!"))
 
-        if current.response.s3.bulk:
+        s3 = current.response.s3
+        if s3.bulk:
             # Pointless in imports/sync
             return (value, None)
 
@@ -1755,10 +1757,15 @@ class IS_LOCATION_SELECTOR2(Validator):
                 # Create a new point
                 if not current.auth.s3_has_permission("create", table):
                     return (None, current.auth.messages.access_denied)
+                if wkt is not None or \
+                   (lat is not None and lon is not None):
+                    inherited = False
+                else:
+                    inherited = True
                 feature = Storage(lat=lat,
                                   lon=lon,
                                   wkt=wkt,
-                                  inherited=False,
+                                  inherited=inherited,
                                   addr_street=address,
                                   addr_postcode=postcode,
                                   parent=parent,
@@ -1889,7 +1896,16 @@ class IS_LOCATION_SELECTOR2(Validator):
                         self.error_message or current.T("Invalid Location!"))
             level = location.level
             if level:
-                if level in self.levels:
+                levels = self.levels
+                if not levels:
+                    # Which levels of Hierarchy are we using?
+                    hierarchy = current.gis.get_location_hierarchy()
+                    levels = hierarchy.keys()
+                    if len(current.deployment_settings.get_gis_countries()) == 1 or \
+                       s3.gis.config.region_location_id:
+                        levels.remove("L0")
+
+                if level in levels:
                     # OK
                     return (value, None)
                 else:
@@ -1916,7 +1932,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
         Sites of the specified type.
         Note that these cannot include any other mandatory fields other than Name & location_id
 
-        Designed for use within the ???S3LocationSelectorWidget.
+        Designed for use within the S3LocationSelectorWidget with sites.
         For Create forms, this will create a new site & location from the additional fields
         For Update forms, this will normally just check that we have a valid site_id FK
         - although there is the option to create a new location there too, in which case it acts as-above.

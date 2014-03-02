@@ -1056,9 +1056,9 @@ class S3OrganisationGroupModel(S3Model):
                                    length=128,
                                    label=T("Name")),
                              self.gis_location_id(
-                                widget = S3LocationSelectorWidget(
+                                widget = S3LocationSelectorWidget2(
                                     #catalog_layers=True,
-                                    polygon=True
+                                    polygons=True
                                     )),
                              Field("website",
                                    label=T("Website"),
