@@ -49,6 +49,7 @@ class S3Config(Storage):
         Deployment Settings Helper Class
     """
 
+    # Used by modules/s3theme.py
     FORMSTYLE = {
         "foundation": formstyle_foundation,
         "foundation_inline": formstyle_foundation_inline,

@@ -121,10 +121,12 @@ def formstyle_foundation(form, fields, *args, **kwargs):
         Formstyle for foundation themes (Labels above Inputs)
     """
 
-    def render_row(row_id, label, controls, helptext):
+    def render_row(row_id, label, controls, helptext, hidden=False):
         if isinstance(controls, INPUT):
             if controls['_type'] == 'submit':
                 controls['_class'] = 'small primary button'
+
+        _class = "form-row row hide" if hidden else "form-row row"
         controls = DIV(label,
                        DIV(controls,
                            _class="controls",
@@ -134,13 +136,14 @@ def formstyle_foundation(form, fields, *args, **kwargs):
         comment = DIV(helptext,
                       _class="small-6 columns",
                       )
-        return DIV(controls, comment, _class="form-row row", _id=row_id)
+        return DIV(controls, comment, _class=_class, _id=row_id)
 
     if args:
         row_id = form
         label = fields
         controls, helptext = args
-        return render_row(row_id, label, controls, helptext)
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, controls, helptext, hidden)
     else:
         parent = TAG[""]()
         for row_id, label, controls, helptext in fields:

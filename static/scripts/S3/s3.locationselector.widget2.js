@@ -43,8 +43,9 @@
         var L0_row = $(selector + '_L0__row');
         var map_icon_row = $(selector + '_map_icon__row');
         var map_div = $(selector + '_map_icon__row .map_wrapper').attr('id', fieldname + '_map_wrapper');
-        var bootstrap = real_row.hasClass('control-group');
-        if (bootstrap) {
+        var div_style = real_row.hasClass('control-group') // Bootstrap
+                        || real_row.hasClass('form-row'); // Foundation
+        if (div_style) {
             // Move the user-visible rows underneath the real (hidden) one
             var L1_row = $(selector + '_L1__row');
             var L2_row = $(selector + '_L2__row');
@@ -132,7 +133,7 @@
             }
             // Show the Country row
             L0_row.removeClass('hide').show();
-            if (!bootstrap) {
+            if (!div_style) {
                 $(selector + '_L0__row1').removeClass('hide').show();
             }
         }

@@ -3907,6 +3907,11 @@ class S3LocationSelectorWidget2(FormWidget):
             else:
                 # Non-std formstyle with just a single row
                 tuple_rows = False
+                #if "form-row" in row["_class"]:
+                #    # Foundation formstyle
+                #    foundation = True
+                #else:
+                #    foundation = False
         else:
             # Unsupported
             raise
@@ -4163,16 +4168,12 @@ class S3LocationSelectorWidget2(FormWidget):
                 address_label = ""
             else:
                 comment = ""
-                address_row = formstyle("%s__row" % id, label, widget, comment, hidden=True)
+                address_row = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
                 if tuple_rows:
                     address_label = address_row[0]
                     address_row = address_row[1]
-                elif "form-row" in address_row["_class"]:
-                    # Foundation formstyle
-                    address_label = address_row[0][0]
-                    address_row = address_row[0][1]
-                #else:
-                    # @todo: what else? (uninitialized variables!)
+                else:
+                    address_label = ""
         else:
             address_row = ""
             address_label = ""
@@ -4203,12 +4204,8 @@ class S3LocationSelectorWidget2(FormWidget):
                 if tuple_rows:
                     postcode_label = postcode_row[0]
                     postcode_row = postcode_row[1]
-                elif "form-row" in postcode_row["_class"]:
-                    # Foundation formstyle
-                    postcode_label = postcode_row[0][0]
-                    postcode_row = postcode_row[0][1]
-                #else:
-                    # @todo: what else? (uninitialized variables!)
+                else:
+                    postcode_label = ""
         else:
             postcode_row = ""
             postcode_label = ""
