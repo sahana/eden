@@ -48,3 +48,62 @@
 .filter-form .ui-multiselect {
     max-width: 60%;
 }
+
+/* Over-ride widgets.css */
+.form-container {
+    width: 100%;
+    overflow: auto;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+.form-container form input,
+.form-container form button,
+.form-container form select,
+.form-container form textarea {
+    padding: 2px;
+    margin: 2px 0 2px 0;
+}
+.form-container form input.string,
+.form-container form textarea  {
+    width: 500px;
+}
+
+/* Required Field indicator */
+.error,
+.req {
+    color: red;
+    font-weight: bold;
+}
+
+/* Action Buttons */
+.dataTable .action-btn,
+.dataTable .delete-btn-ajax,
+.dataTable .delete-btn {
+    color: #ffffff;
+}
+
+.action-btn,
+.delete-btn-ajax,
+.delete-btn {
+    cursor: pointer;
+    line-height: 1.5;
+    text-decoration: none;
+    color: #ffffff;
+    background-color: #3286e2;
+    border: 1px solid #4c95e6;
+    border-bottom: 2px solid #164b8b;
+    border-top: 1px solid #5f9eeb;
+    padding: 2px 4px 2px 4px;
+    margin: 2px;
+    z-index: 500;
+    white-space: nowrap;
+    border-radius: 2px;
+}
+
+.action-btn:hover,
+.delete-btn-ajax:hover,
+.delete-btn:hover {
+    text-decoration: none;
+    color: #fff;
+    background-color: #164b8b;
+}
