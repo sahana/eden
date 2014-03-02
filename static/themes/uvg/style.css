@@ -13,19 +13,19 @@
 }
 
 /* Links should ALWAYS be unvisited */
-#contents a {
+#contents a:not(.action-btn):not(.delete-btn) {
     color: #039;
     text-decoration: underline;
     outline: 0;
 }
-#contents a:hover {
+#contents a:hover:not(.action-btn):not(.delete-btn) {
     color: #c00;
     text-decoration: none;
     background-color: #ffffcc;
     outline: 0;
 }
-#contents a:active,
-#contents a:focus {
+#contents a:active:not(.action-btn):not(.delete-btn),
+#contents a:focus:not(.action-btn):not(.delete-btn) {
     outline: 0;
 }
 
@@ -42,15 +42,6 @@
 #contents a:visited.help {
     font-weight: normal;
     color: #666;
-}
-
-.sidebar {
-    background: none repeat scroll 0 0 #FAFAFA;
-    padding: 10px 10px;
-}
-
-.side-nav .heading {
-    text-transform: uppercase;
 }
 
 .filter-form table tr,

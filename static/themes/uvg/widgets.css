@@ -879,43 +879,49 @@ span.tab_next_inactive a {
 }
 
 /* Action Buttons */
-.dataTable .action-btn,
-.dataTable .delete-btn-ajax,
-.dataTable .delete-btn {
-    color: #ffffff;
-}
-
 .ui-tabs .ui-tabs-panel {
     padding: 2px 5px;
 }
-
 .action-btn,
 .delete-btn-ajax,
 .delete-btn {
-    cursor: pointer;
-    line-height: 1.5;
+    background-color: #2BA6CB;
+    color: #FFFFFF;
+    display: inline-block;
+    font-family: "Helvetica Neue","Helvetica",Helvetica,Arial,sans-serif;
+    font-size: 0.6875rem;
+    font-weight: normal;
+    line-height: 1;
+    margin-bottom: inherit;
+    padding: 0.25rem 0.5rem 0.375rem;
+    position: relative;
+    text-align: center;
     text-decoration: none;
-    color: #ffffff;
-    background-color: #3286e2;
-    border: 1px solid #4c95e6;
-    border-bottom: 2px solid #164b8b;
-    border-top: 1px solid #5f9eeb;
-    padding: 2px 4px 2px 4px;
-    margin: 2px;
-    z-index: 500;
     white-space: nowrap;
+    cursor: pointer;
+    z-index: 500;
     border-radius: 2px;
+}
+.delete-btn-ajax,
+.delete-btn {
+    background-color: #c60f13;
 }
 .action-btn:hover,
 .delete-btn-ajax:hover,
 .delete-btn:hover {
     text-decoration: none;
     color: #fff;
-    background-color: #164b8b;
+    background-color: #1f7994;
 }
+.delete-btn-ajax:hover,
+.delete-btn:hover {
+    background-color: #a20c10;
+}
+
 #delete-btn {
     margin-bottom: 8px;
 }
+
 #markDuplicate {
     float: right;
     clear: right;
