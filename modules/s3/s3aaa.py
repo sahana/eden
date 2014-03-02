@@ -4755,6 +4755,14 @@ class S3Permission(object):
             elif group_id:
                 acl["group_id"] = group_id
                 success = table.insert(**acl)
+            else:
+                # Lookup the group_id
+                record = current.db(gtable.uuid == group).select(gtable.id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
+                if record:
+                    acl["group_id"] = group_id
+                    success = table.insert(**acl)
 
         return success
 
