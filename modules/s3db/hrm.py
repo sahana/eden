@@ -772,6 +772,26 @@ class S3HRModel(S3Model):
                   super_entity = ("sit_trackable", "doc_entity"),
                   #update_next = hrm_url,
                   update_realm = True,
+                  # Default summary
+                  summary = [{"name": "addform",
+                              "common": True,
+                              "widgets": [{"method": "create"}],
+                             },
+                             {"name": "table",
+                              "label": "Table",
+                              "widgets": [{"method": "datatable"}]
+                              },
+                             {"name": "report",
+                              "label": "Report",
+                              "widgets": [{"method": "report",
+                                           "ajax_init": True}]
+                              },
+                             {"name": "map",
+                              "label": "Map",
+                              "widgets": [{"method": "map",
+                                           "ajax_init": True}],
+                              },
+                             ],
                   )
 
         # =========================================================================
@@ -5423,21 +5443,6 @@ def hrm_human_resource_controller(extra_filter=None):
                                           (settings.get_ui_label_mobile_phone(), "phone.value"),
                                           ],
                            report_options = report_options,
-                           summary = [{"name": "table",
-                                       "label": "Table",
-                                       "widgets": [{"method": "datatable"}]
-                                       },
-                                      {"name": "report",
-                                       "label": "Report",
-                                       "widgets": [{"method": "report",
-                                                    "ajax_init": True}]
-                                       },
-                                      {"name": "map",
-                                       "label": "Map",
-                                       "widgets": [{"method": "map",
-                                                    "ajax_init": True}],
-                                       },
-                                      ],
                            )                           
 
             # Remove controller filter

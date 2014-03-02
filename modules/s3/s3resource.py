@@ -862,7 +862,7 @@ class S3Resource(object):
                                        limitby=limitby,
                                        cacheable=not as_rows,
                                        *qfields.values())
-
+                                       
         # Restore virtual fields (if they were deactivated before)
         if not virtual:
             osetattr(table, "virtualfields", vf)
@@ -5588,7 +5588,7 @@ class S3ResourceQuery(object):
         elif op == self.ANYOF:
             q = l.contains(r, all=False)
         elif op == self.BELONGS:
-            if type(r) is not list:
+            if not isinstance(r, (list, tuple, set)):
                 r = [r]
             if None in r:
                 _r = [item for item in r if item is not None]
@@ -5596,13 +5596,6 @@ class S3ResourceQuery(object):
             else:
                 q = l.belongs(r)
         elif op == self.LIKE:
-            # Fixed in web2py trunk by:
-            # https://github.com/web2py/web2py/commit/7b4a0515becf3a6b7ffd145d7a1e00c11ede9b91
-            # for earlier versions, use this instead as a workaround:
-            #if isinstance(l, Field) and l.type not in TEXTTYPES:
-                #q = (l == s3_unicode(r).replace("%", ""))
-            #else:
-                #q = l.like(s3_unicode(r))
             q = l.like(s3_unicode(r))
         elif op == self.LT:
             q = l < r
@@ -6572,20 +6565,6 @@ class S3ResourceFilter(object):
                 # Add to query
                 query &= self.rfltr.query(self.resource)
 
-        # Add cross-component joins if required
-        parent = resource.parent
-        if parent:
-            pf = parent.rfilter
-            if pf is None:
-                pf = parent.build_query()
-            left = pf.get_left_joins(as_list=False)
-            tablename = resource._alias
-            if left:
-                for tn in left:
-                    if tn != tablename:
-                        for join in left[tn]:
-                            query &= join.second
-                
         self.query = query
         return query
 
@@ -6613,6 +6592,19 @@ class S3ResourceFilter(object):
         for q in self.filters:
             joins, distinct = q.joins(resource, left=True)
             left.update(joins)
+
+        # Add cross-component joins if required
+        parent = resource.parent
+        if parent:
+            pf = parent.rfilter
+            if pf is None:
+                pf = parent.build_query()
+            parent_left = pf.get_left_joins(as_list=False)
+            tablename = resource._alias
+            if parent_left:
+                for tn in parent_left:
+                    if tn not in left and tn != tablename:
+                        left[tn] = parent_left[tn]
 
         if as_list:
             return [j for tablename in left for j in left[tablename]]

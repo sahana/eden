@@ -11,7 +11,7 @@
 
 /* Main Navigation (S3MainMenu or modules menu) */
 #nav{clear:both;float:left;width:964px;height:40px;margin:0 0 0 60px;padding:0px;border-top:1px solid #9c9c9c;}
-#nav > li{position:relative;float:left;list-style:none;padding: 0;border-right:1px solid #9c9c9c;}
+#nav > li{position:relative;float:left;list-style:none;padding: 0;border-right:1px solid #9c9c9c;z-index: 999;}
 #nav > li:first-child{border-left:1px solid #9c9c9c;}
 #nav > li > a{display:block;min-width:40px;background:#fcf9ed;padding:12px 10px 10px 10px;font-size:1em;font-weight:bold;color:#000;text-transform:uppercase;text-decoration:none;}
 #nav > li > a:hover{border-top:2px solid #dc032e;padding-top:10px}
@@ -21,6 +21,8 @@
 #nav li .sub-menu li{padding:5px 0;border-bottom:1px solid #dbcca8;}
 #nav li .sub-menu li a{display:block;margin:0 0;padding:0 10px;font-size:0.9em; color:#590f12;}
 #nav li .sub-menu li a:hover{color:#dc032e;}
+
+div.pmenu-wrapper ul {margin: 0 10px 10px 0;}
 
 /* Side Menu (S3OptionsMenu) */
 #left-col .sub-menu {
