@@ -132,7 +132,6 @@ class AuthS3(Auth):
 
         - S3 ACL management:
             - s3_update_acls
-            - s3_update_acl
 
         - S3 user identification helpers:
             - s3_get_user_id
@@ -1311,15 +1310,14 @@ Thank you
         #utable.reset_password_key.label = messages.label_registration_key
 
         # Organisation
-        # @ToDo: Allow Admin to see Org linkage even if Users cannot specify when they register
         if current.auth.s3_has_role("ADMIN"):         
-            req_org = deployment_settings.get_auth_admin_sees_organisation()
+            show_org = deployment_settings.get_auth_admin_sees_organisation()
         else:
-            req_org = deployment_settings.get_auth_registration_requests_organisation()
-        if req_org:
+            show_org = deployment_settings.get_auth_registration_requests_organisation()
+        if show_org:
             if pe_ids:
                 # Filter orgs to just those belonging to the Org Admin's Org
-                # & Descendants
+                # & Descendants (or realms for which they are Org Admin)
                 filterby = "pe_id"
                 filter_opts = pe_ids
             else:
@@ -1392,7 +1390,7 @@ Thank you
                 field.readable = field.writable = True
                 #field.default = deployment_settings.get_auth_registration_site_id_default()
                 site_required = deployment_settings.get_auth_registration_site_required()
-                if req_org:
+                if show_org:
                     from s3validators import IS_ONE_OF_EMPTY
                     requires = IS_ONE_OF_EMPTY(db, "org_site.site_id",
                                                site_represent,
@@ -4757,6 +4755,14 @@ class S3Permission(object):
             elif group_id:
                 acl["group_id"] = group_id
                 success = table.insert(**acl)
+            else:
+                # Lookup the group_id
+                record = current.db(gtable.uuid == group).select(gtable.id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
+                if record:
+                    acl["group_id"] = group_id
+                    success = table.insert(**acl)
 
         return success
 
@@ -7671,14 +7677,8 @@ class S3RoleManager(S3Method):
         if is_admin:
             pe_ids = []
         else:
-            # Filter the realms
-            otable = s3db.org_organisation
-            query = (otable.id == auth.user.organisation_id)
-            pe_id = current.db(query).select(otable.pe_id,
-                                             limitby=(0, 1)
-                                             ).first().pe_id
-            pe_ids = s3db.pr_get_descendants(pe_id, entity_types=types)
-            pe_ids.append(pe_id)
+            # Filter realms to just those for which the user has Org_Admin role
+            pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
 
         entities = s3db.pr_get_entities(pe_ids=pe_ids, types=types, group=True)
 

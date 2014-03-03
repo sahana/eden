@@ -152,9 +152,16 @@ class S3CRUD(S3Method):
             @param attr: controller attributes
         """
 
+        # Settings
+        sqlform = current.deployment_settings.get_ui_crud_form(self.tablename)
+        if not sqlform:
+            sqlform = self._config("crud_form", S3SQLDefaultForm())
+        self.sqlform = sqlform
+        self.settings = current.response.s3.crud
+
         _attr = Storage(attr)
         _attr["list_id"] = widget_id
-
+        
         if method == "datatable":
             output = self._datatable(r, **_attr)
             if isinstance(output, dict):
@@ -165,6 +172,8 @@ class S3CRUD(S3Method):
             if isinstance(output, dict) and "items" in output:
                 output = DIV(output["items"], _id="list-container")
             return output
+        elif method == "create":
+            return self._widget_create(r, **_attr)
         else:
             return None
 
@@ -429,6 +438,73 @@ class S3CRUD(S3Method):
 
         return output
 
+    # -------------------------------------------------------------------------
+    def _widget_create(self, r, **attr):
+        """
+            Create-buttons/form in summary views, both GET and POST
+
+            @param r: the S3Request
+            @param attr: dictionary of parameters for the method handler
+        """
+
+        resource = self.resource
+        get_config = resource.get_config
+        tablename = resource.tablename
+
+        output = ""
+        insertable = get_config("insertable", True)
+        if insertable:
+
+            listadd = get_config("listadd", True)
+            addbtn = get_config("addbtn", False)
+
+            if listadd:
+                # Hidden form + Add-button to activate it
+                self.data = None
+                if r.http == "GET" and not self.record_id:
+                    populate = attr.pop("populate", None)
+                    if callable(populate):
+                        try:
+                            self.data = populate(r, **attr)
+                        except TypeError:
+                            self.data = None
+                        except:
+                            raise
+                    elif isinstance(populate, dict):
+                        self.data = populate
+                view = current.response.view
+                form = self.create(r, **attr).get("form", None)
+                if form.accepted and self.next:
+                    # Tell the summary handler that we're done
+                    # and supposed to redirect to another view
+                    return {"success": True, "next": self.next}
+                current.response.view = view
+                if form is not None:
+                    add_btn = self.crud_button(
+                                        tablename=tablename,
+                                        name="label_create_button",
+                                        _id="show-add-btn")
+                    output = DIV(add_btn,
+                                    DIV(form,
+                                        _id="list-add",
+                                        _class="form-container",
+                                        )
+                                    )
+                    if r.http == "POST":
+                        script = '''$('#list-add').show();$('#show-add-btn').hide()'''
+                    else:
+                        script = '''$('#show-add-btn').click(function(){$('#list-add').show();$('#show-add-btn').hide()})'''
+                    current.response.s3.jquery_ready.append(script)
+            elif addbtn:
+                # No form, just Add-button linked to create-view
+                add_btn = self.crud_button(
+                                    tablename=tablename,
+                                    name="label_create_button",
+                                    _id="add-btn")
+                output = DIV(add_btn)
+
+        return output
+            
     # -------------------------------------------------------------------------
     def read(self, r, **attr):
         """

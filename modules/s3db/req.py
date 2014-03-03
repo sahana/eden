@@ -4431,17 +4431,10 @@ def req_customize_commit_fields():
     else:
         field.writable = False
 
-    # Which levels of Hierarchy are we using?
-    hierarchy = current.gis.get_location_hierarchy()
-    levels = hierarchy.keys()
-    if len(current.deployment_settings.get_gis_countries()) == 1 or \
-       s3.gis.config.region_location_id:
-        levels.remove("L0")
-
     #field = table.location_id
     #field.represent = s3db.gis_LocationRepresent(sep=" | ")
-    #field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    #field.widget = S3LocationSelectorWidget2(levels=levels)
+    # Required
+    #field.requires = IS_LOCATION_SELECTOR2()
 
     field = table.comments
     field.label = T("Donation")
@@ -4489,7 +4482,6 @@ def req_customize_commit_fields():
                      comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
                      ),
         S3LocationFilter("location_id",
-                         levels=levels,
                          widget="multiselect",
                          hidden=True,
                          ),

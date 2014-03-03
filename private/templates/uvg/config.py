@@ -36,7 +36,7 @@ settings = current.deployment_settings
 #settings.base.prepopulate = 1
 
 # Theme (folder to use for views/layout.html)
-#settings.base.theme = "default"
+settings.base.theme = "uvg"
 
 # Enable Guided Tours
 #settings.base.guided_tour = True
@@ -304,6 +304,9 @@ settings.L10n.decimal_separator = "."
 #settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
+
+settings.ui.formstyle = "foundation"
+settings.ui.filter_formstyle = "foundation_inline"
 
 # -----------------------------------------------------------------------------
 # CMS

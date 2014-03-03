@@ -12,7 +12,6 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3fields import S3Represent
-from s3.s3utils import S3DateTime
 from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
@@ -29,8 +28,6 @@ settings = current.deployment_settings
 
     Deployers should ideally not need to edit any other files outside of their template folder
 """
-
-datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
 # =============================================================================
 # System Settings
