@@ -4053,8 +4053,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         lowest_Lx = None
         if "L0" not in levels and \
-           "L0" in _levels:
-            lowest_Lx = "L0"
+           "L0" in _levels and L0:
             # Have a hidden L0 input
             # - used for Geocoder & client-side validation
             L0_input = INPUT(_name="L0",
@@ -4067,8 +4066,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L0_input = ""
 
         if "L1" not in levels and \
-           "L1" in _levels:
-            lowest_Lx = "L1"
+           "L1" in _levels and L1:
             # Have a hidden L1 input
             # - used for Geocoder & client-side validation
             L1_input = INPUT(_name="L1",
@@ -4081,8 +4079,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L1_input = ""
 
         if "L2" not in levels and \
-           "L2" in _levels:
-            lowest_Lx = "L2"
+           "L2" in _levels and L2:
             # Have a hidden L2 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L2_input = INPUT(_name="L2",
@@ -4095,8 +4092,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L2_input = ""
 
         if "L3" not in levels and \
-           "L3" in _levels:
-            lowest_Lx = "L3"
+           "L3" in _levels and L3:
             # Have a hidden L3 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L3_input = INPUT(_name="L3",
@@ -4109,8 +4105,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L3_input = ""
 
         if "L4" not in levels and \
-           "L4" in _levels:
-            lowest_Lx = "L4"
+           "L4" in _levels and L4:
             # Have a hidden L4 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L4_input = INPUT(_name="L4",
@@ -4123,8 +4118,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L4_input = ""
 
         if "L5" not in levels and \
-           "L5" in _levels:
-            lowest_Lx = "L5"
+           "L5" in _levels and L5:
             # Have a hidden L5 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L5_input = INPUT(_name="L5",

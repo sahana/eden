@@ -102,6 +102,9 @@ settings.gis.countries = ["US"]
 # Levels for the LocationSelector
 levels = ("L1", "L2", "L3")
 
+# Uncomment to pass Addresses imported from CSV to a Geocoder to try and automate Lat/Lon
+#settings.gis.geocode_imported_addresses = "google"
+
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
 # Uncomment to hide Layer Properties tool
