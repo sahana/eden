@@ -1887,7 +1887,15 @@ class S3FilterForm(object):
                 label = ""
             if not comment:
                 comment = ""
-            rappend(formstyle(row_id, label, widget, comment, hidden=hidden))
+            formrow = formstyle(row_id, label, widget, comment, hidden=hidden)
+            if hidden:
+                if isinstance(formrow, DIV):
+                    formrow.add_class("advanced")
+                elif isinstance(formrow, tuple):
+                    for item in formrow:
+                        if hasattr(item, "add_class"):
+                            item.add_class("advanced")
+            rappend(formrow)
         if advanced:
             if resource:
                 self.opts["advanced"] = resource.get_config(
