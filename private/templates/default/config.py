@@ -354,6 +354,8 @@ settings.L10n.decimal_separator = "."
 #settings.pr.reverse_names = True
 # Uncomment to prevent selecting existing users in S3AddPersonWidget
 #settings.pr.select_existing = False
+# Uncomment to allow person imports to match even without email addresses 
+#settings.pr.import_update_requires_email = False
 
 # -----------------------------------------------------------------------------
 # Organisations
