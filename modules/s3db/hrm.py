@@ -380,9 +380,12 @@ class S3HRModel(S3Model):
                                         ondelete = "SET NULL",
                                         ),
                              self.pr_person_id(
-                               widget=S3AddPersonWidget(controller="hrm"),
-                               requires=IS_ADD_PERSON_WIDGET(),
-                               comment=None
+                               comment = None,
+                               requires = IS_ADD_PERSON_WIDGET(),
+                               widget = S3AddPersonWidget(controller="hrm"),
+                               # Doesn't work without Bootstrap yet
+                               #requires = IS_ADD_PERSON_WIDGET2(),
+                               #widget = S3AddPersonWidget2(controller="hrm"),
                                ),
                              Field("type", "integer",
                                    requires = IS_IN_SET(hrm_type_opts,

@@ -4472,6 +4472,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if not location_selector_loaded:
             global_append = s3.js_global.append
+            # @ToDo: Check whether relevant ls & ds in the previous instance of locationselector or need appending
             script = '''l=%s''' % json.dumps(location_dict)
             global_append(script)
             script = '''h=%s''' % json.dumps(hdict)
@@ -4512,7 +4513,7 @@ class S3LocationSelectorWidget2(FormWidget):
                      args)
         if show_map and use_callback:
             callback = script
-        elif not location_selector_loaded:
+        elif not location_selector_loaded or not location_selector_loaded[fieldname]:
             s3.jquery_ready.append(script)
 
         if s3.debug:
@@ -4602,7 +4603,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             map_icon = ""
 
         # Ensure that we don't insert duplicate scripts on validation errors
-        s3.gis.location_selector_loaded = True
+        if location_selector_loaded:
+            location_selector_loaded[fieldname] = True
+        else:
+            s3.gis.location_selector_loaded = Storage()
+            s3.gis.location_selector_loaded[fieldname] = True
 
         # The overall layout of the components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden

@@ -875,6 +875,7 @@ class S3PersonModel(S3Model):
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = self.person_deduplicate,
+                       filter_widgets = filter_widgets,
                        list_fields = ["id",
                                       "first_name",
                                       "middle_name",
@@ -889,7 +890,6 @@ class S3PersonModel(S3Model):
                        extra = "last_name",
                        onaccept = self.pr_person_onaccept,
                        realm_components = ["presence"],
-                       filter_widgets = filter_widgets,
                        super_entity = ("pr_pentity", "sit_trackable"),
                        )
 
@@ -1207,7 +1207,7 @@ class S3PersonModel(S3Model):
 
             if id and row_id_type:
                 id_value = id.get(str(row_id_type), None)
-                check += rank(id_value, row_id_value, +5, -5)
+                check += rank(id_value, row_id_value, +5, -2)
 
             if check in duplicates:
                 continue
