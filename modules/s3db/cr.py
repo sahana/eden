@@ -45,7 +45,8 @@ class S3CampDataModel(S3Model):
              "cr_shelter_service",
              "cr_shelter",
              "cr_shelter_status",
-             "cr_shelter_person"
+             "cr_shelter_person",
+             "cr_shelter_group"
              ]
 
     # Define a function model() which takes no parameters (except self):
@@ -229,7 +230,10 @@ class S3CampDataModel(S3Model):
                              Field("phone",
                                    label = T("Phone"),
                                    requires = IS_NULL_OR(s3_phone_requires)),
-                             self.pr_person_id(label = T("Contact Person")),
+                             Field("email", "string",
+                                   label = T("Email")
+                                   ),
+                             self.pr_person_id(label = T("Contact Person / Camp Owner")),
                              Field("capacity_day", "integer",
                                    label = T("Capacity (Day)"),
                                    requires = IS_NULL_OR(
@@ -250,12 +254,25 @@ class S3CampDataModel(S3Model):
                                                  _title="%s|%s" % (T("Capacity (Night / Post-Impact)"),
                                                                    T("Post-impact shelterees are there for a longer time, so need more space to Sleep."))),
                                    ),
-                             Field("population", "integer",
-                                   label = T("Population"),
+                             Field("population_day", "integer",
+                                   label = T("Population (Day)"),
                                    requires = IS_NULL_OR(
                                                 IS_INT_IN_RANGE(0, 999999)),
                                    represent=lambda v: \
-                                                IS_INT_AMOUNT.represent(v)
+                                                IS_INT_AMOUNT.represent(v),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Population (Day)"),
+                                                                   T("Number of persons in the shelter during daytime"))),
+                                   ),
+                             Field("population_night", "integer",
+                                   label = T("Population (Night)"),
+                                   requires = IS_NULL_OR(
+                                                IS_INT_IN_RANGE(0, 999999)),
+                                   represent=lambda v: \
+                                                IS_INT_AMOUNT.represent(v),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Population (Night)"),
+                                                                   T("Number of persons in the shelter during the night"))),
                                    ),
                              Field("status", "integer",
                                    requires = IS_NULL_OR(
@@ -433,7 +450,7 @@ class S3CampDataModel(S3Model):
                             cr_shelter_status={"name": "status",
                                                "joinby": "shelter_id",
                                               },
-                            cr_shelter_person="shelter_id"
+                            cr_shelter_person="shelter_id",
                            )
 
         # -------------------------------------------------------------------------
@@ -499,11 +516,19 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Shelter Status"),
                 name_nice_plural = T("Shelter Statuses"))
         
-        #TODO: refine this table and add relevant information
+        #TODO: refine these table and add relevant information
         tablename = "cr_shelter_person"
         table = define_table(tablename,
                              shelter_id(),
                              self.pr_person_id()
+                             )
+        
+        #TODO: this link table needs more discussion
+        # maybe use a super-entity?
+        tablename = "cr_shelter_group"
+        table = define_table(tablename,
+                             shelter_id(),
+                             self.pr_group_id()
                              )
 
         # Pass variables back to global scope (response.s3.*)
@@ -650,8 +675,10 @@ def cr_shelter_rheader(r, tabs=[]):
                 tabs = [(T("Basic Details"), None),
                         (T("Status"), "status"),
                         # the presence tab is the old one
-                        #(T("People"), "presence"),
-                        (T("People"), "shelter_person"),
+                        (T("People"), "presence"),
+                        #TODO: link to cr_shelter_person and cr_shelter_group
+                        #(T("People"), "shelter_person"),
+                        #(T("Groups"), "shelter_group"),
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
                     ]
