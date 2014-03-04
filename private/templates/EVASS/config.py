@@ -156,14 +156,14 @@ settings.L10n.decimal_separator = "."
 # Make last name in person/user records mandatory
 settings.L10n.mandatory_lastname = True
 # Configure the list of Religions
-settings.L10n.religions = {"none": T("none"),
-                           "christian": T("Christian"),
+settings.L10n.religions = {"christian": T("Christian"),
                            "muslim": T("Muslim"),
                            "jewish": T("Jewish"),
                            "buddhist": T("Buddhist"),
                            "hindu": T("Hindu"),
                            "bahai": T("Bahai"),
                            "other": T("other"),
+                           "none": T("none"),
                            "unknown": T("Unknown")
                            }
 # Uncomment this to Translate CMS Series Names
@@ -800,12 +800,12 @@ settings.modules = OrderedDict([
         #restricted = True,
         #module_type = 10
     #)),
-    #("irs", Storage(
-        #name_nice = T("Incidents"),
-        ##description = "Incident Reporting System",
-        #restricted = True,
-        #module_type = 10
-    #)),
+    ("irs", Storage(
+        name_nice = T("Incidents"),
+        #description = "Incident Reporting System",
+        restricted = True,
+        module_type = 10
+    )),
     #("dvi", Storage(
        #name_nice = T("Disaster Victim Identification"),
        ##description = "Disaster Victim Identification",

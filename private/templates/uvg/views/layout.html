@@ -25,6 +25,7 @@
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
+{{include "foundation.css.html"}}
 {{for sheet in s3.stylesheets:}}
  <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
@@ -50,38 +51,39 @@
  {{include}}
 {{else:}}
 <body>
- <div id='menu_modules'>
+ <div>
   {{=current.menu.main}}
  </div>
- <div class='colmask fullpage'>
-  {{if current.menu.options is not None:}}
-   <div class='aside'>
-    <div id='menu_options'>
-     {{=current.menu.options}}
-    </div>
-   </div>
-  {{pass}}
-  <div {{if current.menu.options is not None:}}class='rightside'{{pass}}>
-   <div class='col1'>
-    <div id='alert-space'>
+ <div class='row'>
+    <div class='small-4 large-6 small-centered columns' id='alert-space'>
      {{if response.error:}}<div class='alert alert-error'>{{=response.error}}</div>{{pass}}
      {{if response.warning:}}<div class='alert alert-warning'>{{=response.warning}}</div>{{pass}}
      {{if response.information:}}<div class='alert alert-info'>{{=response.information}}</div>{{pass}}
      {{if response.confirmation:}}<div class='alert alert-success'>{{=response.confirmation}}</div>{{pass}}
      {{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
     </div>
-    <div id='content' class='cf'>
+ </div>
+ <div class='row'>
+  {{if current.menu.options is not None:}}
+   <div class='small-4 large-2 columns' id='menu-options'>
+    {{=current.menu.options}}
+   </div>
+   <div class='small-8 large-10 columns' id='contents'>
+  {{else:}}
+   <div class='small-12 large-12 columns'>
+  {{pass}}
      {{#include "breadcrumbs.html"}} 
      {{include}}
-    </div>
    </div>
-  </div>
- </div>
- <div id='footer'>
+</div>
+<div class='row'>
+  <div class='small-12 large-12 columns' id='footer'>
   {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
  </div>
+</div>
 {{pass}}
 {{include "scripts.html"}}
+{{include "foundation.js.html"}}
 </body>
 </html>

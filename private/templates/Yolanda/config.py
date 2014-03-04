@@ -7,17 +7,15 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from datetime import timedelta
-
-from gluon import current, Field, URL
+from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.validators import IS_NULL_OR, IS_NOT_EMPTY
+from gluon.validators import IS_NOT_EMPTY
 
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
-from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2, IS_ONE_OF
+from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent
+from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
@@ -119,6 +117,8 @@ settings.L10n.thousands_separator = ","
 
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["PH"]
+
+levels = ("L1", "L2", "L3", "L4")
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -1819,13 +1819,6 @@ def customize_org_facility(**attr):
         if r.interactive:
             customize_org_facility_fields()
 
-            # Which levels of Hierarchy are we using?
-            hierarchy = current.gis.get_location_hierarchy()
-            levels = hierarchy.keys()
-            if len(current.deployment_settings.gis.countries) == 1 or \
-               s3.gis.config.region_location_id:
-                levels.remove("L0")
-
             # Filter from a Profile page?
             # If so, then default the fields we know
             get_vars = current.request.get_vars
@@ -2521,13 +2514,6 @@ def customize_org_resource(**attr):
                 location_field.default = location_id
                 # We still want to be able to specify a precise location
                 #location_field.readable = location_field.writable = False
-            #else:
-            # Which levels of Hierarchy are we using?
-            hierarchy = current.gis.get_location_hierarchy()
-            levels = hierarchy.keys()
-            if len(current.deployment_settings.gis.countries) == 1 or \
-               s3.gis.config.region_location_id:
-                levels.remove("L0")
 
             location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             location_field.widget = S3LocationSelectorWidget2(levels=levels,
@@ -3222,8 +3208,6 @@ def customize_project_activity(**attr):
                        "end_date",
                        #"comments",
                        ]
-
-        levels = ("L1", "L2", "L3", "L4")
 
         # Custom Form (Read/Create/Update)
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent

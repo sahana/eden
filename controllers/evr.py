@@ -141,6 +141,7 @@ def group():
                    list_fields = ["id",
                                   "name",
                                   "description",
+                                  "group_type",
                                   "comments",
                                   ],
                    )

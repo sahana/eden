@@ -73,15 +73,24 @@ def user():
         # Needed as Admin has all roles
         pe_ids = None
     elif s3_has_role("ORG_ADMIN"):
-        # Filter users to just those belonging to the Org Admin's Org & Descendants
-        otable = s3db.org_organisation
-        pe_id = db(otable.id == auth.user.organisation_id).select(otable.pe_id,
-                                                                  limitby=(0, 1)
-                                                                  ).first().pe_id
-        pe_ids = s3db.pr_get_descendants(pe_id, entity_types="org_organisation")
-        pe_ids.append(pe_id)
-        s3.filter = (otable.pe_id.belongs(pe_ids)) & \
-                    (table.organisation_id == otable.id)
+        if settings.get_security_policy() < 6:
+            # Filter users to just those belonging to the Org Admin's Org & Descendants
+            otable = s3db.org_organisation
+            pe_id = db(otable.id == auth.user.organisation_id).select(otable.pe_id,
+                                                                      limitby=(0, 1),
+                                                                      cache=s3db.cache,
+                                                                      ).first().pe_id
+            pe_ids = s3db.pr_get_descendants(pe_id, entity_types="org_organisation")
+            pe_ids.append(pe_id)
+            s3.filter = (otable.pe_id.belongs(pe_ids)) & \
+                        (table.organisation_id == otable.id)
+        else:
+            # Filter users to just those belonging to the Org Admin's Realms
+            pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
+            if pe_ids:
+                otable = s3db.org_organisation
+                s3.filter = (otable.pe_id.belongs(pe_ids)) & \
+                            (table.organisation_id == otable.id)
     else:
         auth.permission.fail()
 

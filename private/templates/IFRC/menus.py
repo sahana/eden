@@ -44,7 +44,7 @@ class S3MainMenu(default.S3MainMenu):
             ),
             homepage("hrm", "org", name=T("Staff"),
                     vars=dict(group="staff"))(
-                MM("Staff", c="hrm", f="staff"),
+                MM("Staff", c="hrm", f="staff", m="summary"),
                 MM("Teams", c="hrm", f="group"),
                 MM("National Societies", c="org", f="organisation",
                    vars = red_cross_filter),
@@ -56,7 +56,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Certificate List", c="hrm", f="certificate"),
             ),
             homepage("vol", name=T("Volunteers"))(
-                MM("Volunteers", c="vol", f="volunteer"),
+                MM("Volunteers", c="vol", f="volunteer", m="summary"),
                 MM("Teams", c="vol", f="group"),
                 MM("Volunteer Roles", c="vol", f="job_title"),
                 MM("Programs", c="vol", f="programme"),
@@ -137,7 +137,7 @@ class S3MainMenu(default.S3MainMenu):
                     c="hrm",
                     image = "graphic_staff_wide.png",
                     title = "Staff")(
-                    DB("Manage Staff Data", f="staff"),
+                    DB("Manage Staff Data", f="staff", m="summary"),
                     DB("Manage Teams Data", f="group"),
                 ),
                 DB("OFFICES",
@@ -162,7 +162,7 @@ class S3MainMenu(default.S3MainMenu):
         elif controller == "default" and request.function == "index":
 
             dashboard = DB(_id="dashboard")(
-                DB("Staff", c="hrm", f="staff",
+                DB("Staff", c="hrm", f="staff", m="summary",
                    image = "graphic_staff.png",
                    title = "Staff",
                    text = "Add new and manage existing staff."),
@@ -308,7 +308,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         staff = {"group": "staff"}
 
         return M()(
-                    M("Staff", c="hrm", f=("staff", "person"),
+                    M("Staff", c="hrm", f=("staff", "person"), m="summary",
                       check=manager_mode)(
                         M("New", m="create"),
                         #M("Search"),

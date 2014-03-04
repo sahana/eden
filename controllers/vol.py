@@ -21,8 +21,8 @@ def index():
         # Go to Personal Profile
         redirect(URL(f="person"))
     else:
-        # Bypass home page & go direct to filterable list of Volunteers
-        redirect(URL(f="volunteer"))
+        # Bypass home page & go direct to Volunteers Summary
+        redirect(URL(f="volunteer", args=["summary"]))
 
 # =============================================================================
 # People
@@ -138,21 +138,6 @@ def human_resource():
                            # Needed for Age Group VirtualField to avoid extra DB calls
                            report_fields = ["person_id$date_of_birth"],
                            report_options = report_options,
-                           summary = [{"name": "table",
-                                       "label": "Table",
-                                       "widgets": [{"method": "datatable"}]
-                                       },
-                                      {"name": "report",
-                                       "label": "Report",
-                                       "widgets": [{"method": "report",
-                                                    "ajax_init": True}]
-                                       },
-                                      {"name": "map",
-                                       "label": "Map",
-                                       "widgets": [{"method": "map",
-                                                    "ajax_init": True}],
-                                       },
-                                      ],
                            )
             s3.filter = None
         else:
@@ -374,15 +359,20 @@ def volunteer():
                                     _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     programme = s3_formstyle(row_id, label, widget,
                                                 field.comment)
-                    try:
-                        output["form"][0].insert(4, programme[1])
-                    except:
-                        # A non-standard formstyle with just a single row
-                        pass
-                    try:
-                        output["form"][0].insert(4, programme[0])
-                    except:
-                        pass
+                    if isinstance(programme, DIV) and \
+                       "form-row" in programme["_class"]:
+                        # Foundation formstyle
+                        output["form"][0].insert(4, programme)
+                    else:
+                        try:
+                            output["form"][0].insert(4, programme[1])
+                        except:
+                            # A non-standard formstyle with just a single row
+                            pass
+                        try:
+                            output["form"][0].insert(4, programme[0])
+                        except:
+                            pass
                 else:
                     # Unsupported
                     raise

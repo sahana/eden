@@ -1610,7 +1610,7 @@ class S3ProjectBeneficiaryModel(S3Model):
     def model(self):
 
         if not current.deployment_settings.has_module("stats"):
-            # Beneficiary Model needs Stats module enabling
+            current.log.warning("Project Beneficiary Model needs Stats module enabling")
             return dict()
 
         T = current.T
@@ -2166,9 +2166,9 @@ class S3ProjectCampaignModel(S3Model):
                              s3_comments("message",
                                          label = T("Message")),
                              location_id(
-                                widget = S3LocationSelectorWidget(
+                                widget = S3LocationSelectorWidget2(
                                     catalog_layers=True,
-                                    polygon=True
+                                    polygons=True
                                     )
                                 ),
                              # @ToDo: Allow selection of which channel message should be sent out on

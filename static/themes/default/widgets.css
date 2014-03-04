@@ -847,6 +847,16 @@ span.tab_next_inactive a {
 }
 
 /* Action Buttons */
+.dataTable .action-btn,
+.dataTable .delete-btn-ajax,
+.dataTable .delete-btn {
+    color: #ffffff;
+}
+
+.ui-tabs .ui-tabs-panel {
+    padding: 2px 5px;
+}
+
 .action-btn,
 .delete-btn-ajax,
 .delete-btn {

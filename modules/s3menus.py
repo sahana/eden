@@ -137,6 +137,7 @@ class S3MainMenu(object):
         for language in languages:
             menu_lang.append(MM(languages[language], r=request,
                                 translate=False,
+                                selectable=False,
                                 vars={"_language":language},
                                 ltr=True
                                 ))
@@ -916,7 +917,7 @@ class S3OptionsMenu(object):
         vol_enabled = lambda i: settings.has_module("vol")
 
         return M(c="hrm")(
-                    M(settings.get_hrm_staff_label(), f="staff",
+                    M(settings.get_hrm_staff_label(), f="staff", m="summary",
                       check=manager_mode)(
                         M("New", m="create"),
                         #M("Search"),
@@ -1009,7 +1010,7 @@ class S3OptionsMenu(object):
         show_staff = lambda i: settings.get_hrm_show_staff()
 
         return M(c="vol")(
-                    M("Volunteers", f="volunteer",
+                    M("Volunteers", f="volunteer", m="summary",
                       check=[manager_mode])(
                         M("New", m="create"),
                         #M("Search"),

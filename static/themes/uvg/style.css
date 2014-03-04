@@ -1,0 +1,191 @@
+@charset "UTF-8";
+
+/* Logo in Menu */
+.S3menulogo {
+    background: url(../../img/S3menu_logo.png) left top no-repeat;
+    text-shadow: none;
+    padding: none;
+    margin-left: 5px;
+    margin-top: 10px;
+    width: 35px;
+    height: 28px;
+    display: inline-block;
+}
+
+/* Links should ALWAYS be unvisited (widget.css overrides foundation styles, so override it again) */
+#contents a:not(.action-btn):not(.delete-btn) {
+    color: #039;
+    text-decoration: underline;
+    outline: 0;
+}
+#contents a:hover:not(.action-btn):not(.delete-btn) {
+    color: #c00;
+    text-decoration: none;
+    background-color: #ffffcc;
+    outline: 0;
+}
+#contents a:active:not(.action-btn):not(.delete-btn),
+#contents a:focus:not(.action-btn):not(.delete-btn) {
+    outline: 0;
+}
+
+#contents a.help,
+#contents a:link.help {
+    color: #fff;
+    text-decoration: none;
+    margin-right: 10px;
+}
+#contents a:hover.help {
+    background-color: #336699;
+    text-decoration: underline;
+}
+#contents a:visited.help {
+    font-weight: normal;
+    color: #666;
+}
+
+.filter-form table tr,
+.filter-form .ui-multiselect {
+    max-width: 60%;
+}
+
+/* Form elements (widget.css overrides foundation styles, so override it again) */
+.form-container form input,
+.form-container form button,
+.form-container form select,
+.form-container form textarea {
+    margin: 0;
+}
+.form-container form input.string,
+.form-container form textarea  {
+    width: 100%;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+textarea,
+select {
+  height: 1.75rem;
+  padding: 0.25rem;
+  margin: 0;
+}
+
+.form-row {
+    margin-top: 5px !important;
+}
+
+/* Form error indicators (widget.css overrides foundation, so override it again) */
+.error {
+  display: block;
+  padding: 0.375rem 0.5625rem 0.5625rem;
+  margin-top: -1px;
+  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  font-style: italic;
+  background: #c60f13;
+  color: white;
+}
+
+/* Adapt rheader tabs to theme */
+div.tabs {
+    border-bottom: 1px solid #2BA6CB;
+    clear: left;
+    height: 2.125em;
+    margin: 5px 0 0;
+    padding: 0.5em 0;
+    text-align: left;
+    width: 100%;
+}
+
+div.tabs span {
+    float: left;
+    border-radius: 3px 3px 0 0;
+}
+span.tab_last,
+span.tab_other {
+    font-size: 90%;
+    background: #2BA6CB;
+    border-color: #2BA6CB;
+    border-width: 1px 1px 0 2px;
+    border-style: solid;
+    margin-right: 3px;
+    padding: 0.15em 6px 0.25em 5px;
+    margin-top: 0.25em
+}
+
+div.tabs span a {
+    color: #FFFFFF !important;
+    text-decoration: none !important;
+}
+div.tabs span.tab_here a {
+    color: #666666 !important;
+}
+div.tabs span.tab_here {
+    background: none repeat scroll 0 0 #F0F3F4;
+    border-color: #2BA6CB;
+    border-style: solid;
+    border-width: 2px 2px 0 3px;
+    bottom: 0;
+    display: inline;
+    font-weight: bold;
+    margin-right: 5px;
+    padding: 0.2em 6px 0.25em 5px;
+    position: relative;
+}
+div.tabs span.tab_here {
+    background: #FFFFFF;
+    border-bottom: 1px solid #FFFFFF;
+}
+span.tab_last a:hover,
+span.tab_other a:hover {
+    color: #FFFFFF !important;
+    background: transparent !important;
+}
+span.tab_last:hover,
+span.tab_other:hover {
+    color: #FFFFFF !important;
+    background: #1F7994;
+    border-color: #1F7994;
+}
+
+/* Foundation-style action buttons */
+.action-btn,
+.delete-btn-ajax,
+.delete-btn {
+    background-color: #2BA6CB;
+    color: #FFFFFF;
+    display: inline-block;
+    font-size: 0.6875rem;
+    border: 0;
+    line-height: 1;
+    margin-bottom: inherit;
+    padding: 0.25rem 0.5rem 0.375rem;
+    cursor: pointer;
+}
+.delete-btn-ajax,
+.delete-btn {
+    background-color: #c60f13;
+}
+.action-btn:hover,
+.delete-btn-ajax:hover,
+.delete-btn:hover {
+    text-decoration: none;
+    color: #fff;
+    background-color: #1f7994;
+}
+.delete-btn-ajax:hover,
+.delete-btn:hover {
+    background-color: #a20c10;
+}
+

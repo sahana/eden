@@ -1119,20 +1119,11 @@ def cms_customize_post_fields():
     field.requires = IS_ADD_PERSON_WIDGET2()
     field.widget = S3AddPersonWidget2(controller="pr")
 
-    # Which levels of Hierarchy are we using?
-    hierarchy = current.gis.get_location_hierarchy()
-    levels = hierarchy.keys()
-    if len(current.deployment_settings.get_gis_countries()) == 1 or \
-       s3.gis.config.region_location_id:
-        levels.remove("L0")
-
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
     field = table.location_id
     field.label = ""
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
-    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    field.widget = S3LocationSelectorWidget2(levels=levels)
+    # Required
+    field.requires = IS_LOCATION_SELECTOR2()
 
     if settings.get_cms_richtext():
         table.body.represent = lambda body: XML(body)
