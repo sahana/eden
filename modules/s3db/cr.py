@@ -46,7 +46,7 @@ class S3CampDataModel(S3Model):
              "cr_shelter",
              "cr_shelter_status",
              "cr_shelter_person",
-             "cr_shelter_group"
+             "cr_shelter_allocation"
              ]
 
     # Define a function model() which takes no parameters (except self):
@@ -451,6 +451,7 @@ class S3CampDataModel(S3Model):
                                                "joinby": "shelter_id",
                                               },
                             cr_shelter_person="shelter_id",
+                            cr_shelter_allocation="shelter_id"
                            )
 
         # -------------------------------------------------------------------------
@@ -516,16 +517,25 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Shelter Status"),
                 name_nice_plural = T("Shelter Statuses"))
         
-        #TODO: refine these table and add relevant information
+        cr_day_or_night_opts = {1 : T("Night only"),
+                                2 : T("Day and Night")
+                                }
+        
+        # This table is intended to effectively register a person in a shelter
         tablename = "cr_shelter_person"
         table = define_table(tablename,
                              shelter_id(),
-                             self.pr_person_id()
+                             self.pr_person_id(),
+                             Field("day_or_night", "integer",
+                                   label = T("Presence in the shelter"),
+                                   requires = IS_IN_SET(cr_day_or_night_opts, zero=None),
+                                   represent = lambda opt: \
+                                        cr_day_or_night_opts.get(opt, current.messages.UNKNOWN_OPT)),
                              )
         
-        #TODO: this link table needs more discussion
-        # maybe use a super-entity?
-        tablename = "cr_shelter_group"
+        # This table is intended to assign a person or a group
+        # of people to a shelter
+        tablename = "cr_shelter_allocation"
         table = define_table(tablename,
                              shelter_id(),
                              self.pr_group_id()
@@ -676,9 +686,9 @@ def cr_shelter_rheader(r, tabs=[]):
                         (T("Status"), "status"),
                         # the presence tab is the old one
                         (T("People"), "presence"),
-                        #TODO: link to cr_shelter_person and cr_shelter_group
+                        #TODO: link to cr_shelter_person
                         #(T("People"), "shelter_person"),
-                        #(T("Groups"), "shelter_group"),
+                        #(T("Groups"), "shelter_assignation"),
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
                     ]

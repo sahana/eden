@@ -31,6 +31,7 @@ __all__ = ["S3PersonEntity",
            "S3OrgAuthModel",
            "S3PersonModel",
            "S3GroupModel",
+           "AvailableShelters",
            "S3ContactModel",
            "S3AddressModel",
            "S3PersonImageModel",
@@ -714,9 +715,9 @@ class S3PersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Person
         #
-        pr_gender_opts = {1: "",
+        pr_gender_opts = {# This field is mandatory
+                          1: T("male"),
                           2: T("female"),
-                          3: T("male"),
                           }
         pr_gender = S3ReusableField("gender", "integer",
                                     requires = IS_IN_SET(pr_gender_opts, zero=None),
@@ -794,6 +795,8 @@ class S3PersonModel(S3Model):
                                      label = T("Date of Birth"),
                                      future = 0,
                                      past = 1320,  # Months, so 110 years
+                                     #TODO: require this only in evr module
+                                     requires = IS_NOT_EMPTY(error_message = T("Please enter a date of birth"))
                                      ),
                              # @ToDo: Move this field from this core table (should be using Saved Searches/Subscription)
                              Field("opt_in", "string", # list of mailing lists which link to teams
@@ -1562,11 +1565,14 @@ class S3GroupModel(S3Model):
                             pr_group_membership="group_id",
                             
                             # Shelter (Camp) Registry
-                            cr_shelter_group={"joinby": "group_id",
-                                              # A group can be assigned to only one shelter
-                                              "multiple": False,
-                                              },
+                            cr_shelter_allocation={"joinby": "group_id",
+                                                    # A group can be assigned to only one shelter
+                                                    "multiple": False,
+                                                    },
                             )
+        
+        # configuration for the custom method in evr
+        self.set_method("pr", "group", method="available_shelters", action=AvailableShelters)
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -2651,10 +2657,11 @@ class S3PersonDetailsModel(S3Model):
                                   self.pr_person_id(label = T("Person"),
                                                     ondelete="CASCADE"),
                                   Field("nationality",
-                                        requires = IS_NULL_OR(
+                                        #TODO: require this only in evr module
+                                        requires = #IS_NULL_OR(
                                                     IS_IN_SET_LAZY(lambda: \
                                                         gis.get_countries(key_type="code"),
-                                                        zero = messages.SELECT_LOCATION)),
+                                                        zero = messages.SELECT_LOCATION),#),
                                         label = T("Nationality"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Nationality"),
@@ -6317,5 +6324,27 @@ def summary_urls(resource, url, filters):
         tab_idx += 1
 
     return links
+
+# =============================================================================
+from ..s3.s3rest import S3Method
+class AvailableShelters(S3Method):
+    """
+        Method handler for the "available_shelters" method
+    """
+    
+    def apply_method(self, r, **attr):
+        """
+            Entry point for the RESTful API (=this function will be called to handle the request)
+
+            @param r: the S3Request
+            @param attr: additional keyword parameters passed from the controller
+        """
+        
+        if r.http == "GET":
+            #TODO: filter only shelter associated with a specific event
+            table = current.s3db.cr_shelter
+            rows = current.db(table).select()
+        
+        return rows.as_list()
 
 # END =========================================================================
