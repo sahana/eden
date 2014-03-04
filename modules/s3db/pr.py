@@ -878,6 +878,7 @@ class S3PersonModel(S3Model):
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = self.person_deduplicate,
+                       filter_widgets = filter_widgets,
                        list_fields = ["id",
                                       "first_name",
                                       "middle_name",
@@ -892,7 +893,6 @@ class S3PersonModel(S3Model):
                        extra = "last_name",
                        onaccept = self.pr_person_onaccept,
                        realm_components = ["presence"],
-                       filter_widgets = filter_widgets,
                        super_entity = ("pr_pentity", "sit_trackable"),
                        )
 
@@ -1113,54 +1113,73 @@ class S3PersonModel(S3Model):
 
         db = current.db
         ptable = db.pr_person
-        s3db = current.s3db
-        table = s3db.pr_contact
-        etable = table.with_alias("pr_email")
-        stable = table.with_alias("pr_sms")
 
-        left = [etable.on((etable.pe_id == ptable.pe_id) & \
-                          (etable.contact_method == "EMAIL")),
-                stable.on((stable.pe_id == ptable.pe_id) & \
-                          (stable.contact_method == "SMS"))]
-
+        # Mandatory data
         data = item.data
-        fname = lname = None
-        if "first_name" in data:
-            fname = data["first_name"]
-        if "last_name" in data:
-            lname = data["last_name"]
-        initials = dob = None
-        if "initials" in data:
-            initials = data["initials"]
-        if "date_of_birth" in data:
-            dob = data["date_of_birth"]
-        email = sms = None
-        for citem in item.components:
-            if citem.tablename == "pr_contact":
-                data = citem.data
-                if "contact_method" in data and \
-                   data.contact_method == "EMAIL":
-                    email = data.value
-                elif "contact_method" in data and \
-                     data.contact_method == "SMS":
-                    sms = data.value
-
+        fname = data.get("first_name", None)
+        lname = data.get("last_name", None)
+        initials = data.get("initials", None)
         if fname and lname:
             query = (ptable.first_name.lower() == fname.lower()) & \
                     (ptable.last_name.lower() == lname.lower())
         elif initials:
             query = (ptable.initials.lower() == initials.lower())
         else:
+            # Not enough we can use
             return
-        candidates = db(query).select(ptable._id,
-                                      ptable.first_name,
-                                      ptable.last_name,
-                                      ptable.initials,
-                                      ptable.date_of_birth,
-                                      etable.value,
-                                      stable.value,
+
+        # Optional extra data
+        dob = data.get("date_of_birth", None)
+        email = sms = None
+        id = {}
+        for citem in item.components:
+            if citem.tablename == "pr_contact":
+                data = citem.data
+                if data.get("contact_method", None) == "EMAIL":
+                    email = data.value
+                elif data.get("contact_method", None) == "SMS":
+                    sms = data.value
+            elif citem.tablename == "pr_identity":
+                data = citem.data
+                id_type = data.get("type", None)
+                id_value = data.get("value", None)
+                if id_type and id_value:
+                    id[id_type] = id_value
+
+        s3db = current.s3db
+        table = s3db.pr_contact
+        etable = table.with_alias("pr_email")
+
+        fields = [ptable._id,
+                  ptable.first_name,
+                  ptable.last_name,
+                  ptable.initials,
+                  ptable.date_of_birth,
+                  etable.value,
+                  ]
+
+        left = [etable.on((etable.pe_id == ptable.pe_id) & \
+                          (etable.contact_method == "EMAIL")),
+                ]
+
+        if sms:
+            stable = table.with_alias("pr_sms")
+            fields.append(stable.value)
+            left.append(stable.on((stable.pe_id == ptable.pe_id) & \
+                                  (stable.contact_method == "SMS")))
+        if id:
+            itable = s3db.pr_identity
+            fields += [itable.type,
+                       itable.value,
+                       ]
+            left.append(itable.on(itable.person_id == ptable.id))
+
+        candidates = db(query).select(*fields,
                                       left=left,
                                       orderby=["pr_person.created_on ASC"])
+
+        if not candidates:
+            return
 
         duplicates = Storage()
 
@@ -1177,7 +1196,11 @@ class S3PersonModel(S3Model):
             row_initials = row[ptable.initials]
             row_dob = row[ptable.date_of_birth]
             row_email = row[etable.value]
-            row_sms = row[stable.value]
+            if sms:
+                row_sms = row[stable.value]
+            if id:
+                row_id_type = row[itable.type]
+                row_id_value = row[itable.value]
 
             check = 0
 
@@ -1186,6 +1209,9 @@ class S3PersonModel(S3Model):
 
             if lname and row_lname:
                 check += rank(lname.lower(), row_lname.lower(), +2, -2)
+
+            if initials and row_initials:
+                check += rank(initials.lower(), row_initials.lower(), +4, -1)
 
             if dob and row_dob:
                 check += rank(dob, row_dob, +3, -2)
@@ -1196,18 +1222,18 @@ class S3PersonModel(S3Model):
                 # Treat missing email as mismatch
                 check -= 2 if initials else 3 if not row_email else 4
 
-            if initials and row_initials:
-                check += rank(initials.lower(), row_initials.lower(), +4, -1)
-
             if sms and row_sms:
                 check += rank(sms.lower(), row_sms.lower(), +1, -1)
+
+            if id and row_id_type:
+                id_value = id.get(str(row_id_type), None)
+                check += rank(id_value, row_id_value, +5, -2)
 
             if check in duplicates:
                 continue
             else:
                 duplicates[check] = row
 
-        duplicate = None
         if len(duplicates):
             best_match = max(duplicates.keys())
             if best_match > 0:

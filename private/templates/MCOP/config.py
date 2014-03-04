@@ -100,7 +100,10 @@ settings.L10n.thousands_separator = ","
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["US"]
 # Levels for the LocationSelector
-levels = ("L1", "L2")
+levels = ("L1", "L2", "L3")
+
+# Uncomment to pass Addresses imported from CSV to a Geocoder to try and automate Lat/Lon
+#settings.gis.geocode_imported_addresses = "google"
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -551,8 +554,14 @@ def customize_project_activity(**attr):
     s3.crud_strings["project_activity"] = s3.crud_strings["project_project"]
 
     # Custom PreP
-    standard_prep = s3.prep
+    #standard_prep = s3.prep
     def custom_prep(r):
+        # Call standard prep
+        #if callable(standard_prep):
+        #    result = standard_prep(r)
+        #    if not result:
+        #        return False
+
         if r.method in ["create", "update"]:
             # hide inline labels
             s3db.project_activity_organisation.organisation_id.label = ""
@@ -671,76 +680,92 @@ def customize_project_project(**attr):
     """
 
     s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.project_project
-    
-    # Custom Form
-    location_id_field = s3db.project_location.location_id
-    location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         show_address=True,
-                                                         show_map=True)
-    # Don't add new Locations here
-    location_id_field.comment = None
 
-    table.name.label = T("Description")
-    table.comments.label = T("Details")
-    #s3db.project_project_organisation.organisation_id.label = ""
-    #s3db.project_project_project_type.project_type_id.label = ""
-    crud_form = S3SQLCustomForm(
-                    "status_id",
-                    "name",
-                    "description",
-                    #"location.location_id",
-                    "organisation_id",
-                    S3SQLInlineComponent("location",
-                                         label = T("Location"),
-                                         fields = ["location_id"],
-                                         orderby = "location_id$name",
-                                         #multiple = False,
-                                         ),
-                    "start_date",
-                    "end_date",
-                    )
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
 
-    filter_widgets = [S3TextFilter(["name",
-                                    ],
-                                   label=T("Description"),
-                                   _class="filter-search",
-                                   ),
-                      S3LocationFilter("location_id",
-                                       widget="multiselect",
-                                       levels = levels,
-                                       ),
-                      S3OptionsFilter("status_id",
-                                      label = T("Status"),
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                                      # @ToDo: Introspect cols
-                                      cols = 3,
-                                      #widget="multiselect",
-                                      ),
-                      S3OptionsFilter("project_project_type.project_type_id",
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      S3OptionsFilter("project_organisation.organisation_id",
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      ]
+        s3db = current.s3db
+        if r.method == "validate":
+            from s3.s3validators import IS_LOCATION
+            s3db.project_location.location_id.requires = IS_LOCATION()
+        else:
+            # Custom Form
+            location_id_field = s3db.project_location.location_id
+            location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+            location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                                 show_address=True,
+                                                                 show_map=True)
+            # Don't add new Locations here
+            location_id_field.comment = None
 
-    s3db.configure("project_project",
-                   crud_form = crud_form,
-                   #filter_widgets = filter_widgets,
-                   )
+            table = s3db.project_project
+            table.name.label = T("Description")
+            table.comments.label = T("Details")
+            #s3db.project_project_organisation.organisation_id.label = ""
+            #s3db.project_project_project_type.project_type_id.label = ""
+            crud_form = S3SQLCustomForm(
+                            "status_id",
+                            "name",
+                            "description",
+                            #"location.location_id",
+                            "organisation_id",
+                            S3SQLInlineComponent("location",
+                                                 label = T("Location"),
+                                                 fields = ["location_id"],
+                                                 #orderby = "location_id$name",
+                                                 multiple = False,
+                                                 ),
+                            "start_date",
+                            "end_date",
+                            )
+
+            filter_widgets = [S3TextFilter(["name",
+                                            ],
+                                           label=T("Description"),
+                                           _class="filter-search",
+                                           ),
+                              S3LocationFilter("location_id",
+                                               widget="multiselect",
+                                               levels = levels,
+                                               ),
+                              S3OptionsFilter("status_id",
+                                              label = T("Status"),
+                                              # Doesn't support translation
+                                              #represent="%(name)s",
+                                              # @ToDo: Introspect cols
+                                              cols = 3,
+                                              #widget="multiselect",
+                                              ),
+                              S3OptionsFilter("project_project_type.project_type_id",
+                                              # Doesn't support translation
+                                              #represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              S3OptionsFilter("project_organisation.organisation_id",
+                                              # Doesn't support translation
+                                              #represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
+                                              # Doesn't support translation
+                                              #represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              ]
+
+            s3db.configure("project_project",
+                           crud_form = crud_form,
+                           #filter_widgets = filter_widgets,
+                           )
+
+        return True
+    s3.prep = custom_prep
 
     # Remove rheader
     attr["rheader"] = None
