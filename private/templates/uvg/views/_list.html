@@ -15,18 +15,22 @@
 <div class='row'>
 {{pass}}
  <div class='small-12 columns'>
-  {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
- </div>
- <div class='small-12 columns'>
-  {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
-  {{try:}}{{=deduplicate}}{{except:}}{{pass}}
- </div>
- <div id='map' class='small-12 columns'></div>
- <div class='small-12 columns'>
-  {{include "last_update.html"}}
-  {{include "key.html"}}
-  <div class='form-container'>
-   {{try:}}{{=form}}{{except:}}{{pass}}
+  <div class='row'>
+   <div id='map' class='small-12 columns'></div>
+  </div>
+  <div class='row'>
+   <div class='small-12 columns'>
+    <div id='list-btn-add'>
+     {{try:}}{{=add_btn}}{{except:}}{{pass}}
+    </div>
+   </div>
+  </div>
+  <div class='row'>
+   {{try:}}{{items = items}}
+    <div id='table-container' class='small-12 columns'>
+     {{=items}}
+    </div>
+   {{except:}}{{pass}}
   </div>
  </div>
 </div>
@@ -37,3 +41,4 @@
   </div>
  {{pass}}
 </div>
+{{include "dataTables.html"}}
