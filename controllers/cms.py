@@ -426,7 +426,7 @@ def newsfeed():
                    # No Submit button (done automatically)
                    #filter_submit = (T("SEARCH"), "btn btn-primary"),
                    filter_widgets = filter_widgets,
-                   list_layout = s3db.cms_render_posts,
+                   list_layout = s3db.cms_post_list_layout,
                    # Create form comes via AJAX in a Modal
                    #insertable = False,
                    notify_fields = [(T("Type"), "series_id"),
@@ -570,7 +570,6 @@ def newsfeed():
                            crud_form = crud_form,
                            # Don't include a Create form in 'More' popups
                            listadd = False,
-                           list_layout = s3db.cms_render_posts,
                            )
 
         elif r.representation == "xls":
