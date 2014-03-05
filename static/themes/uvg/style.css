@@ -189,3 +189,12 @@ span.tab_other:hover {
     background-color: #a20c10;
 }
 
+.dataTable .action-btn,
+.dataTable .delete-btn-ajax,
+.dataTable .delete-btn {
+    color: #FFFFFF;
+}
+
+td.actions {
+    white-space: nowrap;
+}
