@@ -333,6 +333,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
+# Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)
+#settings.ui.use_button_glyphicons = True
 
 # -----------------------------------------------------------------------------
 # CMS

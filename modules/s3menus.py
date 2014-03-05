@@ -465,11 +465,10 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="asset")(
-                    M("Assets", f="asset")(
+                    M("Assets", f="asset", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Map", m="map"),
-                        M("Report", m="report"),
+                        #M("Map", m="map"),
                         M("Import", m="import", p="create"),
                     ),
                     #M("Brands", f="brand",
@@ -477,10 +476,9 @@ class S3OptionsMenu(object):
                     #    M("New", m="create"),
                     #    M("Search"),
                     #),
-                    M("Items", f="item")(
+                    M("Items", f="item", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", f="item_category",
@@ -1152,10 +1150,9 @@ class S3OptionsMenu(object):
                         M("Search Shipped Items", f="track_item"),
                         M("Timeline", args="timeline"),
                     ),
-                    M("Items", c="supply", f="item")(
+                    M("Items", c="supply", f="item", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories

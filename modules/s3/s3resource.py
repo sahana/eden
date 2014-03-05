@@ -1517,7 +1517,7 @@ class S3Resource(object):
             return False
 
         tablename = self.tablename
-        table = self.table
+        table = self._table
 
         records = self.select([self._id.name], limit=None)
         for record in records["rows"]:
@@ -4380,6 +4380,20 @@ class S3Resource(object):
             fields.insert(0, pkey)
         return fields
         
+    # -------------------------------------------------------------------------
+    @property
+    def _table(self):
+        """
+            Get the original Table object (without SQL Alias), this
+            is required for SQL update (DAL doesn't detect the alias
+            and uses the wrong tablename).
+        """
+
+        if self.tablename != self._alias:
+            return current.s3db[self.tablename]
+        else:
+            return self.table
+
 # =============================================================================
 class S3LeftJoins(object):
 
