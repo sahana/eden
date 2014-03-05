@@ -208,7 +208,6 @@ class S3Task(object):
                 title_display = T("Scheduled Jobs"),
                 title_list = T("Job Schedule"),
                 title_update = T("Edit Job"),
-                #title_search = T("Search for Job"),
                 subtitle_create = T("Add Job"),
                 label_list_button = T("List Jobs"),
                 label_create_button = T("Add Job"),

@@ -302,7 +302,6 @@ class S3PersonEntity(S3Model):
             title_display = T("Role Details"),
             title_list = T("Roles"),
             title_update = T("Edit Role"),
-            title_search = T("Search Roles"),
             subtitle_create = T("Add New Role"),
             label_list_button = T("List Roles"),
             label_create_button = T("Add Role"),
@@ -355,7 +354,6 @@ class S3PersonEntity(S3Model):
             title_display = T("Affiliation Details"),
             title_list = T("Affiliations"),
             title_update = T("Edit Affiliation"),
-            title_search = T("Search Affiliations"),
             subtitle_create = T("Add New Affiliation"),
             label_list_button = T("List Affiliations"),
             label_create_button = T("Add Affiliation"),
@@ -812,7 +810,6 @@ class S3PersonModel(S3Model):
             title_display = T("Person Details"),
             title_list = T("Persons"),
             title_update = T("Edit Person Details"),
-            title_search = T("Search Persons"),
             subtitle_create = ADD_PERSON,
             label_list_button = T("List Persons"),
             label_create_button = ADD_PERSON,
@@ -1493,7 +1490,6 @@ class S3GroupModel(S3Model):
             title_display = T("Group Details"),
             title_list = T("Groups"),
             title_update = T("Edit Group"),
-            title_search = T("Search Groups"),
             subtitle_create = T("Add New Group"),
             label_list_button = T("List Groups"),
             label_create_button = ADD_GROUP,
@@ -1510,7 +1506,6 @@ class S3GroupModel(S3Model):
             title_display = T("Mailing List Details"),
             title_list = T("Mailing Lists"),
             title_update = T("Edit Mailing List"),
-            title_search = T("Search Mailing Lists"),
             subtitle_create = T("Add New Mailing List"),
             label_list_button = T("List Mailing Lists"),
             label_create_button = ADD_GROUP,
@@ -1584,37 +1579,37 @@ class S3GroupModel(S3Model):
 
         # CRUD strings
         function = current.request.function
-        if function in ("person", "group_membership"):
+        if function == "person":
+            ADD_MEMBERSHIP = T("Add Membership")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Membership"),
+                title_create = ADD_MEMBERSHIP,
                 title_display = T("Membership Details"),
                 title_list = T("Memberships"),
                 title_update = T("Edit Membership"),
-                title_search = T("Search Membership"),
                 subtitle_create = T("Add New Membership"),
                 label_list_button = T("List Memberships"),
-                label_create_button = T("Add Membership"),
+                label_create_button = ADD_MEMBERSHIP,
                 label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Membership added"),
+                msg_record_created = T("Added to Group"),
                 msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Memberships currently registered"))
+                msg_record_deleted = T("Removed from Group"),
+                msg_list_empty = T("Not yet a Member of any Group"))
 
-        elif function == "group":
+        elif function in ("group", "group_membership"):
+            ADD_MEMBER = T("Add Member")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Member"),
+                title_create = ADD_MEMBER,
                 title_display = T("Membership Details"),
                 title_list = T("Group Members"),
                 title_update = T("Edit Membership"),
-                title_search = T("Search Member"),
                 subtitle_create = T("Add New Member"),
                 label_list_button = T("List Members"),
-                label_create_button = T("Add Group Member"),
-                label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Group Member added"),
+                label_create_button = ADD_MEMBER,
+                label_delete_button = T("Remove Person from Group"),
+                msg_record_created = T("Person added to Group"),
                 msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Members currently registered"))
+                msg_record_deleted = T("Person removed from Group"),
+                msg_list_empty = T("This Group has no Members yet"))
 
         filter_widgets = [
             S3TextFilter(["group_id$name",
@@ -1770,7 +1765,6 @@ class S3ContactModel(S3Model):
             title_display = T("Contact Details"),
             title_list = T("Contact Information"),
             title_update = T("Edit Contact Information"),
-            title_search = T("Search Contact Information"),
             subtitle_create = T("Add Contact Information"),
             label_list_button = T("List Contact Information"),
             label_create_button = T("Add Contact Information"),
@@ -1966,7 +1960,6 @@ class S3AddressModel(S3Model):
             title_display = T("Address Details"),
             title_list = T("Addresses"),
             title_update = T("Edit Address"),
-            title_search = T("Search Addresses"),
             subtitle_create = T("Add New Address"),
             label_list_button = T("List Addresses"),
             label_create_button = ADD_ADDRESS,
@@ -2166,7 +2159,6 @@ class S3PersonImageModel(S3Model):
             title_display = T("Image Details"),
             title_list = T("Images"),
             title_update = T("Edit Image Details"),
-            title_search = T("Search Images"),
             subtitle_create = T("Add New Image"),
             label_list_button = T("List Images"),
             label_create_button = T("Add Image"),
@@ -2449,7 +2441,6 @@ class S3PersonIdentityModel(S3Model):
             title_display = T("Identity Details"),
             title_list = T("Identities"),
             title_update = T("Edit Identity"),
-            title_search = T("Search Identity"),
             subtitle_create = T("Add New Identity"),
             label_list_button = T("List Identities"),
             label_create_button = ADD_IDENTITY,
@@ -2545,7 +2536,6 @@ class S3PersonEducationModel(S3Model):
             title_display = T("Education Details"),
             title_list = T("Education Details"),
             title_update = T("Edit Education Details"),
-            title_search = T("Search Education Details"),
             subtitle_create = T("Add Education Detail"),
             label_list_button = T("List Education Details"),
             label_create_button = ADD_IDENTITY,
@@ -2695,7 +2685,6 @@ class S3PersonDetailsModel(S3Model):
             title_display = T("Person's Details"),
             title_list = T("Persons' Details"),
             title_update = T("Edit Person's Details"),
-            title_search = T("Search Person's Details"),
             subtitle_create = T("Add New Person's Details"),
             label_list_button = T("List Persons' Details"),
             label_create_button = ADD_DETAILS,
@@ -3052,7 +3041,6 @@ class S3SavedSearch(S3Model):
             title_display=T("Saved search details"),
             title_list=T("Saved searches"),
             title_update=T("Edit saved search"),
-            title_search=T("Search saved searches"),
             subtitle_create=T("Add saved search"),
             label_list_button=T("List saved searches"),
             label_create_button=T("Save search"),
@@ -3340,7 +3328,6 @@ class S3PersonPresence(S3Model):
             title_display = T("Log Entry Details"),
             title_list = T("Presence Log"),
             title_update = T("Edit Log Entry"),
-            title_search = T("Search Log Entry"),
             subtitle_create = T("Add New Log Entry"),
             label_list_button = T("List Log Entries"),
             label_create_button = ADD_LOG_ENTRY,
@@ -3609,7 +3596,6 @@ class S3PersonDescription(S3Model):
             title_display = T("Journal Entry Details"),
             title_list = T("Journal"),
             title_update = T("Edit Entry"),
-            title_search = T("Search Entries"),
             subtitle_create = T("Add New Entry"),
             label_list_button = T("See All Entries"),
             label_create_button = ADD_NOTE,

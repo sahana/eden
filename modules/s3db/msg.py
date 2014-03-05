@@ -2018,7 +2018,6 @@ class S3BaseStationModel(S3Model):
             title_display=T("Base Station Details"),
             title_list=T("Base Stations"),
             title_update=T("Edit Base Station"),
-            title_search=T("Search Base Stations"),
             title_upload=T("Import Base Stations"),
             title_map=T("Map of Base Stations"),
             subtitle_create=ADD_BASE,

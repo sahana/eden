@@ -320,19 +320,39 @@ def ns_only(f, required=True, branches=True, updateable=True):
         # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
         return
 
+    auth = current.auth
+    s3_has_role = auth.s3_has_role
+    Admin = s3_has_role("ADMIN")
     if branches:
         not_filterby = None
         not_filter_opts = []
+        if Admin:
+            parent = True
+        else:
+            # @ToDo: Set the represent according to whether the user can see resources of just a single NS or multiple
+            # @ToDo: Consider porting this into core
+            user = auth.user
+            realms = user.realms
+            delegations = user.delegations
+            if realms:
+                parent = True
+            else:
+                parent = False
     else:
+        # Keep the represent function as simple as possible
+        parent = False
         btable = current.s3db.org_organisation_branch
         rows = db(btable.deleted != True).select(btable.branch_id)
         branches = [row.branch_id for row in rows]
         not_filterby = "id"
         not_filter_opts = branches
 
+    represent = current.s3db.org_OrganisationRepresent(parent=parent)
+    f.represent = represent
+
     from s3.s3validators import IS_ONE_OF
     requires = IS_ONE_OF(db, "org_organisation.id",
-                         current.s3db.org_OrganisationRepresent(),
+                         represent,
                          filterby = "organisation_type_id",
                          filter_opts = [type_id],
                          not_filterby = not_filterby,
@@ -347,8 +367,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
     # Dropdown not Autocomplete
     f.widget = None
     # Comment
-    s3_has_role = current.auth.s3_has_role
-    if s3_has_role("ADMIN") or \
+    if Admin or \
        s3_has_role("ORG_ADMIN"):
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
@@ -517,7 +536,6 @@ def customize_deploy_assignment(**attr):
         title_display = T("Deployment Details"),
         title_list = T("Deployments"),
         title_update = T("Edit Deployment Details"),
-        title_search = T("Search Deployments"),
         title_upload = T("Import Deployments"),
         subtitle_create = T("Add New Deployment"),
         label_list_button = T("List Deployments"),
@@ -608,7 +626,6 @@ def customize_deploy_mission(**attr):
         title_display = T("Deployment Details"),
         title_list = T("Deployments"),
         title_update = T("Edit Deployment Details"),
-        title_search = T("Search Deployments"),
         title_upload = T("Import Deployments"),
         subtitle_create = T("Add New Deployment"),
         label_list_button = T("List Deployments"),
@@ -798,6 +815,8 @@ def customize_hrm_human_resource(**attr):
             if root_org == vnrc:
                 vnrc = True
                 settings.pr.reverse_names = True
+                # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
+                settings.org.regions = False
     else:
         vnrc = False
 
@@ -895,7 +914,6 @@ def customize_hrm_job_title(**attr):
                 title_display=T("Sector Details"),
                 title_list=T("Sectors"),
                 title_update=T("Edit Sector"),
-                title_search=T("Search Sectors"),
                 subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Sectors"),
                 label_create_button=ADD_SECTOR,
@@ -1154,7 +1172,6 @@ def customize_org_organisation(**attr):
                             title_display=T("National Society Details"),
                             title_list=T("Red Cross & Red Crescent National Societies"),
                             title_update=T("Edit National Society"),
-                            title_search=T("Search Red Cross & Red Crescent National Societies"),
                             title_upload=T("Import Red Cross & Red Crescent National Societies"),
                             subtitle_create=ADD_NS,
                             label_list_button=T("List Red Cross & Red Crescent National Societies"),
@@ -1238,7 +1255,8 @@ def customize_pr_group(**attr):
     s3db = current.s3db
 
     # Organisation needs to be an NS/Branch
-    ns_only(s3db.org_organisation_team.organisation_id,
+    table = s3db.org_organisation_team.organisation_id
+    ns_only(table,
             required=False,
             branches=True,
             )
@@ -1416,9 +1434,21 @@ def customize_pr_person(**attr):
         return result
     s3.prep = custom_prep
 
+    attr["rheader"] = lambda r, vnrc=vnrc: pr_rheader(r, vnrc)
     return attr
 
 settings.ui.customize_pr_person = customize_pr_person
+
+# -----------------------------------------------------------------------------
+def pr_rheader(r, vnrc):
+    """
+        Custom rheader for vol/person for vnrc
+    """
+
+    if vnrc and current.request.controller == "vol":
+        settings.hrm.vol_experience = None
+
+    return current.s3db.hrm_rheader(r)
 
 # -----------------------------------------------------------------------------
 def customize_req_commit(**attr):

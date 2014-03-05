@@ -89,7 +89,6 @@ class S3DelphiModel(S3Model):
             title_display = T("Group Details"),
             title_list = T("Groups"),
             title_update = T("Edit Group"),
-            title_search = T("Search Groups"),
             subtitle_create = T("Add New Group"),
             label_list_button = T("List Groups"),
             label_create_button = ADD_GROUP,
@@ -161,22 +160,21 @@ class S3DelphiModel(S3Model):
                              *s3_meta_fields()
                              )
 
-        # CRUD Strings
-        ADD_MEMBERSHIP = T("Add Membership")
+        # CRUD strings
+        ADD_MEMBER = T("Add Member")
         crud_strings[tablename] = Storage(
-            title_create = ADD_MEMBERSHIP,
+            title_create = ADD_MEMBER,
             title_display = T("Membership Details"),
-            title_list = T("Memberships"),
+            title_list = T("Group Members"),
             title_update = T("Edit Membership"),
-            title_search = T("Search Memberships"),
-            subtitle_create = T("Add New Membership"),
-            label_list_button = T("List Memberships"),
-            label_create_button = ADD_MEMBERSHIP,
-            label_delete_button = T("Remove Membership"),
-            msg_record_created = T("Membership added"),
+            subtitle_create = T("Add New Member"),
+            label_list_button = T("List Members"),
+            label_create_button = ADD_MEMBER,
+            label_delete_button = T("Remove Person from Group"),
+            msg_record_created = T("Person added to Group"),
             msg_record_modified = T("Membership updated"),
-            msg_record_deleted = T("Membership deleted"),
-            msg_list_empty = T("No Memberships currently defined"))
+            msg_record_deleted = T("Person removed from Group"),
+            msg_list_empty = T("This Group has no Members yet"))
 
         configure(tablename,
                   list_fields=["id",
@@ -218,7 +216,6 @@ class S3DelphiModel(S3Model):
             title_display = T("Problem Details"),
             title_list = T("Problems"),
             title_update = T("Edit Problem"),
-            title_search = T("Search Problems"),
             subtitle_create = T("Add New Problem"),
             label_list_button = T("List Problems"),
             label_create_button = ADD_PROBLEM,
@@ -281,7 +278,6 @@ class S3DelphiModel(S3Model):
             title_display = T("Solution Details"),
             title_list = T("Solutions"),
             title_update = T("Edit Solution"),
-            title_search = T("Search Solutions"),
             subtitle_create = T("Add New Solution"),
             label_list_button = T("List Solutions"),
             label_create_button = ADD_SOLUTION,

@@ -93,7 +93,6 @@ class S3SupportModel(S3Model):
             title_display = T("Request Details"),
             title_list = T("Support Requests"),
             title_update = T("Edit Request"),
-            title_search = T("Search Support Requests"),
             subtitle_create = T("Add New Request"),
             label_list_button = T("List Support Requests"),
             label_create_button = ADD_REQUEST,

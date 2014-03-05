@@ -1103,9 +1103,7 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         current.s3db.inv_recv_crud_strings()
-        crud_strings = current.response.s3.crud_strings
-        inv_recv_list = crud_strings.inv_recv.title_list
-        inv_recv_search = crud_strings.inv_recv.title_search
+        inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
         settings = current.deployment_settings
         use_adjust = lambda i: not settings.get_inv_direct_stock_edits()

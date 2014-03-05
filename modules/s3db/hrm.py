@@ -159,7 +159,6 @@ class S3HRModel(S3Model):
             title_display = T("Department Details"),
             title_list = T("Department Catalog"),
             title_update = T("Edit Department"),
-            title_search = T("Search Departments"),
             title_upload = T("Import Departments"),
             subtitle_create = T("Add Department"),
             label_list_button = T("List Departments"),
@@ -252,7 +251,6 @@ class S3HRModel(S3Model):
                 title_display = T("Volunteer Role Details"),
                 title_list = T("Volunteer Role Catalog"),
                 title_update = T("Edit Volunteer Role"),
-                title_search = T("Search Volunteer Roles"),
                 subtitle_create = T("Add Volunteer Role"),
                 label_list_button = T("List Volunteer Roles"),
                 label_create_button = label_create,
@@ -270,7 +268,6 @@ class S3HRModel(S3Model):
                 title_display = T("Job Title Details"),
                 title_list = T("Job Title Catalog"),
                 title_update = T("Edit Job Title"),
-                title_search = T("Search Job Titles"),
                 subtitle_create = T("Add Job Title"),
                 label_list_button = T("List Job Titles"),
                 label_create_button = label_create,
@@ -452,7 +449,6 @@ class S3HRModel(S3Model):
                 title_display = T("Contact Details"),
                 title_list = STAFF,
                 title_update = T("Edit Contact Details"),
-                title_search = T("Search Contacts"),
                 title_upload = T("Import Contacts"),
                 subtitle_create = T("Add New Contact"),
                 label_list_button = T("List Contacts"),
@@ -469,7 +465,6 @@ class S3HRModel(S3Model):
                 title_display = T("Staff Member Details"),
                 title_list = STAFF,
                 title_update = T("Edit Staff Member Details"),
-                title_search = T("Search Staff"),
                 title_upload = T("Import Staff"),
                 subtitle_create = T("Add New Staff Member"),
                 label_list_button = T("List Staff Members"),
@@ -485,7 +480,6 @@ class S3HRModel(S3Model):
             title_display = T("Volunteer Details"),
             title_list = T("Volunteers"),
             title_update = T("Edit Volunteer Details"),
-            title_search = T("Search Volunteers"),
             title_upload = T("Import Volunteers"),
             subtitle_create = T("Add New Volunteer"),
             label_list_button = T("List Volunteers"),
@@ -536,7 +530,6 @@ class S3HRModel(S3Model):
                     title_display = T("Staff Member Details"),
                     title_list = T("Staff & Volunteers"),
                     title_update = T("Edit Record"),
-                    title_search = T("Search Staff & Volunteers"),
                     title_upload =T("Search Staff & Volunteers"),
                     subtitle_create = T("Add New Staff Member"),
                     label_list_button = T("List Staff & Volunteers"),
@@ -1233,7 +1226,6 @@ class S3HRSiteModel(S3Model):
             title_display = T("Staff Assignment Details"),
             title_list = T("Staff Assignments"),
             title_update = T("Edit Staff Assignment"),
-            title_search = T("Search Staff Assignments"),
             subtitle_create = T("Add Staff Assignment"),
             label_list_button = T("List Staff Assignments"),
             label_create_button = T("Add New Staff Assignment"),
@@ -1374,7 +1366,6 @@ class S3HRJobModel(S3Model):
         #    title_display = T("Position Details"),
         #    title_list = T("Position Catalog"),
         #    title_update = T("Edit Position"),
-        #    title_search = T("Search Positions"),
         #    subtitle_create = T("Add Position"),
         #    label_list_button = T("List Positions"),
         #    label_create_button = T("Add Position"),
@@ -1579,7 +1570,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Details"),
             title_list = T("Skill Type Catalog"),
             title_update = T("Edit Skill Type"),
-            title_search = T("Search Skill Types"),
             subtitle_create = T("Add Skill Type"),
             label_list_button = T("List Skill Types"),
             label_create_button = T("Add New Skill Type"),
@@ -1630,7 +1620,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Skill Details"),
             title_list = T("Skill Catalog"),
             title_update = T("Edit Skill"),
-            title_search = T("Search Skills"),
             subtitle_create = T("Add Skill"),
             label_list_button = T("List Skills"),
             label_create_button = T("Add New Skill"),
@@ -1731,7 +1720,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Competency Rating Details"),
             title_list = T("Competency Rating Catalog"),
             title_update = T("Edit Competency Rating"),
-            title_search = T("Search Competency Ratings"),
             subtitle_create = T("Add Competency Rating"),
             label_list_button = T("List Competency Ratings"),
             label_create_button = T("Add New Competency Rating"),
@@ -1794,7 +1782,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Skill Details"),
             title_list = T("Skills"),
             title_update = T("Edit Skill"),
-            title_search = T("Search Skills"),
             subtitle_create = T("Add Skill"),
             label_list_button = T("List Skills"),
             label_create_button = T("Add New Skill"),
@@ -1847,7 +1834,6 @@ class S3HRSkillModel(S3Model):
         #    title_display = T("Skill Provision Details"),
         #    title_list = T("Skill Provision Catalog"),
         #    title_update = T("Edit Skill Provision"),
-        #    title_search = T("Search Skill Provisions"),
         #    subtitle_create = T("Add Skill Provision"),
         #    label_list_button = T("List Skill Provisions"),
         #    label_create_button = T("Add Skill Provision"),
@@ -1947,7 +1933,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Credential Details"),
             title_list = T("Credentials"),
             title_update = T("Edit Credential"),
-            title_search = T("Search Credentials"),
             subtitle_create = T("Add Credential"),
             label_list_button = T("List Credentials"),
             label_create_button = T("Add New Credential"),
@@ -1989,7 +1974,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Course Details"),
             title_list = T("Course Catalog"),
             title_update = T("Edit Course"),
-            title_search = T("Search Courses"),
             title_upload = T("Import Courses"),
             subtitle_create = T("Add Course"),
             label_list_button = T("List Courses"),
@@ -2082,7 +2066,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Training Event Details"),
             title_list = T("Training Events"),
             title_update = T("Edit Training Event"),
-            title_search = T("Search Training Events"),
             title_upload = T("Import Training Events"),
             subtitle_create = T("Add Training Event"),
             label_list_button = T("List Training Events"),
@@ -2206,7 +2189,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Training Details"),
             title_list = T("Trainings"),
             title_update = T("Edit Training"),
-            title_search = T("Search Training Participants"),
             title_report = T("Training Report"),
             title_upload = T("Import Training Participants"),
             subtitle_create = T("Add Training"),
@@ -2324,7 +2306,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Certificate Details"),
             title_list = T("Certificate Catalog"),
             title_update = T("Edit Certificate"),
-            title_search = T("Search Certificates"),
             title_upload = T("Import Certificates"),
             subtitle_create = T("Add Certificate"),
             label_list_button = T("List Certificates"),
@@ -2423,7 +2404,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Certification Details"),
             title_list = T("Certifications"),
             title_update = T("Edit Certification"),
-            title_search = T("Search Certifications"),
             subtitle_create = T("Add Certification"),
             label_list_button = T("List Certifications"),
             label_create_button = T("Add New Certification"),
@@ -2455,7 +2435,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Skill Equivalence Details"),
             title_list = T("Skill Equivalences"),
             title_update = T("Edit Skill Equivalence"),
-            title_search = T("Search Skill Equivalences"),
             subtitle_create = T("Add Skill Equivalence"),
             label_list_button = T("List Skill Equivalences"),
             label_create_button = T("Add New Skill Equivalence"),
@@ -2486,7 +2465,6 @@ class S3HRSkillModel(S3Model):
             title_display = T("Course Certificate Details"),
             title_list = T("Course Certificates"),
             title_update = T("Edit Course Certificate"),
-            title_search = T("Search Course Certificates"),
             subtitle_create = T("Add Course Certificate"),
             label_list_button = T("List Course Certificates"),
             label_create_button = T("Add New Course Certificate"),
@@ -3109,7 +3087,6 @@ class S3HRAppraisalModel(S3Model):
             title_display = T("Appraisal Details"),
             title_list = T("Appraisals"),
             title_update = T("Edit Appraisal"),
-            title_search = T("Search Appraisals"),
             subtitle_create = ADD_APPRAISAL,
             label_list_button = T("List of Appraisals"),
             label_create_button = T("Add New Appraisal"),
@@ -3321,7 +3298,6 @@ class S3HRExperienceModel(S3Model):
             title_display = T("Professional Experience Details"),
             title_list = T("Professional Experience"),
             title_update = T("Edit Professional Experience"),
-            title_search = T("Search Professional Experience"),
             subtitle_create = ADD_EXPERIENCE,
             label_list_button = T("List of Professional Experience"),
             label_create_button = T("Add New Professional Experience"),
@@ -3416,7 +3392,6 @@ class S3HRProgrammeModel(S3Model):
             title_display = T("Program Details"),
             title_list = T("Programs"),
             title_update = T("Edit Program"),
-            title_search = T("Search Programs"),
             subtitle_create = ADD_PROG,
             label_list_button = T("List Programs"),
             label_create_button = T("Add New Program"),
@@ -3496,7 +3471,6 @@ class S3HRProgrammeModel(S3Model):
             title_display = T("Hours Details"),
             title_list = T("Hours"),
             title_update = T("Edit Hours"),
-            title_search = T("Search Hours"),
             title_upload = T("Import Hours"),
             subtitle_create = T("Add Hours"),
             label_list_button = T("List Hours"),
@@ -5055,7 +5029,6 @@ def hrm_group_controller():
             title_display = T("Team Details"),
             title_list = T("Teams"),
             title_update = T("Edit Team"),
-            title_search = T("Search Teams"),
             subtitle_create = T("Add New Team"),
             label_list_button = T("List Teams"),
             label_create_button = T("Add New Team"),
@@ -5068,54 +5041,56 @@ def hrm_group_controller():
     # Format for filter_widgets & imports
     s3db.add_components("pr_group", org_organisation_team="group_id")
 
-    s3db.org_organisation_team.organisation_id.label = ""
-    crud_form = S3SQLCustomForm("name",
-                                "description",
-                                S3SQLInlineComponent("organisation_team",
-                                                     label = T("Organization"),
-                                                     fields = ["organisation_id"],
-                                                     # @ToDo: Make this optional?
-                                                     multiple = False,
-                                                     ),
-                                "comments",
-                                )
-
-    filter_widgets = [
-        S3TextFilter(["name",
-                      "description",
-                      "comments",
-                      "organisation_team.organisation_id$name",
-                      "organisation_team.organisation_id$acronym",
-                      ],
-                     label = T("Search"),
-                     comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all."),
-                     #_class="filter-search",
-                     ),
-        S3OptionsFilter("organisation_team.organisation_id",
-                        label=T("Organization"),
-                        widget="multiselect",
-                        #hidden=True,
-                        ),
-        ]
-
-    list_fields = ["id",
-                   "organisation_team.organisation_id",
-                   "name",
-                   "description",
-                   "comments",
-                   ]
-
-    s3db.configure(tablename,
-                   # Redirect to member list when a new group has been created
-                   create_next = URL(f="group",
-                                     args=["[id]", "group_membership"]),
-                   crud_form = crud_form,
-                   filter_widgets = filter_widgets,
-                   list_fields = list_fields,
-                   )
-
     # Pre-process
     def prep(r):
+        ottable = s3db.org_organisation_team
+        label = ottable.organisation_id.label
+        ottable.organisation_id.label = ""
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    S3SQLInlineComponent("organisation_team",
+                                                         label = label,
+                                                         fields = ["organisation_id"],
+                                                         # @ToDo: Make this optional?
+                                                         multiple = False,
+                                                         ),
+                                    "comments",
+                                    )
+
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "description",
+                          "comments",
+                          "organisation_team.organisation_id$name",
+                          "organisation_team.organisation_id$acronym",
+                          ],
+                         label = T("Search"),
+                         comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all."),
+                         #_class="filter-search",
+                         ),
+            S3OptionsFilter("organisation_team.organisation_id",
+                            label=T("Organization"),
+                            widget="multiselect",
+                            #hidden=True,
+                            ),
+            ]
+
+        list_fields = ["id",
+                       "organisation_team.organisation_id",
+                       "name",
+                       "description",
+                       "comments",
+                       ]
+
+        s3db.configure("pr_group",
+                       # Redirect to member list when a new group has been created
+                       create_next = URL(f="group",
+                                         args=["[id]", "group_membership"]),
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
         if r.interactive or r.representation in ("aadata", "xls"):
             if r.component_name == "group_membership":
                 hrm_configure_pr_group_membership()
@@ -5150,7 +5125,8 @@ def hrm_group_controller():
                                    "person_id$middle_name",
                                    "person_id$last_name",
                                    ] + list_fields
-                    s3db.configure(tablename, list_fields=list_fields)
+                    s3db.configure(tablename,
+                                   list_fields=list_fields)
 
         return True
     s3.prep = prep
@@ -5943,7 +5919,6 @@ def hrm_training_event_controller():
                 title_display = T("Participant Details"),
                 title_list = T("Participants"),
                 title_update = T("Edit Participant"),
-                title_search = T("Search Participants"),
                 title_upload = T("Import Participants"),
                 subtitle_create = T("Add Participant"),
                 label_list_button = T("List Participants"),
@@ -6273,27 +6248,44 @@ def hrm_configure_pr_group_membership():
     settings = current.deployment_settings
     request = current.request
     function = request.function
+    tablename = "pr_group_membership"
 
     table = s3db.pr_group_membership
     if settings.get_hrm_teams() == "Teams":
         table.group_id.label = T("Team Name")
         table.group_head.label = T("Team Leader")
 
-        if function == "group":
-            current.response.s3.crud_strings["pr_group_membership"] = Storage(
-                title_create = T("Add Member"),
+        if function == "person":
+            ADD_MEMBERSHIP = T("Add Membership")
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = ADD_MEMBERSHIP,
+                title_display = T("Membership Details"),
+                title_list = T("Memberships"),
+                title_update = T("Edit Membership"),
+                subtitle_create = T("Add New Membership"),
+                label_list_button = T("List Memberships"),
+                label_create_button = ADD_MEMBERSHIP,
+                label_delete_button = T("Delete Membership"),
+                msg_record_created = T("Added to Team"),
+                msg_record_modified = T("Membership updated"),
+                msg_record_deleted = T("Removed from Team"),
+                msg_list_empty = T("Not yet a Member of any Team"))
+
+        elif function in ("group", "group_membership"):
+            ADD_MEMBER = T("Add Team Member")
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = ADD_MEMBER,
                 title_display = T("Membership Details"),
                 title_list = T("Team Members"),
                 title_update = T("Edit Membership"),
-                title_search = T("Search Members"),
-                subtitle_create = T("Add New Team Member"),
+                subtitle_create = T("Add New Member"),
                 label_list_button = T("List Members"),
-                label_create_button = T("Add Team Member"),
-                label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Team Member added"),
+                label_create_button = ADD_MEMBER,
+                label_delete_button = T("Remove Person from Team"),
+                msg_record_created = T("Person added to Team"),
                 msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Members currently registered"))
+                msg_record_deleted = T("Person removed from Team"),
+                msg_list_empty = T("This Team has no Members yet"))
     else:
         table.group_head.label = T("Group Leader")
 
@@ -6323,7 +6315,8 @@ def hrm_configure_pr_group_membership():
                        "group_id$description",
                        ]
         orderby = table.group_id
-    s3db.configure("pr_group_membership",
+
+    s3db.configure(tablename,
                    list_fields = list_fields,
                    orderby = orderby,
                    )

@@ -746,7 +746,6 @@ def partners():
         title_display=T("Partner Organization Details"),
         title_list=T("Partner Organizations"),
         title_update=T("Edit Partner Organization"),
-        title_search=T("Search Partner Organizations"),
         title_upload=T("Import Partner Organizations"),
         subtitle_create=ADD_PARTNER,
         label_list_button=T("List Partner Organizations"),

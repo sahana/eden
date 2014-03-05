@@ -127,7 +127,6 @@ def supplier():
         title_display=T("Supplier Details"),
         title_list=T("Suppliers"),
         title_update=T("Edit Supplier"),
-        title_search=T("Search Suppliers"),
         title_upload=T("Import Suppliers"),
         subtitle_create=ADD_SUPPLIER,
         label_list_button=T("List Suppliers"),

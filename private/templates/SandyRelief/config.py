@@ -468,7 +468,6 @@ def customize_org_group(**attr):
                 title_display = T("Network Details"),
                 title_list = T("Networks"),
                 title_update = T("Edit Network"),
-                title_search = T("Search Networks"),
                 subtitle_create = T("Add New Network"),
                 label_list_button = T("List Networks"),
                 label_create_button = T("Add Network"),

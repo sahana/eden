@@ -1013,7 +1013,6 @@ def customize_pr_person(**attr):
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Edit Contact Details"),
-                    title_search = T("Search Contacts"),
                     subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
                     label_create_button = ADD_CONTACT,
