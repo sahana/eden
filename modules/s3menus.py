@@ -465,11 +465,10 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="asset")(
-                    M("Assets", f="asset")(
+                    M("Assets", f="asset", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Map", m="map"),
-                        M("Report", m="report"),
+                        #M("Map", m="map"),
                         M("Import", m="import", p="create"),
                     ),
                     #M("Brands", f="brand",

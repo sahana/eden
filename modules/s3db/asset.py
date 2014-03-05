@@ -308,24 +308,20 @@ S3OptionsFilter({
                          #_class = "filter-search",
                          ),
             S3OptionsFilter("item_id$item_category_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
-                            #label = T("Category"),
+                            filter = "auto",
                             represent = "%(name)s",
                             widget = "multiselect",
                             ),
             S3OptionsFilter("organisation_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
-                            #label = T("Organization"),
+                            filter = "auto",
                             represent = "%(name)s",
                             widget = "multiselect",
+                            hidden = True,
                             ),
             S3LocationFilter("location_id",
-                             #hidden = True,
-                             #label = T("Location"),
                              levels = levels,
                              widget = "multiselect",
+                             hidden = True,
                              ),
             ]
 
@@ -371,12 +367,34 @@ S3OptionsFilter({
                                     "comments",
                                     )
 
+        # Default summary
+        summary = [{"name": "addform",
+                    "common": True,
+                    "widgets": [{"method": "create"}],
+                    },
+                   {"name": "table",
+                    "label": "Table",
+                    "widgets": [{"method": "datatable"}]
+                    },
+                   {"name": "report",
+                    "label": "Report",
+                    "widgets": [{"method": "report",
+                                 "ajax_init": True}]
+                    },
+                   {"name": "map",
+                    "label": "Map",
+                    "widgets": [{"method": "map",
+                                 "ajax_init": True}],
+                    },
+                   ]
+                   
         # Resource Configuration
         configure(tablename,
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
                   crud_form = crud_form,
+                  summary = summary,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   mark_required = ["organisation_id"],

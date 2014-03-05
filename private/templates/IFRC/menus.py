@@ -79,7 +79,7 @@ class S3MainMenu(default.S3MainMenu):
                 #M("Commitments", f="commit")(),
             ),
             homepage("asset")(
-                MM("Assets", c="asset", f="asset"),
+                MM("Assets", c="asset", f="asset", m="summary"),
                 MM("Items", c="asset", f="item"),
             ),
             homepage("survey")(
