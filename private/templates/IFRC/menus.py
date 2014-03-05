@@ -80,7 +80,7 @@ class S3MainMenu(default.S3MainMenu):
             ),
             homepage("asset")(
                 MM("Assets", c="asset", f="asset", m="summary"),
-                MM("Items", c="asset", f="item"),
+                MM("Items", c="asset", f="item", m="summary"),
             ),
             homepage("survey")(
                 MM("Assessment Templates", c="survey", f="template"),
@@ -651,10 +651,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Search"),
                         M("Search Shipped Items", f="track_item"),
                     ),
-                    M("Items", c="supply", f="item")(
+                    M("Items", c="supply", f="item", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories

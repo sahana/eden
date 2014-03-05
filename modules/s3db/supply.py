@@ -486,12 +486,29 @@ S3OptionsFilter({
                                                   ),
                                  )
 
+        # Default summary
+        summary = [{"name": "addform",
+                    "common": True,
+                    "widgets": [{"method": "create"}],
+                    },
+                   {"name": "table",
+                    "label": "Table",
+                    "widgets": [{"method": "datatable"}]
+                    },
+                   {"name": "report",
+                    "label": "Report",
+                    "widgets": [{"method": "report",
+                                 "ajax_init": True}]
+                    },
+                   ]
+
         configure(tablename,
                   deduplicate = self.supply_item_duplicate,
                   filter_widgets = filter_widgets,
                   onaccept = self.supply_item_onaccept,
                   orderby = table.name,
                   report_options = report_options,
+                  summary = summary,
                   )
 
         # Components
