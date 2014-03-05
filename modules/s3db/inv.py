@@ -41,6 +41,7 @@ __all__ = ["S3WarehouseModel",
            "inv_tracking_status",
            "inv_adj_rheader",
            "depends",
+           "inv_InvItemRepresent",
            ]
 
 import itertools
@@ -518,7 +519,7 @@ class S3InventoryModel(S3Model):
             msg_list_empty = T("No Stock currently registered in this Warehouse"))
 
         # Reusable Field
-        represent = self.inv_item_represent
+        inv_item_represent = represent = self.inv_InvItemRepresent()
         inv_item_id = S3ReusableField("inv_item_id", table,
                                       requires = IS_ONE_OF(db, "inv_inv_item.id",
                                                            represent,
@@ -696,7 +697,7 @@ S3OptionsFilter({
         # Pass names back to global scope (s3.*)
         #
         return dict(inv_item_id = inv_item_id,
-                    inv_item_represent = self.inv_item_represent,
+                    inv_item_represent = inv_item_represent,
                     inv_remove = self.inv_remove,
                     inv_prep = self.inv_prep,
                     )
@@ -839,54 +840,6 @@ S3OptionsFilter({
                 #    # Display only incoming shipments which haven't been received yet
                 #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
                 #    r.resource.add_component_filter("send", filter)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_item_represent(id, row=None, show_link=True):
-        """
-            Represent an Inventory Item
-        """
-
-        if row:
-            # @ToDo: Optimised query where we don't need to do the join
-            id = row.id
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        itable = db.inv_inv_item
-        stable = db.supply_item
-        query = (itable.id == id) & \
-                (itable.item_id == stable.id)
-        record = db(query).select(stable.name,
-                                  stable.um,
-                                  itable.item_source_no,
-                                  itable.bin,
-                                  itable.expiry_date,
-                                  itable.owner_org_id,
-                                  limitby = (0, 1)).first()
-        if record:
-            s3_string_represent = lambda str: str if str else ""
-            s3_date_represent = lambda dt: \
-                S3DateTime.date_represent(dt, utc=True)
-            ctn = s3_string_represent(record.inv_inv_item.item_source_no)
-            org = current.s3db.org_organisation_represent(record.inv_inv_item.owner_org_id)
-            if record.inv_inv_item.expiry_date:
-                exp_date = "expires:%s" % \
-                    s3_date_represent(record.inv_inv_item.expiry_date)
-            else:
-                exp_date = ""
-            bin = s3_string_represent(record.inv_inv_item.bin)
-            NONE = current.messages["NONE"]
-            rep_strings = [str for str in [record.supply_item.name,
-                                           exp_date,
-                                           ctn,
-                                           org,
-                                           bin
-                                           ] if str and str != NONE]
-            return " - ".join(rep_strings)
-        else:
-            return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3302,9 +3255,9 @@ def inv_rheader(r):
 
         # Get site data
         table = s3db.inv_inv_item
-        irecord = db(table.id == record.send_inv_item_id).select(table.site_id,
-                                                                 limitby=(0, 1)
-                                                                 ).first()
+        irecord = current.db(table.id == record.send_inv_item_id).select(
+                                                        table.site_id,
+                                                        limitby=(0, 1)).first()
         # Header
         if irecord:
             rheader = DIV(
@@ -4319,5 +4272,90 @@ def duplicator(job, query):
         job.method = job.METHOD.UPDATE
         return _duplicate.id
     return False
+
+# =============================================================================
+class inv_InvItemRepresent(S3Represent):
+    
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(inv_InvItemRepresent, self).__init__(lookup = "inv_inv_item")
+                                                   
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+        
+        itable = s3db.inv_inv_item
+        stable = s3db.supply_item
+
+        left = stable.on(stable.id == itable.item_id)
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(itable.id,
+                                        stable.name,
+                                        stable.um,
+                                        itable.item_source_no,
+                                        itable.bin,
+                                        itable.expiry_date,
+                                        itable.owner_org_id,
+                                        left=left)
+
+        self.queries += 1
+
+        # Bulk-represent owner_org_ids
+        organisation_id = str(itable.owner_org_id)
+        organisation_ids = [row[organisation_id] for row in rows]
+        if organisation_ids:
+            itable.owner_org_id.represent.bulk(organisation_ids)
+        
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        itable = current.s3db.inv_inv_item
+        
+        iitem = row.inv_inv_item
+        sitem = row.supply_item
+
+        stringify = lambda string: string if string else ""
+
+        ctn = stringify(iitem.item_source_no)
+        org = itable.owner_org_id.represent(iitem.owner_org_id)
+        bin = stringify(iitem.bin)
+
+        expires = iitem.expiry_date
+        if expires:
+            expires = "expires: %s" % \
+                      S3DateTime.date_represent(expires, utc=True)
+        else:
+            expires = ""
+
+        NONE = current.messages["NONE"]
+        rep_strings = [string for string in [sitem.name,
+                                             expires,
+                                             ctn,
+                                             org,
+                                             bin,
+                                             ]
+                              if string and string != NONE]
+        return " - ".join(rep_strings)
 
 # END =========================================================================
