@@ -1506,12 +1506,17 @@ class S3OptionsMenu(object):
         """ PROJECT / Project Tracking & Management """
 
         settings = current.deployment_settings
-        #activities = settings.get_project_activities()
+        #activities = lambda i: settings.get_project_activities()
+        activity_types = lambda i: settings.get_project_activity_types()
         community = settings.get_project_community()
         if community:
             IMPORT = "Import Project Communities"
         else:
             IMPORT = "Import Project Locations"
+        hazards = lambda i: settings.get_project_hazards()
+        sectors = lambda i: settings.get_project_sectors()
+        stats = lambda i: settings.has_module("stats")
+        themes = lambda i: settings.get_project_themes()
 
         menu = M(c="project")
 
@@ -1538,7 +1543,6 @@ class S3OptionsMenu(object):
                         M("Map", f="location", m="map"),
                      )
                     )
-            stats = lambda i: settings.has_module("stats")
             menu(
                  M("Reports", f="location", m="report")(
                     M("3W", f="location", m="report"),
@@ -1554,45 +1558,42 @@ class S3OptionsMenu(object):
                     M(IMPORT, f="location",
                       m="import", p="create"),
                  ),
-                M("Partner Organizations",  f="partners")(
+                 M("Partner Organizations",  f="partners")(
                     M("New", m="create"),
                     #M("Search"),
                     M("Import", m="import", p="create"),
-                ),
-                 M("Themes", f="theme")(
-                    M("New", m="create"),
-                    #M("Search"),
                  ),
-                 M("Activity Types", f="activity_type")(
+                 M("Activity Types", f="activity_type",
+                   check=activity_types)(
                     M("New", m="create"),
                     #M("Search"),
                  ),
                  M("Beneficiary Types", f="beneficiary_type",
-                   check = stats,)(
+                   check=stats)(
                     M("New", m="create"),
                     #M("Search"),
                  ),
                  M("Demographics", f="demographic",
-                   check = stats,)(
+                   check=stats)(
+                    M("New", m="create"),
+                    #M("Search"),
+                 ),
+                 M("Hazards", f="hazard",
+                   check=hazards)(
+                    M("New", m="create"),
+                    #M("Search"),
+                 ),
+                 M("Sectors", f="sector",
+                   check=sectors)(
+                    M("New", m="create"),
+                    #M("Search"),
+                 ),
+                 M("Themes", f="theme",
+                   check=themes)(
                     M("New", m="create"),
                     #M("Search"),
                  ),
                 )
-
-            if settings.get_project_mode_drr():
-                menu(
-                     M("Hazards", f="hazard")(
-                        M("New", m="create"),
-                        #M("Search"),
-                     )
-                    )
-            #if settings.get_project_sectors():
-            #    menu(
-            #         M("Sectors", c="org", f="sector")(
-            #            M("New", m="create"),
-            #            #M("Search"),
-            #         )
-            #        )
 
         elif settings.get_project_mode_task():
             menu(

@@ -370,6 +370,12 @@ def project_theme_id_widget():
     return widget
 
 # =============================================================================
+def sector():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller("org", "sector")
+
+# -----------------------------------------------------------------------------
 def status():
     """ RESTful CRUD controller """
 

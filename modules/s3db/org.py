@@ -1218,10 +1218,10 @@ class S3OrganisationGroupPersonModel(S3Model):
         tablename = "org_group_person"
         table = self.define_table(tablename,
                                   self.org_group_id(ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   self.pr_person_id(ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   *s3_meta_fields())
 
@@ -1238,7 +1238,7 @@ class S3OrganisationGroupTeamModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         # ---------------------------------------------------------------------
         # Link table between Organisation Groups & Teams
@@ -1247,15 +1247,50 @@ class S3OrganisationGroupTeamModel(S3Model):
         table = self.define_table(tablename,
                                   self.org_group_id("org_group_id",
                                                     ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   self.pr_group_id(ondelete="CASCADE",
-                                                   required=True,
+                                                   empty=False,
                                                    ),
                                   *s3_meta_fields())
 
+        self.configure(tablename,
+                       onaccept = self.org_group_team_onaccept,
+                       )
+
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_group_team_onaccept(form):
+        """
+            Update affiliations
+        """
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+
+        if not _id:
+            return
+
+        db = current.db
+        table = db.org_group_team
+
+        record = db(table.id == _id).select(table.group_id,
+                                            table.org_group_id,
+                                            limitby=(0, 1)).first()
+        if record:
+            org_group = ("org_organisation", record.org_group_id)
+            pr_group = ("pr_group", record.group_id)
+            current.s3db.pr_add_affiliation(org_group, pr_group,
+                                            role="Groups",
+                                            role_type=1) # 1 = OU
+        return
 
 # =============================================================================
 class S3OrganisationLocationModel(S3Model):
@@ -1976,12 +2011,51 @@ class S3OrganisationTeamModel(S3Model):
         #
         tablename = "org_organisation_team"
         table = self.define_table(tablename,
-                                  self.org_organisation_id(ondelete="CASCADE"),
-                                  self.pr_group_id(ondelete="CASCADE"),
+                                  self.org_organisation_id(ondelete="CASCADE",
+                                                           empty=False,
+                                                           ),
+                                  self.pr_group_id(ondelete="CASCADE",
+                                                   empty=False,
+                                                   ),
                                   *s3_meta_fields())
+
+        self.configure(tablename,
+                       onaccept = self.org_team_onaccept,
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_team_onaccept(form):
+        """
+            Update affiliations
+        """
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+
+        if not _id:
+            return
+
+        db = current.db
+        table = db.org_organisation_team
+
+        record = db(table.id == _id).select(table.group_id,
+                                            table.organisation_id,
+                                            limitby=(0, 1)).first()
+        if record:
+            org = ("org_organisation", record.organisation_id)
+            group = ("pr_group", record.group_id)
+            current.s3db.pr_add_affiliation(org, group,
+                                            role="Groups",
+                                            role_type=1) # 1 = OU
+        return
 
 # =============================================================================
 class S3OrganisationTypeTagModel(S3Model):

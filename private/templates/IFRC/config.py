@@ -125,7 +125,7 @@ def ifrc_realm_entity(table, row):
             # Inherit realm_entity from parent record
             if fk == EID:
                 ftable = s3db.pr_person
-                query = ftable[EID] == row[EID]
+                query = (ftable[EID] == row[EID])
             else:
                 ftablename = table[fk].type[10:] # reference tablename
                 ftable = s3db[ftablename]
@@ -1242,7 +1242,7 @@ def customize_pr_group(**attr):
             required=False,
             branches=True,
             )
-    
+
     s3 = current.response.s3
 
     # Custom prep

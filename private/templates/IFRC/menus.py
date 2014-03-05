@@ -406,11 +406,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("New", m="create"),
                     #    #M("Search"),
                     #),
-                    M(SECTORS, f="sector", c="org", restrict=[ADMIN],
-                      check=manager_mode)(
-                        M("New", m="create"),
-                        #M("Search"),
-                    ),
                     #M("My Profile", c="hrm", f="person",
                     #  check=personal_mode, vars=dict(mode="personal")),
                     # This provides the link to switch to the manager mode:
@@ -421,6 +416,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #  check=manager_mode, vars=dict(mode="personal"))
                 )
 
+    # -------------------------------------------------------------------------
+    def org(self):
+        """ Organisation Management """
+
+        # Same as HRM
+        return self.hrm()
+    
     # -------------------------------------------------------------------------
     @staticmethod
     def check_org(org_name):
@@ -701,6 +703,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
+    def req(self):
+        """ Requests Management """
+
+        # Same as Inventory
+        return self.inv()
+
+    # -------------------------------------------------------------------------
     def irs(self):
         """ IRS Incident Reporting """
 
@@ -726,20 +735,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Incidents", m="report"),
                     ),
                 )
-
-    # -------------------------------------------------------------------------
-    def org(self):
-        """ Organisation Management """
-
-        # Same as HRM
-        return self.hrm()
-    
-    # -------------------------------------------------------------------------
-    def req(self):
-        """ Organisation Management """
-
-        # Same as Inventory
-        return self.inv()
 
     # -------------------------------------------------------------------------
     def event(self):

@@ -228,7 +228,7 @@ class S3PersonEntity(S3Model):
                        #   - Personalised configurations
                        #   - OU configurations (Organisation/Branch/Facility/Team)
                        gis_config=pe_id,
-                      )
+                       )
                       
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
@@ -241,7 +241,6 @@ class S3PersonEntity(S3Model):
                         method="search_ac",
                         action=self.pe_search_ac)
 
-                      
         # ---------------------------------------------------------------------
         # Person <-> User
         #
@@ -1682,28 +1681,28 @@ class S3GroupModel(S3Model):
         else:
             return
 
-        db = current.db
-        mtable = db.pr_group_membership
-
-        if _id:
-            record = db(mtable.id == _id).select(limitby=(0, 1)).first()
-        else:
+        if not _id:
             return
+
+        db = current.db
+        table = db.pr_group_membership
+
+        record = db(table.id == _id).select(limitby=(0, 1)).first()
         if record:
             person_id = record.person_id
             group_id = record.group_id
             if person_id and group_id and not record.deleted:
-                query = (mtable.person_id == person_id) & \
-                        (mtable.group_id == group_id) & \
-                        (mtable.id != record.id) & \
-                        (mtable.deleted != True)
+                query = (table.person_id == person_id) & \
+                        (table.group_id == group_id) & \
+                        (table.id != record.id) & \
+                        (table.deleted != True)
                 deleted_fk = {"person_id": person_id,
                               "group_id": group_id}
                 db(query).update(deleted = True,
                                  person_id = None,
                                  group_id = None,
                                  deleted_fk = json.dumps(deleted_fk))
-            pr_update_affiliations(mtable, record)
+            pr_update_affiliations(table, record)
         return
 
 # =============================================================================
