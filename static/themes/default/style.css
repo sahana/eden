@@ -183,3 +183,12 @@ textarea:focus {
     border: 1px dotted #afafaf;
     white-space: pre-wrap;
 }
+.dataTable .action-btn,
+.dataTable .delete-btn-ajax,
+.dataTable .delete-btn {
+    color: #FFFFFF;
+}
+
+td.actions {
+    white-space: nowrap;
+}
