@@ -847,11 +847,12 @@ span.tab_next_inactive a {
 }
 
 /* Action Buttons */
+/* Breaks current Bootstrap-based themes - seems like a theme-specific style rather than a Widgets thing?
 .dataTable .action-btn,
 .dataTable .delete-btn-ajax,
 .dataTable .delete-btn {
     color: #ffffff;
-}
+} */
 
 .ui-tabs .ui-tabs-panel {
     padding: 2px 5px;
