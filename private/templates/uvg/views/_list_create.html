@@ -35,44 +35,22 @@
    </div>
   </div>
   <div class='row'>
-   <div class='small-8 columns'>
-    {{try:}}{{if list_filter_form:}}
-    <div id='list-filter' class='form-container'>
-     {{=list_filter_form}}
-    </div>
-    {{pass}}
-    {{except:}}{{pass}}
-   </div>
-   <div class='small-4 columns'></div>
-  </div>
-  <div class='row'>
-   {{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
    {{try:}}{{items = items}}
-   {{if ltype == "datalist":}}
-    <div id='dl-container' class='small-12 columns'>
-     {{=items}}
-    </div>
-   {{else:}}
-    <div id='table-container' class='small-12 columns'>
-     {{=items}}
-    </div>
-   {{pass}}
+   <div id='table-container' class='small-12 columns'>
+    {{=items}}
+   </div>
    {{except:}}{{pass}}
   </div>
  </div>
 </div>
 <div class='row'>
  {{if s3.rfooter:}}
- <div id='rfooter' class='small-12 columns'>
-  {{=XML(s3.rfooter)}}
- </div>
+  <div id='rfooter' class='small-12 columns'>
+   {{=XML(s3.rfooter)}}
+  </div>
  {{pass}}
 </div>
-{{if ltype == "datalist":}}
-{{include "dataLists.html"}}
-{{else:}}
 {{include "dataTables.html"}}
-{{pass}}
 {{if r.http == "POST" or not hide_listadd:}}
 {{script = '''$('#list-add').show()
 $('#show-add-btn').hide()'''}}
