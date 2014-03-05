@@ -603,9 +603,14 @@ class S3Request(object):
 
         # Custom action?
         if not self.custom_action:
-            self.custom_action = current.s3db.get_method(self.prefix, self.name,
-                                                         component_name=self.component_name,
-                                                         method=self.method)
+            action = current.s3db.get_method(self.prefix,
+                                             self.name,
+                                             component_name=self.component_name,
+                                             method=self.method)
+            if isinstance(action, (type, types.ClassType)):
+                self.custom_action = action()
+            else:
+                self.custom_action = action
 
         # Method handling
         http = self.http
