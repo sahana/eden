@@ -1268,7 +1268,8 @@ def inject_enable(output):
                        _type="checkbox",
                        _value="on",
                        _id="layer_enable",
-                      _class="boolean")
+                      _class="boolean",
+                      )
         comment = ""
         if s3_formstyle == "bootstrap":
             _controls = DIV(widget, comment, _class="controls")
@@ -1278,10 +1279,7 @@ def inject_enable(output):
                       _id="%s__row" % id
                       )
         elif callable(s3_formstyle):
-            row = s3_formstyle(id=id,
-                               label=label,
-                               widget=widget,
-                               comment=comment)
+            row = s3_formstyle(id, label, widget, comment)
         else:
             # Unsupported
             raise

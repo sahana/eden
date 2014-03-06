@@ -2280,8 +2280,7 @@ def customize_cms_post(**attr):
                            list_fields = list_fields,
                            )
 
-        elif r.representation == "plain" and \
-             r.method != "search":
+        elif r.representation == "plain":
             # Map Popups
             table = r.table
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -2319,8 +2318,7 @@ def customize_cms_post(**attr):
                 output["form"].add_class("cms_post")
             elif "item" in output and hasattr(output["item"], "add_class"):
                 output["item"].add_class("cms_post")
-        elif r.representation == "plain" and \
-             r.method != "search":
+        elif r.representation == "plain":
             # Map Popups
             #output = cms_post_popup(r)
             pass

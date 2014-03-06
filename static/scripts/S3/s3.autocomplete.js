@@ -505,18 +505,23 @@
             // No Match or too many results
             return item.label;
         }
-        if (S3.pr_reverse_names) {
-            var name = item.last + ', ' + item.first;
-            if (item.middle) {
-                name += ' ' + item.middle;
-            }
+        if (item.org || item.job) {
+            // Represent the Person as an HR
+            var name = represent_hr(item);
         } else {
-            var name = item.first;
-            if (item.middle) {
-                name += ' ' + item.middle;
-            }
-            if (item.last) {
-                name += ' ' + item.last;
+            if (S3.pr_reverse_names) {
+                var name = item.last + ', ' + item.first;
+                if (item.middle) {
+                    name += ' ' + item.middle;
+                }
+            } else {
+                var name = item.first;
+                if (item.middle) {
+                    name += ' ' + item.middle;
+                }
+                if (item.last) {
+                    name += ' ' + item.last;
+                }
             }
         }
         return name;
