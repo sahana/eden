@@ -13,33 +13,33 @@
 }
 
 /* Links should ALWAYS be unvisited (widget.css overrides foundation styles, so override it again) */
-#contents a:not(.action-btn):not(.delete-btn) {
+#content a:not(.action-btn):not(.delete-btn) {
     color: #039;
     text-decoration: underline;
     outline: 0;
 }
-#contents a:hover:not(.action-btn):not(.delete-btn) {
+#content a:hover:not(.action-btn):not(.delete-btn) {
     color: #c00;
     text-decoration: none;
     background-color: #ffffcc;
     outline: 0;
 }
-#contents a:active:not(.action-btn):not(.delete-btn),
-#contents a:focus:not(.action-btn):not(.delete-btn) {
+#content a:active:not(.action-btn):not(.delete-btn),
+#content a:focus:not(.action-btn):not(.delete-btn) {
     outline: 0;
 }
 
-#contents a.help,
-#contents a:link.help {
+#content a.help,
+#content a:link.help {
     color: #fff;
     text-decoration: none;
     margin-right: 10px;
 }
-#contents a:hover.help {
+#content a:hover.help {
     background-color: #336699;
     text-decoration: underline;
 }
-#contents a:visited.help {
+#content a:visited.help {
     font-weight: normal;
     color: #666;
 }
@@ -47,6 +47,16 @@
 .filter-form table tr,
 .filter-form .ui-multiselect {
     max-width: 60%;
+}
+
+.dataTables_length label {
+    white-space: nowrap;
+    margin-right: 10em;
+    margin-bottom: 1em;
+}
+.dataTables_length label select {
+    height: auto;
+    padding: 2px;
 }
 
 /* Form elements (widget.css overrides foundation, so override it again) */
@@ -199,11 +209,6 @@ td.actions {
     white-space: nowrap;
 }
 
-/* Better highlighting of hovered top menu items */
-.top-bar-section li:not(.has-form) a:not(.button):hover {
-    background: #575757;
-}
-
 /* Form/item-containers */
 .form-container,
 .item-container{
@@ -244,4 +249,91 @@ td.actions {
 }
 #footer button.btn:hover {
     background: #A0A0A0;
+}
+
+/*** Typography ***/
+form {
+    font-size: 0.8em;
+}
+label.inline {
+    padding: 0;
+}
+
+#content h1,
+#content h2 {
+    font-size: 1.3em;
+    font-weight: bolder;
+    background: #F7F8F9;
+    padding: 5px 5px 5px 5px;
+}
+#content h2:first-child {
+    margin-top: 10px;
+    padding-left: 10px;
+}
+p {
+    padding: 5px;
+    margin: 0;
+}
+
+/* Colours */
+
+/*
+.top-bar,
+.top-bar-section li:not(.has-form) a:not(.button) {
+    background-color: #0C0E0F;
+}
+*/
+.top-bar-section li.active:not(.has-form) a:not(.button) {
+    background-color: #73726F;
+}
+.top-bar-section li.active:not(.has-form) a:not(.button):hover {
+    background-color: #BDB6B0;
+}
+.top-bar-section li:not(.has-form) a:not(.button):hover {
+    background-color: #BDB6B0;
+}
+.sidebar {
+    background-color: #BDB6B0;
+}
+
+.side-nav li a:not(.button) {
+    color: #222222;
+}
+.side-nav li.active > a:first-child:not(.button) {
+    color: #FFFFFF;
+    background-color: #73726F;
+}
+.side-nav li a:not(.button):hover,
+.side-nav li a:not(.button):focus {
+    color: #222222 !important;
+    background-color: #F1EDEC !important;
+}
+.side-nav li.divider {
+    border-top-color: white;
+}
+.side-nav .heading {
+    border-top-color: #ADA6A0;
+}
+table.dataTable tr.odd td.sorting_1 {
+    background-color: #FAFAFA;
+}
+table.dataTable tr.even td.sorting_1 {
+    background-color: #F2F2F2;
+}
+table.dataTable tr.odd {
+    background-color: #FFFFFF;
+}
+table.dataTable tr.even {
+    background-color: #F9F9F9;
+}
+#table-container tr.odd td {
+    border-color: #CCCCCC;
+}
+.ui-widget-header {
+    background: #BDB6B0;
+    border: 1px solid #ADA6A0;
+}
+.ui-state-active,
+.ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active {
+    border-color: #ADA6A0;
 }
