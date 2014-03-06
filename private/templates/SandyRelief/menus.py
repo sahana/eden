@@ -126,11 +126,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        #current.s3db.inv_recv_crud_strings()
-        #crud_strings = current.response.s3.crud_strings
-        #inv_recv_list = crud_strings.inv_recv.title_list
-        #inv_recv_search = crud_strings.inv_recv.title_search
-
         return M()(
                     M("Facilities", c="inv", f="facility")(
                         M("New", m="create"),

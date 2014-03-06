@@ -201,7 +201,6 @@ def shelter():
                         title_display = T("Registration Details"),
                         title_list = T("Registered People"),
                         title_update = T("Edit Registration"),
-                        title_search = T("Search Registations"),
                         subtitle_create = REGISTER_LABEL,
                         label_list_button = T("List Registrations"),
                         label_create_button = T("Register Person"),

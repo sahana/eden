@@ -125,7 +125,6 @@ class S3OrganisationModel(S3Model):
             title_display=T("Organization Type Details"),
             title_list=T("Organization Types"),
             title_update=T("Edit Organization Type"),
-            title_search=T("Search Organization Types"),
             subtitle_create=T("Add New Organization Type"),
             label_list_button=T("List Organization Types"),
             label_create_button=T("Add New Organization Type"),
@@ -201,7 +200,6 @@ class S3OrganisationModel(S3Model):
                 title_display=T("Region Details"),
                 title_list=T("Regions"),
                 title_update=T("Edit Region"),
-                title_search=T("Search Regions"),
                 subtitle_create=T("Add New Region"),
                 label_list_button=T("List Regions"),
                 label_create_button=T("Add New Region"),
@@ -320,7 +318,6 @@ class S3OrganisationModel(S3Model):
             title_display=T("Organization Details"),
             title_list=T("Organizations"),
             title_update=T("Edit Organization"),
-            title_search=T("Search Organizations"),
             title_upload=T("Import Organizations"),
             subtitle_create=ADD_ORGANIZATION,
             label_list_button=T("List Organizations"),
@@ -880,7 +877,6 @@ class S3OrganisationBranchModel(S3Model):
             title_display=T("Branch Organization Details"),
             title_list=T("Branch Organizations"),
             title_update=T("Edit Branch Organization"),
-            title_search=T("Search Branch Organizations"),
             #title_upload=T("Import Branch Organizations"),
             subtitle_create=T("Add New Branch Organization"),
             label_list_button=T("List Branch Organizations"),
@@ -1075,7 +1071,6 @@ class S3OrganisationGroupModel(S3Model):
                 title_display = T("Coalition Details"),
                 title_list = T("Coalitions"),
                 title_update = T("Update Coalition"),
-                title_search = T("Search Coalitions"),
                 subtitle_create = T("Add New Coalition"),
                 label_list_button = T("List Coalitions"),
                 label_create_button = T("Add Coalition"),
@@ -1090,7 +1085,6 @@ class S3OrganisationGroupModel(S3Model):
                 title_display = T("Network Details"),
                 title_list = T("Networks"),
                 title_update = T("Edit Network"),
-                title_search = T("Search Networks"),
                 subtitle_create = T("Add New Network"),
                 label_list_button = T("List Networks"),
                 label_create_button = T("Add Network"),
@@ -1218,10 +1212,10 @@ class S3OrganisationGroupPersonModel(S3Model):
         tablename = "org_group_person"
         table = self.define_table(tablename,
                                   self.org_group_id(ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   self.pr_person_id(ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   *s3_meta_fields())
 
@@ -1238,7 +1232,7 @@ class S3OrganisationGroupTeamModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         # ---------------------------------------------------------------------
         # Link table between Organisation Groups & Teams
@@ -1247,15 +1241,50 @@ class S3OrganisationGroupTeamModel(S3Model):
         table = self.define_table(tablename,
                                   self.org_group_id("org_group_id",
                                                     ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   self.pr_group_id(ondelete="CASCADE",
-                                                   required=True,
+                                                   empty=False,
                                                    ),
                                   *s3_meta_fields())
 
+        self.configure(tablename,
+                       onaccept = self.org_group_team_onaccept,
+                       )
+
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_group_team_onaccept(form):
+        """
+            Update affiliations
+        """
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+
+        if not _id:
+            return
+
+        db = current.db
+        table = db.org_group_team
+
+        record = db(table.id == _id).select(table.group_id,
+                                            table.org_group_id,
+                                            limitby=(0, 1)).first()
+        if record:
+            org_group = ("org_organisation", record.org_group_id)
+            pr_group = ("pr_group", record.group_id)
+            current.s3db.pr_add_affiliation(org_group, pr_group,
+                                            role="Groups",
+                                            role_type=1) # 1 = OU
+        return
 
 # =============================================================================
 class S3OrganisationLocationModel(S3Model):
@@ -1289,7 +1318,6 @@ class S3OrganisationLocationModel(S3Model):
             title_display = T("Location"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),
-            title_search = T("Search Locations"),
             title_upload = T("Import Location data"),
             subtitle_create = T("Add New Location"),
             label_list_button = T("List Locations"),
@@ -1374,7 +1402,6 @@ class S3OrganisationResourceModel(S3Model):
             title_display=T("Resource Type Details"),
             title_list=T("Resource Types"),
             title_update=T("Edit Resource Type"),
-            title_search=T("Search Resource  Types"),
             title_upload=T("Import Resource Types"),
             subtitle_create=ADD_RESOURCE_TYPE,
             label_list_button=T("Resource Types"),
@@ -1441,7 +1468,6 @@ class S3OrganisationResourceModel(S3Model):
             title_list=T("Resource Inventory"),
             title_update=T("Edit Resource"),
             title_map=T("Map of Resources"),
-            title_search=T("Search Resource Inventory"),
             title_upload=T("Import Resources"),
             subtitle_create=T("Add New Resource"),
             label_list_button=T("Resource Inventory"),
@@ -1548,7 +1574,6 @@ class S3OrganisationSectorModel(S3Model):
                 title_display=T("Cluster Details"),
                 title_list=T("Clusters"),
                 title_update=T("Edit Cluster"),
-                title_search=T("Search Clusters"),
                 subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Clusters"),
                 label_create_button=ADD_SECTOR,
@@ -1566,7 +1591,6 @@ class S3OrganisationSectorModel(S3Model):
                 title_display=T("Sector Details"),
                 title_list=T("Sectors"),
                 title_update=T("Edit Sector"),
-                title_search=T("Search Sectors"),
                 subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Sectors"),
                 label_create_button=ADD_SECTOR,
@@ -1648,7 +1672,6 @@ class S3OrganisationSectorModel(S3Model):
                 # title_display = T("Cluster Subsector Details"),
                 # title_list = T("Cluster Subsectors"),
                 # title_update = T("Edit Cluster Subsector"),
-                # title_search = T("Search Cluster Subsectors"),
                 # subtitle_create = T("Add New Cluster Subsector"),
                 # label_list_button = T("List Cluster Subsectors"),
                 # label_create_button = T("Add Cluster Subsector"),
@@ -1664,7 +1687,6 @@ class S3OrganisationSectorModel(S3Model):
                 # title_display = T("Subsector Details"),
                 # title_list = T("Subsectors"),
                 # title_update = T("Edit Subsector"),
-                # title_search = T("Search Subsectors"),
                 # subtitle_create = T("Add New Subsector"),
                 # label_list_button = T("List Subsectors"),
                 # label_create_button = T("Add Subsector"),
@@ -1703,7 +1725,6 @@ class S3OrganisationSectorModel(S3Model):
             title_display = T("Sector"),
             title_list = T("Sectors"),
             title_update = T("Edit Sector"),
-            title_search = T("Search Sectors"),
             title_upload = T("Import Sector data"),
             subtitle_create = T("Add New Sector"),
             label_list_button = T("List Sectors"),
@@ -1886,7 +1907,6 @@ class S3OrganisationServiceModel(S3Model):
             title_display = T("Service"),
             title_list = T("Services"),
             title_update = T("Edit Service"),
-            title_search = T("Search Services"),
             title_upload = T("Import Service data"),
             subtitle_create = T("Add New Service"),
             label_list_button = T("List Services"),
@@ -1976,12 +1996,51 @@ class S3OrganisationTeamModel(S3Model):
         #
         tablename = "org_organisation_team"
         table = self.define_table(tablename,
-                                  self.org_organisation_id(ondelete="CASCADE"),
-                                  self.pr_group_id(ondelete="CASCADE"),
+                                  self.org_organisation_id(ondelete="CASCADE",
+                                                           empty=False,
+                                                           ),
+                                  self.pr_group_id(ondelete="CASCADE",
+                                                   empty=False,
+                                                   ),
                                   *s3_meta_fields())
+
+        self.configure(tablename,
+                       onaccept = self.org_team_onaccept,
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_team_onaccept(form):
+        """
+            Update affiliations
+        """
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+
+        if not _id:
+            return
+
+        db = current.db
+        table = db.org_organisation_team
+
+        record = db(table.id == _id).select(table.group_id,
+                                            table.organisation_id,
+                                            limitby=(0, 1)).first()
+        if record:
+            org = ("org_organisation", record.organisation_id)
+            group = ("pr_group", record.group_id)
+            current.s3db.pr_add_affiliation(org, group,
+                                            role="Groups",
+                                            role_type=1) # 1 = OU
+        return
 
 # =============================================================================
 class S3OrganisationTypeTagModel(S3Model):
@@ -2605,7 +2664,6 @@ class S3SiteDetailsModel(S3Model):
             title_display = T("%(site_label)s Status") % site_label,
             title_list = T("%(site_label)s Status") % site_label,
             title_update = T("Edit %(site_label)s Status") % site_label,
-            title_search = T("Search %(site_label)s Status") % site_label,
             subtitle_create = T("Add New %(site_label)s Status") % site_label,
             label_list_button = T("List %(site_label)s Status") % site_label,
             label_create_button = ADD_DETAILS,
@@ -2680,7 +2738,6 @@ class S3FacilityModel(S3Model):
             title_display=T("Facility Type Details"),
             title_list=T("Facility Types"),
             title_update=T("Edit Facility Type"),
-            title_search=T("Search Facility Types"),
             title_upload=T("Import Facility Types"),
             subtitle_create=T("Add New Facility Type"),
             label_list_button=T("List Facility Types"),
@@ -2781,7 +2838,6 @@ class S3FacilityModel(S3Model):
             title_list=T("Facilities"),
             title_update=T("Edit Facility"),
             title_map=T("Map of Facilities"),
-            title_search=T("Search Facilities"),
             title_upload=T("Import Facilities"),
             subtitle_create=T("Add New Facility"),
             label_list_button=T("List Facilities"),
@@ -3274,7 +3330,6 @@ class S3RoomModel(S3Model):
             title_display=T("Room Details"),
             title_list=T("Rooms"),
             title_update=T("Edit Room"),
-            title_search=T("Search Rooms"),
             subtitle_create=T("Add New Room"),
             label_list_button=T("List Rooms"),
             label_create_button=ADD_ROOM,
@@ -3380,7 +3435,6 @@ class S3OfficeModel(S3Model):
             title_display=T("Office Type Details"),
             title_list=T("Office Types"),
             title_update=T("Edit Office Type"),
-            title_search=T("Search Office Types"),
             subtitle_create=ADD_OFFICE_TYPE,
             label_list_button=T("List Office Types"),
             label_create_button=ADD_OFFICE_TYPE,
@@ -3481,7 +3535,6 @@ class S3OfficeModel(S3Model):
             title_display=T("Office Details"),
             title_list=T("Offices"),
             title_update=T("Edit Office"),
-            title_search=T("Search Offices"),
             title_upload=T("Import Offices"),
             title_map=T("Map of Offices"),
             subtitle_create=ADD_OFFICE,

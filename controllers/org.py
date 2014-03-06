@@ -255,7 +255,6 @@ def donor():
         title_display = T("Donor Details"),
         title_list = T("Donors Report"),
         title_update = T("Edit Donor"),
-        title_search = T("Search Donors"),
         subtitle_create = T("Add New Donor"),
         label_list_button = T("List Donors"),
         label_create_button = ADD_DONOR,

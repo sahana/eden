@@ -238,7 +238,6 @@ S3OptionsFilter({
             title_display = T("Asset Details"),
             title_list =  T("Assets"),
             title_update = T("Edit Asset"),
-            title_search = T("Search Assets"),
             title_upload = T("Import Assets"),
             subtitle_create = T("Add New Asset"),
             label_list_button =  T("List Assets"),
@@ -308,24 +307,20 @@ S3OptionsFilter({
                          #_class = "filter-search",
                          ),
             S3OptionsFilter("item_id$item_category_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
-                            #label = T("Category"),
+                            filter = "auto",
                             represent = "%(name)s",
                             widget = "multiselect",
                             ),
             S3OptionsFilter("organisation_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
-                            #label = T("Organization"),
+                            filter = "auto",
                             represent = "%(name)s",
                             widget = "multiselect",
+                            hidden = True,
                             ),
             S3LocationFilter("location_id",
-                             #hidden = True,
-                             #label = T("Location"),
                              levels = levels,
                              widget = "multiselect",
+                             hidden = True,
                              ),
             ]
 
@@ -371,12 +366,34 @@ S3OptionsFilter({
                                     "comments",
                                     )
 
+        # Default summary
+        summary = [{"name": "addform",
+                    "common": True,
+                    "widgets": [{"method": "create"}],
+                    },
+                   {"name": "table",
+                    "label": "Table",
+                    "widgets": [{"method": "datatable"}]
+                    },
+                   {"name": "report",
+                    "label": "Report",
+                    "widgets": [{"method": "report",
+                                 "ajax_init": True}]
+                    },
+                   {"name": "map",
+                    "label": "Map",
+                    "widgets": [{"method": "map",
+                                 "ajax_init": True}],
+                    },
+                   ]
+                   
         # Resource Configuration
         configure(tablename,
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
                   crud_form = crud_form,
+                  summary = summary,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   mark_required = ["organisation_id"],
@@ -561,7 +578,6 @@ S3OptionsFilter({
             title_display = T("Asset Log Details"),
             title_list = T("Asset Log"),
             title_update = T("Edit Asset Log Entry"),
-            title_search = T("Search Asset Log"),
             subtitle_create = ADD_ASSIGN,
             label_list_button = T("Asset Log"),
             label_create_button = ADD_ASSIGN,

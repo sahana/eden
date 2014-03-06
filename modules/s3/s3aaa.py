@@ -1850,10 +1850,15 @@ S3OptionsFilter({
 
         if "@" in approver:
             approver = [approver]
-        for each_approver in approver:
-            result = self.settings.mailer.send(to = each_approver,
-                                               subject = subject,
-                                               message = message)
+        mailer = self.settings.mailer
+        if mailer.settings.server:
+            for each_approver in approver:
+                result = mailer.send(to = each_approver,
+                                     subject = subject,
+                                     message = message)
+        else:
+            # Email system not configured (yet)
+            result = None
         if not result:
             # Don't prevent registration just because email not configured
             #db.rollback()

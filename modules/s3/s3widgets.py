@@ -109,6 +109,7 @@ from gluon import *
 #from gluon.http import HTTP
 #from gluon.validators import *
 from gluon.html import BUTTON
+from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
@@ -4702,16 +4703,20 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             header = '''header:false'''
         else:
             header = '''header:"%s"''' % header_opt
+        noneSelectedText = self.noneSelectedText
+        if not isinstance(noneSelectedText, lazyT):
+            noneSelectedText = T(noneSelectedText)
         script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
                  (selector,
                   T("All selected"),
                   T("# selected"),
                   header,
                   self.selectedList,
-                  T(self.noneSelectedText))
+                  noneSelectedText)
 
         if filter_opt:
-            script = '''%s.multiselectfilter()''' % script
+            script = '''%s.multiselectfilter({label:'%s',placeholder:'%s'})''' % \
+                (script, "%s:" % T("Filter"), T("Enter keywords"))
         current.response.s3.jquery_ready.append(script)
 
         return widget

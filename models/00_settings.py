@@ -350,7 +350,6 @@ s3.crud_strings = Storage(
     title_display = T("Record Details"),
     title_list = T("Records"),
     title_update = T("Edit Record"),
-    title_search = T("Search Records"),
     title_map = T("Map"),
     title_report = T("Report"),
     subtitle_create = T("Add New Record"),

@@ -1332,6 +1332,12 @@ class S3Config(Storage):
         """
         return self.ui.get("report_auto_submit", 800)
 
+    def get_ui_use_button_glyphicons(self):
+        """
+            Use glyphicons on action buttons (requires bootstrap CSS)
+        """
+        return self.ui.get("use_button_glyphicons", False)
+
     # =========================================================================
     # Messaging
     #

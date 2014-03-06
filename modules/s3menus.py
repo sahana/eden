@@ -465,11 +465,10 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="asset")(
-                    M("Assets", f="asset")(
+                    M("Assets", f="asset", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Map", m="map"),
-                        M("Report", m="report"),
+                        #M("Map", m="map"),
                         M("Import", m="import", p="create"),
                     ),
                     #M("Brands", f="brand",
@@ -477,10 +476,9 @@ class S3OptionsMenu(object):
                     #    M("New", m="create"),
                     #    M("Search"),
                     #),
-                    M("Items", f="item")(
+                    M("Items", f="item", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", f="item_category",
@@ -1105,9 +1103,7 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         current.s3db.inv_recv_crud_strings()
-        crud_strings = current.response.s3.crud_strings
-        inv_recv_list = crud_strings.inv_recv.title_list
-        inv_recv_search = crud_strings.inv_recv.title_search
+        inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
         settings = current.deployment_settings
         use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
@@ -1152,10 +1148,9 @@ class S3OptionsMenu(object):
                         M("Search Shipped Items", f="track_item"),
                         M("Timeline", args="timeline"),
                     ),
-                    M("Items", c="supply", f="item")(
+                    M("Items", c="supply", f="item", m="summary")(
                         M("New", m="create"),
                         #M("Search"),
-                        M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories
@@ -1506,12 +1501,17 @@ class S3OptionsMenu(object):
         """ PROJECT / Project Tracking & Management """
 
         settings = current.deployment_settings
-        #activities = settings.get_project_activities()
+        #activities = lambda i: settings.get_project_activities()
+        activity_types = lambda i: settings.get_project_activity_types()
         community = settings.get_project_community()
         if community:
             IMPORT = "Import Project Communities"
         else:
             IMPORT = "Import Project Locations"
+        hazards = lambda i: settings.get_project_hazards()
+        sectors = lambda i: settings.get_project_sectors()
+        stats = lambda i: settings.has_module("stats")
+        themes = lambda i: settings.get_project_themes()
 
         menu = M(c="project")
 
@@ -1538,7 +1538,6 @@ class S3OptionsMenu(object):
                         M("Map", f="location", m="map"),
                      )
                     )
-            stats = lambda i: settings.has_module("stats")
             menu(
                  M("Reports", f="location", m="report")(
                     M("3W", f="location", m="report"),
@@ -1554,45 +1553,42 @@ class S3OptionsMenu(object):
                     M(IMPORT, f="location",
                       m="import", p="create"),
                  ),
-                M("Partner Organizations",  f="partners")(
+                 M("Partner Organizations",  f="partners")(
                     M("New", m="create"),
                     #M("Search"),
                     M("Import", m="import", p="create"),
-                ),
-                 M("Themes", f="theme")(
-                    M("New", m="create"),
-                    #M("Search"),
                  ),
-                 M("Activity Types", f="activity_type")(
+                 M("Activity Types", f="activity_type",
+                   check=activity_types)(
                     M("New", m="create"),
                     #M("Search"),
                  ),
                  M("Beneficiary Types", f="beneficiary_type",
-                   check = stats,)(
+                   check=stats)(
                     M("New", m="create"),
                     #M("Search"),
                  ),
                  M("Demographics", f="demographic",
-                   check = stats,)(
+                   check=stats)(
+                    M("New", m="create"),
+                    #M("Search"),
+                 ),
+                 M("Hazards", f="hazard",
+                   check=hazards)(
+                    M("New", m="create"),
+                    #M("Search"),
+                 ),
+                 M("Sectors", f="sector",
+                   check=sectors)(
+                    M("New", m="create"),
+                    #M("Search"),
+                 ),
+                 M("Themes", f="theme",
+                   check=themes)(
                     M("New", m="create"),
                     #M("Search"),
                  ),
                 )
-
-            if settings.get_project_mode_drr():
-                menu(
-                     M("Hazards", f="hazard")(
-                        M("New", m="create"),
-                        #M("Search"),
-                     )
-                    )
-            #if settings.get_project_sectors():
-            #    menu(
-            #         M("Sectors", c="org", f="sector")(
-            #            M("New", m="create"),
-            #            #M("Search"),
-            #         )
-            #        )
 
         elif settings.get_project_mode_task():
             menu(

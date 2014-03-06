@@ -102,7 +102,6 @@ class S3DVRModel(S3Model):
             title_display = T("Case Details"),
             title_list = T("Cases"),
             title_update = T("Edit Case"),
-            title_search = T("Search Cases"),
             subtitle_create = T("Add New Case"),
             label_list_button = T("List Cases"),
             label_create_button = ADD_CASE,

@@ -49,7 +49,7 @@
     max-width: 60%;
 }
 
-/* Form elements (widget.css overrides foundation styles, so override it again) */
+/* Form elements (widget.css overrides foundation, so override it again) */
 .form-container form input,
 .form-container form button,
 .form-container form select,
@@ -97,7 +97,7 @@ select {
   color: white;
 }
 
-/* Adapt rheader tabs to theme */
+/* Adapt rheader tabs to foundation theme */
 div.tabs {
     border-bottom: 1px solid #2BA6CB;
     clear: left;
@@ -189,3 +189,59 @@ span.tab_other:hover {
     background-color: #a20c10;
 }
 
+/* Action buttons in datatables */
+.dataTable .action-btn,
+.dataTable .delete-btn-ajax,
+.dataTable .delete-btn {
+    color: #FFFFFF;
+}
+td.actions {
+    white-space: nowrap;
+}
+
+/* Better highlighting of hovered top menu items */
+.top-bar-section li:not(.has-form) a:not(.button):hover {
+    background: #575757;
+}
+
+/* Form/item-containers */
+.form-container,
+.item-container{
+    width: auto;
+    overflow: inherit;
+}
+ .form-row > .columns > label {
+    font-weight: bold;
+}
+.item-container .controls {
+    background: #FAFAFA;
+    padding: 0.35em;
+    min-height: 1.7em;
+}
+.form-container form,
+.item-container form {
+    background: #FEFEFE;
+    border: 1px solid #EEEEEE;
+    padding: 5px 10px;
+}
+
+/* Footer */
+#footer {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #EEEEEE;
+}
+#footer button.btn {
+    background: #DDDDDD;
+    font-size: 0.6875rem;
+    border: 0;
+    line-height: 1;
+    margin-bottom: inherit;
+    margin-left: 2px;
+    margin-right: 2px;
+    padding: 0.25rem 0.5rem 0.375rem;
+    cursor: pointer;
+}
+#footer button.btn:hover {
+    background: #A0A0A0;
+}
