@@ -45,6 +45,15 @@ def person():
     def prep(r):
         resource = r.resource
         
+        table = resource.table
+        
+        # Disallow "unknown" gender and defaults to "male"
+        evr_gender_opts = dict((k, v) for k, v in s3db.pr_gender_opts.items()
+                                      if k in (2, 3))
+        gender = table.gender
+        gender.requires = IS_IN_SET(evr_gender_opts, zero=None)
+        gender.default = 3
+        
         if r.interactive and not r.component:
 
             # Filter widgets
@@ -82,8 +91,6 @@ def person():
                                         "last_name",
                                         "date_of_birth",
                                         "case.fiscal_code",
-                                        # @todo: split this into 3 different
-                                        #        inline-fields (really? why?)
                                         S3SQLInlineComponent(
                                             "identity",
                                             label = T("Identity Documents"),
@@ -145,6 +152,12 @@ def group():
                                   "comments",
                                   ],
                    )
+    
+    # Custom method to get a list of available shelters
+    s3db.set_method("pr", "group",
+                    method="available_shelters",
+                    action=s3db.evr_AvailableShelters
+                    )
     
     # Pre-process
     def prep(r):

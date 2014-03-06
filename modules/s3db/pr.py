@@ -31,7 +31,6 @@ __all__ = ["S3PersonEntity",
            "S3OrgAuthModel",
            "S3PersonModel",
            "S3GroupModel",
-           "AvailableShelters",
            "S3ContactModel",
            "S3AddressModel",
            "S3PersonImageModel",
@@ -712,9 +711,9 @@ class S3PersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Person
         #
-        pr_gender_opts = {# This field is mandatory
-                          1: T("male"),
+        pr_gender_opts = {1: "",
                           2: T("female"),
+                          3: T("male"),
                           }
         pr_gender = S3ReusableField("gender", "integer",
                                     requires = IS_IN_SET(pr_gender_opts, zero=None),
@@ -985,10 +984,12 @@ class S3PersonModel(S3Model):
                                       },
                        
                        # Shelter (Camp) Registry
-                       cr_shelter_person={"joinby": "person_id",
-                                          # A person can be assigned to only one shelter
-                                          "multiple": False,
-                                          },
+                       cr_shelter_registration={"joinby": "person_id",
+                                                # A person can be assigned to only one shelter
+                                                # @todo: when fully implemented this needs to allow
+                                                # multiple instances for tracking reasons
+                                                "multiple": False,
+                                                },
                       )
 
         # ---------------------------------------------------------------------
@@ -1587,12 +1588,11 @@ class S3GroupModel(S3Model):
                             # Shelter (Camp) Registry
                             cr_shelter_allocation={"joinby": "group_id",
                                                     # A group can be assigned to only one shelter
+                                                    # @todo: when fully implemented this needs to allow
+                                                    # multiple instances for tracking reasons
                                                     "multiple": False,
                                                     },
                             )
-        
-        # configuration for the custom method in evr
-        self.set_method("pr", "group", method="available_shelters", action=AvailableShelters)
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -6335,27 +6335,5 @@ def summary_urls(resource, url, filters):
         tab_idx += 1
 
     return links
-
-# =============================================================================
-from ..s3.s3rest import S3Method
-class AvailableShelters(S3Method):
-    """
-        Method handler for the "available_shelters" method
-    """
-    
-    def apply_method(self, r, **attr):
-        """
-            Entry point for the RESTful API (=this function will be called to handle the request)
-
-            @param r: the S3Request
-            @param attr: additional keyword parameters passed from the controller
-        """
-        
-        if r.http == "GET":
-            #TODO: filter only shelter associated with a specific event
-            table = current.s3db.cr_shelter
-            rows = current.db(table).select()
-        
-        return rows.as_list()
 
 # END =========================================================================

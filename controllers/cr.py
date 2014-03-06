@@ -63,7 +63,7 @@ def shelter():
     s3db.configure("cr_shelter",
                    # Go to People check-in for this shelter after creation
                    create_next = URL(c="cr", f="shelter",
-                                     args=["[id]", "presence"]))
+                                     args=["[id]", "shelter_registration"]))
 
     # Pre-processor
     def prep(r):
@@ -208,6 +208,21 @@ def shelter():
                         msg_record_modified = T("Registration updated"),
                         msg_record_deleted = T("Registration entry deleted"),
                         msg_list_empty = EMPTY_LIST
+                    )
+                    
+                elif r.component.name == "shelter_registration":
+                    s3.crud_strings.cr_shelter_registration = Storage(
+                        title_create = T("Register Person"),
+                        title_display = T("Registration Details"),
+                        title_list = T("Registered People"),
+                        title_update = T("Edit Registration"),
+                        subtitle_create = T("Register person to this shelter"),
+                        label_list_button = T("List Registrations"),
+                        label_create_button = T("Register Person"),
+                        msg_record_created = T("Registration added"),
+                        msg_record_modified = T("Registration updated"),
+                        msg_record_deleted = T("Registration entry deleted"),
+                        msg_list_empty = T("No people currently registered in this shelter")
                     )
 
                 elif r.component.name == "req":
