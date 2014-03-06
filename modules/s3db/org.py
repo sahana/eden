@@ -4746,7 +4746,7 @@ def org_organisation_controller():
                             # A non-standard formstyle with just a single row
                             pass
 
-                elif r.method not in ("import", "search") and \
+                elif r.method != "import" and \
                      "form" in output:
 
                     sep = ": "
@@ -4944,7 +4944,7 @@ def org_office_controller():
                             # A non-standard formstyle with just a single row
                             pass
 
-                elif r.method not in ("import", "map", "search") and \
+                elif r.method not in ("import", "map") and \
                      "form" in output:
 
                     sep = ": "
@@ -5085,8 +5085,7 @@ def org_facility_controller():
     s3.prep = prep
 
     def postp(r, output):
-        if r.representation == "plain" and \
-             r.method !="search":
+        if r.representation == "plain":
             # Custom Map Popup
             T = current.T
             output = TABLE()

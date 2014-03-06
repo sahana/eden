@@ -50,7 +50,7 @@ def formstyle_default(form, fields, *args, **kwargs):
         Default Eden Form Style (Labels above the Inputs)
     """
 
-    def render_row(row_id, label, controls, comment, hidden=False):
+    def render_row(row_id, label, widget, comment, hidden=False):
         
         row = []
         _class = "hide" if hidden else None
@@ -62,7 +62,7 @@ def formstyle_default(form, fields, *args, **kwargs):
                       _class = _class))
                       
         # Widget & Comment on the 2nd Row
-        row.append(TR(controls,
+        row.append(TR(widget,
                       TD(comment, _class = "w2p_fc"),
                       _id = row_id,
                       _class = _class))
@@ -76,8 +76,8 @@ def formstyle_default(form, fields, *args, **kwargs):
     else:
         # New-style, all-rows call:
         parent = TABLE()
-        for row_id, label, controls, comment in fields:
-            rows = render_row(row_id, label, controls, comment)
+        for row_id, label, widget, comment in fields:
+            rows = render_row(row_id, label, widget, comment)
             parent.append(rows[0])
             parent.append(rows[1])
         return parent
@@ -88,12 +88,12 @@ def formstyle_default_inline(form, fields, *args, **kwargs):
         Default Eden Form Style (In-Line Labels)
     """
 
-    def render_row(row_id, label, controls, comment, hidden=False):
+    def render_row(row_id, label, widget, comment, hidden=False):
 
         _class = "hide" if hidden else None
 
         row = TR(TD(label, _class = "w2p_fl"),
-                 TD(controls),
+                 TD(widget),
                  _id = row_id,
                  _class = _class)
 
@@ -110,8 +110,8 @@ def formstyle_default_inline(form, fields, *args, **kwargs):
     else:
         # New-style, all-rows call:
         parent = TABLE()
-        for row_id, label, controls, comment in fields:
-            row = render_row(row_id, label, controls, comment)
+        for row_id, label, widget, comment in fields:
+            row = render_row(row_id, label, widget, comment)
             parent.append(row)
         return parent
 

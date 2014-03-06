@@ -837,11 +837,6 @@ def person():
     else:
         trainings_tab = None
 
-    if settings.get_search_save_widget():
-        searches_tab = (T("Saved Searches"), "saved_search")
-    else:
-        searches_tab = None
-
     tabs = [(T("Person Details"), None),
             (T("User Account"), "user"),
             (T("Staff/Volunteer Record"), "human_resource"),

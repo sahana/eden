@@ -818,14 +818,17 @@ def customize_pr_person(**attr):
                     _class = "action-btn"
                     ),
                 A(T("Matrix"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("search", "report"),
                     _class = "action-btn"
                     ),
                 A(T("Chart"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("search", "report?chart=breakdown%3Arows"),
                     _class = "action-btn"
                     ),
                 A(T("Map"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("project/search", "location/map"),
                     _class = "action-btn"
                     )

@@ -1950,8 +1950,7 @@ def customize_cms_post(**attr):
                            list_fields = list_fields,
                            )
 
-        elif r.representation == "plain" and \
-             r.method != "search":
+        elif r.representation == "plain":
             # Map Popups
             s3db = current.s3db
             table = r.table
@@ -1985,8 +1984,7 @@ def customize_cms_post(**attr):
                 output["form"].add_class("cms_post")
             elif "item" in output and hasattr(output["item"], "add_class"):
                 output["item"].add_class("cms_post")
-        elif r.representation == "plain" and \
-             r.method != "search":
+        elif r.representation == "plain":
             # Map Popups
             #output = cms_post_popup(r)
             pass

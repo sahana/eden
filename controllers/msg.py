@@ -1261,10 +1261,7 @@ def inject_search_after_save(output):
                       _id="%s__row" % id
                       )
         elif callable(s3_formstyle):
-            row = s3_formstyle(id=id,
-                               label=label,
-                               widget=widget,
-                               comment=comment)
+            row = s3_formstyle(id, label, widget, comment)
         else:
             # Unsupported
             raise
