@@ -918,6 +918,9 @@ $(function() {
         });
     };
 
+    // Make global for OptionsFilter script
+    S3.inline_checkbox_events = inline_checkbox_events;
+
     // Used by S3SQLInlineComponentMultiSelectWidget
     var inline_multiselect_events = function() {
         // Listen for changes on all Inline MultiSelect Widgets

@@ -861,6 +861,10 @@ var S3OptionsFilter = function(settings) {
                         S3ClearNavigateAwayConfirm();
                         first = false;
                     }
+                    // Restore event handlers
+                    if (S3.inline_checkbox_events) {
+                        S3.inline_checkbox_events();
+                    }
                 }
             });
         }
