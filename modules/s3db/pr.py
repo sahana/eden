@@ -1184,7 +1184,7 @@ class S3PersonModel(S3Model):
                 row_fname = row[ptable.first_name]
                 row_mname = row[ptable.middle_name]
                 row_lname = row[ptable.last_name]
-            else:
+            if initials:
                 row_initials = row[ptable.initials]
             if dob:
                 row_dob = row[ptable.date_of_birth]
