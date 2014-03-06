@@ -273,8 +273,8 @@ def evr_rheader(r):
                 (T("Contact Data"), "contact"),
                 (T("Members"), "group_membership"),
                 #TODO: enable available shelter view
-                (T("Shelter Allocation"), "available_shelters"),
-                #(T("Shelter Allocation"), "shelter_allocation")
+                #(T("Shelter Allocation"), "available_shelters"),
+                (T("Shelter Allocation"), "shelter_allocation")
                 ]
 
     if rheader_fields is not None:

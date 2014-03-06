@@ -516,8 +516,8 @@ class S3CampDataModel(S3Model):
         # This table is intended to effectively register a person in a shelter
         tablename = "cr_shelter_person"
         table = define_table(tablename,
-                             shelter_id(),
-                             self.pr_person_id(),
+                             shelter_id(comment = None),
+                             self.pr_person_id(comment = None),
                              Field("day_or_night", "integer",
                                    label = T("Presence in the shelter"),
                                    requires = IS_IN_SET(cr_day_or_night_opts, zero=None),
@@ -529,8 +529,8 @@ class S3CampDataModel(S3Model):
         # of people to a shelter
         tablename = "cr_shelter_allocation"
         table = define_table(tablename,
-                             shelter_id(),
-                             self.pr_group_id()
+                             shelter_id(comment = None),
+                             self.pr_group_id(comment = None)
                              )
 
         # Pass variables back to global scope (response.s3.*)
