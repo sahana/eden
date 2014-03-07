@@ -124,6 +124,9 @@ S3.addModals = function() {
             caller = $(this).parent().parent().attr('id');
         }
         if (!caller) {
+            caller = $(this).parents('.form-row').attr('id');
+        }
+        if (!caller) {
             // Bootstrap formstyle
             caller = $(this).parents('.control-group').attr('id');
         }

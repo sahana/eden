@@ -60,15 +60,18 @@
 }
 
 /* Form elements (widget.css overrides foundation, so override it again) */
-.form-container form input,
-.form-container form button,
 .form-container form select,
+.form-container form input.string:not(.date),
 .form-container form textarea {
     margin: 0;
-}
-.form-container form input.string,
-.form-container form textarea  {
     width: 100%;
+}
+.gis_loc_select_btn {
+    font-size: 0.8em;
+}
+.gis_loc_select_btn i {
+    font-size: 1.0em;
+    margin-right: 4px;
 }
 
 input[type="text"],
@@ -215,7 +218,7 @@ td.actions {
     width: auto;
     overflow: inherit;
 }
- .form-row > .columns > label {
+.form-row > .columns > label {
     font-weight: bold;
 }
 .item-container .controls {
@@ -314,13 +317,13 @@ p {
     border-top-color: #ADA6A0;
 }
 table.dataTable tbody tr.odd td.sorting_1 {
-    background-color: #D5D5D0;
+    background-color: #F0F1F2;
 }
 table.dataTable tbody tr.even td.sorting_1 {
-    background-color: #FEFEF9;
+    background-color: #FAFAFA;
 }
 table.dataTable tbody tr.odd {
-    background-color: #DDDDD9;
+    background-color: #F7F8F9;
 }
 table.dataTable tbody tr.even {
     background-color: #FFFFFF;
@@ -457,4 +460,35 @@ div.alert {
 .filter-form .inline-tooltip {
     padding-top: 0.2em;
 }
-
+#show-add-btn {
+    margin-bottom: 6px;
+}
+input.date.hasDatepicker {
+    display: inline-block;
+}
+.ui-datepicker-trigger {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("../../img/bootstrap/calendar.gif");
+    margin-left: 10px;
+}
+.ui-datepicker-trigger:hover {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("../../img/bootstrap/calendar.gif");
+    margin-left: 10px;
+}
+.alert.alert-error,
+.alert.alert-info,
+.alert.alert-warning,
+.alert.alert-success {
+    border: 1px solid #B2B2B2;
+    box-shadow: 0 1px 1px #AAAAA7;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    padding: 8px 35px 8px 14px;
+    position: relative;
+    min-width: 445px;
+    width: auto;
+    z-index: 999;
+    border-radius: 4px;
+}

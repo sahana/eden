@@ -157,7 +157,7 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         Formstyle for foundation themes (In-Line Labels)
     """
 
-    def render_row(row_id, label, widget, comment):
+    def render_row(row_id, label, widget, comment, hidden=False):
         
         if isinstance(widget, INPUT):
             if widget['_type'] == 'submit':
@@ -171,16 +171,18 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         comments_col = DIV(render_tooltip(label, comment),
                            _class="small-4 columns inline-tooltip")
 
+        _class = "form-row row hide" if hidden else "form-row row"
         return DIV(label_col,
                    controls_col,
                    comments_col,
-                   _class="form-row row", _id=row_id)
+                   _class=_class, _id=row_id)
 
     if args:
         row_id = form
         label = fields
         widget, comment = args
-        return render_row(row_id, label, widget, comment)
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
     else:
         parent = TAG[""]()
         for row_id, label, widget, comment in fields:
