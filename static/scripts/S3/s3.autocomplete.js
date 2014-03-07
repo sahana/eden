@@ -312,6 +312,13 @@
             // Site contents
             var name = ''
         }
+        if (item.addr) {
+            if (name) {
+                name += ', ' + item.addr;
+            } else {
+                name = item.addr;
+            }
+        }
         if (item.L5) {
             if (name) {
                 name += ', ' + item.L5;
@@ -1183,47 +1190,93 @@
         }
 
         if (item.match_type) {
-            // use next gen site autocomplete
-            var label = item.match_string + '<b>' + item.next_string + '</b>';
-            var context = '';
+            // Use next gen site autocomplete
+            var label = '<b>' + item.match_string + '</b>';
+            if (item.pre_string) {
+                // i.e. Address match
+                label = item.pre_string + label;
+            }
+            if (item.next_string) {
+                label += item.next_string;
+            }
             if (item.match_type == 'name') {
-                context = item.L1;
-            }
-            else {
-                context = item.name;
-            }
-            if (context != '' && item.next_string) {
-                label += ' - ' + context;
-            }
-            return label;
-        }
-        else {
-            // use old site auto complete
-            var name = item.name;
-            var address = item.address;
-            if (address) {
-                name += ' (' + address + ')';
-            }
-            var location = item.location;
-            if (location) {
-                location = represent_location(location);
-                name += ' (' + location + ')';
-            }
-            var org = item.org;
-            var instance_type = item.instance_type;
-            if (org || instance_type) {
-                if (instance_type) {
-                    name += ' (' + S3.org_site_types[item.instance_type];
-                    if (org) {
-                        name += ', ' + org;
+                // Provide the rest of the data as context
+                var addr = item.addr;
+                var Lx = item.L4 || item.L3 || item.L2 || item.L1;
+                if (addr || Lx) {
+                    if (addr) {
+                        label += ' (' + addr;
+                        if (Lx) {
+                            label += ', ' + Lx;
+                        }
+                        label += ')';
+                    } else {
+                        label += ' (' + Lx + ')';
                     }
-                    name += ')';
+                }
+                var org = item.org;
+                var instance_type = item.instance_type;
+                if (org || instance_type) {
+                    if (instance_type) {
+                        label += ' (' + S3.org_site_types[instance_type];
+                        if (org) {
+                            label += ', ' + org;
+                        }
+                        label += ')';
+                    } else {
+                        label += ' (' + org + ')';
+                    }
+                }
+            } else if (item.match_type == 'addr') {
+                // Provide the rest of the data as context
+                label = item.name + ' (' + label;
+                var Lx = item.L4 || item.L3 || item.L2 || item.L1;
+                if (Lx) {
+                    label += ', ' + Lx + ')';
                 } else {
-                    name += ' (' + org + ')';
+                    label += ')';
+                }
+                var org = item.org;
+                var instance_type = item.instance_type;
+                if (org || instance_type) {
+                    if (instance_type) {
+                        label += ' (' + S3.org_site_types[instance_type];
+                        if (org) {
+                            label += ', ' + org;
+                        }
+                        label += ')';
+                    } else {
+                        label += ' (' + org + ')';
+                    }
+                }
+            } else if (item.match_type == 'org') {
+                // Provide the rest of the data as context
+                var context = item.name;
+                var addr = item.addr;
+                var Lx = item.L4 || item.L3 || item.L2 || item.L1;
+                if (addr || Lx) {
+                    if (addr) {
+                        context += ' (' + addr;
+                        if (Lx) {
+                            context += ', ' + Lx;
+                        }
+                        context += ')';
+                    } else {
+                        context += ' (' + Lx + ')';
+                    }
+                }
+                var instance_type = item.instance_type;
+                if (instance_type) {
+                    label = context + ' (' + S3.org_site_types[instance_type] + ', ' + label + ')';
+                } else {
+                    label = context + ' (' + label + ')';
                 }
             }
-            return name;
+        } else {
+            // Fallback
+            label = item.name;
         }
+        return label;
     }
 
     /**
@@ -1361,145 +1414,6 @@
                 //if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: Prepopulate name field
-                //    create.click();
-                //}
-            }
-        });
-    };
-
-    /**
-     * S3SiteAddressAutocompleteWidget
-     * - uses name & address (address added to represent server-side)
-     */
-    S3.autocomplete.site_address = function(input, postprocess, delay, min_length) {
-        var dummy = 'dummy_' + input;
-        var dummy_input = $('#' + dummy);
-
-        if (dummy_input == 'undefined') {
-            return;
-        }
-
-        var url = S3.Ap.concat('/org/site/search_address_ac');
-
-        var real_input = $('#' + input);
-        // Bootstrap overides .hide :/
-        real_input.hide();
-
-        var value = real_input.val();
-        if (value) {
-            // Store existing data in case of cancel
-            var existing = {value: value,
-                            name: dummy_input.val()
-                            };
-        } else {
-            var existing;
-        }
-        real_input.data('existing', existing);
-
-        // Have the URL editable after setup (e.g. to Filter by Organisation)
-        real_input.data('url', url);
-
-        if (real_input.parent().hasClass('controls')) {
-            // Bootstrap
-            var create = real_input.next().find('.s3_add_resource_link');
-        } else {
-            // Other Theme
-            var create = real_input.parent().next().find('.s3_add_resource_link');
-        }
-
-        var throbber = $('#' + dummy + '_throbber');
-
-        // Optional args
-        if (delay == 'undefined') {
-            delay = 450;
-        }
-        if (min_length == 'undefined') {
-            min_length = 2;
-        }
-        dummy_input.autocomplete({
-            delay: delay,
-            minLength: min_length,
-            source: function(request, response) {
-                // Patch the source so that we can handle No Matches
-                $.ajax({
-                    url: real_input.data('url'),
-                    data: {
-                        term: request.term
-                    }
-                }).done(function (data) {
-                    if (data.length == 0) {
-                        // No Match
-                        real_input.val('').change();
-                        // New Entry?
-                        //if (create.length) {
-                            // Open popup to create new entry
-                            // @ToDo: prepopulate name field
-                        //    create.click();
-                        //} else {
-                            // No link to create new (e.g. no permission to do so)
-                            data.push({
-                                id: 0,
-                                value: '',
-                                label: i18n.no_matching_records
-                            });
-                        //}
-                    } else {
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: i18n.none_of_the_above
-                        });
-                    }
-                    response(data);
-                });
-            },
-            search: function(event, ui) {
-                throbber.removeClass('hide').show();
-                return true;
-            },
-            response: function(event, ui, content) {
-                throbber.hide();
-                return content;
-            },
-            focus: function(event, ui) {
-                return false;
-            },
-            select: function(event, ui) {
-                var item = ui.item;
-                if (item.id) {
-                    dummy_input.val(item.name);
-                    real_input.val(item.id).change();
-                    // Update existing, so blur does not remove
-                    // the selection again:
-                    existing = {value: item.id,
-                                name: item.name
-                                };
-                } else {
-                    // No Match & no ability to create new
-                    dummy_input.val('');
-                    real_input.val('').change();
-                }
-                if (postprocess) {
-                    // postprocess has to be able to handle the 'no match' option
-                    eval(postprocess);
-                }
-                return false;
-            }
-        })
-        .data('ui-autocomplete')._renderItem = function(ul, item) {
-            var label = represent_site(item);
-            return $('<li>').data('item.autocomplete', item)
-                            .append('<a>' + label + '</a>')
-                            .appendTo(ul);
-        };
-        dummy_input.blur(function() {
-            if (existing && existing.name != dummy_input.val()) {
-                // New Entry - without letting AC complete (e.g. tab out)
-                real_input.val('').change();
-                // @ToDo: Something better!
-                //if (create.length) {
-                    // Open popup to create new entry
-                    // @ToDo: prepopulate name field
                 //    create.click();
                 //}
             }

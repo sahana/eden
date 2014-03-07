@@ -66,7 +66,7 @@ def subsector():
 def site():
     """
         RESTful CRUD controller
-        - used by S3SiteAutocompleteWidget/S3SiteAddressAutocompleteWidget
+        - used by S3SiteAutocompleteWidget
           which doesn't yet support filtering to just updateable sites
         - used by site_contact_person()
         - used by S3OptionsFilter (e.g. Asset Log)

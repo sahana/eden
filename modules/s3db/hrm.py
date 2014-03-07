@@ -337,10 +337,7 @@ class S3HRModel(S3Model):
             org_widget = None
 
         if settings.get_org_site_autocomplete():
-            if settings.get_org_site_address_autocomplete():
-                site_widget = S3SiteAddressAutocompleteWidget()
-            else:
-                site_widget = S3SiteAutocompleteWidget()
+            site_widget = S3SiteAutocompleteWidget()
             site_comment = DIV(_class="tooltip",
                                _title="%s|%s" % (T("Requested By Facility"),
                                                  T("Enter some characters to bring up a list of possible matches")))

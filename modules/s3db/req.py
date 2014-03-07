@@ -161,10 +161,7 @@ class S3RequestModel(S3Model):
 
         # Dropdown or Autocomplete?
         if settings.get_org_site_autocomplete():
-            if settings.get_org_site_address_autocomplete():
-                site_widget = S3SiteAddressAutocompleteWidget()
-            else:
-                site_widget = S3SiteAutocompleteWidget()
+            site_widget = S3SiteAutocompleteWidget()
             site_comment = S3AddResourceLink(c="org", f="facility",
                                              vars = dict(child="site_id"),
                                              title=T("Add New Facility"),
@@ -2329,10 +2326,7 @@ class S3CommitModel(S3Model):
 
         # Dropdown or Autocomplete?
         if settings.get_org_site_autocomplete():
-            if settings.get_org_site_address_autocomplete():
-                site_widget = S3SiteAddressAutocompleteWidget()
-            else:
-                site_widget = S3SiteAutocompleteWidget()
+            site_widget = S3SiteAutocompleteWidget()
             site_comment = DIV(_class="tooltip",
                                _title="%s|%s" % (T("From Facility"),
                                                  T("Enter some characters to bring up a list of possible matches")))
