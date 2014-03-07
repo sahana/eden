@@ -439,7 +439,7 @@ class S3IncidentModel(S3Model):
                                         length=64,
                                         label=T("Name")),
                                   Field("exercise", "boolean",
-                                        represent = lambda opt: "√" if opt else NONE,
+                                        represent = lambda opt: "√" if opt else None,
                                         #comment = DIV(_class="tooltip",
                                         #              _title="%s|%s" % (T("Exercise"),
                                                                         # Should!
@@ -585,6 +585,7 @@ class S3IncidentModel(S3Model):
             # Set the Event in the session
             current.session.s3.event = event
         s3db = current.s3db
+        db = current.db
         ctable = s3db.gis_config
         mapconfig = None
         scenario = vars.get("scenario_id", None)
@@ -593,7 +594,6 @@ class S3IncidentModel(S3Model):
             # copy all resources from the Scenario to the Incident
 
             # Read the source resource tables
-            db = current.db
             table = db.scenario_scenario
             otable = s3db.scenario_organisation
             stable = s3db.scenario_site
@@ -659,7 +659,7 @@ class S3IncidentModel(S3Model):
             # Create a new Map Config
             config = ctable.insert(name = vars.name)
             mtable = db.event_config
-            mtable.insert(incident_id=id,
+            mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
             current.gis.set_config(config)
