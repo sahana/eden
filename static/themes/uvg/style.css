@@ -436,7 +436,25 @@ table.dataTable tfoot td {
 div.alert {
     margin-top: 10px;
 }
-.empty {
+.empty,
+.pt-empty,
+.pt-no-data {
     font-style: italic;
     font-size: 0.8em;
 }
+
+/* Help Popup */
+.tooltip,
+.tooltipbody,
+.stickytip,
+.ajaxtip {
+    display: block;
+    padding: 0;
+}
+.inline-tooltip {
+    padding-top: 1.6em;
+}
+.filter-form .inline-tooltip {
+    padding-top: 0.2em;
+}
+

@@ -576,7 +576,8 @@ ul.ui-autocomplete {
     text-transform: uppercase;
     height: 20px;
     width: 50px;
-    background-image: url(../../img/help_off.gif);
+    background: none;
+    background: url(../../img/help_off.gif) no-repeat;
 }
 .tooltip span,
 .tooltipbody span,
@@ -591,7 +592,7 @@ ul.ui-autocomplete {
     background-color: transparent;
     height: 20px;
     width: 50px;
-    background-image: url(../../img/help_on.gif);
+    background: url(../../img/help_on.gif) no-repeat;
 }
 
 /* Form Popup */

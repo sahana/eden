@@ -31,6 +31,7 @@
 """
 
 from gluon.html import *
+from gluon.languages import lazyT
 
 # =============================================================================
 class NAV(DIV):
@@ -133,8 +134,8 @@ def formstyle_foundation(form, fields, *args, **kwargs):
                              ),
                          _class="small-6 columns",
                          )
-        comment_col = DIV(comment,
-                          _class="small-6 columns",
+        comment_col = DIV(render_tooltip(label, comment),
+                          _class="small-6 columns inline-tooltip",
                           )
         return DIV(widget_col, comment_col, _class=_class, _id=row_id)
 
@@ -166,10 +167,14 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
             label.add_class("left inline")
                 
         label_col = DIV(label, _class="small-2 columns")
-        controls_col = DIV(widget, _class="small-6 columns")
-        comments_col = DIV(comment, _class="small-4 columns")
+        controls_col = DIV(widget, _class="small-6 columns controls")
+        comments_col = DIV(render_tooltip(label, comment),
+                           _class="small-4 columns inline-tooltip")
 
-        return DIV(label_col, controls_col, comments_col, _class="form-row row", _id=row_id)
+        return DIV(label_col,
+                   controls_col,
+                   comments_col,
+                   _class="form-row row", _id=row_id)
 
     if args:
         row_id = form
@@ -182,4 +187,19 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
             parent.append(render_row(row_id, label, widget, comment))
         return parent
 
+# =============================================================================
+def render_tooltip(label, comment):
+    """ Render a tooltip for a form field """
+
+    if not comment:
+        tooltip = ""
+    elif isinstance(comment, (lazyT, basestring)):
+        if hasattr(label, "flatten"):
+            label = label.flatten().strip("*")
+        tooltip = DIV(_class = "tooltip",
+                      _title = "%s|%s" % (label, comment))
+    else:
+        tooltip = comment
+    return tooltip
+    
 # END =========================================================================
