@@ -1294,28 +1294,6 @@
                         label += ' (' + org + ')';
                     }
                 }
-            } else if (item.match_type == 'org') {
-                // Provide the rest of the data as context
-                var context = item.name;
-                var addr = item.addr;
-                var Lx = item.L4 || item.L3 || item.L2 || item.L1;
-                if (addr || Lx) {
-                    if (addr) {
-                        context += ' (' + addr;
-                        if (Lx) {
-                            context += ', ' + Lx;
-                        }
-                        context += ')';
-                    } else {
-                        context += ' (' + Lx + ')';
-                    }
-                }
-                var instance_type = item.instance_type;
-                if (instance_type) {
-                    label = context + ' (' + S3.org_site_types[instance_type] + ', ' + label + ')';
-                } else {
-                    label = context + ' (' + label + ')';
-                }
             }
         } else {
             // Fallback
