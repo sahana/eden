@@ -226,7 +226,6 @@ td.actions {
 .form-container form,
 .item-container form {
     background: #FEFEFE;
-    border: 1px solid #EEEEEE;
     padding: 5px 10px;
 }
 
@@ -266,7 +265,7 @@ label.inline {
     background: #F7F8F9;
     padding: 5px 5px 5px 5px;
 }
-#content h2:first-child {
+#content h2 {
     margin-top: 10px;
     padding-left: 10px;
 }
@@ -314,26 +313,130 @@ p {
 .side-nav .heading {
     border-top-color: #ADA6A0;
 }
-table.dataTable tr.odd td.sorting_1 {
-    background-color: #FAFAFA;
+table.dataTable tbody tr.odd td.sorting_1 {
+    background-color: #D5D5D0;
 }
-table.dataTable tr.even td.sorting_1 {
-    background-color: #F2F2F2;
+table.dataTable tbody tr.even td.sorting_1 {
+    background-color: #FEFEF9;
 }
-table.dataTable tr.odd {
+table.dataTable tbody tr.odd {
+    background-color: #DDDDD9;
+}
+table.dataTable tbody tr.even {
     background-color: #FFFFFF;
-}
-table.dataTable tr.even {
-    background-color: #F9F9F9;
 }
 #table-container tr.odd td {
     border-color: #CCCCCC;
 }
 .ui-widget-header {
-    background: #BDB6B0;
+    background: none; 
     border: 1px solid #ADA6A0;
 }
 .ui-state-active,
 .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active {
     border-color: #ADA6A0;
+}
+
+#summary-tabs {
+    margin-top: 10px;
+}
+
+#summary-tab-headers .ui-tabs-nav {
+    border: none;
+    margin: 0 10px;
+}
+
+#summary-tab-headers a {
+    border-color: #CCC;
+}
+
+#summary-tab-headers .ui-tabs-active a {
+    border-bottom: 1px solid white;
+}
+
+#summary-tab-headers li {
+    margin-right: 5px;
+    box-shadow: none;
+}
+
+#summary-tabs.ui-widget-content {
+    background: none;
+    border: none;
+}
+
+/* Fit Summary Map Inside Summary Section */
+#summary-sections .x-panel-body {
+    border: none;
+    border-radius: 4px;
+}
+.ui-widget-header a {
+    color: #222222 !important;
+    border-color: #C7C7C7;
+    margin-bottom: 0px;
+/*     background: none; */
+    font-weight: bold;
+    text-decoration: none !important;
+    font-size: 0.7em;
+}
+
+.ui-widget-header .ui-icon-check,
+.ui-widget-header .ui-icon-closethick {
+    background: none;
+    height: 0px;
+    width: 0px;
+}
+/* Page Elements */
+.form-container form.form-horizontal,
+#datalist-filter-form,
+#datatable-filter-form,
+#summary-filter-form,
+#summary-sections,
+/* #datatable_wrapper, */
+#pivottable,
+.thumbnail {
+    border: 1px solid #CCC;
+}
+/*#datatable_wrapper {
+    padding: 5px;
+}*/
+.ui-tabs .ui-tabs-panel {
+    padding: 0.5em;
+}
+
+.pt-chart-opts {
+    height: 1.0em;
+}
+.pt-chart-label {
+    font-size: 0.7em;
+}
+
+table.dataTable thead th,
+table.dataTable thead td {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #cccccc;
+    font-size: 1.0em;
+}
+table.dataTable th,
+table.dataTable td {
+    border: 1px solid #CCCCCC;
+    padding: 0.7em 0.7em 0.7em 0.5em;
+}
+table.dataTable tfoot th,
+table.dataTable tfoot td {
+    background-color: #F7F8F9;
+    border-top: 2px solid #CCCCCC;
+    padding: 0.5em;
+}
+
+.pt-chart-title h4 {
+    font-size: 1.0em;
+    font-weight: normal;
+}
+
+div.alert {
+    margin-top: 10px;
+}
+.empty {
+    font-style: italic;
+    font-size: 0.8em;
 }
