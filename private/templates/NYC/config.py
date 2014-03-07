@@ -334,6 +334,8 @@ def customize_org_facility(**attr):
                                                          )
                 # element.style is being set to width: 0 for some reason, so not working
                 #table.organisation_id.widget = S3SelectChosenWidget()
+                # Don't assume that user is from same org/site as Contacts they create
+                table.site_id.default = None
 
             if r.get_vars.get("format", None) == "popup":
                 # Coming from req/create form
@@ -583,6 +585,8 @@ def customize_org_organisation(**attr):
                                                              )
                     # element.style is being set to width: 0 for some reason, so not working
                     #table.organisation_id.widget = S3SelectChosenWidget()
+                    # Don't assume that user is from same org/site as Contacts they create
+                    table.site_id.default = None
 
         return result
     s3.prep = custom_prep
