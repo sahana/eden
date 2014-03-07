@@ -1089,6 +1089,12 @@ class S3Config(Storage):
         else:
             return attr
 
+    def ui_custom_configure(self, tablename):
+        """
+            Get customization callback for a resource
+        """
+        return self.ui.get("custom_configure_%s" % tablename)
+
     def get_ui_export_formats(self):
         """
             Which export formats should we display?
