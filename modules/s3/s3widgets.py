@@ -3886,7 +3886,11 @@ class S3LocationSelectorWidget2(FormWidget):
             levels = hierarchy.keys()
             if len(settings.get_gis_countries()) == 1 or \
                s3.gis.config.region_location_id:
-                levels.remove("L0")
+                   try:
+                       levels.remove("L0")
+                   except:
+                       pass
+
 
         hide_lx = self.hide_lx
         show_address = self.show_address

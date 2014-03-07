@@ -853,7 +853,6 @@ def person():
             teams_tab,
             #(T("Assets"), "asset"),
             (T("My Maps"), "config"),
-            searches_tab,
             ]
     
     output = s3_rest_controller("pr", "person",
