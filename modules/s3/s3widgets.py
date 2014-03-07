@@ -4226,7 +4226,9 @@ class S3LocationSelectorWidget2(FormWidget):
                 if row.uuid == "SITE_DEFAULT":
                     d = hdict["d"] = {}
                     for level in levels:
-                        if level != "L0":
+                        if level == "L0":
+                            labels["L0"] = current.messages.COUNTRY
+                        else:
                             d[int(level[1:])] = row[level]
                 else:
                     h_l0 = hdict[L0] = {}
@@ -4255,7 +4257,7 @@ class S3LocationSelectorWidget2(FormWidget):
         comment = ""
         for level in levels:
             id = "%s_%s" % (fieldname, level)
-            label = labels[level]
+            label = labels.get(level, level)
             widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
                                    _value=""),
                             _id=id)
