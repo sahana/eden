@@ -564,6 +564,23 @@ def customize_org_organisation(**attr):
                 field = s3db.hrm_human_resource.person_id
                 field.widget = S3AddPersonWidget2(controller="pr")
                 field.requires = IS_ADD_PERSON_WIDGET2()
+            elif r.component_name == "facility":
+                if r.method in (None, "create", "update"):
+                    from s3.s3validators import IS_LOCATION_SELECTOR2
+                    from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
+                    field = s3db.org_facility.location_id
+                    if r.method in ("create", "update"):
+                        field.label = "" # Gets replaced by widget
+                    levels = ("L2", "L3")
+                    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+                    field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                             hide_lx=False,
+                                                             reverse_lx=True,
+                                                             show_address=True,
+                                                             show_postcode=True,
+                                                             )
+                    # element.style is being set to width: 0 for some reason, so not working
+                    #table.organisation_id.widget = S3SelectChosenWidget()
 
         return result
     s3.prep = custom_prep
