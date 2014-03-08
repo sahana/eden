@@ -602,7 +602,7 @@ def results(r, **attr):
                  table_color="",
                  grids="",
                  summary=""
-                )
+                 )
 
     problem = r.record
 
@@ -881,50 +881,67 @@ def results(r, **attr):
                  output)
     grids.append(output)
 
+    # Sort the Solutions by Scale
+    def scale(solution):
+        return float(solution.scale)
 
-    # Sort the Solutions by Uncertainty
-    def uncertainty(solution):
-        return float(solution.uncertainty)
-
-    solutions = solutions.sort(uncertainty, reverse=True)
+    solutions = solutions.sort(scale, reverse=True)
 
     n = len(solutions)
 
-    # Canvas of 900x600
-    from s3chart import S3Chart
-    chart = S3Chart(9, 6)
-    fig = chart.fig
-    # Add Axes with padding of 10px for the labels (fractional left, bottom, width, height)
-    ax = fig.add_axes([0.35, 0.1, 0.6, 0.8])
+    # @ToDo: deployment_setting
+    image = ""
+    if image:
+        # Canvas of 900x600
+        from s3chart import S3Chart
+        chart = S3Chart(9, 6)
+        fig = chart.fig
+        # Add Axes with padding of 10px for the labels (fractional left, bottom, width, height)
+        ax = fig.add_axes([0.35, 0.1, 0.6, 0.8])
 
-    problem = r.record
-    ax.set_title(problem.name)
+        problem = r.record
+        ax.set_title(problem.name)
 
-    labels = []
-    scales = []
-    uncertainties = []
-    for solution in solutions:
-        labels.append(solution.name)
-        scales.append(solution.scale)
-        uncertainties.append(solution.uncertainty)
-    from numpy import arange
-    ind = arange(n)
-    width = .35
-    ax.set_yticks(ind + width)
-    ax.set_yticklabels(labels)
-    labels = ax.get_yticklabels()
-    for label in labels:
-        label.set_size(8)
+        labels = []
+        scales = []
+        uncertainties = []
+        for solution in solutions:
+            labels.append(solution.name)
+            scales.append(solution.scale)
+            uncertainties.append(solution.uncertainty)
+        from numpy import arange
+        ind = arange(n)
+        width = .35
+        ax.set_yticks(ind + width)
+        ax.set_yticklabels(labels)
+        labels = ax.get_yticklabels()
+        for label in labels:
+            label.set_size(8)
 
-    ax.set_xlabel("Scale") # rotation="vertical" or rotation = 45
-    ax.xaxis.grid(True)
+        ax.set_xlabel("Scale") # rotation="vertical" or rotation = 45
+        ax.xaxis.grid(True)
 
-    rects1 = ax.barh(ind, scales, width, linewidth=0) # color="blue"
-    rects2 = ax.barh(ind + width, uncertainties, width, linewidth=0, color="red")
+        rects1 = ax.barh(ind, scales, width, linewidth=0) # color="blue"
+        rects2 = ax.barh(ind + width, uncertainties, width, linewidth=0, color="red")
 
-    ax.legend( (rects1[0], rects2[0]), ("Scale", "Uncertainty") )
+        ax.legend( (rects1[0], rects2[0]), ("Scale", "Uncertainty") )
 
-    image = chart.draw()
+        image = chart.draw()
+
+    # Colour the rows
+    # @ToDo: Review the weightings
+    MIN_COLOR = (0xfc, 0xaf, 0x3e)
+    MAX_COLOR = (0x4e, 0x9a, 0x06)
+    beans_num = int((n + 1) * 2)
+    bean_size = 0.1 * n / beans_num
+    i = 0
+    for j in range(beans_num):
+        color = "%02x%02x%02x" % tuple([int(((j * MIN_COLOR[k]) + ((beans_num - j) * MAX_COLOR[k])) / beans_num) for k in (0, 1, 2)])
+        limit = ((beans_num - j - 1) * bean_size) - (0.05 * n)
+        bean = []
+        while i < n and solutions[i].scale >= limit:
+            solutions[i].color = color
+            i += 1
 
     # A table showing overall rankings
     thead = THEAD(
@@ -949,14 +966,15 @@ def results(r, **attr):
                     TD(solution.scale,
                        _class="taright"),
                     TD(solution.uncertainty,
-                       _class="taright"),
+                      _class="taright"),
                     TD(solution.votes(),
                        _class="tacenter"),
                     TD(solution.changes,
                        _class="tacenter"),
                     TD(solution.comments(),
                        _class="tacenter"),
-                )
+                    _style="background:#%s" % solution.color
+                    )
             )
     summary = TABLE(thead,
                     tbody,
@@ -970,7 +988,7 @@ def results(r, **attr):
                 chart=image,
                 summary=summary,
                 grids=grids
-               )
+                )
 
 # =============================================================================
 # Discussions
