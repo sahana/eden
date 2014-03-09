@@ -3890,7 +3890,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         hide_lx = self.hide_lx
         show_address = self.show_address
-        show_postcode = self.show_postcode
+        show_postcode = self.show_postcode and settings.get_gis_postcode_selector()
         show_map = self.show_map
         lines = self.lines
         polygons = self.polygons or lines

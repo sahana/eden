@@ -1127,7 +1127,6 @@
 'Duplicate?': 'Doppelt?',
 'Dust Storm': 'Staub Sturm',
 'Dwelling': 'Unterkunft',
-'E-mail': 'E-Mail',
 'Early Recovery': 'Frühe Besserung / Bergung',
 'Earthquake': 'Erdbeben',
 'Edit': 'edit',

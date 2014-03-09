@@ -1626,7 +1626,6 @@
 'Dwelling': 'Vivienda',
 'Dwellings': 'Viviendas',
 'dyed': 'teñido',
-'E-mail': 'Correo electrónico',
 'Early Recovery': 'Rescate temprano',
 'Ears, angle': 'Orejas, ángulo',
 'Ears, size': 'Orejas, tamaño',

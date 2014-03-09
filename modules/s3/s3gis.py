@@ -1084,7 +1084,7 @@ class GIS(object):
             Only update tables which are already defined
         """
 
-        levels = ["L1", "L2", "L3", "L4"]
+        levels = ("L1", "L2", "L3", "L4", "L5")
         labels = self.get_location_hierarchy()
 
         db = current.db

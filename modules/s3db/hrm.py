@@ -2028,7 +2028,8 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              course_id(empty=False),
                              self.super_link("site_id", "org_site",
-                                             label=settings.get_org_site_label(),
+                                             #label=settings.get_org_site_label(),
+                                             label = T("Venue"),
                                              instance_types = auth.org_site_types,
                                              updateable = True,
                                              not_filterby = "obsolete",
@@ -5857,16 +5858,17 @@ def hrm_person_controller(**attr):
     else:
         orgname = None
 
-    _attr = dict(rheader=hrm_rheader,
-                 orgname=orgname,
-                 replace_option=T("Remove existing data before import"),
-                 csv_template="staff",
+    _attr = dict(csv_template="staff",
                  csv_stylesheet=("hrm", "person.xsl"),
                  csv_extra_fields=[dict(label="Type",
                                         field=s3db.hrm_human_resource.type),
                                   ],
                  # Better in the native person controller:
-                 deduplicate="")
+                 deduplicate="",
+                 orgname=orgname,
+                 replace_option=T("Remove existing data before import"),
+                 rheader=hrm_rheader,
+                 )
     _attr.update(attr)
     
     output = current.rest_controller("pr", "person", **_attr)

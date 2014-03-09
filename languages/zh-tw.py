@@ -1524,7 +1524,6 @@
 'Dust Storm': '暴雨灰塵',
 'DVI Navigator': 'DVI導览器',
 'Dwelling': '住宅',
-'E-mail': '電子郵件',
 'Early Recovery': '早期回复',
 'Earthquake': '地震',
 'Easy access to sanitation items for women/girls': '容易存取設施的項目婦女/女孩',

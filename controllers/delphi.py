@@ -933,11 +933,11 @@ def results(r, **attr):
     MIN_COLOR = (0xfc, 0xaf, 0x3e)
     MAX_COLOR = (0x4e, 0x9a, 0x06)
     beans_num = int((n + 1) * 2)
-    bean_size = 0.1 * n / beans_num
+    bean_size = 0.04 * n / beans_num
     i = 0
     for j in range(beans_num):
         color = "%02x%02x%02x" % tuple([int(((j * MIN_COLOR[k]) + ((beans_num - j) * MAX_COLOR[k])) / beans_num) for k in (0, 1, 2)])
-        limit = ((beans_num - j - 1) * bean_size) - (0.05 * n)
+        limit = ((beans_num - j - 1) * bean_size) - (0.02 * n)
         bean = []
         while i < n and solutions[i].scale >= limit:
             solutions[i].color = color

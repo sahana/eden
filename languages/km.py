@@ -865,7 +865,6 @@
 'Duplicate label selected': 'ស្លាក​ស្ទួន​ត្រូវ​បាន​ជ្រើស',
 'Duration': 'ថិរវេលា',
 'Duration (months)': 'ថិរវេលា (ខែ)',
-'E-mail': 'អ៊ីម៉ែល',
 'Early Warning Systems': 'ប្រព័ន្ធព្រមាន​បឋម',
 'Edit': 'កែសម្រួល',
 'Edit %(site_label)s Status': 'កែសម្រួល​ស្ថានភាព %(site_label)',

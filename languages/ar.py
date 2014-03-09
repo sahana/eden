@@ -457,7 +457,6 @@
 'Duration': 'المدة',
 'Dust Storm': 'عاصفة ترابية',
 'DVI Navigator': 'متصفح DVI',
-'E-mail': 'البريد الإلكتروني',
 'Early Recovery': 'الإنعاش المبكر',
 'Edit Address': 'تحرير عنوان',
 'Edit Application': 'تحريرتطبيق Edit Application',

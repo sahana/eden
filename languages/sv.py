@@ -2039,7 +2039,6 @@
 'Dust Storm': 'Dust Storm',
 'DVI Navigator': 'DVI Navigator',
 'Dwelling': 'Dwelling',
-'E-mail': 'E-mail',
 'e.g. Census 2010': 'e.g. Census 2010',
 'Ear plugs': 'Ear plugs',
 'Earthquake': 'Earthquake',

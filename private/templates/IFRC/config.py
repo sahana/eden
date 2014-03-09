@@ -332,12 +332,16 @@ def ns_only(f, required=True, branches=True, updateable=True):
             # @ToDo: Set the represent according to whether the user can see resources of just a single NS or multiple
             # @ToDo: Consider porting this into core
             user = auth.user
-            realms = user.realms
-            delegations = user.delegations
-            if realms:
-                parent = True
+            if user:
+                realms = user.realms
+                delegations = user.delegations
+                if realms:
+                    parent = True
+                else:
+                    parent = False
             else:
-                parent = False
+                parent = True
+
     else:
         # Keep the represent function as simple as possible
         parent = False
@@ -412,13 +416,13 @@ def customize_auth_user(**attr):
         Customize admin/user() and default/user() controllers
     """
 
-    if "arg" in attr and attr["arg"] == "register":
-        # Organisation needs to be an NS/Branch
-        ns_only(current.db.auth_user.organisation_id,
-                required=True,
-                branches=True,
-                updateable=False, # Need to see all Orgs in Registration screens
-                )
+    #if "arg" in attr and attr["arg"] == "register":
+    # Organisation needs to be an NS/Branch
+    ns_only(current.db.auth_user.organisation_id,
+            required=True,
+            branches=True,
+            updateable=False, # Need to see all Orgs in Registration screens
+            )
 
     return attr
 
@@ -1016,6 +1020,8 @@ def customize_hrm_programme_hours(**attr):
             settings.pr.reverse_names = True
             field = s3db.hrm_programme_hours.job_title_id
             field.readable = field.writable = False
+            # Remove link to download Template
+            attr["csv_template"] = "hide"
 
     return attr
 
@@ -1321,9 +1327,17 @@ def customize_pr_person(**attr):
         root_org = current.auth.root_org()
         if root_org == vnrc:
             vnrc = True
-            settings.pr.reverse_names = True
+            gis = current.gis
+            gis.get_location_hierarchy()
+            try:
+                gis.hierarchy_levels.pop("L3")
+            except:
+                # Must be already removed
+                pass
+            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
             settings.hrm.use_skills = True
             settings.hrm.vol_experience = "both"
+            settings.pr.reverse_names = True
             try:
                 settings.modules.pop("asset")
             except:
@@ -1389,7 +1403,6 @@ def customize_pr_person(**attr):
                 settings.gis.building_name = False
                 settings.gis.latlon_selector = False
                 settings.gis.map_selector = False
-                settings.gis.postcode_selector = False
 
             elif component_name == "identity":
                 table = s3db.pr_identity
@@ -1435,6 +1448,11 @@ def customize_pr_person(**attr):
     s3.prep = custom_prep
 
     attr["rheader"] = lambda r, vnrc=vnrc: pr_rheader(r, vnrc)
+    if vnrc:
+        # Link to customised download Template
+        #attr["csv_template"] = ("../../themes/IFRC/formats", "volunteer_vnrc")
+        # Remove link to download Template
+        attr["csv_template"] = "hide"
     return attr
 
 settings.ui.customize_pr_person = customize_pr_person

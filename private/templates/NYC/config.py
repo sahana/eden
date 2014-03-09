@@ -572,7 +572,8 @@ def customize_org_organisation(**attr):
                 if r.method in (None, "create", "update"):
                     from s3.s3validators import IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
-                    field = s3db.org_facility.location_id
+                    table = s3db.org_facility
+                    field = table.location_id
                     if r.method in ("create", "update"):
                         field.label = "" # Gets replaced by widget
                     levels = ("L2", "L3")

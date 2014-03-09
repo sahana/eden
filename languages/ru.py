@@ -1143,7 +1143,6 @@
 'Dust Storm': 'Пыльная буря',
 'DVI Navigator': 'DVI Навигатор',
 'Dwelling': 'проживание',
-'E-mail': 'Эл. почта',
 'Early Recovery': 'Раннее восстановление',
 'Earthquake': 'Землетрясение',
 'Edit': 'редактировать',

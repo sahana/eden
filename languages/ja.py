@@ -1322,7 +1322,6 @@
 'DVI Navigator': '被災者の検索',
 'Dwelling': '居住施設',
 'Dwellings': '住居数',
-'E-mail': '電子メール',
 'Early Recovery': '早期復旧',
 'Earthquake': '地震',
 'Easy access to sanitation items for women/girls': '女性用サニタリ用品の入手が容易である',

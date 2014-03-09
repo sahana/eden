@@ -2703,6 +2703,12 @@ class S3PersonDetailsModel(S3Model):
                                         represent = lambda opt: \
                                             pr_religion_opts.get(opt, UNKNOWN_OPT),
                                         ),
+                                  # Alternate free-text form
+                                  #Field("religion_freetext",
+                                  #      label = T("Religion"),
+                                  #      readable = False,
+                                  #      writable = False,
+                                  #      ),
                                   Field("father_name",
                                         label = T("Name of Father"),
                                         ),
