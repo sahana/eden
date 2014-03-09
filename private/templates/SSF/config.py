@@ -25,7 +25,7 @@ settings.base.prepopulate = ["SSF"]
 
 # Should users be allowed to register themselves?
 settings.security.self_registration = True
-settings.auth.registration_requires_verification = False
+settings.auth.registration_requires_verification = True
 settings.auth.registration_requires_approval = False
 
 # The name of the teams that users are added to when they opt-in to receive alerts
