@@ -356,7 +356,6 @@
 'Age group does not match actual age.': '年龄组别不匹配实际年龄。',
 'Aggravating factors': '从重因素',
 'Agriculture': '农业',
-'Air tajin': '津空气',
 'Air Transport Service': '航空运输服务',
 'Aircraft Crash': '坠机',
 'Aircraft Hijacking': '劫持飞机',

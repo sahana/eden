@@ -232,7 +232,7 @@ Thank you"""
 
         # Site types (for OrgAuth)
         T = current.T
-        if deployment_settings.get_ui_label_camp():
+        if current.deployment_settings.get_ui_label_camp():
             shelter = T("Camp")
         else:
             shelter = T("Shelter")
