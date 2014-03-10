@@ -658,6 +658,16 @@ class TimePlotTests(unittest.TestCase):
         db.tp_test_events.drop()
 
     # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+        
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
     def testAutomaticInterval(self):
         """ Test automatic determination of interval start and end """
 
