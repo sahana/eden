@@ -163,7 +163,7 @@ def group():
             # only show evr_group_types
             r.resource.table.group_type.requires = IS_IN_SET(evr_group_types,
                                                              zero=None)
-            return True
+        return True
     s3.prep = prep
     
     # Post-process

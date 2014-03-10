@@ -1331,7 +1331,7 @@ def deploy_apply(r, **attr):
         # @todo: generalize label
         dt_bulk_actions = [(T("Add as RDRT Members"), "add")]
 
-        if r.extension == "html":
+        if r.representation == "html":
             # Page load
             resource.configure(deletable = False)
 
@@ -1402,7 +1402,7 @@ def deploy_apply(r, **attr):
             response.view = "list_filter.html"
             return output
 
-        elif r.extension == "aadata":
+        elif r.representation == "aadata":
             # Ajax refresh
             if "sEcho" in get_vars:
                 echo = int(get_vars.sEcho)
