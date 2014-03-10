@@ -210,7 +210,7 @@ No action is required."""
         messages.registration_disabled = "Registration Disabled!"
         messages.registration_verifying = "You haven't yet Verified your account - please check your email"
         messages.reset_password = "Click on the link %(url)s to reset your password"
-        messages.verify_email = "Click on the link %(url)s% to verify your email"
+        messages.verify_email = "Click on the link %(url)s to verify your email"
         messages.verify_email_subject = "%(system_name)s - Verify Email"
         messages.welcome_email_subject = "Welcome to %(system_name)s"
         messages.welcome_email = \
@@ -992,7 +992,7 @@ Thank you"""
     dict(system_name=deployment_settings.get_system_name()),
                                             message=messages.verify_email % \
             dict(url="%s/default/user/verify_email/%s" % \
-                dict(current.response.s3.base_url, key))):
+                (current.response.s3.base_url, key))):
                     current.response.error = messages.email_verification_failed
                     return form
                 # @ToDo: Deployment Setting?
@@ -1874,6 +1874,8 @@ S3OptionsFilter({
         # Ensure that we send out the mails in the language that the approver(s) want
         if "@" in approver:
             # Look up language of the user
+            utable = self.settings.table_user
+            db = current.db
             record = db(utable.email == approver).select(utable.language,
                                                          limitby=(0, 1)
                                                          ).first()
