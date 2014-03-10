@@ -65,10 +65,11 @@ class S3PatientModel(S3Model):
 
         tablename = "patient_patient"
         table = self.define_table(tablename,
-                                  person_id(widget=S3AddPersonWidget(),
-                                            requires=IS_ADD_PERSON_WIDGET(),
+                                  person_id(comment=None,
                                             label=T("Patient"),
-                                            comment=None),
+                                            requires=IS_ADD_PERSON_WIDGET2(),
+                                            widget=S3AddPersonWidget2(),
+                                            ),
                                   #person_id(empty=False, label = T("Patient")),
                                   Field("country",
                                         label = T("Current Location Country"),
@@ -168,11 +169,11 @@ class S3PatientModel(S3Model):
         tablename = "patient_relative"
         table = self.define_table(tablename,
                                   patient_id(readable=False, writable=False),
-                                  #person_id(label = T("Accompanying Relative")),
-                                  person_id(widget=S3AddPersonWidget(),
-                                            requires=IS_ADD_PERSON_WIDGET(),
+                                  person_id(comment=None,
                                             label=T("Accompanying Relative"),
-                                            comment=None),
+                                            requires=IS_ADD_PERSON_WIDGET2(),
+                                            widget=S3AddPersonWidget2(),
+                                            ),
                                   s3_comments(),
                                   *s3_meta_fields())
 
@@ -201,10 +202,11 @@ class S3PatientModel(S3Model):
         tablename = "patient_home"
         table = self.define_table(tablename,
                                   patient_id(readable=False, writable=False),
-                                  person_id(widget=S3AddPersonWidget(),
-                                            requires=IS_ADD_PERSON_WIDGET(),
+                                  person_id(comment=None,
                                             label=T("Home Relative"),
-                                            comment=None),
+                                            requires=IS_ADD_PERSON_WIDGET2(),
+                                            widget=S3AddPersonWidget2(),
+                                            ),
                                   #person_id(label = T("Home Relative")),
                                   self.gis_location_id(
                                     label=T("Home City"),

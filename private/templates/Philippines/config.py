@@ -1746,12 +1746,6 @@ def customize_org_facility_fields():
                    "comments",
                    ]
 
-    #from s3.s3validators import IS_ADD_PERSON_WIDGET2
-    #from s3.s3widgets import S3AddPersonWidget2
-    #field = s3db.hrm_human_resource_site.human_resource_id
-    #field.requires = IS_ADD_PERSON_WIDGET2()
-    #field.widget = S3AddPersonWidget2(controller="pr")
-
     crud_form = S3SQLCustomForm("name",
                                 "code",
                                 S3SQLInlineComponentMultiSelectWidget(

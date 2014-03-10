@@ -375,11 +375,8 @@ class S3HRModel(S3Model):
                                         ),
                              self.pr_person_id(
                                comment = None,
-                               requires = IS_ADD_PERSON_WIDGET(),
-                               widget = S3AddPersonWidget(controller="hrm"),
-                               # Doesn't work without Bootstrap yet
-                               #requires = IS_ADD_PERSON_WIDGET2(),
-                               #widget = S3AddPersonWidget2(controller="hrm"),
+                               requires = IS_ADD_PERSON_WIDGET2(),
+                               widget = S3AddPersonWidget2(controller="hrm"),
                                ),
                              Field("type", "integer",
                                    requires = IS_IN_SET(hrm_type_opts,
@@ -3103,12 +3100,9 @@ class S3HRAppraisalModel(S3Model):
                              person_id("supervisor_id",
                                        label = T("Supervisor"),
                                        requires = IS_NULL_OR(
-                                                    IS_ADD_PERSON_WIDGET()
-                                                    ),
-                                       widget = S3AddPersonWidget(),
-                                       # Doesn't work outside of Bootstrap yet
-                                       #requires = IS_ADD_PERSON_WIDGET2(),
-                                       #widget = S3AddPersonWidget2(),
+                                        IS_ADD_PERSON_WIDGET2()
+                                        ),
+                                       widget = S3AddPersonWidget2(),
                                        ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -3314,12 +3308,9 @@ class S3HRExperienceModel(S3Model):
                                   person_id("supervisor_id",
                                             label = T("Supervisor"),
                                             requires = IS_NULL_OR(
-                                                        IS_ADD_PERSON_WIDGET()
-                                                        ),
-                                            widget = S3AddPersonWidget(),
-                                            # Doesn't work outside of Bootstrap yet
-                                            #requires = IS_ADD_PERSON_WIDGET2(),
-                                            #widget = S3AddPersonWidget2(),
+                                                IS_ADD_PERSON_WIDGET2()
+                                                ),
+                                            widget = S3AddPersonWidget2(),
                                             ),
                                   s3_comments(),
                                   *s3_meta_fields())

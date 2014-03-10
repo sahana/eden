@@ -844,7 +844,10 @@ class S3ProjectActivityModel(S3Model):
                              # Implementing Org should be a human_resource_id
                              # Beneficiary could be a person_id
                              # Either way label should be clear
-                             self.pr_person_id(label=T("Contact Person")),
+                             self.pr_person_id(label=T("Contact Person"),
+                                               requires = IS_ADD_PERSON_WIDGET2(),
+                                               widget = S3AddPersonWidget2(controller="pr"),
+                                               ),
                              Field("time_estimated", "double",
                                    readable = mode_task,
                                    writable = mode_task,
@@ -2825,9 +2828,9 @@ class S3ProjectLocationModel(S3Model):
         table = define_table(tablename,
                              project_location_id(),
                              self.pr_person_id(
-                                widget=S3AddPersonWidget(controller="pr"),
-                                requires=IS_ADD_PERSON_WIDGET(),
-                                comment=None
+                                comment=None,
+                                requires=IS_ADD_PERSON_WIDGET2(),
+                                widget=S3AddPersonWidget2(controller="pr"),
                                 ),
                              *s3_meta_fields())
 

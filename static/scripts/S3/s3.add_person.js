@@ -17,11 +17,14 @@
 
         var selector = '#' + fieldname;
         var real_input = $(selector);
+        var real_row = $(selector + '__row');
 
-        if ($(selector + '__row').hasClass('control-group')) {
-            // Bootstrap:
+        var error_row = real_input.next('.error_wrapper');
+
+        var div_style = real_row.hasClass('control-group') // Bootstrap
+                        || real_row.hasClass('form-row'); // Foundation
+        if (div_style) {
             // Move the user-visible rows underneath the real (hidden) one
-            var error_row = real_input.next('.error_wrapper');
             var title_row = $(selector + '_title__row');
             var org_row = $(selector + '_organisation_id__row');
             var name_row = $(selector + '_full_name__row');
@@ -32,18 +35,18 @@
             var home_phone_row = $(selector + '_home_phone__row');
             var email_row = $(selector + '_email__row');
             var box_bottom = $(selector + '_box_bottom');
-            $(selector + '__row').hide()
-                                 .after(box_bottom)
-                                 .after(email_row)
-                                 .after(home_phone_row)
-                                 .after(mobile_phone_row)
-                                 .after(occupation_row)
-                                 .after(gender_row)
-                                 .after(date_of_birth_row)
-                                 .after(name_row)
-                                 .after(org_row)
-                                 .after(title_row)
-                                 .after(error_row);
+            real_row.hide()
+                    .after(box_bottom)
+                    .after(email_row)
+                    .after(home_phone_row)
+                    .after(mobile_phone_row)
+                    .after(occupation_row)
+                    .after(gender_row)
+                    .after(date_of_birth_row)
+                    .after(name_row)
+                    .after(org_row)
+                    .after(title_row)
+                    .after(error_row);
 
             title_row.removeClass('hide').show();
             org_row.removeClass('hide').show();
@@ -55,6 +58,11 @@
             home_phone_row.removeClass('hide').show();
             email_row.removeClass('hide').show();
             box_bottom.removeClass('hide').show();
+        } else {
+            // Hide the main row & move out the Error
+            $(selector + '__row1').hide();
+            real_row.hide()
+                    .after(error_row);
         }
 
         var value = real_input.val();
@@ -87,7 +95,7 @@
         });
 
         $(selector + '_organisation_id').change(function() {
-            // If there is an organisation selected then use this as a filter for the Autocomplete
+            // HR: If there is an organisation selected then use this as a filter for the Autocomplete
             var organisation_id = $(this).val();
             var url = real_input.data('url');
             if (organisation_id) {
@@ -117,7 +125,7 @@
             // Allow the Form's Save to continue
             return true;
         });
-    }
+    };
 
     /**
      * Check that Widget is ready

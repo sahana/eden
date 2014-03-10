@@ -285,7 +285,7 @@ def volunteer():
                                 
                 elif not r.component and r.method != "delete":
                     # Configure AddPersonWidget
-                    table.person_id.widget = S3AddPersonWidget(controller="vol")
+                    table.person_id.widget = S3AddPersonWidget2(controller="vol")
                     # Show location ID
                     location_id.writable = location_id.readable = True
                     # Hide unwanted fields

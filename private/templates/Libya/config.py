@@ -1512,12 +1512,6 @@ def customize_hrm_human_resource_fields():
         settings.pr.request_dob = True
         settings.pr.request_gender = True
 
-        from s3.s3validators import IS_ADD_PERSON_WIDGET2
-        from s3.s3widgets import S3AddPersonWidget2
-        field = table.person_id
-        field.requires = IS_ADD_PERSON_WIDGET2()
-        field.widget = S3AddPersonWidget2(controller="vol")
-
     list_fields = ["person_id",
                    "person_id$pe_id",
                    "organisation_id",
@@ -1706,12 +1700,6 @@ def customize_org_facility_fields():
                    "status.power_supply_type",
                    "comments",
                    ]
-
-    #from s3.s3validators import IS_ADD_PERSON_WIDGET2
-    #from s3.s3widgets import S3AddPersonWidget2
-    #field = s3db.hrm_human_resource_site.human_resource_id
-    #field.requires = IS_ADD_PERSON_WIDGET2()
-    #field.widget = S3AddPersonWidget2(controller="pr")
 
     crud_form = S3SQLCustomForm("name",
                                 "code",

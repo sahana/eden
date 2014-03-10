@@ -1267,7 +1267,10 @@ class S3StatsPeopleModel(S3Model):
                                    label=T("Number of People"),
                                    ),
                              self.gis_location_id(label=T("Address")),
-                             self.pr_person_id(label=T("Contact Person")),
+                             self.pr_person_id(label=T("Contact Person"),
+                                               requires = IS_ADD_PERSON_WIDGET2(),
+                                               widget = S3AddPersonWidget2(controller="pr"),
+                                               ),
                              s3_comments(),
                              *s3_meta_fields())
 
