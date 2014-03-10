@@ -964,7 +964,8 @@ class S3IncidentShelterModel(S3Model):
                                   self.cr_shelter_id(),
                                   *s3_meta_fields()
                                   )
-        if current.request.function == "event":
+        
+        if current.request.function == "incident":
             current.response.s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Shelter"),
                 title_display = T("Shelter Details"),

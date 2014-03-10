@@ -25,9 +25,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @todo: add cr_shelter_person linktable to register shelterees,
-           as replacement for pr_presence
 """
 
 __all__ = ["S3ShelterModel",

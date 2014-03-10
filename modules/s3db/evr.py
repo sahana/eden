@@ -55,13 +55,18 @@ class S3EVRCaseModel(S3Model):
                                   self.pr_person_id(),
                                   Field("fiscal_code", "string",
                                         length=16,
-                                        label=T("Fiscal Code")
-                                        # @todo: provide a tooltip
-                                        # for this field including
-                                        # generator (?)
+                                        label=T("Fiscal Code"),
+                                        comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Fiscal Code"),
+                                                                T("Insert the fiscal code with no spaces"))),
                                         ),
+                                  Field("birthplace"),
                                   s3_comments(),
                                   *s3_meta_fields())
+        
+        # If fiscal code is present, it's unique
+        fiscal_code = current.db.evr_case.fiscal_code
+        fiscal_code.requires = IS_EMPTY_OR(IS_NOT_IN_DB(current.db, fiscal_code))
                                   
         # ---------------------------------------------------------------------
         # Medical Details

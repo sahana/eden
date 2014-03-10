@@ -87,19 +87,16 @@ def person():
             # Custom Form for Persons
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
             crud_form = S3SQLCustomForm("first_name",
-                                        "local_name",
+                                        "middle_name",
                                         "last_name",
                                         "date_of_birth",
+                                        "case.birthplace",
                                         "case.fiscal_code",
                                         S3SQLInlineComponent(
                                             "identity",
                                             label = T("Identity Documents"),
                                             fields = ["type",
                                                       "value",
-                                                      # @todo: more fields available
-                                                      # e.g. valid_until, country code
-                                                      # for foreign documents etc.,
-                                                      # see pr_identity
                                                       ],
                                         ),
                                         "gender",
