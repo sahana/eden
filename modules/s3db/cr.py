@@ -133,7 +133,7 @@ class S3ShelterModel(S3Model):
                                           comment=S3AddResourceLink(c="cr",
                                                                     f="shelter_type",
                                                                     label=ADD_SHELTER_TYPE),
-                                          ondelete = "RESTRICT",
+                                          ondelete = "CASCADE",
                                           label = SHELTER_TYPE_LABEL)
 
         # -------------------------------------------------------------------------
@@ -454,7 +454,8 @@ class S3ShelterModel(S3Model):
                                                "joinby": "shelter_id",
                                               },
                             cr_shelter_registration="shelter_id",
-                            cr_shelter_allocation="shelter_id"
+                            cr_shelter_allocation="shelter_id",
+                            event_incident_shelter="shelter_id"
                            )
 
         # -------------------------------------------------------------------------
@@ -623,6 +624,7 @@ def cr_shelter_rheader(r, tabs=[]):
                         (T("People"), "shelter_registration"),
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
+                        (T("Associated incidents"), "incident_shelter")
                     ]
                 if current.deployment_settings.has_module("assess"):
                     tabs.append((T("Assessments"), "rat"))

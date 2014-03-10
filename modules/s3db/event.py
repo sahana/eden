@@ -33,6 +33,7 @@ __all__ = ["S3EventModel",
            "S3IncidentGroupModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
+           "S3IncidentShelterModel",
            "S3EventActivityModel",
            "S3EventAssetModel",
            "S3EventCMSModel",
@@ -485,7 +486,7 @@ class S3IncidentModel(S3Model):
                                                               sort=True)),
                                       represent = represent,
                                       label = T("Incident"),
-                                      ondelete = "RESTRICT",
+                                      ondelete = "CASCADE",
                                       # Uncomment these to use an Autocomplete & not a Dropdown
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",
@@ -551,6 +552,7 @@ class S3IncidentModel(S3Model):
                                    "autocomplete": "name",
                                    "autodelete": True,
                                   },
+                       event_incident_shelter="incident_id"
                       )
 
         # Pass names back to global scope (s3.*)
@@ -934,6 +936,65 @@ class S3IncidentTypeTagModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
+        # Pass names back to global scope (s3.*)
+        return dict()
+    
+# =============================================================================
+class S3IncidentShelterModel(S3Model):
+    """
+        Link Shelters to Incidents
+    """
+
+    names = ["event_incident_shelter"]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("cr"):
+            return None
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Shelters
+        #   Link table for cr_shelter <> event_event
+
+        tablename = "event_incident_shelter"
+        table = self.define_table(tablename,
+                                  self.event_incident_id(),
+                                  self.cr_shelter_id(),
+                                  *s3_meta_fields()
+                                  )
+        if current.request.function == "event":
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Shelter"),
+                title_display = T("Shelter Details"),
+                title_list = T("Shelters"),
+                title_update = T("Edit Shelter"),
+                subtitle_create = T("Add New Shelter"),
+                label_list_button = T("List Shelters"),
+                label_create_button = T("Add Shelter"),
+                label_delete_button = T("Remove Shelter for this Event"),
+                msg_record_created = T("Shelter added"),
+                msg_record_modified = T("Shelter updated"),
+                msg_record_deleted = T("Shelter removed"),
+                msg_list_empty = T("No Shelters currently tagged to this event")
+                )
+
+        elif current.request.function == "shelter":
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Associate Incident"),
+                title_display = T("Incident Details"),
+                title_list = T("Incidents"),
+                title_update = T("Edit Incident"),
+                subtitle_create = T("Associate New Incident"),
+                label_list_button = T("List Incidents"),
+                label_create_button = T("Associate Incident"),
+                label_delete_button = T("Remove Incident for this Shelter"),
+                msg_record_created = T("Incident added"),
+                msg_record_modified = T("Incident updated"),
+                msg_record_deleted = T("Incident removed"),
+                msg_list_empty = T("No Incidents currently tagged to this Shelter")
+                )
         # Pass names back to global scope (s3.*)
         return dict()
 
