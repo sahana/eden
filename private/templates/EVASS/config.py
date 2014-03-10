@@ -878,12 +878,12 @@ settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 10,
     #   )),
-    #("deploy", Storage(
-    #        name_nice = T("Deployments"),
-    #        #description = "Manage Deployments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    ("deploy", Storage(
+            name_nice = T("Deployments"),
+            #description = "Manage Deployments",
+            restricted = True,
+            module_type = 10,
+        )),
     #("patient", Storage(
     #        name_nice = T("Patient Tracking"),
     #        #description = "Tracking of Patients",
