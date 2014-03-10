@@ -25,12 +25,10 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @todo: add cr_shelter_person linktable to register shelterees,
-           as replacement for pr_presence
 """
 
-__all__ = ["S3CampDataModel",
+__all__ = ["S3ShelterModel",
+           "S3ShelterRegistrationModel",
            "cr_shelter_rheader",
            ]
 
@@ -39,11 +37,12 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
-class S3CampDataModel(S3Model):
+class S3ShelterModel(S3Model):
 
     names = ["cr_shelter_type",
              "cr_shelter_service",
              "cr_shelter",
+             "cr_shelter_id",
              "cr_shelter_status",
              "cr_shelter_person",
              "cr_shelter_allocation"
@@ -91,7 +90,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Camp Type Details"),
                 title_list = T("Camp Types"),
                 title_update = T("Edit Camp Type"),
-                title_search = T("Search Camp Types"),
                 subtitle_create = T("Add New Camp Type"),
                 label_list_button = T("List Camp Types"),
                 label_create_button = ADD_SHELTER_TYPE,
@@ -109,7 +107,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Shelter Type Details"),
                 title_list = T("Shelter Types"),
                 title_update = T("Edit Shelter Type"),
-                title_search = T("Search Shelter Types"),
                 subtitle_create = T("Add New Shelter Type"),
                 label_list_button = T("List Shelter Types"),
                 label_create_button = ADD_SHELTER_TYPE,
@@ -133,7 +130,7 @@ class S3CampDataModel(S3Model):
                                           comment=S3AddResourceLink(c="cr",
                                                                     f="shelter_type",
                                                                     label=ADD_SHELTER_TYPE),
-                                          ondelete = "RESTRICT",
+                                          ondelete = "CASCADE",
                                           label = SHELTER_TYPE_LABEL)
 
         # -------------------------------------------------------------------------
@@ -156,7 +153,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Camp Service Details"),
                 title_list = T("Camp Services"),
                 title_update = T("Edit Camp Service"),
-                title_search = T("Search Camp Services"),
                 subtitle_create = T("Add New Camp Service"),
                 label_list_button = T("List Camp Services"),
                 label_create_button = ADD_SHELTER_SERVICE,
@@ -174,7 +170,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Shelter Service Details"),
                 title_list = T("Shelter Services"),
                 title_update = T("Edit Shelter Service"),
-                title_search = T("Search Shelter Services"),
                 subtitle_create = T("Add New Shelter Service"),
                 label_list_button = T("List Shelter Services"),
                 label_create_button = ADD_SHELTER_SERVICE,
@@ -185,15 +180,20 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Shelter Service"),
                 name_nice_plural = T("Shelter Services"))
 
+        service_represent = S3Represent(lookup=tablename)
+        service_multirepresent = S3Represent(lookup=tablename,
+                                             multiple=True
+                                             )
+        
         shelter_service_id = S3ReusableField("shelter_service_id",
                                              "list:reference cr_shelter_service",
                                              sortby="name",
                                              requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
                                                                       "cr_shelter_service.id",
-                                                                      self.cr_shelter_service_represent,
+                                                                      service_represent,
                                                                       multiple=True)),
-                                             represent = self.cr_shelter_service_multirepresent,
+                                             represent = service_multirepresent,
                                              label = SHELTER_SERVICE_LABEL,
                                              comment = S3AddResourceLink(c="cr",
                                                                          f="shelter_service",
@@ -203,6 +203,8 @@ class S3CampDataModel(S3Model):
                                              )
 
         # -------------------------------------------------------------------------
+        # Shelters
+        #
         cr_shelter_opts = {1 : T("Closed"),
                            2 : T("Open")
                            }
@@ -224,8 +226,8 @@ class S3CampDataModel(S3Model):
                              self.org_organisation_id(
                                 widget = org_widget,
                              ),
-                             shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
-                             shelter_service_id(),       # e.g. medical, housing, food, ...
+                             shelter_type_id(),
+                             shelter_service_id(),
                              self.gis_location_id(),
                              Field("phone",
                                    label = T("Phone"),
@@ -305,7 +307,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Camp Details"),
                 title_list = T("Camps"),
                 title_update = T("Edit Camp"),
-                title_search = T("Search Camps"),
                 subtitle_create = T("Add New Camp"),
                 label_list_button = T("List Camps"),
                 label_create_button = ADD_SHELTER,
@@ -325,7 +326,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Shelter Details"),
                 title_list = T("Shelters"),
                 title_update = T("Edit Shelter"),
-                title_search = T("Search Shelters"),
                 subtitle_create = T("Add New Shelter"),
                 label_list_button = T("List Shelters"),
                 label_create_button = ADD_SHELTER,
@@ -450,8 +450,9 @@ class S3CampDataModel(S3Model):
                             cr_shelter_status={"name": "status",
                                                "joinby": "shelter_id",
                                               },
-                            cr_shelter_person="shelter_id",
-                            cr_shelter_allocation="shelter_id"
+                            cr_shelter_registration="shelter_id",
+                            cr_shelter_allocation="shelter_id",
+                            event_incident_shelter="shelter_id"
                            )
 
         # -------------------------------------------------------------------------
@@ -488,7 +489,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Camp Status Details"),
                 title_list = T("Camp Statuses"),
                 title_update = T("Edit Camp Status"),
-                title_search = T("Search Camp Statuses"),
                 subtitle_create = T("Add New Camp Status"),
                 label_list_button = T("List Camp Statuses"),
                 label_create_button = ADD_SHELTER_STATUS,
@@ -506,7 +506,6 @@ class S3CampDataModel(S3Model):
                 title_display = T("Shelter Status Details"),
                 title_list = T("Shelter Statuses"),
                 title_update = T("Edit Shelter Status"),
-                title_search = T("Search Shelter Statuses"),
                 subtitle_create = T("Add New Shelter Status"),
                 label_list_button = T("List Shelter Statuses"),
                 label_create_button = ADD_SHELTER_STATUS,
@@ -516,30 +515,6 @@ class S3CampDataModel(S3Model):
                 msg_list_empty = T("No Shelter Statuses currently registered"),
                 name_nice = T("Shelter Status"),
                 name_nice_plural = T("Shelter Statuses"))
-        
-        cr_day_or_night_opts = {1 : T("Night only"),
-                                2 : T("Day and Night")
-                                }
-        
-        # This table is intended to effectively register a person in a shelter
-        tablename = "cr_shelter_person"
-        table = define_table(tablename,
-                             shelter_id(),
-                             self.pr_person_id(),
-                             Field("day_or_night", "integer",
-                                   label = T("Presence in the shelter"),
-                                   requires = IS_IN_SET(cr_day_or_night_opts, zero=None),
-                                   represent = lambda opt: \
-                                        cr_day_or_night_opts.get(opt, current.messages.UNKNOWN_OPT)),
-                             )
-        
-        # This table is intended to assign a person or a group
-        # of people to a shelter
-        tablename = "cr_shelter_allocation"
-        table = define_table(tablename,
-                             shelter_id(),
-                             self.pr_group_id()
-                             )
 
         # Pass variables back to global scope (response.s3.*)
         return Storage(
@@ -628,48 +603,6 @@ class S3CampDataModel(S3Model):
                 item.id = row.id
                 item.method = item.METHOD.UPDATE
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_service_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.cr_shelter_service
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_service_multirepresent(shelter_service_ids):
-        """
-        """
-        if not shelter_service_ids:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.cr_shelter_service
-        if isinstance(shelter_service_ids, (list, tuple)):
-            query = (table.id.belongs(shelter_service_ids))
-            shelter_services = db(query).select(table.name)
-            return ", ".join([s.name for s in shelter_services])
-        else:
-            query = (table.id == shelter_service_ids)
-            shelter_service = db(query).select(table.name,
-                                               limitby=(0, 1)).first()
-            try:
-                return shelter_service.name
-            except:
-                return current.messages.UNKNOWN_OPT
-
 # =============================================================================
 def cr_shelter_rheader(r, tabs=[]):
     """ Resource Headers """
@@ -684,13 +617,11 @@ def cr_shelter_rheader(r, tabs=[]):
             if not tabs:
                 tabs = [(T("Basic Details"), None),
                         (T("Status"), "status"),
-                        # the presence tab is the old one
-                        (T("People"), "presence"),
-                        #TODO: link to cr_shelter_person
-                        #(T("People"), "shelter_person"),
-                        #(T("Groups"), "shelter_assignation"),
+                        #(T("Groups"), "shelter_allocation"),
+                        (T("People"), "shelter_registration"),
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
+                        (T("Associated incidents"), "incident_shelter")
                     ]
                 if current.deployment_settings.has_module("assess"):
                     tabs.append((T("Assessments"), "rat"))
@@ -728,5 +659,85 @@ def cr_shelter_rheader(r, tabs=[]):
 
     return rheader
 
+# =============================================================================
+class S3ShelterRegistrationModel(S3Model):
+    
+    names = ["cr_shelter_allocation",
+             "cr_shelter_registration",
+             ]
+    
+    def model(self):
+        
+        T = current.T
+        
+        # ---------------------------------------------------------------------
+        # Shelter Allocation: table to allocate shelter capacity to a group
+        #
+        allocation_status_opts = {1: T("requested"),
+                                  2: T("available"),
+                                  3: T("allocated"),
+                                  4: T("occupied"),
+                                  5: T("departed"),
+                                  6: T("obsolete"),
+                                  7: T("unavailable"),
+                                  }
+        
+        tablename = "cr_shelter_allocation"
+        table = self.define_table(tablename,
+                             self.cr_shelter_id(),
+                             self.pr_group_id(comment = None),
+                             *s3_meta_fields()
+                             )
+        
+        # ---------------------------------------------------------------------
+        # Shelter Registration: table to register a person to a shelter
+        #
+        cr_day_or_night_opts = {1: T("Night only"),
+                                2: T("Day and Night")
+                                }
+        
+        cr_registration_status_opts = {1: T("Planned"),
+                                        2: T("Checked-in"),
+                                        3: T("Checked-out"),
+                                        }
+        
+        tablename = "cr_shelter_registration"
+        table = self.define_table(tablename,
+                             self.cr_shelter_id(),
+                             # The comment=None prevents "Add Person"
+                             # this should not be done in a popup 
+                             self.pr_person_id(comment=None),
+                             Field("day_or_night", "integer",
+                                   label = T("Presence in the shelter"),
+                                   requires = IS_IN_SET(cr_day_or_night_opts,
+                                                        zero=None
+                                                        ),
+                                   represent = S3Represent(
+                                                    options=cr_day_or_night_opts
+                                                    )
+                                   ),
+                             Field("registration_status", "integer",
+                                   label = T("Status"),
+                                   requires = IS_IN_SET(cr_registration_status_opts,
+                                                        zero=None
+                                                        ),
+                                   represent = S3Represent(
+                                                    options=cr_registration_status_opts,
+                                                    )
+                                   ),
+                            s3_datetime("check_in_date",
+                                        label = T("Check-in date"),
+                                        #empty=False,
+                                        default="now",
+                                        future=0
+                                        ),
+                            s3_datetime("check_out_date",
+                                        label = T("Check-out date"),
+                                        #empty=False,
+                                        #default="now",
+                                        future=0
+                                        ),
+                             s3_comments(),
+                             *s3_meta_fields()
+                             )
 # END =========================================================================
-

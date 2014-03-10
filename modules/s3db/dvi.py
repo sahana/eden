@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ Sahana Eden Disaster Victim Identification Model
 
@@ -125,7 +126,6 @@ class S3DVIModel(S3Model):
             title_display = T("Request Details"),
             title_list = T("Body Recovery Requests"),
             title_update = T("Update Request"),
-            title_search = T("Search Request"),
             subtitle_create = T("Add New Request"),
             label_list_button = T("List Requests"),
             label_create_button = T("Add Request"),
@@ -194,7 +194,6 @@ class S3DVIModel(S3Model):
             title_display = T("Morgue Details"),
             title_list = T("Morgues"),
             title_update = T("Update Morgue Details"),
-            title_search = T("Search Morgues"),
             subtitle_create = T("Add New Morgue"),
             label_list_button = T("List Morgues"),
             label_create_button = T("Add Morgue"),
@@ -256,7 +255,6 @@ class S3DVIModel(S3Model):
             title_display = T("Dead Body Details"),
             title_list = T("Dead Body Reports"),
             title_update = T("Edit Dead Body Details"),
-            title_search = T("Find Dead Body Report"),
             subtitle_create = T("Add New Report"),
             label_list_button = T("List Reports"),
             label_create_button = T("Add Report"),
@@ -321,7 +319,7 @@ class S3DVIModel(S3Model):
                              checklist_item("fingerprints",
                                             label = T("Fingerprinting")),
                              checklist_item("anthropology",
-                                            label = T("Anthropolgy")),
+                                            label = T("Anthropology")),
                              checklist_item("pathology",
                                             label = T("Pathology")),
                              checklist_item("embalming",
@@ -339,7 +337,6 @@ class S3DVIModel(S3Model):
             title_display = T("Checklist of Operations"),
             title_list = T("Checklists"),
             title_update = T("Update Task Status"),
-            title_search = T("Search Checklists"),
             subtitle_create = T("New Checklist"),
             label_list_button = T("List Checklists"),
             label_create_button = CREATE_CHECKLIST,
@@ -371,7 +368,6 @@ class S3DVIModel(S3Model):
             title_display = T("Personal Effects Details"),
             title_list = T("Personal Effects"),
             title_update = T("Edit Personal Effects Details"),
-            title_search = T("Search Personal Effects"),
             subtitle_create = T("Add New Entry"),
             label_list_button = T("List Personal Effects"),
             label_create_button = ADD_PERSONAL_EFFECTS,
@@ -433,7 +429,6 @@ class S3DVIModel(S3Model):
             title_display = T("Identification Report"),
             title_list = T("Identification Reports"),
             title_update = T("Edit Identification Report"),
-            title_search = T("Search Report"),
             subtitle_create = T("Add New Report"),
             label_list_button = T("List Reports"),
             label_create_button = T("Add Identification Report"),

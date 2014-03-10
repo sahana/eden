@@ -45,6 +45,15 @@ def person():
     def prep(r):
         resource = r.resource
         
+        table = resource.table
+        
+        # Disallow "unknown" gender and defaults to "male"
+        evr_gender_opts = dict((k, v) for k, v in s3db.pr_gender_opts.items()
+                                      if k in (2, 3))
+        gender = table.gender
+        gender.requires = IS_IN_SET(evr_gender_opts, zero=None)
+        gender.default = 3
+        
         if r.interactive and not r.component:
 
             # Filter widgets
@@ -78,21 +87,16 @@ def person():
             # Custom Form for Persons
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
             crud_form = S3SQLCustomForm("first_name",
-                                        "local_name",
+                                        "middle_name",
                                         "last_name",
                                         "date_of_birth",
+                                        "case.birthplace",
                                         "case.fiscal_code",
-                                        # @todo: split this into 3 different
-                                        #        inline-fields (really? why?)
                                         S3SQLInlineComponent(
                                             "identity",
                                             label = T("Identity Documents"),
                                             fields = ["type",
                                                       "value",
-                                                      # @todo: more fields available
-                                                      # e.g. valid_until, country code
-                                                      # for foreign documents etc.,
-                                                      # see pr_identity
                                                       ],
                                         ),
                                         "gender",
@@ -145,6 +149,12 @@ def group():
                                   "comments",
                                   ],
                    )
+    
+    # Custom method to get a list of available shelters
+    s3db.set_method("pr", "group",
+                    method="available_shelters",
+                    action=s3db.evr_AvailableShelters
+                    )
     
     # Pre-process
     def prep(r):

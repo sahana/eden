@@ -38,9 +38,9 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from gluon import current
+from gluon.storage import Storage
 
 from s3.s3resource import S3FieldSelector
-from s3.s3search import *
 from s3.s3utils import s3_unicode
 from s3.s3widgets import *
 

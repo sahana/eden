@@ -189,6 +189,7 @@ def event_rheader(r):
                 tabs.append((T("Assets"), "asset"))
             tabs.append((T("Facilities"), "site"))
             tabs.append((T("Map Configuration"), "config"))
+            tabs.append((T("Associated Shelters"), "incident_shelter"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             record = r.record

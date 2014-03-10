@@ -41,6 +41,7 @@ __all__ = ["S3WarehouseModel",
            "inv_tracking_status",
            "inv_adj_rheader",
            "depends",
+           "inv_InvItemRepresent",
            ]
 
 import itertools
@@ -154,7 +155,6 @@ class S3WarehouseModel(S3Model):
         #    title_display = T("Warehouse Type Details"),
         #    title_list = T("Warehouse Types"),
         #    title_update = T("Edit Warehouse Type"),
-        #    title_search = T("Search Warehouse Types"),
         #    subtitle_create = T("Add New Warehouse Type"),
         #    label_list_button = T("List Warehouse Types"),
         #    label_create_button = T("Add New Warehouse Type"),
@@ -245,7 +245,6 @@ class S3WarehouseModel(S3Model):
             title_display = T("Warehouse Details"),
             title_list = T("Warehouses"),
             title_update = T("Edit Warehouse"),
-            title_search = T("Search Warehouses"),
             title_upload = T("Import Warehouses"),
             title_map = T("Map of Warehouses"),
             subtitle_create = T("Add New Warehouse"),
@@ -508,7 +507,6 @@ class S3InventoryModel(S3Model):
             title_display = T("Warehouse Stock Details"),
             title_list = T("Stock in Warehouse"),
             title_update = T("Edit Warehouse Stock"),
-            title_search = T("Search Warehouse Stock"),
             title_report = T("Warehouse Stock Report"),
             title_upload = T("Import Warehouse Stock"),
             subtitle_create = ADD_INV_ITEM,
@@ -521,13 +519,13 @@ class S3InventoryModel(S3Model):
             msg_list_empty = T("No Stock currently registered in this Warehouse"))
 
         # Reusable Field
-        represent = self.inv_item_represent
+        inv_item_represent = inv_InvItemRepresent()
         inv_item_id = S3ReusableField("inv_item_id", table,
                                       requires = IS_ONE_OF(db, "inv_inv_item.id",
-                                                           represent,
+                                                           inv_item_represent,
                                                            orderby="inv_inv_item.id",
                                                            sort=True),
-                                      represent = represent,
+                                      represent = inv_item_represent,
                                       label = INV_ITEM,
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (INV_ITEM,
@@ -649,8 +647,6 @@ S3OptionsFilter({
         # Configuration
         direct_stock_edits = settings.get_inv_direct_stock_edits()
         self.configure(tablename,
-                       super_entity = "supply_item_entity",
-                       list_fields = list_fields,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
                        create = direct_stock_edits,
@@ -661,7 +657,7 @@ S3OptionsFilter({
                        extra_fields = ["quantity",
                                        "pack_value",
                                        "item_pack_id",
-                                      ],
+                                       ],
                        filter_widgets = filter_widgets,
                        # @todo: where is this config used?
                        #filter_widgets = [
@@ -691,15 +687,17 @@ S3OptionsFilter({
                        #                   cols=2,
                        #                  )
                        #],
-                       report_options = report_options,
+                       list_fields = list_fields,
                        onvalidation = self.inv_inv_item_onvalidate,
+                       report_options = report_options,
+                       super_entity = "supply_item_entity",
                        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(inv_item_id = inv_item_id,
-                    inv_item_represent = self.inv_item_represent,
+                    inv_item_represent = inv_item_represent,
                     inv_remove = self.inv_remove,
                     inv_prep = self.inv_prep,
                     )
@@ -842,54 +840,6 @@ S3OptionsFilter({
                 #    # Display only incoming shipments which haven't been received yet
                 #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
                 #    r.resource.add_component_filter("send", filter)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_item_represent(id, row=None, show_link=True):
-        """
-            Represent an Inventory Item
-        """
-
-        if row:
-            # @ToDo: Optimised query where we don't need to do the join
-            id = row.id
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        itable = db.inv_inv_item
-        stable = db.supply_item
-        query = (itable.id == id) & \
-                (itable.item_id == stable.id)
-        record = db(query).select(stable.name,
-                                  stable.um,
-                                  itable.item_source_no,
-                                  itable.bin,
-                                  itable.expiry_date,
-                                  itable.owner_org_id,
-                                  limitby = (0, 1)).first()
-        if record:
-            s3_string_represent = lambda str: str if str else ""
-            s3_date_represent = lambda dt: \
-                S3DateTime.date_represent(dt, utc=True)
-            ctn = s3_string_represent(record.inv_inv_item.item_source_no)
-            org = current.s3db.org_organisation_represent(record.inv_inv_item.owner_org_id)
-            if record.inv_inv_item.expiry_date:
-                exp_date = "expires:%s" % \
-                    s3_date_represent(record.inv_inv_item.expiry_date)
-            else:
-                exp_date = ""
-            bin = s3_string_represent(record.inv_inv_item.bin)
-            NONE = current.messages["NONE"]
-            rep_strings = [str for str in [record.supply_item.name,
-                                           exp_date,
-                                           ctn,
-                                           org,
-                                           bin
-                                           ] if str and str != NONE]
-            return " - ".join(rep_strings)
-        else:
-            return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1194,7 +1144,6 @@ class S3InventoryTrackingModel(S3Model):
             title_display = T("Sent Shipment Details"),
             title_list = T("Sent Shipments"),
             title_update = T("Shipment to Send"),
-            title_search = T("Search Sent Shipments"),
             subtitle_create = ADD_SEND,
             label_list_button = T("List Sent Shipments"),
             label_create_button = ADD_SEND,
@@ -1600,7 +1549,6 @@ class S3InventoryTrackingModel(S3Model):
             title_display = T("Kit Details"),
             title_list = T("Kits"),
             title_update = T("Kit"),
-            title_search = T("Search Kits"),
             subtitle_create = ADD_KIT,
             label_list_button = T("List Kits"),
             label_create_button = ADD_KIT,
@@ -1747,7 +1695,6 @@ S3OptionsFilter({
             title_display = T("Shipment Item Details"),
             title_list = T("Shipment Items"),
             title_update = T("Edit Shipment Item"),
-            title_search = T("Search Shipment Items"),
             subtitle_create = T("Add New Shipment Item"),
             label_list_button = T("List Shipment Items"),
             label_create_button = ADD_TRACK_ITEM,
@@ -3308,9 +3255,9 @@ def inv_rheader(r):
 
         # Get site data
         table = s3db.inv_inv_item
-        irecord = db(table.id == record.send_inv_item_id).select(table.site_id,
-                                                                 limitby=(0, 1)
-                                                                 ).first()
+        irecord = current.db(table.id == record.send_inv_item_id).select(
+                                                        table.site_id,
+                                                        limitby=(0, 1)).first()
         # Header
         if irecord:
             rheader = DIV(
@@ -3397,7 +3344,6 @@ def inv_recv_crud_strings():
             title_display = T("Order Details"),
             title_list = T("Orders"),
             title_update = T("Edit Order"),
-            title_search = T("Search Orders"),
             subtitle_create = ADD_RECV,
             label_list_button = T("List Orders"),
             label_create_button = ADD_RECV,
@@ -3415,7 +3361,6 @@ def inv_recv_crud_strings():
             title_display = T("Received Shipment Details"),
             title_list = T("Received/Incoming Shipments"),
             title_update = T("Shipment to Receive"),
-            title_search = T("Search Received/Incoming Shipments"),
             subtitle_create = ADD_RECV,
             label_list_button = T("List Received/Incoming Shipments"),
             label_create_button = ADD_RECV,
@@ -3995,7 +3940,6 @@ class S3InventoryAdjustModel(S3Model):
                 title_display = T("Stock Count Details"),
                 title_list = T("Stock Counts"),
                 title_update = T("Edit Stock Count"),
-                title_search = T("Search Stock Counts"),
                 subtitle_create = T("New Stock Count"),
                 label_list_button = T("List Stock Counts"),
                 label_create_button = ADJUST_STOCK,
@@ -4011,7 +3955,6 @@ class S3InventoryAdjustModel(S3Model):
                 title_display = T("Stock Adjustment Details"),
                 title_list = T("Stock Adjustments"),
                 title_update = T("Edit Adjustment"),
-                title_search = T("Search Stock Adjustments"),
                 subtitle_create = T("New Stock Adjustment"),
                 label_list_button = T("List Stock Adjustments"),
                 label_create_button = ADJUST_STOCK,
@@ -4114,7 +4057,6 @@ class S3InventoryAdjustModel(S3Model):
             title_display = T("Item Details"),
             title_list = T("Items in Stock"),
             title_update = T("Adjust Item Quantity"),
-            title_search = T("Search Stock Items"),
             subtitle_create = T("Add New Item to Stock"),
             label_list_button = T("List Items in Stock"),
             label_create_button = ADJUST_STOCK,
@@ -4330,5 +4272,90 @@ def duplicator(job, query):
         job.method = job.METHOD.UPDATE
         return _duplicate.id
     return False
+
+# =============================================================================
+class inv_InvItemRepresent(S3Represent):
+    
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(inv_InvItemRepresent, self).__init__(lookup = "inv_inv_item")
+                                                   
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+        
+        itable = s3db.inv_inv_item
+        stable = s3db.supply_item
+
+        left = stable.on(stable.id == itable.item_id)
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(itable.id,
+                                        stable.name,
+                                        stable.um,
+                                        itable.item_source_no,
+                                        itable.bin,
+                                        itable.expiry_date,
+                                        itable.owner_org_id,
+                                        left=left)
+
+        self.queries += 1
+
+        # Bulk-represent owner_org_ids
+        organisation_id = str(itable.owner_org_id)
+        organisation_ids = [row[organisation_id] for row in rows]
+        if organisation_ids:
+            itable.owner_org_id.represent.bulk(organisation_ids)
+        
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        itable = current.s3db.inv_inv_item
+        
+        iitem = row.inv_inv_item
+        sitem = row.supply_item
+
+        stringify = lambda string: string if string else ""
+
+        ctn = stringify(iitem.item_source_no)
+        org = itable.owner_org_id.represent(iitem.owner_org_id)
+        bin = stringify(iitem.bin)
+
+        expires = iitem.expiry_date
+        if expires:
+            expires = "expires: %s" % \
+                      S3DateTime.date_represent(expires, utc=True)
+        else:
+            expires = ""
+
+        NONE = current.messages["NONE"]
+        rep_strings = [string for string in [sitem.name,
+                                             expires,
+                                             ctn,
+                                             org,
+                                             bin,
+                                             ]
+                              if string and string != NONE]
+        return " - ".join(rep_strings)
 
 # END =========================================================================

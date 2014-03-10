@@ -82,7 +82,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("People Registry", c="pr", f="index")
             ),                
             MM("Resources", url="http://occupysandy.net/resources/coordination/")(
-                MM("Assets", c="asset", f="asset", m="search"),
+                MM("Assets", c="asset", f="asset"),
                 MM("Inventory", c="inv", f="inv_item"),
                 MM("Stock Counts", c="inv", f="adj"),
                 MM("Shipments", c="inv", f="send")
@@ -125,11 +125,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ INV / Inventory """
 
         ADMIN = current.session.s3.system_roles.ADMIN
-
-        #current.s3db.inv_recv_crud_strings()
-        #crud_strings = current.response.s3.crud_strings
-        #inv_recv_list = crud_strings.inv_recv.title_list
-        #inv_recv_search = crud_strings.inv_recv.title_search
 
         return M()(
                     M("Facilities", c="inv", f="facility")(

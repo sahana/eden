@@ -225,10 +225,6 @@ def customize_project_project(**attr):
                                      ),
                        )
 
-    # Custom CRUD Strings
-    crud_strings = s3.crud_strings
-    crud_strings.project_project.title_search = T("Project List")
-
     # Custom Fields
     table.name.label = T("Project Title")
     s3db.project_project.budget.label = T("Total Funding (USD)")
@@ -361,12 +357,12 @@ def customize_project_project(**attr):
                             
             # Report Settings for charts
             if "chart" in r.get_vars and r.representation != "json":
-                crud_strings[tablename].title_report  = T("Project Graph")
+                s3.crud_strings[tablename].title_report  = T("Project Graph")
                 report_fact_default = "count(id)"
                 report_facts = [(T("Number of Projects"), "count(id)")]
                 show_table = False
             else:
-                crud_strings[tablename].title_report  = T("Project Matrix")
+                s3.crud_strings[tablename].title_report  = T("Project Matrix")
                 report_fact_default = "count(id)"
                 report_facts = [(T("Number of Projects"), "count(id)"),
                                 (T("Number of Countries"), "count(location.location_id)"),
@@ -822,14 +818,17 @@ def customize_pr_person(**attr):
                     _class = "action-btn"
                     ),
                 A(T("Matrix"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("search", "report"),
                     _class = "action-btn"
                     ),
                 A(T("Chart"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("search", "report?chart=breakdown%3Arows"),
                     _class = "action-btn"
                     ),
                 A(T("Map"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("project/search", "location/map"),
                     _class = "action-btn"
                     )

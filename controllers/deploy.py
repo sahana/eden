@@ -153,6 +153,7 @@ def person():
 
     return s3db.hrm_person_controller(replace_option = None,
                                       csv_extra_fields = [
+                                            # CSV column headers, so no T()
                                             dict(label="Deployable",
                                                  value="true"),
                                             # Assume volunteer if not

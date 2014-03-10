@@ -346,7 +346,6 @@ class S3CAPModel(S3Model):
                 # alert instead of modifying the original
                 title_update = T("Edit Alert"),
                 title_upload = T("Import Alerts"),
-                title_search = T("Search Alerts"),
                 subtitle_create = T("Create new Alert"),
                 label_list_button = T("List Alerts"),
                 label_create_button = ADD_ALERT,
@@ -510,7 +509,6 @@ class S3CAPModel(S3Model):
                 title_list = T("Information entries"),
                 title_update = T("Update alert information"), # this will create a new "Update" alert?
                 title_upload = T("Import alert information"),
-                title_search = T("Search alert information"),
                 subtitle_create = T("Create an information entry"),
                 subtitle_list = T("Listing of alert information items"),
                 label_list_button = T("List information entries"),

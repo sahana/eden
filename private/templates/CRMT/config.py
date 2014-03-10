@@ -191,6 +191,10 @@ settings.ui.summary = [{"common": True,
                         "name": "cms",
                         "widgets": [{"method": "cms"}]
                         },
+                       {"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
@@ -396,7 +400,6 @@ def customize_pr_person(**attr):
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Update Contact Details"),
-                    title_search = T("Search Contacts"),
                     subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
                     label_create_button = ADD_CONTACT,
@@ -1238,7 +1241,6 @@ def customize_org_facility(**attr):
                 title_display = T("Place Details"),
                 title_list = T("Places"),
                 title_update = T("Update Place"),
-                title_search = T("Search Places"),
                 subtitle_create = T("Add New Place"),
                 label_list_button = T("List Places"),
                 label_create_button = T("Add Place"),
@@ -1385,8 +1387,7 @@ def customize_org_facility(**attr):
                                crud_form = crud_form,
                                )
 
-        elif representation == "plain" and \
-             method != "search":
+        elif representation == "plain":
             # Map Popups
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
@@ -1480,7 +1481,6 @@ def customize_stats_people(**attr):
                 title_display = T("People Details"),
                 title_list = T("People"),
                 title_update = T("Update People"),
-                title_search = T("Search People"),
                 subtitle_create = T("Add New People"),
                 label_list_button = T("List People"),
                 label_create_button = T("Add People"),
@@ -1862,7 +1862,6 @@ def customize_vulnerability_risk(**attr):
                 title_display = T("Hazard Details"),
                 title_list = T("Hazards"),
                 title_update = T("Update Hazard"),
-                title_search = T("Search Hazards"),
                 subtitle_create = T("Add New Hazard"),
                 label_list_button = T("List Hazards"),
                 label_create_button = T("Add Hazard"),

@@ -216,7 +216,6 @@ settings.org.site_autocomplete_fields = ["location_id$L1",
                                          #"location_id$L3",
                                          #"location_id$L4",
                                          ]
-#settings.org.site_address_autocomplete = True
 
 # -----------------------------------------------------------------------------
 # Project
@@ -1679,7 +1678,6 @@ def customize_org_facility_fields():
         title_display = T("Site Details"),
         title_list = T("Sites"),
         title_update = T("Edit Site"),
-        title_search = T("Search Sites"),
         subtitle_create = ADD_FAC,
         label_list_button = T("List Sites"),
         label_create_button = ADD_FAC,
@@ -2437,7 +2435,6 @@ def customize_pr_person(**attr):
                     title_display = T("Volunteer Details"),
                     title_list = T("Volunteer Directory"),
                     title_update = T("Edit Volunteer Details"),
-                    title_search = T("Search Volunteers"),
                     subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Volunteers"),
                     label_create_button = ADD_CONTACT,
@@ -2459,7 +2456,6 @@ def customize_pr_person(**attr):
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Edit Contact Details"),
-                    title_search = T("Search Contacts"),
                     subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
                     label_create_button = ADD_CONTACT,
@@ -2671,7 +2667,6 @@ def customize_doc_document(**attr):
                 title_display = T("Document"),
                 title_list = T("Documents"),
                 title_update = T("Edit Document"),
-                title_search = T("Search Documents"),
                 subtitle_create = T("Add Document"),
                 label_list_button = T("List New Documents"),
                 label_create_button = T("Add Documents"),

@@ -756,7 +756,6 @@ ADD_LAYER = T("Add Layer")
 LAYER_DETAILS = T("Layer Details")
 LAYERS = T("Layers")
 EDIT_LAYER = T("Edit Layer")
-SEARCH_LAYERS = T("Search Layers")
 ADD_NEW_LAYER = T("Add New Layer")
 LIST_LAYERS = T("List Layers")
 DELETE_LAYER = T("Delete Layer")
@@ -1269,7 +1268,8 @@ def inject_enable(output):
                        _type="checkbox",
                        _value="on",
                        _id="layer_enable",
-                      _class="boolean")
+                      _class="boolean",
+                      )
         comment = ""
         if s3_formstyle == "bootstrap":
             _controls = DIV(widget, comment, _class="controls")
@@ -1279,10 +1279,7 @@ def inject_enable(output):
                       _id="%s__row" % id
                       )
         elif callable(s3_formstyle):
-            row = s3_formstyle(id=id,
-                               label=label,
-                               widget=widget,
-                               comment=comment)
+            row = s3_formstyle(id, label, widget, comment)
         else:
             # Unsupported
             raise
@@ -1463,7 +1460,6 @@ def layer_openstreetmap():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -1683,7 +1679,6 @@ def layer_mgrs():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -1740,7 +1735,6 @@ def layer_arcrest():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -1810,7 +1804,6 @@ def layer_geojson():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -1892,7 +1885,6 @@ def layer_georss():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -1981,7 +1973,6 @@ def layer_gpx():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2045,7 +2036,6 @@ def layer_kml():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2132,7 +2122,6 @@ def layer_openweathermap():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2217,7 +2206,6 @@ def layer_shapefile():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2364,7 +2352,6 @@ def layer_theme():
                     title_display=LAYER_DETAILS,
                     title_list=LAYERS,
                     title_update=EDIT_LAYER,
-                    title_search=SEARCH_LAYERS,
                     subtitle_create=ADD_NEW_LAYER,
                     label_list_button=LIST_LAYERS,
                     label_create_button=ADD_LAYER,
@@ -2438,7 +2425,6 @@ def layer_tms():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2508,7 +2494,6 @@ def layer_wfs():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2591,7 +2576,6 @@ def layer_wms():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2660,7 +2644,6 @@ def layer_xyz():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,
@@ -2733,7 +2716,6 @@ def layer_js():
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        title_search=SEARCH_LAYERS,
         subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
         label_create_button=ADD_LAYER,

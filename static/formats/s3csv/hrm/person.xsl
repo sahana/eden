@@ -494,7 +494,9 @@
             <xsl:if test="col[@field='Middle Name']!=''">
                 <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
             </xsl:if>
-            <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
+            <xsl:if test="col[@field='Last Name']!=''">
+                <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Initials']!=''">
                 <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>
             </xsl:if>

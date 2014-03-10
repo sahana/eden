@@ -166,8 +166,8 @@ settings.org.site_last_contacted = True
 #     }
 # Uncomment to use an Autocomplete for Site lookup fields
 settings.org.site_autocomplete = True
-# Uncomment to have Site Autocompletes search within Address fields
-settings.org.site_address_autocomplete = True
+# Extra fields to search in Autocompletes & display in Representations
+settings.org.site_autocomplete_fields = ("location_id$addr_street",)
 # Uncomment to hide inv & req tabs from Sites
 #settings.org.site_inv_req_tabs = True
 
@@ -468,7 +468,6 @@ def customize_org_group(**attr):
                 title_display = T("Network Details"),
                 title_list = T("Networks"),
                 title_update = T("Edit Network"),
-                title_search = T("Search Networks"),
                 subtitle_create = T("Add New Network"),
                 label_list_button = T("List Networks"),
                 label_create_button = T("Add Network"),

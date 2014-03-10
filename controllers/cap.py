@@ -232,7 +232,6 @@ def template():
             title_list = T("Templates"),
             title_update = T("Edit Template"), # If already-published, this should create a new "Update" alert instead of modifying the original
             title_upload = T("Import Templates"),
-            title_search = T("Search Templates"),
             subtitle_create = T("Create new Template"),
             label_list_button = T("List Templates"),
             label_create_button = ADD_ALERT_TPL,

@@ -414,7 +414,6 @@ def supplier():
         title_display=T("Supplier Details"),
         title_list=T("Suppliers"),
         title_update=T("Edit Supplier"),
-        title_search=T("Search Suppliers"),
         title_upload=T("Import Suppliers"),
         subtitle_create=ADD_SUPPLIER,
         label_list_button=T("List Suppliers"),
@@ -469,7 +468,6 @@ def inv_item():
                 title_list = T("Monetization Report"),
                 subtitle_list = T("Monetization Details"),
                 #msg_list_empty = T("No Stock currently registered"),
-                title_search = T("Monetization Report"),
               ))
             s3db.configure(tablename,
                            list_fields = ["id",
@@ -1339,8 +1337,7 @@ def track_item():
         # Summary of Releases
         s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Releases"),
                                                     subtitle_list = T("Summary Details"),
-                                                    title_search = T("Summary of Releases"),
-                                                   )
+                                                    )
         s3db.configure("inv_track_item",
                        list_fields = ["id",
                                       #"send_id",
@@ -1365,7 +1362,6 @@ def track_item():
         # Summary of Incoming Supplies
         s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Incoming Supplies"),
                                                     subtitle_list = T("Summary Details"),
-                                                    title_search = T("Summary of Incoming Supplies"),
                                                     )
 
         s3db.configure("inv_track_item",
@@ -1391,7 +1387,6 @@ def track_item():
         # Utilization Report
         s3.crud_strings["inv_track_item"] = Storage(title_list = T("Utilization Report"),
                                                     subtitle_list = T("Utilization Details"),
-                                                    title_search = T("Utilization Report"),
                                                     )
 
         s3db.configure("inv_track_item",
@@ -1415,7 +1410,6 @@ def track_item():
         # Expiration Report
         s3.crud_strings["inv_track_item"] = Storage(title_list = T("Expiration Report"),
                                                     subtitle_list = T("Expiration Details"),
-                                                    title_search = T("Expiration Report"),
                                                     )
 
         s3db.configure("inv_track_item",

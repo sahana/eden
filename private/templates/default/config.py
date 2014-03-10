@@ -333,6 +333,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
+# Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)
+#settings.ui.use_button_glyphicons = True
 
 # -----------------------------------------------------------------------------
 # CMS
@@ -345,6 +347,8 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Persons
+# Uncomment to allow person imports to match even without email addresses 
+#settings.pr.import_update_requires_email = False
 # Uncomment to hide fields in S3AddPersonWidget[2]
 #settings.pr.request_dob = False
 #settings.pr.request_gender = False
@@ -354,6 +358,8 @@ settings.L10n.decimal_separator = "."
 #settings.pr.reverse_names = True
 # Uncomment to prevent selecting existing users in S3AddPersonWidget
 #settings.pr.select_existing = False
+# Uncomment to prevent showing HR details in S3PersonAutocompleteWidget results
+#settings.pr.search_shows_hr_details = False
 
 # -----------------------------------------------------------------------------
 # Organisations
@@ -374,10 +380,8 @@ settings.L10n.decimal_separator = "."
 #settings.org.site_last_contacted = True
 # Uncomment to use an Autocomplete for Site lookup fields
 #settings.org.site_autocomplete = True
-# Extra fields to show in Autocomplete Representations
-#settings.org.site_autocomplete_fields = ["instance_type", "location_id$L1", "organisation_id$name"]
-# Uncomment to have Site Autocompletes search within Address fields
-#settings.org.site_address_autocomplete = True
+# Extra fields to search in Autocompletes & display in Representations
+#settings.org.site_autocomplete_fields = ("instance_type", "location_id$L1", "location_id$addr_street", "organisation_id$name")
 # Uncomment to hide inv & req tabs from Sites
 #settings.org.site_inv_req_tabs = False
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
@@ -551,7 +555,6 @@ settings.L10n.decimal_separator = "."
 #    title_display = T("Request for Donations Details"),
 #    title_list = T("Requests for Donations"),
 #    title_update = T("Edit Request for Donations"),
-#    title_search = T("Search Requests for Donations"),
 #    subtitle_create = ADD_ITEM_REQUEST,
 #    label_list_button = T("List Requests for Donations"),
 #    label_create_button = ADD_ITEM_REQUEST,
@@ -567,7 +570,6 @@ settings.L10n.decimal_separator = "."
 #    title_display = T("Request for Volunteers Details"),
 #    title_list = T("Requests for Volunteers"),
 #    title_update = T("Edit Request for Volunteers"),
-#    title_search = T("Search Requests for Volunteers"),
 #    subtitle_create = ADD_PEOPLE_REQUEST,
 #    label_list_button = T("List Requests for Volunteers"),
 #    label_create_button = ADD_PEOPLE_REQUEST,

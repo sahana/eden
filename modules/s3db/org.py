@@ -125,7 +125,6 @@ class S3OrganisationModel(S3Model):
             title_display=T("Organization Type Details"),
             title_list=T("Organization Types"),
             title_update=T("Edit Organization Type"),
-            title_search=T("Search Organization Types"),
             subtitle_create=T("Add New Organization Type"),
             label_list_button=T("List Organization Types"),
             label_create_button=T("Add New Organization Type"),
@@ -201,7 +200,6 @@ class S3OrganisationModel(S3Model):
                 title_display=T("Region Details"),
                 title_list=T("Regions"),
                 title_update=T("Edit Region"),
-                title_search=T("Search Regions"),
                 subtitle_create=T("Add New Region"),
                 label_list_button=T("List Regions"),
                 label_create_button=T("Add New Region"),
@@ -320,7 +318,6 @@ class S3OrganisationModel(S3Model):
             title_display=T("Organization Details"),
             title_list=T("Organizations"),
             title_update=T("Edit Organization"),
-            title_search=T("Search Organizations"),
             title_upload=T("Import Organizations"),
             subtitle_create=ADD_ORGANIZATION,
             label_list_button=T("List Organizations"),
@@ -425,7 +422,7 @@ class S3OrganisationModel(S3Model):
                   xml_post_parse = self.org_organisation_xml_post_parse,
                   )
 
-        # Custom Method for S3SiteAddressAutocompleteWidget
+        # Custom Method for S3OrganisationAutocompleteWidget
         self.set_method("org", "organisation",
                         method="search_ac",
                         action=self.org_search_ac)
@@ -880,7 +877,6 @@ class S3OrganisationBranchModel(S3Model):
             title_display=T("Branch Organization Details"),
             title_list=T("Branch Organizations"),
             title_update=T("Edit Branch Organization"),
-            title_search=T("Search Branch Organizations"),
             #title_upload=T("Import Branch Organizations"),
             subtitle_create=T("Add New Branch Organization"),
             label_list_button=T("List Branch Organizations"),
@@ -1075,7 +1071,6 @@ class S3OrganisationGroupModel(S3Model):
                 title_display = T("Coalition Details"),
                 title_list = T("Coalitions"),
                 title_update = T("Update Coalition"),
-                title_search = T("Search Coalitions"),
                 subtitle_create = T("Add New Coalition"),
                 label_list_button = T("List Coalitions"),
                 label_create_button = T("Add Coalition"),
@@ -1090,7 +1085,6 @@ class S3OrganisationGroupModel(S3Model):
                 title_display = T("Network Details"),
                 title_list = T("Networks"),
                 title_update = T("Edit Network"),
-                title_search = T("Search Networks"),
                 subtitle_create = T("Add New Network"),
                 label_list_button = T("List Networks"),
                 label_create_button = T("Add Network"),
@@ -1218,10 +1212,10 @@ class S3OrganisationGroupPersonModel(S3Model):
         tablename = "org_group_person"
         table = self.define_table(tablename,
                                   self.org_group_id(ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   self.pr_person_id(ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   *s3_meta_fields())
 
@@ -1238,7 +1232,7 @@ class S3OrganisationGroupTeamModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         # ---------------------------------------------------------------------
         # Link table between Organisation Groups & Teams
@@ -1247,15 +1241,50 @@ class S3OrganisationGroupTeamModel(S3Model):
         table = self.define_table(tablename,
                                   self.org_group_id("org_group_id",
                                                     ondelete="CASCADE",
-                                                    required=True,
+                                                    empty=False,
                                                     ),
                                   self.pr_group_id(ondelete="CASCADE",
-                                                   required=True,
+                                                   empty=False,
                                                    ),
                                   *s3_meta_fields())
 
+        self.configure(tablename,
+                       onaccept = self.org_group_team_onaccept,
+                       )
+
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_group_team_onaccept(form):
+        """
+            Update affiliations
+        """
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+
+        if not _id:
+            return
+
+        db = current.db
+        table = db.org_group_team
+
+        record = db(table.id == _id).select(table.group_id,
+                                            table.org_group_id,
+                                            limitby=(0, 1)).first()
+        if record:
+            org_group = ("org_organisation", record.org_group_id)
+            pr_group = ("pr_group", record.group_id)
+            current.s3db.pr_add_affiliation(org_group, pr_group,
+                                            role="Groups",
+                                            role_type=1) # 1 = OU
+        return
 
 # =============================================================================
 class S3OrganisationLocationModel(S3Model):
@@ -1289,7 +1318,6 @@ class S3OrganisationLocationModel(S3Model):
             title_display = T("Location"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),
-            title_search = T("Search Locations"),
             title_upload = T("Import Location data"),
             subtitle_create = T("Add New Location"),
             label_list_button = T("List Locations"),
@@ -1374,7 +1402,6 @@ class S3OrganisationResourceModel(S3Model):
             title_display=T("Resource Type Details"),
             title_list=T("Resource Types"),
             title_update=T("Edit Resource Type"),
-            title_search=T("Search Resource  Types"),
             title_upload=T("Import Resource Types"),
             subtitle_create=ADD_RESOURCE_TYPE,
             label_list_button=T("Resource Types"),
@@ -1441,7 +1468,6 @@ class S3OrganisationResourceModel(S3Model):
             title_list=T("Resource Inventory"),
             title_update=T("Edit Resource"),
             title_map=T("Map of Resources"),
-            title_search=T("Search Resource Inventory"),
             title_upload=T("Import Resources"),
             subtitle_create=T("Add New Resource"),
             label_list_button=T("Resource Inventory"),
@@ -1548,7 +1574,6 @@ class S3OrganisationSectorModel(S3Model):
                 title_display=T("Cluster Details"),
                 title_list=T("Clusters"),
                 title_update=T("Edit Cluster"),
-                title_search=T("Search Clusters"),
                 subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Clusters"),
                 label_create_button=ADD_SECTOR,
@@ -1566,7 +1591,6 @@ class S3OrganisationSectorModel(S3Model):
                 title_display=T("Sector Details"),
                 title_list=T("Sectors"),
                 title_update=T("Edit Sector"),
-                title_search=T("Search Sectors"),
                 subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Sectors"),
                 label_create_button=ADD_SECTOR,
@@ -1648,7 +1672,6 @@ class S3OrganisationSectorModel(S3Model):
                 # title_display = T("Cluster Subsector Details"),
                 # title_list = T("Cluster Subsectors"),
                 # title_update = T("Edit Cluster Subsector"),
-                # title_search = T("Search Cluster Subsectors"),
                 # subtitle_create = T("Add New Cluster Subsector"),
                 # label_list_button = T("List Cluster Subsectors"),
                 # label_create_button = T("Add Cluster Subsector"),
@@ -1664,7 +1687,6 @@ class S3OrganisationSectorModel(S3Model):
                 # title_display = T("Subsector Details"),
                 # title_list = T("Subsectors"),
                 # title_update = T("Edit Subsector"),
-                # title_search = T("Search Subsectors"),
                 # subtitle_create = T("Add New Subsector"),
                 # label_list_button = T("List Subsectors"),
                 # label_create_button = T("Add Subsector"),
@@ -1703,7 +1725,6 @@ class S3OrganisationSectorModel(S3Model):
             title_display = T("Sector"),
             title_list = T("Sectors"),
             title_update = T("Edit Sector"),
-            title_search = T("Search Sectors"),
             title_upload = T("Import Sector data"),
             subtitle_create = T("Add New Sector"),
             label_list_button = T("List Sectors"),
@@ -1886,7 +1907,6 @@ class S3OrganisationServiceModel(S3Model):
             title_display = T("Service"),
             title_list = T("Services"),
             title_update = T("Edit Service"),
-            title_search = T("Search Services"),
             title_upload = T("Import Service data"),
             subtitle_create = T("Add New Service"),
             label_list_button = T("List Services"),
@@ -1976,12 +1996,51 @@ class S3OrganisationTeamModel(S3Model):
         #
         tablename = "org_organisation_team"
         table = self.define_table(tablename,
-                                  self.org_organisation_id(ondelete="CASCADE"),
-                                  self.pr_group_id(ondelete="CASCADE"),
+                                  self.org_organisation_id(ondelete="CASCADE",
+                                                           empty=False,
+                                                           ),
+                                  self.pr_group_id(ondelete="CASCADE",
+                                                   empty=False,
+                                                   ),
                                   *s3_meta_fields())
+
+        self.configure(tablename,
+                       onaccept = self.org_team_onaccept,
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_team_onaccept(form):
+        """
+            Update affiliations
+        """
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+
+        if not _id:
+            return
+
+        db = current.db
+        table = db.org_organisation_team
+
+        record = db(table.id == _id).select(table.group_id,
+                                            table.organisation_id,
+                                            limitby=(0, 1)).first()
+        if record:
+            org = ("org_organisation", record.organisation_id)
+            group = ("pr_group", record.group_id)
+            current.s3db.pr_add_affiliation(org, group,
+                                            role="Groups",
+                                            role_type=1) # 1 = OU
+        return
 
 # =============================================================================
 class S3OrganisationTypeTagModel(S3Model):
@@ -2103,11 +2162,6 @@ class S3SiteModel(S3Model):
         set_method("org", "site",
                    method="search_ac",
                    action=self.site_search_ac)
-
-        # Custom Method for S3SiteAddressAutocompleteWidget
-        set_method("org", "site",
-                   method="search_address_ac",
-                   action=self.site_search_address_ac)
 
         # Custom Method for S3AddPersonWidget2
         # @ToDo: One for HRMs
@@ -2385,8 +2439,13 @@ class S3SiteModel(S3Model):
         query = (S3FieldSelector("name").lower().like(value + "%"))
 
         # Add template specific search criteria
-        for field in settings.get_org_site_autocomplete_fields():
-            query |= (S3FieldSelector(field).lower().like(value + "%"))
+        extra_fields = settings.get_org_site_autocomplete_fields()
+        for field in extra_fields:
+            if "addr_street" in field:
+                # Need to be able to get through the street number
+                query |= (S3FieldSelector(field).lower().like("%" + value + "%"))
+            else:
+                query |= (S3FieldSelector(field).lower().like(value + "%"))
 
         resource.add_filter(query)
 
@@ -2403,10 +2462,10 @@ class S3SiteModel(S3Model):
             # default fields to return 
             fields = ["name",
                       "site_id",
-                     ]
+                      ]
 
             # Add template specific fields to return
-            fields += settings.get_org_site_autocomplete_fields()
+            fields += extra_fields
 
             rows = resource.select(fields,
                                    start=0,
@@ -2423,6 +2482,9 @@ class S3SiteModel(S3Model):
                           }
 
                 # Populate fields only if present
+                org = row.get("org_organisation.name", None)
+                if org:
+                    record["org"] = org
                 L1 = row.get("gis_location.L1", None)
                 if L1:
                     record["L1"] = L1
@@ -2435,89 +2497,12 @@ class S3SiteModel(S3Model):
                 L4 = row.get("gis_location.L4", None)
                 if L4:
                     record["L4"] = L4
+                addr_street = row.get("gis_location.addr_street", None)
+                if addr_street:
+                    record["addr"] = addr_street
 
                 # Populate match information (if applicable)
                 set_match_strings(record, value)
-                append(record)
-            output = json.dumps(output)
-
-        response.headers["Content-Type"] = "application/json"
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def site_search_address_ac(r, **attr):
-        """
-            JSON search method for S3SiteAddressAutocompleteWidget
-
-            @param r: the S3Request
-            @param attr: request attributes
-        """
-
-        response = current.response
-        resource = r.resource
-
-        # Query comes in pre-filtered to accessible & deletion_status
-        # Respect response.s3.filter
-        resource.add_filter(response.s3.filter)
-
-        _vars = current.request.get_vars
-
-        # JQueryUI Autocomplete uses "term"
-        # old JQuery Autocomplete uses "q"
-        # what uses "value"?
-        value = _vars.term or _vars.value or _vars.q or None
-
-        # We want to do case-insensitive searches
-        # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower().strip()
-
-        filter = _vars.get("filter", "~")
-
-        if filter and value:
-            if filter == "~":
-                query = (S3FieldSelector("name").lower().like(value + "%")) | \
-                        (S3FieldSelector("location_id$addr_street").lower().like(value + "%"))
-            else:
-                output = current.xml.json_message(False, 400,
-                                "Unsupported filter! Supported filters: ~")
-                raise HTTP(400, body=output)
-        else:
-            output = current.xml.json_message(False, 400,
-                            "Missing options! Require: filter & value")
-            raise HTTP(400, body=output)
-
-        resource.add_filter(query)
-
-        MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
-        limit = int(_vars.limit or MAX_SEARCH_RESULTS)
-        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = json.dumps([
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
-        else:
-            s3db = current.s3db
-
-            # Fields to return
-            fields = ["site_id",
-                      "name",
-                      "location_id$addr_street",
-                      ]
-            rows = resource.select(fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby="name",
-                                   as_rows=True)
-            output = []
-            append = output.append
-            for row in rows:
-                address = row.get("gis_location.addr_street", None)
-                row = row.get("org_site", row)
-                record = dict(id = row.site_id,
-                              name = row.name,
-                              )
-                if address:
-                    record["address"] = address
                 append(record)
             output = json.dumps(output)
 
@@ -2605,7 +2590,6 @@ class S3SiteDetailsModel(S3Model):
             title_display = T("%(site_label)s Status") % site_label,
             title_list = T("%(site_label)s Status") % site_label,
             title_update = T("Edit %(site_label)s Status") % site_label,
-            title_search = T("Search %(site_label)s Status") % site_label,
             subtitle_create = T("Add New %(site_label)s Status") % site_label,
             label_list_button = T("List %(site_label)s Status") % site_label,
             label_create_button = ADD_DETAILS,
@@ -2680,7 +2664,6 @@ class S3FacilityModel(S3Model):
             title_display=T("Facility Type Details"),
             title_list=T("Facility Types"),
             title_update=T("Edit Facility Type"),
-            title_search=T("Search Facility Types"),
             title_upload=T("Import Facility Types"),
             subtitle_create=T("Add New Facility Type"),
             label_list_button=T("List Facility Types"),
@@ -2781,7 +2764,6 @@ class S3FacilityModel(S3Model):
             title_list=T("Facilities"),
             title_update=T("Edit Facility"),
             title_map=T("Map of Facilities"),
-            title_search=T("Search Facilities"),
             title_upload=T("Import Facilities"),
             subtitle_create=T("Add New Facility"),
             label_list_button=T("List Facilities"),
@@ -3274,7 +3256,6 @@ class S3RoomModel(S3Model):
             title_display=T("Room Details"),
             title_list=T("Rooms"),
             title_update=T("Edit Room"),
-            title_search=T("Search Rooms"),
             subtitle_create=T("Add New Room"),
             label_list_button=T("List Rooms"),
             label_create_button=ADD_ROOM,
@@ -3380,7 +3361,6 @@ class S3OfficeModel(S3Model):
             title_display=T("Office Type Details"),
             title_list=T("Office Types"),
             title_update=T("Edit Office Type"),
-            title_search=T("Search Office Types"),
             subtitle_create=ADD_OFFICE_TYPE,
             label_list_button=T("List Office Types"),
             label_create_button=ADD_OFFICE_TYPE,
@@ -3481,7 +3461,6 @@ class S3OfficeModel(S3Model):
             title_display=T("Office Details"),
             title_list=T("Offices"),
             title_update=T("Edit Office"),
-            title_search=T("Search Offices"),
             title_upload=T("Import Offices"),
             title_map=T("Map of Offices"),
             subtitle_create=ADD_OFFICE,
@@ -4693,7 +4672,7 @@ def org_organisation_controller():
                             # A non-standard formstyle with just a single row
                             pass
 
-                elif r.method not in ("import", "search") and \
+                elif r.method != "import" and \
                      "form" in output:
 
                     sep = ": "
@@ -4891,7 +4870,7 @@ def org_office_controller():
                             # A non-standard formstyle with just a single row
                             pass
 
-                elif r.method not in ("import", "map", "search") and \
+                elif r.method not in ("import", "map") and \
                      "form" in output:
 
                     sep = ": "
@@ -5032,8 +5011,7 @@ def org_facility_controller():
     s3.prep = prep
 
     def postp(r, output):
-        if r.representation == "plain" and \
-             r.method !="search":
+        if r.representation == "plain":
             # Custom Map Popup
             T = current.T
             output = TABLE()

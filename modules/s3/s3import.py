@@ -736,6 +736,7 @@ class S3Importer(S3Method):
                         formname="upload_form"):
             upload_id = table.insert(**table._filter_fields(form.vars))
             if self.csv_extra_fields:
+                # Convert Values to Represents
                 self.csv_extra_data = Storage()
                 for f in self.csv_extra_fields:
                     label = f.get("label", None)

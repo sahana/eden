@@ -31,7 +31,6 @@ __all__ = ["S3PersonEntity",
            "S3OrgAuthModel",
            "S3PersonModel",
            "S3GroupModel",
-           "AvailableShelters",
            "S3ContactModel",
            "S3AddressModel",
            "S3PersonImageModel",
@@ -229,7 +228,7 @@ class S3PersonEntity(S3Model):
                        #   - Personalised configurations
                        #   - OU configurations (Organisation/Branch/Facility/Team)
                        gis_config=pe_id,
-                      )
+                       )
                       
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
@@ -242,7 +241,6 @@ class S3PersonEntity(S3Model):
                         method="search_ac",
                         action=self.pe_search_ac)
 
-                      
         # ---------------------------------------------------------------------
         # Person <-> User
         #
@@ -304,7 +302,6 @@ class S3PersonEntity(S3Model):
             title_display = T("Role Details"),
             title_list = T("Roles"),
             title_update = T("Edit Role"),
-            title_search = T("Search Roles"),
             subtitle_create = T("Add New Role"),
             label_list_button = T("List Roles"),
             label_create_button = T("Add Role"),
@@ -357,7 +354,6 @@ class S3PersonEntity(S3Model):
             title_display = T("Affiliation Details"),
             title_list = T("Affiliations"),
             title_update = T("Edit Affiliation"),
-            title_search = T("Search Affiliations"),
             subtitle_create = T("Add New Affiliation"),
             label_list_button = T("List Affiliations"),
             label_create_button = T("Add Affiliation"),
@@ -715,9 +711,9 @@ class S3PersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Person
         #
-        pr_gender_opts = {# This field is mandatory
-                          1: T("male"),
+        pr_gender_opts = {1: "",
                           2: T("female"),
+                          3: T("male"),
                           }
         pr_gender = S3ReusableField("gender", "integer",
                                     requires = IS_IN_SET(pr_gender_opts, zero=None),
@@ -816,7 +812,6 @@ class S3PersonModel(S3Model):
             title_display = T("Person Details"),
             title_list = T("Persons"),
             title_update = T("Edit Person Details"),
-            title_search = T("Search Persons"),
             subtitle_create = ADD_PERSON,
             label_list_button = T("List Persons"),
             label_create_button = ADD_PERSON,
@@ -878,6 +873,7 @@ class S3PersonModel(S3Model):
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = self.person_deduplicate,
+                       filter_widgets = filter_widgets,
                        list_fields = ["id",
                                       "first_name",
                                       "middle_name",
@@ -892,7 +888,6 @@ class S3PersonModel(S3Model):
                        extra = "last_name",
                        onaccept = self.pr_person_onaccept,
                        realm_components = ["presence"],
-                       filter_widgets = filter_widgets,
                        super_entity = ("pr_pentity", "sit_trackable"),
                        )
 
@@ -989,10 +984,12 @@ class S3PersonModel(S3Model):
                                       },
                        
                        # Shelter (Camp) Registry
-                       cr_shelter_person={"joinby": "person_id",
-                                          # A person can be assigned to only one shelter
-                                          "multiple": False,
-                                          },
+                       cr_shelter_registration={"joinby": "person_id",
+                                                # A person can be assigned to only one shelter
+                                                # @todo: when fully implemented this needs to allow
+                                                # multiple instances for tracking reasons
+                                                "multiple": False,
+                                                },
                       )
 
         # ---------------------------------------------------------------------
@@ -1113,54 +1110,86 @@ class S3PersonModel(S3Model):
 
         db = current.db
         ptable = db.pr_person
-        s3db = current.s3db
-        table = s3db.pr_contact
-        etable = table.with_alias("pr_email")
-        stable = table.with_alias("pr_sms")
 
-        left = [etable.on((etable.pe_id == ptable.pe_id) & \
-                          (etable.contact_method == "EMAIL")),
-                stable.on((stable.pe_id == ptable.pe_id) & \
-                          (stable.contact_method == "SMS"))]
-
+        # Mandatory data
         data = item.data
-        fname = lname = None
-        if "first_name" in data:
-            fname = data["first_name"]
-        if "last_name" in data:
-            lname = data["last_name"]
-        initials = dob = None
-        if "initials" in data:
-            initials = data["initials"]
-        if "date_of_birth" in data:
-            dob = data["date_of_birth"]
+        fname = data.get("first_name", None)
+        mname = data.get("middle_name", None)
+        lname = data.get("last_name", None)
+        if fname:
+            fname = fname.lower()
+        if mname:
+            mname = mname.lower()
+        if lname:
+            lname = lname.lower()
+        initials = data.get("initials", None)
+        if initials:
+            initials = initials.lower()
+
+        if fname and lname:
+            query = (ptable.first_name.lower() == fname) & \
+                    (ptable.last_name.lower() == lname)
+        elif initials:
+            query = (ptable.initials.lower() == initials)
+        else:
+            # Not enough we can use
+            return
+
+        # Optional extra data
+        dob = data.get("date_of_birth", None)
         email = sms = None
+        id = {}
         for citem in item.components:
             if citem.tablename == "pr_contact":
                 data = citem.data
-                if "contact_method" in data and \
-                   data.contact_method == "EMAIL":
+                if data.get("contact_method", None) == "EMAIL":
                     email = data.value
-                elif "contact_method" in data and \
-                     data.contact_method == "SMS":
+                elif data.get("contact_method", None) == "SMS":
                     sms = data.value
+            elif citem.tablename == "pr_identity":
+                data = citem.data
+                id_type = data.get("type", None)
+                id_value = data.get("value", None)
+                if id_type and id_value:
+                    id[id_type] = id_value
 
-        if fname and lname:
-            query = (ptable.first_name.lower() == fname.lower()) & \
-                    (ptable.last_name.lower() == lname.lower())
-        elif initials:
-            query = (ptable.initials.lower() == initials.lower())
-        else:
-            return
-        candidates = db(query).select(ptable._id,
-                                      ptable.first_name,
-                                      ptable.last_name,
-                                      ptable.initials,
-                                      ptable.date_of_birth,
-                                      etable.value,
-                                      stable.value,
+        s3db = current.s3db
+        table = s3db.pr_contact
+        etable = table.with_alias("pr_email")
+
+        fields = [ptable._id,
+                  ptable.first_name,
+                  ptable.middle_name,
+                  ptable.last_name,
+                  ptable.initials,
+                  etable.value,
+                  ]
+
+        left = [etable.on((etable.pe_id == ptable.pe_id) & \
+                          (etable.contact_method == "EMAIL")),
+                ]
+
+        if dob:
+            fields.append(ptable.date_of_birth)
+
+        if sms:
+            stable = table.with_alias("pr_sms")
+            fields.append(stable.value)
+            left.append(stable.on((stable.pe_id == ptable.pe_id) & \
+                                  (stable.contact_method == "SMS")))
+        if id:
+            itable = s3db.pr_identity
+            fields += [itable.type,
+                       itable.value,
+                       ]
+            left.append(itable.on(itable.person_id == ptable.id))
+
+        candidates = db(query).select(*fields,
                                       left=left,
                                       orderby=["pr_person.created_on ASC"])
+
+        if not candidates:
+            return
 
         duplicates = Storage()
 
@@ -1172,20 +1201,38 @@ class S3PersonModel(S3Model):
 
         email_required = current.deployment_settings.get_pr_import_update_requires_email()
         for row in candidates:
-            row_fname = row[ptable.first_name]
-            row_lname = row[ptable.last_name]
-            row_initials = row[ptable.initials]
-            row_dob = row[ptable.date_of_birth]
+            if fname and lname:
+                row_fname = row[ptable.first_name]
+                row_mname = row[ptable.middle_name]
+                row_lname = row[ptable.last_name]
+            if initials:
+                row_initials = row[ptable.initials]
+            if dob:
+                row_dob = row[ptable.date_of_birth]
             row_email = row[etable.value]
-            row_sms = row[stable.value]
+            if sms:
+                row_sms = row[stable.value]
+            if id:
+                row_id_type = row[itable.type]
+                row_id_value = row[itable.value]
 
             check = 0
 
             if fname and row_fname:
-                check += rank(fname.lower(), row_fname.lower(), +2, -2)
+                check += rank(fname, row_fname.lower(), +2, -2)
+
+            if mname:
+                if row_mname:
+                    check += rank(mname, row_mname.lower(), +2, -2)
+                else:
+                    # Don't penalise hard if the new source doesn't include the middle name
+                    check -= 1
 
             if lname and row_lname:
-                check += rank(lname.lower(), row_lname.lower(), +2, -2)
+                check += rank(lname, row_lname.lower(), +2, -2)
+
+            if initials and row_initials:
+                check += rank(initials, row_initials.lower(), +4, -1)
 
             if dob and row_dob:
                 check += rank(dob, row_dob, +3, -2)
@@ -1196,18 +1243,18 @@ class S3PersonModel(S3Model):
                 # Treat missing email as mismatch
                 check -= 2 if initials else 3 if not row_email else 4
 
-            if initials and row_initials:
-                check += rank(initials.lower(), row_initials.lower(), +4, -1)
-
             if sms and row_sms:
                 check += rank(sms.lower(), row_sms.lower(), +1, -1)
+
+            if id and row_id_type:
+                id_value = id.get(str(row_id_type), None)
+                check += rank(id_value, row_id_value, +5, -2)
 
             if check in duplicates:
                 continue
             else:
                 duplicates[check] = row
 
-        duplicate = None
         if len(duplicates):
             best_match = max(duplicates.keys())
             if best_match > 0:
@@ -1276,6 +1323,13 @@ class S3PersonModel(S3Model):
                       "last_name",
                       ]
 
+            show_hr = settings.get_pr_search_shows_hr_details()
+            if show_hr:
+                fields.append("human_resource.job_title_id$name")
+                show_orgs = settings.get_hrm_show_organisation()
+                if show_orgs:
+                    fields.append("human_resource.organisation_id$name")
+
             if settings.get_pr_reverse_names():
                 orderby = "pr_person.last_name"
             else:
@@ -1285,14 +1339,27 @@ class S3PersonModel(S3Model):
                                    limit=limit,
                                    orderby=orderby)["rows"]
 
-            if rows:
-                items = [{"id"     : row["pr_person.id"],
-                          "first"  : row["pr_person.first_name"],
-                          "middle" : row["pr_person.middle_name"] or "",
-                          "last"   : row["pr_person.last_name"] or "",
-                          } for row in rows ]
-            else:
-                items = []
+            items = []
+            iappend = items.append
+            for row in rows:
+                item = {"id"     : row["pr_person.id"],
+                        "first"  : row["pr_person.first_name"],
+                        }
+                middle_name = row.get("pr_person.middle_name", None)
+                if middle_name:
+                    item["middle"] = middle_name
+                last_name = row.get("pr_person.last_name", None)
+                if last_name:
+                    item["last"] = last_name
+                if show_hr:
+                    job_title = row.get("hrm_job_title.name", None)
+                    if job_title:
+                        item["job"] = job_title
+                    if show_orgs:
+                         org = row.get("org_organisation.name", None)
+                         if org:
+                            item["org"] = org
+                iappend(item)
             output = json.dumps(items)
 
         response.headers["Content-Type"] = "application/json"
@@ -1495,7 +1562,6 @@ class S3GroupModel(S3Model):
             title_display = T("Group Details"),
             title_list = T("Groups"),
             title_update = T("Edit Group"),
-            title_search = T("Search Groups"),
             subtitle_create = T("Add New Group"),
             label_list_button = T("List Groups"),
             label_create_button = ADD_GROUP,
@@ -1512,7 +1578,6 @@ class S3GroupModel(S3Model):
             title_display = T("Mailing List Details"),
             title_list = T("Mailing Lists"),
             title_update = T("Edit Mailing List"),
-            title_search = T("Search Mailing Lists"),
             subtitle_create = T("Add New Mailing List"),
             label_list_button = T("List Mailing Lists"),
             label_create_button = ADD_GROUP,
@@ -1567,12 +1632,11 @@ class S3GroupModel(S3Model):
                             # Shelter (Camp) Registry
                             cr_shelter_allocation={"joinby": "group_id",
                                                     # A group can be assigned to only one shelter
+                                                    # @todo: when fully implemented this needs to allow
+                                                    # multiple instances for tracking reasons
                                                     "multiple": False,
                                                     },
                             )
-        
-        # configuration for the custom method in evr
-        self.set_method("pr", "group", method="available_shelters", action=AvailableShelters)
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -1595,37 +1659,37 @@ class S3GroupModel(S3Model):
 
         # CRUD strings
         function = current.request.function
-        if function in ("person", "group_membership"):
+        if function == "person":
+            ADD_MEMBERSHIP = T("Add Membership")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Membership"),
+                title_create = ADD_MEMBERSHIP,
                 title_display = T("Membership Details"),
                 title_list = T("Memberships"),
                 title_update = T("Edit Membership"),
-                title_search = T("Search Membership"),
                 subtitle_create = T("Add New Membership"),
                 label_list_button = T("List Memberships"),
-                label_create_button = T("Add Membership"),
+                label_create_button = ADD_MEMBERSHIP,
                 label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Membership added"),
+                msg_record_created = T("Added to Group"),
                 msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Memberships currently registered"))
+                msg_record_deleted = T("Removed from Group"),
+                msg_list_empty = T("Not yet a Member of any Group"))
 
-        elif function == "group":
+        elif function in ("group", "group_membership"):
+            ADD_MEMBER = T("Add Member")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Member"),
+                title_create = ADD_MEMBER,
                 title_display = T("Membership Details"),
                 title_list = T("Group Members"),
                 title_update = T("Edit Membership"),
-                title_search = T("Search Member"),
                 subtitle_create = T("Add New Member"),
                 label_list_button = T("List Members"),
-                label_create_button = T("Add Group Member"),
-                label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Group Member added"),
+                label_create_button = ADD_MEMBER,
+                label_delete_button = T("Remove Person from Group"),
+                msg_record_created = T("Person added to Group"),
                 msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Members currently registered"))
+                msg_record_deleted = T("Person removed from Group"),
+                msg_list_empty = T("This Group has no Members yet"))
 
         filter_widgets = [
             S3TextFilter(["group_id$name",
@@ -1692,28 +1756,28 @@ class S3GroupModel(S3Model):
         else:
             return
 
-        db = current.db
-        mtable = db.pr_group_membership
-
-        if _id:
-            record = db(mtable.id == _id).select(limitby=(0, 1)).first()
-        else:
+        if not _id:
             return
+
+        db = current.db
+        table = db.pr_group_membership
+
+        record = db(table.id == _id).select(limitby=(0, 1)).first()
         if record:
             person_id = record.person_id
             group_id = record.group_id
             if person_id and group_id and not record.deleted:
-                query = (mtable.person_id == person_id) & \
-                        (mtable.group_id == group_id) & \
-                        (mtable.id != record.id) & \
-                        (mtable.deleted != True)
+                query = (table.person_id == person_id) & \
+                        (table.group_id == group_id) & \
+                        (table.id != record.id) & \
+                        (table.deleted != True)
                 deleted_fk = {"person_id": person_id,
                               "group_id": group_id}
                 db(query).update(deleted = True,
                                  person_id = None,
                                  group_id = None,
                                  deleted_fk = json.dumps(deleted_fk))
-            pr_update_affiliations(mtable, record)
+            pr_update_affiliations(table, record)
         return
 
 # =============================================================================
@@ -1781,7 +1845,6 @@ class S3ContactModel(S3Model):
             title_display = T("Contact Details"),
             title_list = T("Contact Information"),
             title_update = T("Edit Contact Information"),
-            title_search = T("Search Contact Information"),
             subtitle_create = T("Add Contact Information"),
             label_list_button = T("List Contact Information"),
             label_create_button = T("Add Contact Information"),
@@ -1977,7 +2040,6 @@ class S3AddressModel(S3Model):
             title_display = T("Address Details"),
             title_list = T("Addresses"),
             title_update = T("Edit Address"),
-            title_search = T("Search Addresses"),
             subtitle_create = T("Add New Address"),
             label_list_button = T("List Addresses"),
             label_create_button = ADD_ADDRESS,
@@ -2177,7 +2239,6 @@ class S3PersonImageModel(S3Model):
             title_display = T("Image Details"),
             title_list = T("Images"),
             title_update = T("Edit Image Details"),
-            title_search = T("Search Images"),
             subtitle_create = T("Add New Image"),
             label_list_button = T("List Images"),
             label_create_button = T("Add Image"),
@@ -2460,7 +2521,6 @@ class S3PersonIdentityModel(S3Model):
             title_display = T("Identity Details"),
             title_list = T("Identities"),
             title_update = T("Edit Identity"),
-            title_search = T("Search Identity"),
             subtitle_create = T("Add New Identity"),
             label_list_button = T("List Identities"),
             label_create_button = ADD_IDENTITY,
@@ -2556,7 +2616,6 @@ class S3PersonEducationModel(S3Model):
             title_display = T("Education Details"),
             title_list = T("Education Details"),
             title_update = T("Edit Education Details"),
-            title_search = T("Search Education Details"),
             subtitle_create = T("Add Education Detail"),
             label_list_button = T("List Education Details"),
             label_create_button = ADD_IDENTITY,
@@ -2681,6 +2740,12 @@ class S3PersonDetailsModel(S3Model):
                                         represent = lambda opt: \
                                             pr_religion_opts.get(opt, UNKNOWN_OPT),
                                         ),
+                                  # Alternate free-text form
+                                  #Field("religion_freetext",
+                                  #      label = T("Religion"),
+                                  #      readable = False,
+                                  #      writable = False,
+                                  #      ),
                                   Field("father_name",
                                         label = T("Name of Father"),
                                         ),
@@ -2707,7 +2772,6 @@ class S3PersonDetailsModel(S3Model):
             title_display = T("Person's Details"),
             title_list = T("Persons' Details"),
             title_update = T("Edit Person's Details"),
-            title_search = T("Search Person's Details"),
             subtitle_create = T("Add New Person's Details"),
             label_list_button = T("List Persons' Details"),
             label_create_button = ADD_DETAILS,
@@ -3064,7 +3128,6 @@ class S3SavedSearch(S3Model):
             title_display=T("Saved search details"),
             title_list=T("Saved searches"),
             title_update=T("Edit saved search"),
-            title_search=T("Search saved searches"),
             subtitle_create=T("Add saved search"),
             label_list_button=T("List saved searches"),
             label_create_button=T("Save search"),
@@ -3352,7 +3415,6 @@ class S3PersonPresence(S3Model):
             title_display = T("Log Entry Details"),
             title_list = T("Presence Log"),
             title_update = T("Edit Log Entry"),
-            title_search = T("Search Log Entry"),
             subtitle_create = T("Add New Log Entry"),
             label_list_button = T("List Log Entries"),
             label_create_button = ADD_LOG_ENTRY,
@@ -3621,7 +3683,6 @@ class S3PersonDescription(S3Model):
             title_display = T("Journal Entry Details"),
             title_list = T("Journal"),
             title_update = T("Edit Entry"),
-            title_search = T("Search Entries"),
             subtitle_create = T("Add New Entry"),
             label_list_button = T("See All Entries"),
             label_create_button = ADD_NOTE,
@@ -6324,27 +6385,5 @@ def summary_urls(resource, url, filters):
         tab_idx += 1
 
     return links
-
-# =============================================================================
-from ..s3.s3rest import S3Method
-class AvailableShelters(S3Method):
-    """
-        Method handler for the "available_shelters" method
-    """
-    
-    def apply_method(self, r, **attr):
-        """
-            Entry point for the RESTful API (=this function will be called to handle the request)
-
-            @param r: the S3Request
-            @param attr: additional keyword parameters passed from the controller
-        """
-        
-        if r.http == "GET":
-            #TODO: filter only shelter associated with a specific event
-            table = current.s3db.cr_shelter
-            rows = current.db(table).select()
-        
-        return rows.as_list()
 
 # END =========================================================================

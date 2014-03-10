@@ -1201,6 +1201,12 @@ class S3Config(Storage):
         else:
             return attr
 
+    def ui_custom_configure(self, tablename):
+        """
+            Get customization callback for a resource
+        """
+        return self.ui.get("custom_configure_%s" % tablename)
+
     def get_ui_export_formats(self):
         """
             Which export formats should we display?
@@ -1332,6 +1338,12 @@ class S3Config(Storage):
         """
         return self.ui.get("report_auto_submit", 800)
 
+    def get_ui_use_button_glyphicons(self):
+        """
+            Use glyphicons on action buttons (requires bootstrap CSS)
+        """
+        return self.ui.get("use_button_glyphicons", False)
+
     # =========================================================================
     # Messaging
     #
@@ -1439,14 +1451,6 @@ class S3Config(Storage):
             Lower this number to get extra performance from an overloaded server.
         """
         return self.search.get("max_results", 200)
-
-    # -------------------------------------------------------------------------
-    # Save Search and Subscription
-    def get_search_save_widget(self):
-        """
-            Enable the Saved Search widget
-        """
-        return self.search.get("save_widget", False)
 
     # -------------------------------------------------------------------------
     # Filter Manager Widget
@@ -1954,13 +1958,7 @@ class S3Config(Storage):
         """
             Which extra fields should be returned in S3SiteAutocompleteWidget
         """
-        return self.org.get("site_autocomplete_fields", ["instance_type"])
-
-    def get_org_site_address_autocomplete(self):
-        """
-            Whether site_id Autocomplete fields should search Address fields as well as name
-        """
-        return self.org.get("site_address_autocomplete", False)
+        return self.org.get("site_autocomplete_fields", ("instance_type",))
 
     def get_org_site_last_contacted(self):
         """
@@ -2039,6 +2037,13 @@ class S3Config(Storage):
                 group = "60+"
         return group
 
+    def get_pr_import_update_requires_email(self):
+        """
+            During imports, records are only updated if the import
+            item contains a (matching) email address
+        """
+        return self.pr.get("import_update_requires_email", True)
+
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget[2] """
         return self.pr.get("request_dob", True)
@@ -2063,12 +2068,11 @@ class S3Config(Storage):
         """
         return self.pr.get("select_existing", True)
 
-    def get_pr_import_update_requires_email(self):
+    def get_pr_search_shows_hr_details(self):
         """
-            During imports, records are only updated if the import
-            item contains a (matching) email address
+            Whether S3PersonAutocompleteWidget results show the details of their HR record
         """
-        return self.pr.get("import_update_requires_email", True)
+        return self.pr.get("search_shows_hr_details", True)
 
     # -------------------------------------------------------------------------
     # Proc

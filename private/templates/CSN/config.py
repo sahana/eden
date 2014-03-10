@@ -232,8 +232,7 @@ def customize_cms_post(**attr):
     # Custom PostP
     standard_postp = s3.postp
     def custom_postp(r, output):
-        if r.representation == "plain" and \
-           r.method != "search":
+        if r.representation == "plain":
             # Map Popups - styled like dataList
             auth = current.auth
             db = current.db

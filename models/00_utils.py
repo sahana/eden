@@ -296,6 +296,9 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Parse the request
     r = s3_request(prefix, resourcename)
 
+    # Customize target resource(s)
+    r.custom_configure()
+
     # Configure standard method handlers
     set_handler = r.set_handler
     set_handler("barchart", s3_barchart)

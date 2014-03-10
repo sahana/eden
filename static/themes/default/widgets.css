@@ -195,6 +195,10 @@ table.embeddedComponent tr.label-row td {
     padding: 0;
 }
 
+.ui-tabs .ui-tabs-panel {
+    padding: 2px 5px;
+}
+
 /* ========================================================================= */
 
 textarea.comments {
@@ -572,7 +576,8 @@ ul.ui-autocomplete {
     text-transform: uppercase;
     height: 20px;
     width: 50px;
-    background-image: url(../../img/help_off.gif);
+    background: none;
+    background: url(../../img/help_off.gif) no-repeat;
 }
 .tooltip span,
 .tooltipbody span,
@@ -587,7 +592,7 @@ ul.ui-autocomplete {
     background-color: transparent;
     height: 20px;
     width: 50px;
-    background-image: url(../../img/help_on.gif);
+    background: url(../../img/help_on.gif) no-repeat;
 }
 
 /* Form Popup */
@@ -847,16 +852,6 @@ span.tab_next_inactive a {
 }
 
 /* Action Buttons */
-.dataTable .action-btn,
-.dataTable .delete-btn-ajax,
-.dataTable .delete-btn {
-    color: #ffffff;
-}
-
-.ui-tabs .ui-tabs-panel {
-    padding: 2px 5px;
-}
-
 .action-btn,
 .delete-btn-ajax,
 .delete-btn {

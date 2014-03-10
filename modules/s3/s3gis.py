@@ -520,7 +520,7 @@ class GIS(object):
         if postcode:
             location = "%s,%s" % (location, postcode)
 
-        L5 = L4 = L3 = L2 = L1 = L0 = None
+        Lx = L5 = L4 = L3 = L2 = L1 = L0 = None
         if Lx_ids:
             # Convert Lx IDs to Names
             table = current.s3db.gis_location
@@ -590,27 +590,27 @@ class GIS(object):
                             wkt = db(table.id == L5).select(table.wkt,
                                                             limitby=(0, 1)
                                                             ).first().wkt
-                            used_Lx = "L5"
+                            used_Lx = L5
                         elif L4 and Lx[L4]["gis_feature_type"] != 1:
                             wkt = db(table.id == L4).select(table.wkt,
                                                             limitby=(0, 1)
                                                             ).first().wkt
-                            used_Lx = "L4"
+                            used_Lx = L4
                         elif L3 and Lx[L3]["gis_feature_type"] != 1:
                             wkt = db(table.id == L3).select(table.wkt,
                                                             limitby=(0, 1)
                                                             ).first().wkt
-                            used_Lx = "L3"
+                            used_Lx = L3
                         elif L2 and Lx[L2]["gis_feature_type"] != 1:
                             wkt = db(table.id == L2).select(table.wkt,
                                                             limitby=(0, 1)
                                                             ).first().wkt
-                            used_Lx = "L2"
+                            used_Lx = L2
                         elif L1 and Lx[L1]["gis_feature_type"] != 1:
                             wkt = db(table.id == L1).select(table.wkt,
                                                             limitby=(0, 1)
                                                             ).first().wkt
-                            used_Lx = "L1"
+                            used_Lx = L1
                         elif L0:
                             L0_row = db(table.id == L0).select(table.wkt,
                                                                table.lon_min,
@@ -619,8 +619,9 @@ class GIS(object):
                                                                table.lat_max,
                                                                limitby=(0, 1)
                                                                ).first()
-                            wkt = L0_row.wkt
-                            used_Lx = "L0"
+                            if not L0_row.wkt.startswith("POI"): # Point
+                                wkt = L0_row.wkt
+                            used_Lx = L0
                         if wkt:
                             from shapely.geometry import point
                             from shapely.wkt import loads as wkt_loads
@@ -635,7 +636,7 @@ class GIS(object):
                             shape = wkt_loads(wkt)
                             ok = test.intersects(shape)
                             if not ok:
-                                output = "Returned value not within %s" % Lx[used_Lx].name
+                                output = "Returned value not within %s" % Lx[used_Lx]["name"]
                         elif L0:
                             # Check within country at least
                             if not L0_row:
@@ -1083,7 +1084,7 @@ class GIS(object):
             Only update tables which are already defined
         """
 
-        levels = ["L1", "L2", "L3", "L4"]
+        levels = ("L1", "L2", "L3", "L4", "L5")
         labels = self.get_location_hierarchy()
 
         db = current.db
@@ -1091,7 +1092,7 @@ class GIS(object):
             # Update the specific table which has just been defined
             table = db[tablename]
             if tablename == "gis_location":
-                labels["L0"] = current.messages["COUNTRY"]
+                labels["L0"] = current.messages.COUNTRY
                 table.level.requires = \
                     IS_NULL_OR(IS_IN_SET(labels))
             else:
@@ -1372,7 +1373,7 @@ class GIS(object):
             else:
                 return _levels
 
-        COUNTRY = current.messages["COUNTRY"]
+        COUNTRY = current.messages.COUNTRY
 
         if level == "L0":
             return COUNTRY

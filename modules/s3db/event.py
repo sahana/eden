@@ -33,6 +33,7 @@ __all__ = ["S3EventModel",
            "S3IncidentGroupModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
+           "S3IncidentShelterModel",
            "S3EventActivityModel",
            "S3EventAssetModel",
            "S3EventCMSModel",
@@ -98,7 +99,6 @@ class S3EventModel(S3Model):
             title_display = T("Event Type Details"),
             title_list = T("Event Types"),
             title_update = T("Edit Event Type"),
-            title_search = T("Search Event Types"),
             title_upload = T("Import Event Types"),
             subtitle_create = T("Add New Event Type"),
             label_list_button = T("List Event Types"),
@@ -171,7 +171,6 @@ class S3EventModel(S3Model):
             title_display = T("Event Details"),
             title_list = T("Events"),
             title_update = T("Edit Event"),
-            title_search = T("Search Events"),
             subtitle_create = T("Add New Event"),
             label_list_button = T("List Events"),
             label_create_button = ADD_EVENT,
@@ -441,7 +440,7 @@ class S3IncidentModel(S3Model):
                                         length=64,
                                         label=T("Name")),
                                   Field("exercise", "boolean",
-                                        represent = lambda opt: "√" if opt else NONE,
+                                        represent = lambda opt: "√" if opt else None,
                                         #comment = DIV(_class="tooltip",
                                         #              _title="%s|%s" % (T("Exercise"),
                                                                         # Should!
@@ -466,7 +465,6 @@ class S3IncidentModel(S3Model):
             title_display = T("Incident Details"),
             title_list = T("Incidents"),
             title_update = T("Edit Incident"),
-            title_search = T("Search Incidents"),
             subtitle_create = T("Add New Incident"),
             label_list_button = T("List Incidents"),
             label_create_button = T("Add Incident"),
@@ -488,7 +486,7 @@ class S3IncidentModel(S3Model):
                                                               sort=True)),
                                       represent = represent,
                                       label = T("Incident"),
-                                      ondelete = "RESTRICT",
+                                      ondelete = "CASCADE",
                                       # Uncomment these to use an Autocomplete & not a Dropdown
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",
@@ -554,6 +552,7 @@ class S3IncidentModel(S3Model):
                                    "autocomplete": "name",
                                    "autodelete": True,
                                   },
+                       event_incident_shelter="incident_id"
                       )
 
         # Pass names back to global scope (s3.*)
@@ -588,6 +587,7 @@ class S3IncidentModel(S3Model):
             # Set the Event in the session
             current.session.s3.event = event
         s3db = current.s3db
+        db = current.db
         ctable = s3db.gis_config
         mapconfig = None
         scenario = vars.get("scenario_id", None)
@@ -596,7 +596,6 @@ class S3IncidentModel(S3Model):
             # copy all resources from the Scenario to the Incident
 
             # Read the source resource tables
-            db = current.db
             table = db.scenario_scenario
             otable = s3db.scenario_organisation
             stable = s3db.scenario_site
@@ -662,7 +661,7 @@ class S3IncidentModel(S3Model):
             # Create a new Map Config
             config = ctable.insert(name = vars.name)
             mtable = db.event_config
-            mtable.insert(incident_id=id,
+            mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
             current.gis.set_config(config)
@@ -735,7 +734,6 @@ class S3IncidentReportModel(S3Model):
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
-            title_search = T("Search Incident Reports"),
             subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
             label_create_button = T("Add Incident Report"),
@@ -834,7 +832,6 @@ class S3IncidentTypeModel(S3Model):
             title_display = T("Incident Type Details"),
             title_list = T("Incident Types"),
             title_update = T("Edit Incident Type"),
-            title_search = T("Search Incident Types"),
             title_upload = T("Import Incident Types"),
             subtitle_create = T("Add New Incident Type"),
             label_list_button = T("List Incident Types"),
@@ -941,6 +938,66 @@ class S3IncidentTypeTagModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+    
+# =============================================================================
+class S3IncidentShelterModel(S3Model):
+    """
+        Link Shelters to Incidents
+    """
+
+    names = ["event_incident_shelter"]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("cr"):
+            return None
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Shelters
+        #   Link table for cr_shelter <> event_event
+
+        tablename = "event_incident_shelter"
+        table = self.define_table(tablename,
+                                  self.event_incident_id(),
+                                  self.cr_shelter_id(),
+                                  *s3_meta_fields()
+                                  )
+        
+        if current.request.function == "incident":
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Shelter"),
+                title_display = T("Shelter Details"),
+                title_list = T("Shelters"),
+                title_update = T("Edit Shelter"),
+                subtitle_create = T("Add New Shelter"),
+                label_list_button = T("List Shelters"),
+                label_create_button = T("Add Shelter"),
+                label_delete_button = T("Remove Shelter for this Event"),
+                msg_record_created = T("Shelter added"),
+                msg_record_modified = T("Shelter updated"),
+                msg_record_deleted = T("Shelter removed"),
+                msg_list_empty = T("No Shelters currently tagged to this event")
+                )
+
+        elif current.request.function == "shelter":
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Associate Incident"),
+                title_display = T("Incident Details"),
+                title_list = T("Incidents"),
+                title_update = T("Edit Incident"),
+                subtitle_create = T("Associate New Incident"),
+                label_list_button = T("List Incidents"),
+                label_create_button = T("Associate Incident"),
+                label_delete_button = T("Remove Incident for this Shelter"),
+                msg_record_created = T("Incident added"),
+                msg_record_modified = T("Incident updated"),
+                msg_record_deleted = T("Incident removed"),
+                msg_list_empty = T("No Incidents currently tagged to this Shelter")
+                )
+        # Pass names back to global scope (s3.*)
+        return dict()
 
 # =============================================================================
 class S3EventActivityModel(S3Model):
@@ -994,7 +1051,6 @@ class S3EventAssetModel(S3Model):
             title_display = T("Asset Details"),
             title_list = T("Assets"),
             title_update = T("Edit Asset"),
-            title_search = T("Search Assets"),
             subtitle_create = T("Add New Asset"),
             label_list_button = T("List Assets"),
             label_create_button = T("Add Asset"),
@@ -1038,7 +1094,6 @@ class S3EventCMSModel(S3Model):
             title_display = T("Tag Details"),
             title_list = T("Tags"),
             title_update = T("Edit Tag"),
-            title_search = T("Search Tags"),
             subtitle_create = T("Add New Tag"),
             label_list_button = T("List Tags"),
             label_create_button = T("Add Tag"),
@@ -1080,7 +1135,6 @@ class S3EventHRModel(S3Model):
             title_display = T("Human Resource Details"),
             title_list = T("Assigned Human Resources"),
             title_update = T("Edit Human Resource"),
-            title_search = T("Search Assigned Human Resources"),
             subtitle_create = T("Assign New Human Resource"),
             label_list_button = T("List Assigned Human Resources"),
             label_create_button = T("Assign Human Resource"),
@@ -1121,7 +1175,6 @@ class S3EventIReportModel(S3Model):
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
-            title_search = T("Search Incident Reports"),
             subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
             label_create_button = T("Add Incident Report"),
@@ -1159,7 +1212,6 @@ class S3EventMapModel(S3Model):
             title_display = T("Map Configuration Details"),
             title_list = T("Map Configurations"),
             title_update = T("Edit Map Configuration"),
-            title_search = T("Search Map Configurations"),
             subtitle_create = T("Add New Map Configuration"),
             label_list_button = T("List Map Configurations"),
             label_create_button = T("Add Map Configuration"),
@@ -1200,7 +1252,6 @@ class S3EventSiteModel(S3Model):
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
             title_update = T("Edit Facility"),
-            title_search = T("Search Facilities"),
             subtitle_create = T("Add New Facility"),
             label_list_button = T("List Facilities"),
             label_create_button = T("Add Facility"),
@@ -1246,7 +1297,6 @@ class S3EventTaskModel(S3Model):
             title_display = T("Task Details"),
             title_list = T("Tasks"),
             title_update = T("Edit Task"),
-            title_search = T("Search Tasks"),
             subtitle_create = T("Add New Task"),
             label_list_button = T("List Tasks"),
             label_create_button = T("Add Task"),

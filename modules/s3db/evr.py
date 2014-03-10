@@ -29,6 +29,7 @@
 
 __all__ = ["S3EVRCaseModel",
            "evr_rheader",
+           "evr_AvailableShelters",
            ]
 
 from gluon import *
@@ -54,13 +55,18 @@ class S3EVRCaseModel(S3Model):
                                   self.pr_person_id(),
                                   Field("fiscal_code", "string",
                                         length=16,
-                                        label=T("Fiscal Code")
-                                        # @todo: provide a tooltip
-                                        # for this field including
-                                        # generator (?)
+                                        label=T("Fiscal Code"),
+                                        comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Fiscal Code"),
+                                                                T("Insert the fiscal code with no spaces"))),
                                         ),
+                                  Field("birthplace"),
                                   s3_comments(),
                                   *s3_meta_fields())
+        
+        # If fiscal code is present, it's unique
+        fiscal_code = current.db.evr_case.fiscal_code
+        fiscal_code.requires = IS_EMPTY_OR(IS_NOT_IN_DB(current.db, fiscal_code))
                                   
         # ---------------------------------------------------------------------
         # Medical Details
@@ -256,7 +262,7 @@ def evr_rheader(r):
                 (T("Physical Description"), "physical_description"),
                 (T("Medical Information"), "medical_details"),
                 (T("Socio-Economic Background"), "background"),
-                (T("Shelter Registration"), "shelter_person"),
+                (T("Shelter Registration"), "shelter_registration"),
                 ]
 
         rheader_fields = [["first_name", "last_name"],
@@ -272,14 +278,61 @@ def evr_rheader(r):
         tabs = [("Group Details", None),
                 (T("Contact Data"), "contact"),
                 (T("Members"), "group_membership"),
-                #TODO: enable available shelter view
                 (T("Shelter Allocation"), "available_shelters"),
-                #(T("Shelter Allocation"), "shelter_allocation")
                 ]
 
     if rheader_fields is not None:
         return S3ResourceHeader(rheader_fields, tabs)(r)
     else:
         return None
+    
+# =============================================================================
+class evr_AvailableShelters(S3Method):
+    """
+        Method handler for the "available_shelters" method
+    """
 
+    def apply_method(self, r, **attr):
+        
+        T = current.T
+        s3db = current.s3db
+        response = current.response
+        resource = s3db.resource("cr_shelter")
+        
+        if r.http == "GET":
+            # Find out how many records are in the resource
+            totalrows = resource.count()
+            list_fields = ["name",
+                           "capacity_day",
+                           "population_day",
+                           "capacity_night",
+                           "population_night",
+                           ]
+            
+            # Get all the data from the resource
+            data = resource.select(list_fields)
+            
+            filteredrows = data["numrows"]
+            
+            # Create the resource fields
+            dt = S3DataTable(data["rfields"], data["rows"])
+            dt_id = "datatable"
+            
+            if r.extension == "html":
+                # Create the html for the dataTable 
+                items = dt.html(totalrows,
+                                filteredrows,
+                                dt_id,
+                                dt_pagination="true"
+                                )
+                
+                output = dict(items=items)
+                response.view = "list_filter.html"
+                return output
+            
+        elif r.http == "POST":
+            pass
+            # @todo: implement
+        
+        
 # END =========================================================================

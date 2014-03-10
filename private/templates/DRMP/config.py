@@ -2280,8 +2280,7 @@ def customize_cms_post(**attr):
                            list_fields = list_fields,
                            )
 
-        elif r.representation == "plain" and \
-             r.method != "search":
+        elif r.representation == "plain":
             # Map Popups
             table = r.table
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -2319,8 +2318,7 @@ def customize_cms_post(**attr):
                 output["form"].add_class("cms_post")
             elif "item" in output and hasattr(output["item"], "add_class"):
                 output["item"].add_class("cms_post")
-        elif r.representation == "plain" and \
-             r.method != "search":
+        elif r.representation == "plain":
             # Map Popups
             #output = cms_post_popup(r)
             pass
@@ -2351,7 +2349,6 @@ def customize_event_event(**attr):
                 title_display = T("Disaster Details"),
                 title_list = T("Disasters"),
                 title_update = T("Edit Disaster"),
-                title_search = T("Search Disasters"),
                 subtitle_create = T("Add New Disaster"),
                 label_list_button = T("List Disasters"),
                 label_create_button = ADD_EVENT,
@@ -3104,7 +3101,6 @@ def customize_org_organisation(**attr):
                 title_display = T("Stakeholder Details"),
                 title_list = T("Stakeholders"),
                 title_update = T("Edit Stakeholder"),
-                title_search = T("Search Stakeholders"),
                 subtitle_create = T("Add New Stakeholder"),
                 label_list_button = T("List Stakeholders"),
                 label_create_button = ADD_ORGANISATION,
@@ -3507,7 +3503,6 @@ def customize_pr_person(**attr):
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Edit Contact Details"),
-                    title_search = T("Search Contacts"),
                     subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
                     label_create_button = ADD_CONTACT,
@@ -4044,7 +4039,6 @@ def customize_doc_document(**attr):
                 title_display = T("Document"),
                 title_list = T("Documents"),
                 title_update = T("Edit Document"),
-                title_search = T("Search Documents"),
                 subtitle_create = T("Add Document"),
                 label_list_button = T("List New Documents"),
                 label_create_button = T("Add Documents"),

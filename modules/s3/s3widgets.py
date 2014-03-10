@@ -64,7 +64,6 @@ __all__ = ["S3ACLWidget",
            "S3PriorityListWidget",
            "S3SelectChosenWidget",
            "S3SiteAutocompleteWidget",
-           "S3SiteAddressAutocompleteWidget",
            "S3SliderWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
@@ -109,6 +108,7 @@ from gluon import *
 #from gluon.http import HTTP
 #from gluon.validators import *
 from gluon.html import BUTTON
+from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
@@ -3890,7 +3890,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         hide_lx = self.hide_lx
         show_address = self.show_address
-        show_postcode = self.show_postcode
+        show_postcode = self.show_postcode and settings.get_gis_postcode_selector()
         show_map = self.show_map
         lines = self.lines
         polygons = self.polygons or lines
@@ -4053,8 +4053,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         lowest_Lx = None
         if "L0" not in levels and \
-           "L0" in _levels:
-            lowest_Lx = "L0"
+           "L0" in _levels and L0:
             # Have a hidden L0 input
             # - used for Geocoder & client-side validation
             L0_input = INPUT(_name="L0",
@@ -4067,8 +4066,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L0_input = ""
 
         if "L1" not in levels and \
-           "L1" in _levels:
-            lowest_Lx = "L1"
+           "L1" in _levels and L1:
             # Have a hidden L1 input
             # - used for Geocoder & client-side validation
             L1_input = INPUT(_name="L1",
@@ -4081,8 +4079,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L1_input = ""
 
         if "L2" not in levels and \
-           "L2" in _levels:
-            lowest_Lx = "L2"
+           "L2" in _levels and L2:
             # Have a hidden L2 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L2_input = INPUT(_name="L2",
@@ -4095,8 +4092,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L2_input = ""
 
         if "L3" not in levels and \
-           "L3" in _levels:
-            lowest_Lx = "L3"
+           "L3" in _levels and L3:
             # Have a hidden L3 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L3_input = INPUT(_name="L3",
@@ -4109,8 +4105,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L3_input = ""
 
         if "L4" not in levels and \
-           "L4" in _levels:
-            lowest_Lx = "L4"
+           "L4" in _levels and L4:
             # Have a hidden L4 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L4_input = INPUT(_name="L4",
@@ -4123,8 +4118,7 @@ class S3LocationSelectorWidget2(FormWidget):
             L4_input = ""
 
         if "L5" not in levels and \
-           "L5" in _levels:
-            lowest_Lx = "L5"
+           "L5" in _levels and L5:
             # Have a hidden L5 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L5_input = INPUT(_name="L5",
@@ -4231,7 +4225,9 @@ class S3LocationSelectorWidget2(FormWidget):
                 if row.uuid == "SITE_DEFAULT":
                     d = hdict["d"] = {}
                     for level in levels:
-                        if level != "L0":
+                        if level == "L0":
+                            labels["L0"] = current.messages.COUNTRY
+                        else:
                             d[int(level[1:])] = row[level]
                 else:
                     h_l0 = hdict[L0] = {}
@@ -4260,7 +4256,7 @@ class S3LocationSelectorWidget2(FormWidget):
         comment = ""
         for level in levels:
             id = "%s_%s" % (fieldname, level)
-            label = labels[level]
+            label = labels.get(level, level)
             widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
                                    _value=""),
                             _id=id)
@@ -4472,6 +4468,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if not location_selector_loaded:
             global_append = s3.js_global.append
+            # @ToDo: Check whether relevant ls & ds in the previous instance of locationselector or need appending
             script = '''l=%s''' % json.dumps(location_dict)
             global_append(script)
             script = '''h=%s''' % json.dumps(hdict)
@@ -4512,7 +4509,7 @@ class S3LocationSelectorWidget2(FormWidget):
                      args)
         if show_map and use_callback:
             callback = script
-        elif not location_selector_loaded:
+        elif not location_selector_loaded or not location_selector_loaded[fieldname]:
             s3.jquery_ready.append(script)
 
         if s3.debug:
@@ -4602,7 +4599,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             map_icon = ""
 
         # Ensure that we don't insert duplicate scripts on validation errors
-        s3.gis.location_selector_loaded = True
+        if location_selector_loaded:
+            location_selector_loaded[fieldname] = True
+        else:
+            s3.gis.location_selector_loaded = Storage()
+            s3.gis.location_selector_loaded[fieldname] = True
 
         # The overall layout of the components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden
@@ -4703,16 +4704,20 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             header = '''header:false'''
         else:
             header = '''header:"%s"''' % header_opt
+        noneSelectedText = self.noneSelectedText
+        if not isinstance(noneSelectedText, lazyT):
+            noneSelectedText = T(noneSelectedText)
         script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
                  (selector,
                   T("All selected"),
                   T("# selected"),
                   header,
                   self.selectedList,
-                  T(self.noneSelectedText))
+                  noneSelectedText)
 
         if filter_opt:
-            script = '''%s.multiselectfilter()''' % script
+            script = '''%s.multiselectfilter({label:'%s',placeholder:'%s'})''' % \
+                (script, "%s:" % T("Filter"), T("Enter keywords"))
         current.response.s3.jquery_ready.append(script)
 
         return widget
@@ -5208,70 +5213,6 @@ class S3SiteAutocompleteWidget(FormWidget):
                  min_length = self.min_length,
                  )
         s3.jquery_ready.append(script)
-        return TAG[""](INPUT(_id=dummy_input,
-                             _class="string",
-                             _value=represent),
-                       DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber input_throbber hide"),
-                       INPUT(**attr),
-                       requires = field.requires
-                       )
-
-# =============================================================================
-class S3SiteAddressAutocompleteWidget(FormWidget):
-    """
-        Renders an org_site SELECT as an INPUT field with AJAX Autocomplete.
-        Differs from the S3AutocompleteWidget in that it searches both name & address fields
-        & uses these in the represent
-    """
-
-    def __init__(self,
-                 post_process = "",
-                 delay = 450, # milliseconds
-                 min_length = 2):
-
-        self.auth = current.auth
-        self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
-
-    def __call__(self, field, value, **attributes):
-
-        default = dict(
-            _type = "text",
-            value = (value != None and str(value)) or "",
-            )
-        attr = StringWidget._attributes(field, default, **attributes)
-
-        # Hide the real field
-        attr["_class"] = "%s hide" % attr["_class"]
-
-        if "_id" in attr:
-            real_input = attr["_id"]
-        else:
-            real_input = str(field).replace(".", "_")
-        dummy_input = "dummy_%s" % real_input
-
-        if value:
-            try:
-                value = long(value)
-            except ValueError:
-                pass
-            # Provide the representation for the current/default Value
-            text = s3_unicode(field.represent(value))
-            if "<" in text:
-                text = s3_strip_markup(text)
-            represent = text.encode("utf-8")
-        else:
-            represent = ""
-
-        script = '''S3.autocomplete.site_address('%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
-            dict(input = real_input,
-                 postprocess = self.post_process,
-                 delay = self.delay,
-                 min_length = self.min_length,
-                 )
-        current.response.s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent),
@@ -5861,13 +5802,36 @@ def s3_richtext_widget(field, value):
 
 # =============================================================================
 def set_match_strings(matchDict, value):
+    """
+        Helper method for site_search_ac and org_search_ac
+        Find which field the search term matched & where
+
+        @param matchDict: usually the record
+        @param value: the search term
+    """
+
     for key in matchDict:
-        if not isinstance(matchDict[key], str):
+        v = matchDict[key]
+        if not isinstance(v, str):
             continue
-        if matchDict[key][:len(value)].lower() == value:
+        l = len(value)
+        if v[:l].lower() == value:
+            # Match needs to start from beginning
             matchDict["match_type"] = key
-            matchDict["match_string"] = value
-            matchDict["next_string"] = matchDict[key][len(value):]
+            matchDict["match_string"] = v[:l] # Maintain original case
+            next_string = v[l:]
+            if next_string:
+                matchDict["next_string"] = next_string
+            break
+        elif key == "addr" and value in v.lower():
+            # Match can start after the beginning (to allow for house number)
+            matchDict["match_type"] = key
+            pre_string, next_string = v.lower().split(value, 1)
+            if pre_string:
+                matchDict["pre_string"] = v[:len(pre_string)] # Maintain original case
+            if next_string:
+                matchDict["next_string"] = v[(len(pre_string) + l):] # Maintain original case
+            matchDict["match_string"] = v[len(pre_string):][:l] # Maintain original case
             break
 
 # =============================================================================

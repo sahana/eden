@@ -101,7 +101,6 @@ class S3MembersModel(S3Model):
             title_display = T("Membership Type Details"),
             title_list = T("Membership Types"),
             title_update = T("Edit Membership Type"),
-            title_search = T("Search Membership Types"),
             title_upload = T("Import Membership Types"),
             subtitle_create = T("Add New Membership Type"),
             label_list_button = T("List Membership Types"),
@@ -180,7 +179,6 @@ class S3MembersModel(S3Model):
             title_display = T("Member Details"),
             title_list = T("Members"),
             title_update = T("Edit Member"),
-            title_search = T("Search Members"),
             title_upload = T("Import Members"),
             subtitle_create = T("Add New Member"),
             label_list_button = T("List Members"),
@@ -189,7 +187,7 @@ class S3MembersModel(S3Model):
             msg_record_created = T("Member added"),
             msg_record_modified = T("Member updated"),
             msg_record_deleted = T("Member deleted"),
-            msg_list_empty = T("No members currently registered"))
+            msg_list_empty = T("No Members currently registered"))
 
         table.paid = Field.Lazy(self.member_membership_paid)
 
