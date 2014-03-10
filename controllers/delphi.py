@@ -929,19 +929,35 @@ def results(r, **attr):
         image = chart.draw()
 
     # Colour the rows
-    # @ToDo: Review the weightings
-    MIN_COLOR = (0xfc, 0xaf, 0x3e)
-    MAX_COLOR = (0x4e, 0x9a, 0x06)
-    beans_num = int((n + 1) * 2)
-    bean_size = 0.04 * n / beans_num
-    i = 0
-    for j in range(beans_num):
-        color = "%02x%02x%02x" % tuple([int(((j * MIN_COLOR[k]) + ((beans_num - j) * MAX_COLOR[k])) / beans_num) for k in (0, 1, 2)])
-        limit = ((beans_num - j - 1) * bean_size) - (0.02 * n)
-        bean = []
-        while i < n and solutions[i].scale >= limit:
-            solutions[i].color = color
-            i += 1
+    # Calculate Breaks
+    classes = 5
+    q = []
+    qappend = q.append
+    for i in range(classes - 1):
+        qappend(1.0 / classes * (i + 1))
+    values = [float(solution.scale) for solution in solutions]
+    breaks = s3db.stats_quantile(values, q)
+    # Make mutable
+    breaks = list(breaks)
+    values_min = min(values)
+    values_max = max(values)
+    breaks.insert(0, values_min)
+    breaks.append(values_max)
+    # Apply colours
+    # 5-class BuGn from ColorBrewer.org
+    colours = ["edf8fb",
+               "b2e2e2",
+               "66c2a4",
+               "2ca25f",
+               "006d2c",
+               ]
+    for solution in solutions:
+        for i in range(classes):
+            value = solution.scale
+            if value >= breaks[i] and \
+               value <= breaks[i + 1]:
+                solution.color = colours[i]
+                break
 
     # A table showing overall rankings
     thead = THEAD(

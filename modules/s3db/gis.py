@@ -4402,7 +4402,7 @@ class S3GISThemeModel(S3Model):
         q = []
         qappend = q.append
         for i in range(classes - 1):
-            qappend(1 / classes * (i + 1))
+            qappend(1.0 / classes * (i + 1))
         breaks = current.s3db.stats_quantile(values, q)
         # Make mutable
         breaks = list(breaks)
@@ -4421,11 +4421,10 @@ class S3GISThemeModel(S3Model):
         style = []
         sappend = style.append
         for i in range(classes):
-            element = {"low": breaks[i],
-                       "high": breaks[i + 1],
-                       "fill": colours[i]
-                       }
-            sappend(element)
+            sappend({"low": breaks[i],
+                     "high": breaks[i + 1],
+                     "fill": colours[i]
+                     })
 
         current.response.headers["Content-Type"] = "application/json"
         return json.dumps(style)
