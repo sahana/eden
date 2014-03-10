@@ -570,6 +570,14 @@ class _TestResult(TestResult):
 
 
     def addSuccess(self, test):
+        # broken_links testcase passes by default; calling addSuccess. 
+        # Below condition checks if a link failed in smoke tests and if it did; addFailure 
+        # is called
+        if "smoke_results" in current.data:
+            if current.data['smoke_results']['broken_links_count'] != 0:
+                self.addFailure(test,("Broken Links Found", None, None))
+                return
+
         self.success_count += 1
         TestResult.addSuccess(self, test)
         output = self.complete_output()
