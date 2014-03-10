@@ -311,14 +311,7 @@ def customize_org_facility(**attr):
             tablename = "org_facility"
             table = s3db[tablename]
 
-            if r.component_name == "human_resource":
-                from s3.s3validators import IS_ADD_PERSON_WIDGET2
-                from s3.s3widgets import S3AddPersonWidget2
-                pfield = r.component.table.person_id
-                pfield.requires = IS_ADD_PERSON_WIDGET2()
-                pfield.widget = S3AddPersonWidget2(controller="pr")
-
-            elif r.method in (None, "create", "update"):
+            if not r.component and r.method in (None, "create", "update"):
                 from s3.s3validators import IS_LOCATION_SELECTOR2
                 from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
                 field = table.location_id
@@ -562,12 +555,6 @@ def customize_org_organisation(**attr):
                 s3db.configure("pr_contact",
                                onaccept = pr_contact_onaccept,
                                )
-            elif r.component_name == "human_resource":
-                from s3.s3validators import IS_ADD_PERSON_WIDGET2
-                from s3.s3widgets import S3AddPersonWidget2
-                field = s3db.hrm_human_resource.person_id
-                field.widget = S3AddPersonWidget2(controller="pr")
-                field.requires = IS_ADD_PERSON_WIDGET2()
             elif r.component_name == "facility":
                 if r.method in (None, "create", "update"):
                     from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -1023,11 +1010,6 @@ def customize_hrm_human_resource(**attr):
                 table = r.table
                 #table.department_id.readable = table.department_id.writable = False
                 #table.end_date.readable = table.end_date.writable = False
-                from s3.s3validators import IS_ADD_PERSON_WIDGET2
-                from s3.s3widgets import S3AddPersonWidget2
-                pfield = table.person_id
-                pfield.requires = IS_ADD_PERSON_WIDGET2()
-                pfield.widget = S3AddPersonWidget2(controller="pr")
                 list_fields = ["id",
                                "person_id",
                                "job_title_id",

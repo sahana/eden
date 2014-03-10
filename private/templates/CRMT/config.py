@@ -682,9 +682,8 @@ def customize_project_activity(**attr):
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
                 if method in ("create", "update"):
                     # Custom Widgets/Validators
-                    widgets = True
-                    from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2, S3SelectChosenWidget
+                    from s3.s3validators import IS_LOCATION_SELECTOR2
+                    from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
                     field.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
@@ -695,14 +694,8 @@ def customize_project_activity(**attr):
                                                              show_postcode=True,
                                                              )
                     s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
-                else:
-                    widgets = False
 
-                field = table.person_id
-                field.comment = None
-                if widgets:
-                    field.requires = IS_ADD_PERSON_WIDGET2()
-                    field.widget = S3AddPersonWidget2(controller="pr")
+                table.person_id.comment = None
                 
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
@@ -1331,14 +1324,8 @@ def customize_org_facility(**attr):
                                                              show_address=True,
                                                              show_postcode=True,
                                                              )
-                    #field.widget = None
-                    #field = s3db.hrm_human_resource.person_id
-                    #field.comment = None
-                    #field.requires = IS_ADD_PERSON_WIDGET2()
-                    #field.widget = S3AddPersonWidget2(controller="pr")
 
                     table.organisation_id.widget = S3SelectChosenWidget()
-                    #s3db.hrm_human_resource.person_id.widget = None
 
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
@@ -1554,8 +1541,8 @@ def customize_stats_people(**attr):
                 if method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
-                    from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
+                    from s3.s3validators import IS_LOCATION_SELECTOR2
+                    from s3.s3widgets import S3LocationSelectorWidget2
                 else:
                     widgets = False
 
@@ -1585,10 +1572,7 @@ def customize_stats_people(**attr):
                     #field.widget = None
                     #field.label = T("City")
 
-                    field = table.person_id
-                    field.comment = None
-                    field.requires = IS_ADD_PERSON_WIDGET2()
-                    field.widget = S3AddPersonWidget2(controller="pr")
+                    table.person_id.comment = None
     
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""

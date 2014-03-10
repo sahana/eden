@@ -935,20 +935,43 @@ span.tab_next_inactive a {
 #select_from_registry_row td {
    padding: 8px;
 }
+
+/* This should be in style.css where-required
 .box_top,
 .box_middle,
 .box_bottom {
    border-left: #bbb 1px solid;
    border-right: #bbb 1px solid;
    background: #F0F3F4;
-}
+}*/
 
-.box_top {
+.box_top,
+.box_top_inner {
    border-top: #bbb 1px solid;
+}
+.box_top {
    padding-top: 8px;
 }
+form table td.box_top_td {
+    padding-top: 8px;
+}
 
-.box_bottom {
+.box_top label,
+.box_top_inner label {
+    display: block;
+    background-color: #fbfbfb;
+    float: left;
+    margin-top: -6px;
+    margin-left: 50px;
+    padding: 0 10px;
+    width: auto;
+}
+
+.box_bottom { /* For Bootstrap */
+   border-bottom: #bbb 1px solid;
+   padding-bottom: 8px;
+}
+form table tr.box_bottom td { /* For regular themes */
    border-bottom: #bbb 1px solid;
    padding-bottom: 8px;
 }

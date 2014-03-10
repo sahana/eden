@@ -72,10 +72,10 @@ class S3DVRModel(S3Model):
                                   Field("reference",
                                         label = T("Case Number")),
                                   self.pr_person_id(
-                                    widget=S3AddPersonWidget(controller="pr"),
                                     # @ToDo: Modify this to update location_id if the selected person has a Home Address already
-                                    requires=IS_ADD_PERSON_WIDGET(),
-                                    comment=None
+                                    comment=None,
+                                    requires=IS_ADD_PERSON_WIDGET2(),
+                                    widget=S3AddPersonWidget2(controller="pr"),
                                     ),
                                   self.gis_location_id(label = T("Home Address")),
                                   Field("damage", "integer",

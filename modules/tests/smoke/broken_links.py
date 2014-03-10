@@ -151,6 +151,9 @@ class BrokenLinkTest(Web2UnitTest):
 
             The test can also display an histogram depicting the number of
             links found at each depth.
+
+            Failure or Success to be shown in the report is checked in addSuccess in TestResult
+            class
         """
         for user in self.credentials:
             self.clearRecord()
@@ -159,7 +162,8 @@ class BrokenLinkTest(Web2UnitTest):
                 self.visitLinks()
                 self.report()
                 self.addResults2Current()
-                self.assertIs(self.broken_links_count, 0, "Broken Links Found");
+            else:
+                raise Exception("Login Failed")
 
     def visitLinks(self):
         url = self.homeURL + "/default/index"
@@ -290,7 +294,6 @@ class BrokenLinkTest(Web2UnitTest):
                 self.record_timings()
             self.scatterplot()
         self.depthReport()
-        # If there are any broken links, report failed test.
 
     def record_timings(self):
         import_error = ""
@@ -504,7 +507,7 @@ class BrokenLinkTest(Web2UnitTest):
                             parent = "<a href=%s%s target=\"_blank\">Parent</a>" % (self.homeURL, parent)
                     except:
                         parent = "unknown"
-                    msg = "%3d. (%s - %s) %s called from %s" % (self.broken_links_count,
+                    msg = "%3d. (%s - %s) %s called from %s" % (self.broken_links_count + 1,
                                                                 http_code,
                                                                 ticket,
                                                                 print_url,

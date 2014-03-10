@@ -466,7 +466,7 @@ class S3IRSModel(S3Model):
                                   "key": "person_id",
                                   "actuate": "link",
                                   #"actuate": "embed",
-                                  #"widget": S3AddPersonWidget(),
+                                  #"widget": S3AddPersonWidget2(),
                                   "autodelete": False,
                                  },
                       )

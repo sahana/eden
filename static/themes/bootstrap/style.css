@@ -985,13 +985,14 @@ span.toggle-text i {
 }
 
 /* Embed Widget */
+/* Override no-longer needed
 .box_top,
 .box_middle,
 .box_bottom {
    border-left: none;
    border-right: none;
    background: none;
-}
+}*/
 
 .form-horizontal .control-group.box_top,
 .form-horizontal .control-group.box_middle,
@@ -999,18 +1000,12 @@ span.toggle-text i {
     max-width: 500px;
 }
 
-.box_top label.control-label {
-    background-color: white;
-    margin-left: 50px;
+.box_top .control-label {
+    background-color: #ffffff;
     margin-top: -20px;
     padding: 0 10px;
     width: auto;
 }
-
-/*
-[id$=full_name__row].box_middle {
-    margin-top: -15px;
-} */
 
 /* Report / Pivot Table */
 .pt-form {

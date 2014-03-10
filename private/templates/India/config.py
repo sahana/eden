@@ -3723,9 +3723,7 @@ def customize_project_project(**attr):
 
             # Configure fields 
             table.objectives.readable = table.objectives.writable = True
-            from s3.s3widgets import S3AddPersonWidget2
             table.human_resource_id.label = T("Focal Person")
-            table.human_resource_id.widget = S3AddPersonWidget2()
             s3db.hrm_human_resource.organisation_id.default = organisation_id
             table.budget.label = "%s (USD)" % T("Budget")
             # Better in column label & otherwise this construction loses thousands separators

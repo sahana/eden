@@ -142,6 +142,10 @@
 .icon-plus-sign:before {
   content: "\f055";
 }
+.icon-remove:before {
+  /* used for AddPersonWidget2 */
+  content: "\f00d";
+}
 .icon-signin:before {
   /* Used for Login */
   content: "\f090";

@@ -622,6 +622,7 @@ class S3AddPersonWidget2(FormWidget):
         with an embedded Autocomplete to select existing people.
 
         It relies on JS code in static/S3/s3.add_person.js
+        and s3validators.IS_ADD_PERSON_WIDGET2
 
         @ToDo: get working in a non-Bootstrap formstyle
         @ToDo: get working AC/validator for human_resource_id
@@ -637,24 +638,7 @@ class S3AddPersonWidget2(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
-        controller = self.controller
-
-        T = current.T
-        request = current.request
-        s3 = current.response.s3
-        formstyle = s3.crud.formstyle
-        settings = current.deployment_settings
-
-        default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
-        attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = "hide"
-
-        fieldname = str(field).replace(".", "_")
-
         s3db = current.s3db
-        ptable = s3db.pr_person
-
         field_type = field.type[10:]
         if field_type == "pr_person":
             # person_id
@@ -667,7 +651,45 @@ class S3AddPersonWidget2(FormWidget):
             htable = s3db.hrm_human_resource
             organisation_id = htable.organisation_id
         else:
-            raise UnsupportedError
+            # Unsupported
+            raise
+
+        s3 = current.response.s3
+
+        # Test the formstyle
+        formstyle = s3.crud.formstyle
+        if formstyle == "bootstrap":
+            bootstrap = True
+            tuple_rows = False
+        elif callable(formstyle):
+            bootstrap = False
+            row = formstyle("test", "test", "test", "test")
+            if isinstance(row, tuple):
+                tuple_rows = True
+            else:
+                # Formstyle with just a single row
+                tuple_rows = False
+                #if "form-row" in row["_class"]:
+                #    # Foundation formstyle
+                #    foundation = True
+                #else:
+                #    foundation = False
+        else:
+            # Unsupported
+            raise
+
+        default = dict(_type = "text",
+                       value = (value != None and str(value)) or "")
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "hide"
+
+        fieldname = str(field).replace(".", "_")
+
+        request = current.request
+        controller = self.controller or request.controller
+        settings = current.deployment_settings
+
+        ptable = s3db.pr_person
 
         if settings.get_pr_request_dob():
             date_of_birth = ptable.date_of_birth
@@ -679,11 +701,6 @@ class S3AddPersonWidget2(FormWidget):
             gender = None
 
         req_home_phone = settings.get_pr_request_home_phone()
-
-        if self.controller is None:
-            controller = request.controller
-        else:
-            controller = self.controller
 
         if controller == "hrm":
             emailRequired = settings.get_hrm_email_required()
@@ -784,45 +801,53 @@ class S3AddPersonWidget2(FormWidget):
             # @ToDo: Format these for Display?
 
         # Output
+        T = current.T
         rows = DIV()
 
         # Section Title
         id = "%s_title" % fieldname
         label = field.label
+        label = LABEL(label, _for=id)
         # @ToDo: Style these icons in non-Bootstrap themes
         # @ToDo: Check Permissions for existing person records to know whether we can edit the person or simply select a different one
-        widget= DIV(A(I(" ", _class="icon icon-edit"),
-                      _title=T("Edit Entry"), # "Edit Selection"
-                      ),
-                    A(I(" ", _class="icon icon-remove"),
-                      _title=T("Revert Entry"), # "Clear Selection"
-                      ),
-                    _class="add_person_edit_bar hide",
-                    _id="%s_edit_bar" % fieldname,
-                    )
+        widget = DIV(A(I(" ", _class="icon icon-edit"),
+                       _title=T("Edit Entry"), # "Edit Selection"
+                       ),
+                     A(I(" ", _class="icon icon-remove"),
+                       _title=T("Revert Entry"), # "Clear Selection"
+                       ),
+                     _class="add_person_edit_bar hide",
+                     _id="%s_edit_bar" % fieldname,
+                     )
         comment = ""
-        if formstyle == "bootstrap":
+        if bootstrap:
             # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
             # -> Elements moved via JS after page load
-            label = LABEL(label, _class="control-label", _for=id)
+            label.add_class("control-label")
             _controls = DIV(widget, _class="controls")
             row = DIV(label, _controls,
                       _class="control-group hide box_top",
                       _id="%s__row" % id,
                       )
-        elif callable(formstyle):
-            # @ToDo: Complete (not currently working)
-            row = formstyle(id, label, widget, comment)
-            if isinstance(row, DIV):
-                row.add_class("box_top")
-            else:
-                row[0].add_class("box_top")
-                for i in range(1, len(row)):
-                    row[i].add_class("box_middle")
+            rows.append(row)
         else:
-            # Unsupported
-            raise
-        rows.append(row)
+            if tuple_rows:
+                # We want label & widget in 1 row, so position abnormally
+                # We also want to put a margin on top of the box, which isn't possible with a TD
+                row = TR(TD(DIV(label,
+                                widget,
+                                _class="box_top_inner",
+                                ),
+                            _class="box_top_td",
+                            _colspan=2,
+                            ),
+                         _id="%s__row" % id,
+                         )
+                rows.append(row)
+            else:
+                row = formstyle("%s__row" % id, label, widget, comment)
+                row.add_class("box_top hide")
+                rows.append(row)
 
         # Fields
         # (id, label, widget, required)
@@ -867,20 +892,22 @@ class S3AddPersonWidget2(FormWidget):
             fname = f[0]
             id = "%s_%s" % (fieldname, fname)
             label = f[1]
+            if f[3]:
+                # Mark Required
+                label = DIV("%s:" % label,
+                            SPAN(" *", _class="req"))
+            else:
+                label = "%s:" % label
+            label = LABEL(label, _for=id)
             widget = f[2]
             if fname not in ("date_of_birth", "gender"):
                 widget["_id"] = id
                 widget["_name"] = fname
                 widget["_value"] = values.get(fname, "")
-            if formstyle == "bootstrap":
+            if bootstrap:
                 # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
                 # -> Elements moved via JS after page load
-                if f[3]:
-                    label = DIV("%s:" % label,
-                                SPAN(" *", _class="req"))
-                else:
-                    label = "%s:" % label
-                label = LABEL(label, _class="control-label", _for=id)
+                label.add_class("control-label")
                 if fname == "date_of_birth":
                     widget = widget[0]
                     widget.remove_class("string")
@@ -890,26 +917,32 @@ class S3AddPersonWidget2(FormWidget):
                           _class="control-group hide box_middle",
                           _id="%s__row" % id,
                           )
-            elif callable(formstyle):
-                # @ToDo: Test
-                row = formstyle(id, label, widget, comment, hidden=False)
-                if isinstance(row, DIV):
-                    row.add_class("box_middle")
-                else:
-                    for i in range(0, len(row)):
-                        row[i].add_class("box_middle")
+                rows.append(row)
             else:
-                # Unsupported
-                raise
-            rows.append(row)
+                row = formstyle("%s__row" % id, label, widget, comment)
+                if tuple_rows:
+                    row[0].add_class("box_middle")
+                    row[1].add_class("box_middle")
+                    rows.append(row[0])
+                    rows.append(row[1])
+                else:
+                    row.add_class("box_middle hide")
+                    rows.append(row)
 
         # Divider
-        divider = DIV(_id="%s_box_bottom" % fieldname,
+        if tuple_rows:
+            # Assume tr-based
+            row = formstyle("%s_box_bottom" % fieldname, "", "", "")
+            row = row[0]
+            row.add_class("box_bottom")
+        else:
+            # Assume div-based (Bootstrap/Foundation)
+            row = DIV(_id="%s_box_bottom" % fieldname,
                       _class="box_bottom hide",
                       )
-        if formstyle == "bootstrap":
-            divider.add_class("control-group")
-        rows.append(divider)
+            if bootstrap:
+                row.add_class("control-group")
+        rows.append(row)
 
         # JS
         if s3.debug:
@@ -1673,7 +1706,8 @@ class S3EmbedComponentWidget(FormWidget):
         table = DIV(*trs)
 
         # Divider
-        divider = TR(TD(_class="subheading"), TD(), _class="box_bottom embedded")
+        divider = TR(TD(_class="subheading"), TD(),
+                     _class="box_bottom embedded")
 
         # JavaScript
         if s3.debug:
@@ -3908,7 +3942,7 @@ class S3LocationSelectorWidget2(FormWidget):
             if isinstance(row, tuple):
                 tuple_rows = True
             else:
-                # Non-std formstyle with just a single row
+                # Formstyle with just a single row
                 tuple_rows = False
                 #if "form-row" in row["_class"]:
                 #    # Foundation formstyle
