@@ -191,6 +191,10 @@ settings.ui.summary = [{"common": True,
                         "name": "cms",
                         "widgets": [{"method": "cms"}]
                         },
+                       {"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
@@ -1383,8 +1387,7 @@ def customize_org_facility(**attr):
                                crud_form = crud_form,
                                )
 
-        elif representation == "plain" and \
-             method != "search":
+        elif representation == "plain":
             # Map Popups
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)

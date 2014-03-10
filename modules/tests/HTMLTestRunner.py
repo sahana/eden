@@ -659,10 +659,16 @@ class HTMLTestRunner(Template_mixin):
         # Get the current template
         settings = current.deployment_settings
         template = settings.get_template()
-        
+
         startTime = str(self.startTime)[:19]
         duration = str(self.stopTime - self.startTime)
         status = []
+        # change counts if smoke test has run
+        if 'smoke_results' in current.data:
+            sc, fc = self._get_smoke_results()
+            result.success_count = sc
+            result.failure_count = fc
+
         if result.success_count: status.append('Pass %s'    % result.success_count)
         if result.failure_count: status.append('Failure %s' % result.failure_count)
         if result.error_count:   status.append('Error %s'   % result.error_count  )
@@ -693,6 +699,7 @@ class HTMLTestRunner(Template_mixin):
             report = report,
             ending = ending,
         )
+        self.tearDown()
         self.stream.write(output.encode('utf8'))
 
 
@@ -715,6 +722,10 @@ class HTMLTestRunner(Template_mixin):
         )
         return heading
 
+    def _get_smoke_results(self):
+        sc = current.data['smoke_results']['working_links']
+        fc = current.data['smoke_results']['broken_links_count']
+        return sc, fc
 
     def _generate_report(self, result):
         rows = []
@@ -726,6 +737,9 @@ class HTMLTestRunner(Template_mixin):
                 if n == 0: np += 1
                 elif n == 1: nf += 1
                 else: ne += 1
+            # change counts if smoke test is run
+            if 'smoke_results' in current.data:
+                np, nf = self._get_smoke_results()
 
             # format class description
             if cls.__module__ == "__main__":
@@ -801,6 +815,10 @@ class HTMLTestRunner(Template_mixin):
 
     def _generate_ending(self):
         return self.ENDING_TMPL
+
+    def tearDown(self):
+        if 'smoke_results' in current.data:
+            del current.data['smoke_results']
 
 
 ##############################################################################

@@ -474,7 +474,7 @@ class S3CRUD(S3Method):
                         self.data = populate
                 view = current.response.view
                 form = self.create(r, **attr).get("form", None)
-                if form.accepted and self.next:
+                if form and form.accepted and self.next:
                     # Tell the summary handler that we're done
                     # and supposed to redirect to another view
                     return {"success": True, "next": self.next}

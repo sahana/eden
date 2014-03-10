@@ -124,6 +124,9 @@ S3.addModals = function() {
             caller = $(this).parent().parent().attr('id');
         }
         if (!caller) {
+            caller = $(this).parents('.form-row').attr('id');
+        }
+        if (!caller) {
             // Bootstrap formstyle
             caller = $(this).parents('.control-group').attr('id');
         }
@@ -860,6 +863,10 @@ var S3OptionsFilter = function(settings) {
                         // Don't include this change in the deliberate changes
                         S3ClearNavigateAwayConfirm();
                         first = false;
+                    }
+                    // Restore event handlers
+                    if (S3.inline_checkbox_events) {
+                        S3.inline_checkbox_events();
                     }
                 }
             });

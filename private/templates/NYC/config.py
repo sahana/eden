@@ -194,8 +194,10 @@ settings.org.site_last_contacted = True
 #     }
 # Uncomment to use an Autocomplete for Site lookup fields
 settings.org.site_autocomplete = True
-# Uncomment to have Site Autocompletes search within Address fields
-settings.org.site_address_autocomplete = True
+# Extra fields to search in Autocompletes & display in Representations
+settings.org.site_autocomplete_fields = ("organisation_id$name",
+                                         "location_id$addr_street",
+                                         )
 # Uncomment to hide inv & req tabs from Sites
 #settings.org.site_inv_req_tabs = True
 
@@ -332,6 +334,8 @@ def customize_org_facility(**attr):
                                                          )
                 # element.style is being set to width: 0 for some reason, so not working
                 #table.organisation_id.widget = S3SelectChosenWidget()
+                # Don't assume that user is from same org/site as Contacts they create
+                table.site_id.default = None
 
             if r.get_vars.get("format", None) == "popup":
                 # Coming from req/create form
@@ -564,6 +568,26 @@ def customize_org_organisation(**attr):
                 field = s3db.hrm_human_resource.person_id
                 field.widget = S3AddPersonWidget2(controller="pr")
                 field.requires = IS_ADD_PERSON_WIDGET2()
+            elif r.component_name == "facility":
+                if r.method in (None, "create", "update"):
+                    from s3.s3validators import IS_LOCATION_SELECTOR2
+                    from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
+                    table = s3db.org_facility
+                    field = table.location_id
+                    if r.method in ("create", "update"):
+                        field.label = "" # Gets replaced by widget
+                    levels = ("L2", "L3")
+                    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+                    field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                             hide_lx=False,
+                                                             reverse_lx=True,
+                                                             show_address=True,
+                                                             show_postcode=True,
+                                                             )
+                    # element.style is being set to width: 0 for some reason, so not working
+                    #table.organisation_id.widget = S3SelectChosenWidget()
+                    # Don't assume that user is from same org/site as Contacts they create
+                    table.site_id.default = None
 
         return result
     s3.prep = custom_prep

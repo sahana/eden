@@ -519,13 +519,13 @@ class S3InventoryModel(S3Model):
             msg_list_empty = T("No Stock currently registered in this Warehouse"))
 
         # Reusable Field
-        inv_item_represent = represent = inv_InvItemRepresent()
+        inv_item_represent = inv_InvItemRepresent()
         inv_item_id = S3ReusableField("inv_item_id", table,
                                       requires = IS_ONE_OF(db, "inv_inv_item.id",
-                                                           represent,
+                                                           inv_item_represent,
                                                            orderby="inv_inv_item.id",
                                                            sort=True),
-                                      represent = represent,
+                                      represent = inv_item_represent,
                                       label = INV_ITEM,
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (INV_ITEM,
@@ -647,8 +647,6 @@ S3OptionsFilter({
         # Configuration
         direct_stock_edits = settings.get_inv_direct_stock_edits()
         self.configure(tablename,
-                       super_entity = "supply_item_entity",
-                       list_fields = list_fields,
                        # Lock the record so that it can't be meddled with
                        # - unless explicitly told to allow this
                        create = direct_stock_edits,
@@ -659,7 +657,7 @@ S3OptionsFilter({
                        extra_fields = ["quantity",
                                        "pack_value",
                                        "item_pack_id",
-                                      ],
+                                       ],
                        filter_widgets = filter_widgets,
                        # @todo: where is this config used?
                        #filter_widgets = [
@@ -689,8 +687,10 @@ S3OptionsFilter({
                        #                   cols=2,
                        #                  )
                        #],
-                       report_options = report_options,
+                       list_fields = list_fields,
                        onvalidation = self.inv_inv_item_onvalidate,
+                       report_options = report_options,
+                       super_entity = "supply_item_entity",
                        )
 
         # ---------------------------------------------------------------------

@@ -194,51 +194,8 @@ _settings.on_failed_authorization = URL(c="default", f="user",
 _settings.reset_password_requires_verification = True
 _settings.verify_email_next = URL(c="default", f="index")
 
-# Auth Messages
-_messages = auth.messages
-
-_messages.verify_email = "Click on the link %(url)s%(key)s to verify your email" % \
-    dict(url="%s/default/user/verify_email/" % s3.base_url,
-         key="%(key)s")
-_messages.verify_email_subject = "%(system_name)s - Verify Email" % \
-    {"system_name" : settings.get_system_name()}
-_messages.reset_password = "%s %s/default/user/reset_password/%s %s" % \
-    (T("Click on the link"),
-     s3.base_url,
-     "%(key)s",
-     T("to reset your password"))
-_messages.help_mobile_phone = T("Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages.")
 # Require Admin approval for self-registered users
 _settings.registration_requires_approval = settings.get_auth_registration_requires_approval()
-_messages.registration_pending = settings.get_auth_registration_pending()
-
-_messages["approve_user"] = \
-"""Your action is required to approve a New User for %(system_name)s:
-%(name_format)s
-Please go to %(base_url)s/admin/user/%(id)s to approve this user.""" \
-% dict(system_name = settings.get_system_name(),
-       name_format = \
-"""%(first_name)s %(last_name)s
-%(email)s""",
-       base_url = s3.base_url,
-       id = "%(id)s")
-
-_messages["new_user"] = \
-"""A New User has registered for %(system_name)s:
-%(name_format)s
-No action is required.""" \
-% dict(system_name = settings.get_system_name(),
-       name_format = \
-"""%(first_name)s %(last_name)s
-%(email)s""")
-
-_messages["confirmation_email_subject"] = "%s %s" % (settings.get_system_name(),
-                                                     T("access granted"))
-_messages["confirmation_email"] = "%s %s %s %s. %s." % (T("Welcome to the"),
-                                                        settings.get_system_name(),
-                                                        T("Portal at"),
-                                                        s3.base_url,
-                                                        T("Thanks for your assistance"))
 
 # We don't wish to clutter the groups list with 1 per user.
 _settings.create_user_groups = False

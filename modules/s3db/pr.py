@@ -1114,13 +1114,23 @@ class S3PersonModel(S3Model):
         # Mandatory data
         data = item.data
         fname = data.get("first_name", None)
+        mname = data.get("middle_name", None)
         lname = data.get("last_name", None)
+        if fname:
+            fname = fname.lower()
+        if mname:
+            mname = mname.lower()
+        if lname:
+            lname = lname.lower()
         initials = data.get("initials", None)
+        if initials:
+            initials = initials.lower()
+
         if fname and lname:
-            query = (ptable.first_name.lower() == fname.lower()) & \
-                    (ptable.last_name.lower() == lname.lower())
+            query = (ptable.first_name.lower() == fname) & \
+                    (ptable.last_name.lower() == lname)
         elif initials:
-            query = (ptable.initials.lower() == initials.lower())
+            query = (ptable.initials.lower() == initials)
         else:
             # Not enough we can use
             return
@@ -1149,15 +1159,18 @@ class S3PersonModel(S3Model):
 
         fields = [ptable._id,
                   ptable.first_name,
+                  ptable.middle_name,
                   ptable.last_name,
                   ptable.initials,
-                  ptable.date_of_birth,
                   etable.value,
                   ]
 
         left = [etable.on((etable.pe_id == ptable.pe_id) & \
                           (etable.contact_method == "EMAIL")),
                 ]
+
+        if dob:
+            fields.append(ptable.date_of_birth)
 
         if sms:
             stable = table.with_alias("pr_sms")
@@ -1188,10 +1201,14 @@ class S3PersonModel(S3Model):
 
         email_required = current.deployment_settings.get_pr_import_update_requires_email()
         for row in candidates:
-            row_fname = row[ptable.first_name]
-            row_lname = row[ptable.last_name]
-            row_initials = row[ptable.initials]
-            row_dob = row[ptable.date_of_birth]
+            if fname and lname:
+                row_fname = row[ptable.first_name]
+                row_mname = row[ptable.middle_name]
+                row_lname = row[ptable.last_name]
+            if initials:
+                row_initials = row[ptable.initials]
+            if dob:
+                row_dob = row[ptable.date_of_birth]
             row_email = row[etable.value]
             if sms:
                 row_sms = row[stable.value]
@@ -1202,13 +1219,20 @@ class S3PersonModel(S3Model):
             check = 0
 
             if fname and row_fname:
-                check += rank(fname.lower(), row_fname.lower(), +2, -2)
+                check += rank(fname, row_fname.lower(), +2, -2)
+
+            if mname:
+                if row_mname:
+                    check += rank(mname, row_mname.lower(), +2, -2)
+                else:
+                    # Don't penalise hard if the new source doesn't include the middle name
+                    check -= 1
 
             if lname and row_lname:
-                check += rank(lname.lower(), row_lname.lower(), +2, -2)
+                check += rank(lname, row_lname.lower(), +2, -2)
 
             if initials and row_initials:
-                check += rank(initials.lower(), row_initials.lower(), +4, -1)
+                check += rank(initials, row_initials.lower(), +4, -1)
 
             if dob and row_dob:
                 check += rank(dob, row_dob, +3, -2)
@@ -1299,6 +1323,13 @@ class S3PersonModel(S3Model):
                       "last_name",
                       ]
 
+            show_hr = settings.get_pr_search_shows_hr_details()
+            if show_hr:
+                fields.append("human_resource.job_title_id$name")
+                show_orgs = settings.get_hrm_show_organisation()
+                if show_orgs:
+                    fields.append("human_resource.organisation_id$name")
+
             if settings.get_pr_reverse_names():
                 orderby = "pr_person.last_name"
             else:
@@ -1308,14 +1339,27 @@ class S3PersonModel(S3Model):
                                    limit=limit,
                                    orderby=orderby)["rows"]
 
-            if rows:
-                items = [{"id"     : row["pr_person.id"],
-                          "first"  : row["pr_person.first_name"],
-                          "middle" : row["pr_person.middle_name"] or "",
-                          "last"   : row["pr_person.last_name"] or "",
-                          } for row in rows ]
-            else:
-                items = []
+            items = []
+            iappend = items.append
+            for row in rows:
+                item = {"id"     : row["pr_person.id"],
+                        "first"  : row["pr_person.first_name"],
+                        }
+                middle_name = row.get("pr_person.middle_name", None)
+                if middle_name:
+                    item["middle"] = middle_name
+                last_name = row.get("pr_person.last_name", None)
+                if last_name:
+                    item["last"] = last_name
+                if show_hr:
+                    job_title = row.get("hrm_job_title.name", None)
+                    if job_title:
+                        item["job"] = job_title
+                    if show_orgs:
+                         org = row.get("org_organisation.name", None)
+                         if org:
+                            item["org"] = org
+                iappend(item)
             output = json.dumps(items)
 
         response.headers["Content-Type"] = "application/json"
@@ -2696,6 +2740,12 @@ class S3PersonDetailsModel(S3Model):
                                         represent = lambda opt: \
                                             pr_religion_opts.get(opt, UNKNOWN_OPT),
                                         ),
+                                  # Alternate free-text form
+                                  #Field("religion_freetext",
+                                  #      label = T("Religion"),
+                                  #      readable = False,
+                                  #      writable = False,
+                                  #      ),
                                   Field("father_name",
                                         label = T("Name of Father"),
                                         ),

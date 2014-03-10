@@ -94,6 +94,7 @@ class AuthS3(Auth):
             - set_cookie
             - login
             - register
+            - email_reset_password
             - verify_email
             - profile
             - has_membership
@@ -168,49 +169,56 @@ class AuthS3(Auth):
         Auth.__init__(self, current.db)
 
         deployment_settings = current.deployment_settings
-        system_name = deployment_settings.get_system_name()
 
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
 
-        self.messages.lock_keys = False
+        messages = self.messages
+        messages.lock_keys = False
 
         # @ToDo Move these to deployment_settings
-        self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
-        self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
-        self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
-        self.messages.email_verified = "Email verified - you can now login"
-        self.messages.welcome_email_subject = "Welcome to %(system_name)s" % \
-            dict(system_name=system_name)
-        self.messages.welcome_email = \
+        messages.approve_user = \
+"""Your action is required to approve a New User for %(system_name)s:
+%(first_name)s %(last_name)s
+%(email)s
+Please go to %(url)s to approve this user."""
+        messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
+        messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
+        messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
+        messages.email_verified = "Email verified - you can now login"
+        messages.duplicate_email = "This email address is already in use"
+        messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
+        messages.help_mobile_phone = "Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages."
+        messages.help_organisation = "Entering an Organization is optional, but doing so directs you to the appropriate approver & means you automatically get the appropriate permissions."
+        messages.help_image = "You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50."
+        messages.label_image = "Profile Image"
+        messages.label_organisation_id = "Organization"
+        messages.label_org_group_id = "Coalition"
+        messages.label_remember_me = "Remember Me"
+        messages.label_utc_offset = "UTC Offset"
+        #messages.logged_in = "Signed In"
+        #messages.logged_out = "Signed Out"
+        #messages.submit_button = "Signed In"
+        messages.new_user = \
+"""A New User has registered for %(system_name)s:
+%(first_name)s %(last_name)s
+%(email)s
+No action is required."""
+        messages.password_reset_button='Request password reset'
+        messages.profile_save_button = "Apply changes"
+        messages.registration_disabled = "Registration Disabled!"
+        messages.registration_verifying = "You haven't yet Verified your account - please check your email"
+        messages.reset_password = "Click on the link %(url)s to reset your password"
+        messages.verify_email = "Click on the link %(url)s% to verify your email"
+        messages.verify_email_subject = "%(system_name)s - Verify Email"
+        messages.welcome_email_subject = "Welcome to %(system_name)s"
+        messages.welcome_email = \
 """Welcome to %(system_name)s
  - You can start using %(system_name)s at: %(url)s
  - To edit your profile go to: %(url)s%(profile)s
-Thank you
-""" % \
-            dict(system_name = system_name,
-                 url = deployment_settings.get_base_public_url(),
-                 profile = URL("default", "user", args=["profile"])
-                 )
-        self.messages.duplicate_email = "This email address is already in use"
-        self.messages.registration_disabled = "Registration Disabled!"
-        self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
-        self.messages.label_organisation_id = "Organization"
-        self.messages.label_org_group_id = "Coalition"
-        self.messages.label_utc_offset = "UTC Offset"
-        self.messages.label_image = "Profile Image"
-        self.messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
-        self.messages.help_mobile_phone = "Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages."
-        self.messages.help_organisation = "Entering an Organization is optional, but doing so directs you to the appropriate approver & means you automatically get the appropriate permissions."
-        self.messages.help_image = "You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50."
-        self.messages.label_remember_me = "Remember Me"
-        #self.messages.logged_in = "Signed In"
-        #self.messages.submit_button = "Signed In"
-        #self.messages.logged_out = "Signed Out"
-        self.messages.password_reset_button='Request password reset'
-        self.messages.profile_save_button = "Apply changes"
-        self.messages.lock_keys = True
+Thank you"""
+        messages.lock_keys = True
 
         # S3Permission
         self.permission = S3Permission(self)
@@ -224,7 +232,7 @@ Thank you
 
         # Site types (for OrgAuth)
         T = current.T
-        if deployment_settings.get_ui_label_camp():
+        if current.deployment_settings.get_ui_label_camp():
             shelter = T("Camp")
         else:
             shelter = T("Shelter")
@@ -518,52 +526,54 @@ Thank you
 
         T = current.T
         db = current.db
+        messages = self.messages
         request = current.request
         response = current.response
         session = current.session
+        settings = self.settings
         deployment_settings = current.deployment_settings
 
-        utable = self.settings.table_user
-        if self.settings.login_userfield:
-            username = self.settings.login_userfield
+        utable = settings.table_user
+        if settings.login_userfield:
+            username = settings.login_userfield
         elif "username" in utable.fields:
             username = "username"
         else:
             username = "email"
         old_requires = utable[username].requires
         utable[username].requires = [IS_NOT_EMPTY(), IS_LOWER()]
-        passfield = self.settings.password_field
+        passfield = settings.password_field
         try:
             utable[passfield].requires[-1].min_length = 0
         except:
             pass
         if next is DEFAULT:
-            next = request.vars._next or self.settings.login_next
+            next = request.vars._next or settings.login_next
         if onvalidation is DEFAULT:
-            onvalidation = self.settings.login_onvalidation
+            onvalidation = settings.login_onvalidation
         if onaccept is DEFAULT:
-            onaccept = self.settings.login_onaccept
+            onaccept = settings.login_onaccept
         if log is DEFAULT:
-            log = self.messages.login_log
+            log = messages.login_log
 
         user = None # default
 
         response.title = T("Login")
 
         # Do we use our own login form, or from a central source?
-        formstyle = self.settings.formstyle
-        if self.settings.login_form == self:
+        formstyle = settings.formstyle
+        if settings.login_form == self:
             form = SQLFORM(
                 utable,
                 fields=[username, passfield],
                 hidden=dict(_next=request.vars._next),
-                showid=self.settings.showid,
+                showid=settings.showid,
                 submit_button=T("Login"),
-                delete_label=self.messages.delete_label,
+                delete_label=messages.delete_label,
                 formstyle=formstyle,
-                separator=self.settings.label_separator
+                separator=settings.label_separator
                 )
-            if self.settings.remember_me_form:
+            if settings.remember_me_form:
                 # Add a new input checkbox "remember me for longer"
                 addrow(form, XML("&nbsp;"),
                        DIV(XML("&nbsp;"),
@@ -573,7 +583,7 @@ Thank you
                                  _name="remember",
                                  ),
                            XML("&nbsp;&nbsp;"),
-                           LABEL(self.messages.label_remember_me,
+                           LABEL(messages.label_remember_me,
                                  _for="auth_user_remember",
                                  )), "",
                        formstyle,
@@ -586,8 +596,8 @@ Thank you
                        "display:none", "auth_user_client_location")
                 response.s3.jquery_ready.append('''S3.getClientLocation($('#auth_user_clientlocation'))''')
 
-            captcha = self.settings.login_captcha or \
-                (self.settings.login_captcha!=False and self.settings.captcha)
+            captcha = settings.login_captcha or \
+                (settings.login_captcha!=False and settings.captcha)
             if captcha:
                 addrow(form, captcha.label, captcha, captcha.comment,
                        formstyle,'captcha__row')
@@ -605,7 +615,7 @@ Thank you
                         from gluon.contrib.login_methods.email_auth import email_auth
                         domain = form.vars[username].split("@")[1]
                         if domain in gmail_domains:
-                            self.settings.login_methods.append(
+                            settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
                 # Check for username in db
                 query = (utable[username] == form.vars[username])
@@ -614,58 +624,58 @@ Thank you
                     # user in db, check if registration pending or disabled
                     temp_user = user
                     if temp_user.registration_key == "pending":
-                        response.warning = self.messages.registration_pending
+                        response.warning = deployment_settings.get_auth_registration_pending()
                         return form
                     elif temp_user.registration_key in ("disabled", "blocked"):
-                        response.error = self.messages.login_disabled
+                        response.error = messages.login_disabled
                         return form
                     elif not temp_user.registration_key is None and \
                              temp_user.registration_key.strip():
                         response.warning = \
-                            self.messages.registration_verifying
+                            messages.registration_verifying
                         return form
                     # Try alternate logins 1st as these have the
                     # current version of the password
                     user = None
-                    for login_method in self.settings.login_methods:
+                    for login_method in settings.login_methods:
                         if login_method != self and \
                                 login_method(request.vars[username],
                                              request.vars[passfield]):
-                            if not self in self.settings.login_methods:
+                            if not self in settings.login_methods:
                                 # do not store password in db
                                 form.vars[passfield] = None
                             user = self.get_or_create_user(form.vars)
                             break
                     if not user:
                         # Alternates have failed, maybe because service inaccessible
-                        if self.settings.login_methods[0] == self:
+                        if settings.login_methods[0] == self:
                             # Try logging in locally using cached credentials
                             if temp_user[passfield] == form.vars.get(passfield, ""):
                                 # Success
                                 user = temp_user
                 else:
                     # User not in db
-                    if not self.settings.alternate_requires_registration:
+                    if not settings.alternate_requires_registration:
                         # We're allowed to auto-register users from external systems
-                        for login_method in self.settings.login_methods:
+                        for login_method in settings.login_methods:
                             if login_method != self and \
                                     login_method(request.vars[username],
                                                  request.vars[passfield]):
-                                if not self in self.settings.login_methods:
+                                if not self in settings.login_methods:
                                     # Do not store password in db
                                     form.vars[passfield] = None
                                 user = self.get_or_create_user(form.vars)
                                 break
                 if not user:
-                    self.log_event(self.settings.login_failed_log,
+                    self.log_event(settings.login_failed_log,
                                    request.post_vars)
                     # Invalid login
-                    session.error = self.messages.invalid_login
+                    session.error = messages.invalid_login
                     redirect(self.url(args=request.args,
                                       vars=request.get_vars))
         else:
             # Use a central authentication server
-            cas = self.settings.login_form
+            cas = settings.login_form
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
@@ -689,7 +699,7 @@ Thank you
             self.log_event(log % self.user)
 
         # How to continue
-        if self.settings.login_form == self:
+        if settings.login_form == self:
             if accepted_form:
                 if onaccept:
                     onaccept(form)
@@ -978,8 +988,11 @@ Thank you
                 if not settings.mailer or \
                    not settings.mailer.settings.server or \
                    not settings.mailer.send(to=form.vars.email,
-                                            subject=messages.verify_email_subject,
-                                            message=messages.verify_email % dict(key=key)):
+                                            subject=messages.verify_email_subject % \
+    dict(system_name=deployment_settings.get_system_name()),
+                                            message=messages.verify_email % \
+            dict(url="%s/default/user/verify_email/%s" % \
+                dict(current.response.s3.base_url, key))):
                     current.response.error = messages.email_verification_failed
                     return form
                 # @ToDo: Deployment Setting?
@@ -1017,6 +1030,26 @@ Thank you
             redirect(next)
 
         return form
+
+    # -------------------------------------------------------------------------
+    def email_reset_password(self, user):
+        """
+             Overrides Web2Py's email_reset_password() to modify the message structure
+        """
+
+        settings = self.settings
+        if not settings.mailer:
+            return False
+        reset_password_key = str(int(time.time())) + '-' + web2py_uuid()
+        message = self.messages.reset_password % \
+            dict(url="%s/default/user/reset_password/%s" % \
+                dict(current.response.s3.base_url, reset_password_key))
+        if settings.mailer.send(to=user.email,
+                                subject=self.messages.reset_password_subject,
+                                message=message):
+            user.update_record(reset_password_key=reset_password_key)
+            return True
+        return False
 
     # -------------------------------------------------------------------------
     def add_membership(self, group_id=None, user_id=None, role=None,
@@ -1275,7 +1308,7 @@ Thank you
                                                    utable._tablename)
 
         email = utable.email
-        email.label = T("E-mail") #messages.label_email
+        email.label = T("Email") #messages.label_email
         email.requires = [IS_EMAIL(error_message=messages.invalid_email),
                           IS_LOWER(),
                           IS_NOT_IN_DB(db,
@@ -1397,9 +1430,9 @@ Thank you
                                                orderby="org_site.name",
                                                sort=True)
                     if site_required:
-                        site_required = ""
+                        site_optional = ""
                     else:
-                        site_required = ''',
+                        site_optional = ''',
  'optional': true'''
                     current.response.s3.jquery_ready.append('''
 S3OptionsFilter({
@@ -1408,7 +1441,7 @@ S3OptionsFilter({
  'lookupField':'site_id',
  'lookupResource':'site',
  'lookupURL':S3.Ap.concat('/org/sites_for_org/')%s
-})''' % site_required)
+})''' % site_optional)
                 else:
                     requires = IS_ONE_OF(db, "org_site.site_id",
                                          site_represent,
@@ -1785,8 +1818,6 @@ S3OptionsFilter({
     # -------------------------------------------------------------------------
     def s3_verify_user(self, user):
         """"
-            S3 framework function
-
             Designed to be called when a user is verified through:
                 - responding to their verification email
                 - if verification isn't required
@@ -1801,6 +1832,7 @@ S3OptionsFilter({
         """
 
         deployment_settings = current.deployment_settings
+        session = current.session
 
         # Lookup the Approver
         approver, organisation_id = self.s3_approver(user)
@@ -1808,54 +1840,105 @@ S3OptionsFilter({
         if deployment_settings.get_auth_registration_requires_approval() and approver:
             approved = False
             utable = self.settings.table_user
-            current.db(utable.id == user.id).update(registration_key = "pending")
+            db = current.db
+            db(utable.id == user.id).update(registration_key = "pending")
 
             if user.registration_key:
                 # User has just been verified
-                current.session.information = deployment_settings.get_auth_registration_pending_approval()
+                session.information = deployment_settings.get_auth_registration_pending_approval()
             else:
-                #No Verification needed
-                current.session.information = deployment_settings.get_auth_registration_pending()
-            # @ToDo: include link to user
-            subject = current.T("%(system_name)s - New User Registration Approval Pending") % \
-                        {"system_name": deployment_settings.get_system_name()}
-            message = self.messages.approve_user % \
-                        dict(first_name = user.first_name,
-                             last_name = user.last_name,
-                             email = user.email,
-                             id = user.id)
+                # No Verification needed
+                session.information = deployment_settings.get_auth_registration_pending()
+            message = "approve_user"
+
         else:
             approved = True
             if organisation_id and not user.get("organisation_id", None):
                 # Use the whitelist
                 user["organisation_id"] = organisation_id
                 utable = self.settings.table_user
-                current.db(utable.id == user.id).update(organisation_id = organisation_id)
+                db = current.db
+                db(utable.id == user.id).update(organisation_id = organisation_id)
                 link_user_to = deployment_settings.get_auth_registration_link_user_to_default()
                 if link_user_to and not user.get("link_user_to", None):
                     user["link_user_to"] = link_user_to
                 self.s3_link_user(user)
             self.s3_approve_user(user)
-            session = current.session
             session.confirmation = self.messages.email_verified
             session.flash = self.messages.registration_successful
 
             if not deployment_settings.get_auth_always_notify_approver():
                 return True
-            subject = current.T("%(system_name)s - New User Registered") % \
-                      {"system_name": deployment_settings.get_system_name()}
-            message = self.messages.new_user % dict(first_name = user.first_name,
-                                                    last_name = user.last_name,
-                                                    email = user.email)
+            message = "new_user"
 
+        # Ensure that we send out the mails in the language that the approver(s) want
         if "@" in approver:
-            approver = [approver]
+            # Look up language of the user
+            record = db(utable.email == approver).select(utable.language,
+                                                         limitby=(0, 1)
+                                                         ).first()
+            if record:
+                language = record.language
+            else:
+                language = deployment_settings.get_L10n_default_language()
+            approvers = [{"email": approver,
+                          "language": language,
+                          }]
+            languages = [language]
+        else:
+            approvers = []
+            aappend = approvers.append
+            languages = []
+            for each_approver in approver:
+                language = approver["language"]
+                if language not in languages:
+                    languages.append(language)
+                aappend(each_approver)
+
+        T = current.T
+        auth_messages = self.messages
+        subjects = {}
+        messages = {}
+        first_name = user.first_name
+        last_name = user.last_name
+        email = user.email
+        id = user.id
+        base_url = current.response.s3.base_url
+        system_name = deployment_settings.get_system_name()
+        for language in languages:
+            T.force(language)
+            if message == "approve_user":
+                subjects[language] = \
+                    T("%(system_name)s - New User Registration Approval Pending") % \
+                            {"system_name": system_name}
+                messages[language] = auth_messages.approve_user % \
+                            dict(system_name = system_name,
+                                 first_name = first_name,
+                                 last_name = last_name,
+                                 email = email,
+                                 url = "%(base_url)s/admin/user/%(id)s" % \
+                                    dict(base_url=base_url,
+                                         id=id))
+            elif message == "new_user":
+                subjects[language] = \
+                    T("%(system_name)s - New User Registered") % \
+                            {"system_name": system_name}
+                messages[language] = \
+                    auth_messages.new_user % dict(system_name = system_name,
+                                                  first_name = first_name,
+                                                  last_name = last_name,
+                                                  email = email)
+
+        # Restore language for UI
+        T.force(session.s3.language)
+
         mailer = self.settings.mailer
         if mailer.settings.server:
-            for each_approver in approver:
-                result = mailer.send(to = each_approver,
-                                     subject = subject,
-                                     message = message)
+            for approver in approvers:
+                language = approver["language"]
+                result = mailer.send(to = approver["email"],
+                                     subject = subjects[language],
+                                     message = messages[language])
         else:
             # Email system not configured (yet)
             result = None
@@ -2513,7 +2596,8 @@ S3OptionsFilter({
         table = s3db.auth_organisation
         if "email" in user and user["email"] and "@" in user["email"]:
             domain = user.email.split("@", 1)[-1]
-            query = (table.domain == domain)
+            query = (table.domain == domain) & \
+                    (table.deleted == False)
             record = db(query).select(table.organisation_id,
                                       table.approver,
                                       limitby=(0, 1)).first()
@@ -2524,10 +2608,11 @@ S3OptionsFilter({
             organisation_id = record.organisation_id
             approver = record.approver
         elif deployment_settings.get_auth_registration_requests_organisation():
-            # Check for an Organization-specific Approver
+            # Check for an Organisation-specific Approver
             organisation_id = user.get("organisation_id", None)
             if organisation_id:
-                query = (table.organisation_id == organisation_id)
+                query = (table.organisation_id == organisation_id) & \
+                        (table.deleted == False)
                 record = db(query).select(table.approver,
                                           limitby=(0, 1)).first()
                 if record and record.approver:
@@ -2537,6 +2622,7 @@ S3OptionsFilter({
             # Default Approver
             approver = deployment_settings.get_mail_approver()
             if "@" not in approver:
+                # Must be the UUID of a Group
                 utable = db.auth_user
                 mtable = db.auth_membership
                 gtable = db.auth_group
@@ -2544,8 +2630,9 @@ S3OptionsFilter({
                         (gtable.id == mtable.group_id) & \
                         (mtable.user_id == utable.id)
                 rows = db(query).select(utable.email,
+                                        utable.language,
                                         distinct=True)
-                approver = [row.email for row in rows]
+                approver = rows.as_list()
 
         return approver, organisation_id
 
@@ -2569,10 +2656,22 @@ S3OptionsFilter({
         #    # Facebook
         #    user["last_name"] = user["family_name"]
 
-        to = user["email"]
-        subject = messages.welcome_email_subject
-        message = messages.welcome_email
+        # Ensure that we send out the mails in the language that the recipient wants
+        T = current.T
+        T.force(user["language"])
+        system_name = settings.get_system_name()
+        subject = messages.welcome_email_subject % \
+            dict(system_name=system_name)
+        message = messages.welcome_email % \
+            dict(system_name = system_name,
+                 url = settings.get_base_public_url(),
+                 profile = URL("default", "user", args=["profile"])
+                 )
 
+        # Restore language for UI
+        T.force(current.session.s3.language)
+
+        to = user["email"]
         if settings.has_module("msg"):
             results = current.msg.send_email(to, subject=subject,
                                              message=message)
@@ -7219,7 +7318,7 @@ class S3RoleManager(S3Method):
 
                 # Subtitle
                 rmvtitle = T("Roles currently assigned")
-                trow = TR(TH(), TH("Role"))
+                trow = TR(TH(), TH(T("Role")))
                 if use_realms:
                     trow.append(TH(T("For Entity")))
                 thead = THEAD(trow)
@@ -7311,7 +7410,7 @@ class S3RoleManager(S3Method):
                 else:
                     help_txt = ""
 
-                trow = TR(TH("Role", _colspan="2"))
+                trow = TR(TH(T("Role"), _colspan="2"))
                 if use_realms:
                     trow.append(TH(T("For Entity")))
                 thead = THEAD(trow)

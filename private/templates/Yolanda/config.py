@@ -158,6 +158,10 @@ settings.ui.summary = [#{"common": True,
                        # "name": "cms",
                        # "widgets": [{"method": "cms"}]
                        # },
+                       {"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
@@ -3318,7 +3322,6 @@ def customize_project_activity(**attr):
         s3db.configure(tablename,
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
-                       listadd = False,
                        list_fields = list_fields,
                        )
 

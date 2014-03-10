@@ -724,7 +724,7 @@
      * Event handler to decide whether to Geocode
      * Address: Mandatory
      * Postcode: optional
-     * Lx: Mandatory to lowest-level
+     * Lx: Mandatory to lowest-level if it has options
      */
     var geocodeDecision = function(fieldname) {
         var selector = '#' + fieldname;
@@ -740,13 +740,14 @@
             lev = levels[i];
             s = $(selector + '_L' + lev);
             if ((s.length) && (!s.val())) {
-                return;
+                if (s[0].options.length > 1) {
+                    // User hasn't yet selected an option, but can do so
+                    return;
+                }
             }
         }
 
-        var real_input = $(selector);
-        var manually_geocoded = real_input.data('manually_geocoded');
-        if (manually_geocoded) {
+        if ($(selector).data('manually_geocoded')) {
             // Show a button to allow the user to do a new automatic Geocode
             $(selector + '_geocode .geocode_success').hide();
             $(selector + '_geocode .geocode_fail').hide();

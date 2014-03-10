@@ -37,7 +37,6 @@
 'Documents': 'دستاویزات',
 'Documents and Photos': 'دستاویزات اور تصاویر',
 'Drugs': 'فارمیسی',
-'E-mail': 'ای میل',
 'Education': 'تعلیم',
 'Eggs': 'انڈے',
 'Email': 'ای میل',

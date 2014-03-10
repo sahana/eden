@@ -348,8 +348,6 @@ settings.ui.filter_formstyle = "foundation_inline"
 #settings.org.site_autocomplete = True
 # Extra fields to show in Autocomplete Representations
 #settings.org.site_autocomplete_fields = ["instance_type", "location_id$L1", "organisation_id$name"]
-# Uncomment to have Site Autocompletes search within Address fields
-#settings.org.site_address_autocomplete = True
 # Uncomment to hide inv & req tabs from Sites
 #settings.org.site_inv_req_tabs = False
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff

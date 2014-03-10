@@ -337,10 +337,7 @@ class S3HRModel(S3Model):
             org_widget = None
 
         if settings.get_org_site_autocomplete():
-            if settings.get_org_site_address_autocomplete():
-                site_widget = S3SiteAddressAutocompleteWidget()
-            else:
-                site_widget = S3SiteAutocompleteWidget()
+            site_widget = S3SiteAutocompleteWidget()
             site_comment = DIV(_class="tooltip",
                                _title="%s|%s" % (T("Requested By Facility"),
                                                  T("Enter some characters to bring up a list of possible matches")))
@@ -754,7 +751,6 @@ class S3HRModel(S3Model):
                   realm_components = ["presence"],
                   report_fields = report_fields_extra,
                   report_options = Storage(
-                    #search=report_search,
                     rows=report_fields,
                     cols=report_fields,
                     fact=report_fields,
@@ -2032,7 +2028,8 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              course_id(empty=False),
                              self.super_link("site_id", "org_site",
-                                             label=settings.get_org_site_label(),
+                                             #label=settings.get_org_site_label(),
+                                             label = T("Venue"),
                                              instance_types = auth.org_site_types,
                                              updateable = True,
                                              not_filterby = "obsolete",
@@ -2270,6 +2267,8 @@ class S3HRSkillModel(S3Model):
                   list_layout = hrm_training_list_layout,
                   onaccept = hrm_training_onaccept,
                   ondelete = hrm_training_onaccept,
+                  # Only used in Imports
+                  #onvalidation = hrm_training_onvalidation,
                   orderby = ~table.date,
                   report_options = report_options,
                   )
@@ -2827,11 +2826,13 @@ class S3HRSkillModel(S3Model):
 
         if job.tablename == "hrm_training_event":
             data = job.data
-            start_date = "start_date" in data and data.start_date
-            if not start_date:
+            # Mandatory Data
+            course_id = data.get("course_id", None)
+            start_date = data.get("start_date", None)
+            if not course_id or not start_date:
                 return
-            course_id = "course_id" in data and data.course_id
-            site_id = "site_id" in data and data.site_id
+            # Optional Data
+            site_id = data.get("site_id", None)
             # Need to provide a range of dates as otherwise second differences prevent matches
             # - assume that if we have multiple training courses of the same
             #   type at the same site then they start at least a minute apart
@@ -2907,6 +2908,37 @@ class S3HRSkillModel(S3Model):
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
+
+# =============================================================================
+def hrm_training_onvalidation(form):
+    """
+        If the Training is created from a Training Event (e.g. during Import),
+        then auto-populate the fields from that
+    """
+
+    form_vars = form.vars
+    training_event_id = form_vars.get("training_event_id", None)
+    if not training_event_id:
+        # Nothing to do
+        return
+
+    db = current.db
+    table = db.hrm_training_event
+    record = db(table.id == training_event_id).select(table.course_id,
+                                                      table.start_date,
+                                                      table.end_date,
+                                                      table.hours,
+                                                      cache = current.s3db.cache,
+                                                      limitby = (0, 1)
+                                                      ).first()
+    try:
+        form_vars.course_id = record.course_id
+        form_vars.date = record.start_date
+        form_vars.end_date = record.end_date
+        form_vars.hours = record.hours
+    except:
+        # Record not found
+        return
 
 # =============================================================================
 def hrm_training_onaccept(form):
@@ -3850,95 +3882,97 @@ class hrm_HumanResourceRepresent(S3Represent):
         return ", ".join(representation)
         
 # =============================================================================
-#class hrm_TrainingEventRepresent(S3Represent):
-#    """ Representation of training_event_id (unused) """
-#
-#    def __init__(self):
-#        """
-#            Constructor
-#        """
-#
-#        super(hrm_TrainingEventRepresent, self).__init__(
-#                                        lookup = "hrm_training_event")
-#
-#    # -------------------------------------------------------------------------
-#    def lookup_rows(self, key, values, fields=[]):
-#        """
-#            Custom rows lookup
-#
-#            @param key: the key Field
-#            @param values: the values
-#            @param fields: unused (retained for API compatibility)
-#        """
-#
-#        s3db = current.s3db
-#        
-#        etable = self.table
-#        ctable = s3db.hrm_course
-#        stable = s3db.org_site
-#
-#        left = [ctable.on(ctable.id == etable.course_id),
-#                stable.on(stable.site_id == etable.site_id),
-#               ]
-#        if len(values) == 1:
-#            query = (key == values[0])
-#        else:
-#            query = key.belongs(values)
-#
-#        rows = current.db(query).select(etable.id,
-#                                        etable.start_date,
-#                                        etable.instructor,
-#                                        ctable.name,
-#                                        ctable.code,
-#                                        stable.name,
-#                                        left = left)
-#        self.queries += 1
-#        return rows
-#                                     
-#    # -------------------------------------------------------------------------
-#    def represent_row(self, row):
-#        """
-#            Represent a row
-#
-#            @param row: the Row
-#        """
-#
-#        # Course details
-#        course = row.get("hrm_course")
-#        if not course:
-#            return current.messages.UNKNOWN_OPT
-#        name = course.get("name")
-#        if not name:
-#            name = current.messages.UNKNOWN_OPT
-#        code = course.get("code")
-#        if code:
-#            representation = ["%s (%s)" % (name, code)]
-#        else:
-#            representation = [name]
-#        append = representation.append
-#
-#        # Venue and instructor
-#        event = row.hrm_training_event
-#        try:       
-#            site = row.org_site.name
-#        except:
-#            site = None
-#        instructor = event.get("instructor")
-#        if instructor and site:
-#            append("(%s - %s)" % (instructor, site))
-#        elif instructor:
-#            append("(%s)" % instructor)
-#        elif site:
-#            append("(%s)" % site)
-#
-#        # Start date
-#        start_date = event.start_date
-#        if start_date:
-#            start_date = self.table.start_date.represent(start_date)
-#            append("[%s]" % start_date)
-#
-#        return " ".join(representation)
-#        
+class hrm_TrainingEventRepresent(S3Represent):
+   """ Representation of training_event_id """
+
+   def __init__(self):
+       """
+           Constructor
+       """
+
+       super(hrm_TrainingEventRepresent, self).__init__(lookup = "hrm_training_event")
+
+   # -------------------------------------------------------------------------
+   def lookup_rows(self, key, values, fields=[]):
+       """
+           Custom rows lookup
+
+           @param key: the key Field
+           @param values: the values
+           @param fields: unused (retained for API compatibility)
+       """
+
+       s3db = current.s3db
+       
+       etable = self.table
+       ctable = s3db.hrm_course
+       stable = s3db.org_site
+
+       left = [ctable.on(ctable.id == etable.course_id),
+               stable.on(stable.site_id == etable.site_id),
+               ]
+       if len(values) == 1:
+           query = (key == values[0])
+       else:
+           query = key.belongs(values)
+
+       rows = current.db(query).select(etable.id,
+                                       etable.start_date,
+                                       etable.instructor,
+                                       ctable.name,
+                                       ctable.code,
+                                       stable.name,
+                                       left = left)
+       self.queries += 1
+       return rows
+                                    
+   # -------------------------------------------------------------------------
+   def represent_row(self, row):
+       """
+           Represent a row
+
+           NB This needs to be machine-parseable by training.xsl
+
+           @param row: the Row
+       """
+
+       # Course details
+       course = row.get("hrm_course")
+       if not course:
+           return current.messages.UNKNOWN_OPT
+       name = course.get("name")
+       if not name:
+           name = current.messages.UNKNOWN_OPT
+       code = course.get("code")
+       if code:
+           representation = ["%s (%s)" % (name, code)]
+       else:
+           representation = [name]
+       append = representation.append
+
+       # Venue and instructor
+       event = row.hrm_training_event
+       try:       
+           site = row.org_site.name
+       except:
+           site = None
+       instructor = event.get("instructor")
+       if instructor and site:
+           append(" %s - {%s}" % (instructor, site))
+       elif instructor:
+           append(" %s" % instructor)
+       elif site:
+           append(" {%s}" % site)
+
+       # Start date
+       start_date = event.start_date
+       if start_date:
+           # Easier for users & machines
+           start_date = S3DateTime.date_represent(start_date, format="%Y-%m-%d")
+           append(" [%s]" % start_date)
+
+       return " ".join(representation)
+       
 # =============================================================================
 #def hrm_position_represent(id, row=None):
 #    """
@@ -5824,16 +5858,17 @@ def hrm_person_controller(**attr):
     else:
         orgname = None
 
-    _attr = dict(rheader=hrm_rheader,
-                 orgname=orgname,
-                 replace_option=T("Remove existing data before import"),
-                 csv_template="staff",
+    _attr = dict(csv_template="staff",
                  csv_stylesheet=("hrm", "person.xsl"),
                  csv_extra_fields=[dict(label="Type",
                                         field=s3db.hrm_human_resource.type),
                                   ],
                  # Better in the native person controller:
-                 deduplicate="")
+                 deduplicate="",
+                 orgname=orgname,
+                 replace_option=T("Remove existing data before import"),
+                 rheader=hrm_rheader,
+                 )
     _attr.update(attr)
     
     output = current.rest_controller("pr", "person", **_attr)
@@ -5852,6 +5887,8 @@ def hrm_training_controller():
         current.session.error = current.T("Access denied")
         redirect(URL(f="index"))
 
+    s3db = current.s3db
+
     def prep(r):
         if r.interactive or \
            r.extension == "aadata":
@@ -5863,7 +5900,6 @@ def hrm_training_controller():
                            (current.messages.ORGANISATION, "organisation"),
                            "date",
                            ]
-            s3db = current.s3db
             s3db.configure("hrm_training",
                            #insertable = False,
                            listadd = False,
@@ -5885,12 +5921,37 @@ def hrm_training_controller():
                 table.year = Field.Lazy(hrm_training_year)
                 table.month = Field.Lazy(hrm_training_month)
 
+            # @ToDo: Complete
+            #elif r.method in ("import", "import.popup"):
+            #    # Allow course to be populated onaccept from training_event_id
+            #    table = s3db.hrm_training
+            #    s3db.configure("hrm_training",
+            #                   onvalidation = hrm_training_onvalidation,
+            #                   )
+            #    table.course_id.requires = IS_NULL_OR(table.course_id.requires)
+            #    f = table.training_event_id
+            #    training_event_id = r.get_vars.get("~.training_event_id", None)
+            #    if training_event_id:
+            #        f.default = training_event_id
+            #    else:
+            #        f.label = T("Training Event")
+            #        f.requires = IS_NULL_OR(
+            #                        IS_ONE_OF(current.db, "hrm_training_event.id",
+            #                                  hrm_TrainingEventRepresent(),
+            #                                  sort=True
+            #                                  )
+            #                        )
+            #        f.writable = True
+
         return True
     current.response.s3.prep = prep
 
     output = current.rest_controller("hrm", "training",
                                      csv_stylesheet = ("hrm", "training.xsl"),
                                      csv_template = ("hrm", "training"),
+                                     csv_extra_fields=[dict(label="Training Event",
+                                        field=s3db.hrm_training.training_event_id),
+                                        ],
                                      )
     return output
 
@@ -5956,10 +6017,27 @@ def hrm_training_event_controller():
     s3.prep = prep
 
     def postp(r, output):
-        if r.interactive and not r.component:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
+        if r.interactive:
+            if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
 '''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
+            # @ToDo: Restore once the other part is working
+            #elif r.component_name == "participant" and \
+            #     isinstance(output, dict):
+            #    showadd_btn = output.get("showadd_btn", None)
+            #    if showadd_btn:
+            #        # Add an Import button
+            #        if s3.crud.formstyle == "bootstrap":
+            #            _class = "s3_modal"
+            #        else:
+            #            _class = "action-btn s3_modal"
+            #        import_btn = S3CRUD.crud_button(label=current.T("Import Participants"),
+            #                                        _class=_class,
+            #                                        _href=URL(f="training", args="import.popup",
+            #                                                  vars={"~.training_event_id":r.id}),
+            #                                        )
+            #        output["showadd_btn"] = TAG[""](showadd_btn, import_btn)
         return output
     s3.postp = postp
 

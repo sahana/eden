@@ -31,6 +31,7 @@
 """
 
 from gluon.html import *
+from gluon.languages import lazyT
 
 # =============================================================================
 class NAV(DIV):
@@ -50,7 +51,7 @@ def formstyle_default(form, fields, *args, **kwargs):
         Default Eden Form Style (Labels above the Inputs)
     """
 
-    def render_row(row_id, label, controls, comment, hidden=False):
+    def render_row(row_id, label, widget, comment, hidden=False):
         
         row = []
         _class = "hide" if hidden else None
@@ -62,7 +63,7 @@ def formstyle_default(form, fields, *args, **kwargs):
                       _class = _class))
                       
         # Widget & Comment on the 2nd Row
-        row.append(TR(controls,
+        row.append(TR(widget,
                       TD(comment, _class = "w2p_fc"),
                       _id = row_id,
                       _class = _class))
@@ -76,8 +77,8 @@ def formstyle_default(form, fields, *args, **kwargs):
     else:
         # New-style, all-rows call:
         parent = TABLE()
-        for row_id, label, controls, comment in fields:
-            rows = render_row(row_id, label, controls, comment)
+        for row_id, label, widget, comment in fields:
+            rows = render_row(row_id, label, widget, comment)
             parent.append(rows[0])
             parent.append(rows[1])
         return parent
@@ -88,12 +89,12 @@ def formstyle_default_inline(form, fields, *args, **kwargs):
         Default Eden Form Style (In-Line Labels)
     """
 
-    def render_row(row_id, label, controls, comment, hidden=False):
+    def render_row(row_id, label, widget, comment, hidden=False):
 
         _class = "hide" if hidden else None
 
         row = TR(TD(label, _class = "w2p_fl"),
-                 TD(controls),
+                 TD(widget),
                  _id = row_id,
                  _class = _class)
 
@@ -110,8 +111,8 @@ def formstyle_default_inline(form, fields, *args, **kwargs):
     else:
         # New-style, all-rows call:
         parent = TABLE()
-        for row_id, label, controls, comment in fields:
-            row = render_row(row_id, label, controls, comment)
+        for row_id, label, widget, comment in fields:
+            row = render_row(row_id, label, widget, comment)
             parent.append(row)
         return parent
 
@@ -121,33 +122,33 @@ def formstyle_foundation(form, fields, *args, **kwargs):
         Formstyle for foundation themes (Labels above Inputs)
     """
 
-    def render_row(row_id, label, controls, helptext, hidden=False):
-        if isinstance(controls, INPUT):
-            if controls['_type'] == 'submit':
-                controls['_class'] = 'small primary button'
+    def render_row(row_id, label, widget, comment, hidden=False):
+        if isinstance(widget, INPUT):
+            if widget['_type'] == 'submit':
+                widget['_class'] = 'small primary button'
 
         _class = "form-row row hide" if hidden else "form-row row"
-        controls = DIV(label,
-                       DIV(controls,
-                           _class="controls",
-                           ),
-                       _class="small-6 columns",
-                       )
-        comment = DIV(helptext,
-                      _class="small-6 columns",
-                      )
-        return DIV(controls, comment, _class=_class, _id=row_id)
+        widget_col = DIV(label,
+                         DIV(widget,
+                             _class="controls",
+                             ),
+                         _class="small-6 columns",
+                         )
+        comment_col = DIV(render_tooltip(label, comment),
+                          _class="small-6 columns inline-tooltip",
+                          )
+        return DIV(widget_col, comment_col, _class=_class, _id=row_id)
 
     if args:
         row_id = form
         label = fields
-        controls, helptext = args
+        widget, comment = args
         hidden = kwargs.get("hidden", False)
-        return render_row(row_id, label, controls, helptext, hidden)
+        return render_row(row_id, label, widget, comment, hidden)
     else:
         parent = TAG[""]()
-        for row_id, label, controls, helptext in fields:
-            parent.append(render_row(row_id, label, controls, helptext))
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
         return parent
 
 # =============================================================================
@@ -156,30 +157,51 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         Formstyle for foundation themes (In-Line Labels)
     """
 
-    def render_row(row_id, label, controls, helptext):
+    def render_row(row_id, label, widget, comment, hidden=False):
         
-        if isinstance(controls, INPUT):
-            if controls['_type'] == 'submit':
-                controls['_class'] = 'small primary button'
+        if isinstance(widget, INPUT):
+            if widget['_type'] == 'submit':
+                widget['_class'] = 'small primary button'
 
         if isinstance(label, LABEL):
             label.add_class("left inline")
                 
         label_col = DIV(label, _class="small-2 columns")
-        controls_col = DIV(controls, _class="small-6 columns")
-        comments_col = DIV(helptext, _class="small-4 columns")
+        controls_col = DIV(widget, _class="small-6 columns controls")
+        comments_col = DIV(render_tooltip(label, comment),
+                           _class="small-4 columns inline-tooltip")
 
-        return DIV(label_col, controls_col, comments_col, _class="form-row row", _id=row_id)
+        _class = "form-row row hide" if hidden else "form-row row"
+        return DIV(label_col,
+                   controls_col,
+                   comments_col,
+                   _class=_class, _id=row_id)
 
     if args:
         row_id = form
         label = fields
-        controls, helptext = args
-        return render_row(row_id, label, controls, helptext)
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
     else:
         parent = TAG[""]()
-        for row_id, label, controls, helptext in fields:
-            parent.append(render_row(row_id, label, controls, helptext))
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
         return parent
 
+# =============================================================================
+def render_tooltip(label, comment):
+    """ Render a tooltip for a form field """
+
+    if not comment:
+        tooltip = ""
+    elif isinstance(comment, (lazyT, basestring)):
+        if hasattr(label, "flatten"):
+            label = label.flatten().strip("*")
+        tooltip = DIV(_class = "tooltip",
+                      _title = "%s|%s" % (label, comment))
+    else:
+        tooltip = comment
+    return tooltip
+    
 # END =========================================================================

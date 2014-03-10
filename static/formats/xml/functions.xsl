@@ -12,9 +12,9 @@
                    the resource template that will format the value as desired. The rest of
                    the list is then sent (recursively) to this function for further processing -->
         		   <xsl:call-template name="resource">
-				     <xsl:with-param name="value" select="normalize-space(substring-before($list,$splitsep))"/>
+				     <xsl:with-param name="value" select="normalize-space(substring-before($list, $splitsep))"/>
 			       </xsl:call-template>
-                   <xsl:variable name="end" select="normalize-space(substring-after($list,$splitsep))"/>
+                   <xsl:variable name="end" select="normalize-space(substring-after($list, $splitsep))"/>
 
                    <!-- recursive call -->
          	       <xsl:if test="$end!=''">
@@ -44,11 +44,11 @@
 	  <xsl:param name="joinsep"/>
 	  <xsl:if test="$list!=''">
          <xsl:choose>
-		     <xsl:when test="contains($list,$splitsep)">
+		     <xsl:when test="contains($list, $splitsep)">
                 <!-- When we have a list pop the first value off the list and and store in first.
                     The rest of the list is then sent to this function for further processing -->
-                <xsl:variable name="front" select="substring-before($list,$splitsep)"/>
-                <xsl:variable name="end" select="substring-after($list,$splitsep)"/>
+                <xsl:variable name="front" select="substring-before($list ,$splitsep)"/>
+                <xsl:variable name="end" select="substring-after($list, $splitsep)"/>
 
                 <!-- recursive call -->
         	    <xsl:if test="$end!=''">

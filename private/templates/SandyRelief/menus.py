@@ -82,7 +82,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("People Registry", c="pr", f="index")
             ),                
             MM("Resources", url="http://occupysandy.net/resources/coordination/")(
-                MM("Assets", c="asset", f="asset", m="search"),
+                MM("Assets", c="asset", f="asset"),
                 MM("Inventory", c="inv", f="inv_item"),
                 MM("Stock Counts", c="inv", f="adj"),
                 MM("Shipments", c="inv", f="send")

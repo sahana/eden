@@ -437,11 +437,12 @@ def theme_sector_widget():
         )
 
     resource = s3db.resource("project_project")
-    #(_instance , _nothing, _field) = widget.resolve(resource)
-    widget.resolve(resource)
+    instance, fieldname, field = widget.resolve(resource)
+    
     value = widget.extract(resource, record_id=None)
-
-    output = widget(s3db.project_theme_project.theme_id, value)
+    output = widget(s3db.project_theme_project.theme_id,
+                    value,
+                    _name=field.name)
 
     return output
 

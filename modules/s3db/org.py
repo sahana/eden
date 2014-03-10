@@ -422,7 +422,7 @@ class S3OrganisationModel(S3Model):
                   xml_post_parse = self.org_organisation_xml_post_parse,
                   )
 
-        # Custom Method for S3SiteAddressAutocompleteWidget
+        # Custom Method for S3OrganisationAutocompleteWidget
         self.set_method("org", "organisation",
                         method="search_ac",
                         action=self.org_search_ac)
@@ -2163,11 +2163,6 @@ class S3SiteModel(S3Model):
                    method="search_ac",
                    action=self.site_search_ac)
 
-        # Custom Method for S3SiteAddressAutocompleteWidget
-        set_method("org", "site",
-                   method="search_address_ac",
-                   action=self.site_search_address_ac)
-
         # Custom Method for S3AddPersonWidget2
         # @ToDo: One for HRMs
         set_method("org", "site",
@@ -2444,8 +2439,13 @@ class S3SiteModel(S3Model):
         query = (S3FieldSelector("name").lower().like(value + "%"))
 
         # Add template specific search criteria
-        for field in settings.get_org_site_autocomplete_fields():
-            query |= (S3FieldSelector(field).lower().like(value + "%"))
+        extra_fields = settings.get_org_site_autocomplete_fields()
+        for field in extra_fields:
+            if "addr_street" in field:
+                # Need to be able to get through the street number
+                query |= (S3FieldSelector(field).lower().like("%" + value + "%"))
+            else:
+                query |= (S3FieldSelector(field).lower().like(value + "%"))
 
         resource.add_filter(query)
 
@@ -2462,10 +2462,10 @@ class S3SiteModel(S3Model):
             # default fields to return 
             fields = ["name",
                       "site_id",
-                     ]
+                      ]
 
             # Add template specific fields to return
-            fields += settings.get_org_site_autocomplete_fields()
+            fields += extra_fields
 
             rows = resource.select(fields,
                                    start=0,
@@ -2482,6 +2482,9 @@ class S3SiteModel(S3Model):
                           }
 
                 # Populate fields only if present
+                org = row.get("org_organisation.name", None)
+                if org:
+                    record["org"] = org
                 L1 = row.get("gis_location.L1", None)
                 if L1:
                     record["L1"] = L1
@@ -2494,89 +2497,12 @@ class S3SiteModel(S3Model):
                 L4 = row.get("gis_location.L4", None)
                 if L4:
                     record["L4"] = L4
+                addr_street = row.get("gis_location.addr_street", None)
+                if addr_street:
+                    record["addr"] = addr_street
 
                 # Populate match information (if applicable)
                 set_match_strings(record, value)
-                append(record)
-            output = json.dumps(output)
-
-        response.headers["Content-Type"] = "application/json"
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def site_search_address_ac(r, **attr):
-        """
-            JSON search method for S3SiteAddressAutocompleteWidget
-
-            @param r: the S3Request
-            @param attr: request attributes
-        """
-
-        response = current.response
-        resource = r.resource
-
-        # Query comes in pre-filtered to accessible & deletion_status
-        # Respect response.s3.filter
-        resource.add_filter(response.s3.filter)
-
-        _vars = current.request.get_vars
-
-        # JQueryUI Autocomplete uses "term"
-        # old JQuery Autocomplete uses "q"
-        # what uses "value"?
-        value = _vars.term or _vars.value or _vars.q or None
-
-        # We want to do case-insensitive searches
-        # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower().strip()
-
-        filter = _vars.get("filter", "~")
-
-        if filter and value:
-            if filter == "~":
-                query = (S3FieldSelector("name").lower().like(value + "%")) | \
-                        (S3FieldSelector("location_id$addr_street").lower().like(value + "%"))
-            else:
-                output = current.xml.json_message(False, 400,
-                                "Unsupported filter! Supported filters: ~")
-                raise HTTP(400, body=output)
-        else:
-            output = current.xml.json_message(False, 400,
-                            "Missing options! Require: filter & value")
-            raise HTTP(400, body=output)
-
-        resource.add_filter(query)
-
-        MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
-        limit = int(_vars.limit or MAX_SEARCH_RESULTS)
-        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = json.dumps([
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
-        else:
-            s3db = current.s3db
-
-            # Fields to return
-            fields = ["site_id",
-                      "name",
-                      "location_id$addr_street",
-                      ]
-            rows = resource.select(fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby="name",
-                                   as_rows=True)
-            output = []
-            append = output.append
-            for row in rows:
-                address = row.get("gis_location.addr_street", None)
-                row = row.get("org_site", row)
-                record = dict(id = row.site_id,
-                              name = row.name,
-                              )
-                if address:
-                    record["address"] = address
                 append(record)
             output = json.dumps(output)
 
@@ -4746,7 +4672,7 @@ def org_organisation_controller():
                             # A non-standard formstyle with just a single row
                             pass
 
-                elif r.method not in ("import", "search") and \
+                elif r.method != "import" and \
                      "form" in output:
 
                     sep = ": "
@@ -4944,7 +4870,7 @@ def org_office_controller():
                             # A non-standard formstyle with just a single row
                             pass
 
-                elif r.method not in ("import", "map", "search") and \
+                elif r.method not in ("import", "map") and \
                      "form" in output:
 
                     sep = ": "
@@ -5085,8 +5011,7 @@ def org_facility_controller():
     s3.prep = prep
 
     def postp(r, output):
-        if r.representation == "plain" and \
-             r.method !="search":
+        if r.representation == "plain":
             # Custom Map Popup
             T = current.T
             output = TABLE()

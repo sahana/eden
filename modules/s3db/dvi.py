@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ Sahana Eden Disaster Victim Identification Model
 
@@ -318,7 +319,7 @@ class S3DVIModel(S3Model):
                              checklist_item("fingerprints",
                                             label = T("Fingerprinting")),
                              checklist_item("anthropology",
-                                            label = T("Anthropolgy")),
+                                            label = T("Anthropology")),
                              checklist_item("pathology",
                                             label = T("Pathology")),
                              checklist_item("embalming",
