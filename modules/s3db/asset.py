@@ -266,10 +266,10 @@ S3OptionsFilter({
         levels = hierarchy.keys()
         if len(settings.get_gis_countries()) == 1 or \
            s3.gis.config.region_location_id:
-               try:
-                   levels.remove("L0")
-               except:
-                   pass
+            try:
+                levels.remove("L0")
+            except:
+                pass
 
         list_fields = ["id",
                        "item_id$item_category_id",

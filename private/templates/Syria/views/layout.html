@@ -72,15 +72,7 @@
    {{if auth.is_logged_in():}}
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-     <li class='dropdown'> <a href='/{{=appname}}/project/activity' class='dropdown-toggle disabled top-level' id='projects' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Data Entry")}}<!--<b class='caret'></b>--></a>
-      <!--<ul class='dropdown-menu' role='menu' aria-labelledby='projects'>-->
-       <!--<li role='menuitem'><a href='/{{=appname}}/org/organisation' tabindex='-1' class='menu-item'><i class='icon-sitemap'></i> {{=T("Organizations")}}</a></li>-->
-       <!--<li role='menuitem'><a href='/{{=appname}}/project/activity' tabindex='-1' class='menu-item'><i class='icon-wrench'></i> {{=T("Activities")}}</a></li>-->
-       <!--<li role='menuitem'><a href='/{{=appname}}/project/beneficiary' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Beneficiaries")}}</a></li>-->
-       <!--<li role='menuitem'><a href='/{{=appname}}/supply/distribution' tabindex='-1' class='menu-item'><i class='icon-truck'></i> {{=T("Distributions")}}</a></li>-->
-       <!--<li role='menuitem'><a href='/{{=appname}}/project/project' tabindex='-1' class='menu-item'><i class='icon-project'></i> {{=T("Projects")}}</a></li>-->
-       <!--<li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Contact People")}}</a></li>-->
-      <!--</ul>-->
+     <li class='dropdown'> <a href='/{{=appname}}/project/activity/import' class='dropdown-toggle disabled top-level' id='projects' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Import Data")}}</a>
      </li>
     </ul>
     {{pass}}

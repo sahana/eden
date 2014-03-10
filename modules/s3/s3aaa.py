@@ -168,8 +168,6 @@ class AuthS3(Auth):
 
         Auth.__init__(self, current.db)
 
-        deployment_settings = current.deployment_settings
-
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
@@ -1831,16 +1829,16 @@ S3OptionsFilter({
             @returns boolean - if the user has been approved
         """
 
+        db = current.db
         deployment_settings = current.deployment_settings
         session = current.session
+        utable = self.settings.table_user
 
         # Lookup the Approver
         approver, organisation_id = self.s3_approver(user)
 
         if deployment_settings.get_auth_registration_requires_approval() and approver:
             approved = False
-            utable = self.settings.table_user
-            db = current.db
             db(utable.id == user.id).update(registration_key = "pending")
 
             if user.registration_key:
@@ -1856,8 +1854,6 @@ S3OptionsFilter({
             if organisation_id and not user.get("organisation_id", None):
                 # Use the whitelist
                 user["organisation_id"] = organisation_id
-                utable = self.settings.table_user
-                db = current.db
                 db(utable.id == user.id).update(organisation_id = organisation_id)
                 link_user_to = deployment_settings.get_auth_registration_link_user_to_default()
                 if link_user_to and not user.get("link_user_to", None):
@@ -1874,8 +1870,6 @@ S3OptionsFilter({
         # Ensure that we send out the mails in the language that the approver(s) want
         if "@" in approver:
             # Look up language of the user
-            utable = self.settings.table_user
-            db = current.db
             record = db(utable.email == approver).select(utable.language,
                                                          limitby=(0, 1)
                                                          ).first()

@@ -2779,10 +2779,10 @@ class S3FacilityModel(S3Model):
         levels = hierarchy.keys()
         if len(settings.get_gis_countries()) == 1 or \
            s3.gis.config.region_location_id:
-               try:
-                   levels.remove("L0")
-               except:
-                   pass
+            try:
+                levels.remove("L0")
+            except:
+                pass
 
         text_fields = ["name",
                        "code",

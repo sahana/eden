@@ -43,7 +43,7 @@ class S3MainMenu(default.S3MainMenu):
             homepage("gis")(
             ),
             homepage("hrm", "org", name=T("Staff"),
-                    vars=dict(group="staff"))(
+                     vars=dict(group="staff"))(
                 MM("Staff", c="hrm", f="staff", m="summary"),
                 MM("Teams", c="hrm", f="group"),
                 MM("National Societies", c="org", f="organisation",
@@ -119,7 +119,7 @@ class S3MainMenu(default.S3MainMenu):
                     c="vol",
                     image = "graphic_staff_wide.png",
                     title = "Volunteers")(
-                    DB("Manage Volunteer Data", f="volunteer"),
+                    DB("Manage Volunteer Data", f="volunteer", m="summary"),
                     DB("Manage Teams Data", f="group"),
                 ),
                 DB("CATALOGS",
@@ -166,7 +166,7 @@ class S3MainMenu(default.S3MainMenu):
                    image = "graphic_staff.png",
                    title = "Staff",
                    text = "Add new and manage existing staff."),
-                DB("Volunteers", c="vol", f="volunteer",
+                DB("Volunteers", c="vol", f="volunteer", m="summary",
                    image = "graphic_volunteers.png",
                    title = "Volunteers",
                    text = "Add new and manage existing volunteers."),
@@ -474,7 +474,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                              enable_field = False)
 
         return M(c="vol")(
-                    M("Volunteers", f="volunteer",
+                    M("Volunteers", f="volunteer", m="summary",
                       check=[manager_mode])(
                         M("New", m="create"),
                         #M("Search"),
