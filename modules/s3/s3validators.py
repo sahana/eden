@@ -2220,7 +2220,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
                     if error:
                         return (None, error)
                     elif f == "date_of_birth" and \
-                        value:
+                        value and \
+                        not isinstance(value, str):
+                        # isoformat() is a method of datetime.date, so
+                        # if value is a string, it raises an exception
                         _vars[f] = value.isoformat()
                 person_id = ptable.insert(**ptable._filter_fields(_vars))
 
