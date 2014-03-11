@@ -149,7 +149,7 @@ class S3EVRCaseModel(S3Model):
                                                      evr_therapy_opts,
                                                      label = T("Therapy"),
                                                     ),
-                                                    
+                                  Field("therapy_comment"),
                                   Field("pregnancy", "boolean",
                                         label=T("Pregnancy"),
                                         ),

@@ -54,6 +54,41 @@ def person():
         gender.requires = IS_IN_SET(evr_gender_opts, zero=None)
         gender.default = 3
         
+        # Disable unneeded physical details
+        pdtable = s3db.pr_physical_description
+        pdtable.race.writable = pdtable.race.readable = False
+        pdtable.complexion.writable = pdtable.complexion.readable = False
+        pdtable.height.writable = pdtable.height.readable = False
+        pdtable.hair_length.writable = pdtable.hair_length.readable = False
+        pdtable.hair_baldness.writable = pdtable.hair_baldness.readable = False
+        pdtable.facial_hair_type.writable = pdtable.facial_hair_type.readable = False
+        pdtable.facial_hair_color.writable = pdtable.facial_hair_color.readable = False
+        pdtable.facial_hair_length.writable = pdtable.facial_hair_length.readable = False
+        pdtable.hair_style.writable = pdtable.hair_style.readable = False
+        pdtable.facial_hair_comment.writable = pdtable.facial_hair_comment.readable = False
+        pdtable.body_hair.writable = pdtable.body_hair.readable = False
+        pdtable.skin_marks.writable = pdtable.skin_marks.readable = False
+        pdtable.medical_conditions.writable = pdtable.medical_conditions.readable = False
+        
+        # This set is suitable for Italy
+        evr_ethnicity_opts = {1: T("Italian"),
+                              2: T("Chinese"),
+                              3: T("Albanese"),
+                              4: T("Philippine"),
+                              5: T("Pakistani"),
+                              6: T("English"),
+                              7: T("African"),
+                              8: T("Other"),
+                              9: T("Unknown")
+                              }
+        pdtable.ethnicity_opts.writable = pdtable.ethnicity_opts.readable = True
+        pdtable.ethnicity_opts.requires = IS_EMPTY_OR(IS_IN_SET(evr_ethnicity_opts))
+        pdtable.ethnicity_opts.represent = lambda opt: \
+                                               evr_ethnicity_opts.get(
+                                                    opt,
+                                                    current.messages.UNKNOWN_OPT)
+        pdtable.ethnicity.label = T("Ethnicity comments")
+        
         if r.interactive and not r.component:
 
             # Filter widgets

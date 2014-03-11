@@ -3842,13 +3842,20 @@ class S3PersonDescription(S3Model):
                                    label = T("Complexion"),
                                    represent = lambda opt: \
                                                 pr_complexion_opts.get(opt, UNKNOWN_OPT)),
+                             Field("ethnicity_opts", "integer",
+                                   #requires=IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
+                                   readable=False,
+                                   writable=False,
+                                   label = T("Ethnicity"),
+                                   #represent = lambda opt: \
+                                   #             pr_ethnicity_opts.get(opt, UNKNOWN_OPT)
+                                   ),
                              Field("ethnicity", length=64, # Mayon Compatibility
                                    #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
                                    #readable=False,
                                    #writable=False,
                                    label = T("Ethnicity"),
-                                   ),  
-
+                                   ),
                              # Height and weight
                              Field("height", "integer",
                                    requires = IS_EMPTY_OR(IS_IN_SET(pr_height_opts)),
@@ -3950,7 +3957,7 @@ class S3PersonDescription(S3Model):
 
                              s3_comments(),
                              *s3_meta_fields())
-
+                             
         # Field configuration
         table.pe_id.readable = False
         table.pe_id.writable = False
