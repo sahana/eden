@@ -168,8 +168,6 @@ class AuthS3(Auth):
 
         Auth.__init__(self, current.db)
 
-        deployment_settings = current.deployment_settings
-
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
@@ -210,7 +208,7 @@ No action is required."""
         messages.registration_disabled = "Registration Disabled!"
         messages.registration_verifying = "You haven't yet Verified your account - please check your email"
         messages.reset_password = "Click on the link %(url)s to reset your password"
-        messages.verify_email = "Click on the link %(url)s% to verify your email"
+        messages.verify_email = "Click on the link %(url)s to verify your email"
         messages.verify_email_subject = "%(system_name)s - Verify Email"
         messages.welcome_email_subject = "Welcome to %(system_name)s"
         messages.welcome_email = \
@@ -992,7 +990,7 @@ Thank you"""
     dict(system_name=deployment_settings.get_system_name()),
                                             message=messages.verify_email % \
             dict(url="%s/default/user/verify_email/%s" % \
-                dict(current.response.s3.base_url, key))):
+                (current.response.s3.base_url, key))):
                     current.response.error = messages.email_verification_failed
                     return form
                 # @ToDo: Deployment Setting?
@@ -1831,16 +1829,16 @@ S3OptionsFilter({
             @returns boolean - if the user has been approved
         """
 
+        db = current.db
         deployment_settings = current.deployment_settings
         session = current.session
+        utable = self.settings.table_user
 
         # Lookup the Approver
         approver, organisation_id = self.s3_approver(user)
 
         if deployment_settings.get_auth_registration_requires_approval() and approver:
             approved = False
-            utable = self.settings.table_user
-            db = current.db
             db(utable.id == user.id).update(registration_key = "pending")
 
             if user.registration_key:
@@ -1856,8 +1854,6 @@ S3OptionsFilter({
             if organisation_id and not user.get("organisation_id", None):
                 # Use the whitelist
                 user["organisation_id"] = organisation_id
-                utable = self.settings.table_user
-                db = current.db
                 db(utable.id == user.id).update(organisation_id = organisation_id)
                 link_user_to = deployment_settings.get_auth_registration_link_user_to_default()
                 if link_user_to and not user.get("link_user_to", None):
