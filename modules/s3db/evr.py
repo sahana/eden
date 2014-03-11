@@ -297,42 +297,106 @@ class evr_AvailableShelters(S3Method):
         T = current.T
         s3db = current.s3db
         response = current.response
-        resource = s3db.resource("cr_shelter")
-        
+
+        # @note: currently, "Allocate" does nothing, needs implementation
+        #        of the workflow like this:
+
+        # @todo: find out whether there is already a "current" shelter
+        #        allocation for this group, and if yes, return a form
+        #        to edit it (using SQLFORM)
+
+        # @todo: otherwise, if we don't yet have a current shelter allocation,
+        #        check if we have a ?allocate=<shelter_id> in r.get_vars, and
+        #        if we do, then populate a create-form for cr_shelter_allocation
+        #        (using SQLFORM)
+
+        # @todo: if we have a form (either of the two cases above), then process
+        #        it (if form.accepts())
+        #        => if successful, redirect to r.url()
+        #        => if not successful, return the form
+
+        # @todo: otherwise, if we don't have a form, then provide the list (below)
+
+        # Provide a list of available shelters
+        shelters = s3db.resource("cr_shelter")
         if r.http == "GET":
+
             # Find out how many records are in the resource
-            totalrows = resource.count()
-            list_fields = ["name",
+            totalrows = shelters.count()
+            list_fields = ["id",
+                           "name",
                            "capacity_day",
                            "population_day",
                            "capacity_night",
                            "population_night",
                            ]
+
+            # Pagination, filtering, sorting
+            get_vars = r.get_vars
+            if "iDisplayLength" in get_vars:
+                display_length = int(get_vars["iDisplayLength"])
+            else:
+                display_length = 25
+            limit = 4 * display_length
+            filter, orderby, left = shelters.datatable_filter(list_fields, get_vars)
+            shelters.add_filter(filter)
             
             # Get all the data from the resource
-            data = resource.select(list_fields)
-            
+            data = shelters.select(list_fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby=orderby,
+                                   left=left,
+                                   count=True,
+                                   represent=True)
             filteredrows = data["numrows"]
-            
-            # Create the resource fields
             dt = S3DataTable(data["rfields"], data["rows"])
             dt_id = "datatable"
-            
-            if r.extension == "html":
-                # Create the html for the dataTable 
+
+            # Generate the output
+            if r.representation == "html":
+                # Page request
+
+                # Provide an action button for each entry
+                alloc_url = r.url(vars={"allocate": "[id]"})
+                S3CRUD.action_button(T("Allocate"), alloc_url)
+
+                # Don't need export formats
+                response.s3.no_formats = True
+
+                # Create the html for the dataTable
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_pagination="true"
+                                dt_displayLength=display_length,
+                                dt_ajax_url=r.url(representation="aadata"),
+                                #dt_bFilter="false",
+                                dt_pagination="true",
                                 )
-                
+
                 output = dict(items=items)
-                response.view = "list_filter.html"
+                response.view = "list.html"
                 return output
-            
-        elif r.http == "POST":
-            pass
-            # @todo: implement
-        
+                
+            elif r.representation == "aadata":
+                # Ajax refresh
+                if "sEcho" in get_vars:
+                    echo = int(get_vars.sEcho)
+                else:
+                    echo = None
+                items = dt.json(totalrows,
+                                filteredrows,
+                                dt_id,
+                                echo)
+                response.headers["Content-Type"] = "application/json"
+                response.view = "xml.html"
+                return items
+
+            else:
+                # Unsupported data format
+                r.error(501, current.ERROR.BAD_FORMAT)
+        else:
+            # Unsupported request method
+            r.error(405, current.ERROR.BAD_METHOD)
         
 # END =========================================================================

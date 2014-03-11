@@ -130,7 +130,7 @@ class S3ShelterModel(S3Model):
                                           comment=S3AddResourceLink(c="cr",
                                                                     f="shelter_type",
                                                                     label=ADD_SHELTER_TYPE),
-                                          ondelete = "CASCADE",
+                                          ondelete = "RESTRICT",
                                           label = SHELTER_TYPE_LABEL)
 
         # -------------------------------------------------------------------------

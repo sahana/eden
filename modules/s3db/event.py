@@ -949,15 +949,15 @@ class S3IncidentShelterModel(S3Model):
 
     def model(self):
 
-        if not current.deployment_settings.has_module("cr"):
-            return None
-
         T = current.T
 
         # ---------------------------------------------------------------------
         # Shelters
         #   Link table for cr_shelter <> event_event
 
+        # @todo: make this a 3-way link (event_id, incident_id, shelter_id) and
+        #        allow shelters to be "event-global" (=for all incidents within
+        #        the event)
         tablename = "event_incident_shelter"
         table = self.define_table(tablename,
                                   self.event_incident_id(),
@@ -1274,6 +1274,8 @@ class S3EventTaskModel(S3Model):
 
     def model(self):
 
+        # @todo: this is not correct - if enabled, the model must
+        #        deliver the tables it promises (=>fix upstream)
         if not current.deployment_settings.has_module("project"):
             return None
 
