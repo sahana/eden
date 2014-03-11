@@ -969,9 +969,6 @@ class S3EventAssetModel(S3Model):
 
     def model(self):
 
-        if not current.deployment_settings.has_module("asset"):
-            return None
-
         T = current.T
 
         # ---------------------------------------------------------------------
@@ -1010,9 +1007,6 @@ class S3EventCMSModel(S3Model):
     names = ["event_event_post"]
 
     def model(self):
-
-        if not current.deployment_settings.has_module("cms"):
-            return None
 
         T = current.T
 
@@ -1094,9 +1088,6 @@ class S3EventIReportModel(S3Model):
     names = ["event_ireport"]
 
     def model(self):
-
-        if not current.deployment_settings.has_module("irs"):
-            return None
 
         T = current.T
 
@@ -1211,9 +1202,6 @@ class S3EventTaskModel(S3Model):
     names = ["event_task"]
 
     def model(self):
-
-        if not current.deployment_settings.has_module("project"):
-            return None
 
         T = current.T
 
