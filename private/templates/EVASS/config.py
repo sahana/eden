@@ -57,7 +57,7 @@ settings.base.theme = "default"
 #                                           "member":T("Member")}
 
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
-#settings.auth.always_notify_approver = False
+settings.auth.always_notify_approver = False
 
 # The name of the teams that users are added to when they opt-in to receive alerts
 #settings.auth.opt_in_team_list = ["Updates"]
