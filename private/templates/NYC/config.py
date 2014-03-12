@@ -282,7 +282,7 @@ def org_facility_onvalidation(form):
         form_vars.name = current.db.org_facility.location_id.represent(form_vars.location_id)
 
 # -----------------------------------------------------------------------------
-def customize_org_facility(**attr):
+def customize_org_facility_controller(**attr):
     """
         Customize org_facility controller
     """
@@ -358,10 +358,10 @@ def customize_org_facility(**attr):
 
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.ui.customize_org_facility = customize_org_facility_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customize_org_organisation_controller(**attr):
     """
         Customize org_organisation controller
     """
@@ -601,10 +601,10 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.ui.customize_org_organisation = customize_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_group(**attr):
+def customize_org_group_controller(**attr):
     """
         Customize org_group controller
     """
@@ -752,7 +752,7 @@ def customize_org_group(**attr):
 
     return attr
 
-settings.ui.customize_org_group = customize_org_group
+settings.ui.customize_org_group = customize_org_group_controller
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -764,7 +764,7 @@ settings.pr.request_gender = False
 
 # -----------------------------------------------------------------------------
 # Persons
-def customize_pr_person(**attr):
+def customize_pr_person_controller(**attr):
     """
         Customize pr_person controller
     """
@@ -780,53 +780,20 @@ def customize_pr_person(**attr):
         else:
             result = True
 
-        if r.interactive:
-            if r.component_name == "human_resource":
-                s3db = current.s3db
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                s3db.org_group_person.group_id.label = ""
-                crud_form = S3SQLCustomForm("organisation_id",
-                                            "site_id",
-                                            S3SQLInlineComponent(
-                                                "group_person",
-                                                label = T("Network"),
-                                                link = False,
-                                                fields = ["group_id"],
-                                                multiple = False,
-                                                ),
-                                            "job_title_id",
-                                            "start_date",
-                                            )
-
-                list_fields = ["id",
-                               "job_title_id",
-                               "organisation_id",
-                               (T("Network"), "group_person.group_id"),
-                               (T("Groups"), "person_id$group_membership.group_id"),
-                               "site_id",
-                               #"site_contact",
-                               (T("Email"), "email.value"),
-                               (settings.get_ui_label_mobile_phone(), "phone.value"),
-                               ]
-
-                s3db.configure("hrm_human_resource",
-                               crud_form = crud_form,
-                               list_fields = list_fields,
-                               )
-
-            elif r.component_name == "group_membership":
-                current.s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        if r.interactive and \
+           r.component_name == "group_membership":
+            current.s3db.pr_group_membership.group_head.label = T("Group Chairperson")
 
         return result
     s3.prep = custom_prep
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.ui.customize_pr_person = customize_pr_person_controller
 
 # -----------------------------------------------------------------------------
 # Groups
-def customize_pr_group(**attr):
+def customize_pr_group_controller(**attr):
     """
         Customize pr_group controller
     """
@@ -909,7 +876,7 @@ def customize_pr_group(**attr):
 
     return attr
 
-settings.ui.customize_pr_group = customize_pr_group
+settings.ui.customize_pr_group = customize_pr_group_controller
 
 # -----------------------------------------------------------------------------
 def pr_contact_onaccept(form):
@@ -988,7 +955,7 @@ settings.hrm.teams = "Groups"
 settings.hrm.organisation_label = "Organization"
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource(**attr):
+def customize_hrm_human_resource_controller(**attr):
     """
         Customize hrm_human_resource controller
     """
@@ -1006,22 +973,6 @@ def customize_hrm_human_resource(**attr):
 
         if r.interactive or r.representation == "aadata":
             if not r.component:
-                s3db = current.s3db
-                table = r.table
-                #table.department_id.readable = table.department_id.writable = False
-                #table.end_date.readable = table.end_date.writable = False
-                list_fields = ["id",
-                               "person_id",
-                               "job_title_id",
-                               "organisation_id",
-                               (T("Network"), "group_person.group_id"),
-                               (T("Groups"), "person_id$group_membership.group_id"),
-                               "site_id",
-                               #"site_contact",
-                               (T("Email"), "email.value"),
-                               (settings.get_ui_label_mobile_phone(), "phone.value"),
-                               ]
-
                 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [
                     S3TextFilter(["person_id$first_name",
@@ -1067,37 +1018,75 @@ def customize_hrm_human_resource(**attr):
                                     ),
                     ]
 
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                s3db.org_group_person.group_id.label = ""
-                crud_form = S3SQLCustomForm("person_id",
-                                            "organisation_id",
-                                            "site_id",
-                                            S3SQLInlineComponent(
-                                                "group_person",
-                                                label = T("Network"),
-                                                link = False,
-                                                fields = ["group_id"],
-                                                multiple = False,
-                                                ),
-                                            "job_title_id",
-                                            "start_date",
-                                            )
-
+                s3db = current.s3db
                 s3db.configure("hrm_human_resource",
-                               crud_form = crud_form,
                                filter_widgets = filter_widgets,
-                               list_fields = list_fields,
                                )
+
+                # Use a hierarchical dropdown instead of AC
+                s3db.hrm_human_resource.site_id.widget = None
+                script = \
+'''S3OptionsFilter({
+ 'triggerName':'organisation_id',
+ 'targetName':'site_id',
+ 'lookupResource':'site',
+ 'lookupURL':'/%s/org/sites_for_org/',
+ 'optional':true
+})''' % r.application
+                s3.jquery_ready.append(script)
 
         return result
     s3.prep = custom_prep
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+settings.ui.customize_hrm_human_resource = customize_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_job_title(**attr):
+def customize_hrm_human_resource(r, tablename):
+    """
+        Customize hrm_human_resource resource (in facility, human_resource, organisation & person controllers)
+            - runs after controller customisation
+            - but runs before prep
+    """
+
+    s3db = current.s3db
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    s3db.org_group_person.group_id.label = ""
+    crud_form = S3SQLCustomForm("person_id",
+                                "organisation_id",
+                                "site_id",
+                                S3SQLInlineComponent(
+                                    "group_person",
+                                    label = T("Network"),
+                                    link = False,
+                                    fields = ["group_id"],
+                                    multiple = False,
+                                    ),
+                                "job_title_id",
+                                "start_date",
+                                )
+    list_fields = ["id",
+                   "person_id",
+                   "job_title_id",
+                   "organisation_id",
+                   (T("Network"), "group_person.group_id"),
+                   (T("Groups"), "person_id$group_membership.group_id"),
+                   "site_id",
+                   #"site_contact",
+                   (T("Email"), "email.value"),
+                   (settings.get_ui_label_mobile_phone(), "phone.value"),
+                   ]
+
+    s3db.configure("hrm_human_resource",
+                   crud_form = crud_form,
+                   list_fields = list_fields,
+                   )
+
+settings.ui.custom_configure_hrm_human_resource = customize_hrm_human_resource
+
+# -----------------------------------------------------------------------------
+def customize_hrm_job_title_controller(**attr):
     """
         Customize hrm_job_title controller
     """
@@ -1123,7 +1112,7 @@ def customize_hrm_job_title(**attr):
 
     return attr
 
-settings.ui.customize_hrm_job_title = customize_hrm_job_title
+settings.ui.customize_hrm_job_title = customize_hrm_job_title_controller
 
 # -----------------------------------------------------------------------------
 # Projects
@@ -1140,7 +1129,7 @@ settings.project.sectors = False
 # Multiple partner organizations
 settings.project.multiple_organisations = True
 
-def customize_project_project(**attr):
+def customize_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -1286,7 +1275,7 @@ def customize_project_project(**attr):
 
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.ui.customize_project_project = customize_project_project_controller
 
 # -----------------------------------------------------------------------------
 # Requests Management
@@ -1309,7 +1298,7 @@ settings.req.type_inv_label = "Supplies"
 settings.req.summary = True
 
 # -----------------------------------------------------------------------------
-def customize_req_req(**attr):
+def customize_req_req_controller(**attr):
     """
         Customize req_req controller
     """
@@ -1339,7 +1328,7 @@ def customize_req_req(**attr):
 
     return attr
 
-settings.ui.customize_req_req = customize_req_req
+settings.ui.customize_req_req = customize_req_req_controller
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

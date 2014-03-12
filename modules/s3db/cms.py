@@ -495,6 +495,15 @@ class S3ContentModel(S3Model):
                     )
 
     # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+        post_id = S3ReusableField("post_id", "integer",
+                                  readable=False, writable=False)
+        return dict(cms_post_id=post_id)
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def cms_series_onaccept(form):
         """
