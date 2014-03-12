@@ -4427,7 +4427,8 @@ class S3LocationSelectorWidget2(FormWidget):
             # Only L0s get set before here
             location_dict["d"] = dict(id=L0,
                                       b=default_bounds)
-            location_dict[L0] = dict(b=default_bounds)
+            location_dict[L0] = dict(b=default_bounds,
+                                     l=0)
         elif lowest_Lx:
             # What is the lowest-level un-selectable Lx?
             if lowest_Lx == "L0":
@@ -4457,7 +4458,8 @@ class S3LocationSelectorWidget2(FormWidget):
                       ]
             location_dict["d"] = dict(id=Lx,
                                       b=bounds)
-            location_dict[Lx] = dict(b=bounds)
+            location_dict[Lx] = dict(b=bounds,
+                                     l=int(lowest_Lx[1:]))
         else:
             default_bounds = [config.lon_min,
                               config.lat_min,
