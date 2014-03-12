@@ -8,6 +8,7 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
+from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3utils import s3_fullname
@@ -818,9 +819,12 @@ def chairperson(row):
     chair = db(query).select(ptable.first_name,
                              ptable.middle_name,
                              ptable.last_name,
+                             ptable.id,
                              limitby=(0, 1)).first()
     if chair:
-        return s3_fullname(chair)
+        # Only used in list view so HTML is OK
+        return A(s3_fullname(chair),
+                 _href=URL(c="hrm", f="person", args=chair.id))
     else:
         return current.messages["NONE"]
 
