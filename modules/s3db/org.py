@@ -53,6 +53,7 @@ __all__ = ["S3OrganisationModel",
            "org_organisation_requires",
            "org_region_options",
            "org_rheader",
+           "org_site_staff_config",
            "org_organisation_controller",
            "org_office_controller",
            "org_facility_controller",
@@ -3279,7 +3280,7 @@ class S3RoomModel(S3Model):
  'triggerName':'site_id',
  'targetName':'room_id',
  'lookupPrefix':'org',
- 'lookupResource':'room',
+ 'lookupResource':'room'
 })''')
                            )
 
@@ -4728,6 +4729,62 @@ def org_organisation_controller():
     return output
 
 # =============================================================================
+def org_site_staff_config(r):
+    """
+        Configure the Staff tab for Sites
+    """
+
+    htable = current.s3db.hrm_human_resource
+    #record = r.record
+
+    # Filter to just Staff
+    current.response.s3.filter = (htable.type == 1)
+
+    # Filter out people which are already staff for this office
+    # - this only works for an IS_ONE_OF dropdown
+    # - @ToDo: Pass a flag to pr_search_ac via S3AddPersonWidget2 to do the same thing
+    #site_id = record.site_id
+    #try:
+    #    person_id_field = r.target()[2].person_id
+    #except:
+    #    pass
+    #else:
+    #    query = (htable.site_id == site_id) & \
+    #            (htable.deleted == False)
+    #    staff = current.db(query).select(htable.person_id)
+    #    person_ids = [row.person_id for row in staff]
+    #    try:
+    #        person_id_field.requires.set_filter(not_filterby = "id",
+    #                                            not_filter_opts = person_ids)
+    #    except:
+    #        pass
+
+    # Cascade the organisation_id from the site to the staff
+    field = htable.organisation_id
+    field.default = r.record.organisation_id
+    field.writable = False
+    field.comment = None
+
+    # Make it clear that this is for adding new staff, not assigning existing
+    # @ToDo: Review with new crud_strings & make it react to settings.hrm.staff_label
+    #s3.crud_strings.hrm_human_resource.label_create_button = current.T("Add New Staff Member")
+
+    # Modify list_fields
+    # - we don't want this over-riding Templates' custom_configure_hrm_human_resource
+    #s3db.configure("hrm_human_resource",
+    #               list_fields = ["person_id",
+    #                              "phone",
+    #                              "email",
+    #                              #"organisation_id",
+    #                              "job_title_id",
+    #                              "department_id",
+    #                              "site_contact",
+    #                              "status",
+    #                              "comments",
+    #                              ]
+    #               )
+
+# =============================================================================
 def org_office_controller():
     """
         Office Controller, defined in the model for use from
@@ -4778,18 +4835,7 @@ def org_office_controller():
                                    )
 
                 elif cname == "human_resource":
-                    # Filter to just Staff
-                    s3.filter = (s3db.hrm_human_resource.type == 1)
-                    # Make it clear that this is for adding new staff, not assigning existing
-                    s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
-                    # Cascade the organisation_id from the office to the staff
-                    htable = s3db.hrm_human_resource
-                    field = htable.organisation_id
-                    field.default = r.record.organisation_id
-                    field.writable = False
-                    field.comment = None
-                    # Filter out people which are already staff for this office
-                    s3_filter_staff(r)
+                    org_site_staff_config(r)
 
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form
@@ -4953,31 +4999,7 @@ def org_facility_controller():
                                    )
 
                 elif cname == "human_resource":
-                    # Filter to just Staff
-                    s3.filter = (s3db.hrm_human_resource.type == 1)
-                    # Make it clear that this is for adding new staff, not assigning existing
-                    s3.crud_strings.hrm_human_resource.label_create_button = current.T("Add New Staff Member")
-                    # Cascade the organisation_id from the office to the staff
-                    htable = s3db.hrm_human_resource
-                    field = htable.organisation_id
-                    field.default = r.record.organisation_id
-                    field.writable = False
-                    field.comment = None
-                    # Filter out people which are already staff for this office
-                    s3_filter_staff(r)
-                    # Modify list_fields
-                    s3db.configure("hrm_human_resource",
-                                   list_fields=["person_id",
-                                                "phone",
-                                                "email",
-                                                "organisation_id",
-                                                "job_title_id",
-                                                "department_id",
-                                                "site_contact",
-                                                "status",
-                                                "comments",
-                                                ]
-                                   )
+                    org_site_staff_config(r)
 
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form

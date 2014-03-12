@@ -296,7 +296,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Parse the request
     r = s3_request(prefix, resourcename)
 
-    # Customize target resource(s)
+    # Customize target resource(s) from Template
     r.custom_configure()
 
     # Configure standard method handlers

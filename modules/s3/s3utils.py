@@ -516,33 +516,6 @@ $(document).on('click','.s3-truncate-less',function(event){
     return
 
 # =============================================================================
-def s3_filter_staff(r):
-    """
-        Filter out people which are already staff for this facility
-
-        @todo: make the Person-AC pick up the filter options from
-               the person_id field (currently not implemented)
-    """
-
-    db = current.db
-    try:
-        hrtable = db.hrm_human_resource
-        site_id = r.record.site_id
-        person_id_field = r.target()[2].person_id
-    except:
-        return
-    query = (hrtable.site_id == site_id) & \
-            (hrtable.deleted == False)
-
-    staff = db(query).select(hrtable.person_id)
-    person_ids = [row.person_id for row in staff]
-    try:
-        person_id_field.requires.set_filter(not_filterby = "id",
-                                            not_filter_opts = person_ids)
-    except:
-        pass
-
-# =============================================================================
 def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
     """
         Formats the full name of a person

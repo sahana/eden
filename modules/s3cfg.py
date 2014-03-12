@@ -1082,6 +1082,8 @@ class S3Config(Storage):
     def ui_customize(self, tablename, **attr):
         """
             Customize a Controller
+            - runs before resource customisation
+            - but prep runs after resource customisation
         """
         customize = self.ui.get("customize_%s" % tablename)
         if customize:
@@ -1092,6 +1094,8 @@ class S3Config(Storage):
     def ui_custom_configure(self, tablename):
         """
             Get customization callback for a resource
+            - runs after controller customisation
+            - but runs before prep
         """
         return self.ui.get("custom_configure_%s" % tablename)
 
