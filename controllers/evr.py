@@ -89,6 +89,10 @@ def person():
                                                     current.messages.UNKNOWN_OPT)
         pdtable.ethnicity.label = T("Ethnicity comments")
         
+        # Enable place of birth
+        s3db.pr_person_details.place_of_birth.writable = True
+        s3db.pr_person_details.place_of_birth.readable = True
+        
         if r.interactive and not r.component:
 
             # Filter widgets
@@ -125,7 +129,7 @@ def person():
                                         "middle_name",
                                         "last_name",
                                         "date_of_birth",
-                                        "case.birthplace",
+                                        "person_details.place_of_birth",
                                         "case.fiscal_code",
                                         S3SQLInlineComponent(
                                             "identity",

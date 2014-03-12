@@ -60,7 +60,6 @@ class S3EVRCaseModel(S3Model):
                                               _title="%s|%s" % (T("Fiscal Code"),
                                                                 T("Insert the fiscal code with no spaces"))),
                                         ),
-                                  Field("birthplace"),
                                   s3_comments(),
                                   *s3_meta_fields())
         
@@ -278,7 +277,8 @@ def evr_rheader(r):
         tabs = [("Group Details", None),
                 (T("Contact Data"), "contact"),
                 (T("Members"), "group_membership"),
-                (T("Shelter Allocation"), "available_shelters"),
+                # Hidden until correctly implemented
+                #(T("Shelter Allocation"), "available_shelters"),
                 ]
 
     if rheader_fields is not None:
