@@ -488,21 +488,23 @@ def customize_project_task(**attr):
                        "priority",
                        (T("Project"), "task_activity.activity_id"),
                        "date_due",
+                       "location_id",
                        ]
     
         # Custom Form
         table.name.label = T("Name")
         table.description.label = T("Description")
+        table.location_id.readable = table.location_id.writable = True
         s3db.project_task_activity.activity_id.label = T("Project")
-        crud_form = S3SQLCustomForm(
-                        "status",
-                        "name",
-                        "description",
-                        "priority",
-                        "task_activity.activity_id",
-                        "pe_id",
-                        "date_due",
-                        )
+        crud_form = S3SQLCustomForm("status",
+                                    "name",
+                                    "description",
+                                    "priority",
+                                    "task_activity.activity_id",
+                                    "pe_id",
+                                    "date_due",
+                                    "location_id",
+                                    )
 
         # Remove Project Filter
         filter_widgets = s3db.get_config("project_task", 
@@ -514,12 +516,12 @@ def customize_project_task(**attr):
                          "priority",
                          "pe_id",
                          "task_activity.activity_id",
+                         "location_id",
                          ]
     
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
-                                 fact = ["count(name)"
-                                         ],
+                                 fact = ["count(name)"],
                                  defaults=Storage(rows = "status",
                                                   cols = "priority",
                                                   fact = "count(name)",

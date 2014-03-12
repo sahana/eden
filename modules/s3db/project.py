@@ -4112,7 +4112,8 @@ class S3ProjectTaskModel(S3Model):
                                                                    T("Please provide as much detail as you can, including the URL(s) where the bug occurs or you'd like the new feature to go.")))),
                              self.org_site_id,
                              self.gis_location_id(
-                                    label=T("Deployment Location"),
+                                    # Enable/re-Label in Templates as-required
+                                    #label=T("Deployment Location"),
                                     readable=False,
                                     writable=False
                                     ),
@@ -4198,7 +4199,7 @@ class S3ProjectTaskModel(S3Model):
             msg_record_deleted = T("Task deleted"),
             msg_list_empty = T("No tasks currently registered"))
 
-        # Search Method
+        # Filter Widgets
         filter_widgets = [
             S3TextFilter(["name",
                           "description",
@@ -4298,44 +4299,43 @@ class S3ProjectTaskModel(S3Model):
                                  )
 
         # Custom Form
-        crud_form = S3SQLCustomForm(
-                        "name",
-                        "description",
-                        "source",
-                        "priority",
-                        "pe_id",
-                        "date_due",
-                        "time_estimated",
-                        "status",
-                        S3SQLInlineComponent(
-                            "time",
-                            label = T("Time Log"),
-                            fields = ["date",
-                                      "person_id",
-                                      "hours",
-                                      "comments"
-                                      ],
-                            orderby = "date"
-                        ),
-                        "time_actual",
-                    )
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    "source",
+                                    "priority",
+                                    "pe_id",
+                                    "date_due",
+                                    "time_estimated",
+                                    "status",
+                                    S3SQLInlineComponent(
+                                        "time",
+                                        label = T("Time Log"),
+                                        fields = ["date",
+                                                  "person_id",
+                                                  "hours",
+                                                  "comments"
+                                                  ],
+                                        orderby = "date"
+                                        ),
+                                    "time_actual",
+                                    )
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = "doc_entity",
                   copyable = True,
-                  orderby = "project_task.priority,project_task.date_due asc",
-                  realm_entity = self.project_task_realm_entity,
-                  onvalidation = self.project_task_onvalidation,
                   #create_next = URL(f="task", args=["[id]"]),
                   create_onaccept = self.project_task_create_onaccept,
-                  update_onaccept = self.project_task_update_onaccept,
-                  filter_widgets = filter_widgets,
-                  report_options = report_options,
-                  list_fields = list_fields,
-                  extra_fields = ["id"],
                   crud_form = crud_form,
-                  extra = "description"
+                  extra = "description",
+                  extra_fields = ["id"],
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  onvalidation = self.project_task_onvalidation,
+                  orderby = "project_task.priority,project_task.date_due asc",
+                  realm_entity = self.project_task_realm_entity,
+                  report_options = report_options,
+                  super_entity = "doc_entity",
+                  update_onaccept = self.project_task_update_onaccept,
                   )
 
         # Reusable field

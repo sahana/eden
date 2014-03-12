@@ -8,7 +8,10 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
+from gluon.html import *
 from gluon.storage import Storage
+
+from s3.s3utils import s3_fullname
 
 T = current.T
 settings = current.deployment_settings
@@ -793,6 +796,38 @@ settings.ui.customize_pr_person = customize_pr_person_controller
 
 # -----------------------------------------------------------------------------
 # Groups
+def chairperson(row):
+    """
+       Virtual Field to show the chairperson of a group 
+    """
+
+    if hasattr(row, "pr_group"):
+        row = row.pr_group
+    try:
+        group_id = row.id
+    except:
+        # not available
+        return current.messages["NONE"]
+
+    db = current.db
+    s3db = current.s3db
+    mtable = s3db.pr_group_membership
+    ptable = db.pr_person
+    query = (mtable.group_id == group_id) & \
+            (mtable.group_head == True) & \
+            (mtable.person_id == ptable.id)
+    chair = db(query).select(ptable.first_name,
+                             ptable.middle_name,
+                             ptable.last_name,
+                             ptable.id,
+                             limitby=(0, 1)).first()
+    if chair:
+        # Only used in list view so HTML is OK
+        return A(s3_fullname(chair),
+                 _href=URL(c="hrm", f="person", args=chair.id))
+    else:
+        return current.messages["NONE"]
+
 def customize_pr_group_controller(**attr):
     """
         Customize pr_group controller
@@ -810,20 +845,18 @@ def customize_pr_group_controller(**attr):
             result = True
 
         s3db = current.s3db
-        tablename = "pr_group"
 
         # Format for filter_widgets & imports
-        s3db.add_components("pr_group", org_group_team="group_id")
+        s3db.add_components("pr_group",
+                            org_group_team="group_id")
 
-        from gluon import URL
-        from gluon.sqlhtml import TextWidget
         from s3.s3fields import S3Represent
         from s3.s3filter import S3TextFilter, S3OptionsFilter
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
         field = s3db.org_group_team.org_group_id
         field.label = ""
         field.represent = S3Represent(lookup="org_group", show_link=True)
-        s3db.pr_group.description.widget = TextWidget.widget
         crud_form = S3SQLCustomForm("name",
                                     "description",
                                     S3SQLInlineComponent("group_team",
@@ -852,24 +885,16 @@ def customize_pr_group_controller(**attr):
                             ),
             ]
 
-        list_fields = ["id",
-                       (T("Network"), "group_team.org_group_id"),
-                       "name",
-                       "description",
-                       "comments",
-                       ]
-
-        s3db.configure(tablename,
-                       # Redirect to member list when a new group has been created
-                       create_next = URL(f="group",
-                                         args=["[id]", "group_membership"]),
+        s3db.configure("pr_group",
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
-                       list_fields = list_fields,
                        )
 
-        if r.component_name == "group_membership":
-            s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        #if r.component_name == "group_membership":
+        s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        #else:
+        #    # RHeader wants a simplified version, but don't want inconsistent across tabs
+        #    s3db.pr_group_membership.group_head.label = T("Chairperson")
 
         return result
     s3.prep = custom_prep
@@ -877,6 +902,43 @@ def customize_pr_group_controller(**attr):
     return attr
 
 settings.ui.customize_pr_group = customize_pr_group_controller
+
+# -----------------------------------------------------------------------------
+def customize_pr_group(r, tablename):
+    """
+        Customize pr_group resource (in group & org_group controllers)
+            - runs after controller customisation
+            - but runs before prep
+    """
+
+    from gluon import Field, URL
+    from gluon.sqlhtml import TextWidget
+
+    s3db = current.s3db
+
+    table = s3db.pr_group
+
+    # Increase size of widget
+    table.description.widget = TextWidget.widget
+
+    table.chairperson = Field.Lazy(chairperson)
+
+    list_fields = ["id",
+                   (T("Network"), "group_team.org_group_id"),
+                   "name",
+                   "description",
+                   (T("Chairperson"), "chairperson"),
+                   "comments",
+                   ]
+
+    s3db.configure("pr_group",
+                   # Redirect to member list when a new group has been created
+                   create_next = URL(c="hrm", f="group",
+                                     args=["[id]", "group_membership"]),
+                   list_fields = list_fields,
+                   )
+
+settings.ui.custom_configure_pr_group = customize_pr_group
 
 # -----------------------------------------------------------------------------
 def pr_contact_onaccept(form):
