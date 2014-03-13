@@ -318,6 +318,64 @@ def s3_represent_value(field,
     return text
 
 # =============================================================================
+def s3_set_default_filter(selector, value, tablename=None):
+    """
+        Set a default filter for selector.
+
+        @param selector: the field selector
+        @param value: the value, can be a dict {operator: value},
+                      a list of values, or a single value, or a
+                      callable that returns any of these
+        @param tablename: the tablename
+    """
+
+    s3 = current.response.s3
+
+    filter_defaults = s3
+    for level in ("filter_defaults", tablename):
+        if level not in filter_defaults:
+            filter_defaults[level] = {}
+        filter_defaults = filter_defaults[level]
+    filter_defaults[selector] = value
+    return
+    
+# =============================================================================
+def s3_get_default_filter(selector, operator, tablename=None):
+    """
+        Get the default filter values for selector/operator
+
+        @param selector: the field selector
+        @param operator: the operator
+        @param tablename: tablename of the master resource
+    """
+
+    s3 = current.response.s3
+
+    filter_defaults = s3
+    for level in ("filter_defaults", tablename, selector):
+        if level not in filter_defaults:
+            return None
+        filter_defaults = filter_defaults[level]
+    if callable(filter_defaults):
+        filter_defaults = filter_defaults(selector, tablename=tablename)
+    if not isinstance(operator, (tuple, list, set)):
+        if isinstance(filter_defaults, dict):
+            value = filter_defaults.get(operator)
+        else:
+            value = filter_defaults
+        return value if isinstance(value, (list, type(None)))
+                     else [value]
+    elif isinstance(filter_defaults, dict):
+        values = {}
+        for op in operator:
+            value = filter_defaults.get(op)
+            values[op] = value if isinstance(value, (list, type(None)))
+                               else [value]
+        return values
+    else:
+        return None
+
+# =============================================================================
 def s3_dev_toolbar():
     """
         Developer Toolbar - ported from gluon.Response.toolbar()

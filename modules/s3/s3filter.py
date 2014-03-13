@@ -199,7 +199,7 @@ class S3FilterWidget(object):
         """
             Entry point for the form builder
 
-            @param resource: the S3Resource to render with widget for
+            @param resource: the S3Resource to render the widget for
             @param get_vars: the GET vars (URL query vars) to prepopulate
                              the widget
             @param alias: the resource alias to use
