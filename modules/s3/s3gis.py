@@ -76,13 +76,12 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
 from gluon.dal import Rows
-from gluon.storage import Storage, Messages
+from gluon.storage import Storage
 
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3track import S3Trackable
-from s3utils import s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext, s3_unicode
+from s3utils import s3_include_ext, s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -6070,6 +6069,8 @@ class MAP(DIV):
         select_stroke = settings.get_gis_select_stroke() 
         if select_stroke and select_stroke != 'ff9933':
             options["select_stroke"] = select_stroke
+        if not settings.get_gis_cluster_label():
+            options["cluster_label"] = False
 
         ########
         # Layout

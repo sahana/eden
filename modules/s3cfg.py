@@ -655,6 +655,12 @@ class S3Config(Storage):
         """
         return self.gis.get("cluster_fill", None)
 
+    def get_gis_cluster_label(self):
+        """
+            Label Clustered points on Map?
+        """
+        return self.gis.get("cluster_label", True)
+
     def get_gis_cluster_stroke(self):
         """
             Stroke for Clustered points on Map, else default

@@ -82,6 +82,8 @@ settings.gis.map_height = 400
 #settings.gis.map_width = 854
 # Use a non-default fillColor for Clustered points
 settings.gis.cluster_fill = "ee3224"
+# Disable the label for clustered points
+settings.gis.cluster_label = False
 # Use a non-default strokeColor for Clustered points
 settings.gis.cluster_stroke = "7a1600"
 # Use a non-default fillColor for Selected points
