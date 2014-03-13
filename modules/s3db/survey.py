@@ -169,50 +169,50 @@ class S3SurveyTemplateModel(S3Model):
         # the questions that will be used in a survey.
 
         tablename = "survey_template"
-        table = define_table(tablename,
-                             Field("name", "string", length=120,
-                                   notnull=True, unique=True,
-                                   label = T("Template Name"),
-                                   default="",
-                                   ),
-                             Field("description", "text", length=500,
-                                   label = T("Description"),
-                                   default=""),
-                             Field("status", "integer",
-                                   label = T("Status"),
-                                   requires = IS_IN_SET(template_status,
-                                                        zero=None),
-                                   default=1,
-                                   represent = lambda index: \
-                                        template_status[index],
-                                   readable=True,
-                                   writable=False),
-                             # Standard questions which may belong to all template
-                             # competion_qstn: who completed the assessment
-                             Field("competion_qstn", "string", length=200,
-                                   label = T("Completion Question"),
-                                   ),
-                             # date_qstn: when it was completed (date)
-                             Field("date_qstn", "string", length=200,
-                                   label = T("Date Question"),
-                                   ),
-                             # time_qstn: when it was completed (time)
-                             Field("time_qstn", "string", length=200,
-                                   label = T("Time Question"),
-                                   ),
-                             # location_detail: json of the location question
-                             #                  May consist of any of the following:
-                             #                  L0, L1, L2, L3, L4, Lat, Lon
-                             Field("location_detail", "string", length=200,
-                                   label = T("Location Detail"),
-                                   ),
-                             # The priority question is the default question used
-                             # to determine the priority of each point on the map.
-                             # The data is stored as the question code.
-                             Field("priority_qstn", "string", length=16,
-                                   label = T("Default map question"),
-                                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", "string", length=120,
+                           notnull=True, unique=True,
+                           label = T("Template Name"),
+                           default="",
+                           ),
+                     Field("description", "text", length=500,
+                           label = T("Description"),
+                           default=""),
+                     Field("status", "integer",
+                           label = T("Status"),
+                           requires = IS_IN_SET(template_status,
+                                                zero=None),
+                           default=1,
+                           represent = lambda index: \
+                                       template_status[index],
+                           readable=True,
+                           writable=False),
+                     # Standard questions which may belong to all template
+                     # competion_qstn: who completed the assessment
+                     Field("competion_qstn", "string", length=200,
+                           label = T("Completion Question"),
+                           ),
+                     # date_qstn: when it was completed (date)
+                     Field("date_qstn", "string", length=200,
+                           label = T("Date Question"),
+                           ),
+                     # time_qstn: when it was completed (time)
+                     Field("time_qstn", "string", length=200,
+                           label = T("Time Question"),
+                           ),
+                     # location_detail: json of the location question
+                     #                  May consist of any of the following:
+                     #                  L0, L1, L2, L3, L4, Lat, Lon
+                     Field("location_detail", "string", length=200,
+                           label = T("Location Detail"),
+                           ),
+                     # The priority question is the default question used
+                     # to determine the priority of each point on the map.
+                     # The data is stored as the question code.
+                     Field("priority_qstn", "string", length=16,
+                           label = T("Default map question"),
+                           ),
+                     *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -232,7 +232,7 @@ class S3SurveyTemplateModel(S3Model):
             msg_record_deleted = T("Assessment Template deleted"),
             msg_list_empty = T("No Assessment Templates"))
 
-        template_id = S3ReusableField("template_id", table,
+        template_id = S3ReusableField("template_id", "reference %s" % tablename,
                                       sortby="name",
                                       label=T("Template"),
                                       requires = IS_ONE_OF(db,
@@ -261,22 +261,22 @@ class S3SurveyTemplateModel(S3Model):
         # the position of the section within the template
 
         tablename = "survey_section"
-        table = define_table(tablename,
-                             Field("name", "string", length=120,
-                                   notnull=True,
-                                   default="",
-                                   ),
-                             Field("description", "text", length=500,
-                                   default="",
-                                   ),
-                             Field("posn", "integer",
-                                   ),
-                             Field("cloned_section_id", "integer",
-                                   readable=False,
-                                   writable=False,
-                                   ),
-                             template_id(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", "string", length=120,
+                           notnull=True,
+                           default="",
+                           ),
+                     Field("description", "text", length=500,
+                           default="",
+                           ),
+                     Field("posn", "integer",
+                           ),
+                     Field("cloned_section_id", "integer",
+                           readable=False,
+                           writable=False,
+                           ),
+                     template_id(),
+                     *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -862,23 +862,23 @@ class S3SurveyQuestionModel(S3Model):
         #    footnote in the printed form.
 
         tablename = "survey_question"
-        table = define_table(tablename,
-                             Field("name", "string", length=200,
-                                   notnull=True,
-                                   represent = self.qstn_name_represent,
-                                   ),
-                             Field("code", "string", length=16,
-                                   notnull=True,
-                                   ),
-                             Field("notes", "string", length=400
-                                   ),
-                             Field("type", "string", length=40,
-                                   notnull=True,
-                                   ),
-                             Field("metadata", "text",
-                                  ),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     Field("name", "string", length=200,
+                           notnull=True,
+                           represent = self.qstn_name_represent,
+                           ),
+                     Field("code", "string", length=16,
+                           notnull=True,
+                           ),
+                     Field("notes", "string", length=400
+                           ),
+                     Field("type", "string", length=40,
+                           notnull=True,
+                           ),
+                     Field("metadata", "text",
+                           ),
+                     *s3_meta_fields()
+                     )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -916,23 +916,23 @@ class S3SurveyQuestionModel(S3Model):
         #    question_metadata records.
 
         tablename = "survey_question_metadata"
-        table = define_table(tablename,
-                             Field("question_id",
-                                   "reference survey_question",
-                                   readable=False,
-                                   writable=False
-                                   ),
-                             Field("descriptor",
-                                   "string",
-                                   length=20,
-                                   notnull=True,
-                                   ),
-                             Field("value",
-                                   "text",
-                                   notnull=True,
-                                   ),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     Field("question_id",
+                           "reference survey_question",
+                           readable=False,
+                           writable=False
+                           ),
+                     Field("descriptor",
+                           "string",
+                           length=20,
+                           notnull=True,
+                           ),
+                     Field("value",
+                           "text",
+                           notnull=True,
+                           ),
+                     *s3_meta_fields()
+                     )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -964,24 +964,24 @@ class S3SurveyQuestionModel(S3Model):
         #    it will have the position that the question will appear in the template
 
         tablename = "survey_question_list"
-        table = define_table(tablename,
-                             Field("posn",
-                                   "integer",
-                                   notnull=True,
-                                   ),
-                             self.survey_template_id(),
-                             Field("question_id",
-                                   "reference survey_question",
-                                   readable=False,
-                                   writable=False
-                                   ),
-                             Field("section_id",
-                                   "reference survey_section",
-                                   readable=False,
-                                   writable=False
-                                   ),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     Field("posn",
+                           "integer",
+                           notnull=True,
+                           ),
+                     self.survey_template_id(),
+                     Field("question_id",
+                           "reference survey_question",
+                           readable=False,
+                           writable=False
+                           ),
+                     Field("section_id",
+                           "reference survey_section",
+                           readable=False,
+                           writable=False
+                           ),
+                     *s3_meta_fields()
+                     )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -1400,23 +1400,23 @@ class S3SurveyFormatterModel(S3Model):
 
         # ---------------------------------------------------------------------
         tablename = "survey_formatter"
-        table = self.define_table(tablename,
-                                  self.survey_template_id(),
-                                  Field("section_id", "reference survey_section",
-                                        readable=False,
-                                        writable=False
-                                        ),
-                                  Field("method", "integer",
-                                        requires = IS_IN_SET(survey_formatter_methods,
-                                                             zero=None),
-                                        default=1,
-                                        represent = lambda index: \
-                                            survey_formatter_methods[index],
-                                        readable=True,
-                                        writable=False),
-                                  Field("rules", "text", default=""),
-                                  *s3_meta_fields()
-                                  )
+        self.define_table(tablename,
+                          self.survey_template_id(),
+                          Field("section_id", "reference survey_section",
+                                readable=False,
+                                writable=False
+                                ),
+                          Field("method", "integer",
+                                requires = IS_IN_SET(survey_formatter_methods,
+                                                        zero=None),
+                                default=1,
+                                represent = lambda index: \
+                                    survey_formatter_methods[index],
+                                readable=True,
+                                writable=False),
+                          Field("rules", "text", default=""),
+                          *s3_meta_fields()
+                          )
 
         self.configure(tablename,
                        onaccept = self.formatter_onaccept,
@@ -1587,36 +1587,36 @@ class S3SurveySeriesModel(S3Model):
         }
 
         tablename = "survey_series"
-        table = self.define_table(tablename,
-                                 Field("name", "string", length=120,
-                                       default="",
-                                       requires = IS_NOT_EMPTY()),
-                                 Field("description", "text", default="", length=500),
-                                 Field("status", "integer",
-                                       requires = IS_IN_SET(series_status,
-                                                            zero=None),
-                                       default=1,
-                                       represent = lambda index: series_status[index],
-                                       readable=True,
-                                       writable=False),
-                                 self.survey_template_id(empty=False,
-                                                         ondelete="RESTRICT"),
-                                 person_id(),
-                                 organisation_id(widget = org_widget),
-                                 Field("logo", "string", default="", length=512),
-                                 Field("language", "string", default="en", length=8),
-                                 Field("start_date", "date",
-                                       requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
-                                       represent = s3_date_represent,
-                                       widget = S3DateWidget(),
-                                       default=None),
-                                 Field("end_date", "date",
-                                       requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
-                                       represent = s3_date_represent,
-                                       widget = S3DateWidget(),
-                                       default=None),
-                                 #self.super_link("source_id", "doc_source_entity"),
-                                 *s3_meta_fields())
+        self.define_table(tablename,
+                          Field("name", "string", length=120,
+                                default="",
+                                requires = IS_NOT_EMPTY()),
+                          Field("description", "text", default="", length=500),
+                          Field("status", "integer",
+                                requires = IS_IN_SET(series_status,
+                                                    zero=None),
+                                default=1,
+                                represent = lambda index: series_status[index],
+                                readable=True,
+                                writable=False),
+                          self.survey_template_id(empty=False,
+                                                  ondelete="RESTRICT"),
+                          person_id(),
+                          organisation_id(widget = org_widget),
+                          Field("logo", "string", default="", length=512),
+                          Field("language", "string", default="en", length=8),
+                          Field("start_date", "date",
+                                requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                represent = s3_date_represent,
+                                widget = S3DateWidget(),
+                                default=None),
+                          Field("end_date", "date",
+                                requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                represent = s3_date_represent,
+                                widget = S3DateWidget(),
+                                default=None),
+                          #self.super_link("source_id", "doc_source_entity"),
+                          *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -2586,21 +2586,21 @@ class S3SurveyCompleteModel(S3Model):
         #    for a given question across all responses.
 
         tablename = "survey_complete"
-        table = define_table(tablename,
-                             Field("series_id", "reference survey_series",
-                                   represent = survey_series_represent,
-                                   label = T("Series"),
-                                   readable=False,
-                                   writable=False
-                                   ),
-                             Field("answer_list", "text",
-                                   represent = survey_answer_list_represent
-                                   ),
-                             Field("location", "text",
-                                   readable=False,
-                                   writable=False
-                                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("series_id", "reference survey_series",
+                           represent = survey_series_represent,
+                           label = T("Series"),
+                           readable=False,
+                           writable=False
+                           ),
+                     Field("answer_list", "text",
+                           represent = survey_answer_list_represent
+                           ),
+                     Field("location", "text",
+                           readable=False,
+                           writable=False
+                           ),
+                     *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -2636,20 +2636,20 @@ class S3SurveyCompleteModel(S3Model):
         #    of a given question.
 
         tablename = "survey_answer"
-        table = define_table(tablename,
-                             Field("complete_id", "reference survey_complete",
-                                   readable=False,
-                                   writable=False
-                                   ),
-                             Field("question_id", "reference survey_question",
-                                   readable=True,
-                                   writable=False
-                                   ),
-                             Field("value", "text",
-                                   readable=True,
-                                   writable=True
-                                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("complete_id", "reference survey_complete",
+                           readable=False,
+                           writable=False
+                           ),
+                     Field("question_id", "reference survey_question",
+                           readable=True,
+                           writable=False
+                           ),
+                     Field("value", "text",
+                           readable=True,
+                           writable=True
+                           ),
+                     *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Assessment Answer"),
@@ -3249,28 +3249,28 @@ class S3SurveyTranslateModel(S3Model):
         LANG_HELP = T("This is the full name of the language and will be displayed to the user when selecting the template language.")
         CODE_HELP = T("This is the short code of the language and will be used as the name of the file. This should be the ISO 639 code.")
         tablename = "survey_translate"
-        table = self.define_table(tablename,
-                                  self.survey_template_id(),
-                                  Field("language",
-                                        readable=True,
-                                        writable=True,
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Language"),
-                                                                        LANG_HELP))
-                                        ),
-                                  Field("code",
-                                        readable=True,
-                                        writable=True,
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Language Code"),
-                                                                        CODE_HELP))
-                                        ),
-                                  Field("file", "upload",
-                                        autodelete=True),
-                                  Field("filename",
-                                        readable=False,
-                                        writable=False),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.survey_template_id(),
+                          Field("language",
+                                readable=True,
+                                writable=True,
+                                comment = DIV(_class="tooltip",
+                                                _title="%s|%s" % (T("Language"),
+                                                                LANG_HELP))
+                                ),
+                          Field("code",
+                                readable=True,
+                                writable=True,
+                                comment = DIV(_class="tooltip",
+                                                _title="%s|%s" % (T("Language Code"),
+                                                                CODE_HELP))
+                                ),
+                          Field("file", "upload",
+                                autodelete=True),
+                          Field("filename",
+                                readable=False,
+                                writable=False),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add new translation language"),

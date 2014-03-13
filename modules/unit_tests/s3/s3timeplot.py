@@ -587,13 +587,14 @@ class TimePlotTests(unittest.TestCase):
     def setUpClass(cls):
 
         db = current.db
-        event_table = db.define_table("tp_test_events",
-                                      Field("event_start", "datetime"),
-                                      Field("event_end", "datetime"),
-                                      Field("parameter1", "integer"),
-                                      Field("parameter2", "double"),
-                                      Field("event_type"),
-                                     )
+        db.define_table("tp_test_events",
+                        Field("event_start", "datetime"),
+                        Field("event_end", "datetime"),
+                        Field("parameter1", "integer"),
+                        Field("parameter2", "double"),
+                        Field("event_type"),
+                        )
+        event_table = db["tp_test_events"]
 
         events = (("STARTEND",
                    (2011, 1, 3, 0, 0, 0),

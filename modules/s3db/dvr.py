@@ -67,33 +67,33 @@ class S3DVRModel(S3Model):
         }
 
         tablename = "dvr_case"
-        table = self.define_table(tablename,
-                                  # @ToDo: Option to autogenerate these, like Waybills, et al
-                                  Field("reference",
-                                        label = T("Case Number")),
-                                  self.pr_person_id(
-                                    # @ToDo: Modify this to update location_id if the selected person has a Home Address already
-                                    comment=None,
-                                    requires=IS_ADD_PERSON_WIDGET2(),
-                                    widget=S3AddPersonWidget2(controller="pr"),
-                                    ),
-                                  self.gis_location_id(label = T("Home Address")),
-                                  Field("damage", "integer",
-                                        requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
-                                        represent = lambda opt: \
-                                            dvr_damage_opts.get(opt, UNKNOWN_OPT),
-                                        label= T("Damage Assessment")),
-                                  Field("insurance", "boolean",
-                                        represent = s3_yes_no_represent,
-                                        label = T("Insurance")),
-                                  Field("status", "integer",
-                                        default = 1,
-                                        requires = IS_NULL_OR(IS_IN_SET(dvr_status_opts)),
-                                        represent = lambda opt: \
-                                            dvr_status_opts.get(opt, UNKNOWN_OPT),
-                                        label= T("Status")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          # @ToDo: Option to autogenerate these, like Waybills, et al
+                          Field("reference",
+                                label = T("Case Number")),
+                          self.pr_person_id(
+                            # @ToDo: Modify this to update location_id if the selected person has a Home Address already
+                            comment=None,
+                            requires=IS_ADD_PERSON_WIDGET2(),
+                            widget=S3AddPersonWidget2(controller="pr"),
+                          ),
+                          self.gis_location_id(label = T("Home Address")),
+                          Field("damage", "integer",
+                                requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
+                                represent = lambda opt: \
+                                    dvr_damage_opts.get(opt, UNKNOWN_OPT),
+                                label= T("Damage Assessment")),
+                          Field("insurance", "boolean",
+                                represent = s3_yes_no_represent,
+                                label = T("Insurance")),
+                          Field("status", "integer",
+                                default = 1,
+                                requires = IS_NULL_OR(IS_IN_SET(dvr_status_opts)),
+                                represent = lambda opt: \
+                                    dvr_status_opts.get(opt, UNKNOWN_OPT),
+                                label= T("Status")),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD Strings
         ADD_CASE = T("Add Case")

@@ -921,7 +921,7 @@ def customize_pr_group(r, tablename):
     # Increase size of widget
     table.description.widget = TextWidget.widget
 
-    table.chairperson = Field.Lazy(chairperson)
+    table.chairperson = Field.Method("chairperson", chairperson)
 
     list_fields = ["id",
                    (T("Network"), "group_team.org_group_id"),

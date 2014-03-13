@@ -138,45 +138,45 @@ class S3AssetModel(S3Model):
                              (itable.item_category_id == ctable.id))
 
         tablename = "asset_asset"
-        table = define_table(tablename,
-                             # Instances
-                             super_link("track_id", "sit_trackable"),
-                             super_link("doc_id", "doc_entity"),
-                             item_entity_id,
-                             Field("number",
-                                   label = T("Asset Number"),
-                                   ),
-                             # @ToDo: We could set this automatically based on Item Category
-                             Field("type", "integer",
-                                   label = T("Type"),
-                                   readable = vehicle,
-                                   writable = vehicle,
-                                   requires = IS_IN_SET(asset_type_opts),
-                                   default = ASSET_TYPE_OTHER,
-                                   represent = lambda opt: \
+        define_table(tablename,
+                     # Instances
+                     super_link("track_id", "sit_trackable"),
+                     super_link("doc_id", "doc_entity"),
+                     item_entity_id,
+                     Field("number",
+                           label = T("Asset Number"),
+                           ),
+                     # @ToDo: We could set this automatically based on Item Category
+                     Field("type", "integer",
+                           label = T("Type"),
+                           readable = vehicle,
+                           writable = vehicle,
+                           requires = IS_IN_SET(asset_type_opts),
+                           default = ASSET_TYPE_OTHER,
+                           represent = lambda opt: \
                                        asset_type_opts.get(opt, UNKNOWN_OPT),
-                                   ),
-                             item_id(represent = supply_item_represent,
-                                     requires = IS_ONE_OF(asset_items_set,
-                                                          "supply_item.id",
-                                                          supply_item_represent,
-                                                          sort = True,
-                                                          ),
-                                     script = None, # No Item Pack Filter
-                                     widget = None,
-                                     ),
-                             Field("kit", "boolean",
-                                   default = False,
-                                   label = T("Kit?"),
-                                   represent = lambda bool: \
-                                    (bool and [T("Yes")] or [NONE])[0],
-                                   ),
-                             organisation_id(requires=self.org_organisation_requires(
-                                                updateable=True,
-                                                #required=True
-                                             ),
-                                             required = True,
-                                             script = '''
+                           ),
+                     item_id(represent = supply_item_represent,
+                             requires = IS_ONE_OF(asset_items_set,
+                                                  "supply_item.id",
+                                                  supply_item_represent,
+                                                  sort = True,
+                                                  ),
+                             script = None, # No Item Pack Filter
+                             widget = None,
+                             ),
+                     Field("kit", "boolean",
+                           default = False,
+                           label = T("Kit?"),
+                           represent = lambda opt: \
+                                       (opt and [T("Yes")] or [NONE])[0],
+                           ),
+                     organisation_id(requires=self.org_organisation_requires(
+                                                 updateable=True,
+                                                 #required=True
+                                              ),
+                                     required = True,
+                                     script = '''
 S3OptionsFilter({
  'triggerName':'organisation_id',
  'targetName':'site_id',
@@ -185,51 +185,51 @@ S3OptionsFilter({
  'lookupField':'site_id',
  'lookupURL':S3.Ap.concat('/org/sites_for_org/'),
 })''',
-                                             ),
-                             # This is a component, so needs to be a super_link
-                             # - can't override field name, ondelete or requires
-                             super_link("site_id", "org_site",
-                                        label = org_site_label,
-                                        default = auth.user.site_id if auth.is_logged_in() else None,
-                                        readable = True,
-                                        writable = True,
-                                        empty = False,
-                                        ondelete = "RESTRICT",
-                                        represent = self.org_site_represent,
-                                        # Comment these to use a Dropdown & not an Autocomplete
-                                        #widget = S3SiteAutocompleteWidget(),
-                                        #comment = DIV(_class="tooltip",
-                                        #              _title="%s|%s" % (T("Warehouse"),
-                                        #                                T("Enter some characters to bring up a list of possible matches"))),
-                                        ),
-                             Field("sn",
-                                   label = T("Serial Number"),
-                                   ),
-                             organisation_id("supply_org_id",
-                                             label = T("Supplier/Donor"),
-                                             ondelete = "SET NULL",
-                                             ),
-                             s3_date("purchase_date",
-                                     label = T("Purchase Date"),
                                      ),
-                             Field("purchase_price", "double",
-                                   #default=0.00,
-                                   represent=lambda v, row=None: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
-                                   ),
-                             s3_currency("purchase_currency"),
-                             # Base Location, which should always be a Site & set via Log
-                             location_id(readable=False,
-                                         writable=False,
-                                         ),
-                             # Populated onaccept of the log to make a component tab
-                             person_id("assigned_to_id",
-                                       readable=False,
-                                       writable=False,
-                                       comment=self.pr_person_comment(child="assigned_to_id"),
-                                       ),
-                             s3_comments(),
-                             *s3_meta_fields())
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     super_link("site_id", "org_site",
+                                label = org_site_label,
+                                default = auth.user.site_id if auth.is_logged_in() else None,
+                                readable = True,
+                                writable = True,
+                                empty = False,
+                                ondelete = "RESTRICT",
+                                represent = self.org_site_represent,
+                                # Comment these to use a Dropdown & not an Autocomplete
+                                #widget = S3SiteAutocompleteWidget(),
+                                #comment = DIV(_class="tooltip",
+                                #              _title="%s|%s" % (T("Warehouse"),
+                                #                                T("Enter some characters to bring up a list of possible matches"))),
+                                ),
+                     Field("sn",
+                           label = T("Serial Number"),
+                           ),
+                     organisation_id("supply_org_id",
+                                     label = T("Supplier/Donor"),
+                                     ondelete = "SET NULL",
+                                     ),
+                     s3_date("purchase_date",
+                             label = T("Purchase Date"),
+                             ),
+                     Field("purchase_price", "double",
+                           #default=0.00,
+                           represent=lambda v, row=None: \
+                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           ),
+                     s3_currency("purchase_currency"),
+                     # Base Location, which should always be a Site & set via Log
+                     location_id(readable=False,
+                                 writable=False,
+                                 ),
+                     # Populated onaccept of the log to make a component tab
+                     person_id("assigned_to_id",
+                               readable=False,
+                               writable=False,
+                               comment=self.pr_person_comment(child="assigned_to_id"),
+                               ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         ADD_ASSET = T("Add Asset")
@@ -249,7 +249,7 @@ S3OptionsFilter({
             msg_list_empty = T("No Assets currently registered"))
 
         # Reusable Field
-        asset_id = S3ReusableField("asset_id", table,
+        asset_id = S3ReusableField("asset_id", "reference %s" % tablename,
                                    sortby="number",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "asset_asset.id",
@@ -421,40 +421,40 @@ S3OptionsFilter({
         # - to allow building ad-hoc Kits
         #
         tablename = "asset_item"
-        table = define_table(tablename,
-                             item_entity_id,
-                             asset_id(ondelete="CASCADE"),
-                             item_id(represent = supply_item_represent,
-                                     requires = IS_ONE_OF(asset_items_set,
-                                                          "supply_item.id",
-                                                          supply_item_represent,
-                                                          sort = True,
-                                                          ),
-                                     script = None, # No Item Pack Filter
-                                     widget = None,
-                                     ),
-                             Field("quantity", "integer", notnull=True,
-                                   default = 1,
-                                   label = T("Quantity"),
-                                   requires = IS_INT_IN_RANGE(1, 1000),
-                                   ),
-                             Field("sn",
-                                   label = T("Serial Number")),
-                             organisation_id("supply_org_id",
-                                             label = T("Supplier/Donor"),
-                                             ondelete = "SET NULL"),
-                             s3_date("purchase_date",
-                                     label = T("Purchase Date")),
-                             Field("purchase_price", "double",
-                                   #default=0.00,
-                                   represent=lambda v, row=None: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                             s3_currency("purchase_currency"),
-                             # Base Location, which should always be a Site & set via Log
-                             location_id(readable=False,
-                                         writable=False),
-                             s3_comments(comment=None),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     item_entity_id,
+                     asset_id(ondelete="CASCADE"),
+                     item_id(represent = supply_item_represent,
+                             requires = IS_ONE_OF(asset_items_set,
+                                                  "supply_item.id",
+                                                   supply_item_represent,
+                                                   sort = True,
+                                                   ),
+                             script = None, # No Item Pack Filter
+                             widget = None,
+                             ),
+                     Field("quantity", "integer", notnull=True,
+                           default = 1,
+                           label = T("Quantity"),
+                           requires = IS_INT_IN_RANGE(1, 1000),
+                           ),
+                     Field("sn",
+                           label = T("Serial Number")),
+                     organisation_id("supply_org_id",
+                                     label = T("Supplier/Donor"),
+                                     ondelete = "SET NULL"),
+                     s3_date("purchase_date",
+                             label = T("Purchase Date")),
+                     Field("purchase_price", "double",
+                           #default=0.00,
+                           represent=lambda v, row=None: \
+                                     IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                     s3_currency("purchase_currency"),
+                     # Base Location, which should always be a Site & set via Log
+                     location_id(readable=False,
+                                 writable=False),
+                     s3_comments(comment=None),
+                     *s3_meta_fields())
 
         # =====================================================================
         # Asset Log
@@ -498,81 +498,81 @@ S3OptionsFilter({
             script = None
 
         tablename = "asset_log"
-        table = define_table(tablename,
-                             asset_id(),
-                             Field("status", "integer",
-                                   label = T("Status"),
-                                   requires = IS_IN_SET(asset_log_status_opts),
-                                   represent = lambda opt: \
+        define_table(tablename,
+                     asset_id(),
+                     Field("status", "integer",
+                           label = T("Status"),
+                           requires = IS_IN_SET(asset_log_status_opts),
+                           represent = lambda opt: \
                                        asset_log_status_opts.get(opt, UNKNOWN_OPT)
-                                   ),
-                             s3_datetime("datetime",
-                                         default="now",
-                                         empty=False,
-                                         represent="date",
-                                         ),
-                             s3_datetime("datetime_until",
-                                         label = T("Date Until"),
-                                         represent="date",
-                                         ),
-                             person_id(label = T("Assigned To")),
-                             Field("check_in_to_person", "boolean",
-                                   #label = T("Mobile"),      # Relabel?
-                                   label = T("Track with this Person?"),
-                                   
-                                   comment = DIV(_class="tooltip",
-                                                 #_title="%s|%s" % (T("Mobile"),
-                                                 _title="%s|%s" % (T("Track with this Person?"),
-                                                                   T("If selected, then this Asset's Location will be updated whenever the Person's Location is updated."))),
-                                   readable = False,
-                                   writable = False),
-                             # The Organisation to whom the loan is made
-                             organisation_id(
-                                    readable = False,
-                                    writable = False,
-                                    widget = None
-                                    ),
-                             # This is a component, so needs to be a super_link
-                             # - can't override field name, ondelete or requires
-                             super_link("site_id", "org_site",
-                                        label = org_site_label,
-                                        #filterby = "site_id",
-                                        #filter_opts = auth.permitted_facilities(redirect_on_error=False),
-                                        instance_types = auth.org_site_types,
-                                        updateable = True,
-                                        not_filterby = "obsolete",
-                                        not_filter_opts = [True],
-                                        #default = user.site_id if is_logged_in() else None,
-                                        readable = True,
-                                        writable = True,
-                                        empty = False,
-                                        represent = self.org_site_represent,
-                                        #widget = S3SiteAutocompleteWidget(),
-                                        script = script,
-                                        ),
-                             self.org_room_id(),
-                             #location_id(),
-                             Field("cancel", "boolean",
-                                   default = False,
-                                   label = T("Cancel Log Entry"),
-                                   represent = s3_yes_no_represent,
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Cancel Log Entry"),
-                                                                   T("'Cancel' will indicate an asset log entry did not occur")))
-                                   ),
-                             Field("cond", "integer",  # condition is a MySQL reserved word
-                                   requires = IS_IN_SET(asset_condition_opts,
-                                                        zero = "%s..." % T("Please select")),
-                                   represent = lambda opt: \
+                           ),
+                     s3_datetime("datetime",
+                                 default="now",
+                                 empty=False,
+                                 represent="date",
+                                 ),
+                     s3_datetime("datetime_until",
+                                 label = T("Date Until"),
+                                 represent="date",
+                                 ),
+                     person_id(label = T("Assigned To")),
+                     Field("check_in_to_person", "boolean",
+                           #label = T("Mobile"),      # Relabel?
+                           label = T("Track with this Person?"),
+
+                           comment = DIV(_class="tooltip",
+                                         #_title="%s|%s" % (T("Mobile"),
+                                         _title="%s|%s" % (T("Track with this Person?"),
+                                                           T("If selected, then this Asset's Location will be updated whenever the Person's Location is updated."))),
+                           readable = False,
+                           writable = False),
+                     # The Organisation to whom the loan is made
+                     organisation_id(
+                            readable = False,
+                            writable = False,
+                            widget = None
+                            ),
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     super_link("site_id", "org_site",
+                                label = org_site_label,
+                                #filterby = "site_id",
+                                #filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                instance_types = auth.org_site_types,
+                                updateable = True,
+                                not_filterby = "obsolete",
+                                not_filter_opts = [True],
+                                #default = user.site_id if is_logged_in() else None,
+                                readable = True,
+                                writable = True,
+                                empty = False,
+                                represent = self.org_site_represent,
+                                #widget = S3SiteAutocompleteWidget(),
+                                script = script,
+                                ),
+                     self.org_room_id(),
+                     #location_id(),
+                     Field("cancel", "boolean",
+                           default = False,
+                           label = T("Cancel Log Entry"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Cancel Log Entry"),
+                                                           T("'Cancel' will indicate an asset log entry did not occur")))
+                           ),
+                     Field("cond", "integer",  # condition is a MySQL reserved word
+                           requires = IS_IN_SET(asset_condition_opts,
+                                                zero = "%s..." % T("Please select")),
+                           represent = lambda opt: \
                                        asset_condition_opts.get(opt, UNKNOWN_OPT),
-                                   label = T("Condition")),
-                             person_id("by_person_id",
-                                       label = T("Assigned By"),               # This can either be the Asset controller if signed-out from the store
-                                       default = auth.s3_logged_in_person(),   # or the previous owner if passed on directly (e.g. to successor in their post)
-                                       comment = self.pr_person_comment(child="by_person_id"),
-                                       ),
-                             s3_comments(),
-                             *s3_meta_fields())
+                           label = T("Condition")),
+                     person_id("by_person_id",
+                               label = T("Assigned By"),               # This can either be the Asset controller if signed-out from the store
+                               default = auth.s3_logged_in_person(),   # or the previous owner if passed on directly (e.g. to successor in their post)
+                               comment = self.pr_person_comment(child="by_person_id"),
+                               ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         ADD_ASSIGN = T("New Entry in Asset Log")

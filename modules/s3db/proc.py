@@ -79,42 +79,42 @@ class S3ProcurementModel(S3Model):
                              }
 
         tablename = "proc_plan"
-        table = define_table(tablename,
-                             self.super_link("site_id", "org_site",
-                                             #label = T("Inventory"),
-                                             label = T("Office"),
-                                             default = auth.user.site_id if auth.is_logged_in() else None,
-                                             readable = True,
-                                             writable = True,
-                                             empty = False,
-                                             # Comment these to use a Dropdown & not an Autocomplete
-                                             #widget = S3SiteAutocompleteWidget(),
-                                             #comment = DIV(_class="tooltip",
-                                             #              _title="%s|%s" % (T("Inventory"),
-                                             #                                T("Enter some characters to bring up a list of possible matches"))),
-                                             represent=self.org_site_represent),
-                              # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
-                              #project_id(),
-                              s3_date("order_date",
-                                      label = T("Order Date")
-                                      ),
-                              s3_date("eta",
-                                      label = T("Date Expected"),
-                                      ),
-                              # @ToDo: Do we want more than 1 supplier per Plan?
-                              # @ToDo: Filter to orgs of type 'supplier'
-                              self.org_organisation_id(label=T("Supplier")),
-                              Field("shipping", "integer",
-                                    requires = IS_NULL_OR(IS_IN_SET(proc_shipping_opts)),
-                                    represent = lambda opt: \
-                                        proc_shipping_opts.get(opt,
-                                                               messages.UNKNOWN_OPT),
-                                    label = T("Shipping Method"),
-                                    default = 0,
-                                    ),
-                              # @ToDo: Add estimated shipping costs
-                              s3_comments(),
-                              *s3_meta_fields())
+        define_table(tablename,
+                     self.super_link("site_id", "org_site",
+                                     #label = T("Inventory"),
+                                     label = T("Office"),
+                                     default = auth.user.site_id if auth.is_logged_in() else None,
+                                     readable = True,
+                                     writable = True,
+                                     empty = False,
+                                     # Comment these to use a Dropdown & not an Autocomplete
+                                     #widget = S3SiteAutocompleteWidget(),
+                                     #comment = DIV(_class="tooltip",
+                                     #              _title="%s|%s" % (T("Inventory"),
+                                     #                                T("Enter some characters to bring up a list of possible matches"))),
+                                     represent=self.org_site_represent),
+                     # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
+                     #project_id(),
+                     s3_date("order_date",
+                             label = T("Order Date")
+                             ),
+                     s3_date("eta",
+                             label = T("Date Expected"),
+                             ),
+                     # @ToDo: Do we want more than 1 supplier per Plan?
+                     # @ToDo: Filter to orgs of type 'supplier'
+                     self.org_organisation_id(label=T("Supplier")),
+                     Field("shipping", "integer",
+                           requires = IS_NULL_OR(IS_IN_SET(proc_shipping_opts)),
+                           represent = lambda opt: \
+                                       proc_shipping_opts.get(opt,
+                                                              messages.UNKNOWN_OPT),
+                           label = T("Shipping Method"),
+                           default = 0,
+                           ),
+                     # @ToDo: Add estimated shipping costs
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -139,7 +139,8 @@ class S3ProcurementModel(S3Model):
                   create_next = plan_item_url,
                   update_next = plan_item_url)
 
-        plan_id = S3ReusableField("plan_id", table, sortby="date",
+        plan_id = S3ReusableField("plan_id", "reference %s" % tablename,
+                                  sortby="date",
                                   requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "proc_plan.id",
                                                           self.proc_plan_represent,
@@ -158,30 +159,30 @@ class S3ProcurementModel(S3Model):
         # Procurement Plan Items
         #
         tablename = "proc_plan_item"
-        table = define_table(tablename,
-                             plan_id(),
-                             self.supply_item_entity_id,
-                             self.supply_item_id(),
-                             self.supply_item_pack_id(),
-                             Field("quantity", "double", notnull = True,
-                                   label = T("Quantity"),
-                                   ),
-                             # @ToDo: Move this into a Currency Widget
-                             #        for the pack_value field
-                             s3_currency(readable=False,
-                                         writable=False
-                                        ),
-                             Field("pack_value", "double",
-                                   readable=False,
-                                   writable=False,
-                                   label = T("Value per Pack")),
-                             #Field("pack_quantity",
-                             #      "double",
-                             #      compute = record_pack_quantity), # defined in supply
-                             s3_comments(),
-                             *s3_meta_fields())
-
-        #table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
+        define_table(tablename,
+                     plan_id(),
+                     self.supply_item_entity_id,
+                     self.supply_item_id(),
+                     self.supply_item_pack_id(),
+                     Field("quantity", "double", notnull = True,
+                           label = T("Quantity"),
+                           ),
+                     # @ToDo: Move this into a Currency Widget
+                     #        for the pack_value field
+                     s3_currency(readable=False,
+                                 writable=False
+                                ),
+                     Field("pack_value", "double",
+                           readable=False,
+                           writable=False,
+                           label = T("Value per Pack")),
+                     #Field("pack_quantity",
+                     #      "double",
+                     #      compute = record_pack_quantity), # defined in supply
+                     #Field.Method("pack_quantity",
+                     #             self.supply_item_pack_quantity(tablename=tablename)),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         crud_strings[tablename] = Storage(

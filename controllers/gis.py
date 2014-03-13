@@ -221,7 +221,7 @@ def location():
                action=s3_gis_location_parents)
     
     if "report" in request.args:
-        # @ToDo: Migrate to Field.Lazy
+        # @ToDo: Migrate to Field.Method
         class S3LocationVirtualFields:
             def population(self):
                 """

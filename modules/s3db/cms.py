@@ -85,33 +85,33 @@ class S3ContentModel(S3Model):
         #
 
         tablename = "cms_series"
-        table = define_table(tablename,
-                             Field("name",
-                                   length=255,
-                                   notnull=True, unique=True,
-                                   label=T("Name")),
-                             Field("avatar", "boolean",
-                                   default=False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Show author picture?")),
-                             Field("location", "boolean",
-                                   default=False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Show Location?")),
-                             Field("richtext", "boolean",
-                                   default=True,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Rich Text?")),
-                             Field("replies", "boolean",
-                                   default=False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Comments permitted?")),
-                             s3_comments(),
-                             # Multiple Roles (@ToDo: Implement the restriction)
-                             s3_roles_permitted(readable = False,
-                                                writable = False
-                                                ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           length=255,
+                           notnull=True, unique=True,
+                           label=T("Name")),
+                     Field("avatar", "boolean",
+                           default=False,
+                           represent = s3_yes_no_represent,
+                           label=T("Show author picture?")),
+                     Field("location", "boolean",
+                           default=False,
+                           represent = s3_yes_no_represent,
+                           label=T("Show Location?")),
+                     Field("richtext", "boolean",
+                           default=True,
+                           represent = s3_yes_no_represent,
+                           label=T("Rich Text?")),
+                     Field("replies", "boolean",
+                           default=False,
+                           represent = s3_yes_no_represent,
+                           label=T("Comments permitted?")),
+                     s3_comments(),
+                     # Multiple Roles (@ToDo: Implement the restriction)
+                     s3_roles_permitted(readable = False,
+                                        writable = False
+                                        ),
+                     *s3_meta_fields())
 
         # CRUD Strings
         ADD_SERIES = T("Add Series")
@@ -132,7 +132,7 @@ class S3ContentModel(S3Model):
         # Reusable field
         translate = settings.get_L10n_translate_cms_series()
         represent = S3Represent(lookup=tablename, translate=translate)
-        series_id = S3ReusableField("series_id", table,
+        series_id = S3ReusableField("series_id", "reference %s" % tablename,
                                     label = T("Type"), # Even if this isn't always the use-case
                                     ondelete = "CASCADE",
                                     readable = False,
@@ -161,51 +161,51 @@ class S3ContentModel(S3Model):
         #
 
         tablename = "cms_post"
-        table = define_table(tablename,
-                             self.super_link("doc_id", "doc_entity"),
-                             series_id(),
-                             Field("name", #notnull=True,
-                                   comment=T("This isn't visible to the published site, but is used to allow menu items to point to the page"),
-                                   label=T("Name")),
-                             Field("title",
-                                   comment=T("The title of the page, as seen in the browser (optional)"),
-                                   label=T("Title")),
-                             Field("body", "text", notnull=True,
-                                   widget = s3_richtext_widget,
-                                   label=T("Body")),
-                             # @ToDo: Move this to link table?
-                             # - although this makes widget hard!
-                             self.gis_location_id(),
-                             # @ToDo: Move this to link table?
-                             # - although this makes widget hard!
-                             self.pr_person_id(label=T("Contact"),
-                                               # Enable only in certain conditions
-                                               readable = False,
-                                               writable = False,
-                                               ),
-                             Field("avatar", "boolean",
-                                   default=False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Show author picture?")),
-                             Field("replies", "boolean",
-                                   default=False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Comments permitted?")),
-                             s3_datetime(default = "now"),
-                             # @ToDo: Also have a datetime for 'Expires On'
-                             Field("expired", "boolean",
-                                   default=False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Expired?")),
-                             #Field("published", "boolean",
-                             #      default=True,
-                             #      label=T("Published")),
-                             s3_comments(),
-                             # Multiple Roles (@ToDo: Implement the restriction)
-                             s3_roles_permitted(readable = False,
-                                                writable = False
-                                                ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
+                     series_id(),
+                     Field("name", #notnull=True,
+                           comment=T("This isn't visible to the published site, but is used to allow menu items to point to the page"),
+                           label=T("Name")),
+                     Field("title",
+                           comment=T("The title of the page, as seen in the browser (optional)"),
+                           label=T("Title")),
+                     Field("body", "text", notnull=True,
+                           widget = s3_richtext_widget,
+                           label=T("Body")),
+                     # @ToDo: Move this to link table?
+                     # - although this makes widget hard!
+                     self.gis_location_id(),
+                     # @ToDo: Move this to link table?
+                     # - although this makes widget hard!
+                     self.pr_person_id(label=T("Contact"),
+                                       # Enable only in certain conditions
+                                       readable = False,
+                                       writable = False,
+                                       ),
+                     Field("avatar", "boolean",
+                           default=False,
+                           represent = s3_yes_no_represent,
+                           label=T("Show author picture?")),
+                     Field("replies", "boolean",
+                           default=False,
+                           represent = s3_yes_no_represent,
+                           label=T("Comments permitted?")),
+                     s3_datetime(default = "now"),
+                     # @ToDo: Also have a datetime for 'Expires On'
+                     Field("expired", "boolean",
+                           default=False,
+                           represent = s3_yes_no_represent,
+                           label=T("Expired?")),
+                     #Field("published", "boolean",
+                     #      default=True,
+                     #      label=T("Published")),
+                     s3_comments(),
+                     # Multiple Roles (@ToDo: Implement the restriction)
+                     s3_roles_permitted(readable = False,
+                                        writable = False
+                                        ),
+                     *s3_meta_fields())
 
         # CRUD Strings
         ADD_POST = T("Add Post")
@@ -225,7 +225,7 @@ class S3ContentModel(S3Model):
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
-        post_id = S3ReusableField("post_id", table,
+        post_id = S3ReusableField("post_id", "reference %s" % tablename,
                                   sortby = "name",
                                   label = T("Post"),
                                   ondelete = "CASCADE",
@@ -290,9 +290,9 @@ class S3ContentModel(S3Model):
                                     ],
                   filter_widgets = filter_widgets,
                   list_layout = cms_post_list_layout,
-                  list_orderby = ~table.created_on,
+                  list_orderby = "cms_post.created_on desc",
                   onaccept = self.cms_post_onaccept,
-                  orderby = ~table.created_on,
+                  orderby = "cms_post.created_on desc",
                   summary = [{"name": "table",
                               "label": "Table",
                               "widgets": [{"method": "datatable"}]
@@ -364,17 +364,17 @@ class S3ContentModel(S3Model):
         # Modules/Resources <> Posts link table
         #
         tablename = "cms_post_module"
-        table = define_table(tablename,
-                             post_id(empty=False),
-                             Field("module",
-                                   comment=T("If you specify a module then this will be used as the text in that module's index page"),
-                                   label=T("Module")
-                                   ),
-                             Field("resource",
-                                   comment=T("If you specify a resource then this will be used as the text in that resource's summary page"),
-                                   label=T("Resource")
-                                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     post_id(empty=False),
+                     Field("module",
+                           comment=T("If you specify a module then this will be used as the text in that module's index page"),
+                           label=T("Module")
+                           ),
+                     Field("resource",
+                           comment=T("If you specify a resource then this will be used as the text in that resource's summary page"),
+                           label=T("Resource")
+                           ),
+                     *s3_meta_fields())
 
         # CRUD Strings
         ADD_POST = T("Add Post")
@@ -396,26 +396,26 @@ class S3ContentModel(S3Model):
         # - used to handle record history
         #
         #tablename = "cms_post_record"
-        #table = define_table(tablename,
-        #                     post_id(empty=False),
-        #                     Field("tablename"),
-        #                     Field("record", "integer"),
-        #                     Field("url"),
-        #                     *s3_meta_fields())
+        #define_table(tablename,
+        #             post_id(empty=False),
+        #             Field("tablename"),
+        #             Field("record", "integer"),
+        #             Field("url"),
+        #            *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Tags
         #
         tablename = "cms_tag"
-        table = define_table(tablename,
-                             Field("name",
-                                   label=T("Tag")),
-                             s3_comments(),
-                             # Multiple Roles (@ToDo: Implement the restriction)
-                             #s3_roles_permitted(readable = False,
-                             #                   writable = False
-                             #                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label=T("Tag")),
+                     s3_comments(),
+                     # Multiple Roles (@ToDo: Implement the restriction)
+                     #s3_roles_permitted(readable = False,
+                     #                   writable = False
+                     #                   ),
+                     *s3_meta_fields())
 
         # CRUD Strings
         ADD_TAG = T("Add Tag")
@@ -437,10 +437,10 @@ class S3ContentModel(S3Model):
         # Tags <> Posts link table
         #
         tablename = "cms_tag_post"
-        table = define_table(tablename,
-                             post_id(empty=False),
-                             Field("tag_id", "reference cms_tag"),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     post_id(empty=False),
+                     Field("tag_id", "reference cms_tag"),
+                     *s3_meta_fields())
 
         # CRUD Strings
         ADD_TAG = T("Tag Post")
@@ -470,15 +470,15 @@ class S3ContentModel(S3Model):
         #  * hook a new reply into the correct location in the hierarchy
         #
         tablename = "cms_comment"
-        table = define_table(tablename,
-                             Field("parent", "reference cms_comment",
-                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "cms_comment.id")),
-                                   readable=False),
-                             post_id(empty=False),
-                             Field("body", "text", notnull=True,
-                                   label = T("Comment")),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("parent", "reference cms_comment",
+                           requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "cms_comment.id")),
+                           readable=False),
+                     post_id(empty=False),
+                     Field("body", "text", notnull=True,
+                           label = T("Comment")),
+                     *s3_meta_fields())
 
         # Resource Configuration
         configure(tablename,
@@ -766,10 +766,10 @@ class S3ContentMapModel(S3Model):
         # Layers <> Posts link table
         #
         tablename = "cms_post_layer"
-        table = self.define_table(tablename,
-                                  self.cms_post_id(empty=False),
-                                  self.super_link("layer_id", "gis_layer_entity"),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.cms_post_id(empty=False),
+                          self.super_link("layer_id", "gis_layer_entity"),
+                          *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -791,10 +791,10 @@ class S3ContentOrgModel(S3Model):
         # Organisations <> Posts link table
         #
         tablename = "cms_post_organisation"
-        table = self.define_table(tablename,
-                                  self.cms_post_id(empty=False),
-                                  self.org_organisation_id(empty=False),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.cms_post_id(empty=False),
+                          self.org_organisation_id(empty=False),
+                          *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -817,10 +817,10 @@ class S3ContentOrgGroupModel(S3Model):
         # Organisation Groups <> Posts link table
         #
         tablename = "cms_post_organisation_group"
-        table = self.define_table(tablename,
-                                  self.cms_post_id(empty=False),
-                                  self.org_group_id(empty=False),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.cms_post_id(empty=False),
+                          self.org_group_id(empty=False),
+                          *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

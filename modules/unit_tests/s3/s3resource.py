@@ -1602,10 +1602,11 @@ class ResourceAxisFilterTests(unittest.TestCase):
 
         tablename = "axis_filter"
         db = current.db
-        table = db.define_table(tablename,
-                                Field("facility_type_id",
-                                      "list:reference org_facility_type"),
-                                *s3_meta_fields())
+        db.define_table(tablename,
+                        Field("facility_type_id",
+                              "list:reference org_facility_type"),
+                        *s3_meta_fields())
+        table = db[tablename]
 
         try:
 
@@ -2864,10 +2865,10 @@ class MergeReferenceListsTest(unittest.TestCase):
         
         tablename = self.tablename = "merge_list_reference"
         db = current.db
-        table = db.define_table(tablename,
-                                Field("facility_type_id",
-                                      "list:reference org_facility_type"),
-                                *s3_meta_fields())
+        db.define_table(tablename,
+                        Field("facility_type_id",
+                              "list:reference org_facility_type"),
+                        *s3_meta_fields())
                                 
         xmlstr = """
 <s3xml>
@@ -3017,7 +3018,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
         s3db = current.s3db
         table = s3db.pr_person
         if not hasattr(table, "name"):
-            table.name = Field.Lazy(self.lazy_name)
+            table.name = Field.Method("name", self.lazy_name)
             s3db.configure("pr_person",
                            extra_fields=["first_name", "last_name"])
         self.record_id = None
@@ -3787,10 +3788,10 @@ class ResourceDeleteTests(unittest.TestCase):
                           {"del_master": "DEL Master"})
 
         # Define master table
-        master = s3db.define_table("del_master",
-                                   s3db.super_link("del_super_id",
-                                                   "del_super"),
-                                   *s3_meta_fields())
+        s3db.define_table("del_master",
+                          s3db.super_link("del_super_id",
+                                          "del_super"),
+                          *s3_meta_fields())
 
         current.db.commit()
 
@@ -3906,11 +3907,12 @@ class ResourceDeleteTests(unittest.TestCase):
         master_id = self.master_id
 
         # Define component table
-        component = s3db.define_table("del_component",
-                                      Field("del_master_id",
-                                            s3db.del_master,
-                                            ondelete="CASCADE"),
-                                      *s3_meta_fields())
+        s3db.define_table("del_component",
+                          Field("del_master_id",
+                                s3db.del_master,
+                                ondelete="CASCADE"),
+                          *s3_meta_fields())
+        component = s3db["del_component"]
         s3db.add_components("del_master",
                             del_component="del_master_id")
 
@@ -3959,11 +3961,12 @@ class ResourceDeleteTests(unittest.TestCase):
         master_id = self.master_id
 
         # Define component table
-        component = s3db.define_table("del_component",
-                                      Field("del_master_id",
-                                            s3db.del_master,
-                                            ondelete="SET NULL"),
-                                      *s3_meta_fields())
+        s3db.define_table("del_component",
+                          Field("del_master_id",
+                                s3db.del_master,
+                                ondelete="SET NULL"),
+                          *s3_meta_fields())
+        component = s3db["del_component"]
         s3db.add_components("del_master",
                             del_component="del_master_id")
 
@@ -4013,11 +4016,12 @@ class ResourceDeleteTests(unittest.TestCase):
         master_id = self.master_id
 
         # Define component table
-        component = s3db.define_table("del_component",
-                                      Field("del_master_id",
-                                            s3db.del_master,
-                                            ondelete="RESTRICT"),
-                                      *s3_meta_fields())
+        s3db.define_table("del_component",
+                          Field("del_master_id",
+                                s3db.del_master,
+                                ondelete="RESTRICT"),
+                          *s3_meta_fields())
+        component = s3db["del_component"]
         s3db.add_components("del_master",
                             del_component="del_master_id")
 
@@ -4102,11 +4106,12 @@ class ResourceDeleteTests(unittest.TestCase):
         master_id = self.master_id
 
         # Define component table
-        component = s3db.define_table("del_component",
-                                      s3db.super_link("del_super_id",
-                                                      "del_super",
-                                                      ondelete="CASCADE"),
-                                      *s3_meta_fields())
+        s3db.define_table("del_component",
+                          s3db.super_link("del_super_id",
+                                          "del_super",
+                                          ondelete="CASCADE"),
+                          *s3_meta_fields())
+        component = s3db["del_component"]
         s3db.add_components("del_super",
                             del_component="del_super_id")
 
@@ -4165,11 +4170,12 @@ class ResourceDeleteTests(unittest.TestCase):
         master_id = self.master_id
 
         # Define component table
-        component = s3db.define_table("del_component",
-                                      s3db.super_link("del_super_id",
-                                                      "del_super",
-                                                      ondelete="SET NULL"),
-                                      *s3_meta_fields())
+        s3db.define_table("del_component",
+                          s3db.super_link("del_super_id",
+                                          "del_super",
+                                          ondelete="SET NULL"),
+                          *s3_meta_fields())
+        component = s3db["del_component"]
         s3db.add_components("del_super",
                             del_component="del_super_id")
 
@@ -4228,11 +4234,12 @@ class ResourceDeleteTests(unittest.TestCase):
         master_id = self.master_id
 
         # Define component table
-        component = s3db.define_table("del_component",
-                                      s3db.super_link("del_super_id",
-                                                      "del_super",
-                                                      ondelete="RESTRICT"),
-                                      *s3_meta_fields())
+        s3db.define_table("del_component",
+                          s3db.super_link("del_super_id",
+                                          "del_super",
+                                          ondelete="RESTRICT"),
+                          *s3_meta_fields())
+        component = s3db["del_component"]
         s3db.add_components("del_super",
                             del_component="del_super_id")
 

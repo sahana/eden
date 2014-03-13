@@ -463,7 +463,7 @@ def customize_pr_person(**attr):
             # S3SQLInlineComponent uses the link table, so cannot access org_group_id
             # => use a readonly virtual field instead
             from gluon import Field
-            s3db.pr_person_user.org_group_id = Field.Lazy(user_coalition)
+            s3db.pr_person_user.org_group_id = Field.Method("org_group_id", user_coalition)
 
             s3_sql_custom_fields = [
                     "first_name",
@@ -935,7 +935,7 @@ def customize_org_organisation(**attr):
                 # We can't include components in an Inline Component
                 # => use a readonly virtual field instead
                 from gluon import Field
-                ftable.facility_types = Field.Lazy(org_facility_types)
+                ftable.facility_types = Field.Method("facility_types", org_facility_types)
 
                 hrtable = s3db.hrm_human_resource
                 hrtable.person_id.widget = None

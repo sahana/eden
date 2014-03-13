@@ -2247,7 +2247,7 @@ def customize_cms_post(**attr):
             #table.created_on.represent = datetime_represent
 
         elif r.representation == "geojson":
-            r.table.age = Field.Lazy(cms_post_age)
+            r.table.age = Field.Method("age", cms_post_age)
 
         return True
     s3.prep = custom_prep
