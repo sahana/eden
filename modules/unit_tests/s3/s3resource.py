@@ -432,19 +432,24 @@ class ResourceFilterJoinTests(unittest.TestCase):
         project_project = resource.table
         project_task_project = s3db.project_task_project
         project_task = s3db.project_task
+        org_organisation = s3db.org_organisation
         
-        expected_l = project_task_project.on(
+        expected1 = org_organisation.on(
+                        project_project.organisation_id == org_organisation.id)
+
+        expected2 = project_task_project.on(
                         (project_task_project.project_id == project_project.id) &
                         (project_task_project.deleted != True))
 
-        expected_r = project_task.on(
-                        project_task_project.task_id == project_task.id)
-
+        expected3 = project_task.on(project_task_project.task_id == project_task.id)
+        
         joins = resource.rfilter.get_left_joins()
         self.assertTrue(isinstance(joins, list))
+        self.assertEqual(len(joins), 3)
 
-        self.assertEqual(joins[0], str(expected_l))
-        self.assertEqual(joins[1], str(expected_r))
+        self.assertEqual(str(joins[0]), str(expected1))
+        self.assertEqual(str(joins[1]), str(expected2))
+        self.assertEqual(str(joins[2]), str(expected3))
 
     # -------------------------------------------------------------------------
     def tearDown(self):
