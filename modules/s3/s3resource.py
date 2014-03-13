@@ -6619,6 +6619,7 @@ class S3ResourceFilter(object):
                 for tn in parent_left:
                     if tn not in left and tn != tablename:
                         left[tn] = parent_left[tn]
+                left[parent.tablename] = [parent.table.on(resource.get_join())]
 
         if as_list:
             return [j for tablename in left for j in left[tablename]]
