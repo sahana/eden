@@ -363,18 +363,14 @@ def s3_get_default_filter(selector, operator, tablename=None):
             value = filter_defaults.get(operator)
         else:
             value = filter_defaults
-        if isinstance(value, (list, type(None))):
-            return value
-        else:
-            return [value]
+        return value if isinstance(value, (list, type(None))) \
+                     else [value]
     elif isinstance(filter_defaults, dict):
         values = {}
         for op in operator:
             value = filter_defaults.get(op)
-            if isinstance(value, (list, type(None))):
-                values[op] = value
-            else:
-                values[op] = [value]
+            values[op] = value if isinstance(value, (list, type(None))) \
+                               else [value]
         return values
     else:
         return None
