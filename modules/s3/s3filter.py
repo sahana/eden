@@ -56,7 +56,7 @@ from s3rest import S3Method
 from s3resource import S3FieldSelector, S3ResourceField, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, s3_grouped_checkboxes_widget, S3SelectChosenWidget
+from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, S3SelectChosenWidget
 
 # =============================================================================
 class S3FilterWidget(object):
@@ -758,15 +758,19 @@ class S3LocationFilter(S3FilterWidget):
 
         else:
             # Grouped Checkboxes
-            if "s3-checkboxes-widget" not in _class:
-                attr["_class"] = "%s s3-checkboxes-widget" % _class
+            # @ToDo: somehow working, but ugly, not usable (deprecated?)
+            if "groupedopts-filter-widget" not in _class:
+                attr["_class"] = "%s groupedopts-filter-widget" % _class
             attr["cols"] = opts.get("cols", 3)
 
             # Add one widget per level
             for level in levels:
+                options = levels[level]["options"]
+                groupedopts = S3GroupedOptionsWidget(cols = opts["cols"],
+                                                     size = opts["size"] or 12,
+                                                     )
                 # Dummy field
                 name = "%s-%s" % (base_name, level)
-                options = levels[level]["options"]
                 dummy_field = Storage(name=name,
                                       type=ftype,
                                       requires=IS_IN_SET(options,
@@ -774,11 +778,10 @@ class S3LocationFilter(S3FilterWidget):
                 # Unique ID/name
                 attr["_id"] = "%s-%s" % (base_id, level)
                 attr["_name"] = name
+                
                 # Find relevant values to pre-populate
                 _values = values.get("%s$%s__%s" % (fname, level, operator))
-                w_append(s3_grouped_checkboxes_widget(dummy_field,
-                                                      _values,
-                                                      **attr))
+                w_append(groupedopts(dummy_field, _values, **attr))
 
         # Restore id and name for the data_element
         attr["_id"] = base_id
