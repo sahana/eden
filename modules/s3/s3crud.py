@@ -479,11 +479,12 @@ class S3CRUD(S3Method):
                                         icon="icon-plus",
                                         _id="show-add-btn")
                     output = DIV(add_btn,
-                                    DIV(form,
-                                        _id="list-add",
-                                        _class="form-container",
-                                        )
-                                    )
+                                 DIV(form,
+                                     _id="list-add",
+                                     _class="form-container",
+                                     ),
+                                 _class="list-btn-add"
+                                 )
                     if r.http == "POST":
                         script = '''$('#list-add').show();$('#show-add-btn').hide()'''
                     else:
