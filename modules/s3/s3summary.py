@@ -91,6 +91,7 @@ class S3Summary(S3Method):
             active_tab = 0
         active_map = None
 
+        show_filter_form = False
         filter_widgets = get_config("filter_widgets")
         if filter_widgets and not self.hide_filter:
             # Apply filter defaults (before rendering the data!)

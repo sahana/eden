@@ -987,7 +987,8 @@ class S3CRUD(S3Method):
 
             hide_filter = self.hide_filter
             filter_widgets = get_config("filter_widgets", None)
-            
+
+            show_filter_form = False
             if filter_widgets and not hide_filter and \
                representation not in ("aadata", "dl"):
                 # Apply filter defaults (before rendering the data!)

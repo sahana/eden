@@ -84,6 +84,7 @@ class S3Report(S3Method):
         resource = self.resource
         get_config = resource.get_config
 
+        show_filter_form = False
         if r.representation in ("html", "iframe"):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not self.hide_filter:
