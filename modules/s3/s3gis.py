@@ -8147,6 +8147,8 @@ class S3Map(S3Method):
 
                 request = self.request
                 from s3filter import S3FilterForm
+                # Apply filter defaults (before rendering the data!)
+                S3FilterForm.apply_filter_defaults(r, resource)
                 filter_formstyle = get_config("filter_formstyle", None)
                 submit = resource.get_config("map_submit", True)
                 filter_form = S3FilterForm(filter_widgets,

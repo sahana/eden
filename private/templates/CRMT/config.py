@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import s3_avatar_represent
+from s3.s3utils import s3_avatar_represent, s3_set_default_filter
 
 T = current.T
 settings = current.deployment_settings
@@ -561,29 +561,34 @@ def customise_pr_person_controller(**attr):
 settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
+def default_coalition_filter(selector, tablename=None):
+    """
+        Default filter for coalitions (callback)
+    """
+
+    auth = current.auth
+    org_group_id = auth.is_logged_in() and auth.user.org_group_id
+    if org_group_id:
+        return org_group_id
+    else:
+        # Filter to all Coalitions
+        gtable = s3db.org_group
+        rows = current.db(gtable.deleted == False).select(gtable.id)
+        return [row.id for row in rows]
+
+# -----------------------------------------------------------------------------
 # Activities
 #
 def customise_project_activity_controller(**attr):
 
     s3db = current.s3db
     request = current.request
+
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("activity_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["activity_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["activity_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("activity_group.group_id",
+                              default_coalition_filter,
+                              tablename = "project_activity")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1159,22 +1164,10 @@ def customise_org_facility_controller(**attr):
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("site_org_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["site_org_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["site_org_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("site_org_group.group_id",
+                              default_coalition_filter,
+                              tablename = "org_facility")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1388,22 +1381,10 @@ def customise_stats_people_controller(**attr):
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("people_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["people_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["people_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("people_group.group_id",
+                              default_coalition_filter,
+                              tablename = "stats_people")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1601,22 +1582,10 @@ def customise_vulnerability_evac_route_controller(**attr):
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("evac_route_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["evac_route_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["evac_route_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("evac_route_group.group_id",
+                              default_coalition_filter,
+                              tablename = "vulnerability_evac_route")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1765,22 +1734,10 @@ def customise_vulnerability_risk_controller(**attr):
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("risk_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["risk_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["risk_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("risk_group.group_id",
+                              default_coalition_filter,
+                              tablename = "vulnerability_risk")
 
     # Custom PreP
     s3 = current.response.s3

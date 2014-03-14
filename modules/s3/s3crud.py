@@ -988,6 +988,13 @@ class S3CRUD(S3Method):
             hide_filter = self.hide_filter
             filter_widgets = get_config("filter_widgets", None)
             
+            if filter_widgets and not hide_filter and \
+               representation not in ("aadata", "dl"):
+                # Apply filter defaults (before rendering the data!)
+                from s3filter import S3FilterForm
+                show_filter_form = True
+                S3FilterForm.apply_filter_defaults(r, resource)
+            
             # Data
             list_type = attr.get("list_type", "datatable")
             if list_type == "datalist":
@@ -1022,7 +1029,7 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # Filter-form
-            if filter_widgets and not hide_filter:
+            if show_filter_form:
 
                 # Where to retrieve filtered data from:
                 filter_submit_url = attr.get("filter_submit_url")
@@ -1036,7 +1043,6 @@ class S3CRUD(S3Method):
                                                  vars={},
                                                  representation="options"))
 
-                from s3filter import S3FilterForm
                 filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)

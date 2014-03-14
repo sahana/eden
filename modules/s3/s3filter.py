@@ -193,6 +193,7 @@ class S3FilterWidget(object):
         self.opts = options
 
         self.selector = None
+        self.values = Storage()
 
     # -------------------------------------------------------------------------
     def __call__(self, resource, get_vars=None, alias=None):
@@ -215,9 +216,15 @@ class S3FilterWidget(object):
         if type(variable) is list:
             values = Storage()
             for k in variable:
-                values[k] = self._values(get_vars, k)
+                if k in self.values:
+                    values[k] = self.values[k]
+                else:
+                    values[k] = self._values(get_vars, k)
         else:
-            values = self._values(get_vars, variable)
+            if variable in self.values:
+                values = self.values[variable]
+            else:
+                values = self._values(get_vars, variable)
 
         # Construct and populate the widget
         widget = self.widget(resource, values)
@@ -2021,6 +2028,98 @@ class S3FilterForm(object):
         """
 
         raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_filter_defaults(request, resource):
+        """
+            Add default filters to resource, to be called a multi-record
+            view with a filter form is rendered the first time and before
+            the view elements get processed
+
+            @param request: the request
+            @param resource: the resource
+        """
+
+        s3 = current.response.s3
+
+        get_vars = request.get_vars
+        tablename = resource.tablename
+
+        # Do we have filter defaults for this resource?
+        filter_defaults = s3
+        for level in ("filter_defaults", tablename):
+            if level not in filter_defaults:
+                return None
+            filter_defaults = filter_defaults[level]
+
+        # Which filter widgets do we need to apply defaults for?
+        filter_widgets = resource.get_config("filter_widgets")
+        for filter_widget in filter_widgets:
+            # Do not apply defaults of hidden widgets because they are
+            # not visible for the user:
+            if filter_widget.opts.hidden:
+                continue
+
+            defaults = {}
+            variable = filter_widget.variable(resource, get_vars)
+
+            # Do we have a corresponding value in get_vars?
+            if type(variable) is list:
+                for k in variable:
+                    values = filter_widget._values(get_vars, k)
+                    if values:
+                        filter_widget.values[k] = values
+                    else:
+                        defaults[k] = None
+            else:
+                values = filter_widget._values(get_vars, variable)
+                if values:
+                    filter_widget.values[variable] = values
+                else:
+                    defaults[variable] = None
+
+            default_filters = {}
+            for variable in defaults:
+                if "__" in variable:
+                    selector, operator = variable.split("__", 1)
+                else:
+                    selector, operator = variable, None
+                if selector not in filter_defaults:
+                    continue
+                applicable_defaults = filter_defaults[selector]
+                if callable(applicable_defaults):
+                    applicable_defaults = applicable_defaults(selector,
+                                                              tablename=tablename)
+                if isinstance(applicable_defaults, dict):
+                    if operator in applicable_defaults:
+                        default = applicable_defaults[operator]
+                elif operator in (None, "belongs", "eq"):
+                    default = applicable_defaults
+                else:
+                    continue
+                if not isinstance(default, (list, type(None))):
+                    default = [default]
+                filter_widget.values[variable] = default
+                default_filters[variable] = ",".join(s3_unicode(v) for v in default)
+
+            # @todo: make sure the applied default options are available in
+            #        the filter widget - otherwise the user can not deselect
+            #        them! (critical) Maybe enforce this by adding the default
+            #        values to the available options in S3OptionsFilter and
+            #        S3LocationFilter?
+
+            # Store in widget
+            filter_widget.values.update(default_filters)
+
+            # Apply to resource
+            queries = S3URLQuery.parse(resource, default_filters)
+            add_filter = resource.add_filter
+            for alias in queries:
+                for q in queries[alias]:
+                    add_filter(q)
+                    
+        return
 
 # =============================================================================
 class S3Filter(S3Method):
