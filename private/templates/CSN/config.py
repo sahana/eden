@@ -155,10 +155,7 @@ def location_represent(id, row=None):
     return represent
 
 # -----------------------------------------------------------------------------
-def customize_cms_post(**attr):
-    """
-        Customize cms_post controller
-    """
+def customise_cms_post_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -394,7 +391,7 @@ def customize_cms_post(**attr):
 
     return attr
 
-settings.ui.customize_cms_post = customize_cms_post
+settings.customise_cms_post_controller = customise_cms_post_controller
 
 # -----------------------------------------------------------------------------
 def org_office_marker_fn(record):
@@ -434,9 +431,9 @@ def org_office_marker_fn(record):
     return marker
 
 # -----------------------------------------------------------------------------
-def customize_org_office(**attr):
+def customise_org_office_controller(**attr):
     """
-        Customize org_office controller
+        Customise org_office controller
         - Marker fn
     """
 
@@ -446,7 +443,8 @@ def customize_org_office(**attr):
 
     return attr
 
-settings.ui.customize_org_office = customize_org_office
+settings.customise_org_office_controller = customise_org_office_controller
+
 # =============================================================================
 # Template Modules
 # Comment/uncomment modules here to disable/enable them

@@ -199,14 +199,13 @@ for item in current.response.menu:
 # =============================================================================
 # Module Settings
 
-# -----------------------------------------------------------------------------
 # =============================================================================
 # Custom Controllers
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
         - List Fields
         - Form
         - Filter
@@ -305,13 +304,10 @@ def customize_org_organisation(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_resource(**attr):
-    """
-        Customize org_resource controller
-    """
+def customise_org_resource_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -327,7 +323,7 @@ def customize_org_resource(**attr):
                 return False
 
         if r.interactive or r.representation == "aadata":
-            s3db.org_customize_org_resource_fields(r.method)
+            s3db.org_customise_org_resource_fields(r.method)
     
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False
@@ -394,13 +390,10 @@ def customize_org_resource(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_resource = customize_org_resource
+settings.customise_org_resource_controller = customise_org_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_cms_post(**attr):
-    """
-        Customize cms_post controller
-    """
+def customise_cms_post_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -459,13 +452,10 @@ def customize_cms_post(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_cms_post = customize_cms_post
+settings.customise_cms_post_controller = customise_cms_post_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_task(**attr):
-    """
-        Customize project_task controller
-    """
+def customise_project_task_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -543,13 +533,10 @@ def customize_project_task(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_project_task = customize_project_task
+settings.customise_project_task_controller = customise_project_task_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_activity(**attr):
-    """
-        Customize project_activity controller
-    """
+def customise_project_activity_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -676,13 +663,10 @@ def customize_project_activity(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_project_activity = customize_project_activity
+settings.customise_project_activity_controller = customise_project_activity_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_project(**attr):
-    """
-        Customize project_project controller
-    """
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -776,13 +760,10 @@ def customize_project_project(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_office(**attr):
-    """
-        Customize org_office controller
-    """
+def customise_org_office_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -832,13 +813,10 @@ def customize_org_office(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_office = customize_org_office
+settings.customise_org_office_controller = customise_org_office_controller
 
 # -----------------------------------------------------------------------------
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -1070,7 +1048,7 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # =============================================================================
 # Modules

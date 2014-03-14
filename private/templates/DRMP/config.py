@@ -1799,9 +1799,9 @@ def render_resources(list_id, item_id, resource, rfields, record):
     return item
 
 # -----------------------------------------------------------------------------
-def customize_cms_post_fields():
+def customise_cms_post_fields():
     """
-        Customize cms_post fields for it's own controller & for Profile pages
+        Customise cms_post fields for it's own controller & for Profile pages
     """
 
     s3db = current.s3db
@@ -1845,7 +1845,7 @@ def customize_cms_post_fields():
 # -----------------------------------------------------------------------------
 def cms_post_popup(r):
     """
-        Customized Map popup for cms_post resource
+        Customised Map popup for cms_post resource
         - style like the cards
         - currently unused
     """
@@ -2116,10 +2116,7 @@ def cms_post_age(row):
         return 3
 
 # -----------------------------------------------------------------------------
-def customize_cms_post(**attr):
-    """
-        Customize cms_post controller
-    """
+def customise_cms_post_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -2139,7 +2136,7 @@ def customize_cms_post(**attr):
                 return False
 
         if r.interactive:
-            table = customize_cms_post_fields()
+            table = customise_cms_post_fields()
 
             get_vars = current.request.get_vars
 
@@ -2328,12 +2325,12 @@ def customize_cms_post(**attr):
 
     return attr
 
-settings.ui.customize_cms_post = customize_cms_post
+settings.customise_cms_post_controller = customise_cms_post_controller
 
 # -----------------------------------------------------------------------------
-def customize_event_event(**attr):
+def customise_event_event_controller(**attr):
     """
-        Customize event_event controller
+        Customise event_event controller
         - Profile Page
     """
 
@@ -2375,7 +2372,7 @@ def customize_event_event(**attr):
 
             elif r.method == "profile":
                 # Customise the cms_post table as that is used for the widgets
-                customize_cms_post_fields()
+                customise_cms_post_fields()
 
                 gtable = db.gis_location
                 ltable = db.event_event_location
@@ -2585,12 +2582,12 @@ def customize_event_event(**attr):
 
     return attr
 
-settings.ui.customize_event_event = customize_event_event
+settings.customise_event_event_controller = customise_event_event_controller
 
 # -----------------------------------------------------------------------------
-def customize_gis_location(**attr):
+def customise_gis_location_controller(**attr):
     """
-        Customize gis_location controller
+        Customise gis_location controller
         - Profile Page
     """
 
@@ -2630,9 +2627,9 @@ def customize_gis_location(**attr):
             elif r.method == "profile":
         
                 # Customise tables used by widgets
-                customize_cms_post_fields()
-                s3db.org_customize_org_resource_fields("profile")
-                customize_project_project_fields()
+                customise_cms_post_fields()
+                s3db.org_customise_org_resource_fields("profile")
+                customise_project_project_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -2771,12 +2768,12 @@ def customize_gis_location(**attr):
 
     return attr
 
-settings.ui.customize_gis_location = customize_gis_location
+settings.customise_gis_location_controller = customise_gis_location_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource_fields():
+def customise_hrm_human_resource_fields():
     """
-        Customize hrm_human_resource for Profile widgets and 'more' popups
+        Customise hrm_human_resource for Profile widgets and 'more' popups
     """
 
     s3db = current.s3db
@@ -2802,9 +2799,9 @@ def customize_hrm_human_resource_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource(**attr):
+def customise_hrm_human_resource_controller(**attr):
     """
-        Customize hrm_human_resource controller
+        Customise hrm_human_resource controller
         - used for 'more' popups
     """
 
@@ -2820,7 +2817,7 @@ def customize_hrm_human_resource(**attr):
                 return False
 
         if r.method == "datalist":
-            customize_hrm_human_resource_fields()
+            customise_hrm_human_resource_fields()
             current.s3db.configure("hrm_human_resource",
                                    # Don't include a Create form in 'More' popups
                                    listadd = False,
@@ -2832,13 +2829,10 @@ def customize_hrm_human_resource(**attr):
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_job_title(**attr):
-    """
-        Customize hrm_job_title controller
-    """
+def customise_hrm_job_title_controller(**attr):
 
     s3 = current.response.s3
 
@@ -2915,12 +2909,12 @@ def customize_hrm_job_title(**attr):
 
     return attr
 
-settings.ui.customize_hrm_job_title = customize_hrm_job_title
+settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_office_fields():
+def customise_org_office_fields():
     """
-        Customize org_office for Profile widgets and 'more' popups
+        Customise org_office for Profile widgets and 'more' popups
     """
 
     s3db = current.s3db
@@ -2944,10 +2938,7 @@ def customize_org_office_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_org_office(**attr):
-    """
-        Customize org_office controller
-    """
+def customise_org_office_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -2963,7 +2954,7 @@ def customize_org_office(**attr):
                 return False
 
         if r.method == "datalist":
-            customize_org_office_fields()
+            customise_org_office_fields()
             s3db.configure("org_office",
                            # Don't include a Create form in 'More' popups
                            listadd = False,
@@ -3074,12 +3065,12 @@ def customize_org_office(**attr):
 
     return attr
 
-settings.ui.customize_org_office = customize_org_office
+settings.customise_org_office_controller = customise_org_office_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
         - Profile Page
     """
 
@@ -3119,11 +3110,11 @@ def customize_org_organisation(**attr):
             s3db = current.s3db
             if r.method == "profile":
                 # Customise tables used by widgets
-                customize_cms_post_fields()
-                customize_hrm_human_resource_fields()
-                customize_org_office_fields()
-                s3db.org_customize_org_resource_fields("profile")
-                customize_project_project_fields()
+                customise_cms_post_fields()
+                customise_hrm_human_resource_fields()
+                customise_org_office_fields()
+                s3db.org_customise_org_resource_fields("profile")
+                customise_project_project_fields()
 
                 contacts_widget = dict(label = "Contacts",
                                        title_create = "Add New Contact",
@@ -3311,13 +3302,10 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_resource(**attr):
-    """
-        Customize org_resource controller
-    """
+def customise_org_resource_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -3333,7 +3321,7 @@ def customize_org_resource(**attr):
                 return False
 
         if r.interactive or r.representation == "aadata":
-            s3db.org_customize_org_resource_fields(r.method)
+            s3db.org_customise_org_resource_fields(r.method)
     
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False
@@ -3450,28 +3438,22 @@ def customize_org_resource(**attr):
 
     return attr
 
-settings.ui.customize_org_resource = customize_org_resource
+settings.customise_org_resource_controller = customise_org_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_resource_type(**attr):
-    """
-        Customize org_resource_type controller
-    """
+#def customise_org_resource_type_controller(**attr):
 
-    table = current.s3db.org_resource_type
-    table.name.represent = lambda v: T(v) if v else ""
-    table.comments.label = T("Units")
-    table.comments.represent = lambda v: T(v) if v else ""
+#    table = current.s3db.org_resource_type
+#    table.name.represent = lambda v: T(v) if v else ""
+#    table.comments.label = T("Units")
+#    table.comments.represent = lambda v: T(v) if v else ""
 
-    return attr
+#    return attr
 
-#settings.ui.customize_org_resource_type = customize_org_resource_type
+#settings.customise_org_resource_type_controller = customise_org_resource_type_controller
 
 # -----------------------------------------------------------------------------
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -3707,12 +3689,12 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_project_fields():
+def customise_project_project_fields():
     """
-        Customize project_project fields for Profile widgets and 'more' popups
+        Customise project_project fields for Profile widgets and 'more' popups
     """
 
     format = "%d/%m/%y"
@@ -3750,10 +3732,7 @@ def customize_project_project_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_project_project(**attr):
-    """
-        Customize project_project controller
-    """
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -3773,7 +3752,7 @@ def customize_project_project(**attr):
         table = s3db.project_project
 
         if r.method == "datalist":
-            customize_project_project_fields()
+            customise_project_project_fields()
             s3db.configure("project_project",
                            # Don't include a Create form in 'More' popups
                            listadd = False,
@@ -4008,13 +3987,10 @@ def customize_project_project(**attr):
 
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
-def customize_doc_document(**attr):
-    """
-        Customize doc_document controller
-    """
+def customise_doc_document_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -4070,7 +4046,7 @@ def customize_doc_document(**attr):
 
     return attr
 
-settings.ui.customize_doc_document = customize_doc_document
+settings.customise_doc_document_controller = customise_doc_document_controller
 
 # =============================================================================
 # Template Modules

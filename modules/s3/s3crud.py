@@ -76,12 +76,8 @@ class S3CRUD(S3Method):
             @return: output object to send to the view
         """
 
-        sqlform = current.deployment_settings.get_ui_crud_form(self.tablename)
-        if not sqlform:
-            sqlform = self._config("crud_form", S3SQLDefaultForm())
-        self.sqlform = sqlform
-
         self.settings = current.response.s3.crud
+        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
 
         # Pre-populate create-form?
         self.data = None
@@ -153,11 +149,8 @@ class S3CRUD(S3Method):
         """
 
         # Settings
-        sqlform = current.deployment_settings.get_ui_crud_form(self.tablename)
-        if not sqlform:
-            sqlform = self._config("crud_form", S3SQLDefaultForm())
-        self.sqlform = sqlform
         self.settings = current.response.s3.crud
+        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
 
         _attr = Storage(attr)
         _attr["list_id"] = widget_id

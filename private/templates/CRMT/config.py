@@ -343,10 +343,7 @@ def user_coalition(row):
     else:
         return current.messages["NONE"]
 
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3 = current.response.s3
 
@@ -561,15 +558,12 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
 # Activities
 #
-def customize_project_activity(**attr):
-    """
-        Customize project_activity controller
-    """
+def customise_project_activity_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -766,12 +760,10 @@ def customize_project_activity(**attr):
 
     return attr
 
-settings.ui.customize_project_activity = customize_project_activity
+settings.customise_project_activity_controller = customise_project_activity_controller
 
-def customize_project_activity_type(**attr):
-    """
-        Customize project_activity_type controller
-    """
+def customise_project_activity_type_controller(**attr):
+
     from s3.s3forms import S3SQLCustomForm
     current.s3db.configure("project_activity_type",
                            crud_form = S3SQLCustomForm("name",
@@ -780,7 +772,7 @@ def customize_project_activity_type(**attr):
 
     return attr
 
-settings.ui.customize_project_activity_type = customize_project_activity_type
+settings.customise_project_activity_type_controller = customise_project_activity_type_controller
 
 # -----------------------------------------------------------------------------
 # Organisations
@@ -808,10 +800,7 @@ def org_facility_types(row):
     return ",".join([r.name for r in rows])
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
-    """
-        Customize org_organisation controller
-    """
+def customise_org_organisation_controller(**attr):
 
     # Custom PreP
     s3 = current.response.s3
@@ -1060,15 +1049,12 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
 # Coalitions (org_group)
 #
-def customize_org_group(**attr):
-    """
-        Customize org_group controller
-    """
+def customise_org_group_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -1098,7 +1084,7 @@ def customize_org_group(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_group = customize_org_group
+settings.customise_org_group_controller = customise_org_group_controller
 
 #-----------------------------------------------------------------------------
 # Places (org_facility)
@@ -1168,10 +1154,7 @@ settings.base.import_callbacks = {"org_facility": {"onaccept": facility_onaccept
                                                    },
                                   }
 
-def customize_org_facility(**attr):
-    """
-        Customize org_facility controller
-    """
+def customise_org_facility_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -1395,15 +1378,12 @@ def customize_org_facility(**attr):
 
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
 # People
 #
-def customize_stats_people(**attr):
-    """
-        Customize stats_people controller
-    """
+def customise_stats_people_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -1611,15 +1591,12 @@ def customize_stats_people(**attr):
 
     return attr
 
-settings.ui.customize_stats_people = customize_stats_people
+settings.customise_stats_people_controller = customise_stats_people_controller
 
 # -----------------------------------------------------------------------------
 # Evacuation Routes
 #
-def customize_vulnerability_evac_route(**attr):
-    """
-        Customize vulnerability_evac_route controller
-    """
+def customise_vulnerability_evac_route_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -1778,15 +1755,12 @@ def customize_vulnerability_evac_route(**attr):
 
     return attr
 
-settings.ui.customize_vulnerability_evac_route = customize_vulnerability_evac_route
+settings.customise_vulnerability_evac_route_controller = customise_vulnerability_evac_route_controller
 
 # -----------------------------------------------------------------------------
 # Risks
 #
-def customize_vulnerability_risk(**attr):
-    """
-        Customize vulnerability_risk controller
-    """
+def customise_vulnerability_risk_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -1976,15 +1950,12 @@ def customize_vulnerability_risk(**attr):
 
     return attr
 
-settings.ui.customize_vulnerability_risk = customize_vulnerability_risk
+settings.customise_vulnerability_risk_controller = customise_vulnerability_risk_controller
 
 # -----------------------------------------------------------------------------
 # Saved Maps
 #
-def customize_gis_config(**attr):
-    """
-        Customize gis_config controller
-    """
+def customise_gis_config_controller(**attr):
 
     # Custom PreP
     s3 = current.response.s3
@@ -2033,7 +2004,7 @@ def customize_gis_config(**attr):
 
     return attr
 
-settings.ui.customize_gis_config = customize_gis_config
+settings.customise_gis_config_controller = customise_gis_config_controller
 
 # -----------------------------------------------------------------------------
 # Site Activity Log
@@ -2175,10 +2146,7 @@ def render_log(list_id, item_id, resource, rfields, record):
 current.response.s3.render_log = render_log
 
 # -----------------------------------------------------------------------------
-def customize_s3_audit(**attr):
-    """
-        Customize s3_audit controller
-    """
+def customise_s3_audit_controller(**attr):
 
     from s3.s3utils import s3_auth_user_represent_name
     current.db.s3_audit.user_id.represent = s3_auth_user_represent_name
@@ -2201,7 +2169,7 @@ def customize_s3_audit(**attr):
 
     return attr
 
-settings.ui.customize_s3_audit = customize_s3_audit
+settings.customise_s3_audit_controller = customise_s3_audit_controller
 
 # =============================================================================
 # Template Modules

@@ -145,10 +145,7 @@ settings.project.organisation_roles = {
 }
 
 # -----------------------------------------------------------------------------
-def customize_org_office(**attr):
-    """
-        Customize org_office controller
-    """
+def customise_org_office_controller(**attr):
 
     s3 = current.response.s3
 
@@ -208,13 +205,10 @@ def customize_org_office(**attr):
 
     return attr
 
-settings.ui.customize_org_office = customize_org_office
+settings.customise_org_office_controller = customise_org_office_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
-    """
-        Customize org_organisation controller
-    """
+def customise_org_organisation_controller(**attr):
 
     s3 = current.response.s3
 
@@ -305,13 +299,10 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_project(**attr):
-    """
-        Customize project_project controller
-    """
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -378,13 +369,10 @@ def customize_project_project(**attr):
 
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_location(**attr):
-    """
-        Customize project_location controller
-    """
+def customise_project_location_controller(**attr):
 
     s3 = current.response.s3
 
@@ -476,13 +464,10 @@ def customize_project_location(**attr):
 
     return attr
 
-settings.ui.customize_project_location = customize_project_location
+settings.customise_project_location_controller = customise_project_location_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_organisation(**attr):
-    """
-        Customize project_organisation controller
-    """
+def customise_project_organisation_controller(**attr):
 
     s3 = current.response.s3
 
@@ -554,7 +539,7 @@ def customize_project_organisation(**attr):
 
     return attr
 
-settings.ui.customize_project_organisation = customize_project_organisation
+settings.customise_project_organisation_controller = customise_project_organisation_controller
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
