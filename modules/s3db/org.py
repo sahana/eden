@@ -60,7 +60,7 @@ __all__ = ["S3OrganisationModel",
            "org_update_affiliations",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
-           "org_customize_org_resource_fields",
+           "org_customise_org_resource_fields",
            "org_organisation_list_layout",
            "org_resource_list_layout",
            "org_sector_opts",
@@ -5396,7 +5396,7 @@ def org_site_update_affiliations(record):
     return
 
 # -----------------------------------------------------------------------------
-def org_customize_org_resource_fields(method):
+def org_customise_org_resource_fields(method):
     """
         Customize org_resource fields for Profile widgets and 'more' popups
     """
