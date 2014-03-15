@@ -296,6 +296,26 @@ class S3MembersModel(S3Model):
                   report_options = report_options,
                   filter_widgets = filter_widgets,
                   update_realm = True,
+                  # Default summary
+                  summary = [{"name": "addform",
+                              "common": True,
+                              "widgets": [{"method": "create"}],
+                             },
+                             {"name": "table",
+                              "label": "Table",
+                              "widgets": [{"method": "datatable"}]
+                              },
+                             {"name": "report",
+                              "label": "Report",
+                              "widgets": [{"method": "report",
+                                           "ajax_init": True}]
+                              },
+                             {"name": "map",
+                              "label": "Map",
+                              "widgets": [{"method": "map",
+                                           "ajax_init": True}],
+                              },
+                             ],
                   )
 
         # Components
