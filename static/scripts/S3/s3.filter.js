@@ -283,13 +283,15 @@ S3.search = {};
         });
 
         // Location widgets
+        form.find('.s3-groupedopts-widget:visible').prev(
+                  '.location-filter.groupedopts-filter-widget')
+        .add(
         form.find('.ui-multiselect:visible').prev(
-          '.location-filter.multiselect-filter-widget,' +
-          '.location-filter.groupedopts-filter-widget')
+                  '.location-filter.multiselect-filter-widget')
         .add(
         form.find('.location-filter:visible,' +
-          '.location-filter.multiselect-filter-widget.active' /*+
-          ',.location-filter.multiselect-filter-bootstrap.active'*/))
+                  '.location-filter.multiselect-filter-widget.active' /*+
+          ',.location-filter.multiselect-filter-bootstrap.active'*/)))
         .each(function() {
             id = $(this).attr('id');
             url_var = $('#' + id + '-data').val();
@@ -1306,7 +1308,16 @@ S3.search = {};
                     }
                 }
                 select.html(_options);
-                select.multiselect('refresh');
+                if (select.hasClass('groupedopts-filter-widget') &&
+                    typeof select.groupedopts != 'undefined') {
+                    try {
+                        select.groupedopts('refresh');
+                    } catch(e) { }
+                } else
+                if (select.hasClass('multiselect-filter-widget') &&
+                    typeof select.multiselect != 'undefined') {
+                    select.multiselect('refresh');
+                }
                 if (l === (level + 1)) {
                     if (values) {
                         // Show next level down (if hidden)

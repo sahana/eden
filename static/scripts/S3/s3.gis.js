@@ -38,7 +38,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var cluster_threshold_default = 2;   // minimum # of features to form a cluster
     // Default values if not set by the map
     // Also in modules/s3/s3gis.py
-    var fill_default = '#f5902e';           // fill colour for unclustered Point
+    var fill_default = '#f5902e';          // fill colour for unclustered Point
     var cluster_fill_default = '8087ff';   // fill colour for clustered Point
     var cluster_stroke_default = '2b2f76'; // stroke colour for clustered Point
     var select_fill_default = 'ffdc33';    // fill colour for selected Point
@@ -94,6 +94,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             var center = bounds.getCenterLonLat();
         }
         options.center = center;
+
+        // Configue clustering
+        if (undefined === options.cluster_label) {
+            // Default to on
+            options.cluster_label = true;
+        }
 
         // Build the OpenLayers map
         var map = addMap(map_id, options);
@@ -5211,7 +5217,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     var label;
                     // Label For Clustered Point
                     if (feature.cluster) {
-                        if (feature.attributes.count > 1) {
+                        if (options.cluster_label && feature.attributes.count > 1) {
                             label = feature.attributes.count;
                         }
                     } else if (feature.layer && (undefined != feature.layer.s3_style)) {

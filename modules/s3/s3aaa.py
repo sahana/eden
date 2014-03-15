@@ -335,11 +335,11 @@ Thank you"""
                                           readable=False,
                                           label=messages.label_password))
 
-            utable = define_table(uname,
-                                  migrate = migrate,
-                                  fake_migrate=fake_migrate,
-                                  *utable_fields)
-            settings.table_user = utable
+            define_table(uname,
+                         migrate = migrate,
+                         fake_migrate=fake_migrate,
+                         *utable_fields)
+            utable = settings.table_user = db[uname]
 
         # Fields configured in configure_user_fields
 
@@ -356,7 +356,7 @@ Thank you"""
         gtable = settings.table_group
         gname = settings.table_group_name
         if not gtable:
-            gtable = define_table(gname,
+            define_table(gname,
                 # Group unique ID, must be notnull+unique:
                 Field("uuid", length=64, notnull=True, unique=True,
                       readable=False, writable=False),
@@ -385,11 +385,11 @@ Thank you"""
                 migrate = migrate,
                 fake_migrate=fake_migrate,
                 *(s3_timestamp() + s3_deletion_status()))
-            settings.table_group = gtable
+            gtable = settings.table_group = db[gname]
 
         # Group membership table (user<->role)
         if not settings.table_membership:
-            settings.table_membership = define_table(
+            define_table(
                 settings.table_membership_name,
                 Field("user_id", utable,
                       requires = IS_IN_DB(db, "%s.id" % uname,
@@ -405,6 +405,7 @@ Thank you"""
                 migrate = migrate,
                 fake_migrate=fake_migrate,
                 *(s3_uid() + s3_timestamp() + s3_deletion_status()))
+            settings.table_membership = db[settings.table_membership_name]
 
         # Define Eden permission table
         self.permission.define_table(migrate=migrate,
@@ -439,7 +440,7 @@ Thank you"""
         # @ToDo: Deprecate? At least make it configurable?
         if not settings.table_event:
             request = current.request
-            settings.table_event = define_table(
+            define_table(
                 settings.table_event_name,
                 Field("time_stamp", "datetime",
                       default=request.utcnow,
@@ -463,6 +464,7 @@ Thank you"""
                 migrate = migrate,
                 fake_migrate=fake_migrate,
                 *(s3_uid() + s3_timestamp() + s3_deletion_status()))
+            settings.table_event = db[settings.table_event_name]
 
     # -------------------------------------------------------------------------
     def login_bare(self, username, password):
@@ -4735,7 +4737,8 @@ class S3Permission(object):
             table_group = "integer" # fallback (doesn't work with requires)
 
         if not self.table:
-            self.table = current.db.define_table(self.tablename,
+            db = current.db
+            db.define_table(self.tablename,
                             Field("group_id", table_group),
                             Field("controller", length=64),
                             Field("function", length=512),
@@ -4753,6 +4756,7 @@ class S3Permission(object):
                             migrate=migrate,
                             fake_migrate=fake_migrate,
                             *(s3_uid()+s3_timestamp()+s3_deletion_status()))
+            self.table = db[self.tablename]
 
     # -------------------------------------------------------------------------
     # ACL Management
@@ -6256,23 +6260,22 @@ class S3Audit(object):
             return
 
         db = current.db
-        if tablename in db:
-            self.table = db[tablename]
-        else:
-            self.table = db.define_table(tablename,
-                                         Field("timestmp", "datetime"),
-                                         Field("user_id", db.auth_user),
-                                         Field("method"),
-                                         Field("tablename"),
-                                         Field("record_id", "integer"),
-                                         Field("representation"),
-                                         # List of Key:Values
-                                         Field("old_value", "text"),
-                                         # List of Key:Values
-                                         Field("new_value", "text"),
-                                         migrate=migrate,
-                                         fake_migrate=fake_migrate,
-                                         )
+        if tablename not in db:
+            db.define_table(tablename,
+                            Field("timestmp", "datetime"),
+                            Field("user_id", db.auth_user),
+                            Field("method"),
+                            Field("tablename"),
+                            Field("record_id", "integer"),
+                            Field("representation"),
+                            # List of Key:Values
+                            Field("old_value", "text"),
+                            # List of Key:Values
+                            Field("new_value", "text"),
+                            migrate=migrate,
+                            fake_migrate=fake_migrate,
+                            )
+        self.table = db[tablename]
 
         user = current.auth.user
         if user:

@@ -1312,9 +1312,9 @@ def render_site_needs(list_id, item_id, resource, rfields, record):
 s3.render_site_needs = render_site_needs
 
 # -----------------------------------------------------------------------------
-def customize_gis_location(**attr):
+def customise_gis_location_controller(**attr):
     """
-        Customize gis_location controller
+        Customise gis_location controller
         - Profile Page
     """
 
@@ -1393,10 +1393,10 @@ def customize_gis_location(**attr):
             elif r.method == "profile":
 
                 # Customise tables used by widgets
-                #customize_hrm_human_resource_fields()
-                customize_org_facility_fields()
-                s3db.req_customize_req_fields()
-                s3db.req_customize_commit_fields()
+                #customise_hrm_human_resource_fields()
+                customise_org_facility_fields()
+                s3db.req_customise_req_fields()
+                s3db.req_customise_commit_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -1551,12 +1551,12 @@ def customize_gis_location(**attr):
 
     return attr
 
-settings.ui.customize_gis_location = customize_gis_location
+settings.customise_gis_location_controller = customise_gis_location_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource_fields():
+def customise_hrm_human_resource_fields():
     """
-        Customize hrm_human_resource for Profile widgets and 'more' popups
+        Customise hrm_human_resource for Profile widgets and 'more' popups
     """
 
     s3db = current.s3db
@@ -1583,9 +1583,9 @@ def customize_hrm_human_resource_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource(**attr):
+def customise_hrm_human_resource_controller(**attr):
     """
-        Customize hrm_human_resource controller
+        Customise hrm_human_resource controller
         - used for 'more' popups
     """
 
@@ -1601,7 +1601,7 @@ def customize_hrm_human_resource(**attr):
                 return False
 
         if r.method == "datalist":
-            customize_hrm_human_resource_fields()
+            customise_hrm_human_resource_fields()
             current.s3db.configure("hrm_human_resource",
                                    # Don't include a Create form in 'More' popups
                                    listadd = False,
@@ -1613,13 +1613,10 @@ def customize_hrm_human_resource(**attr):
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_job_title(**attr):
-    """
-        Customize hrm_job_title controller
-    """
+def customise_hrm_job_title_controller(**attr):
 
     s3 = current.response.s3
 
@@ -1696,12 +1693,12 @@ def customize_hrm_job_title(**attr):
 
     return attr
 
-settings.ui.customize_hrm_job_title = customize_hrm_job_title
+settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_facility_fields():
+def customise_org_facility_fields():
     """
-        Customize org_facility for Profile widgets and 'more' popups
+        Customise org_facility for Profile widgets and 'more' popups
     """
 
     # Truncate comments fields
@@ -1755,12 +1752,6 @@ def customize_org_facility_fields():
                    "comments",
                    ]
 
-    #from s3.s3validators import IS_ADD_PERSON_WIDGET2
-    #from s3.s3widgets import S3AddPersonWidget2
-    #field = s3db.hrm_human_resource_site.human_resource_id
-    #field.requires = IS_ADD_PERSON_WIDGET2()
-    #field.widget = S3AddPersonWidget2(controller="pr")
-
     crud_form = S3SQLCustomForm("name",
                                 "code",
                                 S3SQLInlineComponentMultiSelectWidget(
@@ -1801,10 +1792,7 @@ def customize_org_facility_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_org_facility(**attr):
-    """
-        Customize org_facility controller
-    """
+def customise_org_facility_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -1820,7 +1808,7 @@ def customize_org_facility(**attr):
                 return False
 
         if r.interactive:
-            customize_org_facility_fields()
+            customise_org_facility_fields()
 
             # Filter from a Profile page?
             # If so, then default the fields we know
@@ -1921,9 +1909,9 @@ def customize_org_facility(**attr):
 
             elif r.method == "profile":
                 # Customise tables used by widgets
-                customize_hrm_human_resource_fields()
-                customize_site_needs_fields(profile=True)
-                s3db.req_customize_req_fields()
+                customise_hrm_human_resource_fields()
+                customise_site_needs_fields(profile=True)
+                s3db.req_customise_req_fields()
 
                 list_fields = ["name",
                                "id",
@@ -2173,10 +2161,10 @@ def customize_org_facility(**attr):
     #attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_needs_fields(profile=False):
+def customise_org_needs_fields(profile=False):
 
     # Truncate details field(s)
     from s3.s3utils import s3_trunk8
@@ -2219,21 +2207,18 @@ $('#req_organisation_needs_money').change(function(){
     return
 
 # -----------------------------------------------------------------------------
-def customize_req_organisation_needs(**attr):
-    """
-        Customize req_organisation_needs controller
-    """
+def customise_req_organisation_needs_controller(**attr):
 
-    customize_org_needs_fields()
+    customise_org_needs_fields()
 
     return attr
 
-settings.ui.customize_req_organisation_needs = customize_req_organisation_needs
+settings.customise_req_organisation_needs_controller = customise_req_organisation_needs_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
         - Profile Page
         - Requests
     """
@@ -2263,10 +2248,10 @@ def customize_org_organisation(**attr):
 
             if r.method == "profile":
                 # Customise tables used by widgets
-                customize_hrm_human_resource_fields()
-                customize_org_facility_fields()
-                customize_org_needs_fields(profile=True)
-                s3db.org_customize_org_resource_fields("profile")
+                customise_hrm_human_resource_fields()
+                customise_org_facility_fields()
+                customise_org_needs_fields(profile=True)
+                s3db.org_customise_org_resource_fields("profile")
 
                 contacts_widget = dict(label = "Contacts",
                                        title_create = "Add New Contact",
@@ -2475,13 +2460,10 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_resource(**attr):
-    """
-        Customize org_resource controller
-    """
+def customise_org_resource_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -2497,7 +2479,7 @@ def customize_org_resource(**attr):
                 return False
 
         if r.interactive or r.representation == "aadata":
-            s3db.org_customize_org_resource_fields(r.method)
+            s3db.org_customise_org_resource_fields(r.method)
     
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False
@@ -2592,10 +2574,10 @@ def customize_org_resource(**attr):
 
     return attr
 
-settings.ui.customize_org_resource = customize_org_resource
+settings.customise_org_resource_controller = customise_org_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_site_needs_fields(profile=False):
+def customise_site_needs_fields(profile=False):
 
     s3db = current.s3db
     table = s3db.req_site_needs
@@ -2629,13 +2611,10 @@ def customize_site_needs_fields(profile=False):
                    )
     return
 
-s3.customize_site_needs_fields = customize_site_needs_fields
+s3.customise_site_needs_fields = customise_site_needs_fields
 
 # -----------------------------------------------------------------------------
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -2873,11 +2852,10 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
-
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
-def customize_inv_inv_item(**attr):
+def customise_inv_inv_item_controller(**attr):
 
     s3db = current.s3db
     tablename = "inv_inv_item"
@@ -2909,13 +2887,10 @@ def customize_inv_inv_item(**attr):
 
     return attr
 
-settings.ui.customize_inv_inv_item = customize_inv_inv_item
+settings.customise_inv_inv_item_controller = customise_inv_inv_item_controller
 
 # -----------------------------------------------------------------------------
-def customize_doc_document(**attr):
-    """
-        Customize doc_document controller
-    """
+def customise_doc_document_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -2968,7 +2943,7 @@ def customize_doc_document(**attr):
 
     return attr
 
-settings.ui.customize_doc_document = customize_doc_document
+settings.customise_doc_document_controller = customise_doc_document_controller
 
 # -----------------------------------------------------------------------------
 settings.req.req_type = ["Other"]
@@ -2984,10 +2959,7 @@ settings.req.commit_value = True
 # Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
 settings.req.requester_to_site = True
 
-def customize_req_req(**attr):
-    """
-        Customize req_req controller
-    """
+def customise_req_req_controller(**attr):
 
     s3 = current.response.s3
 
@@ -3015,15 +2987,15 @@ def customize_req_req(**attr):
 
         s3db = current.s3db
         if r.component_name == "commit":
-            s3db.req_customize_commit_fields()
+            s3db.req_customise_commit_fields()
         else:
-            s3db.req_customize_req_fields()
+            s3db.req_customise_req_fields()
         if r.method in ("datalist", "datalist.dl"):
             s3.filter = (r.table.req_status.belongs([0, 1]))
         elif r.method == "profile":
             # Customise tables used by widgets
-            s3db.req_customize_commit_fields()
-            customize_org_facility_fields()
+            s3db.req_customise_commit_fields()
+            customise_org_facility_fields()
 
             record = r.record
             record_id = record.id
@@ -3124,13 +3096,10 @@ def customize_req_req(**attr):
 
     return attr
 
-settings.ui.customize_req_req = customize_req_req
+settings.customise_req_req_controller = customise_req_req_controller
 
 # -----------------------------------------------------------------------------
-def customize_req_commit(**attr):
-    """
-        Customize req_commit controller
-    """
+def customise_req_commit_controller(**attr):
 
     s3 = current.response.s3
 
@@ -3141,7 +3110,7 @@ def customize_req_commit(**attr):
         #if callable(standard_prep):
         #    result = standard_prep(r)
 
-        current.s3db.req_customize_commit_fields()
+        current.s3db.req_customise_commit_fields()
 
         if r.method in ("datalist", "datalist.dl"):
             s3.filter = (r.table.cancel != True)
@@ -3154,13 +3123,10 @@ def customize_req_commit(**attr):
 
     return attr
 
-settings.ui.customize_req_commit = customize_req_commit
+settings.customise_req_commit_controller = customise_req_commit_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_activity(**attr):
-    """
-        Customize project_activity controller
-    """
+def customise_project_activity_controller(**attr):
 
     s3db = current.s3db
 
@@ -3333,13 +3299,10 @@ def customize_project_activity(**attr):
 
     return attr
 
-settings.ui.customize_project_activity = customize_project_activity
+settings.customise_project_activity_controller = customise_project_activity_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_task(**attr):
-    """
-        Customize project_task controller
-    """
+def customise_project_task_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -3420,7 +3383,7 @@ def customize_project_task(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_project_task = customize_project_task
+settings.customise_project_task_controller = customise_project_task_controller
 
 # =============================================================================
 # Modules

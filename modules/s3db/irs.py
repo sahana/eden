@@ -209,14 +209,14 @@ class S3IRSModel(S3Model):
 
         # This Table defines which Categories are visible to end-users
         tablename = "irs_icategory"
-        table = define_table(tablename,
-                             Field("code",
-                                   label = T("Category"),
-                                   requires = IS_IN_SET_LAZY(lambda: \
-                                        sort_dict_by_values(irs_incident_type_opts)),
-                                   represent = lambda opt: \
-                                        irs_incident_type_opts.get(opt, opt)),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("code",
+                           label = T("Category"),
+                           requires = IS_IN_SET_LAZY(lambda: \
+                                      sort_dict_by_values(irs_incident_type_opts)),
+                           represent = lambda opt: \
+                                       irs_incident_type_opts.get(opt, opt)),
+                     *s3_meta_fields())
 
         configure(tablename,
                   list_fields = ["code"],
@@ -239,102 +239,104 @@ class S3IRSModel(S3Model):
         #    8201:T("Rescue")
         #}
         tablename = "irs_ireport"
-        table = define_table(tablename,
-                             super_link("sit_id", "sit_situation"),
-                             super_link("doc_id", "doc_entity"),
-                             Field("name",
-                                   label = T("Short Description"),
-                                   requires = IS_NOT_EMPTY()),
-                             Field("message", "text",
-                                   label = T("Message"),
-                                   represent = lambda text: \
+        define_table(tablename,
+                     super_link("sit_id", "sit_situation"),
+                     super_link("doc_id", "doc_entity"),
+                     Field("name",
+                           label = T("Short Description"),
+                           requires = IS_NOT_EMPTY()),
+                     Field("message", "text",
+                           label = T("Message"),
+                           represent = lambda text: \
                                        s3_truncate(text, length=48, nice=True)),
-                             Field("category",
-                                   label = T("Category"),
-                                   # The full set available to Admins & Imports/Exports
-                                   # (users use the subset by over-riding this in the Controller)
-                                   requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
-                                       sort_dict_by_values(irs_incident_type_opts))),
-                                   # Use this instead if a simpler set of Options required
-                                   #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
-                                   represent = lambda opt: \
+                     Field("category",
+                           label = T("Category"),
+                           # The full set available to Admins & Imports/Exports
+                           # (users use the subset by over-riding this in the Controller)
+                           requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
+                                      sort_dict_by_values(irs_incident_type_opts))),
+                           # Use this instead if a simpler set of Options required
+                           #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
+                           represent = lambda opt: \
                                        irs_incident_type_opts.get(opt, opt)),
-                             self.hrm_human_resource_id(
-                                    #readable=False,
-                                    #writable=False,
-                                    label = T("Reported By (Staff)")
-                                    ),
-                             # Plain text field in case non-staff & don't want to clutter the PR
-                             Field("person",
-                                   #readable = False,
-                                   #writable = False,
-                                   label = T("Reported By (Not Staff)"),
-                                   #comment = (T("At/Visited Location (not virtual)"))
-                                   ),
-                             Field("contact",
-                                   readable = False,
-                                   writable = False,
-                                   label = T("Contact Details")),
-                             s3_datetime("datetime",
-                                         label = T("Date/Time of Alert"),
-                                         empty=False,
-                                         default="now",
-                                         future=0,
-                                         ),
-                             s3_datetime("expiry",
-                                         label = T("Expiry Date/Time"),
-                                         past=0,
-                                         ),
-                             self.gis_location_id(),
-                             # Very basic Impact Assessment
-                             Field("affected", "integer",
-                                   label=T("Number of People Affected"),
-                                   represent = lambda val: val or T("unknown"),
-                                   ),
-                             Field("dead", "integer",
-                                   label=T("Number of People Dead"),
-                                   represent = lambda val: val or T("unknown"),
-                                   ),
-                             Field("injured", "integer",
-                                   label=T("Number of People Injured"),
-                                   represent = lambda val: val or T("unknown"),
-                                   ),
-                             # Probably too much to try & capture
-                             #Field("missing", "integer",
-                             #      label=T("Number of People Missing")),
-                             #Field("displaced", "integer",
-                             #      label=T("Number of People Displaced")),
-                             Field("verified", "boolean",    # Ushahidi-compatibility
-                                   # We don't want these visible in Create forms
-                                   # (we override in Update forms in controller)
-                                   readable = False,
-                                   writable = False,
-                                   label = T("Verified?"),
-                                   represent = lambda verified: \
-                                         (T("No"),
-                                          T("Yes"))[verified == True]),
-                             # @ToDo: Move this to Events?
-                             # Then add component to list_fields
-                             s3_datetime("dispatch",
-                                         label = T("Date/Time of Dispatch"),
-                                         future=0,
-                                         # We don't want these visible in Create forms
-                                         # (we override in Update forms in controller)
-                                         readable = False,
-                                         writable = False,
-                                         ),
-                             Field("closed", "boolean",
-                                   # We don't want these visible in Create forms
-                                   # (we override in Update forms in controller)
-                                   default = False,
-                                   readable = False,
-                                   writable = False,
-                                   label = T("Closed?"),
-                                   represent = lambda closed: \
-                                         (T("No"),
-                                          T("Yes"))[closed == True]),
-                             s3_comments(),
-                             *s3_meta_fields())
+                     self.hrm_human_resource_id(
+                          #readable=False,
+                          #writable=False,
+                          label = T("Reported By (Staff)")
+                          ),
+                     # Plain text field in case non-staff & don't want to clutter the PR
+                     Field("person",
+                           #readable = False,
+                           #writable = False,
+                           label = T("Reported By (Not Staff)"),
+                           #comment = (T("At/Visited Location (not virtual)"))
+                           ),
+                     Field("contact",
+                           readable = False,
+                           writable = False,
+                           label = T("Contact Details")),
+                     s3_datetime("datetime",
+                                 label = T("Date/Time of Alert"),
+                                 empty=False,
+                                 default="now",
+                                 future=0,
+                                 ),
+                     s3_datetime("expiry",
+                                 label = T("Expiry Date/Time"),
+                                 past=0,
+                                 ),
+                     self.gis_location_id(),
+                     # Very basic Impact Assessment
+                     Field("affected", "integer",
+                           label=T("Number of People Affected"),
+                           represent = lambda val: val or T("unknown"),
+                           ),
+                     Field("dead", "integer",
+                           label=T("Number of People Dead"),
+                           represent = lambda val: val or T("unknown"),
+                           ),
+                     Field("injured", "integer",
+                           label=T("Number of People Injured"),
+                           represent = lambda val: val or T("unknown"),
+                           ),
+                     # Probably too much to try & capture
+                     #Field("missing", "integer",
+                     #      label=T("Number of People Missing")),
+                     #Field("displaced", "integer",
+                     #      label=T("Number of People Displaced")),
+                     Field("verified", "boolean",    # Ushahidi-compatibility
+                           # We don't want these visible in Create forms
+                           # (we override in Update forms in controller)
+                           readable = False,
+                           writable = False,
+                           label = T("Verified?"),
+                           represent = lambda verified: \
+                                       (T("No"),
+                                       T("Yes"))[verified == True]
+                           ),
+                     # @ToDo: Move this to Events?
+                     # Then add component to list_fields
+                     s3_datetime("dispatch",
+                                 label = T("Date/Time of Dispatch"),
+                                 future=0,
+                                 # We don't want these visible in Create forms
+                                 # (we override in Update forms in controller)
+                                 readable = False,
+                                 writable = False,
+                                 ),
+                     Field("closed", "boolean",
+                           # We don't want these visible in Create forms
+                           # (we override in Update forms in controller)
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           label = T("Closed?"),
+                           represent = lambda closed: \
+                                       (T("No"),
+                                       T("Yes"))[closed == True]
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
         # CRUD strings
         ADD_INC_REPORT = T("Add Incident Report")
         crud_strings[tablename] = Storage(
@@ -466,12 +468,12 @@ class S3IRSModel(S3Model):
                                   "key": "person_id",
                                   "actuate": "link",
                                   #"actuate": "embed",
-                                  #"widget": S3AddPersonWidget(),
+                                  #"widget": S3AddPersonWidget2(),
                                   "autodelete": False,
                                  },
                       )
                       
-        ireport_id = S3ReusableField("ireport_id", table,
+        ireport_id = S3ReusableField("ireport_id", "reference %s" % tablename,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,
                                                               "irs_ireport.id",
@@ -508,11 +510,11 @@ class S3IRSModel(S3Model):
         # -----------------------------------------------------------
         # Affected Persons
         tablename = "irs_ireport_person"
-        table = define_table(tablename,
-                             ireport_id(),
-                             self.pr_person_id(),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     ireport_id(),
+                     self.pr_person_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -1038,33 +1040,33 @@ class S3IRSResponseModel(S3Model):
         #
         msg_enabled = settings.has_module("msg")
         tablename = "irs_ireport_human_resource"
-        table = define_table(tablename,
-                             ireport_id(),
-                             # @ToDo: Limit Staff to those which are not already assigned to an Incident
-                             human_resource_id(label = hrm_label,
-                                               # Simple dropdown is faster for a small team
-                                               #widget=None,
-                                               #comment=None,
-                                               ),
-                             Field("incident_commander", "boolean",
-                                   default = False,
-                                   label = T("Incident Commander"),
-                                   represent = lambda incident_commander: \
-                                           (T("No"),
-                                            T("Yes"))[incident_commander == True]),
-                             Field("response", "boolean",
-                                   default = None,
-                                   label = T("Able to Respond?"),
-                                   writable = msg_enabled,
-                                   readable = msg_enabled,
-                                   represent = response_represent,
-                                   ),
-                             s3_comments("reply",
-                                         label = T("Reply Message"),
-                                         writable = msg_enabled,
-                                         readable = msg_enabled
-                                         ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     ireport_id(),
+                     # @ToDo: Limit Staff to those which are not already assigned to an Incident
+                     human_resource_id(label = hrm_label,
+                                       # Simple dropdown is faster for a small team
+                                       #widget=None,
+                                       #comment=None,
+                                       ),
+                     Field("incident_commander", "boolean",
+                           default = False,
+                           label = T("Incident Commander"),
+                           represent = lambda incident_commander: \
+                                       (T("No"),
+                                       T("Yes"))[incident_commander == True]),
+                     Field("response", "boolean",
+                           default = None,
+                           label = T("Able to Respond?"),
+                           writable = msg_enabled,
+                           readable = msg_enabled,
+                           represent = response_represent,
+                           ),
+                     s3_comments("reply",
+                                 label = T("Reply Message"),
+                                 writable = msg_enabled,
+                                 readable = msg_enabled
+                                 ),
+                     *s3_meta_fields())
 
         configure(tablename,
                   list_fields=["id",
@@ -1082,73 +1084,71 @@ class S3IRSResponseModel(S3Model):
         #
         asset_id = self.asset_asset_id
         tablename = "irs_ireport_vehicle"
-        table = define_table(tablename,
-                             ireport_id(),
-                             asset_id(
-                                    label = T("Vehicle"),
-                                    # Limit Vehicles to those which are not already assigned to an Incident
-                                    requires=self.irs_vehicle_requires,
-                                    comment = S3AddResourceLink(
-                                        c="vehicle",
-                                        f="vehicle",
-                                        label=T("Add Vehicle"),
-                                        tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+        define_table(tablename,
+                     ireport_id(),
+                     asset_id(label = T("Vehicle"),
+                              # Limit Vehicles to those which are not already assigned to an Incident
+                              requires=self.irs_vehicle_requires,
+                              comment = S3AddResourceLink(
+                                 c="vehicle",
+                                 f="vehicle",
+                                 label=T("Add Vehicle"),
+                                 tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+                              ),
+                     s3_datetime("datetime",
+                                 label=T("Dispatch Time"),
+                                 default="now",
+                                 future=0,
+                                 ),
+                     self.super_link("site_id", "org_site",
+                                     label = T("Fire Station"),
+                                     readable = True,
+                                     # Populated from fire_station_vehicle
+                                     #writable = True
+                                     ),
+                     self.gis_location_id(label=T("Destination")),
+                     Field("closed",
+                           # @ToDo: Close all assignments when Incident closed
+                           readable=False,
+                           writable=False),
+                     Field.Method("minutes",
+                                  self.irs_ireport_vehicle_minutes),
+                     s3_comments(),
+                     *s3_meta_fields())
 
-                                    ),
-                             s3_datetime("datetime",
-                                         label=T("Dispatch Time"),
-                                         default="now",
-                                         future=0,
-                                         ),
-                             self.super_link("site_id", "org_site",
-                                             label = T("Fire Station"),
-                                             readable = True,
-                                             # Populated from fire_station_vehicle
-                                             #writable = True
-                                             ),
-                             self.gis_location_id(label=T("Destination")),
-                             Field("closed",
-                                   # @ToDo: Close all assignments when Incident closed
-                                   readable=False,
-                                   writable=False),
-                             s3_comments(),
-                             *s3_meta_fields())
-
-        table.minutes = Field.Lazy(self.irs_ireport_vehicle_minutes)
         configure(tablename, extra_fields = ["datetime"])
 
         # ---------------------------------------------------------------------
         # Which Staff are assigned to which Vehicle?
         #
         tablename = "irs_ireport_vehicle_human_resource"
-        table = define_table(tablename,
-                             ireport_id(),
-                             # @ToDo: Limit Staff to those which are not already assigned to an Incident
-                             human_resource_id(label = hrm_label,
-                                               # Simple dropdown is faster for a small team
-                                               widget=None,
-                                               comment=None,
-                                               ),
-                             asset_id(label=T("Vehicle"),
-                                      # @ToDo: Limit to Vehicles which are assigned to this Incident
-                                      requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db, "asset_asset.id",
-                                                              self.asset_represent,
-                                                              filterby="type",
-                                                              filter_opts=(1,),
-                                                              sort=True)),
-                                     comment = S3AddResourceLink(
-                                        c="vehicle",
-                                        f="vehicle",
-                                        label=T("Add Vehicle"),
-                                        tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
-
-                                     ),
-                             Field("closed",
-                                   # @ToDo: Close all assignments when Incident closed
-                                   readable=False,
-                                   writable=False),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     ireport_id(),
+                     # @ToDo: Limit Staff to those which are not already assigned to an Incident
+                     human_resource_id(label = hrm_label,
+                                       # Simple dropdown is faster for a small team
+                                       widget=None,
+                                       comment=None,
+                                       ),
+                     asset_id(label=T("Vehicle"),
+                              # @ToDo: Limit to Vehicles which are assigned to this Incident
+                              requires = IS_NULL_OR(
+                                            IS_ONE_OF(db, "asset_asset.id",
+                                                      self.asset_represent,
+                                                      filterby="type",
+                                                      filter_opts=(1,),
+                                                      sort=True)),
+                              comment = S3AddResourceLink(
+                              c="vehicle",
+                              f="vehicle",
+                              label=T("Add Vehicle"),
+                              tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+                              ),
+                     Field("closed",
+                           # @ToDo: Close all assignments when Incident closed
+                           readable=False,
+                           writable=False),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*

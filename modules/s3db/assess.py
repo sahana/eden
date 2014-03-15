@@ -221,432 +221,432 @@ class S3AssessBuildingModel(S3Model):
             }
 
         tablename = "assess_building"
-        table = self.define_table(tablename,
-                                  Field("database_id", "integer",
-                                        label=T("Database ID")),
-                                  Field("status", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_status_opts)
-                                                ),
-                                        represent = lambda opt:
-                                            assess_status_opts.get(opt,
-                                                                   UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
-                                        label=T("Status")),
-                                  Field("status_gutting", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_status2_opts)
-                                                ),
-                                        represent = lambda opt:
-                                            assess_status2_opts.get(opt,
-                                                                   UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
-                                        label=T("Gutting Status")),
-                                  Field("status_mold", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_status2_opts)
-                                                ),
-                                        represent = lambda opt:
-                                            assess_status2_opts.get(opt,
-                                                                   UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
-                                        label=T("Mold Status")),
-                                  s3_comments("mold_notes",
-                                              comment=None,
-                                              label=T("Mold Notes")),
-                                  Field("priority", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_priority_opts)
-                                                ),
-                                        represent = lambda opt:
-                                            assess_priority_opts.get(opt,
-                                                                   UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
-                                        label=T("Priority")),
-                                  s3_date(label=T("Intake Date")),
-                                  Field("assessor1",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Assessor 1")),
-                                  Field("assessor2",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Assessor 2")),
-                                  Field("name",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Name")),
-                                  Field("phone",
-                                        requires=IS_NULL_OR(s3_phone_requires),
-                                        represent = lambda v: v or NONE,
-                                        label=T("Phone Number")),
-                                  Field("contact_other",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Other Contact Information")),
-                                  self.gis_location_id(),
-                                  Field("homeowner_availability",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Homeowner Availability")),
-                                  Field("type_of_property", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_property_type_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_property_type_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
-                                        label=T("Type of Property")),
-                                  Field("inhabitants", "integer",
-                                        represent = lambda v: v or NONE,
-                                        label=T("# of Inhabitants")),
-                                  Field("year_built", "integer",
-                                        requires = IS_EMPTY_OR(
-                                                    IS_INT_IN_RANGE(1800, 2012)
-                                                    ),
-                                        represent = lambda v: v or NONE,
-                                        label=T("Year Built")),
-                                  Field("current_residence", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Current Residence")),
-                                  Field("ownership", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(ownership_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            ownership_opts.get(opt,
-                                                               UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Ownership")),
-                                  Field("intention",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Intention to Stay Home")),
-                                  Field("vulnerability", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_vulnerability_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_vulnerability_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
-                                        label=T("Vulnerabilities")),
-                                  Field("building_status", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(building_status_opts)
-                                                ),
-                                        represent = lambda opt:
-                                            building_status_opts.get(opt,
-                                                                     UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
-                                        label=T("Based on the DOB/FEMA sticker, the property is")),
-                                  Field("insurance", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_insurance_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_insurance_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
-                                        label=T("Type of Insurance")),
-                                  Field("work_requested", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_work_requested_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_work_requested_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
-                                        label=T("Work Requested")),
-                                  Field("construction_type", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_construction_type_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_construction_type_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
-                                        label=T("Construction Type (Check all that apply)"),
+        self.define_table(tablename,
+                          Field("database_id", "integer",
+                                label=T("Database ID")),
+                          Field("status", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_status_opts)
                                         ),
-                                  Field("electricity", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(on_off_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            on_off_opts.get(opt,
+                                represent = lambda opt:
+                                    assess_status_opts.get(opt,
                                                             UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Electricity")),
-                                  Field("gas", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(on_off_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            on_off_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Gas")),
-                                  Field("basement_flooding", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Basement Flooding")),
-                                  Field("basement_flooding_depth", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_INT_IN_RANGE(1, 99)
-                                                    ),
-                                        represent = lambda v: v or NONE,
-                                        label=T("Depth (feet)"),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
+                                label=T("Status")),
+                          Field("status_gutting", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_status2_opts)
                                         ),
-                                  Field("first_flooding", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
+                                represent = lambda opt:
+                                    assess_status2_opts.get(opt,
                                                             UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("First Floor Flooding")),
-                                  Field("first_flooding_depth", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_INT_IN_RANGE(1, 99)
-                                                    ),
-                                        represent = lambda v: v or NONE,
-                                        label=T("Depth (feet)"),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
+                                label=T("Gutting Status")),
+                          Field("status_mold", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_status2_opts)
                                         ),
-                                  Field("drywall", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
+                                represent = lambda opt:
+                                    assess_status2_opts.get(opt,
                                                             UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Drywall")),
-                                  Field("floor", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Floor")),
-                                  Field("remove_loose_debris", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Remove Loose Debris")),
-                                  Field("remove_furniture", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Remove Furniture")),
-                                  Field("remove_water_heater", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Remove Water Heater")),
-                                  Field("remove_appliances", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Remove Major Appliances")),
-                                  Field("asbestos", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
-                                                            UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Asbestos")),
-                                  Field("damage_source", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_damage_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            assess_damage_opts.get(opt,
-                                                                   UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
-                                        label=T("Damage Source")),
-                                  Field("damage_source_other",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Other")),
-                                  s3_comments("damage_details",
-                                              label=T("Additional Description of Damage"),
-                                              comment=None,
-                                              ),
-                                  s3_comments("work_plan",
-                                              label=T("Work Plan"),
-                                              comment=T("Describe access points, advice for team leaders"),
-                                              ),
-                                  #Field("tools_required", "list:integer",
-                                  #      requires=IS_EMPTY_OR(
-                                  #                  IS_IN_SET(assess_tools_opts,
-                                  #                            multiple=True)
-                                  #              ),
-                                  #      represent = lambda ids: \
-                                  #          assess_multi_type_represent(ids,
-                                  #                                      assess_tools_opts),
-                                  #      widget = lambda f, v, **attr: \
-                                  #          CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
-                                  #      label=T("Tools and materials required"),
-                                  #      ),
-                                  #s3_comments("tools_other",
-                                  #            comment=None,
-                                  #            label=T("Tools Other")),
-                                  #Field("mold_equipment", "list:integer",
-                                  #      requires=IS_EMPTY_OR(
-                                  #                  IS_IN_SET(assess_mold_removal_opts,
-                                  #                            multiple=True)
-                                  #              ),
-                                  #      represent = lambda ids: \
-                                  #          assess_multi_type_represent(ids,
-                                  #                                      assess_mold_removal_opts),
-                                  #      widget = lambda f, v, **attr: \
-                                  #          CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
-                                  #      label=T("Mold removal equipment"),
-                                  #      ),
-                                  #Field("personal_protectivity", "list:integer",
-                                  #      requires=IS_EMPTY_OR(
-                                  #                  IS_IN_SET(assess_personal_protection_opts,
-                                  #                            multiple=True)
-                                  #              ),
-                                  #      represent = lambda ids: \
-                                  #          assess_multi_type_represent(ids,
-                                  #                                      assess_personal_protection_opts),
-                                  #      widget = lambda f, v, **attr: \
-                                  #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
-                                  #      label=T("All Teams Must Have Personal Protectivity Equipment"),
-                                  #      ),
-                                  #Field("skills_required", "list:integer",
-                                  #      requires=IS_EMPTY_OR(
-                                  #                  IS_IN_SET(assess_skills_required_opts,
-                                  #                            multiple=True)
-                                  #              ),
-                                  #      represent = lambda ids: \
-                                  #          assess_multi_type_represent(ids,
-                                  #                                      assess_skills_required_opts),
-                                  #      widget = lambda f, v, **attr: \
-                                  #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
-                                  #      label=T("Skills Required"),
-                                  #      ),
-                                  #Field("special_skills_required", "list:integer",
-                                  #      requires=IS_EMPTY_OR(
-                                  #                  IS_IN_SET(assess_special_skills_opts,
-                                  #                            multiple=True)
-                                  #              ),
-                                  #      represent = lambda ids: \
-                                  #          assess_multi_type_represent(ids,
-                                  #                                      assess_special_skills_opts),
-                                  #      widget = lambda f, v, **attr: \
-                                  #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
-                                  #      label=T("Special Skills Required"),
-                                  #      ),
-                                  s3_comments("special_skills",
-                                              comment=None,
-                                              label=T("Special Tools and Skills")),
-                                  Field("estimated_volunteers",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Estimated Volunteers"),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=4, **attr),
+                                label=T("Mold Status")),
+                          s3_comments("mold_notes",
+                                      comment=None,
+                                      label=T("Mold Notes")),
+                          Field("priority", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_priority_opts)
                                         ),
-                                  Field("estimated_days",
-                                        represent = lambda v: v or NONE,
-                                        label=T("Estimated Days"),
-                                        ),
-                                  Field("additional_needs", "list:integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(assess_additional_needs_opts,
-                                                              multiple=True)
-                                                ),
-                                        represent = lambda ids: \
-                                            assess_multi_type_represent(ids,
-                                                                        assess_additional_needs_opts),
-                                        widget = lambda f, v, **attr: \
-                                            CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
-                                        label=T("Additional Needs"),
-                                        ),
-                                  Field("approval", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(approved_opts)
-                                                ),
-                                        represent = lambda opt:
-                                            approved_opts.get(opt,
-                                                             UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Approved")),
-                                  s3_comments("approval_details",
-                                              comment=None,
-                                              label=T("Details")),
-                                  Field("permission", "integer",
-                                        requires=IS_EMPTY_OR(
-                                                    IS_IN_SET(yes_no_opts)
-                                                ),
-                                        represent = lambda opt: \
-                                            yes_no_opts.get(opt,
+                                represent = lambda opt:
+                                    assess_priority_opts.get(opt,
                                                             UNKNOWN_OPT),
-                                        widget = lambda f, v, **attr: \
-                                            SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
-                                        label=T("Permission from Owner to Work")),
-                                  s3_date("date_ready",
-                                          label=T("Date Ready")),
-                                  s3_comments(),
-                                  s3_comments("progress",
-                                              comment=None,
-                                              label=T("Progress and Notes")),
-                                  *s3_meta_fields())
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
+                                label=T("Priority")),
+                          s3_date(label=T("Intake Date")),
+                          Field("assessor1",
+                                represent = lambda v: v or NONE,
+                                label=T("Assessor 1")),
+                          Field("assessor2",
+                                represent = lambda v: v or NONE,
+                                label=T("Assessor 2")),
+                          Field("name",
+                                represent = lambda v: v or NONE,
+                                label=T("Name")),
+                          Field("phone",
+                                requires=IS_NULL_OR(s3_phone_requires),
+                                represent = lambda v: v or NONE,
+                                label=T("Phone Number")),
+                          Field("contact_other",
+                                represent = lambda v: v or NONE,
+                                label=T("Other Contact Information")),
+                          self.gis_location_id(),
+                          Field("homeowner_availability",
+                                represent = lambda v: v or NONE,
+                                label=T("Homeowner Availability")),
+                          Field("type_of_property", "list:integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_property_type_opts,
+                                                        multiple=True)
+                                        ),
+                                represent = lambda ids: \
+                                    assess_multi_type_represent(ids,
+                                                                assess_property_type_opts),
+                                widget = lambda f, v, **attr: \
+                                    CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
+                                label=T("Type of Property")),
+                          Field("inhabitants", "integer",
+                                represent = lambda v: v or NONE,
+                                label=T("# of Inhabitants")),
+                          Field("year_built", "integer",
+                                requires = IS_EMPTY_OR(
+                                            IS_INT_IN_RANGE(1800, 2012)
+                                            ),
+                                represent = lambda v: v or NONE,
+                                label=T("Year Built")),
+                          Field("current_residence", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Current Residence")),
+                          Field("ownership", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(ownership_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    ownership_opts.get(opt,
+                                                        UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Ownership")),
+                          Field("intention",
+                                represent = lambda v: v or NONE,
+                                label=T("Intention to Stay Home")),
+                          Field("vulnerability", "list:integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_vulnerability_opts,
+                                                        multiple=True)
+                                        ),
+                                represent = lambda ids: \
+                                    assess_multi_type_represent(ids,
+                                                                assess_vulnerability_opts),
+                                widget = lambda f, v, **attr: \
+                                    CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
+                                label=T("Vulnerabilities")),
+                          Field("building_status", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(building_status_opts)
+                                        ),
+                                represent = lambda opt:
+                                    building_status_opts.get(opt,
+                                                                UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
+                                label=T("Based on the DOB/FEMA sticker, the property is")),
+                          Field("insurance", "list:integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_insurance_opts,
+                                                        multiple=True)
+                                        ),
+                                represent = lambda ids: \
+                                    assess_multi_type_represent(ids,
+                                                                assess_insurance_opts),
+                                widget = lambda f, v, **attr: \
+                                    CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                                label=T("Type of Insurance")),
+                          Field("work_requested", "list:integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_work_requested_opts,
+                                                        multiple=True)
+                                        ),
+                                represent = lambda ids: \
+                                    assess_multi_type_represent(ids,
+                                                                assess_work_requested_opts),
+                                widget = lambda f, v, **attr: \
+                                    CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                                label=T("Work Requested")),
+                          Field("construction_type", "list:integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_construction_type_opts,
+                                                        multiple=True)
+                                        ),
+                                represent = lambda ids: \
+                                    assess_multi_type_represent(ids,
+                                                                assess_construction_type_opts),
+                                widget = lambda f, v, **attr: \
+                                    CheckboxesWidgetS3.widget(f, v, cols=4, **attr),
+                                label=T("Construction Type (Check all that apply)"),
+                                ),
+                          Field("electricity", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(on_off_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    on_off_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Electricity")),
+                          Field("gas", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(on_off_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    on_off_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Gas")),
+                          Field("basement_flooding", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Basement Flooding")),
+                          Field("basement_flooding_depth", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_INT_IN_RANGE(1, 99)
+                                            ),
+                                represent = lambda v: v or NONE,
+                                label=T("Depth (feet)"),
+                                ),
+                          Field("first_flooding", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("First Floor Flooding")),
+                          Field("first_flooding_depth", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_INT_IN_RANGE(1, 99)
+                                            ),
+                                represent = lambda v: v or NONE,
+                                label=T("Depth (feet)"),
+                                ),
+                          Field("drywall", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Drywall")),
+                          Field("floor", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Floor")),
+                          Field("remove_loose_debris", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Remove Loose Debris")),
+                          Field("remove_furniture", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Remove Furniture")),
+                          Field("remove_water_heater", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Remove Water Heater")),
+                          Field("remove_appliances", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Remove Major Appliances")),
+                          Field("asbestos", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Asbestos")),
+                          Field("damage_source", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_damage_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    assess_damage_opts.get(opt,
+                                                            UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=3, **attr),
+                                label=T("Damage Source")),
+                          Field("damage_source_other",
+                                represent = lambda v: v or NONE,
+                                label=T("Other")),
+                          s3_comments("damage_details",
+                                      label=T("Additional Description of Damage"),
+                                      comment=None,
+                                      ),
+                          s3_comments("work_plan",
+                                      label=T("Work Plan"),
+                                      comment=T("Describe access points, advice for team leaders"),
+                                      ),
+                          #Field("tools_required", "list:integer",
+                          #      requires=IS_EMPTY_OR(
+                          #                  IS_IN_SET(assess_tools_opts,
+                          #                            multiple=True)
+                          #              ),
+                          #      represent = lambda ids: \
+                          #          assess_multi_type_represent(ids,
+                          #                                      assess_tools_opts),
+                          #      widget = lambda f, v, **attr: \
+                          #          CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                          #      label=T("Tools and materials required"),
+                          #      ),
+                          #s3_comments("tools_other",
+                          #            comment=None,
+                          #            label=T("Tools Other")),
+                          #Field("mold_equipment", "list:integer",
+                          #      requires=IS_EMPTY_OR(
+                          #                  IS_IN_SET(assess_mold_removal_opts,
+                          #                            multiple=True)
+                          #              ),
+                          #      represent = lambda ids: \
+                          #          assess_multi_type_represent(ids,
+                          #                                      assess_mold_removal_opts),
+                          #      widget = lambda f, v, **attr: \
+                          #          CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                          #      label=T("Mold removal equipment"),
+                          #      ),
+                          #Field("personal_protectivity", "list:integer",
+                          #      requires=IS_EMPTY_OR(
+                          #                  IS_IN_SET(assess_personal_protection_opts,
+                          #                            multiple=True)
+                          #              ),
+                          #      represent = lambda ids: \
+                          #          assess_multi_type_represent(ids,
+                          #                                      assess_personal_protection_opts),
+                          #      widget = lambda f, v, **attr: \
+                          #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
+                          #      label=T("All Teams Must Have Personal Protectivity Equipment"),
+                          #      ),
+                          #Field("skills_required", "list:integer",
+                          #      requires=IS_EMPTY_OR(
+                          #                  IS_IN_SET(assess_skills_required_opts,
+                          #                            multiple=True)
+                          #              ),
+                          #      represent = lambda ids: \
+                          #          assess_multi_type_represent(ids,
+                          #                                      assess_skills_required_opts),
+                          #      widget = lambda f, v, **attr: \
+                          #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
+                          #      label=T("Skills Required"),
+                          #      ),
+                          #Field("special_skills_required", "list:integer",
+                          #      requires=IS_EMPTY_OR(
+                          #                  IS_IN_SET(assess_special_skills_opts,
+                          #                            multiple=True)
+                          #              ),
+                          #      represent = lambda ids: \
+                          #          assess_multi_type_represent(ids,
+                          #                                      assess_special_skills_opts),
+                          #      widget = lambda f, v, **attr: \
+                          #          CheckboxesWidgetS3.widget(f, v, cols=2, **attr),
+                          #      label=T("Special Skills Required"),
+                          #      ),
+                          s3_comments("special_skills",
+                                      comment=None,
+                                      label=T("Special Tools and Skills")),
+                          Field("estimated_volunteers",
+                                represent = lambda v: v or NONE,
+                                label=T("Estimated Volunteers"),
+                                ),
+                          Field("estimated_days",
+                                represent = lambda v: v or NONE,
+                                label=T("Estimated Days"),
+                                ),
+                          Field("additional_needs", "list:integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(assess_additional_needs_opts,
+                                                        multiple=True)
+                                        ),
+                                represent = lambda ids: \
+                                    assess_multi_type_represent(ids,
+                                                                assess_additional_needs_opts),
+                                widget = lambda f, v, **attr: \
+                                    CheckboxesWidgetS3.widget(f, v, cols=3, **attr),
+                                label=T("Additional Needs"),
+                                ),
+                          Field("approval", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(approved_opts)
+                                        ),
+                                represent = lambda opt:
+                                    approved_opts.get(opt,
+                                                        UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Approved")),
+                          s3_comments("approval_details",
+                                      comment=None,
+                                      label=T("Details")),
+                          Field("permission", "integer",
+                                requires=IS_EMPTY_OR(
+                                            IS_IN_SET(yes_no_opts)
+                                        ),
+                                represent = lambda opt: \
+                                    yes_no_opts.get(opt,
+                                                    UNKNOWN_OPT),
+                                widget = lambda f, v, **attr: \
+                                    SQLFORM.widgets.radio.widget(f, v, cols=2, **attr),
+                                label=T("Permission from Owner to Work")),
+                          s3_date("date_ready",
+                                  label=T("Date Ready")),
+                          s3_comments(),
+                          s3_comments("progress",
+                                      comment=None,
+                                      label=T("Progress and Notes")),
+                          *s3_meta_fields())
 
         # CRUD Strings
         ADD_ASSESS = T("Add Assessment")
@@ -947,7 +947,7 @@ class S3AssessCanvassModel(S3Model):
             }
 
         tablename = "assess_canvass"
-        table = self.define_table(tablename,
+        self.define_table(tablename,
                                   Field("status", "integer",
                                         default = 1,
                                         requires = IS_IN_SET(status_opts),

@@ -806,7 +806,8 @@ class organisations():
 
         s3db = current.s3db
         table = s3db.org_organisation
-        table.address = Field.Lazy(s3db.org_organisation_address)
+        table.address = Field.Method("address",
+                                     s3db.org_organisation_address)
 
         s3request = s3_request("org", "organisation", extension="aadata")
         #(S3FieldSelector("project.id") != None) & \

@@ -60,11 +60,11 @@ class S3WaterModel(S3Model):
         # Water Zone Types
         #
         tablename = "water_zone_type"
-        table = define_table(tablename,
-                             Field("name",
-                                   label=T("Name")),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label=T("Name")),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         ADD_ZONE_TYPE = T("Add Zone Type")
@@ -94,28 +94,28 @@ class S3WaterModel(S3Model):
         # - e.g. Floods
         #
         tablename = "water_zone"
-        table = define_table(tablename,
-                             Field("name",
-                                   label=T("Name")),
-                             Field("zone_type_id", db.water_zone_type,
-                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "water_zone_type.id",
-                                                          zone_type_represent,
-                                                          sort=True)),
-                                   represent = zone_type_represent,
-                                   comment = S3AddResourceLink(c="water",
-                                                               f="zone_type",
-                                                               label=ADD_ZONE_TYPE,
-                                                               tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
-                                   label=T("Type")),
-                             self.gis_location_id(
-                                widget = S3LocationSelectorWidget2(
-                                    catalog_layers=True,
-                                    polygons=True
-                                    )
-                                ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label=T("Name")),
+                     Field("zone_type_id", db.water_zone_type,
+                           requires = IS_NULL_OR(
+                                       IS_ONE_OF(db, "water_zone_type.id",
+                                                 zone_type_represent,
+                                                 sort=True)),
+                           represent = zone_type_represent,
+                           comment = S3AddResourceLink(c="water",
+                                                       f="zone_type",
+                                                       label=ADD_ZONE_TYPE,
+                                                       tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                           label=T("Type")),
+                     self.gis_location_id(
+                        widget = S3LocationSelectorWidget2(
+                           catalog_layers=True,
+                           polygons=True
+                           )
+                        ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         ADD_ZONE = T("Add Zone")
@@ -139,12 +139,12 @@ class S3WaterModel(S3Model):
         # -----------------------------------------------------------------------------
         # Rivers
         tablename = "water_river"
-        table = define_table(tablename,
-                             Field("name",
-                                   label=T("Name"),
-                                   requires = IS_NOT_EMPTY()),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label=T("Name"),
+                           requires = IS_NOT_EMPTY()),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         ADD_RIVER = T("Add River")
@@ -162,7 +162,7 @@ class S3WaterModel(S3Model):
             msg_list_empty = T("No Rivers currently registered"))
 
         #represent = S3Represent(lookup = tablename)
-        #river_id = S3ReusableField("river_id", table,
+        #river_id = S3ReusableField("river_id", "reference %s" % tablename,
         #                           requires = IS_NULL_OR(IS_ONE_OF(db, "water_river.id", represent)),
         #                           represent = represent,
         #                           label = T("River"),
@@ -183,30 +183,30 @@ class S3WaterModel(S3Model):
             4:T("Low")
         }
         tablename = "water_gauge"
-        table = define_table(tablename,
-                             Field("name",
-                                   label=T("Name")),
-                             Field("code",
-                                   label=T("Code")),
-                             #super_link("source_id", "doc_source_entity"),
-                             self.gis_location_id(),
-                             Field("url",
-                                   label = T("URL"),
-                                   requires = IS_NULL_OR(IS_URL()),
-                                   represent = lambda url: \
-                                    A(url, _href=url, _target="blank")
-                                   ),
-                             Field("image_url",
-                                   label=T("Image URL")),
-                             Field("discharge", "integer",
-                                   label = T("Discharge (cusecs)")),
-                             Field("status", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(flowstatus_opts)),
-                                   represent = lambda opt: \
-                                    flowstatus_opts.get(opt, opt),
-                                   label = T("Flow Status")),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label=T("Name")),
+                     Field("code",
+                           label=T("Code")),
+                     #super_link("source_id", "doc_source_entity"),
+                     self.gis_location_id(),
+                     Field("url",
+                           label = T("URL"),
+                           requires = IS_NULL_OR(IS_URL()),
+                           represent = lambda url: \
+                                       A(url, _href=url, _target="blank")
+                           ),
+                     Field("image_url",
+                           label=T("Image URL")),
+                     Field("discharge", "integer",
+                           label = T("Discharge (cusecs)")),
+                     Field("status", "integer",
+                           requires = IS_NULL_OR(IS_IN_SET(flowstatus_opts)),
+                           represent = lambda opt: \
+                           flowstatus_opts.get(opt, opt),
+                           label = T("Flow Status")),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         ADD_GAUGE = T("Add Gauge")
         crud_strings[tablename] = Storage(

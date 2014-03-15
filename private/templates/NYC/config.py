@@ -8,7 +8,10 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
+from gluon.html import *
 from gluon.storage import Storage
+
+from s3.s3utils import s3_fullname
 
 T = current.T
 settings = current.deployment_settings
@@ -282,9 +285,9 @@ def org_facility_onvalidation(form):
         form_vars.name = current.db.org_facility.location_id.represent(form_vars.location_id)
 
 # -----------------------------------------------------------------------------
-def customize_org_facility(**attr):
+def customise_org_facility_controller(**attr):
     """
-        Customize org_facility controller
+        Customise org_facility controller
     """
 
     s3db = current.s3db
@@ -311,14 +314,7 @@ def customize_org_facility(**attr):
             tablename = "org_facility"
             table = s3db[tablename]
 
-            if r.component_name == "human_resource":
-                from s3.s3validators import IS_ADD_PERSON_WIDGET2
-                from s3.s3widgets import S3AddPersonWidget2
-                pfield = r.component.table.person_id
-                pfield.requires = IS_ADD_PERSON_WIDGET2()
-                pfield.widget = S3AddPersonWidget2(controller="pr")
-
-            elif r.method in (None, "create", "update"):
+            if not r.component and r.method in (None, "create", "update"):
                 from s3.s3validators import IS_LOCATION_SELECTOR2
                 from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
                 field = table.location_id
@@ -365,12 +361,12 @@ def customize_org_facility(**attr):
 
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
     """
 
     s3db = current.s3db
@@ -562,12 +558,6 @@ def customize_org_organisation(**attr):
                 s3db.configure("pr_contact",
                                onaccept = pr_contact_onaccept,
                                )
-            elif r.component_name == "human_resource":
-                from s3.s3validators import IS_ADD_PERSON_WIDGET2
-                from s3.s3widgets import S3AddPersonWidget2
-                field = s3db.hrm_human_resource.person_id
-                field.widget = S3AddPersonWidget2(controller="pr")
-                field.requires = IS_ADD_PERSON_WIDGET2()
             elif r.component_name == "facility":
                 if r.method in (None, "create", "update"):
                     from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -614,12 +604,12 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_group(**attr):
+def customise_org_group_controller(**attr):
     """
-        Customize org_group controller
+        Customise org_group controller
     """
 
     s3db = current.s3db
@@ -765,7 +755,7 @@ def customize_org_group(**attr):
 
     return attr
 
-settings.ui.customize_org_group = customize_org_group
+settings.customise_org_group_controller = customise_org_group_controller
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -777,9 +767,9 @@ settings.pr.request_gender = False
 
 # -----------------------------------------------------------------------------
 # Persons
-def customize_pr_person(**attr):
+def customise_pr_person_controller(**attr):
     """
-        Customize pr_person controller
+        Customise pr_person controller
     """
 
     s3 = current.response.s3
@@ -793,55 +783,54 @@ def customize_pr_person(**attr):
         else:
             result = True
 
-        if r.interactive:
-            if r.component_name == "human_resource":
-                s3db = current.s3db
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                s3db.org_group_person.group_id.label = ""
-                crud_form = S3SQLCustomForm("organisation_id",
-                                            "site_id",
-                                            S3SQLInlineComponent(
-                                                "group_person",
-                                                label = T("Network"),
-                                                link = False,
-                                                fields = ["group_id"],
-                                                multiple = False,
-                                                ),
-                                            "job_title_id",
-                                            "start_date",
-                                            )
-
-                list_fields = ["id",
-                               "job_title_id",
-                               "organisation_id",
-                               (T("Network"), "group_person.group_id"),
-                               (T("Groups"), "person_id$group_membership.group_id"),
-                               "site_id",
-                               #"site_contact",
-                               (T("Email"), "email.value"),
-                               (settings.get_ui_label_mobile_phone(), "phone.value"),
-                               ]
-
-                s3db.configure("hrm_human_resource",
-                               crud_form = crud_form,
-                               list_fields = list_fields,
-                               )
-
-            elif r.component_name == "group_membership":
-                current.s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        if r.interactive and \
+           r.component_name == "group_membership":
+            current.s3db.pr_group_membership.group_head.label = T("Group Chairperson")
 
         return result
     s3.prep = custom_prep
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
 # Groups
-def customize_pr_group(**attr):
+def chairperson(row):
     """
-        Customize pr_group controller
+       Virtual Field to show the chairperson of a group 
+    """
+
+    if hasattr(row, "pr_group"):
+        row = row.pr_group
+    try:
+        group_id = row.id
+    except:
+        # not available
+        return current.messages["NONE"]
+
+    db = current.db
+    s3db = current.s3db
+    mtable = s3db.pr_group_membership
+    ptable = db.pr_person
+    query = (mtable.group_id == group_id) & \
+            (mtable.group_head == True) & \
+            (mtable.person_id == ptable.id)
+    chair = db(query).select(ptable.first_name,
+                             ptable.middle_name,
+                             ptable.last_name,
+                             ptable.id,
+                             limitby=(0, 1)).first()
+    if chair:
+        # Only used in list view so HTML is OK
+        return A(s3_fullname(chair),
+                 _href=URL(c="hrm", f="person", args=chair.id))
+    else:
+        return current.messages["NONE"]
+
+def customise_pr_group_controller(**attr):
+    """
+        Customise pr_group controller
     """
 
     s3 = current.response.s3
@@ -856,20 +845,18 @@ def customize_pr_group(**attr):
             result = True
 
         s3db = current.s3db
-        tablename = "pr_group"
 
         # Format for filter_widgets & imports
-        s3db.add_components("pr_group", org_group_team="group_id")
+        s3db.add_components("pr_group",
+                            org_group_team="group_id")
 
-        from gluon import URL
-        from gluon.sqlhtml import TextWidget
         from s3.s3fields import S3Represent
         from s3.s3filter import S3TextFilter, S3OptionsFilter
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
         field = s3db.org_group_team.org_group_id
         field.label = ""
         field.represent = S3Represent(lookup="org_group", show_link=True)
-        s3db.pr_group.description.widget = TextWidget.widget
         crud_form = S3SQLCustomForm("name",
                                     "description",
                                     S3SQLInlineComponent("group_team",
@@ -898,31 +885,60 @@ def customize_pr_group(**attr):
                             ),
             ]
 
-        list_fields = ["id",
-                       (T("Network"), "group_team.org_group_id"),
-                       "name",
-                       "description",
-                       "comments",
-                       ]
-
-        s3db.configure(tablename,
-                       # Redirect to member list when a new group has been created
-                       create_next = URL(f="group",
-                                         args=["[id]", "group_membership"]),
+        s3db.configure("pr_group",
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
-                       list_fields = list_fields,
                        )
 
-        if r.component_name == "group_membership":
-            s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        #if r.component_name == "group_membership":
+        s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        #else:
+        #    # RHeader wants a simplified version, but don't want inconsistent across tabs
+        #    s3db.pr_group_membership.group_head.label = T("Chairperson")
 
         return result
     s3.prep = custom_prep
 
     return attr
 
-settings.ui.customize_pr_group = customize_pr_group
+settings.customise_pr_group_controller = customise_pr_group_controller
+
+# -----------------------------------------------------------------------------
+def customise_pr_group_resource(r, tablename):
+    """
+        Customise pr_group resource (in group & org_group controllers)
+            - runs after controller customisation
+            - but runs before prep
+    """
+
+    from gluon import Field, URL
+    from gluon.sqlhtml import TextWidget
+
+    s3db = current.s3db
+
+    table = s3db.pr_group
+
+    # Increase size of widget
+    table.description.widget = TextWidget.widget
+
+    table.chairperson = Field.Method("chairperson", chairperson)
+
+    list_fields = ["id",
+                   (T("Network"), "group_team.org_group_id"),
+                   "name",
+                   "description",
+                   (T("Chairperson"), "chairperson"),
+                   "comments",
+                   ]
+
+    s3db.configure("pr_group",
+                   # Redirect to member list when a new group has been created
+                   create_next = URL(c="hrm", f="group",
+                                     args=["[id]", "group_membership"]),
+                   list_fields = list_fields,
+                   )
+
+settings.customise_pr_group_resource = customise_pr_group_resource
 
 # -----------------------------------------------------------------------------
 def pr_contact_onaccept(form):
@@ -1001,9 +1017,9 @@ settings.hrm.teams = "Groups"
 settings.hrm.organisation_label = "Organization"
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource(**attr):
+def customise_hrm_human_resource_controller(**attr):
     """
-        Customize hrm_human_resource controller
+        Customise hrm_human_resource controller
     """
 
     s3 = current.response.s3
@@ -1019,27 +1035,6 @@ def customize_hrm_human_resource(**attr):
 
         if r.interactive or r.representation == "aadata":
             if not r.component:
-                s3db = current.s3db
-                table = r.table
-                #table.department_id.readable = table.department_id.writable = False
-                #table.end_date.readable = table.end_date.writable = False
-                from s3.s3validators import IS_ADD_PERSON_WIDGET2
-                from s3.s3widgets import S3AddPersonWidget2
-                pfield = table.person_id
-                pfield.requires = IS_ADD_PERSON_WIDGET2()
-                pfield.widget = S3AddPersonWidget2(controller="pr")
-                list_fields = ["id",
-                               "person_id",
-                               "job_title_id",
-                               "organisation_id",
-                               (T("Network"), "group_person.group_id"),
-                               (T("Groups"), "person_id$group_membership.group_id"),
-                               "site_id",
-                               #"site_contact",
-                               (T("Email"), "email.value"),
-                               (settings.get_ui_label_mobile_phone(), "phone.value"),
-                               ]
-
                 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [
                     S3TextFilter(["person_id$first_name",
@@ -1085,39 +1080,77 @@ def customize_hrm_human_resource(**attr):
                                     ),
                     ]
 
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                s3db.org_group_person.group_id.label = ""
-                crud_form = S3SQLCustomForm("person_id",
-                                            "organisation_id",
-                                            "site_id",
-                                            S3SQLInlineComponent(
-                                                "group_person",
-                                                label = T("Network"),
-                                                link = False,
-                                                fields = ["group_id"],
-                                                multiple = False,
-                                                ),
-                                            "job_title_id",
-                                            "start_date",
-                                            )
-
+                s3db = current.s3db
                 s3db.configure("hrm_human_resource",
-                               crud_form = crud_form,
                                filter_widgets = filter_widgets,
-                               list_fields = list_fields,
                                )
+
+                # Use a hierarchical dropdown instead of AC
+                s3db.hrm_human_resource.site_id.widget = None
+                script = \
+'''S3OptionsFilter({
+ 'triggerName':'organisation_id',
+ 'targetName':'site_id',
+ 'lookupResource':'site',
+ 'lookupURL':'/%s/org/sites_for_org/',
+ 'optional':true
+})''' % r.application
+                s3.jquery_ready.append(script)
 
         return result
     s3.prep = custom_prep
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_job_title(**attr):
+def customise_hrm_human_resource_resource(r, tablename):
     """
-        Customize hrm_job_title controller
+        Customise hrm_human_resource resource (in facility, human_resource, organisation & person controllers)
+            - runs after controller customisation
+            - but runs before prep
+    """
+
+    s3db = current.s3db
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    s3db.org_group_person.group_id.label = ""
+    crud_form = S3SQLCustomForm("person_id",
+                                "organisation_id",
+                                "site_id",
+                                S3SQLInlineComponent(
+                                    "group_person",
+                                    label = T("Network"),
+                                    link = False,
+                                    fields = ["group_id"],
+                                    multiple = False,
+                                    ),
+                                "job_title_id",
+                                "start_date",
+                                )
+    list_fields = ["id",
+                   "person_id",
+                   "job_title_id",
+                   "organisation_id",
+                   (T("Network"), "group_person.group_id"),
+                   (T("Groups"), "person_id$group_membership.group_id"),
+                   "site_id",
+                   #"site_contact",
+                   (T("Email"), "email.value"),
+                   (settings.get_ui_label_mobile_phone(), "phone.value"),
+                   ]
+
+    s3db.configure("hrm_human_resource",
+                   crud_form = crud_form,
+                   list_fields = list_fields,
+                   )
+
+settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+# -----------------------------------------------------------------------------
+def customise_hrm_job_title_controller(**attr):
+    """
+        Customise hrm_job_title controller
     """
 
     s3 = current.response.s3
@@ -1141,7 +1174,7 @@ def customize_hrm_job_title(**attr):
 
     return attr
 
-settings.ui.customize_hrm_job_title = customize_hrm_job_title
+settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
 # -----------------------------------------------------------------------------
 # Projects
@@ -1158,7 +1191,7 @@ settings.project.sectors = False
 # Multiple partner organizations
 settings.project.multiple_organisations = True
 
-def customize_project_project(**attr):
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -1304,7 +1337,7 @@ def customize_project_project(**attr):
 
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
 # Requests Management
@@ -1327,9 +1360,9 @@ settings.req.type_inv_label = "Supplies"
 settings.req.summary = True
 
 # -----------------------------------------------------------------------------
-def customize_req_req(**attr):
+def customise_req_req_controller(**attr):
     """
-        Customize req_req controller
+        Customise req_req controller
     """
 
     s3 = current.response.s3
@@ -1357,7 +1390,7 @@ def customize_req_req(**attr):
 
     return attr
 
-settings.ui.customize_req_req = customize_req_req
+settings.customise_req_req_controller = customise_req_req_controller
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

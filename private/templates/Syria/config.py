@@ -82,6 +82,8 @@ settings.gis.map_height = 400
 #settings.gis.map_width = 854
 # Use a non-default fillColor for Clustered points
 settings.gis.cluster_fill = "ee3224"
+# Disable the label for clustered points
+settings.gis.cluster_label = False
 # Use a non-default strokeColor for Clustered points
 settings.gis.cluster_stroke = "7a1600"
 # Use a non-default fillColor for Selected points
@@ -510,9 +512,9 @@ def render_locations(list_id, item_id, resource, rfields, record):
     return item
 
 # -----------------------------------------------------------------------------
-def customize_gis_location(**attr):
+def customise_gis_location_controller(**attr):
     """
-        Customize gis_location controller
+        Customise gis_location controller
         - Profile Page, used as main Homepage for this template
     """
 
@@ -552,8 +554,8 @@ def customize_gis_location(**attr):
             elif r.method == "profile":
         
                 # Customise tables used by widgets
-                #customize_cms_post_fields()
-                #customize_project_project_fields()
+                #customise_cms_post_fields()
+                #customise_project_project_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -651,11 +653,11 @@ def customize_gis_location(**attr):
 
     return attr
 
-settings.ui.customize_gis_location = customize_gis_location
+settings.customise_gis_location_controller = customise_gis_location_controller
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource_fields():
+def customise_hrm_human_resource_fields():
     """
-        Customize hrm_human_resource for Profile widgets and 'more' popups
+        Customise hrm_human_resource for Profile widgets and 'more' popups
     """
 
     s3db = current.s3db
@@ -683,9 +685,9 @@ def customize_hrm_human_resource_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource(**attr):
+def customise_hrm_human_resource_controller(**attr):
     """
-        Customize hrm_human_resource controller
+        Customise hrm_human_resource controller
         - used for 'more' popups
     """
 
@@ -701,7 +703,7 @@ def customize_hrm_human_resource(**attr):
                 return False
 
         if r.method == "datalist":
-            customize_hrm_human_resource_fields()
+            customise_hrm_human_resource_fields()
             current.s3db.configure("hrm_human_resource",
                                    # Don't include a Create form in 'More' popups
                                    listadd = False,
@@ -713,13 +715,10 @@ def customize_hrm_human_resource(**attr):
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_job_title(**attr):
-    """
-        Customize hrm_job_title controller
-    """
+def customise_hrm_job_title_controller(**attr):
 
     s3 = current.response.s3
 
@@ -796,12 +795,12 @@ def customize_hrm_job_title(**attr):
 
     return attr
 
-settings.ui.customize_hrm_job_title = customize_hrm_job_title
+settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
         - Profile Page
     """
 
@@ -826,10 +825,10 @@ def customize_org_organisation(**attr):
             s3db = current.s3db
             if r.method == "profile":
                 # Customise tables used by widgets
-                #customize_cms_post_fields()
-                customize_hrm_human_resource_fields()
-                #customize_org_office_fields()
-                customize_project_project_fields()
+                #customise_cms_post_fields()
+                customise_hrm_human_resource_fields()
+                #customise_org_office_fields()
+                customise_project_project_fields()
 
                 contacts_widget = dict(label = "Contacts",
                                        title_create = "Add New Contact",
@@ -975,13 +974,10 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -1218,12 +1214,12 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_activity(**attr):
+def customise_project_activity_controller(**attr):
     """
-        Customize project_activity controller
+        Customise project_activity controller
 
         This is the main page for this Template
     """
@@ -1435,12 +1431,12 @@ $('.pt-form input[name="pivotdata"]').appendTo($('.pt-container'))'''
 
     return attr
 
-settings.ui.customize_project_activity = customize_project_activity
+settings.customise_project_activity_controller = customise_project_activity_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_project_fields():
+def customise_project_project_fields():
     """
-        Customize project_project fields for Profile widgets and 'more' popups
+        Customise project_project fields for Profile widgets and 'more' popups
     """
 
     format = "%d/%m/%y"
@@ -1478,10 +1474,7 @@ def customize_project_project_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_project_project(**attr):
-    """
-        Customize project_project controller
-    """
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -1501,7 +1494,7 @@ def customize_project_project(**attr):
         table = s3db.project_project
 
         if r.method == "datalist":
-            customize_project_project_fields()
+            customise_project_project_fields()
             s3db.configure("project_project",
                            # Don't include a Create form in 'More' popups
                            listadd = False,
@@ -1519,9 +1512,7 @@ def customize_project_project(**attr):
 
             # Configure fields 
             table.objectives.readable = table.objectives.writable = True
-            from s3.s3widgets import S3AddPersonWidget2
             table.human_resource_id.label = T("Focal Person")
-            table.human_resource_id.widget = S3AddPersonWidget2()
             s3db.hrm_human_resource.organisation_id.default = organisation_id
             table.budget.label = "%s (USD)" % T("Budget")
             # Better in column label & otherwise this construction loses thousands separators
@@ -1733,25 +1724,10 @@ def customize_project_project(**attr):
 
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_beneficiary(**attr):
-    """
-        Customize project_beneficiary controller
-    """
-
-    s3 = current.response.s3
-
-    return attr
-
-#settings.ui.customize_project_beneficiary = customize_project_beneficiary
-
-# -----------------------------------------------------------------------------
-def customize_supply_distribution(**attr):
-    """
-        Customize supply_distribution controller
-    """
+def customise_supply_distribution_controller(**attr):
 
     s3 = current.response.s3
 
@@ -1777,7 +1753,7 @@ def customize_supply_distribution(**attr):
 
     return attr
 
-settings.ui.customize_supply_distribution = customize_supply_distribution
+settings.customise_supply_distribution_controller = customise_supply_distribution_controller
 
 # -----------------------------------------------------------------------------
 # Filter forms - style for Summary pages

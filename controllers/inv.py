@@ -310,12 +310,7 @@ def warehouse():
                 s3db.inv_prep(r)
 
             elif component_name == "human_resource":
-                # Filter out people which are already staff for this warehouse
-                s3base.s3_filter_staff(r)
-                # Cascade the organisation_id from the hospital to the staff
-                htable = s3db.hrm_human_resource
-                htable.organisation_id.default = r.record and r.record.organisation_id
-                htable.organisation_id.writable = False
+                s3db.org_site_staff_config(r)
 
             elif component_name == "req":
                 s3db.req_prep(r)

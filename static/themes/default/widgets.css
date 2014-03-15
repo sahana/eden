@@ -209,7 +209,8 @@ textarea.richtext {
 }
 
 /* Used to diplay the list-add with the list-add-btn */
-#list-btn-add {
+#list-btn-add,
+.list-btn-add {
     margin-bottom: 10px;
 /*     float: left; */
 }
@@ -935,20 +936,43 @@ span.tab_next_inactive a {
 #select_from_registry_row td {
    padding: 8px;
 }
+
+/* This should be in style.css where-required
 .box_top,
 .box_middle,
 .box_bottom {
    border-left: #bbb 1px solid;
    border-right: #bbb 1px solid;
    background: #F0F3F4;
-}
+}*/
 
-.box_top {
+.box_top,
+.box_top_inner {
    border-top: #bbb 1px solid;
+}
+.box_top {
    padding-top: 8px;
 }
+form table td.box_top_td {
+    padding-top: 8px;
+}
 
-.box_bottom {
+.box_top label,
+.box_top_inner label {
+    display: block;
+    background-color: #fbfbfb;
+    float: left;
+    margin-top: -6px;
+    margin-left: 50px;
+    padding: 0 10px;
+    width: auto;
+}
+
+.box_bottom { /* For Bootstrap */
+   border-bottom: #bbb 1px solid;
+   padding-bottom: 8px;
+}
+form table tr.box_bottom td { /* For regular themes */
    border-bottom: #bbb 1px solid;
    padding-bottom: 8px;
 }
@@ -1170,7 +1194,6 @@ ul.x-tree-root-ct {
 }
 
 /* Search Form */
-.search_select_letter_label,
 .s3-grouped-checkboxes-widget-label,
 .s3-groupedopts-label {
     margin: 10px 0 0 7px;
@@ -1179,7 +1202,6 @@ ul.x-tree-root-ct {
     background: url(../../img/icon_blue_plus15px.png) no-repeat;
     cursor: pointer;
 }
-.search_select_letter_label.expanded,
 .s3-grouped-checkboxes-widget-label.expanded,
 .s3-groupedopts-label.expanded {
     height: 16px;
@@ -1187,13 +1209,11 @@ ul.x-tree-root-ct {
     background: url(../../img/icon_blue_minus15px.png) no-repeat;
 }
 
-.search_select_letter_widget,
 .s3-grouped-checkboxes-widget .s3-checkboxes-widget,
 .s3-groupedopts-widget table {
     margin-left: 2em;
 }
 
-.form-container form fieldset .search_select_letter_widget label,
 .form-container form fieldset  .s3-checkboxes-widget label,
 .form-container form fieldset  .s3-groupedopts-widget label {
     white-space: nowrap;
@@ -1241,26 +1261,23 @@ ul.x-tree-root-ct {
 }
 
 .filter-form td,
-.search_form td,
 #filter_options td {
     border-top: 1px solid #D9D9D9;
 }
 .filter-form tr:first-child > td,
-.search_form tr:first-child > td,
 #filter_options tr:first-child > td {
     border-top: 0;
 }
 .filter-form table.s3-checkboxes-widget td,
 .filter-form table.s3-groupedopts-widget td,
-.search_form table.s3-checkboxes-widget td,
-.search_form table.s3searchminmaxwidget td,
 #filter_options table.s3-checkboxes-widget td,
 #filter_options table.s3searchminmaxwidget td {
     border-top: 0;
 }
 
 /* Vertical arrangement of multi-button multi-select filter widgets such as S3LocationFilter */
-.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
+.form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     clear: left;
     float: left;
     min-width: 220px;

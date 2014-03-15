@@ -238,79 +238,79 @@ class S3CAPModel(S3Model):
         ])
 
         tablename = "cap_alert"
-        table = define_table(tablename,
-                             Field("is_template", "boolean",
-                                   readable=False,
-                                   writable=True),
-                             Field("template_id", "reference cap_alert",
-                                      requires = IS_NULL_OR(
-                                          IS_ONE_OF(db, "cap_alert.id",
-                                                    self.template_represent,
-                                                    filterby="is_template",
-                                                    filter_opts=(True,)
-                                                    )),
-                                      represent = self.template_represent,
-                                      label = T("Template"),
-                                      comment = T("Apply a template"),
-                                      ondelete = "RESTRICT"),
-                             Field("template_title",
-                                   label = T("Template Title")),
-                             Field("template_settings", "text",
-                                   readable=False,
-                                   default="{}"),
-                             Field("identifier", unique=True, length=128,
-                                   label = T("Identifier"),
-                                   default = self.generate_identifier),
-                             Field("sender",
-                                   label = T("Sender"),
-                                   default = self.generate_sender),
-                             Field("sent", "datetime",
-                                   writable=False,
-                                   readable=True),
-                             Field("status",
-                                   label = T("Status"),
-                                   requires=IS_IN_SET(cap_alert_status_code_opts)),
-                             Field("msg_type",
-                                   label = T("Message Type"),
-                                   requires=IS_IN_SET(cap_alert_msgType_code_opts)),
-                             Field("source",
-                                   label = T("Source")),
-                             Field("scope",
-                                   label = T("Scope"),
-                                   requires=IS_IN_SET(cap_alert_scope_code_opts)),
-                             # Text decribing the restriction for scope=restricted
-                             Field("restriction", "text",
-                                   label = T("Restriction")),
-                             Field("addresses", "list:string",
-                                   label = T("Recipients"),
-                                   #@ToDo: provide a better way to add multiple addresses,
-                                   #       do not ask the user to delimit it themselves
-                                   #       this should eventually use the CAP contacts
-                                   #widget = S3CAPAddressesWidget,
-                                   represent=self.list_string_represent),
-                             Field("codes", "text",
-                                   label = T("Codes"),
-                                   widget = S3KeyValueWidget(),
-                                   represent = S3KeyValueWidget.represent,
-                                   default = settings.get_cap_codes()
-                                   ),
-                             Field("note", "text",
-                                   label = T("Note")),
-                             Field("reference", "list:reference cap_alert",
-                                   label = T("Reference"),
-                                   # @ToDo: This should not be manually entered,
-                                   #        needs a widget
-                                   #widget = S3ReferenceWidget(table,
-                                   #                           one_to_many=True,
-                                   #                           allow_create=False),
-                                   represent=self.alert_reference_represent),
-                             # @ToDo: Switch to using event_incident_type_id
-                             Field("incidents",
-                                   label = T("Incidents"),
-                                   requires=IS_IN_SET(cap_incident_type_opts,
-                                                      multiple=True),
-                                   represent = self.list_string_represent),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("is_template", "boolean",
+                           readable=False,
+                           writable=True),
+                     Field("template_id", "reference cap_alert",
+                           requires = IS_NULL_OR(
+                                         IS_ONE_OF(db, "cap_alert.id",
+                                             self.template_represent,
+                                             filterby="is_template",
+                                             filter_opts=(True,)
+                                       )),
+                           represent = self.template_represent,
+                           label = T("Template"),
+                           comment = T("Apply a template"),
+                           ondelete = "RESTRICT"),
+                     Field("template_title",
+                           label = T("Template Title")),
+                     Field("template_settings", "text",
+                           readable=False,
+                           default="{}"),
+                     Field("identifier", unique=True, length=128,
+                           label = T("Identifier"),
+                           default = self.generate_identifier),
+                     Field("sender",
+                           label = T("Sender"),
+                           default = self.generate_sender),
+                     Field("sent", "datetime",
+                           writable=False,
+                           readable=True),
+                     Field("status",
+                           label = T("Status"),
+                           requires=IS_IN_SET(cap_alert_status_code_opts)),
+                     Field("msg_type",
+                           label = T("Message Type"),
+                           requires=IS_IN_SET(cap_alert_msgType_code_opts)),
+                     Field("source",
+                           label = T("Source")),
+                     Field("scope",
+                           label = T("Scope"),
+                           requires=IS_IN_SET(cap_alert_scope_code_opts)),
+                     # Text decribing the restriction for scope=restricted
+                     Field("restriction", "text",
+                           label = T("Restriction")),
+                     Field("addresses", "list:string",
+                           label = T("Recipients"),
+                           #@ToDo: provide a better way to add multiple addresses,
+                           #       do not ask the user to delimit it themselves
+                           #       this should eventually use the CAP contacts
+                           #widget = S3CAPAddressesWidget,
+                           represent=self.list_string_represent),
+                     Field("codes", "text",
+                           label = T("Codes"),
+                           widget = S3KeyValueWidget(),
+                           represent = S3KeyValueWidget.represent,
+                           default = settings.get_cap_codes()
+                           ),
+                     Field("note", "text",
+                           label = T("Note")),
+                     Field("reference", "list:reference cap_alert",
+                           label = T("Reference"),
+                           # @ToDo: This should not be manually entered,
+                           #        needs a widget
+                           #widget = S3ReferenceWidget(table,
+                           #                           one_to_many=True,
+                           #                           allow_create=False),
+                           represent=self.alert_reference_represent),
+                     # @ToDo: Switch to using event_incident_type_id
+                     Field("incidents",
+                           label = T("Incidents"),
+                           requires=IS_IN_SET(cap_incident_type_opts,
+                                              multiple=True),
+                           represent = self.list_string_represent),
+                     *s3_meta_fields())
 
         filter_widgets = [
             S3TextFilter(["identifier",
@@ -355,7 +355,7 @@ class S3CAPModel(S3Model):
                 msg_record_deleted = T("Alert deleted"),
                 msg_list_empty = T("No alerts to show"))
 
-        alert_id = S3ReusableField("alert_id", table,
+        alert_id = S3ReusableField("alert_id", "reference %s" % tablename,
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "cap_alert.id",
                                                           self.alert_represent)),
@@ -428,72 +428,72 @@ class S3CAPModel(S3Model):
 
         # @ToDo: i18n: Need label=T("")
         tablename = "cap_info"
-        table = define_table(tablename,
-                             alert_id(),
-                             Field("is_template", "boolean",
-                                   default=True,
-                                   readable=False,
-                                   writable=False),
-                             Field("template_info_id", "reference cap_info",
-                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "cap_info.id",
-                                                          self.template_represent,
-                                                          filterby="is_template",
-                                                          filter_opts=(True,)
-                                                          )),
-                                   ondelete = "RESTRICT",
-                                   widget = S3HiddenWidget(),
-                                   readable=False),
-                             Field("template_settings", "text", readable=False),
-                             Field("language",
-                                   requires=IS_IN_SET(settings.get_cap_languages()),
-                                   default="en"),
-                             Field("category",
-                                   represent=self.list_string_represent,
-                                   requires=IS_IN_SET(cap_info_category_opts,
-                                                      multiple=True),
-                                   required=True),# 1 or more allowed
-                             Field("event", required=True),
-                             Field("response_type",
-                                   #widget = S3MultiSelectWidget(),
-                                   requires=IS_IN_SET(cap_info_responseType_opts,
-                                                      multiple=True),
-                                   represent=self.list_string_represent), # 0 or more allowed
-                             Field("priority",
-                                    requires=IS_IN_SET(cap_info_priority_opts)),
-                             Field("urgency", required=True,
-                                   requires=IS_IN_SET(cap_info_urgency_opts)),
-                             Field("severity", required=True,
-                                   requires=IS_IN_SET(cap_info_severity_opts)),
-                             Field("certainty", required=True,
-                                   requires=IS_IN_SET(cap_info_certainty_opts)),
-                             Field("audience", "text"),
-                             Field("event_code", "text",
-                                   widget = S3KeyValueWidget(),
-                                   represent = S3KeyValueWidget.represent,
-                                   default = settings.get_cap_event_codes()
-                                   ),
-                             Field("effective", "datetime",
-                                   # @ToDo: format/represent for l10n options
-                                   widget = S3DateTimeWidget()),
-                             Field("onset", "datetime",
-                                   widget = S3DateTimeWidget()),
-                             Field("expires", "datetime",
-                                   widget = S3DateTimeWidget(past=0)),
-                             Field("sender_name"),
-                             Field("headline"),
-                             Field("description", "text"),
-                             Field("instruction", "text"),
-                             Field("contact", "text"),
-                             Field("web",
-                                   requires=IS_NULL_OR(IS_URL())),
-                             Field("parameter", "text",
-                                   label = T("Parameters"),
-                                   widget = S3KeyValueWidget(),
-                                   represent = S3KeyValueWidget.represent,
-                                   default = settings.get_cap_parameters()
-                                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     alert_id(),
+                     Field("is_template", "boolean",
+                           default=True,
+                           readable=False,
+                           writable=False),
+                     Field("template_info_id", "reference cap_info",
+                           requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "cap_info.id",
+                                                  self.template_represent,
+                                                  filterby="is_template",
+                                                  filter_opts=(True,)
+                                                  )),
+                           ondelete = "RESTRICT",
+                           widget = S3HiddenWidget(),
+                           readable=False),
+                     Field("template_settings", "text", readable=False),
+                     Field("language",
+                           requires=IS_IN_SET(settings.get_cap_languages()),
+                           default="en"),
+                     Field("category",
+                           represent=self.list_string_represent,
+                           requires=IS_IN_SET(cap_info_category_opts,
+                                              multiple=True),
+                           required=True),# 1 or more allowed
+                     Field("event", required=True),
+                     Field("response_type",
+                           #widget = S3MultiSelectWidget(),
+                           requires=IS_IN_SET(cap_info_responseType_opts,
+                                              multiple=True),
+                           represent=self.list_string_represent), # 0 or more allowed
+                     Field("priority",
+                           requires=IS_IN_SET(cap_info_priority_opts)),
+                     Field("urgency", required=True,
+                           requires=IS_IN_SET(cap_info_urgency_opts)),
+                     Field("severity", required=True,
+                           requires=IS_IN_SET(cap_info_severity_opts)),
+                     Field("certainty", required=True,
+                           requires=IS_IN_SET(cap_info_certainty_opts)),
+                     Field("audience", "text"),
+                     Field("event_code", "text",
+                           widget = S3KeyValueWidget(),
+                           represent = S3KeyValueWidget.represent,
+                           default = settings.get_cap_event_codes()
+                           ),
+                     Field("effective", "datetime",
+                           # @ToDo: format/represent for l10n options
+                           widget = S3DateTimeWidget()),
+                     Field("onset", "datetime",
+                           widget = S3DateTimeWidget()),
+                     Field("expires", "datetime",
+                           widget = S3DateTimeWidget(past=0)),
+                     Field("sender_name"),
+                     Field("headline"),
+                     Field("description", "text"),
+                     Field("instruction", "text"),
+                     Field("contact", "text"),
+                     Field("web",
+                           requires=IS_NULL_OR(IS_URL())),
+                     Field("parameter", "text",
+                           label = T("Parameters"),
+                           widget = S3KeyValueWidget(),
+                           represent = S3KeyValueWidget.represent,
+                           default = settings.get_cap_parameters()
+                           ),
+                     *s3_meta_fields())
 
         info_labels = cap_info_labels()
         for field in info_labels:
@@ -519,7 +519,7 @@ class S3CAPModel(S3Model):
                 msg_record_deleted = T("Alert information deleted"),
                 msg_list_empty = T("No alert information to show"))
 
-        info_id = S3ReusableField("info_id", table,
+        info_id = S3ReusableField("info_id", "reference %s" % tablename,
                                   sortby="identifier",
                                   requires=IS_NULL_OR(
                                             IS_ONE_OF(db, "cap_info.id",
@@ -542,53 +542,53 @@ class S3CAPModel(S3Model):
         # CAP Resource segments
         #
         tablename = "cap_resource"
-        table = define_table(tablename,
-                             info_id(),
-                             alert_id(writable=False),
-                             Field("resource_desc", required=True),
-                             Field("mime_type", required=True),
-                             Field("size", "integer",
-                                   writable = False),
-                             Field("uri",
-                                   writable = False), # needs a special validation
-                             Field("file", "upload"),
-                             Field("deref_uri", "text",
-                                    writable=False, readable=False),
-                             Field("digest",
-                                   writable=False),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     info_id(),
+                     alert_id(writable=False),
+                     Field("resource_desc", required=True),
+                     Field("mime_type", required=True),
+                     Field("size", "integer",
+                           writable = False),
+                     Field("uri",
+                           writable = False), # needs a special validation
+                     Field("file", "upload"),
+                     Field("deref_uri", "text",
+                           writable=False, readable=False),
+                     Field("digest",
+                           writable=False),
+                     *s3_meta_fields())
 
         # @ToDo: CRUD Strings
 
         configure(tablename,
-                  onaccept=update_alert_id(table))
+                  onaccept=update_alert_id(tablename))
 
         # ---------------------------------------------------------------------
         # CAP info area segments
         #
         tablename = "cap_area"
-        table = define_table(tablename,
-                             info_id(),
-                             alert_id(writable=False),
-                             Field("area_desc",
-                                   label = T("Area description"),
-                                   required=True),
-                             self.gis_location_id(
-                                widget = S3LocationSelectorWidget2(polygons=True)
-                             ),
-                             Field("circle"),
-                             Field("geocode", "text",
-                                   widget = S3KeyValueWidget(),
-                                   represent = S3KeyValueWidget.represent,
-                                   default = settings.get_cap_geocodes),
-                             Field("altitude", "integer"),
-                             Field("ceiling", "integer"),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     info_id(),
+                     alert_id(writable=False),
+                     Field("area_desc",
+                           label = T("Area description"),
+                           required=True),
+                     self.gis_location_id(
+                       widget = S3LocationSelectorWidget2(polygons=True)
+                     ),
+                     Field("circle"),
+                     Field("geocode", "text",
+                           widget = S3KeyValueWidget(),
+                           represent = S3KeyValueWidget.represent,
+                           default = settings.get_cap_geocodes),
+                     Field("altitude", "integer"),
+                     Field("ceiling", "integer"),
+                     *s3_meta_fields())
 
         # @ToDo: CRUD Strings
 
         configure(tablename,
-                  onaccept=update_alert_id(table))
+                  onaccept=update_alert_id(tablename))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -945,7 +945,7 @@ def cap_info_rheader(r):
     return None
 
 # =============================================================================
-def update_alert_id(table):
+def update_alert_id(tablename):
     """ On-accept for area and resource records """
 
     def func(form):
@@ -964,6 +964,7 @@ def update_alert_id(table):
             return
 
         db = current.db
+        table = db[tablename]
         item = db(table.id == id).select(table.info_id,
                                          limitby=(0, 1)).first()
         info_id = item.info_id

@@ -60,16 +60,22 @@
             var placeholder = $(el).find('.tp-chart').first()
             var chart = jQuery.plot(placeholder, [d], {
                 series: {
-                    lines: {
+                    bars: {
                         show: true,
-                        lineWidth: 0.5,
-                        fill: true,
-//                         steps: true,
-                        fillColor: {
-                            colors: [ "rgba(255, 255, 255, 0.6)",
-                                      "rgba(204, 128, 128, 0.6)" ]
-                        }
+                        align: "center",
+                        barWidth: 120*24*60*60*300,
+                        align: "left"
                     },
+//                     lines: {
+//                         show: true,
+//                         lineWidth: 0.5,
+//                         fill: true,
+// //                         steps: true,
+//                         fillColor: {
+//                             colors: [ "rgba(255, 255, 255, 0.6)",
+//                                       "rgba(204, 128, 128, 0.6)" ]
+//                         }
+//                     },
 //                     points: { show: true }
                 },
                 xaxis: { mode: "time" },
@@ -105,62 +111,21 @@
             // start/end are timestamps
             // value is a numeric value
 
-            var series = [], result = [], item, value, i, dt;
+            var series = [], item, start, dt;
 
             var start, end;
             for (i=0; i<data.length; i++) {
+
                 item = data[i];
-
-                value = method == 'count'? 1: item[3];
-
-                start = item[1];
+                start = item[0];
                 if (!start) {
-                    series.push([0, value]);
-                } else {
-                    start = start.split(' ').join('T');
-                    dt = new Date(start).getTime();
-                    series.push([dt, value]);
-                }
-                end = item[2];
-                if (end) {
-                    end = end.split(' ').join('T');
-                    dt = new Date(end).getTime();
-                    series.push([dt, -value]);
-                }
-            }
-            
-            var order = function(x, y) {
-                return x[0] - y[0];
-            };
-            series.sort(order);
-
-            var current = 0.0;
-            for (i=0; i<series.length; i++) {
-                
-                item = series[i];
-                value = Number(item[1]);
-                if (value == Number.NaN) {
                     continue;
-                }
-                current += value;
-
-                if (result.length) {
-                    last = result.slice(-1)[0];
-                    if (item[0] > last[0]) {
-                        result.push([item[0], current]);
-                    } else {
-                        result.pop();
-                        result.push([item[0], current]);
-                    }
                 } else {
-                    result.push([item[0], current]);
+                    dt = new Date(start).getTime();
+                    series.push([dt, item[2]]);
                 }
             }
-            
-            if (result[0][0] == 0 && result.length > 1) {
-                result = result.slice(1);
-            }
-            return result;
+            return series
         },
 
         _bindEvents: function() {

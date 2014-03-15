@@ -234,16 +234,16 @@ def facility_marker_fn(record):
                                                     ).first()
     return marker
 
-def customize_org_facility(**attr):
+def customise_org_facility_controller(**attr):
     # Tell the client to request per-feature markers
     current.s3db.configure("org_facility", marker_fn=facility_marker_fn)
 
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -452,14 +452,11 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
 # Networks (org_group)
-def customize_org_group(**attr):
-    """
-        Customize org_group controller
-    """
+def customise_org_group_controller(**attr):
 
     tablename = "org_group"
     # CRUD Strings
@@ -479,7 +476,7 @@ def customize_org_group(**attr):
 
     return attr
 
-settings.ui.customize_org_group = customize_org_group
+settings.customise_org_group_controller = customise_org_group_controller
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -491,10 +488,7 @@ settings.pr.request_gender = False
 
 # -----------------------------------------------------------------------------
 # Persons
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3 = current.response.s3
 
@@ -515,14 +509,11 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
 # Groups
-def customize_pr_group(**attr):
-    """
-        Customize pr_group controller
-    """
+def customise_pr_group_controller(**attr):
 
     s3 = current.response.s3
 
@@ -543,7 +534,7 @@ def customize_pr_group(**attr):
 
     return attr
 
-settings.ui.customize_pr_group = customize_pr_group
+settings.customise_pr_group_controller = customise_pr_group_controller
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
@@ -575,7 +566,7 @@ settings.hrm.teams = "Groups"
 #settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.organisation_label = "Organization"
 
-def customize_hrm_human_resource(**attr):
+def customise_hrm_human_resource_controller(**attr):
 
     s3 = current.response.s3
 
@@ -612,7 +603,7 @@ def customize_hrm_human_resource(**attr):
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
 # Projects
@@ -629,7 +620,7 @@ settings.project.sectors = False
 # Multiple partner organizations
 settings.project.multiple_organisations = True
 
-def customize_project_project(**attr):
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -718,7 +709,7 @@ def customize_project_project(**attr):
 
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
 # Uncomment to show created_by/modified_by using Names not Emails

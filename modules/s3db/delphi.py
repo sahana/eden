@@ -69,18 +69,18 @@ class S3DelphiModel(S3Model):
         # Groups
         # ---------------------------------------------------------------------
         tablename = "delphi_group"
-        table = define_table(tablename,
-                             Field("name",
-                                   length=255,
-                                   notnull=True, unique=True,
-                                   label = T("Group Title")),
-                             Field("description", "text",
-                                   label = T("Description")),
-                             Field("active", "boolean", default=True,
-                                   represent = s3_yes_no_represent,
-                                   label = T("Active")),
-                             *s3_meta_fields()
-                            )
+        define_table(tablename,
+                     Field("name",
+                           length=255,
+                           notnull=True, unique=True,
+                           label = T("Group Title")),
+                     Field("description", "text",
+                           label = T("Description")),
+                     Field("active", "boolean", default=True,
+                           represent = s3_yes_no_represent,
+                           label = T("Active")),
+                     *s3_meta_fields()
+                     )
 
         # CRUD Strings
         ADD_GROUP = T("Add Group")
@@ -111,7 +111,8 @@ class S3DelphiModel(S3Model):
                        delphi_problem="group_id",
                       )
                       
-        group_id = S3ReusableField("group_id", table, notnull=True,
+        group_id = S3ReusableField("group_id", "reference %s" % tablename,
+                                   notnull=True,
                                    label = T("Problem Group"),
                                    requires = IS_ONE_OF(db, "delphi_group.id",
                                                         self.delphi_group_represent
@@ -135,30 +136,30 @@ class S3DelphiModel(S3Model):
             4:T("Moderator")
         }
         tablename = "delphi_membership"
-        table = define_table(tablename,
-                             group_id(),
-                             user_id(),
-                             Field("description",
-                                   label = T("Description")),
-                             # @ToDo: Change how Membership Requests work
-                             Field("req", "boolean", default=False,
-                                   represent = s3_yes_no_represent,
-                                   label = T("Request")), # Membership Request
-                             Field("status", "integer", default=3,
-                                   label = T("Status"),
-                                   requires = IS_IN_SET(delphi_role_opts,
-                                                        zero=None),
-                                   represent = lambda opt: \
-                                        delphi_role_opts.get(opt, UNKNOWN_OPT),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s|%s|%s|%s" % (T("Status"),
-                                                                            T("Guests can view all details"),
-                                                                            T("A Contributor can additionally Post comments to the proposed Solutions & add alternative Solutions"),
-                                                                            T("A Participant can additionally Vote"),
-                                                                            T("A Moderator can additionally create Problems & control Memberships")))
-                                   ),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     group_id(),
+                     user_id(),
+                     Field("description",
+                           label = T("Description")),
+                     # @ToDo: Change how Membership Requests work
+                     Field("req", "boolean", default=False,
+                           represent = s3_yes_no_represent,
+                           label = T("Request")), # Membership Request
+                     Field("status", "integer", default=3,
+                           label = T("Status"),
+                           requires = IS_IN_SET(delphi_role_opts,
+                                                zero=None),
+                           represent = lambda opt: \
+                                       delphi_role_opts.get(opt, UNKNOWN_OPT),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s|%s|%s|%s" % (T("Status"),
+                                                                    T("Guests can view all details"),
+                                                                    T("A Contributor can additionally Post comments to the proposed Solutions & add alternative Solutions"),
+                                                                    T("A Participant can additionally Vote"),
+                                                                    T("A Moderator can additionally create Problems & control Memberships")))
+                           ),
+                     *s3_meta_fields()
+                     )
 
         # CRUD strings
         ADD_MEMBER = T("Add Member")
@@ -187,26 +188,28 @@ class S3DelphiModel(S3Model):
         # Problems
         # ---------------------------------------------------------------------
         tablename = "delphi_problem"
-        table = define_table(tablename,
-                             group_id(),
-                             Field("code", length=8,
-                                   represent = lambda v: v or NONE,
-                                   label = T("Problem Code")),
-                             Field("name",
-                                   length=255,
-                                   notnull=True, unique=True,
-                                   label = T("Problem Title")),
-                             Field("description", "text",
-                                   represent = s3_comments_represent,
-                                   label = T("Description")),
-                             Field("criteria", "text", notnull=True,
-                                   label = T("Criteria")),
-                             Field("active", "boolean", default=True,
-                                   represent = s3_yes_no_represent,
-                                   label = T("Active")),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     group_id(),
+                     Field("code", length=8,
+                           represent = lambda v: v or NONE,
+                           label = T("Problem Code")),
+                     Field("name",
+                           length=255,
+                           notnull=True, unique=True,
+                           label = T("Problem Title")),
+                     Field("description", "text",
+                           represent = s3_comments_represent,
+                           label = T("Description")),
+                     Field("criteria", "text", notnull=True,
+                           label = T("Criteria")),
+                     Field("active", "boolean", default=True,
+                           represent = s3_yes_no_represent,
+                           label = T("Active")),
+                     *s3_meta_fields()
+                     )
 
+        # @todo: make lazy_table
+        table = db[tablename]
         table.modified_on.label = T("Last Modification")
 
         # CRUD Strings
@@ -242,7 +245,8 @@ class S3DelphiModel(S3Model):
                        delphi_solution="problem_id",
                       )
 
-        problem_id = S3ReusableField("problem_id", table, notnull=True,
+        problem_id = S3ReusableField("problem_id", "reference %s" % tablename,
+                                     notnull=True,
                                      label = T("Problem"),
                                      requires = IS_ONE_OF(db, "delphi_problem.id",
                                                           self.delphi_problem_represent
@@ -253,21 +257,27 @@ class S3DelphiModel(S3Model):
         # Solutions
         # ---------------------------------------------------------------------
         tablename = "delphi_solution"
-        table = define_table(tablename,
-                             problem_id(),
-                             Field("name",
-                                   label = T("Title"),
-                                   requires = IS_NOT_EMPTY()),
-                             Field("description", "text",
-                                   represent = s3_comments_represent,
-                                   label = T("Description")),
-                             Field("changes", "integer",
-                                   default = 0,
-                                   writable = False,
-                                   label = T("Changes")),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     problem_id(),
+                     Field("name",
+                           label = T("Title"),
+                           requires = IS_NOT_EMPTY()),
+                     Field("description", "text",
+                           represent = s3_comments_represent,
+                           label = T("Description")),
+                     Field("changes", "integer",
+                           default = 0,
+                           writable = False,
+                           label = T("Changes")),
+                     Field.Method("comments",
+                                  delphi_solution_comments),
+                     Field.Method("votes",
+                                  delphi_solution_votes),
+                     *s3_meta_fields()
+                     )
 
+        # @todo: make lazy_table
+        table = db[tablename]
         table.created_by.label = T("Suggested By")
         table.modified_on.label = T("Last Modification")
 
@@ -288,9 +298,6 @@ class S3DelphiModel(S3Model):
             msg_list_empty = T("No Solutions currently defined"))
 
 
-        table.comments = Field.Lazy(delphi_solution_comments)
-        table.votes = Field.Lazy(delphi_solution_votes)
-
         configure(tablename,
                   list_fields=["id",
                                #"problem_id",
@@ -305,7 +312,7 @@ class S3DelphiModel(S3Model):
                  )
 
         solution_represent = S3Represent(lookup=tablename)
-        solution_id = S3ReusableField("solution_id", table,
+        solution_id = S3ReusableField("solution_id", "reference %s" % tablename,
                                       label = T("Solution"),
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "delphi_solution.id",
@@ -317,13 +324,13 @@ class S3DelphiModel(S3Model):
         # Votes
         # ---------------------------------------------------------------------
         tablename = "delphi_vote"
-        table = define_table(tablename,
-                             problem_id(),
-                             solution_id(empty=False),
-                             Field("rank", "integer",
-                                   label = T("Rank")),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     problem_id(),
+                     solution_id(empty=False),
+                     Field("rank", "integer",
+                           label = T("Rank")),
+                     *s3_meta_fields()
+                     )
 
         # ---------------------------------------------------------------------
         # Comments
@@ -336,19 +343,19 @@ class S3DelphiModel(S3Model):
         #
         # ---------------------------------------------------------------------
         tablename = "delphi_comment"
-        table = define_table(tablename,
-                             Field("parent", "reference delphi_comment",
-                                   requires = IS_EMPTY_OR(
-                                                IS_ONE_OF_EMPTY(db, "delphi_comment.id")),
-                                   readable=False),
-                             problem_id(),
-                             # @ToDo: Tag to 1+ Solutions
-                             #solution_multi_id(),
-                             solution_id(),
-                             Field("body", "text", notnull=True,
-                                   label = T("Comment")),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     Field("parent", "reference delphi_comment",
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF_EMPTY(db, "delphi_comment.id")),
+                           readable=False),
+                     problem_id(),
+                     # @ToDo: Tag to 1+ Solutions
+                     #solution_multi_id(),
+                     solution_id(),
+                     Field("body", "text", notnull=True,
+                           label = T("Comment")),
+                     *s3_meta_fields()
+                     )
 
         configure(tablename,
                   list_fields=["id",

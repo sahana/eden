@@ -168,6 +168,16 @@ textarea:focus {
 .item-container form td.w2p_fl label {
     width: auto;
 }
+
+/* Add Person widget */
+.box_top,
+.box_middle,
+.box_bottom {
+   border-left: #bbb 1px solid;
+   border-right: #bbb 1px solid;
+   background: #F0F3F4;
+}
+
 /* Big Buttons (e.g. RMS) */
 .question-container {
     text-align: center;

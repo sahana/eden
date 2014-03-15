@@ -87,6 +87,12 @@ settings.modules = OrderedDict([
             restricted = False,
             module_type = 1,
         )),
+    ("stats", Storage(
+            name_nice = "Statistics",
+            #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
+        )),
     #("cms", Storage(
     #      name_nice = T("Content Management"),
     #      #description = "Content Management System",

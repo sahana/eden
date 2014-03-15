@@ -97,10 +97,7 @@ def hospital_marker_fn(record):
                                               limitby=(0, 1)).first()
     return marker
 
-def customize_hms_hospital(**attr):
-    """
-        Customize hms_hospital controller
-    """
+def customise_hms_hospital_controller(**attr):
 
     # Custom PreP
     s3 = current.response.s3
@@ -126,8 +123,9 @@ def customize_hms_hospital(**attr):
 
     return attr
 
+settings.customise_hms_hospital_controller = customise_hms_hospital_controller
+
 # -----------------------------------------------------------------------------
-settings.ui.customize_project_activity = customize_project_activity
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled

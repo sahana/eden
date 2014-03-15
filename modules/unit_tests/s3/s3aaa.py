@@ -489,9 +489,9 @@ class RecordOwnershipTests(unittest.TestCase):
     def setUpClass(cls):
         
         tablename = "ownership_test_table"
-        table = current.db.define_table(tablename,
-                                        Field("name"),
-                                        *s3_meta_fields())
+        current.db.define_table(tablename,
+                                Field("name"),
+                                *s3_meta_fields())
 
     @classmethod
     def tearDownClass(cls):
@@ -1242,9 +1242,9 @@ class HasPermissionTests(unittest.TestCase):
         # Create test table
         db = current.db
         tablename = "org_permission_test"
-        table = db.define_table(tablename,
-                                Field("name"),
-                                *s3_meta_fields())
+        db.define_table(tablename,
+                        Field("name"),
+                        *s3_meta_fields())
 
         # Create test roles and ACLs
         auth = current.auth
@@ -1357,6 +1357,8 @@ class HasPermissionTests(unittest.TestCase):
         auth.override = False
 
     def tearDown(self):
+
+        table = current.s3db.org_organisation
 
         # Rollback
         current.db.rollback()
@@ -1906,9 +1908,9 @@ class AccessibleQueryTests(unittest.TestCase):
         # Create test table
         db = current.db
         tablename = "org_permission_test"
-        table = db.define_table(tablename,
-                                Field("name"),
-                                *s3_meta_fields())
+        db.define_table(tablename,
+                        Field("name"),
+                        *s3_meta_fields())
 
         # Create test roles and ACLs
         auth = current.auth

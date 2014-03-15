@@ -207,6 +207,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.building_name = False
 # Use a non-default fillColor for Clustered points
 #settings.gis.cluster_fill = "8087ff"
+# Disable the label for clustered points
+#settings.gis.cluster_label = False
 # Use a non-default strokeColor for Clustered points
 #settings.gis.cluster_stroke = "2b2f76"
 # Use a non-default fillColor for Selected points

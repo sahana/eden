@@ -246,7 +246,7 @@ function s3_popup_refresh_main_form() {
         append = [];
     } else {
         var options = self.parent.$('#' + caller + ' >option');
-        var dropdown = options.length;
+        var dropdown = selector.prop('tagName').toLowerCase() == 'select';
         /* S3SearchAutocompleteWidget should do something like this instead */
         //var dummy = self.parent.$('input[name="item_id_search_simple_simple"]');
         //var has_dummy = (dummy.val() != undefined);
@@ -308,6 +308,14 @@ function s3_popup_refresh_main_form() {
             }
             // Select the value we just added
             selector.val(value_high).change();
+            // Refresh MultiSelect if present
+            if (selector.hasClass('multiselect-widget')) {
+                try {
+                    selector.multiselect('refresh');
+                } catch(e) {
+                    // MultiSelect not present
+                }
+            }
         } else if (checkboxes) {
             // We have been called next to a CheckboxesWidgetS3
             // Read the current value(s)

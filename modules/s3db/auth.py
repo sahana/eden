@@ -66,24 +66,24 @@ class S3AuthModel(S3Model):
         APPROVER_HELP = T("The Email Address to which approval requests are sent (normally this would be a Group mail rather than an individual). If the field is blank then requests are approved automatically if the domain matches.")
 
         tablename = "auth_organisation"
-        table = self.define_table(tablename,
-                                  self.org_organisation_id(
-                                        comment=DIV(_class="tooltip",
-                                                    _title="%s|%s" % (current.messages.ORGANISATION,
-                                                                      ORG_HELP))),
-                                  Field("domain",
-                                        label=T("Domain"),
-                                        comment=DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Domain"),
-                                                                      DOMAIN_HELP))),
-                                  Field("approver",
-                                        label=T("Approver"),
-                                        requires=IS_NULL_OR(IS_EMAIL()),
-                                        comment=DIV(_class="tooltip",
-                                                    _title="%s|%s" % (T("Approver"),
-                                                                      APPROVER_HELP))),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.org_organisation_id(
+                                comment=DIV(_class="tooltip",
+                                            _title="%s|%s" % (current.messages.ORGANISATION,
+                                                                ORG_HELP))),
+                          Field("domain",
+                                label=T("Domain"),
+                                comment=DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Domain"),
+                                                                DOMAIN_HELP))),
+                          Field("approver",
+                                label=T("Approver"),
+                                requires=IS_NULL_OR(IS_EMAIL()),
+                                comment=DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Approver"),
+                                                                APPROVER_HELP))),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -100,22 +100,24 @@ class S3UserOptions(S3Model):
 
         T = current.T
 
-        table = self.define_table("auth_user_options",
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("user_id", current.auth.settings.table_user),
-                                  Field("osm_oauth_consumer_key",
-                                        label = T("OpenStreetMap OAuth Consumer Key"),
-                                        comment = DIV(_class="stickytip",
-                                                      _title="%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
-                                                                           T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % \
-                                                                                    dict(name_short=current.deployment_settings.get_system_name_short()),
-                                                                           T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
-                                                                                    dict(url=A("http://www.openstreetmap.org",
-                                                                                               _href="http://www.openstreetmap.org",
-                                                                                               _target="blank"))))),
-                                  Field("osm_oauth_consumer_secret",
-                                        label = T("OpenStreetMap OAuth Consumer Secret")),
-                                  *s3_meta_fields())
+        self.define_table("auth_user_options",
+                          self.super_link("pe_id", "pr_pentity"),
+                          Field("user_id", current.auth.settings.table_user),
+                          Field("osm_oauth_consumer_key",
+                                label = T("OpenStreetMap OAuth Consumer Key"),
+                                comment = DIV(_class="stickytip",
+                                                _title="%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
+                                                                     T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % \
+                                                                            dict(name_short=current.deployment_settings.get_system_name_short()),
+                                                                     T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
+                                                                            dict(url=A("http://www.openstreetmap.org",
+                                                                                        _href="http://www.openstreetmap.org",
+                                                                                        _target="blank"))))),
+                          Field("osm_oauth_consumer_secret",
+                                label = T("OpenStreetMap OAuth Consumer Secret")),
+                          *s3_meta_fields())
+                          
+        return {}
 
 # =============================================================================
 def auth_user_options_get_osm(pe_id):

@@ -203,7 +203,7 @@ class S3SQLForm(object):
                         # S3SQLInlineComponent[CheckBox]
                         f = f[11:]
                     elif f.startswith("sub_"):
-                        # s3_checkboxes_widget
+                        # S3GroupedOptionsWidget
                         f = f[4:]
                     for k in subheadings.keys():
                         if k in done:

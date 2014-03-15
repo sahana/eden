@@ -73,13 +73,13 @@ class S3ShelterModel(S3Model):
         # Shelter types
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
         tablename = "cr_shelter_type"
-        table = define_table(tablename,
-                             Field("name", notnull=True,
-                                   label = NAME,
-                                   requires = IS_NOT_ONE_OF(db,
-                                                           "%s.name" % tablename)),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           label = NAME,
+                           requires = IS_NOT_ONE_OF(db,
+                                                    "%s.name" % tablename)),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_label_camp():
@@ -122,7 +122,7 @@ class S3ShelterModel(S3Model):
                   )
 
         represent = S3Represent(lookup=tablename)
-        shelter_type_id = S3ReusableField("shelter_type_id", table,
+        shelter_type_id = S3ReusableField("shelter_type_id", "reference %s" % tablename,
                                           requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
                                                                   represent)),
@@ -191,20 +191,20 @@ class S3ShelterModel(S3Model):
                                              requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
                                                                       "cr_shelter_service.id",
-                                                                      service_represent,
+                                                                      self.cr_shelter_service_represent,
                                                                       multiple=True)),
-                                             represent = service_multirepresent,
+                                             represent = self.cr_shelter_service_multirepresent,
                                              label = SHELTER_SERVICE_LABEL,
                                              comment = S3AddResourceLink(c="cr",
                                                                          f="shelter_service",
                                                                          label=ADD_SHELTER_SERVICE),
                                              ondelete = "RESTRICT",
-                                             #widget = SQLFORM.widgets.checkboxes.widget
+                                             widget = S3MultiSelectWidget(filter="auto",
+                                                                          header=False,
+                                                                          ),
                                              )
 
         # -------------------------------------------------------------------------
-        # Shelters
-        #
         cr_shelter_opts = {1 : T("Closed"),
                            2 : T("Open")
                            }
@@ -429,7 +429,7 @@ class S3ShelterModel(S3Model):
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
-        shelter_id = S3ReusableField("shelter_id", table,
+        shelter_id = S3ReusableField("shelter_id", "reference %s" % tablename,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "cr_shelter.id",
                                                               represent,
@@ -460,25 +460,25 @@ class S3ShelterModel(S3Model):
         # - a historical record of shelter status: opening/closing dates & populations
         #
         tablename = "cr_shelter_status"
-        table = define_table(tablename,
-                             shelter_id(ondelete = "CASCADE"),
-                             s3_date(),
-                             Field("status", "integer",
-                                   requires = IS_NULL_OR(
-                                                IS_IN_SET(cr_shelter_opts)
-                                                ),
-                                   represent = lambda opt: \
-                                        cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
-                                   label = T("Status")),
-                             Field("population", "integer",
-                                   label = T("Population"),
-                                   requires = IS_NULL_OR(
-                                                IS_INT_IN_RANGE(0, 999999)),
-                                   represent=lambda v: \
-                                                IS_INT_AMOUNT.represent(v)
-                                   ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     shelter_id(ondelete = "CASCADE"),
+                     s3_date(),
+                     Field("status", "integer",
+                           requires = IS_NULL_OR(
+                                       IS_IN_SET(cr_shelter_opts)
+                                       ),
+                           represent = lambda opt: \
+                               cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
+                           label = T("Status")),
+                     Field("population", "integer",
+                           label = T("Population"),
+                           requires = IS_NULL_OR(
+                                       IS_INT_IN_RANGE(0, 999999)),
+                           represent=lambda v: \
+                                       IS_INT_AMOUNT.represent(v)
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_label_camp():
@@ -525,15 +525,11 @@ class S3ShelterModel(S3Model):
 
     # -----------------------------------------------------------------------------
     def defaults(self):
-        """ Safe defaults in case the module is disabled """
-        
-        cr_shelter_id = S3ReusableField("shelter_id", "integer",
-                                        readable=False,
-                                        writable=False)
+        #cr_shelter_id = S3ReusableField("shelter_id", "integer",
+        #                                readable=False,
+        #                                writable=False)
 
-        return Storage(
-                cr_shelter_id = cr_shelter_id,
-            )
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -602,6 +598,48 @@ class S3ShelterModel(S3Model):
             if row:
                 item.id = row.id
                 item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_service_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages["NONE"]
+
+        db = current.db
+        table = db.cr_shelter_service
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_service_multirepresent(shelter_service_ids):
+        """
+        """
+        if not shelter_service_ids:
+            return current.messages["NONE"]
+
+        db = current.db
+        table = db.cr_shelter_service
+        if isinstance(shelter_service_ids, (list, tuple)):
+            query = (table.id.belongs(shelter_service_ids))
+            shelter_services = db(query).select(table.name)
+            return ", ".join([s.name for s in shelter_services])
+        else:
+            query = (table.id == shelter_service_ids)
+            shelter_service = db(query).select(table.name,
+                                               limitby=(0, 1)).first()
+            try:
+                return shelter_service.name
+            except:
+                return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def cr_shelter_rheader(r, tabs=[]):
@@ -741,3 +779,4 @@ class S3ShelterRegistrationModel(S3Model):
                              *s3_meta_fields()
                              )
 # END =========================================================================
+
