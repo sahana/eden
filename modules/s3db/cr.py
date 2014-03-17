@@ -190,7 +190,9 @@ class S3CampDataModel(S3Model):
                                                                          f="shelter_service",
                                                                          label=ADD_SHELTER_SERVICE),
                                              ondelete = "RESTRICT",
-                                             #widget = SQLFORM.widgets.checkboxes.widget
+                                             widget = S3MultiSelectWidget(filter="auto",
+                                                                          header=False,
+                                                                          ),
                                              )
 
         # -------------------------------------------------------------------------

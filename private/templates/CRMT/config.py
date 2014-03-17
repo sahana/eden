@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import s3_avatar_represent
+from s3.s3utils import s3_avatar_represent, s3_set_default_filter
 
 T = current.T
 settings = current.deployment_settings
@@ -343,10 +343,7 @@ def user_coalition(row):
     else:
         return current.messages["NONE"]
 
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3 = current.response.s3
 
@@ -561,35 +558,37 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
+
+# -----------------------------------------------------------------------------
+def default_coalition_filter(selector, tablename=None):
+    """
+        Default filter for coalitions (callback)
+    """
+
+    auth = current.auth
+    org_group_id = auth.is_logged_in() and auth.user.org_group_id
+    if org_group_id:
+        return org_group_id
+    else:
+        # Filter to all Coalitions
+        gtable = s3db.org_group
+        rows = current.db(gtable.deleted == False).select(gtable.id)
+        return [row.id for row in rows]
 
 # -----------------------------------------------------------------------------
 # Activities
 #
-def customize_project_activity(**attr):
-    """
-        Customize project_activity controller
-    """
+def customise_project_activity_controller(**attr):
 
     s3db = current.s3db
     request = current.request
+
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("activity_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["activity_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["activity_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("activity_group.group_id",
+                              default_coalition_filter,
+                              tablename = "project_activity")
 
     # Custom PreP
     s3 = current.response.s3
@@ -766,12 +765,10 @@ def customize_project_activity(**attr):
 
     return attr
 
-settings.ui.customize_project_activity = customize_project_activity
+settings.customise_project_activity_controller = customise_project_activity_controller
 
-def customize_project_activity_type(**attr):
-    """
-        Customize project_activity_type controller
-    """
+def customise_project_activity_type_controller(**attr):
+
     from s3.s3forms import S3SQLCustomForm
     current.s3db.configure("project_activity_type",
                            crud_form = S3SQLCustomForm("name",
@@ -780,7 +777,7 @@ def customize_project_activity_type(**attr):
 
     return attr
 
-settings.ui.customize_project_activity_type = customize_project_activity_type
+settings.customise_project_activity_type_controller = customise_project_activity_type_controller
 
 # -----------------------------------------------------------------------------
 # Organisations
@@ -808,10 +805,7 @@ def org_facility_types(row):
     return ",".join([r.name for r in rows])
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
-    """
-        Customize org_organisation controller
-    """
+def customise_org_organisation_controller(**attr):
 
     # Custom PreP
     s3 = current.response.s3
@@ -1060,15 +1054,12 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
 # Coalitions (org_group)
 #
-def customize_org_group(**attr):
-    """
-        Customize org_group controller
-    """
+def customise_org_group_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -1098,7 +1089,7 @@ def customize_org_group(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_group = customize_org_group
+settings.customise_org_group_controller = customise_org_group_controller
 
 #-----------------------------------------------------------------------------
 # Places (org_facility)
@@ -1168,30 +1159,15 @@ settings.base.import_callbacks = {"org_facility": {"onaccept": facility_onaccept
                                                    },
                                   }
 
-def customize_org_facility(**attr):
-    """
-        Customize org_facility controller
-    """
+def customise_org_facility_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("site_org_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["site_org_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["site_org_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("site_org_group.group_id",
+                              default_coalition_filter,
+                              tablename = "org_facility")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1395,35 +1371,20 @@ def customize_org_facility(**attr):
 
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
 # People
 #
-def customize_stats_people(**attr):
-    """
-        Customize stats_people controller
-    """
+def customise_stats_people_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("people_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["people_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["people_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("people_group.group_id",
+                              default_coalition_filter,
+                              tablename = "stats_people")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1611,35 +1572,20 @@ def customize_stats_people(**attr):
 
     return attr
 
-settings.ui.customize_stats_people = customize_stats_people
+settings.customise_stats_people_controller = customise_stats_people_controller
 
 # -----------------------------------------------------------------------------
 # Evacuation Routes
 #
-def customize_vulnerability_evac_route(**attr):
-    """
-        Customize vulnerability_evac_route controller
-    """
+def customise_vulnerability_evac_route_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("evac_route_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["evac_route_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["evac_route_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("evac_route_group.group_id",
+                              default_coalition_filter,
+                              tablename = "vulnerability_evac_route")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1778,35 +1724,20 @@ def customize_vulnerability_evac_route(**attr):
 
     return attr
 
-settings.ui.customize_vulnerability_evac_route = customize_vulnerability_evac_route
+settings.customise_vulnerability_evac_route_controller = customise_vulnerability_evac_route_controller
 
 # -----------------------------------------------------------------------------
 # Risks
 #
-def customize_vulnerability_risk(**attr):
-    """
-        Customize vulnerability_risk controller
-    """
+def customise_vulnerability_risk_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("risk_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["risk_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["risk_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("risk_group.group_id",
+                              default_coalition_filter,
+                              tablename = "vulnerability_risk")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1976,15 +1907,12 @@ def customize_vulnerability_risk(**attr):
 
     return attr
 
-settings.ui.customize_vulnerability_risk = customize_vulnerability_risk
+settings.customise_vulnerability_risk_controller = customise_vulnerability_risk_controller
 
 # -----------------------------------------------------------------------------
 # Saved Maps
 #
-def customize_gis_config(**attr):
-    """
-        Customize gis_config controller
-    """
+def customise_gis_config_controller(**attr):
 
     # Custom PreP
     s3 = current.response.s3
@@ -2033,7 +1961,7 @@ def customize_gis_config(**attr):
 
     return attr
 
-settings.ui.customize_gis_config = customize_gis_config
+settings.customise_gis_config_controller = customise_gis_config_controller
 
 # -----------------------------------------------------------------------------
 # Site Activity Log
@@ -2175,10 +2103,7 @@ def render_log(list_id, item_id, resource, rfields, record):
 current.response.s3.render_log = render_log
 
 # -----------------------------------------------------------------------------
-def customize_s3_audit(**attr):
-    """
-        Customize s3_audit controller
-    """
+def customise_s3_audit_controller(**attr):
 
     from s3.s3utils import s3_auth_user_represent_name
     current.db.s3_audit.user_id.represent = s3_auth_user_represent_name
@@ -2201,7 +2126,7 @@ def customize_s3_audit(**attr):
 
     return attr
 
-settings.ui.customize_s3_audit = customize_s3_audit
+settings.customise_s3_audit_controller = customise_s3_audit_controller
 
 # =============================================================================
 # Template Modules

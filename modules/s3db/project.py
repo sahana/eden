@@ -3818,10 +3818,9 @@ class S3ProjectDRRPPModel(S3Model):
                                                       multiple = True)),
                                 represent = lambda opt: \
                                     self.opts_represent(opt, "RFA"),
-                                widget = lambda f, v, **attr: \
-                                    s3_grouped_checkboxes_widget(f, v,
-                                                                 help_field=project_rfa_opts,
-                                                                 **attr),
+                                widget = S3GroupedOptionsWidget(help_field = project_rfa_opts,
+                                                                cols = 1,
+                                                                ),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("RFA Priorities"),
                                                                 T("Applicable to projects in Pacific countries only")))),
@@ -3834,10 +3833,9 @@ class S3ProjectDRRPPModel(S3Model):
                                                       multiple = True)),
                                 represent = lambda opt: \
                                     self.opts_represent(opt, "PIFACC"),
-                                widget = lambda f, v, **attr: \
-                                    s3_grouped_checkboxes_widget(f, v,
-                                                                 help_field=project_pifacc_opts,
-                                                                 **attr),
+                                widget = S3GroupedOptionsWidget(help_field = project_pifacc_opts,
+                                                                cols = 1,
+                                                                ),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("PIFACC Priorities"),
                                                                 T("Pacific Islands Framework for Action on Climate Change. Applicable to projects in Pacific countries only")))),
@@ -3850,10 +3848,9 @@ class S3ProjectDRRPPModel(S3Model):
                                                       multiple = True)),
                                 represent = lambda opt: \
                                     self.opts_represent(opt, "JNAP"),
-                                widget = lambda f, v, **attr: \
-                                    s3_grouped_checkboxes_widget(f, v,
-                                                                 help_field=project_jnap_opts,
-                                                                 **attr),
+                                widget = S3GroupedOptionsWidget(help_field = project_jnap_opts,
+                                                                cols = 1,
+                                                                ),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("JNAP Priorities"),
                                                                 T("Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation. Applicable to Cook Islands only")))),
@@ -3869,8 +3866,9 @@ class S3ProjectDRRPPModel(S3Model):
                                                       multiple=True)),
                                 represent = S3Represent(lookup="gis_location",
                                                         multiple=True),
-                                widget = lambda f, v, **attr: \
-                                    s3_checkboxes_widget(f, v, cols=4, **attr),
+                                widget = S3GroupedOptionsWidget(size = None, # do not group by letter
+                                                                cols = 4,
+                                                                ),
                                 ),
                           Field("outputs", "text",
                                 label = "%s (Old - do NOT use)" % T("Outputs"),

@@ -146,13 +146,6 @@ settings.search.filter_manager = False
 # =============================================================================
 # Custom Controllers
 
-# -----------------------------------------------------------------------------
-def customize_stats_demographic_data(**attr):
-    #attr["rheader"] = None
-    return attr
-
-settings.ui.customize_stats_demographic_data = customize_stats_demographic_data
-
 # =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them

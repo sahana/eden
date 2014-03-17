@@ -123,6 +123,28 @@ class S3Config(Storage):
         return self.base.get("xtheme", None)
 
     # -------------------------------------------------------------------------
+    # Customise Hooks
+    def customise_controller(self, tablename, **attr):
+        """
+            Customise a Controller
+            - runs before resource customisation
+            - but prep runs after resource customisation
+        """
+        customise = self.get("customise_%s_controller" % tablename)
+        if customise:
+            return customise(**attr)
+        else:
+            return attr
+
+    def customise_resource(self, tablename):
+        """
+            Get customisation callback for a resource
+            - runs after controller customisation
+            - but runs before prep
+        """
+        return self.get("customise_%s_resource" % tablename)
+
+    # -------------------------------------------------------------------------
     def has_module(self, module_name):
         """
             List of Active Modules
@@ -1078,32 +1100,6 @@ class S3Config(Storage):
                 http://code.google.com/p/selenium/issues/detail?id=1604
         """
         return self.ui.get("confirm", True)
-
-    def get_ui_crud_form(self, tablename):
-        """
-            Get custom crud_forms for diffent tables
-        """
-        return self.ui.get("crud_form_%s" % tablename, None)
-
-    def ui_customize(self, tablename, **attr):
-        """
-            Customize a Controller
-            - runs before resource customisation
-            - but prep runs after resource customisation
-        """
-        customize = self.ui.get("customize_%s" % tablename)
-        if customize:
-            return customize(**attr)
-        else:
-            return attr
-
-    def ui_custom_configure(self, tablename):
-        """
-            Get customization callback for a resource
-            - runs after controller customisation
-            - but runs before prep
-        """
-        return self.ui.get("custom_configure_%s" % tablename)
 
     def get_ui_export_formats(self):
         """

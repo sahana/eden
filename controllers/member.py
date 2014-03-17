@@ -10,6 +10,8 @@ resourcename = request.function
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
+s3db.hrm_vars()
+
 # =============================================================================
 def index():
     """ Dashboard """
@@ -23,7 +25,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Members
-    redirect(URL(f="membership"))
+    redirect(URL(f="membership", args=["summary"]))
 
 # =============================================================================
 def membership_type():

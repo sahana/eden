@@ -285,9 +285,9 @@ def org_facility_onvalidation(form):
         form_vars.name = current.db.org_facility.location_id.represent(form_vars.location_id)
 
 # -----------------------------------------------------------------------------
-def customize_org_facility_controller(**attr):
+def customise_org_facility_controller(**attr):
     """
-        Customize org_facility controller
+        Customise org_facility controller
     """
 
     s3db = current.s3db
@@ -361,12 +361,12 @@ def customize_org_facility_controller(**attr):
 
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility_controller
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation_controller(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
     """
 
     s3db = current.s3db
@@ -604,12 +604,12 @@ def customize_org_organisation_controller(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation_controller
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_group_controller(**attr):
+def customise_org_group_controller(**attr):
     """
-        Customize org_group controller
+        Customise org_group controller
     """
 
     s3db = current.s3db
@@ -755,7 +755,7 @@ def customize_org_group_controller(**attr):
 
     return attr
 
-settings.ui.customize_org_group = customize_org_group_controller
+settings.customise_org_group_controller = customise_org_group_controller
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -767,9 +767,9 @@ settings.pr.request_gender = False
 
 # -----------------------------------------------------------------------------
 # Persons
-def customize_pr_person_controller(**attr):
+def customise_pr_person_controller(**attr):
     """
-        Customize pr_person controller
+        Customise pr_person controller
     """
 
     s3 = current.response.s3
@@ -792,7 +792,7 @@ def customize_pr_person_controller(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person_controller
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
 # Groups
@@ -828,9 +828,9 @@ def chairperson(row):
     else:
         return current.messages["NONE"]
 
-def customize_pr_group_controller(**attr):
+def customise_pr_group_controller(**attr):
     """
-        Customize pr_group controller
+        Customise pr_group controller
     """
 
     s3 = current.response.s3
@@ -901,12 +901,12 @@ def customize_pr_group_controller(**attr):
 
     return attr
 
-settings.ui.customize_pr_group = customize_pr_group_controller
+settings.customise_pr_group_controller = customise_pr_group_controller
 
 # -----------------------------------------------------------------------------
-def customize_pr_group(r, tablename):
+def customise_pr_group_resource(r, tablename):
     """
-        Customize pr_group resource (in group & org_group controllers)
+        Customise pr_group resource (in group & org_group controllers)
             - runs after controller customisation
             - but runs before prep
     """
@@ -938,7 +938,7 @@ def customize_pr_group(r, tablename):
                    list_fields = list_fields,
                    )
 
-settings.ui.custom_configure_pr_group = customize_pr_group
+settings.customise_pr_group_resource = customise_pr_group_resource
 
 # -----------------------------------------------------------------------------
 def pr_contact_onaccept(form):
@@ -1017,9 +1017,9 @@ settings.hrm.teams = "Groups"
 settings.hrm.organisation_label = "Organization"
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource_controller(**attr):
+def customise_hrm_human_resource_controller(**attr):
     """
-        Customize hrm_human_resource controller
+        Customise hrm_human_resource controller
     """
 
     s3 = current.response.s3
@@ -1102,12 +1102,12 @@ def customize_hrm_human_resource_controller(**attr):
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource_controller
+settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource(r, tablename):
+def customise_hrm_human_resource_resource(r, tablename):
     """
-        Customize hrm_human_resource resource (in facility, human_resource, organisation & person controllers)
+        Customise hrm_human_resource resource (in facility, human_resource, organisation & person controllers)
             - runs after controller customisation
             - but runs before prep
     """
@@ -1145,12 +1145,12 @@ def customize_hrm_human_resource(r, tablename):
                    list_fields = list_fields,
                    )
 
-settings.ui.custom_configure_hrm_human_resource = customize_hrm_human_resource
+settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
 # -----------------------------------------------------------------------------
-def customize_hrm_job_title_controller(**attr):
+def customise_hrm_job_title_controller(**attr):
     """
-        Customize hrm_job_title controller
+        Customise hrm_job_title controller
     """
 
     s3 = current.response.s3
@@ -1174,7 +1174,7 @@ def customize_hrm_job_title_controller(**attr):
 
     return attr
 
-settings.ui.customize_hrm_job_title = customize_hrm_job_title_controller
+settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
 # -----------------------------------------------------------------------------
 # Projects
@@ -1191,7 +1191,7 @@ settings.project.sectors = False
 # Multiple partner organizations
 settings.project.multiple_organisations = True
 
-def customize_project_project_controller(**attr):
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -1337,7 +1337,7 @@ def customize_project_project_controller(**attr):
 
     return attr
 
-settings.ui.customize_project_project = customize_project_project_controller
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
 # Requests Management
@@ -1360,9 +1360,9 @@ settings.req.type_inv_label = "Supplies"
 settings.req.summary = True
 
 # -----------------------------------------------------------------------------
-def customize_req_req_controller(**attr):
+def customise_req_req_controller(**attr):
     """
-        Customize req_req controller
+        Customise req_req controller
     """
 
     s3 = current.response.s3
@@ -1390,7 +1390,7 @@ def customize_req_req_controller(**attr):
 
     return attr
 
-settings.ui.customize_req_req = customize_req_req_controller
+settings.customise_req_req_controller = customise_req_req_controller
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

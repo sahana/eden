@@ -340,46 +340,6 @@ def s3_set_default_filter(selector, value, tablename=None):
     return
     
 # =============================================================================
-def s3_get_default_filter(selector, operator, tablename=None):
-    """
-        Get the default filter values for selector/operator
-
-        @param selector: the field selector
-        @param operator: the operator
-        @param tablename: tablename of the master resource
-    """
-
-    s3 = current.response.s3
-
-    filter_defaults = s3
-    for level in ("filter_defaults", tablename, selector):
-        if level not in filter_defaults:
-            return None
-        filter_defaults = filter_defaults[level]
-    if callable(filter_defaults):
-        filter_defaults = filter_defaults(selector, tablename=tablename)
-    if not isinstance(operator, (tuple, list, set)):
-        if isinstance(filter_defaults, dict):
-            value = filter_defaults.get(operator)
-        else:
-            value = filter_defaults
-        if isinstance(value, (list, type(None))):
-            return value
-        else:
-            return [value]
-    elif isinstance(filter_defaults, dict):
-        values = {}
-        for op in operator:
-            value = filter_defaults.get(op)
-            if isinstance(value, (list, type(None))):
-                values[op] = value
-            else:
-                values[op] = [value]
-        return values
-    else:
-        return None
-
-# =============================================================================
 def s3_dev_toolbar():
     """
         Developer Toolbar - ported from gluon.Response.toolbar()

@@ -84,6 +84,15 @@ class S3Report(S3Method):
         resource = self.resource
         get_config = resource.get_config
 
+        show_filter_form = False
+        if r.representation in ("html", "iframe"):
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not self.hide_filter:
+                # Apply filter defaults (before rendering the data!)
+                from s3filter import S3FilterForm
+                show_filter_form = True
+                S3FilterForm.apply_filter_defaults(r, resource)
+                
         # Filter
         response = current.response
         s3_filter = response.s3.filter
@@ -158,15 +167,13 @@ class S3Report(S3Method):
             output["title"] = self.crud_string(tablename, "title_report")
 
             # Filter widgets
-            filter_widgets = get_config("filter_widgets", None)
-            if filter_widgets and not self.hide_filter:
+            if show_filter_form:
                 advanced = False
                 for widget in filter_widgets:
                     if "hidden" in widget.opts and widget.opts.hidden:
                         advanced = resource.get_config("report_advanced", True)
                         break
 
-                from s3filter import S3FilterForm
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_form = S3FilterForm(filter_widgets,
                                            formstyle=filter_formstyle,

@@ -66,7 +66,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Certificate List", c="vol", f="certificate"),
             ),
             homepage("member")(
-                MM("Members", c="member", f="membership"),
+                MM("Members", c="member", f="membership", m="summary"),
             ),
             homepage("inv", "supply", "req")(
                 MM("Warehouses", c="inv", f="warehouse"),
@@ -170,7 +170,7 @@ class S3MainMenu(default.S3MainMenu):
                    image = "graphic_volunteers.png",
                    title = "Volunteers",
                    text = "Add new and manage existing volunteers."),
-                DB("Members", c="member", f="membership",
+                DB("Members", c="member", f="membership", m="summary",
                    image = "graphic_members.png",
                    title = "Members",
                    text = "Add new and manage existing members."),

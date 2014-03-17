@@ -432,19 +432,24 @@ class ResourceFilterJoinTests(unittest.TestCase):
         project_project = resource.table
         project_task_project = s3db.project_task_project
         project_task = s3db.project_task
+        org_organisation = s3db.org_organisation
         
-        expected_l = project_task_project.on(
+        expected1 = org_organisation.on(
+                        project_project.organisation_id == org_organisation.id)
+
+        expected2 = project_task_project.on(
                         (project_task_project.project_id == project_project.id) &
                         (project_task_project.deleted != True))
 
-        expected_r = project_task.on(
-                        project_task_project.task_id == project_task.id)
-
+        expected3 = project_task.on(project_task_project.task_id == project_task.id)
+        
         joins = resource.rfilter.get_left_joins()
         self.assertTrue(isinstance(joins, list))
+        self.assertEqual(len(joins), 3)
 
-        self.assertEqual(joins[0], str(expected_l))
-        self.assertEqual(joins[1], str(expected_r))
+        self.assertEqual(str(joins[0]), str(expected1))
+        self.assertEqual(str(joins[1]), str(expected2))
+        self.assertEqual(str(joins[2]), str(expected3))
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -586,13 +591,25 @@ class ResourceFilterQueryTests(unittest.TestCase):
         self.assertEqual(query, expected)
         
         left = rfilter.get_left_joins(as_list=False)
-        self.assertEqual(left.keys(), ["org_organisation"])
+        tablenames = left.keys()
+        self.assertEqual(len(tablenames), 2)
+        self.assertTrue("org_organisation" in tablenames)
+        self.assertTrue("project_project" in tablenames)
+        
         self.assertTrue(isinstance(left["org_organisation"], list))
         self.assertEqual(len(left["org_organisation"]), 1)
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
-        self.assertEqual(left["org_organisation"][0], expected)
+        self.assertEqual(str(left["org_organisation"][0]), str(expected))
         
+        self.assertTrue(isinstance(left["project_project"], list))
+        self.assertEqual(len(left["project_project"]), 2)
+        expected = project_task_project.on(project_task_project.task_id == project_task.id)
+        self.assertEqual(str(left["project_project"][0]), str(expected))
+        expected = project_project.on((project_task_project.project_id == project_project.id) &
+                                      (project_task_project.deleted != True))
+        self.assertEqual(str(left["project_project"][1]), str(expected))
+
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
 
@@ -636,15 +653,23 @@ class ResourceFilterQueryTests(unittest.TestCase):
                         (hrm_human_resource.deleted != True))
         expected_o = org_organisation.on(
                         hrm_human_resource.organisation_id == org_organisation.id)
+        expected_p = pr_person.on(pr_identity.person_id == pr_person.id)
 
         left = rfilter.get_left_joins(as_list=False)
-        self.assertEqual(left.keys(), ["hrm_human_resource", "org_organisation"])
+        tablenames = left.keys()
+        self.assertEqual(len(tablenames), 3)
+        self.assertTrue("hrm_human_resource" in tablenames)
+        self.assertTrue("org_organisation" in tablenames)
+        self.assertTrue("pr_person" in tablenames)
+        
         self.assertTrue(isinstance(left["hrm_human_resource"], list))
         self.assertEqual(len(left["hrm_human_resource"]), 1)
-        self.assertEqual(left["hrm_human_resource"][0], expected_h)
+        self.assertEqual(str(left["hrm_human_resource"][0]), str(expected_h))
         self.assertTrue(isinstance(left["org_organisation"], list))
         self.assertEqual(len(left["org_organisation"]), 1)
-        self.assertEqual(left["org_organisation"][0], expected_o)
+        self.assertEqual(str(left["org_organisation"][0]), str(expected_o))
+        self.assertEqual(len(left["pr_person"]), 1)
+        self.assertEqual(str(left["pr_person"][0]), str(expected_p))
         
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)

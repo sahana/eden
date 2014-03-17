@@ -289,15 +289,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
 
     # Customise Controller from Template
-    attr = settings.ui_customize("%s_%s" % (prefix or request.controller,
-                                            resourcename or request.function),
-                                 **attr)
+    attr = settings.customise_controller("%s_%s" % (prefix or request.controller,
+                                                    resourcename or request.function),
+                                         **attr)
 
     # Parse the request
     r = s3_request(prefix, resourcename)
 
     # Customize target resource(s) from Template
-    r.custom_configure()
+    r.customise_resource()
 
     # Configure standard method handlers
     set_handler = r.set_handler

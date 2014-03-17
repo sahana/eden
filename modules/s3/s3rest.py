@@ -225,7 +225,7 @@ class S3Request(object):
                                    include_deleted=include_deleted,
                                    context=True,
                                    filter_component=component_name,
-                                  )
+                                   )
 
         self.tablename = self.resource.tablename
         table = self.table = self.resource.table
@@ -1528,7 +1528,7 @@ class S3Request(object):
         return source
 
     # -------------------------------------------------------------------------
-    def custom_configure(self, tablename=None):
+    def customise_resource(self, tablename=None):
         """
             Invoke the customization callback for a resource.
 
@@ -1542,40 +1542,39 @@ class S3Request(object):
 
             Resource customization functions can be defined like:
 
-                def custom_configure_my_table(r, tablename):
+                def customise_resource_my_table(r, tablename):
 
                     current.s3db.configure(tablename,
                                            my_custom_setting = "example")
                     return
 
-                settings.custom_configure_my_table = \
-                                        custom_configure_my_table
+                settings.customise_resource_my_table = \
+                                        customise_resource_my_table
 
-            @note: the hook itself can call r.custom_configure in order
+            @note: the hook itself can call r.customise_resource in order
                    to cascade customizations as necessary
             @note: if a table is customized that is not currently loaded,
                    then it will be loaded for this process
         """
 
         if tablename is None:
-            customize = self.custom_configure
+            customise = self.customise_resource
             
-            customize(self.resource.tablename)
+            customise(self.resource.tablename)
             component = self.component
             if component:
-                customize(component.tablename)
+                customise(component.tablename)
             link = self.link
             if link:
-                customize(link.tablename)
+                customise(link.tablename)
         else:
             # Always load the model first (otherwise it would
             # override the custom settings when loaded later)
             if tablename not in current.db:
                 table = db.table(tablename)
-            customize = current.deployment_settings \
-                               .ui_custom_configure(tablename)
-            if customize:
-                customize(self, tablename)
+            customise = current.deployment_settings.customise_resource(tablename)
+            if customise:
+                customise(self, tablename)
         return
 
 # =============================================================================

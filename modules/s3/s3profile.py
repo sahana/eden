@@ -715,10 +715,8 @@ class S3Profile(S3CRUD):
 
         sqlform = widget.get("sqlform", None)
         if not sqlform:
-            sqlform = current.deployment_settings.get_ui_crud_form(tablename)
-            if not sqlform:
-                from s3forms import S3SQLDefaultForm
-                sqlform = S3SQLDefaultForm()
+            from s3forms import S3SQLDefaultForm
+            sqlform = S3SQLDefaultForm()
 
         get_config = s3db.get_config
         if record_id:
