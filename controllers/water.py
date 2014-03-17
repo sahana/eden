@@ -17,7 +17,7 @@ def index():
     return s3db.cms_index(module)
 
 # -----------------------------------------------------------------------------
-def flood_gauge():
+def gauge():
     """ Flood Gauges, RESTful controller """
 
     # Pre-processor

@@ -10,14 +10,9 @@ except:
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.validators import IS_NOT_EMPTY
 
-from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent
-from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
-from s3.s3widgets import S3LocationSelectorWidget2
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
 T = current.T
 s3 = current.response.s3
@@ -117,6 +112,7 @@ settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["LY"]
+settings.gis.postcode_selector = False
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -1501,6 +1497,7 @@ def customise_hrm_human_resource_fields():
         Customise hrm_human_resource for Profile widgets and 'more' popups
     """
 
+    from s3.s3fields import S3Represent
     s3db = current.s3db
     table = s3db.hrm_human_resource
     table.site_id.represent = S3Represent(lookup="org_site")
@@ -1698,6 +1695,7 @@ def customise_org_facility_fields():
                    "comments",
                    ]
 
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
     crud_form = S3SQLCustomForm("name",
                                 "code",
                                 S3SQLInlineComponentMultiSelectWidget(
@@ -1779,6 +1777,8 @@ def customise_org_facility_controller(**attr):
             else:
                 # Don't add new Locations here
                 location_field.comment = None
+                from s3.s3validators import IS_LOCATION_SELECTOR2
+                from s3.s3widgets import S3LocationSelectorWidget2
                 location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
                 location_field.widget = S3LocationSelectorWidget2(levels=levels,
                                                                   show_address=True,
@@ -2447,8 +2447,10 @@ def customise_pr_person_controller(**attr):
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
             site_field = htable.site_id
+            from s3.s3fields import S3Represent
             represent = S3Represent(lookup="org_site")
             site_field.represent = represent
+            from s3.s3validators import IS_ONE_OF
             site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                             represent,
                                             orderby = "org_site.name")
@@ -2556,6 +2558,7 @@ def customise_pr_person_controller(**attr):
                                                             options = "EMAIL")),
                                             )
 
+            from s3.s3forms import S3SQLCustomForm
             crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
             if r.id and controller == "default":
@@ -2650,6 +2653,7 @@ def customise_doc_document_controller(**attr):
                 msg_list_empty = T("No Documents currently recorded"))
 
             # Force added docs to have a name
+            from gluon.validators import IS_NOT_EMPTY
             table.name.requires = IS_NOT_EMPTY()
 
             list_fields = ["name",
@@ -2659,6 +2663,7 @@ def customise_doc_document_controller(**attr):
                            "comments",
                            ]
 
+            from s3.s3forms import S3SQLCustomForm
             crud_form = S3SQLCustomForm(*list_fields)
 
             s3db.configure(tablename,
@@ -2671,6 +2676,69 @@ def customise_doc_document_controller(**attr):
     return attr
 
 settings.customise_doc_document_controller = customise_doc_document_controller
+
+# -----------------------------------------------------------------------------
+def customise_irs_ireport_resource(r, tablename):
+
+    from gluon.validators import IS_IN_SET
+    category_opts = {"inquiry" : T("Inquiry"),
+                     "request" : T("Request"),
+                     "complaint" : T("Complaint"),
+                     "emergency" : T("Emergency")
+                     }
+
+    table = current.db[tablename]
+    table.category.requires = IS_IN_SET(category_opts)
+    table.category.represent = lambda opt: category_opts.get(opt, opt)
+
+    if not current.auth.is_logged_in():
+
+        table.person.label = T("Your Contact Details")
+
+        from s3.s3forms import S3SQLCustomForm
+        crud_form = S3SQLCustomForm("name",
+                                    "message",
+                                    "category",
+                                    "person",
+                                    "datetime",
+                                    "location_id",
+                                    )
+    
+        current.s3db.configure(tablename,
+                               # No workflow
+                               create_next = None,
+                               crud_form = crud_form,
+                               )
+
+settings.customise_irs_ireport_resource = customise_irs_ireport_resource
+
+# -----------------------------------------------------------------------------
+def customise_irs_ireport_controller(**attr):
+
+    if not current.auth.is_logged_in():
+
+        attr["rheader"] = None
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and isinstance(output, dict):
+                output["buttons"] = {}
+
+            return output
+        s3.postp = custom_postp
+
+    
+
+    return attr
+
+settings.customise_irs_ireport_controller = customise_irs_ireport_controller
 
 # -----------------------------------------------------------------------------
 settings.req.req_type = ["Other"]
@@ -2934,6 +3002,11 @@ settings.modules = OrderedDict([
     #    restricted = True,
     #    module_type = None
     #)),
+    ("irs", Storage(
+        name_nice = "Incident Reports",
+        restricted = True,
+        module_type = None
+    )),
     ("req", Storage(
             name_nice = "Requests",
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",

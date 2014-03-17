@@ -70,9 +70,13 @@
    <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/S3menu_logo.png" style="width:29px;margin:0 0 -20px 0" alt=""/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
+     <li><a href='/{{=appname}}/irs/ireport/create'><i class='icon-flag'></i> {{=T("Report an Incident")}}</a></li>
+     <!--
      <li><a href='/{{=appname}}/vol/person/create'><i class='icon-user'></i> {{=T("Volunteer")}}</a></li>
      <li><a href='/{{=appname}}/req/req/create'><i class='icon-flag'></i> {{=T("Make a Request")}}</a></li>
-     <li><a href='/{{=appname}}/req/req/datalist'><i class='icon-truck'></i> {{=T("Donate in Kind")}}</a></li>
+     <li><a href='/{{=appname}}/req/req/datalist'><i class='icon-truck'></i> {{=T("Donate in Kind")}}</a></li>-->
+     {{if auth.is_logged_in():}}
+     <li><a href='/{{=appname}}/irs/ireport'><i class='icon-truck'></i> {{=T("Manage Incidents")}}</a></li>
      <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='more' data-toggle='dropdown'><i class='icon-plus-sign'></i> {{=T("More")}}<b class='caret'></b></a>
       <ul class='dropdown-menu' role='menu' aria-labelledby='more'>
        <li role='menuitem'><a href='/{{=appname}}/gis/index' tabindex='-1' class='menu-item'><i class='icon-map-marker'></i> {{=T("Map")}}</a></li>
@@ -84,6 +88,7 @@
        <!--<li role='menuitem'><a href='/{{=appname}}/doc/document' tabindex='-1' class='menu-item'><i class='icon-file-alt'></i> {{=T("Documents")}}</a></li>-->
       </ul>
      </li>
+     {{pass}}
     </ul>
     <ul class='nav pull-right'>
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
