@@ -264,6 +264,7 @@ def evr_rheader(r):
                 # but can enabled to verify the functionality:
                 #(T("Identity Documents"), "identity"),
                 #(T("Case Details"), "case"),
+                (T("Images"), "image"),
                 (T("Physical Description"), "physical_description"),
                 (T("Medical Information"), "medical_details"),
                 (T("Socio-Economic Background"), "background"),
@@ -274,11 +275,23 @@ def evr_rheader(r):
                           ["date_of_birth"],
                          ]
 
-    elif resourcename == "group":
+        # Show profile picture in rheader
+        itable = current.s3db.pr_image
+        query = (itable.pe_id == r.record.pe_id) & \
+                (itable.profile == True)
+        image = current.db(query).select(itable.image,
+                                        limitby=(0, 1)).first()
+        if image:
+            image = itable.image.represent(image.image)
+        else:
+            image = IMG(_src=URL(c="static", f="img", args="blank-user.gif"),
+                        _height=60,
+                        _title=T("No image available"))
+            
+        return DIV(DIV(image, _style="float:left"),
+                   S3ResourceHeader(rheader_fields, tabs)(r))
 
-        rheader_fields = [["name"],
-                          ["description"],
-                         ]
+    elif resourcename == "group":
 
         tabs = [("Group Details", None),
                 (T("Contact Data"), "contact"),
@@ -287,10 +300,14 @@ def evr_rheader(r):
                 #(T("Shelter Allocation"), "available_shelters"),
                 ]
 
-    if rheader_fields is not None:
+
+        rheader_fields = [["name"],
+                          ["description"],
+                         ]
+
         return S3ResourceHeader(rheader_fields, tabs)(r)
-    else:
-        return None
+        
+    return None
 
 # =============================================================================
 class evr_AvailableShelters(S3Method):
