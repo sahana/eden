@@ -276,14 +276,12 @@ class S3StatsDemographicModel(S3Model):
         # CRUD Strings
         ADD_DEMOGRAPHIC = T("Add Demographic")
         crud_strings[tablename] = Storage(
-            title_create = ADD_DEMOGRAPHIC,
+            label_create = ADD_DEMOGRAPHIC,
             title_display = T("Demographic Details"),
             title_list = T("Demographics"),
             title_update = T("Edit Demographic"),
             #title_upload = T("Import Demographics"),
-            subtitle_create = T("Add New Demographic"),
             label_list_button = T("List Demographics"),
-            label_create_button = ADD_DEMOGRAPHIC,
             msg_record_created = T("Demographic added"),
             msg_record_modified = T("Demographic updated"),
             msg_record_deleted = T("Demographic deleted"),
@@ -343,14 +341,12 @@ class S3StatsDemographicModel(S3Model):
         # CRUD Strings
         ADD_DEMOGRAPHIC = T("Add Demographic Data")
         crud_strings[tablename] = Storage(
-            title_create = ADD_DEMOGRAPHIC,
+            label_create = ADD_DEMOGRAPHIC,
             title_display = T("Demographic Data Details"),
             title_list = T("Demographic Data"),
             title_update = T("Edit Demographic Data"),
             title_upload = T("Import Demographic Data"),
-            subtitle_create = T("Add New Demographic Data"),
             label_list_button = T("List Demographic Data"),
-            label_create_button = ADD_DEMOGRAPHIC,
             msg_record_created = T("Demographic Data added"),
             msg_record_modified = T("Demographic Data updated"),
             msg_record_deleted = T("Demographic Data deleted"),
@@ -1217,14 +1213,12 @@ class S3StatsPeopleModel(S3Model):
 
         ADD_PEOPLE_TYPE = T("Add New Type of People")
         crud_strings[tablename] = Storage(
-            title_create=T("Add Type of People"),
+            label_create=T("Add Type of People"),
             title_display=T("Type of People Details"),
             title_list=T("Type of Peoples"),
             title_update=T("Edit Type of People"),
             #title_upload=T("Import Type of Peoples"),
-            subtitle_create=ADD_PEOPLE_TYPE,
             label_list_button=T("Type of Peoples"),
-            label_create_button=ADD_PEOPLE_TYPE,
             label_delete_button=T("Delete Type of People"),
             msg_record_created=T("Type of People added"),
             msg_record_modified=T("Type of People updated"),
@@ -1278,14 +1272,12 @@ class S3StatsPeopleModel(S3Model):
 
         ADD_PEOPLE = T("Add New People")
         crud_strings[tablename] = Storage(
-            title_create=T("Add People"),
+            label_create=T("Add People"),
             title_display=T("People Details"),
             title_list=T("People"),
             title_update=T("Edit People"),
             title_upload=T("Import People"),
-            subtitle_create=ADD_PEOPLE,
             label_list_button=T("People"),
-            label_create_button=ADD_PEOPLE,
             label_delete_button=T("Delete People"),
             msg_record_created=T("People added"),
             msg_record_modified=T("People updated"),
@@ -1402,14 +1394,12 @@ class S3StatsTrainedPeopleModel(S3Model):
 
         ADD_TRAINED_PEOPLE_TYPE = T("Add New Type of Trained People")
         crud_strings[tablename] = Storage(
-            title_create=T("Add Type of Trained People"),
+            label_create=T("Add Type of Trained People"),
             title_display=T("Type of Trained People  Details"),
             title_list=T("Types of Trained People"),
             title_update=T("Edit Type of Trained People"),
             #title_upload=T("Import Types of Trained People"),
-            subtitle_create=ADD_TRAINED_PEOPLE_TYPE,
             label_list_button=T("Types of Trained People"),
-            label_create_button=ADD_TRAINED_PEOPLE_TYPE,
             label_delete_button=T("Delete Type of Trained People "),
             msg_record_created=T("Type of Trained People added"),
             msg_record_modified=T("Type of Trained People updated"),
@@ -1467,14 +1457,12 @@ class S3StatsTrainedPeopleModel(S3Model):
 
         ADD_TRAINED_PEOPLE = T("Add Trained People")
         crud_strings[tablename] = Storage(
-            title_create=ADD_TRAINED_PEOPLE,
+            label_create=ADD_TRAINED_PEOPLE,
             title_display=T("Trained People Details"),
             title_list=T("Trained People"),
             title_update=T("Edit Trained People"),
             title_upload=T("Import Trained People"),
-            subtitle_create=ADD_TRAINED_PEOPLE,
             label_list_button=T("Trained People"),
-            label_create_button=ADD_TRAINED_PEOPLE,
             label_delete_button=T("Delete Trained People"),
             msg_record_created=T("Trained People added"),
             msg_record_modified=T("Trained People updated"),

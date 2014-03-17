@@ -66,14 +66,12 @@ class S3SecurityModel(S3Model):
         # CRUD strings
         ADD_ZONE_TYPE = T("Add Zone Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ZONE_TYPE,
+            label_create = ADD_ZONE_TYPE,
             title_display = T("Zone Type Details"),
             title_list = T("Zone Types"),
             title_update = T("Edit Zone Type"),
             title_upload = T("Import Zone Types"),
-            subtitle_create = T("Add New Zone Type"),
             label_list_button = T("List Zone Types"),
-            label_create_button = T("Add New Zone Type"),
             label_delete_button = T("Delete Zone Type"),
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
@@ -116,14 +114,12 @@ class S3SecurityModel(S3Model):
         # CRUD strings
         ADD_ZONE = T("Add Zone")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ZONE,
+            label_create = ADD_ZONE,
             title_display = T("Zone Details"),
             title_list = T("Zones"),
             title_update = T("Edit Zone"),
             title_upload = T("Import Zones"),
-            subtitle_create = T("Add New Zone"),
             label_list_button = T("List Zones"),
-            label_create_button = T("Add New Zone"),
             label_delete_button = T("Delete Zone"),
             msg_record_created = T("Zone added"),
             msg_record_modified = T("Zone updated"),
@@ -145,14 +141,12 @@ class S3SecurityModel(S3Model):
         # CRUD strings
         ADD_STAFF = T("Add Staff Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_STAFF,
+            label_create = ADD_STAFF,
             title_display = T("Staff Type Details"),
             title_list = T("Staff Types"),
             title_update = T("Edit Staff Type"),
             title_upload = T("Import Staff Types"),
-            subtitle_create = T("Add New Staff Type"),
             label_list_button = T("List Staff Types"),
-            label_create_button = T("Add New Staff Type"),
             label_delete_button = T("Delete Staff Type"),
             msg_record_created = T("Staff Type added"),
             msg_record_modified = T("Staff Type updated"),
@@ -201,14 +195,12 @@ class S3SecurityModel(S3Model):
         # CRUD strings
         ADD_STAFF = T("Add Security-Related Staff")
         crud_strings[tablename] = Storage(
-            title_create = ADD_STAFF,
+            label_create = ADD_STAFF,
             title_display = T("Security-Related Staff Details"),
             title_list = T("Security-Related Staff"),
             title_update = T("Edit Security-Related Staff"),
             title_upload = T("Import Security-Related Staff"),
-            subtitle_create = T("Add New Security-Related Staff"),
             label_list_button = T("List Security-Related Staff"),
-            label_create_button = T("Add New Security-Related Staff"),
             label_delete_button = T("Delete Security-Related Staff"),
             msg_record_created = T("Security-Related Staff added"),
             msg_record_modified = T("Security-Related Staff updated"),

@@ -172,13 +172,11 @@ def req_template():
         # CRUD strings
         ADD_REQUEST = T("Add Request Template")
         s3.crud_strings["req_req"] = Storage(
-            title_create = ADD_REQUEST,
+            label_create = ADD_REQUEST,
             title_display = T("Request Template Details"),
             title_list = T("Request Templates"),
             title_update = T("Edit Request Template"),
-            subtitle_create = ADD_REQUEST,
             label_list_button = T("List Request Templates"),
-            label_create_button = ADD_REQUEST,
             label_delete_button = T("Delete Request Template"),
             msg_record_created = T("Request Template Added"),
             msg_record_modified = T("Request Template Updated"),
@@ -248,9 +246,9 @@ def req_controller():
                 if crud_strings:
                     s3.crud_strings["req_req"] = crud_strings
                 elif type == 1:
-                    s3.crud_strings["req_req"].title_create = T("Make Supplies Request")
+                    s3.crud_strings["req_req"].label_create = T("Make Supplies Request")
                 elif type == 3:
-                    s3.crud_strings["req_req"].title_create = T("Make People Request")
+                    s3.crud_strings["req_req"].label_create = T("Make People Request")
 
                 # Filter the query based on type
                 if s3.filter:

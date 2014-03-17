@@ -847,7 +847,7 @@ class S3OptionsMenu(object):
                     # Currently not got geocoding support
                     #M("Bulk Uploader", c="doc", f="bulk_upload"),
                     M("Locations", c="gis", f="location")(
-                        M("Add Location", m="create"),
+                        M("Create Location", m="create"),
                         #M("Add Location Group", m="create", vars={"group": 1}),
                         #M("Search"),
                         M("Import from CSV", m="import", restrict=[MAP_ADMIN]),
@@ -1204,7 +1204,7 @@ class S3OptionsMenu(object):
 
         return M(c="irs")(
                     M("Incident Reports", f="ireport")(
-                        M("Add Incident Report", m="create"),
+                        M("Create Incident Report", m="create"),
                         #M("Search"),
                         M("Open Incidents", vars={"open":1}),
                         M("Map", m="map"),
@@ -1417,7 +1417,7 @@ class S3OptionsMenu(object):
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
-                        M("Add Organization", m="create"),
+                        M("Create Organization", m="create"),
                         #M("Search"),
                         M("Import", m="import")
                     ),
@@ -1476,7 +1476,7 @@ class S3OptionsMenu(object):
                         #M("Search"),
                     ),
                     M("Groups", f="group")(
-                        M("Add Group", m="create"),
+                        M("Create Group", m="create"),
                         #M("Search"),
                     ),
                 )

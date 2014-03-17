@@ -114,16 +114,14 @@ class S3ContentModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_SERIES = T("Add Series")
+        ADD_SERIES = T("Create Series")
         crud_strings[tablename] = Storage(
-            title_create = ADD_SERIES,
+            label_create = ADD_SERIES,
             title_display = T("Series Details"),
             title_list = T("Series"),
             title_update = T("Edit Series"),
             title_upload = T("Import Series"),
-            subtitle_create = T("Add New Series"),
             label_list_button = T("List Series"),
-            label_create_button = ADD_SERIES,
             msg_record_created = T("Series added"),
             msg_record_modified = T("Series updated"),
             msg_record_deleted = T("Series deleted"),
@@ -208,16 +206,14 @@ class S3ContentModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_POST = T("Add Post")
+        ADD_POST = T("Create Post")
         crud_strings[tablename] = Storage(
-            title_create = ADD_POST,
+            label_create = ADD_POST,
             title_display = T("Post Details"),
             title_list = T("Posts"),
             title_update = T("Edit Post"),
             title_upload = T("Import Posts"),
-            subtitle_create = T("Add New Post"),
             label_list_button = T("List Posts"),
-            label_create_button = ADD_POST,
             msg_record_created = T("Post added"),
             msg_record_modified = T("Post updated"),
             msg_record_deleted = T("Post deleted"),
@@ -377,15 +373,13 @@ class S3ContentModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_POST = T("Add Post")
+        ADD_POST = T("Create Post")
         crud_strings[tablename] = Storage(
-            title_create = ADD_POST,
+            label_create = ADD_POST,
             title_display = T("Post Details"),
             title_list = T("Posts"),
             title_update = T("Edit Post"),
-            subtitle_create = T("Add New Post"),
             label_list_button = T("List Posts"),
-            label_create_button = ADD_POST,
             msg_record_created = T("Post set as Module/Resource homepage"),
             msg_record_modified = T("Post updated"),
             msg_record_deleted = T("Post removed"),
@@ -418,16 +412,14 @@ class S3ContentModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_TAG = T("Add Tag")
+        ADD_TAG = T("Create Tag")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TAG,
+            label_create = ADD_TAG,
             title_display = T("Tag Details"),
             title_list = T("Tags"),
             title_update = T("Edit Tag"),
             title_upload = T("Import Tags"),
-            subtitle_create = T("Add New Tag"),
             label_list_button = T("List Tags"),
-            label_create_button = ADD_TAG,
             msg_record_created = T("Tag added"),
             msg_record_modified = T("Tag updated"),
             msg_record_deleted = T("Tag deleted"),
@@ -445,14 +437,12 @@ class S3ContentModel(S3Model):
         # CRUD Strings
         ADD_TAG = T("Tag Post")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TAG,
+            label_create = ADD_TAG,
             title_display = T("Tag Details"),
             title_list = T("Tags"),
             title_update = T("Edit Tag"),
             title_upload = T("Import Tags"),
-            subtitle_create = T("Add New Tag"),
             label_list_button = T("List Tagged Posts"),
-            label_create_button = ADD_TAG,
             msg_record_created = T("Post Tagged"),
             msg_record_modified = T("Tag updated"),
             msg_record_deleted = T("Tag removed"),

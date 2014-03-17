@@ -39,7 +39,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
-                        M("Add Organization", m="create"),
+                        M("Create Organization", m="create"),
                         M("List All"),
                         M("Import", m="import")
                     ),

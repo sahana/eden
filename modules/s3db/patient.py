@@ -103,13 +103,11 @@ class S3PatientModel(S3Model):
         # CRUD strings
         ADD_PATIENT = T("New Patient")
         crud_strings[tablename] = Storage(
-            title_create = ADD_PATIENT,
+            label_create = ADD_PATIENT,
             title_display = T("Patient Details"),
             title_list = T("Patients"),
             title_update = T("Edit Patient"),
-            subtitle_create = T("Add New Patient"),
             label_list_button = T("List Patients"),
-            label_create_button = ADD_PATIENT,
             label_delete_button = T("Delete Patient"),
             msg_record_created = T("Patient added"),
             msg_record_modified = T("Patient updated"),
@@ -180,13 +178,11 @@ class S3PatientModel(S3Model):
         # CRUD strings
         ADD_RELATIVE = T("New Relative")
         crud_strings[tablename] = Storage(
-            title_create = ADD_RELATIVE,
+            label_create = ADD_RELATIVE,
             title_display = T("Relative Details"),
             title_list = T("Relatives"),
             title_update = T("Edit Relative"),
-            subtitle_create = T("Add New Relative"),
             label_list_button = T("List Relatives"),
-            label_create_button = ADD_RELATIVE,
             label_delete_button = T("Delete Relative"),
             msg_record_created = T("Relative added"),
             msg_record_modified = T("Relative updated"),
@@ -222,13 +218,11 @@ class S3PatientModel(S3Model):
         # CRUD strings
         ADD_HOME = T("New Home")
         crud_strings[tablename] = Storage(
-            title_create = ADD_HOME,
+            label_create = ADD_HOME,
             title_display = T("Home Details"),
             title_list = T("Homes"),
             title_update = T("Edit Home"),
-            subtitle_create = T("Add New Home"),
             label_list_button = T("List Homes"),
-            label_create_button = ADD_HOME,
             label_delete_button = T("Delete Home"),
             msg_record_created = T("Home added"),
             msg_record_modified = T("Home updated"),

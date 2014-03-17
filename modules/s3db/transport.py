@@ -137,16 +137,14 @@ class S3TransportModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_AIRPORT = T("Add New Airport")
+        ADD_AIRPORT = T("Create Airport")
         crud_strings[tablename] = Storage(
-            title_create=T("Add Airport"),
+            label_create=T("Create Airport"),
             title_display=T("Airport Details"),
             title_list=T("Airports"),
             title_update=T("Edit Airport"),
             title_upload=T("Import Airports"),
-            subtitle_create=ADD_AIRPORT,
             label_list_button=T("List Airports"),
-            label_create_button=ADD_AIRPORT,
             label_delete_button=T("Delete Airport"),
             msg_record_created=T("Airport added"),
             msg_record_modified=T("Airport updated"),
@@ -190,16 +188,14 @@ class S3TransportModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_HELIPORT = T("Add New Heliport")
+        ADD_HELIPORT = T("Create Heliport")
         crud_strings[tablename] = Storage(
-            title_create=T("Add Heliport"),
+            label_create=T("Create Heliport"),
             title_display=T("Heliport Details"),
             title_list=T("Heliports"),
             title_update=T("Edit Heliport"),
             title_upload=T("Import Heliports"),
-            subtitle_create=ADD_HELIPORT,
             label_list_button=T("List Heliports"),
-            label_create_button=ADD_HELIPORT,
             label_delete_button=T("Delete Heliport"),
             msg_record_created=T("Heliport added"),
             msg_record_modified=T("Heliport updated"),
@@ -348,16 +344,14 @@ class S3TransportModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_SEAPORT = T("Add New Seaport")
+        ADD_SEAPORT = T("Create Seaport")
         crud_strings[tablename] = Storage(
-            title_create=T("Add Seaport"),
+            label_create=T("Create Seaport"),
             title_display=T("Seaport Details"),
             title_list=T("Seaports"),
             title_update=T("Edit Seaport"),
             title_upload=T("Import Seaports"),
-            subtitle_create=ADD_SEAPORT,
             label_list_button=T("List Seaports"),
-            label_create_button=ADD_SEAPORT,
             label_delete_button=T("Delete Seaport"),
             msg_record_created=T("Seaport added"),
             msg_record_modified=T("Seaport updated"),

@@ -154,16 +154,14 @@ class S3HRModel(S3Model):
                                  comment=None),
                      *s3_meta_fields())
 
-        label_create = T("Add New Department")
+        label_create = T("Create Department")
         crud_strings[tablename] = Storage(
-            title_create = T("Add Department"),
+            label_create = label_create,
             title_display = T("Department Details"),
             title_list = T("Department Catalog"),
             title_update = T("Edit Department"),
             title_upload = T("Import Departments"),
-            subtitle_create = T("Add Department"),
             label_list_button = T("List Departments"),
-            label_create_button = label_create,
             label_delete_button = T("Delete Department"),
             msg_record_created = T("Department added"),
             msg_record_modified = T("Department updated"),
@@ -245,16 +243,14 @@ class S3HRModel(S3Model):
 
         if group == "volunteer":
             label = T("Volunteer Role")
-            label_create = T("Add New Volunteer Role")
+            label_create = T("Add Volunteer Role")
             tooltip = T("The volunteer's role")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Volunteer Role"),
+                label_create = label_create,
                 title_display = T("Volunteer Role Details"),
                 title_list = T("Volunteer Role Catalog"),
                 title_update = T("Edit Volunteer Role"),
-                subtitle_create = T("Add Volunteer Role"),
                 label_list_button = T("List Volunteer Roles"),
-                label_create_button = label_create,
                 label_delete_button = T("Delete Volunteer Role"),
                 msg_record_created = T("Volunteer Role added"),
                 msg_record_modified = T("Volunteer Role updated"),
@@ -262,16 +258,14 @@ class S3HRModel(S3Model):
                 msg_list_empty = T("Currently no entries in the catalog"))
         else:
             label = T("Job Title")
-            label_create = T("Add New Job Title")
+            label_create = T("Create Job Title")
             tooltip = T("The staff member's official job title")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Job Title"),
+                label_create = label_create,
                 title_display = T("Job Title Details"),
                 title_list = T("Job Title Catalog"),
                 title_update = T("Edit Job Title"),
-                subtitle_create = T("Add Job Title"),
                 label_list_button = T("List Job Titles"),
-                label_create_button = label_create,
                 label_delete_button = T("Delete Job Title"),
                 msg_record_created = T("Job Title added"),
                 msg_record_modified = T("Job Title updated"),
@@ -434,14 +428,12 @@ class S3HRModel(S3Model):
         if STAFF == T("Contacts"):
             contacts = True
             crud_strings["hrm_staff"] = Storage(
-                title_create = T("Add Contact"),
+                label_create = T("Create Contact"),
                 title_display = T("Contact Details"),
                 title_list = STAFF,
                 title_update = T("Edit Contact Details"),
                 title_upload = T("Import Contacts"),
-                subtitle_create = T("Add New Contact"),
                 label_list_button = T("List Contacts"),
-                label_create_button = T("Add Contact"),
                 label_delete_button = T("Delete Contact"),
                 msg_record_created = T("Contact added"),
                 msg_record_modified = T("Contact Details updated"),
@@ -450,14 +442,12 @@ class S3HRModel(S3Model):
         else:
             contacts = False
             crud_strings["hrm_staff"] = Storage(
-                title_create = T("Add Staff Member"),
+                label_create = T("Create Staff Member"),
                 title_display = T("Staff Member Details"),
                 title_list = STAFF,
                 title_update = T("Edit Staff Member Details"),
                 title_upload = T("Import Staff"),
-                subtitle_create = T("Add New Staff Member"),
                 label_list_button = T("List Staff Members"),
-                label_create_button = T("Add Staff Member"),
                 label_delete_button = T("Delete Staff Member"),
                 msg_record_created = T("Staff Member added"),
                 msg_record_modified = T("Staff Member Details updated"),
@@ -465,14 +455,12 @@ class S3HRModel(S3Model):
                 msg_list_empty = T("No Staff currently registered"))
 
         crud_strings["hrm_volunteer"] = Storage(
-            title_create = T("Add Volunteer"),
+            label_create = T("Create Volunteer"),
             title_display = T("Volunteer Details"),
             title_list = T("Volunteers"),
             title_update = T("Edit Volunteer Details"),
             title_upload = T("Import Volunteers"),
-            subtitle_create = T("Add New Volunteer"),
             label_list_button = T("List Volunteers"),
-            label_create_button = T("Add Volunteer"),
             label_delete_button = T("Delete Volunteer"),
             msg_record_created = T("Volunteer added"),
             msg_record_modified = T("Volunteer Details updated"),
@@ -515,14 +503,12 @@ class S3HRModel(S3Model):
                 crud_strings[tablename] = crud_strings["hrm_staff"]
             else:
                 crud_strings[tablename] = Storage(
-                    title_create = T("Add Staff Member"),
+                    label_create = T("Create Staff Member"),
                     title_display = T("Staff Member Details"),
                     title_list = T("Staff & Volunteers"),
                     title_update = T("Edit Record"),
                     title_upload =T("Search Staff & Volunteers"),
-                    subtitle_create = T("Add New Staff Member"),
                     label_list_button = T("List Staff & Volunteers"),
-                    label_create_button = T("Add Staff Member"),
                     label_delete_button = T("Delete Record"),
                     msg_record_created = T("Staff member added"),
                     msg_record_modified = T("Record updated"),
@@ -535,8 +521,8 @@ class S3HRModel(S3Model):
         comment = S3AddResourceLink(c = "vol" if group == "volunteer" else "hrm",
                                     f = group or "staff",
                                     vars = dict(child="human_resource_id"),
-                                    label=crud_strings["hrm_%s" % group].label_create_button if group else \
-                                          crud_strings[tablename].label_create_button,
+                                    label=crud_strings["hrm_%s" % group].label_create if group else \
+                                          crud_strings[tablename].label_create,
                                     title=label,
                                     tooltip=tooltip)
 
@@ -1209,13 +1195,11 @@ class S3HRSiteModel(S3Model):
                        )
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Assign Staff"),
+            label_create = T("Assign Staff"),
             title_display = T("Staff Assignment Details"),
             title_list = T("Staff Assignments"),
             title_update = T("Edit Staff Assignment"),
-            subtitle_create = T("Add Staff Assignment"),
             label_list_button = T("List Staff Assignments"),
-            label_create_button = T("Add New Staff Assignment"),
             label_delete_button = T("Delete Staff Assignment"),
             msg_record_created = T("Staff Assigned"),
             msg_record_modified = T("Staff Assignment updated"),
@@ -1349,20 +1333,18 @@ class S3HRJobModel(S3Model):
         #table.site_id.readable = table.site_id.writable = True
 
         #crud_strings[tablename] = Storage(
-        #    title_create = T("Add Position"),
+        #    label_create = T("Add Position"),
         #    title_display = T("Position Details"),
         #    title_list = T("Position Catalog"),
         #    title_update = T("Edit Position"),
-        #    subtitle_create = T("Add Position"),
         #    label_list_button = T("List Positions"),
-        #    label_create_button = T("Add Position"),
         #    label_delete_button = T("Delete Position"),
         #    msg_record_created = T("Position added"),
         #    msg_record_modified = T("Position updated"),
         #    msg_record_deleted = T("Position deleted"),
         #    msg_list_empty = T("Currently no entries in the catalog"))
 
-        #label_create = crud_strings[tablename].label_create_button
+        #label_create = crud_strings[tablename].label_create
         #position_id = S3ReusableField("position_id", "reference %s" % tablename,
         #                              sortby = "name",
         #                              label = T("Position"),
@@ -1553,13 +1535,11 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Skill Type"),
+            label_create = T("Create Skill Type"),
             title_display = T("Details"),
             title_list = T("Skill Type Catalog"),
             title_update = T("Edit Skill Type"),
-            subtitle_create = T("Add Skill Type"),
             label_list_button = T("List Skill Types"),
-            label_create_button = T("Add New Skill Type"),
             label_delete_button = T("Delete Skill Type"),
             msg_record_created = T("Skill Type added"),
             msg_record_modified = T("Skill Type updated"),
@@ -1567,7 +1547,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no entries in the catalog"))
 
         skill_types = settings.get_hrm_skill_types()
-        label_create = crud_strings[tablename].label_create_button
+        label_create = crud_strings[tablename].label_create
         represent = S3Represent(lookup=tablename)
         skill_type_id = S3ReusableField("skill_type_id", "reference %s" % tablename,
                             sortby = "name",
@@ -1603,13 +1583,11 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Skill"),
+            label_create = T("Create Skill"),
             title_display = T("Skill Details"),
             title_list = T("Skill Catalog"),
             title_update = T("Edit Skill"),
-            subtitle_create = T("Add Skill"),
             label_list_button = T("List Skills"),
-            label_create_button = T("Add New Skill"),
             label_delete_button = T("Delete Skill"),
             msg_record_created = T("Skill added"),
             msg_record_modified = T("Skill updated"),
@@ -1617,7 +1595,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no entries in the catalog"))
 
         autocomplete = False
-        label_create = crud_strings[tablename].label_create_button
+        label_create = crud_strings[tablename].label_create
         if autocomplete:
             # NB FilterField widget needs fixing for that too
             widget = S3AutocompleteWidget(request.controller,
@@ -1703,13 +1681,11 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Competency Rating"),
+            label_create = T("Create Competency Rating"),
             title_display = T("Competency Rating Details"),
             title_list = T("Competency Rating Catalog"),
             title_update = T("Edit Competency Rating"),
-            subtitle_create = T("Add Competency Rating"),
             label_list_button = T("List Competency Ratings"),
-            label_create_button = T("Add New Competency Rating"),
             label_delete_button = T("Delete Competency Rating"),
             msg_record_created = T("Competency Rating added"),
             msg_record_modified = T("Competency Rating updated"),
@@ -1765,13 +1741,11 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Skill"),
+            label_create = T("Create Skill"),
             title_display = T("Skill Details"),
             title_list = T("Skills"),
             title_update = T("Edit Skill"),
-            subtitle_create = T("Add Skill"),
             label_list_button = T("List Skills"),
-            label_create_button = T("Add New Skill"),
             label_delete_button = T("Remove Skill"),
             msg_record_created = T("Skill added"),
             msg_record_modified = T("Skill updated"),
@@ -1817,20 +1791,18 @@ class S3HRSkillModel(S3Model):
         #                     *s3_meta_fields())
 
         #crud_strings[tablename] = Storage(
-        #    title_create = T("Add Skill Provision"),
+        #    label_create = T("Add Skill Provision"),
         #    title_display = T("Skill Provision Details"),
         #    title_list = T("Skill Provision Catalog"),
         #    title_update = T("Edit Skill Provision"),
-        #    subtitle_create = T("Add Skill Provision"),
         #    label_list_button = T("List Skill Provisions"),
-        #    label_create_button = T("Add Skill Provision"),
         #    label_delete_button = T("Delete Skill Provision"),
         #    msg_record_created = T("Skill Provision added"),
         #    msg_record_modified = T("Skill Provision updated"),
         #    msg_record_deleted = T("Skill Provision deleted"),
         #    msg_list_empty = T("Currently no entries in the catalog"))
 
-        #label_create = crud_strings[tablename].label_create_button
+        #label_create = crud_strings[tablename].label_create
         #represent = S3Represent(lookup=tablename)
         #skill_group_id = S3ReusableField("skill_provision_id", "reference %s" % tablename,
         #                           sortby = "name",
@@ -1915,13 +1887,11 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Credential"),
+            label_create = T("Create Credential"),
             title_display = T("Credential Details"),
             title_list = T("Credentials"),
             title_update = T("Edit Credential"),
-            subtitle_create = T("Add Credential"),
             label_list_button = T("List Credentials"),
-            label_create_button = T("Add New Credential"),
             label_delete_button = T("Delete Credential"),
             msg_record_created = T("Credential added"),
             msg_record_modified = T("Credential updated"),
@@ -1956,14 +1926,12 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Course"),
+            label_create = T("Create Course"),
             title_display = T("Course Details"),
             title_list = T("Course Catalog"),
             title_update = T("Edit Course"),
             title_upload = T("Import Courses"),
-            subtitle_create = T("Add Course"),
             label_list_button = T("List Courses"),
-            label_create_button = T("Add New Course"),
             label_delete_button = T("Delete Course"),
             msg_record_created = T("Course added"),
             msg_record_modified = T("Course updated"),
@@ -1972,7 +1940,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no entries in the catalog"))
 
         if is_admin:
-            label_create = crud_strings[tablename].label_create_button
+            label_create = crud_strings[tablename].label_create
             course_help = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
                                             f="course",
                                             label=label_create)
@@ -2046,14 +2014,12 @@ class S3HRSkillModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Training Event"),
+            label_create = T("Create Training Event"),
             title_display = T("Training Event Details"),
             title_list = T("Training Events"),
             title_update = T("Edit Training Event"),
             title_upload = T("Import Training Events"),
-            subtitle_create = T("Add Training Event"),
             label_list_button = T("List Training Events"),
-            label_create_button = T("Add New Training Event"),
             label_delete_button = T("Delete Training Event"),
             msg_record_created = T("Training Event added"),
             msg_record_modified = T("Training Event updated"),
@@ -2062,7 +2028,7 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no training events registered"))
 
         if is_admin:
-            label_create = crud_strings[tablename].label_create_button
+            label_create = crud_strings[tablename].label_create
             course_help = S3AddResourceLink(f="training_event",
                                             label=label_create)
         else:
@@ -2170,15 +2136,13 @@ class S3HRSkillModel(S3Model):
         # Suitable for use when adding a Training to a Person
         # The ones when adding a Participant to an Event are done in the Controller
         crud_strings[tablename] = Storage(
-            title_create = T("Add Training"),
+            label_create = T("Create Training"),
             title_display = T("Training Details"),
             title_list = T("Trainings"),
             title_update = T("Edit Training"),
             title_report = T("Training Report"),
             title_upload = T("Import Training Participants"),
-            subtitle_create = T("Add Training"),
             label_list_button = T("List Trainings"),
-            label_create_button = T("Add New Training"),
             label_delete_button = T("Delete Training"),
             msg_record_created = T("Training added"),
             msg_record_modified = T("Training updated"),
@@ -2285,14 +2249,12 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Certificate"),
+            label_create = T("Create Certificate"),
             title_display = T("Certificate Details"),
             title_list = T("Certificate Catalog"),
             title_update = T("Edit Certificate"),
             title_upload = T("Import Certificates"),
-            subtitle_create = T("Add Certificate"),
             label_list_button = T("List Certificates"),
-            label_create_button = T("Add New Certificate"),
             label_delete_button = T("Delete Certificate"),
             msg_record_created = T("Certificate added"),
             msg_record_modified = T("Certificate updated"),
@@ -2300,7 +2262,7 @@ class S3HRSkillModel(S3Model):
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
-        label_create = crud_strings[tablename].label_create_button
+        label_create = crud_strings[tablename].label_create
         represent = S3Represent(lookup=tablename)
         certificate_id = S3ReusableField("certificate_id", "reference %s" % tablename,
                                          sortby = "name",
@@ -2383,13 +2345,11 @@ class S3HRSkillModel(S3Model):
                                 ])
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Certification"),
+            label_create = T("Create Certification"),
             title_display = T("Certification Details"),
             title_list = T("Certifications"),
             title_update = T("Edit Certification"),
-            subtitle_create = T("Add Certification"),
             label_list_button = T("List Certifications"),
-            label_create_button = T("Add New Certification"),
             label_delete_button = T("Delete Certification"),
             msg_record_created = T("Certification added"),
             msg_record_modified = T("Certification updated"),
@@ -2414,13 +2374,11 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Skill Equivalence"),
+            label_create = T("Create Skill Equivalence"),
             title_display = T("Skill Equivalence Details"),
             title_list = T("Skill Equivalences"),
             title_update = T("Edit Skill Equivalence"),
-            subtitle_create = T("Add Skill Equivalence"),
             label_list_button = T("List Skill Equivalences"),
-            label_create_button = T("Add New Skill Equivalence"),
             label_delete_button = T("Delete Skill Equivalence"),
             msg_record_created = T("Skill Equivalence added"),
             msg_record_modified = T("Skill Equivalence updated"),
@@ -2444,13 +2402,11 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Course Certificate"),
+            label_create = T("Create Course Certificate"),
             title_display = T("Course Certificate Details"),
             title_list = T("Course Certificates"),
             title_update = T("Edit Course Certificate"),
-            subtitle_create = T("Add Course Certificate"),
             label_list_button = T("List Course Certificates"),
-            label_create_button = T("Add New Course Certificate"),
             label_delete_button = T("Delete Course Certificate"),
             msg_record_created = T("Course Certificate added"),
             msg_record_modified = T("Course Certificate updated"),
@@ -2514,7 +2470,7 @@ class S3HRSkillModel(S3Model):
         else:
             controller = "hrm"
         if current.auth.s3_has_role(current.session.s3.system_roles.ADMIN):
-            label_create = s3.crud_strings["hrm_competency_rating"].label_create_button
+            label_create = s3.crud_strings["hrm_competency_rating"].label_create
             comment = S3AddResourceLink(c=controller,
                                         f="competency_rating",
                                         vars={"child":"competency_id"},
@@ -3094,15 +3050,13 @@ class S3HRAppraisalModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_APPRAISAL = T("Add Appraisal")
+        ADD_APPRAISAL = T("Create Appraisal")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_APPRAISAL,
+            label_create = ADD_APPRAISAL,
             title_display = T("Appraisal Details"),
             title_list = T("Appraisals"),
             title_update = T("Edit Appraisal"),
-            subtitle_create = ADD_APPRAISAL,
             label_list_button = T("List of Appraisals"),
-            label_create_button = T("Add New Appraisal"),
             label_delete_button = T("Delete Appraisal"),
             msg_record_created = T("Appraisal added"),
             msg_record_modified = T("Appraisal updated"),
@@ -3302,15 +3256,13 @@ class S3HRExperienceModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-        ADD_EXPERIENCE = T("Add Professional Experience")
+        ADD_EXPERIENCE = T("Create Professional Experience")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_EXPERIENCE,
+            label_create = ADD_EXPERIENCE,
             title_display = T("Professional Experience Details"),
             title_list = T("Professional Experience"),
             title_update = T("Edit Professional Experience"),
-            subtitle_create = ADD_EXPERIENCE,
             label_list_button = T("List of Professional Experience"),
-            label_create_button = T("Add New Professional Experience"),
             label_delete_button = T("Delete Professional Experience"),
             msg_record_created = T("Professional Experience added"),
             msg_record_modified = T("Professional Experience updated"),
@@ -3396,22 +3348,20 @@ class S3HRProgrammeModel(S3Model):
                                  comment=None),
                      *s3_meta_fields())
 
-        ADD_PROG = T("Add Program")
+        ADD_PROG = T("Create Program")
         crud_strings[tablename] = Storage(
-            title_create = ADD_PROG,
+            label_create = ADD_PROG,
             title_display = T("Program Details"),
             title_list = T("Programs"),
             title_update = T("Edit Program"),
-            subtitle_create = ADD_PROG,
             label_list_button = T("List Programs"),
-            label_create_button = T("Add New Program"),
             label_delete_button = T("Delete Program"),
             msg_record_created = T("Program added"),
             msg_record_modified = T("Program updated"),
             msg_record_deleted = T("Program deleted"),
             msg_list_empty = T("Currently no programs registered"))
 
-        label_create = crud_strings[tablename].label_create_button
+        label_create = crud_strings[tablename].label_create
         if is_admin:
             filter_opts = ()
         elif root_org:
@@ -3478,14 +3428,12 @@ class S3HRProgrammeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Hours"),
+            label_create = T("Create Hours"),
             title_display = T("Hours Details"),
             title_list = T("Hours"),
             title_update = T("Edit Hours"),
             title_upload = T("Import Hours"),
-            subtitle_create = T("Add Hours"),
             label_list_button = T("List Hours"),
-            label_create_button = T("Add New Hours"),
             label_delete_button = T("Delete Hours"),
             msg_record_created = T("Hours added"),
             msg_record_modified = T("Hours updated"),
@@ -5035,13 +4983,11 @@ def hrm_group_controller():
         # CRUD Strings
         ADD_TEAM = T("Add Team")
         s3.crud_strings[tablename] = Storage(
-            title_create = ADD_TEAM,
+            label_create = ADD_TEAM,
             title_display = T("Team Details"),
             title_list = T("Teams"),
             title_update = T("Edit Team"),
-            subtitle_create = T("Add New Team"),
             label_list_button = T("List Teams"),
-            label_create_button = T("Add New Team"),
             label_search_button = T("Search Teams"),
             msg_record_created = T("Team added"),
             msg_record_modified = T("Team updated"),
@@ -5279,7 +5225,7 @@ def hrm_human_resource_controller(extra_filter=None):
             # Configure widgets
             # @todo: put into separate function
             contacts_widget = dict(label = "Contacts",
-                                   title_create = "Add New Contact",
+                                   label_create = "Create Contact",
                                    tablename = "pr_contact",
                                    type = "datalist",
                                    filter = S3FieldSelector("pe_id") == pe_id,
@@ -5289,7 +5235,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                    orderby = "priority asc",
                                    )
             address_widget = dict(label = "Address",
-                                  title_create = "Add New Address",
+                                  label_create = "Create Address",
                                   type = "datalist",
                                   tablename = "pr_address",
                                   filter = S3FieldSelector("pe_id") == pe_id,
@@ -5299,7 +5245,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                   )
             credentials_widget = dict(# @ToDo: deployment_setting for Labels
                                       label = "Sectors",
-                                      title_create = "Add New Sector",
+                                      label_create = "Create Sector",
                                       type = "datalist",
                                       tablename = "hrm_credential",
                                       filter = S3FieldSelector("person_id") == person_id,
@@ -5308,7 +5254,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       #list_layout = hrm_credential_list_layout,
                                       )
             skills_widget = dict(label = "Skills",
-                                 title_create = "Add New Skill",
+                                 label_create = "Create Skill",
                                  type = "datalist",
                                  tablename = "hrm_competency",
                                  filter = S3FieldSelector("person_id") == person_id,
@@ -5317,7 +5263,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                  #list_layout = hrm_competency_list_layout,
                                  )
             trainings_widget = dict(label = "Trainings",
-                                    title_create = "Add New Training",
+                                    label_create = "Create Training",
                                     type = "datalist",
                                     tablename = "hrm_training",
                                     filter = S3FieldSelector("person_id") == person_id,
@@ -5326,7 +5272,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     #list_layout = hrm_training_list_layout,
                                     )
             experience_widget = dict(label = "Experience",
-                                     title_create = "Add New Experience",
+                                     label_create = "Add New Experience",
                                      type = "datalist",
                                      tablename = "hrm_experience",
                                      filter = S3FieldSelector("person_id") == person_id,
@@ -5335,7 +5281,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                      #list_layout = hrm_experience_list_layout,
                                      )
             docs_widget = dict(label = "Documents",
-                               title_create = "Add New Document",
+                               label_create = "Add New Document",
                                type = "datalist",
                                tablename = "doc_document",
                                filter = S3FieldSelector("doc_id") == record.doc_id,
@@ -5952,14 +5898,12 @@ def hrm_training_event_controller():
             T = current.T
             # Use appropriate CRUD strings
             s3.crud_strings["hrm_training"] = Storage(
-                title_create = T("Add Participant"),
+                label_create = T("Add Participant"),
                 title_display = T("Participant Details"),
                 title_list = T("Participants"),
                 title_update = T("Edit Participant"),
                 title_upload = T("Import Participants"),
-                subtitle_create = T("Add Participant"),
                 label_list_button = T("List Participants"),
-                label_create_button = T("Add New Participant"),
                 label_delete_button = T("Delete Participant"),
                 msg_record_created = T("Participant added"),
                 msg_record_modified = T("Participant updated"),
@@ -6069,7 +6013,7 @@ def hrm_cv(r, **attr):
         profile_widgets = []
         if vol and settings.get_hrm_use_awards():
             awards_widget = dict(label = "Awards",
-                                 title_create = "Add Award",
+                                 label_create = "Create Award",
                                  type = "datatable",
                                  actions = dt_row_actions("award"),
                                  tablename = "vol_volunteer_award",
@@ -6082,7 +6026,7 @@ def hrm_cv(r, **attr):
             profile_widgets.append(awards_widget)
         if settings.get_hrm_use_education():
             education_widget = dict(label = "Education",
-                                    title_create = "Add Education",
+                                    label_create = "Add Education",
                                     type = "datatable",
                                     actions = dt_row_actions("education"),
                                     tablename = "pr_education",
@@ -6100,7 +6044,7 @@ def hrm_cv(r, **attr):
             experience = settings.get_hrm_staff_experience()
         if experience:
             experience_widget = dict(label = "Experience",
-                                     title_create = "Add Experience",
+                                     label_create = "Add Experience",
                                      type = "datatable",
                                      actions = dt_row_actions("experience"),
                                      tablename = "hrm_experience",
@@ -6113,7 +6057,7 @@ def hrm_cv(r, **attr):
             profile_widgets.append(experience_widget)
         if settings.get_hrm_use_trainings():
             training_widget = dict(label = "Training",
-                                   title_create = "Add Training",
+                                   label_create = "Create Training",
                                    type = "datatable",
                                    actions = dt_row_actions("training"),
                                    tablename = "hrm_training",
@@ -6126,7 +6070,7 @@ def hrm_cv(r, **attr):
             profile_widgets.append(training_widget)
         if settings.get_hrm_use_skills():
             skills_widget = dict(label = "Skills",
-                                 title_create = "Add Skill",
+                                 label_create = "Create Skill",
                                  type = "datatable",
                                  actions = dt_row_actions("competency"),
                                  tablename = "hrm_competency",
@@ -6230,7 +6174,7 @@ def hrm_record(r, **attr):
                     list_fields.append("job_title_id")
                 list_fields.append("hours")
                 hours_widget = dict(label = "Program Hours",
-                                    title_create = "Add Program Hours",
+                                    label_create = "Add Program Hours",
                                     type = "datatable",
                                     actions = dt_row_actions("hours"),
                                     tablename = "hrm_programme_hours",
@@ -6248,11 +6192,11 @@ def hrm_record(r, **attr):
         if teams:
             hrm_configure_pr_group_membership()
             if teams == "Teams":
-                title_create = "Add Team"
+                label_create = "Add Team"
             elif teams == "Groups":
-                title_create = "Add Group"
+                label_create = "Create Group"
             teams_widget = dict(label = teams,
-                                title_create = title_create,
+                                label_create = label_create,
                                 type = "datatable",
                                 actions = dt_row_actions("group_membership"),
                                 tablename = "pr_group_membership",
@@ -6312,13 +6256,11 @@ def hrm_configure_pr_group_membership():
         if function == "person":
             ADD_MEMBERSHIP = T("Add Membership")
             current.response.s3.crud_strings[tablename] = Storage(
-                title_create = ADD_MEMBERSHIP,
+                label_create = ADD_MEMBERSHIP,
                 title_display = T("Membership Details"),
                 title_list = T("Memberships"),
                 title_update = T("Edit Membership"),
-                subtitle_create = T("Add New Membership"),
                 label_list_button = T("List Memberships"),
-                label_create_button = ADD_MEMBERSHIP,
                 label_delete_button = T("Delete Membership"),
                 msg_record_created = T("Added to Team"),
                 msg_record_modified = T("Membership updated"),
@@ -6328,13 +6270,11 @@ def hrm_configure_pr_group_membership():
         elif function in ("group", "group_membership"):
             ADD_MEMBER = T("Add Team Member")
             current.response.s3.crud_strings[tablename] = Storage(
-                title_create = ADD_MEMBER,
+                label_create = ADD_MEMBER,
                 title_display = T("Membership Details"),
                 title_list = T("Team Members"),
                 title_update = T("Edit Membership"),
-                subtitle_create = T("Add New Member"),
                 label_list_button = T("List Members"),
-                label_create_button = ADD_MEMBER,
                 label_delete_button = T("Remove Person from Team"),
                 msg_record_created = T("Person added to Team"),
                 msg_record_modified = T("Membership updated"),

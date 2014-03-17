@@ -231,16 +231,14 @@ class HospitalDataModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_HOSPITAL = T("Add Hospital")
+        ADD_HOSPITAL = T("Create Hospital")
         crud_strings[tablename] = Storage(
-            title_create = ADD_HOSPITAL,
+            label_create = ADD_HOSPITAL,
             title_display = T("Hospital Details"),
             title_list = T("Hospitals"),
             title_update = T("Edit Hospital"),
             title_map = T("Map of Hospitals"),
-            subtitle_create = T("Add New Hospital"),
             label_list_button = T("List Hospitals"),
-            label_create_button = ADD_HOSPITAL,
             label_delete_button = T("Delete Hospital"),
             msg_record_created = T("Hospital information added"),
             msg_record_modified = T("Hospital information updated"),
@@ -345,7 +343,7 @@ class HospitalDataModel(S3Model):
                                                     f="hospital",
                                                     label=ADD_HOSPITAL,
                                                     title=T("Hospital"),
-                                                    tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Add Hospital'."))
+                                                    tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Create Hospital'."))
 
         hospital_id = S3ReusableField("hospital_id", "reference %s" % tablename,
                                       sortby="name",
@@ -589,13 +587,11 @@ class HospitalDataModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Status Report"),
+            label_create = T("Create Status Report"),
             title_display = T("Status Report"),
             title_list = T("Status Report"),
             title_update = T("Edit Status Report"),
-            subtitle_create = T("New Status Report"),
             label_list_button = T("List Status Reports"),
-            label_create_button = T("Add Status Report"),
             msg_record_created = T("Status Report added"),
             msg_record_modified = T("Status Report updated"),
             msg_record_deleted = T("Status Report deleted"),
@@ -629,13 +625,11 @@ class HospitalDataModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Contact"),
+            label_create = T("Create Contact"),
             title_display = T("Contact Details"),
             title_list = T("Contacts"),
             title_update = T("Edit Contact"),
-            subtitle_create = T("Add New Contact"),
             label_list_button = T("List Contacts"),
-            label_create_button = T("Add Contact"),
             msg_record_created = T("Contact information added"),
             msg_record_modified = T("Contact information updated"),
             msg_record_deleted = T("Contact information deleted"),
@@ -717,13 +711,11 @@ class HospitalDataModel(S3Model):
         # Field configuration
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Bed Type"),
+            label_create = T("Create Bed Type"),
             title_display = T("Bed Capacity"),
             title_list = T("Bed Capacity"),
             title_update = T("Update Unit"),
-            subtitle_create = T("Add Unit"),
             label_list_button = T("List Units"),
-            label_create_button = T("Add Unit"),
             label_delete_button = T("Delete Unit"),
             msg_record_created = T("Unit added"),
             msg_record_modified = T("Unit updated"),
@@ -788,13 +780,11 @@ class HospitalDataModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Service Profile"),
+            label_create = T("Create Service Profile"),
             title_display = T("Services Available"),
             title_list = T("Services Available"),
             title_update = T("Update Service Profile"),
-            subtitle_create = T("Add Service Profile"),
             label_list_button = T("List Service Profiles"),
-            label_create_button = T("Add Service Profile"),
             label_delete_button = T("Delete Service Profile"),
             msg_record_created = T("Service profile added"),
             msg_record_modified = T("Service profile updated"),
@@ -821,13 +811,11 @@ class HospitalDataModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Report Resource"),
+            label_create = T("Report Resource"),
             title_display = T("Resource Details"),
             title_list = T("Resources"),
             title_update = T("Edit Resource"),
-            subtitle_create = T("Add New Resource"),
             label_list_button = T("List Resources"),
-            label_create_button = T("Add Resource"),
             label_delete_button = T("Delete Resource"),
             msg_record_created = T("Resource added"),
             msg_record_modified = T("Resource updated"),
@@ -1070,13 +1058,11 @@ class CholeraTreatmentCapabilityModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Cholera Treatment Capability Information"),
+            label_create = T("Create Cholera Treatment Capability Information"),
             title_display = T("Cholera Treatment Capability"),
             title_list = T("Cholera Treatment Capability"),
             title_update = T("Update Cholera Treatment Capability Information"),
-            subtitle_create = T("Add Status"),
             label_list_button = T("List Statuses"),
-            label_create_button = T("Add Status"),
             label_delete_button = T("Delete Status"),
             msg_record_created = T("Status added"),
             msg_record_modified = T("Status updated"),
@@ -1157,13 +1143,11 @@ class HospitalActivityReportModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Activity Report"),
+            label_create = T("Create Activity Report"),
             title_display = T("Activity Report"),
             title_list = T("Activity Reports"),
             title_update = T("Update Activity Report"),
-            subtitle_create = T("Add Activity Report"),
             label_list_button = T("List Activity Reports"),
-            label_create_button = T("Add Report"),
             label_delete_button = T("Delete Report"),
             msg_record_created = T("Report added"),
             msg_record_modified = T("Report updated"),

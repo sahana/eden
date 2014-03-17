@@ -296,13 +296,11 @@ class S3PersonEntity(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Role"),
+            label_create = T("Create Role"),
             title_display = T("Role Details"),
             title_list = T("Roles"),
             title_update = T("Edit Role"),
-            subtitle_create = T("Add New Role"),
             label_list_button = T("List Roles"),
-            label_create_button = T("Add Role"),
             label_delete_button = T("Delete Role"),
             msg_record_created = T("Role added"),
             msg_record_modified = T("Role updated"),
@@ -347,13 +345,11 @@ class S3PersonEntity(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Affiliation"),
+            label_create = T("Create Affiliation"),
             title_display = T("Affiliation Details"),
             title_list = T("Affiliations"),
             title_update = T("Edit Affiliation"),
-            subtitle_create = T("Add New Affiliation"),
             label_list_button = T("List Affiliations"),
-            label_create_button = T("Add Affiliation"),
             label_delete_button = T("Delete Affiliation"),
             msg_record_created = T("Affiliation added"),
             msg_record_modified = T("Affiliation updated"),
@@ -813,13 +809,11 @@ class S3PersonModel(S3Model):
         # CRUD Strings
         ADD_PERSON = messages.ADD_PERSON
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add a Person"),
+            label_create = T("Create a Person"),
             title_display = T("Person Details"),
             title_list = T("Persons"),
             title_update = T("Edit Person Details"),
-            subtitle_create = ADD_PERSON,
             label_list_button = T("List Persons"),
-            label_create_button = ADD_PERSON,
             label_delete_button = T("Delete Person"),
             msg_record_created = T("Person added"),
             msg_record_modified = T("Person details updated"),
@@ -1524,15 +1518,13 @@ class S3GroupModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_GROUP = T("Add Group")
+        ADD_GROUP = T("Create Group")
         crud_strings[tablename] = Storage(
-            title_create = ADD_GROUP,
+            label_create = ADD_GROUP,
             title_display = T("Group Details"),
             title_list = T("Groups"),
             title_update = T("Edit Group"),
-            subtitle_create = T("Add New Group"),
             label_list_button = T("List Groups"),
-            label_create_button = ADD_GROUP,
             label_delete_button = T("Delete Group"),
             msg_record_created = T("Group added"),
             msg_record_modified = T("Group updated"),
@@ -1542,13 +1534,11 @@ class S3GroupModel(S3Model):
         # CRUD Strings
         ADD_GROUP = T("Add Mailing List")
         mailing_list_crud_strings = Storage(
-            title_create = ADD_GROUP,
+            label_create = ADD_GROUP,
             title_display = T("Mailing List Details"),
             title_list = T("Mailing Lists"),
             title_update = T("Edit Mailing List"),
-            subtitle_create = T("Add New Mailing List"),
             label_list_button = T("List Mailing Lists"),
-            label_create_button = ADD_GROUP,
             label_delete_button = T("Delete Mailing List"),
             msg_record_created = T("Mailing list added"),
             msg_record_modified = T("Mailing list updated"),
@@ -1572,7 +1562,7 @@ class S3GroupModel(S3Model):
             tooltip = T("Create a new Team.")
         else:
             label = T("Group")
-            add_label = crud_strings.pr_group.label_create_button
+            add_label = crud_strings.pr_group.label_create
             title = T("Create Group")
             tooltip = T("Create a new Group.")
         represent = S3Represent(lookup=tablename)
@@ -1622,13 +1612,11 @@ class S3GroupModel(S3Model):
         if function == "person":
             ADD_MEMBERSHIP = T("Add Membership")
             crud_strings[tablename] = Storage(
-                title_create = ADD_MEMBERSHIP,
+                label_create = ADD_MEMBERSHIP,
                 title_display = T("Membership Details"),
                 title_list = T("Memberships"),
                 title_update = T("Edit Membership"),
-                subtitle_create = T("Add New Membership"),
                 label_list_button = T("List Memberships"),
-                label_create_button = ADD_MEMBERSHIP,
                 label_delete_button = T("Delete Membership"),
                 msg_record_created = T("Added to Group"),
                 msg_record_modified = T("Membership updated"),
@@ -1638,13 +1626,11 @@ class S3GroupModel(S3Model):
         elif function in ("group", "group_membership"):
             ADD_MEMBER = T("Add Member")
             crud_strings[tablename] = Storage(
-                title_create = ADD_MEMBER,
+                label_create = ADD_MEMBER,
                 title_display = T("Membership Details"),
                 title_list = T("Group Members"),
                 title_update = T("Edit Membership"),
-                subtitle_create = T("Add New Member"),
                 label_list_button = T("List Members"),
-                label_create_button = ADD_MEMBER,
                 label_delete_button = T("Remove Person from Group"),
                 msg_record_created = T("Person added to Group"),
                 msg_record_modified = T("Membership updated"),
@@ -1796,13 +1782,11 @@ class S3ContactModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Contact Information"),
+            label_create = T("Create Contact Information"),
             title_display = T("Contact Details"),
             title_list = T("Contact Information"),
             title_update = T("Edit Contact Information"),
-            subtitle_create = T("Add Contact Information"),
             label_list_button = T("List Contact Information"),
-            label_create_button = T("Add Contact Information"),
             label_delete_button = T("Delete Contact Information"),
             msg_record_created = T("Contact Information Added"),
             msg_record_modified = T("Contact Information Updated"),
@@ -1985,15 +1969,13 @@ class S3AddressModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ADDRESS = T("Add Address")
+        ADD_ADDRESS = T("Create Address")
         s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ADDRESS,
+            label_create = ADD_ADDRESS,
             title_display = T("Address Details"),
             title_list = T("Addresses"),
             title_update = T("Edit Address"),
-            subtitle_create = T("Add New Address"),
             label_list_button = T("List Addresses"),
-            label_create_button = ADD_ADDRESS,
             msg_record_created = T("Address added"),
             msg_record_modified = T("Address updated"),
             msg_record_deleted = T("Address deleted"),
@@ -2190,13 +2172,11 @@ class S3PersonImageModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Image"),
+            label_create = T("Image"),
             title_display = T("Image Details"),
             title_list = T("Images"),
             title_update = T("Edit Image Details"),
-            subtitle_create = T("Add New Image"),
             label_list_button = T("List Images"),
-            label_create_button = T("Add Image"),
             label_delete_button = T("Delete Image"),
             msg_record_created = T("Image added"),
             msg_record_modified = T("Image updated"),
@@ -2470,15 +2450,13 @@ class S3PersonIdentityModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_IDENTITY = T("Add Identity")
+        ADD_IDENTITY = T("Create Identity")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_IDENTITY,
+            label_create = ADD_IDENTITY,
             title_display = T("Identity Details"),
             title_list = T("Identities"),
             title_update = T("Edit Identity"),
-            subtitle_create = T("Add New Identity"),
             label_list_button = T("List Identities"),
-            label_create_button = ADD_IDENTITY,
             msg_record_created = T("Identity added"),
             msg_record_modified = T("Identity updated"),
             msg_record_deleted = T("Identity deleted"),
@@ -2565,15 +2543,13 @@ class S3PersonEducationModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_IDENTITY = T("Add Educational Achievements")
+        ADD_IDENTITY = T("Create Educational Achievements")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_IDENTITY,
+            label_create = ADD_IDENTITY,
             title_display = T("Education Details"),
             title_list = T("Education Details"),
             title_update = T("Edit Education Details"),
-            subtitle_create = T("Add Education Detail"),
             label_list_button = T("List Education Details"),
-            label_create_button = ADD_IDENTITY,
             msg_record_created = T("Education details added"),
             msg_record_modified = T("Education details updated"),
             msg_record_deleted = T("Education details deleted"),
@@ -2720,15 +2696,13 @@ class S3PersonDetailsModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_DETAILS = T("Add Person's Details")
+        ADD_DETAILS = T("Create Person's Details")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_DETAILS,
+            label_create = ADD_DETAILS,
             title_display = T("Person's Details"),
             title_list = T("Persons' Details"),
             title_update = T("Edit Person's Details"),
-            subtitle_create = T("Add New Person's Details"),
             label_list_button = T("List Persons' Details"),
-            label_create_button = ADD_DETAILS,
             msg_record_created = T("Person's Details added"),
             msg_record_modified = T("Person's Details updated"),
             msg_record_deleted = T("Person's Details deleted"),
@@ -3075,13 +3049,11 @@ class S3SavedSearch(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create=T("Add search"),
+            label_create=T("Create search"),
             title_display=T("Saved search details"),
             title_list=T("Saved searches"),
             title_update=T("Edit saved search"),
-            subtitle_create=T("Add saved search"),
             label_list_button=T("List saved searches"),
-            label_create_button=T("Save search"),
             label_delete_button=T("Delete saved search"),
             msg_record_created=T("Saved search added"),
             msg_record_modified=T("Saved search updated"),
@@ -3358,15 +3330,13 @@ class S3PersonPresence(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_LOG_ENTRY = T("Add Log Entry")
+        ADD_LOG_ENTRY = T("Create Log Entry")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_LOG_ENTRY,
+            label_create = ADD_LOG_ENTRY,
             title_display = T("Log Entry Details"),
             title_list = T("Presence Log"),
             title_update = T("Edit Log Entry"),
-            subtitle_create = T("Add New Log Entry"),
             label_list_button = T("List Log Entries"),
-            label_create_button = ADD_LOG_ENTRY,
             msg_record_created = T("Log entry added"),
             msg_record_modified = T("Log entry updated"),
             msg_record_deleted = T("Log Entry Deleted"),
@@ -3628,13 +3598,11 @@ class S3PersonDescription(S3Model):
         # CRUD strings
         ADD_NOTE = T("New Entry")
         crud_strings[tablename] = Storage(
-            title_create = ADD_NOTE,
+            label_create = ADD_NOTE,
             title_display = T("Journal Entry Details"),
             title_list = T("Journal"),
             title_update = T("Edit Entry"),
-            subtitle_create = T("Add New Entry"),
             label_list_button = T("See All Entries"),
-            label_create_button = ADD_NOTE,
             msg_record_created = T("Journal entry added"),
             msg_record_modified = T("Journal entry updated"),
             msg_record_deleted = T("Journal entry deleted"),

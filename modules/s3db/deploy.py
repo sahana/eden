@@ -166,7 +166,7 @@ class S3DeploymentModel(S3Model):
                                      _href=r.url(component="alert",
                                                  method="create"),
                                      _class="action-btn profile-add-btn"),
-                            title_create="New Alert",
+                            label_create="New Alert",
                             type="datalist",
                             list_fields = ["modified_on",
                                            "mission_id",
@@ -203,13 +203,13 @@ class S3DeploymentModel(S3Model):
         hr_label = current.deployment_settings.get_deploy_hr_label()
         if hr_label == "Member":
             label = "Members Deployed"
-            title_create = "Deploy New Member"
+            label_create = "Deploy New Member"
         elif hr_label == "Staff":
             label = "Staff Deployed"
-            title_create = "Deploy New Staff"
+            label_create = "Deploy New Staff"
         elif hr_label == "Volunteer":
             label = "Volunteers Deployed"
-            title_create = "Deploy New Volunteer"
+            label_create = "Deploy New Volunteer"
 
         assignment_widget = dict(label = label,
                                  insert=lambda r, list_id, title, url: \
@@ -217,7 +217,7 @@ class S3DeploymentModel(S3Model):
                                           _href=r.url(component="assignment",
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
-                                 title_create = title_create,
+                                 label_create = label_create,
                                  tablename = "deploy_assignment",
                                  type="datalist",
                                  #type="datatable",
@@ -238,7 +238,7 @@ class S3DeploymentModel(S3Model):
                                  )
 
         docs_widget = dict(label = "Documents & Links",
-                           title_create = "Add New Document / Link",
+                           label_create = "Add New Document / Link",
                            type = "datalist",
                            tablename = "doc_document",
                            context = ("~.doc_id", "doc_id"),
@@ -329,14 +329,12 @@ class S3DeploymentModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("New Mission"),
+            label_create = T("New Mission"),
             title_display = T("Mission"),
             title_list = T("Missions"),
             title_update = T("Edit Mission Details"),
             title_upload = T("Import Missions"),
-            subtitle_create = T("Add New Mission"),
             label_list_button = T("List Missions"),
-            label_create_button = T("New Mission"),
             label_delete_button = T("Delete Mission"),
             msg_record_created = T("Mission added"),
             msg_record_modified = T("Mission Details updated"),
@@ -515,7 +513,7 @@ class S3DeploymentModel(S3Model):
     def add_button(r, widget_id=None, visible=True, **attr):
 
         return A(S3Method.crud_string(r.tablename,
-                                      "label_create_button"),
+                                      "label_create"),
                  _href=r.url(method="create", id=0, vars={}),
                  _class="action-btn",
                  )
@@ -736,14 +734,12 @@ class S3DeploymentAlertModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("New Alert"),
+            label_create = T("New Alert"),
             title_display = T("Alert Details"),
             title_list = T("Alerts"),
             title_update = T("Edit Alert Details"),
             title_upload = T("Import Alerts"),
-            subtitle_create = T("Add New Alert"),
             label_list_button = T("List Alerts"),
-            label_create_button = T("Add Alert"),
             label_delete_button = T("Delete Alert"),
             msg_record_created = T("Alert added"),
             msg_record_modified = T("Alert Details updated"),
@@ -809,14 +805,12 @@ class S3DeploymentAlertModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("New Recipient"),
+            label_create = T("New Recipient"),
             title_display = T("Recipient Details"),
             title_list = T("Recipients"),
             title_update = T("Edit Recipient Details"),
             title_upload = T("Import Recipients"),
-            subtitle_create = T("Add New Recipient"),
             label_list_button = T("List Recipients"),
-            label_create_button = T("Add Recipient"),
             label_delete_button = T("Delete Recipient"),
             msg_record_created = T("Recipient added"),
             msg_record_modified = T("Recipient Details updated"),

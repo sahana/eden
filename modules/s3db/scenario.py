@@ -86,14 +86,12 @@ class S3ScenarioModel(S3Model):
         # CRUD strings
         ADD_SCENARIO = T("New Scenario")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_SCENARIO,
+            label_create = ADD_SCENARIO,
             title_display = T("Scenario Details"),
             title_list = T("Scenarios"),
             title_update = T("Edit Scenario"),
             title_upload = T("Import Scenarios"),
-            subtitle_create = T("Add New Scenario"),
             label_list_button = T("List Scenarios"),
-            label_create_button = ADD_SCENARIO,
             label_delete_button = T("Delete Scenario"),
             msg_record_created = T("Scenario added"),
             msg_record_modified = T("Scenario updated"),
@@ -256,13 +254,11 @@ class S3ScenarioAssetModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Asset"),
+            label_create = T("Create Asset"),
             title_display = T("Asset Details"),
             title_list = T("Assets"),
             title_update = T("Edit Asset"),
-            subtitle_create = T("Add New Asset"),
             label_list_button = T("List Assets"),
-            label_create_button = T("Add Asset"),
             label_delete_button = T("Remove Asset from this scenario"),
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
@@ -297,13 +293,11 @@ class S3ScenarioHRModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Human Resource"),
+            label_create = T("Add Human Resource"),
             title_display = T("Human Resource Details"),
             title_list = T("Human Resources"),
             title_update = T("Edit Human Resource"),
-            subtitle_create = T("Add New Human Resource"),
             label_list_button = T("List Human Resources"),
-            label_create_button = T("Add Human Resource"),
             label_delete_button = T("Remove Human Resource from this scenario"),
             msg_record_created = T("Human Resource added"),
             msg_record_modified = T("Human Resource updated"),
@@ -339,13 +333,11 @@ class S3ScenarioMapModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Map Configuration"),
+            label_create = T("Create Map Configuration"),
             title_display = T("Map Configuration Details"),
             title_list = T("Map Configurations"),
             title_update = T("Edit Map Configuration"),
-            subtitle_create = T("Add New Map Configuration"),
             label_list_button = T("List Map Configurations"),
-            label_create_button = T("Add Map Configuration"),
             label_delete_button = T("Remove Map Configuration from this scenario"),
             msg_record_created = T("Map Configuration added"),
             msg_record_modified = T("Map Configuration updated"),
@@ -382,13 +374,11 @@ class S3ScenarioOrganisationModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Organization"),
+            label_create = T("Create Organization"),
             title_display = T("Organization Details"),
             title_list = T("Organizations"),
             title_update = T("Edit Organization"),
-            subtitle_create = T("Add New Organization"),
             label_list_button = T("List Organizations"),
-            label_create_button = T("Add Organization"),
             label_delete_button = T("Remove Organization from this scenario"),
             msg_record_created = T("Organization added"),
             msg_record_modified = T("Organization updated"),
@@ -423,13 +413,11 @@ class S3ScenarioSiteModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Facility"),
+            label_create = T("Create Facility"),
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
             title_update = T("Edit Facility"),
-            subtitle_create = T("Add New Facility"),
             label_list_button = T("List Facilities"),
-            label_create_button = T("Add Facility"),
             label_delete_button = T("Remove Facility from this scenario"),
             msg_record_created = T("Facility added"),
             msg_record_modified = T("Facility updated"),
@@ -467,13 +455,11 @@ class S3ScenarioTaskModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Task"),
+            label_create = T("Create Task"),
             title_display = T("Task Details"),
             title_list = T("Tasks"),
             title_update = T("Edit Task"),
-            subtitle_create = T("Add New Task"),
             label_list_button = T("List Tasks"),
-            label_create_button = T("Add Task"),
             label_delete_button = T("Remove Task from this scenario"),
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),

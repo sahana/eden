@@ -1376,7 +1376,7 @@ Thank you"""
             from s3layouts import S3AddResourceLink
             organisation_id.comment = S3AddResourceLink(c="org",
                                                         f="organisation",
-                                                        label=s3db.crud_strings["org_organisation"].title_create,
+                                                        label=s3db.crud_strings["org_organisation"].label_create,
                                                         title=s3db.crud_strings["org_organisation"].title_list,)
             #from s3widgets import S3OrganisationAutocompleteWidget
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
@@ -1406,7 +1406,7 @@ Thank you"""
             #from s3layouts import S3AddResourceLink
             #org_group_id.comment = S3AddResourceLink(c="org",
             #                                         f="group",
-            #                                         label=s3db.crud_strings["org_group"].title_create,
+            #                                         label=s3db.crud_strings["org_group"].label_create,
             #                                         title=s3db.crud_strings["org_group"].title_list,)
 
         # Site
@@ -6746,7 +6746,7 @@ class S3RoleManager(S3Method):
             output["items"] = dt
 
             # Add-button
-            add_btn = A(T("Add Role"),
+            add_btn = A(T("Create Role"),
                         _href=URL(c="admin", f="role", args=["create"]),
                         _class="action-btn")
             output["add_btn"] = add_btn

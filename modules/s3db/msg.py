@@ -2022,17 +2022,15 @@ class S3BaseStationModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_BASE = T("Add New Base Station")
+        ADD_BASE = T("Create Base Station")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create=T("Add Base Station"),
+            label_create=T("Create Base Station"),
             title_display=T("Base Station Details"),
             title_list=T("Base Stations"),
             title_update=T("Edit Base Station"),
             title_upload=T("Import Base Stations"),
             title_map=T("Map of Base Stations"),
-            subtitle_create=ADD_BASE,
             label_list_button=T("List Base Stations"),
-            label_create_button=ADD_BASE,
             label_delete_button=T("Delete Base Station"),
             msg_record_created=T("Base Station added"),
             msg_record_modified=T("Base Station updated"),

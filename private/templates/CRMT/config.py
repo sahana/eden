@@ -391,15 +391,13 @@ def customise_pr_person_controller(**attr):
         if r.interactive:
             if current.request.controller != "default":
                 # CRUD Strings
-                ADD_CONTACT = T("Add New Contact")
+                ADD_CONTACT = T("Create Contact")
                 s3.crud_strings[tablename] = Storage(
-                    title_create = T("Add Contact"),
+                    label_create = T("Create Contact"),
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Update Contact Details"),
-                    subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
-                    label_create_button = ADD_CONTACT,
                     label_delete_button = T("Delete Contact"),
                     msg_record_created = T("Contact added"),
                     msg_record_modified = T("Contact details updated"),
@@ -1206,13 +1204,11 @@ def customise_org_facility_controller(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Place"),
+                label_create = T("Add Place"),
                 title_display = T("Place Details"),
                 title_list = T("Places"),
                 title_update = T("Update Place"),
-                subtitle_create = T("Add New Place"),
                 label_list_button = T("List Places"),
-                label_create_button = T("Add Place"),
                 label_delete_button = T("Remove Place"),
                 msg_record_created = T("Place added"),
                 msg_record_modified = T("Place updated"),
@@ -1425,13 +1421,11 @@ def customise_stats_people_controller(**attr):
             #table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add People"),
+                label_create = T("Add People"),
                 title_display = T("People Details"),
                 title_list = T("People"),
                 title_update = T("Update People"),
-                subtitle_create = T("Add New People"),
                 label_list_button = T("List People"),
-                label_create_button = T("Add People"),
                 label_delete_button = T("Remove People"),
                 msg_record_created = T("People added"),
                 msg_record_modified = T("People updated"),
@@ -1773,13 +1767,11 @@ def customise_vulnerability_risk_controller(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Hazard"),
+                label_create = T("Create Hazard"),
                 title_display = T("Hazard Details"),
                 title_list = T("Hazards"),
                 title_update = T("Update Hazard"),
-                subtitle_create = T("Add New Hazard"),
                 label_list_button = T("List Hazards"),
-                label_create_button = T("Add Hazard"),
                 label_delete_button = T("Remove Hazard"),
                 msg_record_created = T("Hazard added"),
                 msg_record_modified = T("Hazard updated"),

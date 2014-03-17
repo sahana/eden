@@ -96,15 +96,13 @@ class S3DVRModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CASE = T("Add Case")
+        ADD_CASE = T("Create Case")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_CASE,
+            label_create = ADD_CASE,
             title_display = T("Case Details"),
             title_list = T("Cases"),
             title_update = T("Edit Case"),
-            subtitle_create = T("Add New Case"),
             label_list_button = T("List Cases"),
-            label_create_button = ADD_CASE,
             label_delete_button = T("Delete Case"),
             msg_record_created = T("Case added"),
             msg_record_modified = T("Case updated"),

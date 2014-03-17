@@ -85,7 +85,7 @@ def shelter():
                                                     "pr_group"))
             if r.interactive:
                 gtable = s3db.pr_group
-                add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create_button")
+                add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create")
                 if settings.get_ui_label_camp():
                     REGISTER_LABEL = T("Register Person into this Camp")
                     EMPTY_LIST = T("No People currently registered in this camp")
@@ -189,13 +189,11 @@ def shelter():
                     prtable.presence_condition.default = popts.CHECK_IN
                     # Change the Labels
                     s3.crud_strings.pr_presence = Storage(
-                        title_create = T("Register Person"),
+                        label_create = T("Register Person"),
                         title_display = T("Registration Details"),
                         title_list = T("Registered People"),
                         title_update = T("Edit Registration"),
-                        subtitle_create = REGISTER_LABEL,
                         label_list_button = T("List Registrations"),
-                        label_create_button = T("Register Person"),
                         msg_record_created = T("Registration added"),
                         msg_record_modified = T("Registration updated"),
                         msg_record_deleted = T("Registration entry deleted"),

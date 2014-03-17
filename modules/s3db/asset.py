@@ -232,16 +232,14 @@ S3OptionsFilter({
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ASSET = T("Add Asset")
+        ADD_ASSET = T("Create Asset")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ASSET,
+            label_create = ADD_ASSET,
             title_display = T("Asset Details"),
             title_list =  T("Assets"),
             title_update = T("Edit Asset"),
             title_upload = T("Import Assets"),
-            subtitle_create = T("Add New Asset"),
             label_list_button =  T("List Assets"),
-            label_create_button = ADD_ASSET,
             label_delete_button = T("Delete Asset"),
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
@@ -258,7 +256,7 @@ S3OptionsFilter({
                                    represent = self.asset_represent,
                                    label = T("Asset"),
                                    comment = S3AddResourceLink(c="asset", f="asset",
-                                    tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Add Asset'.")),
+                                    tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Create Asset'.")),
                                    ondelete = "CASCADE")
 
         # Which levels of Hierarchy are we using?
@@ -577,13 +575,11 @@ S3OptionsFilter({
         # CRUD strings
         ADD_ASSIGN = T("New Entry in Asset Log")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ASSIGN,
+            label_create = ADD_ASSIGN,
             title_display = T("Asset Log Details"),
             title_list = T("Asset Log"),
             title_update = T("Edit Asset Log Entry"),
-            subtitle_create = ADD_ASSIGN,
             label_list_button = T("Asset Log"),
-            label_create_button = ADD_ASSIGN,
             label_delete_button = T("Delete Asset Log Entry"),
             msg_record_created = T("Entry added to Asset Log"),
             msg_record_modified = T("Asset Log Entry updated"),
@@ -917,7 +913,6 @@ def asset_log_prep(r):
 
     crud_strings = current.response.s3.crud_strings.asset_log
     if status == ASSET_LOG_SET_BASE:
-        crud_strings.subtitle_create = T("Set Base Facility/Site")
         crud_strings.msg_record_created = T("Base Facility/Site Set")
         table.by_person_id.label = T("Set By")
         table.site_id.writable = True
@@ -931,7 +926,6 @@ def asset_log_prep(r):
                                            table.site_id.represent)
 
     elif status == ASSET_LOG_RETURN:
-        crud_strings.subtitle_create = T("Return")
         crud_strings.msg_record_created = T("Returned")
         table.person_id.label = T("Returned From")
         table.person_id.default = current_log.person_id
@@ -942,7 +936,6 @@ def asset_log_prep(r):
         type = request.vars.type
         # table["%s_id" % type].required = True
         if type == "person":
-            crud_strings.subtitle_create = T("Assign to Person")
             crud_strings.msg_record_created = T("Assigned to Person")
             table["person_id"].requires = IS_ONE_OF(db, "pr_person.id",
                                                     table.person_id.represent,
@@ -955,10 +948,8 @@ def asset_log_prep(r):
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   table.site_id.represent))
         elif type == "site":
-            crud_strings.subtitle_create = T("Assign to Facility/Site")
             crud_strings.msg_record_created = T("Assigned to Facility/Site")
         elif type == "organisation":
-            crud_strings.subtitle_create = T("Assign to Organization")
             crud_strings.msg_record_created = T("Assigned to Organization")
             table.organisation_id.readable = True
             table.organisation_id.writable = True
@@ -970,7 +961,6 @@ def asset_log_prep(r):
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   table.site_id.represent))
     elif "status" in request.get_vars:
-        crud_strings.subtitle_create = T("Update Status")
         crud_strings.msg_record_created = T("Status Updated")
         table.person_id.label = T("Updated By")
         field = table.status

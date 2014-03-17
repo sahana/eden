@@ -164,13 +164,13 @@ class S3RequestModel(S3Model):
             site_widget = S3SiteAutocompleteWidget()
             site_comment = S3AddResourceLink(c="org", f="facility",
                                              vars = dict(child="site_id"),
-                                             title=T("Add New Facility"),
+                                             title=T("Create Facility"),
                                              tooltip=T("Enter some characters to bring up a list of possible matches"))
         else:
             site_widget = None
             site_comment = S3AddResourceLink(c="org", f="facility",
                                              vars = dict(child="site_id"),
-                                             title=T("Add New Facility"))
+                                             title=T("Create Facility"))
 
         # ---------------------------------------------------------------------
         # Requests
@@ -263,7 +263,7 @@ class S3RequestModel(S3Model):
                                     comment = S3AddResourceLink(c="pr", f="person",
                                                                 vars = dict(child="requester_id",
                                                                             parent="req"),
-                                                                title=crud_strings["pr_person"].title_create,
+                                                                title=crud_strings["pr_person"].label_create,
                                                                 tooltip=T("Enter some characters to bring up a list of possible matches")),
                                     default = requester_default
                                     ),
@@ -351,15 +351,13 @@ class S3RequestModel(S3Model):
         # CRUD strings
         ADD_REQUEST = T("Make Request")
         crud_strings[tablename] = Storage(
-            title_create = ADD_REQUEST,
+            label_create = ADD_REQUEST,
             title_display = T("Request Details"),
             title_list = T("Requests"),
             title_map=T("Map of Requests"),
             title_report = T("Requests Report"),
             title_update = T("Edit Request"),
-            subtitle_create = ADD_REQUEST,
             label_list_button = T("List Requests"),
-            label_create_button = ADD_REQUEST,
             label_delete_button = T("Delete Request"),
             msg_record_created = T("Request Added"),
             msg_record_modified = T("Request Updated"),
@@ -1649,15 +1647,13 @@ class S3RequestItemModel(S3Model):
         table.site_id.label = T("Requested From")
 
         # CRUD strings
-        ADD_REQUEST_ITEM = T("Add New Item to Request")
+        ADD_REQUEST_ITEM = T("Add Item to Request")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_REQUEST_ITEM,
+            label_create = ADD_REQUEST_ITEM,
             title_display = T("Request Item Details"),
             title_list = T("Items in Request"),
             title_update = T("Edit Item in Request"),
-            subtitle_create = T("Add New Item to Request"),
             label_list_button = T("List Items in Request"),
-            label_create_button = ADD_REQUEST_ITEM,
             label_delete_button = T("Delete Item from Request"),
             msg_record_created = T("Item(s) added to Request"),
             msg_record_modified = T("Item(s) updated on Request"),
@@ -1994,13 +1990,11 @@ class S3RequestSkillModel(S3Model):
         # CRUD strings
         ADD_REQUEST_SKILL = T("Add Skill to Request")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_REQUEST_SKILL,
+            label_create = ADD_REQUEST_SKILL,
             title_display = T("Requested Skill Details"),
             title_list = T("Requested Skills"),
             title_update = T("Edit Requested Skill"),
-            subtitle_create = T("Request New People"),
             label_list_button = T("List Requested Skills"),
-            label_create_button = ADD_REQUEST_SKILL,
             label_delete_button = T("Remove Skill from Request"),
             msg_record_created = T("Skill added to Request"),
             msg_record_modified = T("Requested Skill updated"),
@@ -2105,15 +2099,13 @@ class S3RequestRecurringModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_JOB = T("Add Job")
+        ADD_JOB = T("Create Job")
         s3.crud_strings[tablename] = Storage(
-            title_create = ADD_JOB,
+            label_create = ADD_JOB,
             title_display = T("Request Job"),
             title_list = T("Request Schedule"),
             title_update = T("Edit Job"),
-            subtitle_create = ADD_JOB,
             label_list_button = T("List Jobs"),
-            label_create_button = ADD_JOB,
             msg_record_created = T("Job added"),
             msg_record_modified = T("Job updated"),
             msg_record_deleted = T("Job deleted"),
@@ -2451,13 +2443,11 @@ class S3CommitModel(S3Model):
         # CRUD strings
         ADD_COMMIT = T("Make Commitment")
         s3.crud_strings[tablename] = Storage(
-            title_create = ADD_COMMIT,
+            label_create = ADD_COMMIT,
             title_display = T("Commitment Details"),
             title_list = T("Commitments"),
             title_update = T("Edit Commitment"),
-            subtitle_create = ADD_COMMIT,
             label_list_button = T("List Commitments"),
-            label_create_button = ADD_COMMIT,
             label_delete_button = T("Delete Commitment"),
             msg_record_created = T("Commitment Added"),
             msg_record_modified = T("Commitment Updated"),
@@ -2892,15 +2882,13 @@ class S3CommitItemModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_COMMIT_ITEM = T("Add Item to Commitment")
+        ADD_COMMIT_ITEM = T("Create Item to Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_COMMIT_ITEM,
+            label_create = ADD_COMMIT_ITEM,
             title_display = T("Commitment Item Details"),
             title_list = T("Commitment Items"),
             title_update = T("Edit Commitment Item"),
-            subtitle_create = T("Add New Commitment Item"),
             label_list_button = T("List Commitment Items"),
-            label_create_button = ADD_COMMIT_ITEM,
             label_delete_button = T("Delete Commitment Item"),
             msg_record_created = T("Commitment Item added"),
             msg_record_modified = T("Commitment Item updated"),
@@ -3101,15 +3089,13 @@ class S3CommitPersonModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_COMMIT_PERSON = T("Add Person to Commitment")
+        ADD_COMMIT_PERSON = T("Create Person to Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_COMMIT_PERSON,
+            label_create = ADD_COMMIT_PERSON,
             title_display = T("Committed Person Details"),
             title_list = T("Committed People"),
             title_update = T("Edit Committed Person"),
-            subtitle_create = T("Add New Person to Commitment"),
             label_list_button = T("List Committed People"),
-            label_create_button = ADD_COMMIT_PERSON,
             label_delete_button = T("Remove Person from Commitment"),
             msg_record_created = T("Person added to Commitment"),
             msg_record_modified = T("Committed Person updated"),
@@ -3185,15 +3171,13 @@ class S3CommitSkillModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_COMMIT_SKILL = T("Add People to Commitment")
+        ADD_COMMIT_SKILL = T("Create People to Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_COMMIT_SKILL,
+            label_create = ADD_COMMIT_SKILL,
             title_display = T("Committed People Details"),
             title_list = T("Committed People"),
             title_update = T("Edit Committed People"),
-            subtitle_create = T("Add People to Commitment"),
             label_list_button = T("List Committed People"),
-            label_create_button = ADD_COMMIT_SKILL,
             label_delete_button = T("Remove People from Commitment"),
             msg_record_created = T("People added to Commitment"),
             msg_record_modified = T("Committed People updated"),
@@ -4393,13 +4377,11 @@ def req_customize_commit_fields():
     #ADD_COMMIT = T("Make Donation")
     ADD_COMMIT = T("Add Donation")
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_COMMIT,
+        label_create = ADD_COMMIT,
         title_display = T("Donation Details"),
         title_list = T("Donations"),
         title_update = T("Edit Donation"),
-        subtitle_create = ADD_COMMIT,
         label_list_button = T("List Donations"),
-        label_create_button = ADD_COMMIT,
         label_delete_button = T("Delete Donation"),
         msg_record_created = T("Donation Added"),
         msg_record_modified = T("Donation Updated"),
@@ -4439,7 +4421,7 @@ def req_customize_commit_fields():
     field = table.organisation_id
     field.readable = True
     field.comment = S3AddResourceLink(c="org", f="organisation_id",
-                                      title=T("Add New Organization"),
+                                      title=T("Create Organization"),
                                       )
     if settings.get_org_autocomplete():
         # Enable if there are many Orgs

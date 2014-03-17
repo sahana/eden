@@ -48,7 +48,7 @@ class CR_Test(WSGI_Test):
         # Need to login
         #if "200 OK" in test.getPage("/sahana/%s/%s/create" % (module, resource)):
         #    test.assertHeader("Content-Type", "text/html")
-        #    test.assertInBody("Add Shelter")
+        #    test.assertInBody("Create Shelter")
         if "200 OK" in test.getPage("/sahana/%s/%s?format=json" % (module, resource)):
             test.assertHeader("Content-Type", "text/html")
             test.assertInBody("[")

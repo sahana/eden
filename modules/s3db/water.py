@@ -69,14 +69,12 @@ class S3WaterModel(S3Model):
         # CRUD strings
         ADD_ZONE_TYPE = T("Add Zone Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ZONE_TYPE,
+            label_create = ADD_ZONE_TYPE,
             title_display = T("Zone Type Details"),
             title_list = T("Zone Types"),
             title_update = T("Edit Zone Type"),
             title_upload = T("Import Zone Types"),
-            subtitle_create = T("Add New Zone Type"),
             label_list_button = T("List Zone Types"),
-            label_create_button = ADD_ZONE_TYPE,
             label_delete_button = T("Delete Zone Type"),
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
@@ -120,14 +118,12 @@ class S3WaterModel(S3Model):
         # CRUD strings
         ADD_ZONE = T("Add Zone")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ZONE,
+            label_create = ADD_ZONE,
             title_display = T("Zone Details"),
             title_list = T("Zones"),
             title_update = T("Edit Zone"),
             title_upload = T("Import Zones"),
-            subtitle_create = T("Add New Zone"),
             label_list_button = T("List Zones"),
-            label_create_button = ADD_ZONE,
             label_delete_button = T("Delete Zone"),
             msg_record_created = T("Zone added"),
             msg_record_modified = T("Zone updated"),
@@ -149,13 +145,11 @@ class S3WaterModel(S3Model):
         # CRUD strings
         ADD_RIVER = T("Add River")
         crud_strings[tablename] = Storage(
-            title_create = ADD_RIVER,
+            label_create = ADD_RIVER,
             title_display = T("River Details"),
             title_list = T("Rivers"),
             title_update = T("Edit River"),
-            subtitle_create = T("Add New River"),
             label_list_button = T("List Rivers"),
-            label_create_button = ADD_RIVER,
             msg_record_created = T("River added"),
             msg_record_modified = T("River updated"),
             msg_record_deleted = T("River deleted"),
@@ -210,14 +204,12 @@ class S3WaterModel(S3Model):
 
         ADD_GAUGE = T("Add Gauge")
         crud_strings[tablename] = Storage(
-            title_create = ADD_GAUGE,
+            label_create = ADD_GAUGE,
             title_display = T("Gauge Details"),
             title_list = T("Gauges"),
             title_update = T("Edit Gauge"),
             title_map = T("Map of Gauges"),
-            subtitle_create = T("Add New Gauge"),
             label_list_button = T("List Gauges"),
-            label_create_button = ADD_GAUGE,
             msg_record_created = T("Gauge added"),
             msg_record_modified = T("Gauge updated"),
             msg_record_deleted = T("Gauge deleted"),

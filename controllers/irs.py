@@ -90,13 +90,11 @@ def ireport():
                         htable.reply.readable = htable.reply.writable = False
                     s3.crud.submit_button = T("Assign")
                     s3.crud_strings["irs_ireport_human_resource"] = Storage(
-                        title_create = T("Assign Human Resource"),
+                        label_create = T("Assign Human Resource"),
                         title_display = T("Human Resource Details"),
                         title_list = T("Human Resource Assignments"),
                         title_update = T("Edit Human Resource"),
-                        subtitle_create = T("Assign New Human Resource"),
                         label_list_button = T("List Assigned Human Resources"),
-                        label_create_button = T("Assign Human Resource"),
                         label_delete_button = T("Remove Human Resource from this incident"),
                         msg_record_created = T("Human Resource assigned"),
                         msg_record_modified = T("Human Resource Assignment updated"),
@@ -107,13 +105,11 @@ def ireport():
                 elif r.component_name == "vehicle":
                     s3.crud.submit_button = T("Assign")
                     s3.crud_strings["irs_ireport_vehicle"] = Storage(
-                        title_create = T("Assign Vehicle"),
+                        label_create = T("Assign Vehicle"),
                         title_display = T("Vehicle Details"),
                         title_list = T("Vehicle Assignments"),
                         title_update = T("Edit Vehicle Assignment"),
-                        subtitle_create = T("Add New Vehicle Assignment"),
                         label_list_button = T("List Vehicle Assignments"),
-                        label_create_button = T("Add Vehicle Assignment"),
                         label_delete_button = T("Remove Vehicle from this incident"),
                         msg_record_created = T("Vehicle assigned"),
                         msg_record_modified = T("Vehicle Assignment updated"),

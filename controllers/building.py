@@ -260,13 +260,11 @@ db.define_table(tablename,
 # CRUD strings
 ADD_ASSESSMENT = T("Add Level 1 Assessment")
 s3.crud_strings[tablename] = Storage(
-    title_create = ADD_ASSESSMENT,
+    label_create = ADD_ASSESSMENT,
     title_display = T("Level 1 Assessment Details"),
     title_list = T("Level 1 Assessments"),
     title_update = T("Edit Level 1 Assessment"),
-    subtitle_create = T("Add New Level 1 Assessment"),
     label_list_button = T("List Level 1 Assessments"),
-    label_create_button = ADD_ASSESSMENT,
     label_delete_button = T("Delete Level 1 Assessment"),
     msg_record_created = T("Level 1 Assessment added"),
     msg_record_modified = T("Level 1 Assessment updated"),
@@ -288,7 +286,7 @@ s3db.configure(tablename,
 resourcename = "nzseel2"
 tablename = "%s_%s" % (module, resourcename)
 
-ADD_IMAGE = T("Add Photo")
+ADD_IMAGE = T("Create Photo")
 db.define_table(tablename,
                 Field("ticket_id",
                       type=s3uuid_8char,
@@ -532,13 +530,11 @@ db.define_table(tablename,
 # CRUD strings
 ADD_ASSESSMENT = T("Add Level 2 Assessment")
 s3.crud_strings[tablename] = Storage(
-    title_create = ADD_ASSESSMENT,
+    label_create = ADD_ASSESSMENT,
     title_display = T("Level 2 Assessment Details"),
     title_list = T("Level 2 Assessments"),
     title_update = T("Edit Level 2 Assessment"),
-    subtitle_create = T("Add New Level 2 Assessment"),
     label_list_button = T("List Level 2 Assessments"),
-    label_create_button = ADD_ASSESSMENT,
     label_delete_button = T("Delete Level 2 Assessment"),
     msg_record_created = T("Level 2 Assessment added"),
     msg_record_modified = T("Level 2 Assessment updated"),

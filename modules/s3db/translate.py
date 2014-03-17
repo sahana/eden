@@ -72,7 +72,7 @@ class S3TranslateModel(S3Model):
                      *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Upload file"),
+            label_create = T("Upload file"),
             msg_record_created = T("File uploaded"))
 
         self.configure(tablename,
