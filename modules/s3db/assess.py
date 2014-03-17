@@ -651,13 +651,11 @@ class S3AssessBuildingModel(S3Model):
         # CRUD Strings
         ADD_ASSESS = T("Add Assessment")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ASSESS,
+            label_create = ADD_ASSESS,
             title_display = T("Assessment Details"),
             title_list = T("Assessments"),
             title_update = T("Edit Assessment"),
-            subtitle_create = T("Add New Assessment"),
             label_list_button = T("List Assessments"),
-            label_create_button = ADD_ASSESS,
             label_delete_button = T("Delete Assessment"),
             msg_record_created = T("Assessment added"),
             msg_record_modified = T("Assessment updated"),
@@ -976,13 +974,11 @@ class S3AssessCanvassModel(S3Model):
         # CRUD Strings
         ADD_ASSESS = T("Add Assessment")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ASSESS,
+            label_create = ADD_ASSESS,
             title_display = T("Assessment Details"),
             title_list = T("Assessments"),
             title_update = T("Edit Assessment"),
-            subtitle_create = T("Add New Assessment"),
             label_list_button = T("List Assessments"),
-            label_create_button = ADD_ASSESS,
             label_delete_button = T("Delete Assessment"),
             msg_record_created = T("Assessment added"),
             msg_record_modified = T("Assessment updated"),

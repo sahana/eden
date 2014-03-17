@@ -229,14 +229,12 @@ class S3CRUD(S3Method):
                 else:
                     response.view = self._view(r, "create.html")
 
-                # Title and subtitle
+                # Title
                 if r.component:
                     title = crud_string(r.tablename, "title_display")
-                    subtitle = crud_string(tablename, "subtitle_create")
                     output["title"] = title
-                    output["subtitle"] = subtitle
                 else:
-                    title = crud_string(tablename, "title_create")
+                    title = crud_string(tablename, "label_create")
                     output["title"] = title
                 output["title_list"] = crud_string(tablename, "title_list")
 
@@ -384,7 +382,7 @@ class S3CRUD(S3Method):
             crud_string = self.crud_string
             message = crud_string(tablename, "msg_record_created")
             subheadings = _config("subheadings")
-            output["title"] = crud_string(tablename, "title_create")
+            output["title"] = crud_string(tablename, "label_create")
             output["details_btn"] = ""
             output["item"] = self.sqlform(request=request,
                                           resource=resource,
@@ -475,7 +473,7 @@ class S3CRUD(S3Method):
                 if form is not None:
                     add_btn = self.crud_button(
                                         tablename=tablename,
-                                        name="label_create_button",
+                                        name="label_create",
                                         icon="icon-plus",
                                         _id="show-add-btn")
                     output = DIV(add_btn,
@@ -494,7 +492,7 @@ class S3CRUD(S3Method):
                 # No form, just Add-button linked to create-view
                 add_btn = self.crud_button(
                                     tablename=tablename,
-                                    name="label_create_button",
+                                    name="label_create",
                                     icon="icon-plus",
                                     _id="add-btn")
                 output = DIV(add_btn)
@@ -1084,12 +1082,12 @@ class S3CRUD(S3Method):
                     form = self.create(r, **attr).get("form", None)
                     if form is not None:
                         output["form"] = form
-                        addtitle = self.crud_string(tablename, "subtitle_create")
+                        addtitle = self.crud_string(tablename, "label_create")
                         output["addtitle"] = addtitle
                         showadd_btn = self.crud_button(
                                             None,
                                             tablename=tablename,
-                                            name="label_create_button",
+                                            name="label_create",
                                             icon="icon-plus",
                                             _id="show-add-btn")
                         output["showadd_btn"] = showadd_btn
@@ -2259,7 +2257,7 @@ class S3CRUD(S3Method):
                 if ADD_BTN in custom_crud_buttons:
                     btn = crud_button(custom=custom_crud_buttons[ADD_BTN])
                 else:
-                    label = crud_string(tablename, "label_create_button")
+                    label = crud_string(tablename, "label_create")
                     _href = url(method="create",
                                 representation=representation)
                     btn = crud_button(label=label,

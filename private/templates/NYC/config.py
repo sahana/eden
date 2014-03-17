@@ -1382,7 +1382,7 @@ def customise_req_req_controller(**attr):
             table = s3db.req_req
             table.site_id.comment = S3AddResourceLink(c="org", f="facility",
                                                       vars = dict(child="site_id"),
-                                                      title=T("Add Facility"),
+                                                      title=T("Create Facility"),
                                                       tooltip=T("Enter some characters to bring up a list of possible matches"))
 
         return result

@@ -93,15 +93,13 @@ class S3GuidedTourModel(S3Model):
                      )
 
         # CRUD strings
-        ADD_TOUR = T("Add Tour")
+        ADD_TOUR = T("Create Tour")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TOUR,
+            label_create = ADD_TOUR,
             title_display = T("Tour Configuration"),
             title_list = T("Tours"),
             title_update = T("Edit Tour"),
-            subtitle_create = T("Add New Tour"),
             label_list_button = T("List Tours"),
-            label_create_button = ADD_TOUR,
             label_delete_button = T("Delete Tour"),
             msg_record_created = T("Tour added"),
             msg_record_modified = T("Tour updated"),
@@ -173,15 +171,13 @@ class S3GuidedTourModel(S3Model):
                            label=T("Redirect URL")),
                      )
         # CRUD strings
-        ADD_DETAILS = T("Add Details")
+        ADD_DETAILS = T("Create Details")
         crud_strings[tablename] = Storage(
-            title_create = ADD_DETAILS,
+            label_create = ADD_DETAILS,
             title_display = T("Tour Details"),
             title_list = T("Details"),
             title_update = T("Edit Details"),
-            subtitle_create = T("Add New Detail"),
             label_list_button = T("List Details"),
-            label_create_button = ADD_DETAILS,
             label_delete_button = T("Delete Detail"),
             msg_record_created = T("Detail added"),
             msg_record_modified = T("Detail updated"),
@@ -216,15 +212,13 @@ class S3GuidedTourModel(S3Model):
                      )
 
         # CRUD strings
-        ADD_USER = T("Add User")
+        ADD_USER = T("Create User")
         crud_strings[tablename] = Storage(
-            title_create = ADD_USER,
+            label_create = ADD_USER,
             title_display = T("Tour User"),
             title_list = T("Users"),
             title_update = T("Edit User"),
-            subtitle_create = T("Add New User"),
             label_list_button = T("List Users"),
-            label_create_button = ADD_USER,
             label_delete_button = T("Delete User"),
             msg_record_created = T("User added"),
             msg_record_modified = T("User updated"),

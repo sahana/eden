@@ -1042,11 +1042,11 @@ class S3Profile(S3CRUD):
             vars.refresh = list_id
 
             # CRUD string
-            title_create = widget.get("title_create", None)
-            if title_create:
-                title_create = current.T(title_create)
+            label_create = widget.get("label_create", None)
+            if label_create:
+                label_create = current.T(label_create)
             else:
-                title_create = S3CRUD.crud_string(tablename, "title_create")
+                label_create = S3CRUD.crud_string(tablename, "label_create")
 
             # Popup URL
             # Default to primary REST controller for the resource being added
@@ -1062,18 +1062,18 @@ class S3Profile(S3CRUD):
 
             if callable(insert):
                 # Custom widget
-                create = insert(r, list_id, title_create, add_url)
+                create = insert(r, list_id, label_create, add_url)
                 
             elif s3.crud.formstyle == "bootstrap":
                 # Bootstrap-style action icon
                 create = A(I(_class="icon icon-plus-sign small-add"),
                            _href=add_url,
                            _class="s3_modal",
-                           _title=title_create,
+                           _title=label_create,
                            )
             else:
                 # Standard action button
-                create = A(title_create,
+                create = A(label_create,
                            _href=add_url,
                            _class="action-btn profile-add-btn s3_modal",
                            )

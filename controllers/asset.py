@@ -33,9 +33,9 @@ def asset():
 
     # Use the item() controller in this module to set options correctly
     s3db.asset_asset.item_id.comment = S3AddResourceLink(f="item",
-        label=T("Add New Item"),
+        label=T("Create New Item"),
         title=T("Item"),
-        tooltip=T("Type the name of an existing catalog item OR Click 'Add New Item' to add an item which is not in the catalog."))
+        tooltip=T("Type the name of an existing catalog item OR Click 'Create New Item' to add an item which is not in the catalog."))
 
     # Defined in Model for use from Multiple Controllers for unified menus
     return s3db.asset_controller()
@@ -76,7 +76,7 @@ def item():
                                    )
                     
         field.comment = S3AddResourceLink(f="item_category",
-                                          label=T("Add Item Category"),
+                                          label=T("Create Item Category"),
                                           title=T("Item Category"),
                                           tooltip=T("Only Categories of type 'Asset' will be seen in the dropdown."))
 
@@ -123,14 +123,12 @@ def supplier():
     # Modify CRUD Strings
     ADD_SUPPLIER = T("Add Supplier")
     s3.crud_strings.org_organisation = Storage(
-        title_create=ADD_SUPPLIER,
+        label_create=ADD_SUPPLIER,
         title_display=T("Supplier Details"),
         title_list=T("Suppliers"),
         title_update=T("Edit Supplier"),
         title_upload=T("Import Suppliers"),
-        subtitle_create=ADD_SUPPLIER,
         label_list_button=T("List Suppliers"),
-        label_create_button=ADD_SUPPLIER,
         label_delete_button=T("Delete Supplier"),
         msg_record_created=T("Supplier added"),
         msg_record_modified=T("Supplier updated"),

@@ -129,15 +129,13 @@ class S3SupplyModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_BRAND = T("Add Brand")
+        ADD_BRAND = T("Create Brand")
         crud_strings[tablename] = Storage(
-            title_create = ADD_BRAND,
+            label_create = ADD_BRAND,
             title_display = T("Brand Details"),
             title_list = T("Brands"),
             title_update = T("Edit Brand"),
-            subtitle_create = T("Add New Brand"),
             label_list_button = T("List Brands"),
-            label_create_button = ADD_BRAND,
             label_delete_button = T("Delete Brand"),
             msg_record_created = T("Brand added"),
             msg_record_modified = T("Brand updated"),
@@ -175,15 +173,13 @@ class S3SupplyModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_CATALOG = T("Add Catalog")
+        ADD_CATALOG = T("Create Catalog")
         crud_strings[tablename] = Storage(
-            title_create = ADD_CATALOG,
+            label_create = ADD_CATALOG,
             title_display = T("Catalog Details"),
             title_list = T("Catalogs"),
             title_update = T("Edit Catalog"),
-            subtitle_create = T("Add New Catalog"),
             label_list_button = T("List Catalogs"),
-            label_create_button = ADD_CATALOG,
             label_delete_button = T("Delete Catalog"),
             msg_record_created = T("Catalog added"),
             msg_record_modified = T("Catalog updated"),
@@ -270,15 +266,13 @@ class S3SupplyModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ITEM_CATEGORY = T("Add Item Category")
+        ADD_ITEM_CATEGORY = T("Create Item Category")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ITEM_CATEGORY,
+            label_create = ADD_ITEM_CATEGORY,
             title_display = T("Item Category Details"),
             title_list = T("Item Categories"),
             title_update = T("Edit Item Category"),
-            subtitle_create = T("Add New Item Category"),
             label_list_button = T("List Item Categories"),
-            label_create_button = ADD_ITEM_CATEGORY,
             label_delete_button = T("Delete Item Category"),
             msg_record_created = T("Item Category added"),
             msg_record_modified = T("Item Category updated"),
@@ -413,15 +407,13 @@ S3OptionsFilter({
         #table.item_category_id_2.readable = table.item_category_id_2.writable = False
 
         # CRUD strings
-        ADD_ITEM = T("Add New Item")
+        ADD_ITEM = T("Create New Item")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ITEM,
+            label_create = ADD_ITEM,
             title_display = T("Item Details"),
             title_list = T("Items"),
             title_update = T("Edit Item"),
-            subtitle_create = T("Add New Item"),
             label_list_button = T("List Items"),
-            label_create_button = ADD_ITEM,
             label_delete_button = T("Delete Item"),
             msg_record_created = T("Item added"),
             msg_record_modified = T("Item updated"),
@@ -447,7 +439,7 @@ S3OptionsFilter({
                                       f="item",
                                       label=ADD_ITEM,
                                       title=T("Item"),
-                                      tooltip=T("Type the name of an existing catalog item OR Click 'Add New Item' to add an item which is not in the catalog.")),
+                                      tooltip=T("Type the name of an existing catalog item OR Click 'Create New Item' to add an item which is not in the catalog.")),
             ondelete = "RESTRICT",
             )
 
@@ -561,14 +553,12 @@ S3OptionsFilter({
         # CRUD strings
         ADD_ITEM = T("Add Item to Catalog")
         crud_strings[tablename] = Storage(
-            title_create = T("Add Catalog Item"),
+            label_create = T("Create Catalog Item"),
             title_display = T("Item Catalog Details"),
             title_list = T("Catalog Items"),
             title_update = T("Edit Catalog Item"),
             title_upload = T("Import Catalog Items"),
-            subtitle_create = ADD_ITEM,
             label_list_button = T("List Catalog Items"),
-            label_create_button = ADD_ITEM,
             label_delete_button = T("Delete Catalog Item"),
             msg_record_created = T("Catalog Item added"),
             msg_record_modified = T("Catalog Item updated"),
@@ -646,15 +636,13 @@ S3OptionsFilter({
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ITEM_PACK = T("Add Item Pack")
+        ADD_ITEM_PACK = T("Create Item Pack")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ITEM_PACK,
+            label_create = ADD_ITEM_PACK,
             title_display = T("Item Pack Details"),
             title_list = T("Item Packs"),
             title_update = T("Edit Item Pack"),
-            subtitle_create = T("Add New Item Pack"),
             label_list_button = T("List Item Packs"),
-            label_create_button = ADD_ITEM_PACK,
             label_delete_button = T("Delete Item Pack"),
             msg_record_created = T("Item Pack added"),
             msg_record_modified = T("Item Pack updated"),
@@ -752,15 +740,13 @@ S3OptionsFilter({
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ALT_ITEM = T("Add Alternative Item")
+        ADD_ALT_ITEM = T("Create Alternative Item")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ALT_ITEM,
+            label_create = ADD_ALT_ITEM,
             title_display = T("Alternative Item Details"),
             title_list = T("Alternative Items"),
             title_update = T("Edit Alternative Item"),
-            subtitle_create = T("Add New Alternative Item"),
             label_list_button = T("List Alternative Items"),
-            label_create_button = ADD_ALT_ITEM,
             label_delete_button = T("Delete Alternative Item"),
             msg_record_created = T("Alternative Item added"),
             msg_record_modified = T("Alternative Item updated"),
@@ -1213,13 +1199,11 @@ class S3SupplyDistributionModel(S3Model):
         # CRUD Strings
         ADD_ITEM = T("Add Distribution Item")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ITEM,
+            label_create = ADD_ITEM,
             title_display = T("Distribution Item"),
             title_list = T("Distribution Items"),
             title_update = T("Edit Distribution Item"),
-            subtitle_create = T("Add New Distribution Item"),
             label_list_button = T("List Distribution Items"),
-            label_create_button = ADD_ITEM,
             msg_record_created = T("Distribution Item Added"),
             msg_record_modified = T("Distribution Item Updated"),
             msg_record_deleted = T("Distribution Item Deleted"),
@@ -1280,14 +1264,12 @@ class S3SupplyDistributionModel(S3Model):
         # CRUD Strings
         ADD_DIST = T("Add Distribution")
         crud_strings[tablename] = Storage(
-            title_create = ADD_DIST,
+            label_create = ADD_DIST,
             title_display = T("Distribution Details"),
             title_list = T("Distributions"),
             title_update = T("Edit Distribution"),
             title_report = T("Distribution Report"),
-            subtitle_create = T("Add New Distribution"),
             label_list_button = T("List Distributions"),
-            label_create_button = ADD_DIST,
             msg_record_created = T("Distribution Added"),
             msg_record_modified = T("Distribution Updated"),
             msg_record_deleted = T("Distribution Deleted"),
@@ -2331,12 +2313,11 @@ def supply_item_entity_controller():
 
     # CRUD strings
     s3.crud_strings[tablename] = Storage(
-        title_create = T("Add Item"),
+        label_create = T("Add Item"),
         title_display = T("Item Details"),
         title_list = T("Items"),
         title_update = T("Edit Item"),
         label_list_button = T("List Items"),
-        label_create_button = T("Add Item"),
         label_delete_button = T("Delete Item"),
         msg_record_created = T("Item added"),
         msg_record_modified = T("Item updated"),

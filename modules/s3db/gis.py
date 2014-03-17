@@ -255,14 +255,12 @@ class S3LocationModel(S3Model):
         # CRUD Strings
         ADD_LOCATION = messages.ADD_LOCATION
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_LOCATION,
+            label_create = ADD_LOCATION,
             title_display = T("Location Details"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),
             title_upload = T("Import Locations"),
-            subtitle_create = T("Add New Location"),
             label_list_button = T("List Locations"),
-            label_create_button = ADD_LOCATION,
             label_delete_button = T("Delete Location"),
             msg_record_created = T("Location added"),
             msg_record_modified = T("Location updated"),
@@ -1301,15 +1299,13 @@ class S3LocationHierarchyModel(S3Model):
                           Field("edit_L5", "boolean", default=True),
                           *s3_meta_fields())
 
-        ADD_HIERARCHY = T("Add Location Hierarchy")
+        ADD_HIERARCHY = T("Create Location Hierarchy")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_HIERARCHY,
+            label_create = ADD_HIERARCHY,
             title_display = T("Location Hierarchy"),
             title_list = T("Location Hierarchies"),
             title_update = T("Edit Location Hierarchy"),
-            subtitle_create = T("Add New Location Hierarchy"),
             label_list_button = T("List Location Hierarchies"),
-            label_create_button = ADD_HIERARCHY,
             label_delete_button = T("Delete Location Hierarchy"),
             msg_record_created = T("Location Hierarchy added"),
             msg_record_modified = T("Location Hierarchy updated"),
@@ -1478,15 +1474,13 @@ class S3GISConfigModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_MARKER = T("Add Marker")
+        ADD_MARKER = T("Create Marker")
         crud_strings[tablename] = Storage(
-            title_create = ADD_MARKER,
+            label_create = ADD_MARKER,
             title_display = T("Marker Details"),
             title_list = T("Markers"),
             title_update = T("Edit Marker"),
-            subtitle_create = T("Add New Marker"),
             label_list_button = T("List Markers"),
-            label_create_button = ADD_MARKER,
             label_delete_button = T("Delete Marker"),
             msg_record_created = T("Marker added"),
             msg_record_modified = T("Marker updated"),
@@ -1562,15 +1556,13 @@ class S3GISConfigModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PROJECTION = T("Add Projection")
+        ADD_PROJECTION = T("Create Projection")
         crud_strings[tablename] = Storage(
-            title_create = ADD_PROJECTION,
+            label_create = ADD_PROJECTION,
             title_display = T("Projection Details"),
             title_list = T("Projections"),
             title_update = T("Edit Projection"),
-            subtitle_create = T("Add New Projection"),
             label_list_button = T("List Projections"),
-            label_create_button = ADD_PROJECTION,
             label_delete_button = T("Delete Projection"),
             msg_record_created = T("Projection added"),
             msg_record_modified = T("Projection updated"),
@@ -1611,15 +1603,13 @@ class S3GISConfigModel(S3Model):
                                empty=False),
                      *s3_meta_fields())
 
-        ADD_SYMBOLOGY = T("Add Symbology")
+        ADD_SYMBOLOGY = T("Create Symbology")
         crud_strings[tablename] = Storage(
-            title_create = ADD_SYMBOLOGY,
+            label_create = ADD_SYMBOLOGY,
             title_display = T("Symbology"),
             title_list = T("Symbologies"),
             title_update = T("Edit Symbology"),
-            subtitle_create = T("Add New Symbology"),
             label_list_button = T("List Symbologies"),
-            label_create_button = ADD_SYMBOLOGY,
             label_delete_button = T("Delete Symbology"),
             msg_record_created = T("Symbology added"),
             msg_record_modified = T("Symbology updated"),
@@ -1765,15 +1755,13 @@ class S3GISConfigModel(S3Model):
                                     label = T("Map Configuration"),
                                     ondelete = "CASCADE")
 
-        ADD_CONFIG = T("Add Map Configuration")
+        ADD_CONFIG = T("Create Map Configuration")
         crud_strings[tablename] = Storage(
-            title_create = ADD_CONFIG,
+            label_create = ADD_CONFIG,
             title_display = T("Map Configuration"),
             title_list = T("Map Configurations"),
             title_update = T("Edit Map Configuration"),
-            subtitle_create = T("Add New Map Configuration"),
             label_list_button = T("List Map Configurations"),
-            label_create_button = ADD_CONFIG,
             label_delete_button = T("Delete Map Configuration"),
             msg_record_created = T("Map Configuration added"),
             msg_record_modified = T("Map Configuration updated"),
@@ -1828,13 +1816,11 @@ class S3GISConfigModel(S3Model):
         # CRUD Strings
         # ADD_MENU = T("Add Menu Entry")
         # crud_strings[tablename] = Storage(
-            # title_create = ADD_MENU,
+            # label_create = ADD_MENU,
             # title_display = T("Menu Entry Details"),
             # title_list = T("Menu Entries"),
             # title_update = T("Edit Menu Entry"),
-            # subtitle_create = T("Add New Menu Entry"),
             # label_list_button = T("List Menu Entries"),
-            # label_create_button = ADD_MENU,
             # label_delete_button = T("Delete Menu Entry"),
             # msg_record_created = T("Menu Entry added"),
             # msg_record_modified = T("Menu Entry updated"),
@@ -2342,13 +2328,11 @@ class S3LayerEntityModel(S3Model):
                           )
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Layer"),
+            label_create = T("Create Layer"),
             title_display = T("Layer Details"),
             title_list = T("Layers"),
             title_update = T("Edit Layer"),
-            subtitle_create = T("Add New Layer"),
             label_list_button = T("List Layers"),
-            label_create_button = T("Add Layer"),
             label_delete_button = T("Delete Layer"),
             msg_record_created = T("Layer added"),
             msg_record_modified = T("Layer updated"),
@@ -2444,13 +2428,11 @@ class S3LayerEntityModel(S3Model):
         # since there are many diff layers
         # - override for single Config -> Layer
         crud_strings[tablename] = Storage(
-            title_create = T("Add Profile Configuration for this Layer"),
+            label_create = T("Create Profile Configuration for this Layer"),
             title_display = T("Profile Configuration"),
             title_list = T("Profile Configurations"),
             title_update = T("Edit Profile Configuration"),
-            subtitle_create = T("Add New Profile Configuration"),
             label_list_button = T("List Profiles configured for this Layer"),
-            label_create_button = T("Add Profile Configuration"),
             label_delete_button = T("Remove Profile Configuration for Layer"),
             msg_record_created = T("Profile Configured"),
             msg_record_modified = T("Profile Configuration updated"),
@@ -2486,13 +2468,11 @@ class S3LayerEntityModel(S3Model):
         # since there are many diff layers
         # - override for single Symbology -> Layer
         crud_strings[tablename] = Storage(
-            title_create = T("Add Symbology for Layer"),
+            label_create = T("Create Symbology for Layer"),
             title_display = T("Symbology"),
             title_list = T("Symbologies"),
             title_update = T("Edit Symbology"),
-            subtitle_create = T("Add New Symbology for Layer"),
             label_list_button = T("List Symbologies for Layer"),
-            label_create_button = T("Add Symbology for Layer"),
             label_delete_button = T("Remove Symbology from Layer"),
             msg_record_created = T("Symbology added"),
             msg_record_modified = T("Symbology updated"),
@@ -2662,15 +2642,13 @@ class S3FeatureLayerModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_FEATURE_LAYER = T("Add Feature Layer")
+        ADD_FEATURE_LAYER = T("Create Feature Layer")
         crud_strings[tablename] = Storage(
-            title_create = ADD_FEATURE_LAYER,
+            label_create = ADD_FEATURE_LAYER,
             title_display = T("Feature Layer Details"),
             title_list = T("Feature Layers"),
             title_update = T("Edit Feature Layer"),
-            subtitle_create = T("Add New Feature Layer"),
             label_list_button = T("List Feature Layers"),
-            label_create_button = ADD_FEATURE_LAYER,
             label_delete_button = T("Delete Feature Layer"),
             msg_record_created = T("Feature Layer added"),
             msg_record_modified = T("Feature Layer updated"),
@@ -4359,16 +4337,14 @@ class S3GISThemeModel(S3Model):
                            label = T("Value")),
                      *s3_meta_fields())
 
-        ADD_THEME = T("Add Data to Theme Layer")
+        ADD_THEME = T("Create Data to Theme Layer")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_THEME,
+            label_create = ADD_THEME,
             title_display = T("Theme Data"),
             title_list = T("Theme Data"),
             title_update = T("Edit Theme Data"),
             title_upload = T("Import Data for Theme Layer"),
-            subtitle_create = T("Add New Data to Theme Layer"),
             label_list_button = T("List Data in Theme Layer"),
-            label_create_button = ADD_THEME,
             label_delete_button = T("Delete Data from Theme layer"),
             msg_record_created = T("Data added to Theme Layer"),
             msg_record_modified = T("Theme Data updated"),
@@ -4475,16 +4451,14 @@ class S3POIModel(S3Model):
         #               onaccept = self.gis_poi_type_onaccept,
         #               )
 
-        ADD_POI_TYPE = T("Add PoI Type")
+        ADD_POI_TYPE = T("Create PoI Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_POI_TYPE,
+            label_create = ADD_POI_TYPE,
             title_display = T("PoI Type Details"),
             title_list = T("PoI Types"),
             title_update = T("Edit PoI Type"),
             title_upload = T("Import PoI Types"),
-            subtitle_create = T("Add New PoI Type"),
             label_list_button = T("List PoI Types"),
-            label_create_button = ADD_POI_TYPE,
             label_delete_button = T("Delete PoI Type"),
             msg_record_created = T("PoI Type added"),
             msg_record_modified = T("PoI Type updated"),
@@ -4511,16 +4485,14 @@ class S3POIModel(S3Model):
                      ),
                      *s3_meta_fields())
 
-        ADD_POI = T("Add Point of Interest")
+        ADD_POI = T("Create Point of Interest")
         crud_strings[tablename] = Storage(
-            title_create = ADD_POI,
+            label_create = ADD_POI,
             title_display = T("Point of Interest Details"),
             title_list = T("Points of Interest"),
             title_update = T("Edit Point of Interest"),
             title_upload = T("Import Points of Interest"),
-            subtitle_create = T("Add New Point of Interest"),
             label_list_button = T("List Points of Interest"),
-            label_create_button = ADD_POI,
             label_delete_button = T("Delete Point of Interest"),
             msg_record_created = T("Point of Interest added"),
             msg_record_modified = T("Point of Interest updated"),

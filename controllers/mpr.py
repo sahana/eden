@@ -145,17 +145,13 @@ def person():
                     ntable.status.writable = False
                     ntable.timestmp.label = T("Date/Time when last seen")
                     ntable.note_text.label = T("Circumstances of disappearance")
-                    s3.crud_strings[str(ntable)].update(
-                        title_create = "Add Missing Report",
-                        subtitle_create = "Add Missing Report")
+                    s3.crud_strings[str(ntable)].label_create = "Add Missing Report"
                 elif status == "found":
                     ntable.status.default = 2
                     ntable.status.writable = False
                     ntable.timestmp.label = T("Date/Time when found")
                     ntable.note_text.label = T("Comments")
-                    s3.crud_strings[str(ntable)].update(
-                        title_create = "Add Find Report",
-                        subtitle_create = "Add Find Report")
+                    s3.crud_strings[str(ntable)].abel_create = "Add Find Report"
                 else:
                     ntable.status.default = 99
                     ntable.status.writable = True

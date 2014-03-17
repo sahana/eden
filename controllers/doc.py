@@ -103,7 +103,7 @@ def document_tabs(r):
                     (table.document_id == r.id)
             tab_count = db(query).count()
             if tab_count == 0:
-                label = crud_string(tablename, "title_create")
+                label = crud_string(tablename, "label_create")
             elif tab_count == 1:
                 label = tab_opt["one_title"]
             else:

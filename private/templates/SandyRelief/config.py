@@ -461,13 +461,11 @@ def customise_org_group_controller(**attr):
     tablename = "org_group"
     # CRUD Strings
     current.response.s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Network"),
+                label_create = T("Add Network"),
                 title_display = T("Network Details"),
                 title_list = T("Networks"),
                 title_update = T("Edit Network"),
-                subtitle_create = T("Add New Network"),
                 label_list_button = T("List Networks"),
-                label_create_button = T("Add Network"),
                 label_delete_button = T("Remove Network"),
                 msg_record_created = T("Network added"),
                 msg_record_modified = T("Network updated"),

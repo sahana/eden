@@ -232,13 +232,11 @@ class S3ClimateModel(S3Model):
 
         ADD = T("Add new Station Parameter")
         crud_strings[tablename] = Storage(
-            title_create = ADD,
+            label_create = ADD,
             title_display = T("Station Parameter Details"),
             title_list = T("Station Parameters"),
             title_update = T("Edit Station Parameter"),
-            subtitle_create = ADD,
             label_list_button = T("List Station Parameters"),
-            label_create_button = ADD,
             label_delete_button = T("Remove Station Parameter"),
             msg_record_created = T("Station Parameter added"),
             msg_record_modified = T("Station Parameter updated"),
@@ -302,13 +300,11 @@ class S3ClimateModel(S3Model):
 
         ADD = T("Add new Dataset Price")
         crud_strings[tablename] = Storage(
-            title_create = ADD,
+            label_create = ADD,
             title_display = T("Dataset Price Details"),
             title_list = T("Dataset Prices"),
             title_update = T("Edit Dataset Price"),
-            subtitle_create = ADD,
             label_list_button = T("List Dataset Prices"),
-            label_create_button = ADD,
             label_delete_button = T("Remove Dataset Price"),
             msg_record_created = T("Dataset Price added"),
             msg_record_modified = T("Dataset Price updated"),
@@ -384,13 +380,11 @@ class S3ClimateModel(S3Model):
 
         ADD = T("Purchase New Data")
         crud_strings[tablename] = Storage(
-            title_create = ADD,
+            label_create = ADD,
             title_display = T("Purchased Data Details"),
             title_list = T("All Purchased Data"),
             title_update = T("Edit Purchased Data"),
-            subtitle_create = ADD,
             label_list_button = T("List Dataset Prices"),
-            label_create_button = ADD,
             label_delete_button = T("Remove Purchased Data"),
             msg_record_created = T("Data Purchase In Process"),
             msg_record_modified = T("Purchased Data updated"),
@@ -426,13 +420,11 @@ class S3ClimateModel(S3Model):
 
         ADD = T("Save Query")
         crud_strings[tablename] = Storage(
-            title_create = ADD,
+            label_create = ADD,
             title_display = T("Saved Query Details"),
             title_list = T("Saved Queries"),
             title_update = T("Edit Saved Query"),
-            subtitle_create = ADD,
             label_list_button = T("List Saved Queries"),
-            label_create_button = ADD,
             label_delete_button = T("Remove Saved Query"),
             msg_record_created = T("Query Saved"),
             msg_record_modified = T("Saved Query updated"),

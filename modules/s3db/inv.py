@@ -151,13 +151,11 @@ class S3WarehouseModel(S3Model):
 
         # CRUD strings
         #crud_strings[tablename] = Storage(
-        #    title_create = T("Add Warehouse Type"),
+        #    label_create = T("Add Warehouse Type"),
         #    title_display = T("Warehouse Type Details"),
         #    title_list = T("Warehouse Types"),
         #    title_update = T("Edit Warehouse Type"),
-        #    subtitle_create = T("Add New Warehouse Type"),
         #    label_list_button = T("List Warehouse Types"),
-        #    label_create_button = T("Add New Warehouse Type"),
         #    label_delete_button = T("Delete Warehouse Type"),
         #    msg_record_created = T("Warehouse Type added"),
         #    msg_record_modified = T("Warehouse Type updated"),
@@ -241,15 +239,13 @@ class S3WarehouseModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Warehouse"),
+            label_create = T("Create Warehouse"),
             title_display = T("Warehouse Details"),
             title_list = T("Warehouses"),
             title_update = T("Edit Warehouse"),
             title_upload = T("Import Warehouses"),
             title_map = T("Map of Warehouses"),
-            subtitle_create = T("Add New Warehouse"),
             label_list_button = T("List Warehouses"),
-            label_create_button = T("Add New Warehouse"),
             label_delete_button = T("Delete Warehouse"),
             msg_record_created = T("Warehouse added"),
             msg_record_modified = T("Warehouse updated"),
@@ -502,17 +498,15 @@ class S3InventoryModel(S3Model):
 
         # CRUD strings
         INV_ITEM = T("Warehouse Stock")
-        ADD_INV_ITEM = T("Add Stock to Warehouse")
+        ADD_INV_ITEM = T("Create Stock to Warehouse")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_INV_ITEM,
+            label_create = ADD_INV_ITEM,
             title_display = T("Warehouse Stock Details"),
             title_list = T("Stock in Warehouse"),
             title_update = T("Edit Warehouse Stock"),
             title_report = T("Warehouse Stock Report"),
             title_upload = T("Import Warehouse Stock"),
-            subtitle_create = ADD_INV_ITEM,
             label_list_button = T("List Stock in Warehouse"),
-            label_create_button = ADD_INV_ITEM,
             label_delete_button = T("Remove Stock from Warehouse"),
             msg_record_created = T("Stock added to Warehouse"),
             msg_record_modified = T("Warehouse Stock updated"),
@@ -1144,13 +1138,11 @@ class S3InventoryTrackingModel(S3Model):
         # CRUD strings
         ADD_SEND = T("Send New Shipment")
         crud_strings[tablename] = Storage(
-            title_create = ADD_SEND,
+            label_create = ADD_SEND,
             title_display = T("Sent Shipment Details"),
             title_list = T("Sent Shipments"),
             title_update = T("Shipment to Send"),
-            subtitle_create = ADD_SEND,
             label_list_button = T("List Sent Shipments"),
-            label_create_button = ADD_SEND,
             label_delete_button = T("Delete Sent Shipment"),
             msg_record_created = T("Shipment Created"),
             msg_record_modified = T("Sent Shipment updated"),
@@ -1501,9 +1493,9 @@ class S3InventoryTrackingModel(S3Model):
                            comment = S3AddResourceLink(
                                 c="inv",
                                 f="warehouse",
-                                label=T("Add New Warehouse"),
+                                label=T("Create Warehouse"),
                                 title=T("Warehouse"),
-                                tooltip=T("Type the name of an existing site OR Click 'Add New Warehouse' to add a new warehouse.")),
+                                tooltip=T("Type the name of an existing site OR Click 'Create Warehouse' to add a new warehouse.")),
                             ),
                      item_id(label = T("Kit"),
                              requires = IS_ONE_OF(db, "supply_item.id",
@@ -1517,9 +1509,9 @@ class S3InventoryTrackingModel(S3Model):
                              #comment = S3AddResourceLink(
                              #   c="supply",
                              #   f="item",
-                             #   label=T("Add New Kit"),
+                             #   label=T("Create New Kit"),
                              #   title=T("Kit"),
-                             #   tooltip=T("Type the name of an existing catalog kit OR Click 'Add New Kit' to add a kit which is not in the catalog.")),
+                             #   tooltip=T("Type the name of an existing catalog kit OR Click 'Create New Kit' to add a kit which is not in the catalog.")),
                              comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (T("Kit"),
                                                              T("Type the name of an existing catalog kit"))),
@@ -1545,15 +1537,13 @@ class S3InventoryTrackingModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_KIT = T("Add New Kit")
+        ADD_KIT = T("Create New Kit")
         crud_strings[tablename] = Storage(
-            title_create = ADD_KIT,
+            label_create = ADD_KIT,
             title_display = T("Kit Details"),
             title_list = T("Kits"),
             title_update = T("Kit"),
-            subtitle_create = ADD_KIT,
             label_list_button = T("List Kits"),
-            label_create_button = ADD_KIT,
             label_delete_button = T("Delete Kit"),
             msg_record_created = T("Kit Created"),
             msg_record_modified = T("Kit updated"),
@@ -1692,15 +1682,13 @@ S3OptionsFilter({
                      )
 
         # CRUD strings
-        ADD_TRACK_ITEM = T("Add Item to Shipment")
+        ADD_TRACK_ITEM = T("Create Item to Shipment")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TRACK_ITEM,
+            label_create = ADD_TRACK_ITEM,
             title_display = T("Shipment Item Details"),
             title_list = T("Shipment Items"),
             title_update = T("Edit Shipment Item"),
-            subtitle_create = T("Add New Shipment Item"),
             label_list_button = T("List Shipment Items"),
-            label_create_button = ADD_TRACK_ITEM,
             label_delete_button = T("Delete Shipment Item"),
             msg_record_created = T("Item Added to Shipment"),
             msg_record_modified = T("Shipment Item updated"),
@@ -3344,13 +3332,11 @@ def inv_recv_crud_strings():
         recv_id_label = T("Order")
         ADD_RECV = T("Add Order")
         current.response.s3.crud_strings["inv_recv"] = Storage(
-            title_create = ADD_RECV,
+            label_create = ADD_RECV,
             title_display = T("Order Details"),
             title_list = T("Orders"),
             title_update = T("Edit Order"),
-            subtitle_create = ADD_RECV,
             label_list_button = T("List Orders"),
-            label_create_button = ADD_RECV,
             label_delete_button = T("Delete Order"),
             msg_record_created = T("Order Created"),
             msg_record_modified = T("Order updated"),
@@ -3361,13 +3347,11 @@ def inv_recv_crud_strings():
         recv_id_label = T("Receive Shipment")
         ADD_RECV = T("Receive New Shipment")
         current.response.s3.crud_strings["inv_recv"] = Storage(
-            title_create = ADD_RECV,
+            label_create = ADD_RECV,
             title_display = T("Received Shipment Details"),
             title_list = T("Received/Incoming Shipments"),
             title_update = T("Shipment to Receive"),
-            subtitle_create = ADD_RECV,
             label_list_button = T("List Received/Incoming Shipments"),
-            label_create_button = ADD_RECV,
             label_delete_button = T("Delete Received Shipment"),
             msg_record_created = T("Shipment Created"),
             msg_record_modified = T("Received Shipment updated"),
@@ -3940,13 +3924,11 @@ class S3InventoryAdjustModel(S3Model):
         if settings.get_inv_stock_count():
             ADJUST_STOCK = T("New Stock Count")
             crud_strings["inv_adj"] = Storage(
-                title_create = ADJUST_STOCK,
+                label_create = ADJUST_STOCK,
                 title_display = T("Stock Count Details"),
                 title_list = T("Stock Counts"),
                 title_update = T("Edit Stock Count"),
-                subtitle_create = T("New Stock Count"),
                 label_list_button = T("List Stock Counts"),
-                label_create_button = ADJUST_STOCK,
                 label_delete_button = T("Delete Stock Count"),
                 msg_record_created = T("Stock Count created"),
                 msg_record_modified = T("Stock Count modified"),
@@ -3955,13 +3937,11 @@ class S3InventoryAdjustModel(S3Model):
         else:
             ADJUST_STOCK = T("New Stock Adjustment")
             crud_strings["inv_adj"] = Storage(
-                title_create = ADJUST_STOCK,
+                label_create = ADJUST_STOCK,
                 title_display = T("Stock Adjustment Details"),
                 title_list = T("Stock Adjustments"),
                 title_update = T("Edit Adjustment"),
-                subtitle_create = T("New Stock Adjustment"),
                 label_list_button = T("List Stock Adjustments"),
-                label_create_button = ADJUST_STOCK,
                 label_delete_button = T("Delete Stock Adjustment"),
                 msg_record_created = T("Adjustment created"),
                 msg_record_modified = T("Adjustment modified"),
@@ -4055,15 +4035,13 @@ class S3InventoryAdjustModel(S3Model):
                                       ondelete = "RESTRICT")
 
         # CRUD strings
-        ADJUST_STOCK = T("Add New Stock Items")
+        ADJUST_STOCK = T("Create New Stock Items")
         crud_strings["inv_adj_item"] = Storage(
-            title_create = ADJUST_STOCK,
+            label_create = ADJUST_STOCK,
             title_display = T("Item Details"),
             title_list = T("Items in Stock"),
             title_update = T("Adjust Item Quantity"),
-            subtitle_create = T("Add New Item to Stock"),
             label_list_button = T("List Items in Stock"),
-            label_create_button = ADJUST_STOCK,
             #label_delete_button = T("Remove Item from Stock"), # This should be forbidden - set qty to zero instead
             msg_record_created = T("Item added to stock"),
             msg_record_modified = T("Item quantity adjusted"),

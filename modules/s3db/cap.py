@@ -339,16 +339,14 @@ class S3CAPModel(S3Model):
         else:
             ADD_ALERT = T("Create Alert")
             crud_strings[tablename] = Storage(
-                title_create = ADD_ALERT,
+                label_create = ADD_ALERT,
                 title_display = T("Alert Details"),
                 title_list = T("Alerts"),
                 # If already-published, this should create a new "Update"
                 # alert instead of modifying the original
                 title_update = T("Edit Alert"),
                 title_upload = T("Import Alerts"),
-                subtitle_create = T("Create new Alert"),
                 label_list_button = T("List Alerts"),
-                label_create_button = ADD_ALERT,
                 label_delete_button = T("Delete Alert"),
                 msg_record_created = T("Alert created"),
                 msg_record_modified = T("Alert modified"),
@@ -504,15 +502,13 @@ class S3CAPModel(S3Model):
         else:
             ADD_INFO = T("Add alert information")
             crud_strings[tablename] = Storage(
-                title_create = ADD_INFO,
+                label_create = ADD_INFO,
                 title_display = T("Alert information"),
                 title_list = T("Information entries"),
                 title_update = T("Update alert information"), # this will create a new "Update" alert?
                 title_upload = T("Import alert information"),
-                subtitle_create = T("Create an information entry"),
                 subtitle_list = T("Listing of alert information items"),
                 label_list_button = T("List information entries"),
-                label_create_button = ADD_INFO,
                 label_delete_button = T("Delete Alert"),
                 msg_record_created = T("Alert information created"),
                 msg_record_modified = T("Alert information modified"),

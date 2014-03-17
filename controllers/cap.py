@@ -227,14 +227,12 @@ def template():
 
         ADD_ALERT_TPL = T("Create Template")
         s3.crud_strings["cap_template"] = Storage(
-            title_create = ADD_ALERT_TPL,
+            label_create = ADD_ALERT_TPL,
             title_display = T("Template"),
             title_list = T("Templates"),
             title_update = T("Edit Template"), # If already-published, this should create a new "Update" alert instead of modifying the original
             title_upload = T("Import Templates"),
-            subtitle_create = T("Create new Template"),
             label_list_button = T("List Templates"),
-            label_create_button = ADD_ALERT_TPL,
             label_delete_button = T("Delete Template"),
             msg_record_created = T("Template created"),
             msg_record_modified = T("Template modified"),

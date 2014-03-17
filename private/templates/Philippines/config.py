@@ -1414,7 +1414,7 @@ def customise_gis_location_controller(**attr):
                                   )
                 #locations_widget = dict(label = "Locations",
                 #                        insert = False,
-                #                        #title_create = "Add New Location",
+                #                        #label_create = "Create Location",
                 #                        type = "datalist",
                 #                        tablename = "gis_location",
                 #                        context = "location",
@@ -1424,7 +1424,7 @@ def customise_gis_location_controller(**attr):
                 #                        list_layout = render_locations_profile,
                 #                        )
                 #needs_widget = dict(label = "Needs",
-                #                    title_create = "Add New Need",
+                #                    label_create = "Add New Need",
                 #                    type = "datalist",
                 #                    tablename = "req_site_needs",
                 #                    context = "location",
@@ -1435,7 +1435,7 @@ def customise_gis_location_controller(**attr):
                 #                    list_layout = render_site_needs,
                 #                    )
                 reqs_widget = dict(label = "Requests",
-                                   title_create = "Add New Request",
+                                   label_create = "Add New Request",
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "location",
@@ -1448,7 +1448,7 @@ def customise_gis_location_controller(**attr):
                                    list_layout = s3db.req_req_list_layout,
                                    )
                 commits_widget = dict(label = "Donations",
-                                      title_create = "Add New Donation",
+                                      label_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "location",
@@ -1462,7 +1462,7 @@ def customise_gis_location_controller(**attr):
                                       list_layout = s3db.req_commit_list_layout,
                                       )
                 #resources_widget = dict(label = "Resources",
-                #                        title_create = "Add New Resource",
+                #                        label_create = "Create Resource",
                 #                        type = "datalist",
                 #                        tablename = "org_resource",
                 #                        context = "location",
@@ -1475,7 +1475,7 @@ def customise_gis_location_controller(**attr):
                 #                        list_layout = s3db.org_resource_list_layout,
                 #                        )
                 sites_widget = dict(label = "Sites",
-                                    title_create = "Add New Site",
+                                    label_create = "Add New Site",
                                     type = "datalist",
                                     tablename = "org_facility",
                                     context = "location",
@@ -1710,13 +1710,11 @@ def customise_org_facility_fields():
     # CRUD strings
     ADD_FAC = T("Add Site")
     current.response.s3.crud_strings[tablename] = Storage(
-        title_create = ADD_FAC,
+        label_create = ADD_FAC,
         title_display = T("Site Details"),
         title_list = T("Sites"),
         title_update = T("Edit Site"),
-        subtitle_create = ADD_FAC,
         label_list_button = T("List Sites"),
-        label_create_button = ADD_FAC,
         label_delete_button = T("Delete Site"),
         msg_record_created = T("Site Added"),
         msg_record_modified = T("Site Updated"),
@@ -1926,7 +1924,7 @@ def customise_org_facility_controller(**attr):
                                   width = 568,
                                   )
                 contacts_widget = dict(label = "Contacts",
-                                       title_create = "Add New Contact",
+                                       label_create = "Create Contact",
                                        type = "datalist",
                                        tablename = "hrm_human_resource",
                                        context = "site",
@@ -1937,7 +1935,7 @@ def customise_org_facility_controller(**attr):
                                        list_layout = render_contacts,
                                        )
                 reqs_widget = dict(label = "Requests",
-                                   title_create = "Add New Request",
+                                   label_create = "Add New Request",
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "site",
@@ -1947,7 +1945,7 @@ def customise_org_facility_controller(**attr):
                                    list_layout = s3db.req_req_list_layout,
                                    )
                 commits_widget = dict(label = "Donations",
-                                      #title_create = "Add New Donation",
+                                      #label_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "site",
@@ -2259,7 +2257,7 @@ def customise_org_organisation_controller(**attr):
                 s3db.org_customise_org_resource_fields("profile")
 
                 contacts_widget = dict(label = "Contacts",
-                                       title_create = "Add New Contact",
+                                       label_create = "Create Contact",
                                        type = "datalist",
                                        tablename = "hrm_human_resource",
                                        context = "organisation",
@@ -2277,7 +2275,7 @@ def customise_org_organisation_controller(**attr):
                                   width = 568,
                                   )
                 needs_widget = dict(label = "Needs",
-                                    title_create = "Add New Need",
+                                    label_create = "Add New Need",
                                     type = "datalist",
                                     tablename = "req_organisation_needs",
                                     multiple = False,
@@ -2287,7 +2285,7 @@ def customise_org_organisation_controller(**attr):
                                     list_layout = render_org_needs,
                                     )
                 reqs_widget = dict(label = "Requests",
-                                   title_create = "Add New Request",
+                                   label_create = "Add New Request",
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
@@ -2299,7 +2297,7 @@ def customise_org_organisation_controller(**attr):
                                    list_layout = s3db.req_req_list_layout,
                                    )
                 #resources_widget = dict(label = "Resources",
-                #                        title_create = "Add New Resource",
+                #                        label_create = "Create Resource",
                 #                        type = "datalist",
                 #                        tablename = "org_resource",
                 #                        context = "organisation",
@@ -2311,7 +2309,7 @@ def customise_org_organisation_controller(**attr):
                 #                        list_layout = s3db.org_resource_list_layout,
                 #                        )
                 commits_widget = dict(label = "Donations",
-                                      #title_create = "Add New Donation",
+                                      #label_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "organisation",
@@ -2324,7 +2322,7 @@ def customise_org_organisation_controller(**attr):
                                       list_layout = s3db.req_commit_list_layout,
                                       )
                 sites_widget = dict(label = "Sites",
-                                    title_create = "Add New Site",
+                                    label_create = "Add New Site",
                                     type = "datalist",
                                     tablename = "org_facility",
                                     context = "organisation",
@@ -2458,7 +2456,7 @@ def customise_org_organisation_controller(**attr):
                                                 vars={"refresh": "datalist"}),
                                       _class="btn btn-primary s3_modal",
                                       _role="button",
-                                      _title=T("Add New Organization"),
+                                      _title=T("Create Organization"),
                                       )
 
         # Call standard postp
@@ -2536,15 +2534,13 @@ def customise_pr_person_controller(**attr):
         if r.interactive or r.representation == "aadata":
             if request.controller != "default":
                 # CRUD Strings
-                ADD_CONTACT = T("Add New Contact")
+                ADD_CONTACT = T("Create Contact")
                 s3.crud_strings[tablename] = Storage(
-                    title_create = T("Add Contact"),
+                    label_create = T("Create Contact"),
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Edit Contact Details"),
-                    subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
-                    label_create_button = ADD_CONTACT,
                     label_delete_button = T("Delete Contact"),
                     msg_record_created = T("Contact added"),
                     msg_record_modified = T("Contact details updated"),
@@ -2770,13 +2766,11 @@ def customise_doc_document_controller(**attr):
 
         if r.interactive:
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Document"),
+                label_create = T("Add Document"),
                 title_display = T("Document"),
                 title_list = T("Documents"),
                 title_update = T("Edit Document"),
-                subtitle_create = T("Add Document"),
                 label_list_button = T("List New Documents"),
-                label_create_button = T("Add Documents"),
                 label_delete_button = T("Remove Documents"),
                 msg_record_created = T("Documents added"),
                 msg_record_modified = T("Documents updated"),
@@ -2846,7 +2840,7 @@ def customise_req_req_controller(**attr):
             record = r.record
             record_id = record.id
             commits_widget = dict(label = "Donations",
-                                  title_create = "Add New Donation",
+                                  label_create = "Add New Donation",
                                   type = "datalist",
                                   tablename = "req_commit",
                                   context = "request",
@@ -2861,7 +2855,7 @@ def customise_req_req_controller(**attr):
                                   )
             filter = (S3FieldSelector("obsolete") == False)
             sites_widget = dict(label = "Sites",
-                                #title_create = "Add New Site",
+                                #label_create = "Add New Site",
                                 type = "datalist",
                                 tablename = "org_facility",
                                 multiple = False,

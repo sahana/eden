@@ -86,14 +86,12 @@ def vehicle():
     # CRUD strings
     ADD_VEHICLE = T("Add Vehicle")
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_VEHICLE,
+        label_create = ADD_VEHICLE,
         title_display = T("Vehicle Details"),
         title_list = T("Vehicles"),
         title_update = T("Edit Vehicle"),
         title_map = T("Map of Vehicles"),
-        subtitle_create = T("Add New Vehicle"),
         label_list_button = T("List Vehicles"),
-        label_create_button = ADD_VEHICLE,
         label_delete_button = T("Delete Vehicle"),
         msg_record_created = T("Vehicle added"),
         msg_record_modified = T("Vehicle updated"),
@@ -136,13 +134,11 @@ def item():
     # CRUD strings
     ADD_ITEM = T("Add New Vehicle Type")
     s3.crud_strings["supply_item"] = Storage(
-        title_create = ADD_ITEM,
+        label_create = ADD_ITEM,
         title_display = T("Vehicle Type Details"),
         title_list = T("Vehicle Types"),
         title_update = T("Edit Vehicle Type"),
-        subtitle_create = T("Add New Vehicle Type"),
         label_list_button = T("List Vehicle Types"),
-        label_create_button = ADD_ITEM,
         label_delete_button = T("Delete Vehicle Type"),
         msg_record_created = T("Vehicle Type added"),
         msg_record_modified = T("Vehicle Type updated"),

@@ -118,13 +118,11 @@ class S3ProcurementModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Procurement Plan"),
+            label_create = T("Add Procurement Plan"),
             title_display = T("Procurement Plan Details"),
             title_list = T("Procurement Plans"),
             title_update = T("Edit Procurement Plan"),
-            subtitle_create = T("Add Procurement Plan"),
             label_list_button = T("List Procurement Plans"),
-            label_create_button = T("Add Procurement Plan"),
             label_delete_button = T("Delete Procurement Plan"),
             msg_record_created = T("Procurement Plan added"),
             msg_record_modified = T("Procurement Plan updated"),
@@ -186,13 +184,11 @@ class S3ProcurementModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Item to Procurement Plan"),
+            label_create = T("Add Item to Procurement Plan"),
             title_display = T("Procurement Plan Item Details"),
             title_list = T("Items in Procurement Plan"),
             title_update = T("Edit Procurement Plan Item"),
-            subtitle_create = T("Add Item to Procurement Plan"),
             label_list_button = T("List Items in Procurement Plan"),
-            label_create_button = T("Add Item to Procurement Plan"),
             label_delete_button = T("Remove Item from Procurement Plan"),
             msg_record_created = T("Item added to Procurement Plan"),
             msg_record_modified = T("Procurement Plan Item updated"),

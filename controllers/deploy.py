@@ -632,11 +632,9 @@ def email_channel():
             s3.crud_strings[tablename] = Storage(
                 title_display = T("Email Settings"),
                 title_list = T("Email Accounts"),
-                title_create = ADD_EMAIL_ACCOUNT,
+                label_create = ADD_EMAIL_ACCOUNT,
                 title_update = T("Edit Email Settings"),
                 label_list_button = T("View Email Accounts"),
-                label_create_button = ADD_EMAIL_ACCOUNT,
-                subtitle_create = T("Add New Email Account"),
                 msg_record_created = T("Account added"),
                 msg_record_deleted = T("Email Account deleted"),
                 msg_list_empty = T("No Accounts currently defined"),

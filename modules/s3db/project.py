@@ -225,17 +225,15 @@ class S3ProjectModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PROJECT = T("Add Project")
+        ADD_PROJECT = T("Create Project")
         crud_strings[tablename] = Storage(
-            title_create = ADD_PROJECT,
+            label_create = ADD_PROJECT,
             title_display = T("Project Details"),
             title_list = T("Projects"),
             title_update = T("Edit Project"),
             title_report = T("Project Report"),
             title_upload = T("Import Projects"),
-            subtitle_create = T("Add New Project"),
             label_list_button = T("List Projects"),
-            label_create_button = ADD_PROJECT,
             label_delete_button = T("Delete Project"),
             msg_record_created = T("Project added"),
             msg_record_modified = T("Project updated"),
@@ -343,7 +341,7 @@ class S3ProjectModel(S3Model):
                         ),
             sortby = "name",
             comment = S3AddResourceLink(c="project", f="project",
-                                        tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
+                                        tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'.")),
             ondelete = "CASCADE"
             )
 
@@ -874,18 +872,16 @@ class S3ProjectActivityModel(S3Model):
 
         # CRUD Strings
         ACTIVITY = T("Activity")
-        ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
-        ADD_ACTIVITY = T("Add Activity")
+        ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Create Activity'.")
+        ADD_ACTIVITY = T("Create Activity")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ACTIVITY,
+            label_create = ADD_ACTIVITY,
             title_display = T("Activity Details"),
             title_list = T("Activities"),
             title_update = T("Edit Activity"),
             title_upload = T("Import Activity Data"),
             title_report = T("Activity Report"),
-            subtitle_create = T("Add New Activity"),
             label_list_button = T("List Activities"),
-            label_create_button = ADD_ACTIVITY,
             msg_record_created = T("Activity Added"),
             msg_record_modified = T("Activity Updated"),
             msg_record_deleted = T("Activity Deleted"),
@@ -1132,14 +1128,12 @@ class S3ProjectActivityModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("New Activity Type"),
+            label_create = T("New Activity Type"),
             title_display = T("Activity Type"),
             title_list = T("Activity Types"),
             title_update = T("Edit Activity Type"),
             title_upload = T("Import Activity Type data"),
-            subtitle_create = T("Add New Activity Type"),
             label_list_button = T("List Activity Types"),
-            label_create_button = T("Add Activity Type to Activity"),
             msg_record_created = T("Activity Type added to Activity"),
             msg_record_modified = T("Activity Type Updated"),
             msg_record_deleted = T("Activity Type removed from Activity"),
@@ -1261,15 +1255,13 @@ class S3ProjectActivityTypeModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ACTIVITY_TYPE = T("Add Activity Type")
+        ADD_ACTIVITY_TYPE = T("Create Activity Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ACTIVITY_TYPE,
+            label_create = ADD_ACTIVITY_TYPE,
             title_display = T("Activity Type"),
             title_list = T("Activity Types"),
             title_update = T("Edit Activity Type"),
-            subtitle_create = T("Add New Activity Type"),
             label_list_button = T("List Activity Types"),
-            label_create_button = ADD_ACTIVITY_TYPE,
             msg_record_created = T("Activity Type Added"),
             msg_record_modified = T("Activity Type Updated"),
             msg_record_deleted = T("Activity Type Deleted"),
@@ -1289,7 +1281,7 @@ class S3ProjectActivityTypeModel(S3Model):
                                            comment = S3AddResourceLink(title=ADD_ACTIVITY_TYPE,
                                                                        c="project",
                                                                        f="activity_type",
-                                                                       tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Add Activity Type'.")),
+                                                                       tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Create Activity Type'.")),
                                            ondelete = "SET NULL")
 
         # Component (for Custom Form)
@@ -1344,14 +1336,12 @@ class S3ProjectActivityTypeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("New Activity Type"),
+            label_create = T("New Activity Type"),
             title_display = T("Activity Type"),
             title_list = T("Activity Types"),
             title_update = T("Edit Activity Type"),
             title_upload = T("Import Activity Type data"),
-            subtitle_create = T("Add New Activity Type"),
             label_list_button = T("List Activity Types"),
-            label_create_button = T("Add Activity Type to Project Location"),
             msg_record_created = T("Activity Type added to Project Location"),
             msg_record_modified = T("Activity Type Updated"),
             msg_record_deleted = T("Activity Type removed from Project Location"),
@@ -1393,15 +1383,13 @@ class S3ProjectActivityOrganisationModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ACTIVITY_ORG = T("Add Activity Organisation")
+        ADD_ACTIVITY_ORG = T("Create Activity Organisation")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ACTIVITY_ORG,
+            label_create = ADD_ACTIVITY_ORG,
             title_display = T("Activity Organisation"),
             title_list = T("Activity Organisations"),
             title_update = T("Edit Activity Organisation"),
-            subtitle_create = T("Add New Activity Organisation"),
             label_list_button = T("List Activity Organisations"),
-            label_create_button = ADD_ACTIVITY_ORG,
             msg_record_created = T("Activity Organisation Added"),
             msg_record_modified = T("Activity Organisation Updated"),
             msg_record_deleted = T("Activity Organisation Deleted"),
@@ -1573,15 +1561,13 @@ class S3ProjectAnnualBudgetModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("New Annual Budget"),
+            label_create = T("New Annual Budget"),
             title_display = T("Annual Budget"),
             title_list = T("Annual Budgets"),
             title_update = T("Edit Annual Budget"),
             title_upload = T("Import Annual Budget data"),
             title_report = T("Report on Annual Budgets"),
-            subtitle_create = T("Add New Annual Budget"),
             label_list_button = T("List Annual Budgets"),
-            label_create_button = T("New Annual Budget"),
             msg_record_created = T("New Annual Budget created"),
             msg_record_modified = T("Annual Budget updated"),
             msg_record_deleted = T("Annual Budget deleted"),
@@ -1642,13 +1628,11 @@ class S3ProjectBeneficiaryModel(S3Model):
         # CRUD Strings
         ADD_BNF_TYPE = T("Add Beneficiary Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_BNF_TYPE,
+            label_create = ADD_BNF_TYPE,
             title_display = T("Beneficiary Type"),
             title_list = T("Beneficiary Types"),
             title_update = T("Edit Beneficiary Type"),
-            subtitle_create = T("Add New Beneficiary Type"),
             label_list_button = T("List Beneficiary Types"),
-            label_create_button = ADD_BNF_TYPE,
             msg_record_created = T("Beneficiary Type Added"),
             msg_record_modified = T("Beneficiary Type Updated"),
             msg_record_deleted = T("Beneficiary Type Deleted"),
@@ -1716,14 +1700,12 @@ class S3ProjectBeneficiaryModel(S3Model):
         # CRUD Strings
         ADD_BNF = T("Add Beneficiaries")
         crud_strings[tablename] = Storage(
-            title_create = ADD_BNF,
+            label_create = ADD_BNF,
             title_display = T("Beneficiaries Details"),
             title_list = T("Beneficiaries"),
             title_update = T("Edit Beneficiaries"),
             title_report = T("Beneficiary Report"),
-            subtitle_create = T("Add New Beneficiaries"),
             label_list_button = T("List Beneficiaries"),
-            label_create_button = ADD_BNF,
             msg_record_created = T("Beneficiaries Added"),
             msg_record_modified = T("Beneficiaries Updated"),
             msg_record_deleted = T("Beneficiaries Deleted"),
@@ -2116,13 +2098,11 @@ class S3ProjectCampaignModel(S3Model):
         # CRUD Strings
         ADD_CAMPAIGN = T("Add Campaign")
         crud_strings[tablename] = Storage(
-            title_create = ADD_CAMPAIGN,
+            label_create = ADD_CAMPAIGN,
             title_display = T("Campaign"),
             title_list = T("Campaigns"),
             title_update = T("Edit Campaign"),
-            subtitle_create = T("Add New Campaign"),
             label_list_button = T("List Campaigns"),
-            label_create_button = ADD_CAMPAIGN,
             msg_record_created = T("Campaign Added"),
             msg_record_modified = T("Campaign Updated"),
             msg_record_deleted = T("Campaign Deleted"),
@@ -2179,13 +2159,11 @@ class S3ProjectCampaignModel(S3Model):
         # CRUD Strings
         ADD_CAMPAIGN = T("Add Campaign")
         crud_strings[tablename] = Storage(
-            title_create = ADD_CAMPAIGN,
+            label_create = ADD_CAMPAIGN,
             title_display = T("Campaign"),
             title_list = T("Campaigns"),
             title_update = T("Edit Campaign"),
-            subtitle_create = T("Add New Campaign"),
             label_list_button = T("List Campaigns"),
-            label_create_button = ADD_CAMPAIGN,
             msg_record_created = T("Campaign Added"),
             msg_record_modified = T("Campaign Updated"),
             msg_record_deleted = T("Campaign Deleted"),
@@ -2229,13 +2207,11 @@ class S3ProjectCampaignModel(S3Model):
         # CRUD Strings
         ADD_CAMPAIGN_KW = T("Add Keyword")
         crud_strings[tablename] = Storage(
-            title_create = ADD_CAMPAIGN_KW,
+            label_create = ADD_CAMPAIGN_KW,
             title_display = T("Keyword"),
             title_list = T("Keywords"),
             title_update = T("Edit Keyword"),
-            subtitle_create = T("Add New Keyword"),
             label_list_button = T("List Keywords"),
-            label_create_button = ADD_CAMPAIGN_KW,
             msg_record_created = T("Keyword Added"),
             msg_record_modified = T("Keyword Updated"),
             msg_record_deleted = T("Keyword Deleted"),
@@ -2277,14 +2253,12 @@ class S3ProjectCampaignModel(S3Model):
         # CRUD Strings
         #ADD_CAMPAIGN_RESP = T("Add Response")
         #crud_strings[tablename] = Storage(
-        #    title_create = ADD_CAMPAIGN_RESP,
+        #    label_create = ADD_CAMPAIGN_RESP,
         #    title_display = T("Response Details"),
         #    title_list = T("Responses"),
         #    title_update = T("Edit Response"),
         #    title_report = T("Response Report"),
-        #    subtitle_create = T("Add New Response"),
         #    label_list_button = T("List Responses"),
-        #    label_create_button = ADD_CAMPAIGN_RESP,
         #    msg_record_created = T("Response Added"),
         #    msg_record_modified = T("Response Updated"),
         #    msg_record_deleted = T("Response Deleted"),
@@ -2334,14 +2308,12 @@ class S3ProjectCampaignModel(S3Model):
         # CRUD Strings
         ADD_CAMPAIGN_RESP_SUMM = T("Add Response Summary")
         crud_strings[tablename] = Storage(
-            title_create = ADD_CAMPAIGN_RESP_SUMM,
+            label_create = ADD_CAMPAIGN_RESP_SUMM,
             title_display = T("Response Summary Details"),
             title_list = T("Response Summaries"),
             title_update = T("Edit Response Summary"),
             title_report = T("Response Summary Report"),
-            subtitle_create = T("Add New Response Summary"),
             label_list_button = T("List Response Summaries"),
-            label_create_button = ADD_CAMPAIGN_RESP_SUMM,
             msg_record_created = T("Response Summary Added"),
             msg_record_modified = T("Response Summary Updated"),
             msg_record_deleted = T("Response Summary Deleted"),
@@ -2399,14 +2371,12 @@ class S3ProjectFrameworkModel(S3Model):
         else:
             msg_record_created = T("Policy or Strategy added")
         crud_strings[tablename] = Storage(
-            title_create = T("Add Policy or Strategy"),
+            label_create = T("Create Policy or Strategy"),
             title_display = T("Policy or Strategy"),
             title_list = T("Policies & Strategies"),
             title_update = T("Edit Policy or Strategy"),
             title_upload = T("Import Policies & Strategies"),
-            subtitle_create = T("Add New Policy or Strategy"),
             label_list_button = T("List Policies & Strategies"),
-            label_create_button = T("Add Policy or Strategy"),
             msg_record_created = msg_record_created,
             msg_record_modified = T("Policy or Strategy updated"),
             msg_record_deleted = T("Policy or Strategy deleted"),
@@ -2481,13 +2451,11 @@ class S3ProjectFrameworkModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("New Organization"),
+            label_create = T("New Organization"),
             title_display = ORGANISATION,
             title_list = T("Organizations"),
             title_update = T("Edit Organization"),
-            subtitle_create = T("Add New Organization"),
             label_list_button = T("List Organizations"),
-            label_create_button = T("Add Organization"),
             msg_record_created = T("Organization added to Policy/Strategy"),
             msg_record_modified = T("Organization updated"),
             msg_record_deleted = T("Organization removed from Policy/Strategy"),
@@ -2533,16 +2501,14 @@ class S3ProjectHazardModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_HAZARD = T("Add Hazard")
+        ADD_HAZARD = T("Create Hazard")
         crud_strings[tablename] = Storage(
-            title_create = ADD_HAZARD,
+            label_create = ADD_HAZARD,
             title_display = T("Hazard Details"),
             title_list = T("Hazards"),
             title_update = T("Edit Hazard"),
             title_upload = T("Import Hazards"),
-            subtitle_create = T("Add New Hazard"),
             label_list_button = T("List Hazards"),
-            label_create_button = ADD_HAZARD,
             label_delete_button = T("Delete Hazard"),
             msg_record_created = T("Hazard added"),
             msg_record_modified = T("Hazard updated"),
@@ -2580,14 +2546,12 @@ class S3ProjectHazardModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("New Hazard"),
+            label_create = T("New Hazard"),
             title_display = T("Hazard"),
             title_list = T("Hazards"),
             title_update = T("Edit Hazard"),
             title_upload = T("Import Hazard data"),
-            subtitle_create = T("Add New Hazard"),
             label_list_button = T("List Hazards"),
-            label_create_button = T("Add Hazard to Project"),
             msg_record_created = T("Hazard added to Project"),
             msg_record_modified = T("Hazard updated"),
             msg_record_deleted = T("Hazard removed from Project"),
@@ -2672,7 +2636,7 @@ class S3ProjectLocationModel(S3Model):
                      represent = self.gis_LocationRepresent(sep=", "),
                      comment = S3AddResourceLink(c="gis",
                                                  f="location",
-                                                 label = T("Add Location"),
+                                                 label = T("Create Location"),
                                                  title=T("Location"),
                                                  tooltip=T("Enter some characters to bring up a list of possible matches")),
                      ),
@@ -2694,16 +2658,14 @@ class S3ProjectLocationModel(S3Model):
             LOCATION_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
             ADD_LOCATION = T("Add Community")
             crud_strings[tablename] = Storage(
-                    title_create = ADD_LOCATION,
+                    label_create = ADD_LOCATION,
                     title_display = T("Community Details"),
                     title_list = T("Communities"),
                     title_update = T("Edit Community Details"),
                     title_upload = T("Import Community Data"),
                     title_report = T("3W Report"),
                     title_map = T("Map of Communities"),
-                    subtitle_create = T("Add New Community"),
                     label_list_button = T("List Communities"),
-                    label_create_button = ADD_LOCATION,
                     msg_record_created = T("Community Added"),
                     msg_record_modified = T("Community Updated"),
                     msg_record_deleted = T("Community Deleted"),
@@ -2711,19 +2673,17 @@ class S3ProjectLocationModel(S3Model):
             )
         else:
             LOCATION = T("Location")
-            LOCATION_TOOLTIP = T("If you don't see the location in the list, you can add a new one by clicking link 'Add Location'.")
-            ADD_LOCATION = T("Add Location")
+            LOCATION_TOOLTIP = T("If you don't see the location in the list, you can add a new one by clicking link 'Create Location'.")
+            ADD_LOCATION = T("Create Location")
             crud_strings[tablename] = Storage(
-                    title_create = ADD_LOCATION,
+                    label_create = ADD_LOCATION,
                     title_display = T("Location Details"),
                     title_list = T("Locations"),
                     title_update = T("Edit Location Details"),
                     title_upload = T("Import Location Data"),
                     title_report = T("3W Report"),
                     title_map = T("Map of Projects"),
-                    subtitle_create = T("Add New Location"),
                     label_list_button = T("List Locations"),
-                    label_create_button = ADD_LOCATION,
                     msg_record_created = T("Location Added"),
                     msg_record_modified = T("Location updated"),
                     msg_record_deleted = T("Location Deleted"),
@@ -2840,16 +2800,14 @@ class S3ProjectLocationModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CONTACT = T("Add Contact")
+        ADD_CONTACT = T("Create Contact")
         LIST_OF_CONTACTS = T("Community Contacts")
         crud_strings[tablename] = Storage(
-            title_create = ADD_CONTACT,
+            label_create = ADD_CONTACT,
             title_display = T("Contact Details"),
             title_list = T("Contacts"),
             title_update = T("Edit Contact Details"),
-            subtitle_create = T("Add New Contact"),
             label_list_button = T("List Contacts"),
-            label_create_button = ADD_CONTACT,
             msg_record_created = T("Contact Added"),
             msg_record_modified = T("Contact Updated"),
             msg_record_deleted = T("Contact Deleted"),
@@ -3007,7 +2965,7 @@ class S3ProjectOrganisationModel(S3Model):
                           widget = None,
                           comment=S3AddResourceLink(c="org",
                                                     f="organisation",
-                                                    label=T("Add Organization"),
+                                                    label=T("Create Organization"),
                                                     title=messages.ORGANISATION,
                                                     tooltip=organisation_help)
                           ),
@@ -3031,17 +2989,15 @@ class S3ProjectOrganisationModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PROJECT_ORG = T("Add Organization to Project")
+        ADD_PROJECT_ORG = T("Create Organization to Project")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_PROJECT_ORG,
+            label_create = ADD_PROJECT_ORG,
             title_display = T("Project Organization Details"),
             title_list = T("Project Organizations"),
             title_update = T("Edit Project Organization"),
             title_upload = T("Import Project Organizations"),
             title_report = T("Funding Report"),
-            subtitle_create = T("Add Organization to Project"),
             label_list_button = T("List Project Organizations"),
-            label_create_button = ADD_PROJECT_ORG,
             label_delete_button = T("Remove Organization from Project"),
             msg_record_created = T("Organization added to Project"),
             msg_record_modified = T("Project Organization updated"),
@@ -3224,13 +3180,11 @@ class S3ProjectOutputModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("New Output"),
+            label_create = T("New Output"),
             title_display = T("Output"),
             title_list = T("Outputs"),
             title_update = T("Edit Output"),
-            subtitle_create = T("Add New Output"),
             label_list_button = T("List Outputs"),
-            label_create_button = T("New Output"),
             msg_record_created = T("Output added"),
             msg_record_modified = T("Output updated"),
             msg_record_deleted = T("Output removed"),
@@ -3291,14 +3245,12 @@ class S3ProjectSectorModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("New Sector"),
+            label_create = T("New Sector"),
             title_display = T("Sector"),
             title_list = T("Sectors"),
             title_update = T("Edit Sector"),
             title_upload = T("Import Sector data"),
-            subtitle_create = T("Add New Sector"),
             label_list_button = T("List Sectors"),
-            label_create_button = T("Add Sector to Project"),
             msg_record_created = T("Sector added to Project"),
             msg_record_modified = T("Sector updated"),
             msg_record_deleted = T("Sector removed from Project"),
@@ -3336,16 +3288,14 @@ class S3ProjectStatusModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_STATUS = T("Add Status")
+        ADD_STATUS = T("Create Status")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_STATUS,
+            label_create = ADD_STATUS,
             title_display = T("Status Details"),
             title_list = T("Statuses"),
             title_update = T("Edit Status"),
             #title_upload = T("Import Statuses"),
-            subtitle_create = T("Add New Status"),
             label_list_button = T("List Statuses"),
-            label_create_button = ADD_STATUS,
             label_delete_button = T("Delete Status"),
             msg_record_created = T("Status added"),
             msg_record_modified = T("Status updated"),
@@ -3417,16 +3367,14 @@ class S3ProjectThemeModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_THEME = T("Add Theme")
+        ADD_THEME = T("Create Theme")
         crud_strings[tablename] = Storage(
-            title_create = ADD_THEME,
+            label_create = ADD_THEME,
             title_display = T("Theme Details"),
             title_list = T("Themes"),
             title_update = T("Edit Theme"),
             #title_upload = T("Import Themes"),
-            subtitle_create = T("Add New Theme"),
             label_list_button = T("List Themes"),
-            label_create_button = ADD_THEME,
             label_delete_button = T("Delete Theme"),
             msg_record_created = T("Theme added"),
             msg_record_modified = T("Theme updated"),
@@ -3494,14 +3442,12 @@ class S3ProjectThemeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("New Sector"),
+            label_create = T("New Sector"),
             title_display = T("Sector"),
             title_list = T("Sectors"),
             title_update = T("Edit Sector"),
             title_upload = T("Import Sector data"),
-            subtitle_create = T("Add New Sector"),
             label_list_button = T("List Sectors"),
-            label_create_button = T("Add Sector to Theme"),
             msg_record_created = T("Sector added to Theme"),
             msg_record_modified = T("Sector updated"),
             msg_record_deleted = T("Sector removed from Theme"),
@@ -3526,14 +3472,12 @@ class S3ProjectThemeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("New Theme"),
+            label_create = T("New Theme"),
             title_display = T("Theme"),
             title_list = T("Themes"),
             title_update = T("Edit Theme"),
             #title_upload = T("Import Theme data"),
-            subtitle_create = T("Add New Theme"),
             label_list_button = T("List Themes"),
-            label_create_button = T("Add Theme to Project"),
             msg_record_created = T("Theme added to Project"),
             msg_record_modified = T("Theme updated"),
             msg_record_deleted = T("Theme removed from Project"),
@@ -3563,14 +3507,12 @@ class S3ProjectThemeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("New Theme"),
+            label_create = T("New Theme"),
             title_display = T("Theme"),
             title_list = T("Themes"),
             title_update = T("Edit Theme"),
             #title_upload = T("Import Theme data"),
-            subtitle_create = T("Add New Theme"),
             label_list_button = T("List Themes"),
-            label_create_button = T("Add Theme to Activity"),
             msg_record_created = T("Theme added to Activity"),
             msg_record_modified = T("Theme updated"),
             msg_record_deleted = T("Theme removed from Activity"),
@@ -3600,14 +3542,12 @@ class S3ProjectThemeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("New Theme"),
+            label_create = T("New Theme"),
             title_display = T("Theme"),
             title_list = T("Themes"),
             title_update = T("Edit Theme"),
             title_upload = T("Import Theme data"),
-            subtitle_create = T("Add New Theme"),
             label_list_button = T("List Themes"),
-            label_create_button = T("Add Theme to Project Location"),
             msg_record_created = T("Theme added to Project Location"),
             msg_record_modified = T("Theme updated"),
             msg_record_deleted = T("Theme removed from Project Location"),
@@ -4019,16 +3959,14 @@ class S3ProjectTaskModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_MILESTONE = T("Add Milestone")
+        ADD_MILESTONE = T("Create Milestone")
         crud_strings[tablename] = Storage(
-            title_create = ADD_MILESTONE,
+            label_create = ADD_MILESTONE,
             title_display = T("Milestone Details"),
             title_list = T("Milestones"),
             title_update = T("Edit Milestone"),
             #title_upload = T("Import Milestones"),
-            subtitle_create = T("Add New Milestone"),
             label_list_button = T("List Milestones"),
-            label_create_button = ADD_MILESTONE,
             msg_record_created = T("Milestone Added"),
             msg_record_modified = T("Milestone Updated"),
             msg_record_deleted = T("Milestone Deleted"),
@@ -4187,16 +4125,14 @@ class S3ProjectTaskModel(S3Model):
                                         S3DateTime.date_represent(dt, utc=True)
 
         # CRUD Strings
-        ADD_TASK = T("Add Task")
+        ADD_TASK = T("Create Task")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TASK,
+            label_create = ADD_TASK,
             title_display = T("Task Details"),
             title_list = T("Tasks"),
             title_update = T("Edit Task"),
             title_upload = T("Import Tasks"),
-            subtitle_create = T("Add New Task"),
             label_list_button = T("List Tasks"),
-            label_create_button = ADD_TASK,
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),
             msg_record_deleted = T("Task deleted"),
@@ -4522,15 +4458,13 @@ class S3ProjectTaskModel(S3Model):
         # CRUD Strings
         ADD_TIME = T("Log Time Spent")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TIME,
+            label_create = ADD_TIME,
             title_display = T("Logged Time Details"),
             title_list = T("Logged Time"),
             title_update = T("Edit Logged Time"),
             title_upload = T("Import Logged Time data"),
             title_report = T("Project Time Report"),
-            subtitle_create = T("Log New Time"),
             label_list_button = T("List Logged Time"),
-            label_create_button = ADD_TIME,
             msg_record_created = T("Time Logged"),
             msg_record_modified = T("Time Log Updated"),
             msg_record_deleted = T("Time Log Deleted"),
@@ -6103,10 +6037,10 @@ def project_task_form_inject(r, output, project=True):
     label = field.label
     label = LABEL(label, label and sep, _for=field_id,
                   _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-    comment = S3AddResourceLink(T("Add Activity"),
+    comment = S3AddResourceLink(T("Create Activity"),
                                 c="project",
                                 f="activity",
-                                tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'."))
+                                tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Create Activity'."))
     if project:
         options = {"triggerName": "project_id",
                    "targetName": "activity_id",
@@ -6150,10 +6084,10 @@ def project_task_form_inject(r, output, project=True):
         label = field.label
         label = LABEL(label, label and sep, _for=field_id,
                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-        comment = S3AddResourceLink(T("Add Milestone"),
+        comment = S3AddResourceLink(T("Create Milestone"),
                                     c="project",
                                     f="milestone",
-                                    tooltip=T("If you don't see the milestone in the list, you can add a new one by clicking link 'Add Milestone'."))
+                                    tooltip=T("If you don't see the milestone in the list, you can add a new one by clicking link 'Create Milestone'."))
         options = {"triggerName": "project_id",
                    "targetName": "milestone_id",
                    "lookupPrefix": "project",

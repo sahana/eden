@@ -524,14 +524,12 @@ def customise_deploy_assignment_controller(**attr):
     
     # CRUD Strings
     current.response.s3.crud_strings["deploy_assignment"] = Storage(
-        title_create = T("New Deployment"),
+        label_create = T("New Deployment"),
         title_display = T("Deployment Details"),
         title_list = T("Deployments"),
         title_update = T("Edit Deployment Details"),
         title_upload = T("Import Deployments"),
-        subtitle_create = T("Add New Deployment"),
         label_list_button = T("List Deployments"),
-        label_create_button = T("Add Deployment"),
         label_delete_button = T("Delete Deployment"),
         msg_record_created = T("Deployment added"),
         msg_record_modified = T("Deployment Details updated"),
@@ -611,14 +609,12 @@ def customise_deploy_mission_controller(**attr):
 
     # CRUD Strings
     s3.crud_strings["deploy_assignment"] = Storage(
-        title_create = T("New Deployment"),
+        label_create = T("New Deployment"),
         title_display = T("Deployment Details"),
         title_list = T("Deployments"),
         title_update = T("Edit Deployment Details"),
         title_upload = T("Import Deployments"),
-        subtitle_create = T("Add New Deployment"),
         label_list_button = T("List Deployments"),
-        label_create_button = T("Add Deployment"),
         label_delete_button = T("Delete Deployment"),
         msg_record_created = T("Deployment added"),
         msg_record_modified = T("Deployment Details updated"),
@@ -875,16 +871,14 @@ def customise_hrm_job_title_controller(**attr):
             table.organisation_id.writable = False
 
             SECTOR = T("Sector")
-            ADD_SECTOR = T("Add New Sector")
-            help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Add New Sector'.")
+            ADD_SECTOR = T("Create Sector")
+            help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Create Sector'.")
             s3.crud_strings["hrm_job_title"] = Storage(
-                title_create=T("Add Sector"),
+                label_create=T("Create Sector"),
                 title_display=T("Sector Details"),
                 title_list=T("Sectors"),
                 title_update=T("Edit Sector"),
-                subtitle_create=ADD_SECTOR,
                 label_list_button=T("List Sectors"),
-                label_create_button=ADD_SECTOR,
                 label_delete_button=T("Delete Sector"),
                 msg_record_created=T("Sector added"),
                 msg_record_modified=T("Sector updated"),
@@ -1117,14 +1111,12 @@ def customise_org_organisation_controller(**attr):
                         # Modify CRUD Strings
                         ADD_NS = T("Add National Society")
                         s3.crud_strings.org_organisation = Storage(
-                            title_create=ADD_NS,
+                            label_create=ADD_NS,
                             title_display=T("National Society Details"),
                             title_list=T("Red Cross & Red Crescent National Societies"),
                             title_update=T("Edit National Society"),
                             title_upload=T("Import Red Cross & Red Crescent National Societies"),
-                            subtitle_create=ADD_NS,
                             label_list_button=T("List Red Cross & Red Crescent National Societies"),
-                            label_create_button=ADD_NS,
                             label_delete_button=T("Delete National Society"),
                             msg_record_created=T("National Society added"),
                             msg_record_modified=T("National Society updated"),

@@ -135,7 +135,7 @@ def post():
                     table.name.default = page
                     table.name.readable = table.name.writable = False
                     _crud = s3.crud_strings[tablename]
-                    _crud.title_create = T("New Page")
+                    _crud.label_create = T("New Page")
                     _crud.title_update = T("Edit Page")
                     url = URL(c="default", f="index", vars={"page": page})
                     s3db.configure(tablename,
@@ -165,7 +165,7 @@ def post():
                         # We're creating/updating a Module home page
                         table.name.default = "%s Home Page" % _module
                         _crud = s3.crud_strings[tablename]
-                        _crud.title_create = T("New Page")
+                        _crud.label_create = T("New Page")
                         _crud.title_update = T("Edit Page")
                         url = URL(c=_module, f="index")
 
@@ -185,7 +185,7 @@ def post():
                     table.date.readable = table.date.writable = False
                     table.expired.readable = table.expired.writable = False
                     _crud = s3.crud_strings[tablename]
-                    _crud.title_create = T("Add Metadata")
+                    _crud.label_create = T("Add Metadata")
                     _crud.title_update = T("Edit Metadata")
 
                 if r.component_name == "module":

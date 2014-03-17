@@ -52,7 +52,7 @@ class index():
         menu_btns = [#div, label, app, function, is_icon
                     ["vol", T("View Volunteers"), "vol", "volunteer", True],
                     ["vol", T("View Volunteers"), "vol", "volunteer", False],
-                    ["vol", T("Add Volunteer"), "vol", "volunteer/create", False],
+                    ["vol", T("Create Volunteer"), "vol", "volunteer/create", False],
                     ["qua", T("View Qualifications"), "vol", "certificate", True],
                     ["qua", T("View Qualifications"), "vol", "certificate", False],
                     ["qua", T("Add Qualification"), "vol", "certificate/create", False],

@@ -216,16 +216,14 @@ class S3SurveyTemplateModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Assessment Template"),
+            label_create = T("Create Assessment Template"),
             title_display = T("Assessment Template Details"),
             title_list = T("Assessment Templates"),
             title_analysis_summary = T("Template Summary"),
             title_update = T("Edit Assessment Template"),
             title_question_details = T("Details of each question in the Template"),
-            subtitle_create = T("Add a new Assessment Template"),
             subtitle_analysis_summary = T("Summary by Question Type - (The fewer text questions the better the analysis can be)"),
             label_list_button = T("List Assessment Templates"),
-            label_create_button = T("Add a new Assessment Template"),
             label_delete_button = T("Delete this Assessment Template"),
             msg_record_created = T("Assessment Template added"),
             msg_record_modified = T("Assessment Template updated"),
@@ -280,13 +278,11 @@ class S3SurveyTemplateModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Template Section"),
+            label_create = T("Create Template Section"),
             title_display = T("Template Section Details"),
             title_list = T("Template Sections"),
             title_update = T("Edit Template Section"),
-            subtitle_create = T("Add a new Template Section"),
             label_list_button = T("List Template Sections"),
-            label_create_button = T("Add a new Template Section"),
             label_delete_button = T("Delete this Template Section"),
             msg_record_created = T("Template Section added"),
             msg_record_modified = T("Template Section updated"),
@@ -882,13 +878,11 @@ class S3SurveyQuestionModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add an Assessment Question"),
+            label_create = T("Create an Assessment Question"),
             title_display = T("Assessment Question Details"),
             title_list = T("Assessment Questions"),
             title_update = T("Edit Assessment Question"),
-            subtitle_create = T("Add a new Assessment Question"),
             label_list_button = T("List Assessment Questions"),
-            label_create_button = T("Add a new Assessment Question"),
             label_delete_button = T("Delete this Assessment Question"),
             msg_record_created = T("Assessment Question added"),
             msg_record_modified = T("Assessment Question updated"),
@@ -936,13 +930,11 @@ class S3SurveyQuestionModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Question Meta-Data"),
+            label_create = T("Create Question Meta-Data"),
             title_display = T("Question Meta-Data Details"),
             title_list = T("Question Meta-Data"),
             title_update = T("Edit Question Meta-Data"),
-            subtitle_create = T("Add new Question Meta-Data"),
             label_list_button = T("List Question Meta-Data"),
-            label_create_button = T("Add new Question Meta-Data"),
             label_delete_button = T("Delete this Question Meta-Data"),
             msg_record_created = T("Question Meta-Data added"),
             msg_record_modified = T("Question Meta-Data updated"),
@@ -1620,20 +1612,18 @@ class S3SurveySeriesModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Conduct a Disaster Assessment"),
+            label_create = T("Conduct a Disaster Assessment"),
             title_display = T("Details of Disaster Assessment"),
             title_list = T("Disaster Assessments"),
             title_update = T("Edit this Disaster Assessment"),
             title_analysis_summary = T("Disaster Assessment Summary"),
             title_analysis_chart = T("Disaster Assessment Chart"),
             title_map = T("Disaster Assessment Map"),
-            subtitle_create = T("Add a new Disaster Assessment"),
             subtitle_analysis_summary = T("Summary of Completed Assessment Forms"),
             help_analysis_summary = T("Click on questions below to select them, then click 'Display Selected Questions' button to view the selected questions for all Completed Assessment Forms"),
             subtitle_analysis_chart = T("Select a label question and at least one numeric question to display the chart."),
             subtitle_map = T("Disaster Assessment Map"),
             label_list_button = T("List Disaster Assessments"),
-            label_create_button = T("Add a new Disaster Assessment"),
             label_delete_button = T("Delete this Disaster Assessment"),
             msg_record_created = T("Disaster Assessment added"),
             msg_record_modified = T("Disaster Assessment updated"),
@@ -2604,15 +2594,13 @@ class S3SurveyCompleteModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Enter Completed Assessment Form"),
+            label_create = T("Enter Completed Assessment Form"),
             title_display = T("Completed Assessment Form Details"),
             title_list = T("Completed Assessment Forms"),
             title_update = T("Edit Completed Assessment Form"),
             title_selected = T("Selected Questions for all Completed Assessment Forms"),
-            subtitle_create = T("Enter Completed Assessment Form"),
             subtitle_selected = T("Selected Questions for all Completed Assessment Forms"),
             label_list_button = T("List Completed Assessment Forms"),
-            label_create_button = T("Add a new Completed Assessment Form"),
             label_delete_button = T("Delete this Completed Assessment Form"),
             msg_record_created = T("Completed Assessment Form entered"),
             msg_record_modified = T("Completed Assessment Form updated"),
@@ -2652,13 +2640,11 @@ class S3SurveyCompleteModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Assessment Answer"),
+            label_create = T("Create Assessment Answer"),
             title_display = T("Assessment Answer Details"),
             title_list = T("Assessment Answers"),
             title_update = T("Edit Assessment Answer"),
-            subtitle_create = T("Add a new Assessment Answer"),
             label_list_button = T("List Assessment Answers"),
-            label_create_button = T("Add a new Assessment Answer"),
             label_delete_button = T("Delete this Assessment Answer"),
             msg_record_created = T("Assessment Answer added"),
             msg_record_modified = T("Assessment Answer updated"),
@@ -3273,7 +3259,7 @@ class S3SurveyTranslateModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add new translation language"),
+            label_create = T("Create new translation language"),
         )
 
         self.configure(tablename,

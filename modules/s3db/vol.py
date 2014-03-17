@@ -149,14 +149,12 @@ class S3VolunteerAwardModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Award"),
+            label_create = T("Create Award"),
             title_display = T("Award"),
             title_list = T("Award"),
             title_update = T("Edit Award"),
             title_upload = T("Import Awards"),
-            subtitle_create = T("Add New Award"),
             label_list_button = T("List Awards"),
-            label_create_button = T("Add Award"),
             label_delete_button = T("Delete Award"),
             msg_record_created = T("Award added"),
             msg_record_modified = T("Award updated"),
@@ -165,7 +163,7 @@ class S3VolunteerAwardModel(S3Model):
 
         comment = S3AddResourceLink(c = "vol",
                                     f = "award",
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Award"),
                                     )
 
@@ -194,14 +192,12 @@ class S3VolunteerAwardModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Award"),
+            label_create = T("Create Award"),
             title_display = T("Award"),
             title_list = T("Award"),
             title_update = T("Edit Award"),
             title_upload = T("Import Awards"),
-            subtitle_create = T("Add New Award"),
             label_list_button = T("List Awards"),
-            label_create_button = T("Add Award"),
             label_delete_button = T("Delete Award"),
             msg_record_created = T("Award added"),
             msg_record_modified = T("Award updated"),
@@ -243,14 +239,12 @@ class S3VolunteerClusterModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Cluster Type"),
+            label_create = T("Create Volunteer Cluster Type"),
             title_display = T("Volunteer Cluster Type"),
             title_list = T("Volunteer Cluster Type"),
             title_update = T("Edit Volunteer Cluster Type"),
             title_upload = T("Import Volunteer Cluster Types"),
-            subtitle_create = T("Add New Volunteer Cluster Type"),
             label_list_button = T("List Volunteer Cluster Types"),
-            label_create_button = T("Add Volunteer Cluster Type"),
             label_delete_button = T("Delete Volunteer Cluster Type"),
             msg_record_created = T("Volunteer Cluster Type added"),
             msg_record_modified = T("Volunteer Cluster Type updated"),
@@ -261,7 +255,7 @@ class S3VolunteerClusterModel(S3Model):
                                     f = "cluster_type",
                                     vars = dict(child = "vol_cluster_type_id",
                                                 parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Volunteer Cluster Type"),
                                     )
 
@@ -288,14 +282,12 @@ class S3VolunteerClusterModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Cluster"),
+            label_create = T("Create Volunteer Cluster"),
             title_display = T("Volunteer Cluster"),
             title_list = T("Volunteer Cluster"),
             title_update = T("Edit Volunteer Cluster"),
             title_upload = T("Import Volunteer Clusters"),
-            subtitle_create = T("Add New Volunteer Cluster"),
             label_list_button = T("List Volunteer Clusters"),
-            label_create_button = T("Add Volunteer Cluster"),
             label_delete_button = T("Delete Volunteer Cluster"),
             msg_record_created = T("Volunteer Cluster added"),
             msg_record_modified = T("Volunteer Cluster updated"),
@@ -306,7 +298,7 @@ class S3VolunteerClusterModel(S3Model):
                                     f = "cluster",
                                     vars = dict(child = "vol_cluster_id",
                                                 parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Volunteer Cluster"),
                                     )
 
@@ -333,14 +325,12 @@ class S3VolunteerClusterModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Cluster Position"),
+            label_create = T("Create Volunteer Cluster Position"),
             title_display = T("Volunteer Cluster Position"),
             title_list = T("Volunteer Cluster Position"),
             title_update = T("Edit Volunteer Cluster Position"),
             title_upload = T("Import Volunteer Cluster Positions"),
-            subtitle_create = T("Add New Volunteer Cluster Position"),
             label_list_button = T("List Volunteer Cluster Positions"),
-            label_create_button = T("Add Volunteer Cluster Position"),
             label_delete_button = T("Delete Volunteer Cluster Position"),
             msg_record_created = T("Volunteer Cluster Position added"),
             msg_record_modified = T("Volunteer Cluster Position updated"),
@@ -351,7 +341,7 @@ class S3VolunteerClusterModel(S3Model):
                                     f = "cluster_position",
                                     vars = dict(child = "vol_cluster_position_id",
                                                 parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Volunteer Cluster Position"),
                                     )
 

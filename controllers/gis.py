@@ -355,7 +355,7 @@ def location():
             if r.representation == "popup":
                 table.parent.comment = parent_comment
             else:
-                # Include 'Add Location' button
+                # Include 'Create Location' button
                 table.parent.comment = DIV(S3AddResourceLink(c="gis",
                                                              f="location",
                                                              vars=dict(child="parent")),
@@ -752,11 +752,11 @@ def l0():
 
 # =============================================================================
 # Common CRUD strings for all layers
-ADD_LAYER = T("Add Layer")
+ADD_LAYER = T("Create Layer")
 LAYER_DETAILS = T("Layer Details")
 LAYERS = T("Layers")
 EDIT_LAYER = T("Edit Layer")
-ADD_NEW_LAYER = T("Add New Layer")
+ADD_NEW_LAYER = T("Create Layer")
 LIST_LAYERS = T("List Layers")
 DELETE_LAYER = T("Delete Layer")
 LAYER_ADDED = T("Layer added")
@@ -961,13 +961,11 @@ def config():
 
             elif r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_config"] = Storage(
-                    title_create = T("Add Layer to this Profile"),
+                    label_create = T("Add Layer to this Profile"),
                     title_display = LAYER_DETAILS,
                     title_list = LAYERS,
                     title_update = EDIT_LAYER,
-                    subtitle_create = T("Add Layer from Catalog"),
                     label_list_button = T("List Layers in Profile"),
-                    label_create_button = T("Add Layer from Catalog"),
                     label_delete_button = T("Remove Layer from Profile"),
                     msg_record_created = LAYER_ADDED,
                     msg_record_modified = LAYER_UPDATED,
@@ -1160,13 +1158,11 @@ def symbology():
         if r.interactive:
             if r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_entity"] = Storage(
-                    title_create=T("Configure Layer for this Symbology"),
+                    label_create=T("Configure Layer for this Symbology"),
                     title_display=LAYER_DETAILS,
                     title_list=LAYERS,
                     title_update=EDIT_LAYER,
-                    subtitle_create=T("Add New Layer to Symbology"),
                     label_list_button=T("List Layers in Symbology"),
-                    label_create_button=ADD_LAYER,
                     label_delete_button = T("Remove Layer from Symbology"),
                     msg_record_created=LAYER_ADDED,
                     msg_record_modified=LAYER_UPDATED,
@@ -1456,13 +1452,11 @@ def layer_openstreetmap():
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -1515,7 +1509,7 @@ def layer_bing():
     type = "Bing"
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_update=EDIT_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED)
@@ -1571,7 +1565,7 @@ def layer_empty():
     type = "Empty"
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_update=EDIT_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED)
@@ -1618,7 +1612,7 @@ def layer_google():
     type = "Google"
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_update=EDIT_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED)
@@ -1675,13 +1669,11 @@ def layer_mgrs():
     EDIT_LAYER = T(EDIT_TYPE_LAYER_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -1731,13 +1723,11 @@ def layer_arcrest():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -1800,13 +1790,11 @@ def layer_geojson():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -1881,13 +1869,11 @@ def layer_georss():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -1969,13 +1955,11 @@ def layer_gpx():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2032,13 +2016,11 @@ def layer_kml():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2118,13 +2100,11 @@ def layer_openweathermap():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2202,13 +2182,11 @@ def layer_shapefile():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2348,13 +2326,11 @@ def layer_theme():
                 LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
                 NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
                 s3.crud_strings["gis_layer_theme"] = Storage(
-                    title_create=ADD_LAYER,
+                    label_create=ADD_LAYER,
                     title_display=LAYER_DETAILS,
                     title_list=LAYERS,
                     title_update=EDIT_LAYER,
-                    subtitle_create=ADD_NEW_LAYER,
                     label_list_button=LIST_LAYERS,
-                    label_create_button=ADD_LAYER,
                     label_delete_button = DELETE_LAYER,
                     msg_record_created=LAYER_ADDED,
                     msg_record_modified=LAYER_UPDATED,
@@ -2421,13 +2397,11 @@ def layer_tms():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2490,13 +2464,11 @@ def layer_wfs():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2572,13 +2544,11 @@ def layer_wms():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2640,13 +2610,11 @@ def layer_xyz():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,
@@ -2712,13 +2680,11 @@ def layer_js():
     LIST_LAYERS = T(LIST_TYPE_LAYERS_FMT % type)
     NO_LAYERS = T(NO_TYPE_LAYERS_FMT % type)
     s3.crud_strings[tablename] = Storage(
-        title_create=ADD_LAYER,
+        label_create=ADD_LAYER,
         title_display=LAYER_DETAILS,
         title_list=LAYERS,
         title_update=EDIT_LAYER,
-        subtitle_create=ADD_NEW_LAYER,
         label_list_button=LIST_LAYERS,
-        label_create_button=ADD_LAYER,
         label_delete_button = DELETE_LAYER,
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED,

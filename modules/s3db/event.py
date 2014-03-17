@@ -94,14 +94,12 @@ class S3EventModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Event Type"),
+            label_create = T("Create Event Type"),
             title_display = T("Event Type Details"),
             title_list = T("Event Types"),
             title_update = T("Edit Event Type"),
             title_upload = T("Import Event Types"),
-            subtitle_create = T("Add New Event Type"),
             label_list_button = T("List Event Types"),
-            label_create_button = T("Add Event Type"),
             label_delete_button = T("Remove Event Type from this event"),
             msg_record_created = T("Event Type added"),
             msg_record_modified = T("Event Type updated"),
@@ -166,13 +164,11 @@ class S3EventModel(S3Model):
         # CRUD strings
         ADD_EVENT = T("New Event")
         crud_strings[tablename] = Storage(
-            title_create = ADD_EVENT,
+            label_create = ADD_EVENT,
             title_display = T("Event Details"),
             title_list = T("Events"),
             title_update = T("Edit Event"),
-            subtitle_create = T("Add New Event"),
             label_list_button = T("List Events"),
-            label_create_button = ADD_EVENT,
             label_delete_button = T("Delete Event"),
             msg_record_created = T("Event added"),
             msg_record_modified = T("Event updated"),
@@ -244,7 +240,7 @@ class S3EventModel(S3Model):
                      represent = self.gis_LocationRepresent(sep=", "),
                      comment = S3AddResourceLink(c="gis",
                                                  f="location",
-                                                 label = T("Add Location"),
+                                                 label = T("Create Location"),
                                                  title=T("Location"),
                                                  tooltip=T("Enter some characters to bring up a list of possible matches")),
                      ),
@@ -460,13 +456,11 @@ class S3IncidentModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident"),
+            label_create = T("Create Incident"),
             title_display = T("Incident Details"),
             title_list = T("Incidents"),
             title_update = T("Edit Incident"),
-            subtitle_create = T("Add New Incident"),
             label_list_button = T("List Incidents"),
-            label_create_button = T("Add Incident"),
             label_delete_button = T("Remove Incident from this event"),
             msg_record_created = T("Incident added"),
             msg_record_modified = T("Incident updated"),
@@ -728,13 +722,11 @@ class S3IncidentReportModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident Report"),
+            label_create = T("Create Incident Report"),
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
-            subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
-            label_create_button = T("Add Incident Report"),
             label_delete_button = T("Remove Incident Report from this event"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
@@ -826,14 +818,12 @@ class S3IncidentTypeModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident Type"),
+            label_create = T("Create Incident Type"),
             title_display = T("Incident Type Details"),
             title_list = T("Incident Types"),
             title_update = T("Edit Incident Type"),
             title_upload = T("Import Incident Types"),
-            subtitle_create = T("Add New Incident Type"),
             label_list_button = T("List Incident Types"),
-            label_create_button = T("Add Incident Type"),
             label_delete_button = T("Remove Incident Type from this event"),
             msg_record_created = T("Incident Type added"),
             msg_record_modified = T("Incident Type updated"),
@@ -982,13 +972,11 @@ class S3EventAssetModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Assign Asset"),
+            label_create = T("Assign Asset"),
             title_display = T("Asset Details"),
             title_list = T("Assets"),
             title_update = T("Edit Asset"),
-            subtitle_create = T("Add New Asset"),
             label_list_button = T("List Assets"),
-            label_create_button = T("Add Asset"),
             label_delete_button = T("Remove Asset from this incident"),
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
@@ -1022,13 +1010,11 @@ class S3EventCMSModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Tag Post"),
+            label_create = T("Tag Post"),
             title_display = T("Tag Details"),
             title_list = T("Tags"),
             title_update = T("Edit Tag"),
-            subtitle_create = T("Add New Tag"),
             label_list_button = T("List Tags"),
-            label_create_button = T("Add Tag"),
             label_delete_button = T("Remove Tag for this Event from this Post"),
             msg_record_created = T("Tag added"),
             msg_record_modified = T("Tag updated"),
@@ -1063,13 +1049,11 @@ class S3EventHRModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Assign Human Resource"),
+            label_create = T("Assign Human Resource"),
             title_display = T("Human Resource Details"),
             title_list = T("Assigned Human Resources"),
             title_update = T("Edit Human Resource"),
-            subtitle_create = T("Assign New Human Resource"),
             label_list_button = T("List Assigned Human Resources"),
-            label_create_button = T("Assign Human Resource"),
             label_delete_button = T("Remove Human Resource from this incident"),
             msg_record_created = T("Human Resource assigned"),
             msg_record_modified = T("Human Resource Assignment updated"),
@@ -1100,13 +1084,11 @@ class S3EventIReportModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident Report"),
+            label_create = T("Create Incident Report"),
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
-            subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
-            label_create_button = T("Add Incident Report"),
             label_delete_button = T("Remove Incident Report from this incident"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
@@ -1137,13 +1119,11 @@ class S3EventMapModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Map Configuration"),
+            label_create = T("Create Map Configuration"),
             title_display = T("Map Configuration Details"),
             title_list = T("Map Configurations"),
             title_update = T("Edit Map Configuration"),
-            subtitle_create = T("Add New Map Configuration"),
             label_list_button = T("List Map Configurations"),
-            label_create_button = T("Add Map Configuration"),
             label_delete_button = T("Remove Map Configuration from this incident"),
             msg_record_created = T("Map Configuration added"),
             msg_record_modified = T("Map Configuration updated"),
@@ -1179,13 +1159,11 @@ class S3EventSiteModel(S3Model):
         table.site_id.readable = table.site_id.writable = True
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Assign Facility"),
+            label_create = T("Assign Facility"),
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
             title_update = T("Edit Facility"),
-            subtitle_create = T("Add New Facility"),
             label_list_button = T("List Facilities"),
-            label_create_button = T("Add Facility"),
             label_delete_button = T("Remove Facility from this incident"),
             msg_record_created = T("Facility added"),
             msg_record_modified = T("Facility updated"),
@@ -1221,13 +1199,11 @@ class S3EventTaskModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Task"),
+            label_create = T("Create Task"),
             title_display = T("Task Details"),
             title_list = T("Tasks"),
             title_update = T("Edit Task"),
-            subtitle_create = T("Add New Task"),
             label_list_button = T("List Tasks"),
-            label_create_button = T("Add Task"),
             label_delete_button = T("Remove Task from this incident"),
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),

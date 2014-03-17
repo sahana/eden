@@ -211,15 +211,13 @@ class SyncDataModel(S3Model):
                                             T("Accept unsolicited data transmissions from the repository.")))
 
         # CRUD Strings
-        ADD_REPOSITORY = T("Add Repository")
+        ADD_REPOSITORY = T("Create Repository")
         crud_strings[tablename] = Storage(
-            title_create = ADD_REPOSITORY,
+            label_create = ADD_REPOSITORY,
             title_display = T("Repository Configuration"),
             title_list = T("Repositories"),
             title_update = T("Edit Repository Configuration"),
-            subtitle_create = T("Add Repository"),
             label_list_button = T("List Repositories"),
-            label_create_button = ADD_REPOSITORY,
             msg_record_created = T("Repository configured"),
             msg_record_modified = T("Repository configuration updated"),
             msg_record_deleted = T("Repository configuration deleted"),
@@ -384,15 +382,13 @@ class SyncDataModel(S3Model):
                                                 T("Under which condition a local record shall be updated if it also has been modified locally since the last synchronization")))
 
         # CRUD Strings
-        ADD_TASK = T("Add Resource")
+        ADD_TASK = T("Create Resource")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TASK,
+            label_create = ADD_TASK,
             title_display = T("Resource Configuration"),
             title_list = T("Resources"),
             title_update = T("Edit Resource Configuration"),
-            subtitle_create = ADD_TASK,
             label_list_button = T("List Resources"),
-            label_create_button = ADD_TASK,
             msg_record_created = T("Resource configured"),
             msg_record_modified = T("Resource configuration updated"),
             msg_record_deleted = T("Resource configuration deleted"),
@@ -450,15 +446,13 @@ class SyncDataModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_JOB = T("Add Job")
+        ADD_JOB = T("Create Job")
         crud_strings[tablename] = Storage(
-            title_create = ADD_JOB,
+            label_create = ADD_JOB,
             title_display = T("Synchronization Job"),
             title_list = T("Synchronization Schedule"),
             title_update = T("Edit Job"),
-            subtitle_create = ADD_JOB,
             label_list_button = T("List Jobs"),
-            label_create_button = ADD_JOB,
             msg_record_created = T("Job added"),
             msg_record_modified = T("Job updated"),
             msg_record_deleted = T("Job deleted"),

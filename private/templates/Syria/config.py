@@ -581,7 +581,7 @@ def customise_gis_location_controller(**attr):
                                   )
                 #locations_widget = dict(label = "Locations",
                 #                        insert = False,
-                #                        #title_create = "Add New Location",
+                #                        #label_create = "Create Location",
                 #                        type = "datalist",
                 #                        tablename = "gis_location",
                 #                        context = "location",
@@ -591,7 +591,7 @@ def customise_gis_location_controller(**attr):
                 #                        list_layout = render_locations_profile,
                 #                        )
                 beneficiaries_widget = dict(label = "Beneficiaries",
-                                            #title_create = "Add New Beneficiary",
+                                            #label_create = "Add New Beneficiary",
                                             type = "report",
                                             tablename = "project_beneficiary",
                                             ajaxurl = URL(c="project",
@@ -604,7 +604,7 @@ def customise_gis_location_controller(**attr):
                                             layer = "Beneficiaries",
                                             )
                 distributions_widget = dict(label = "Distributions",
-                                            #title_create = "Add New Distribution",
+                                            #label_create = "Add New Distribution",
                                             type = "report",
                                             tablename = "supply_distribution",
                                             ajaxurl = URL(c="supply",
@@ -831,7 +831,7 @@ def customise_org_organisation_controller(**attr):
                 customise_project_project_fields()
 
                 contacts_widget = dict(label = "Contacts",
-                                       title_create = "Add New Contact",
+                                       label_create = "Create Contact",
                                        type = "datalist",
                                        tablename = "hrm_human_resource",
                                        context = "organisation",
@@ -849,7 +849,7 @@ def customise_org_organisation_controller(**attr):
                                   width = 568,
                                   )
                 #offices_widget = dict(label = "Offices",
-                #                      title_create = "Add New Office",
+                #                      label_create = "Create Office",
                 #                      type = "datalist",
                 #                      tablename = "org_office",
                 #                      context = "organisation",
@@ -860,7 +860,7 @@ def customise_org_organisation_controller(**attr):
                 #                      list_layout = render_offices,
                 #                      )
                 projects_widget = dict(label = "Projects",
-                                       title_create = "Add New Project",
+                                       label_create = "Create Project",
                                        type = "datalist",
                                        tablename = "project_project",
                                        context = "organisation",
@@ -869,7 +869,7 @@ def customise_org_organisation_controller(**attr):
                                        #list_layout = render_projects,
                                        )
                 reports_widget = dict(label = "Reports",
-                                      title_create = "Add New Report",
+                                      label_create = "Add New Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
@@ -881,7 +881,7 @@ def customise_org_organisation_controller(**attr):
                                       list_layout = render_profile_posts,
                                       )
                 assessments_widget = dict(label = "Assessments",
-                                          title_create = "Add New Assessment",
+                                          label_create = "Add New Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",
@@ -894,7 +894,7 @@ def customise_org_organisation_controller(**attr):
                                           )
                 # @ToDo: Renderer
                 #distributions_widget = dict(label = "Distributions",
-                #                            title_create = "Add New Distribution",
+                #                            label_create = "Add New Distribution",
                 #                            type = "datalist",
                 #                            tablename = "supply_distribution",
                 #                            context = "location",
@@ -1003,15 +1003,13 @@ def customise_pr_person_controller(**attr):
         if r.interactive or r.representation == "aadata":
             if request.controller != "default":
                 # CRUD Strings
-                ADD_CONTACT = T("Add New Contact")
+                ADD_CONTACT = T("Create Contact")
                 s3.crud_strings[tablename] = Storage(
-                    title_create = T("Add Contact"),
+                    label_create = T("Create Contact"),
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Edit Contact Details"),
-                    subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
-                    label_create_button = ADD_CONTACT,
                     label_delete_button = T("Delete Contact"),
                     msg_record_created = T("Contact added"),
                     msg_record_modified = T("Contact details updated"),
@@ -1035,9 +1033,9 @@ def customise_pr_person_controller(**attr):
             from s3layouts import S3AddResourceLink
             site_field.comment = S3AddResourceLink(c="org", f="office",
                                                    vars={"child": "site_id"},
-                                                   label=T("Add New Office"),
+                                                   label=T("Create Office"),
                                                    title=T("Office"),
-                                                   tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+                                                   tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
 
             # Best to have no labels when only 1 field in the row
             s3db.pr_contact.value.label = ""

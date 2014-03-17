@@ -230,13 +230,11 @@ def customise_org_organisation_controller(**attr):
 
             ADD_ORGANISATION = T("New Stakeholder")
             s3.crud_strings["org_organisation"] = Storage(
-                title_create = ADD_ORGANISATION,
+                label_create = ADD_ORGANISATION,
                 title_display = T("Stakeholder Details"),
                 title_list = T("Stakeholders"),
                 title_update = T("Edit Stakeholder"),
-                subtitle_create = T("Add New Stakeholder"),
                 label_list_button = T("List Stakeholders"),
-                label_create_button = ADD_ORGANISATION,
                 label_delete_button = T("Delete Stakeholder"),
                 msg_record_created = T("Stakeholder added"),
                 msg_record_modified = T("Stakeholder updated"),
@@ -826,15 +824,13 @@ def customise_pr_person_controller(**attr):
     table = s3db.pr_person
 
     # CRUD Strings
-    ADD_CONTACT = T("Add New Contact")
+    ADD_CONTACT = T("Create Contact")
     s3.crud_strings[tablename] = Storage(
-        title_create = T("Add Contact"),
+        label_create = T("Create Contact"),
         title_display = T("Contact Details"),
         title_list = T("Contact Directory"),
         title_update = T("Edit Contact Details"),
-        subtitle_create = ADD_CONTACT,
         label_list_button = T("List Contacts"),
-        label_create_button = ADD_CONTACT,
         label_delete_button = T("Delete Contact"),
         msg_record_created = T("Contact added"),
         msg_record_modified = T("Contact details updated"),
@@ -871,9 +867,9 @@ def customise_pr_person_controller(**attr):
     from s3layouts import S3AddResourceLink
     site_field.comment = S3AddResourceLink(c="org", f="office",
                                            vars={"child": "site_id"},
-                                           label=T("Add New Office"),
+                                           label=T("Create Office"),
                                            title=T("Office"),
-                                           tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+                                           tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
 
     # Best to have no labels when only 1 field in the row
     s3db.pr_contact.value.label = ""

@@ -82,13 +82,11 @@ class S3CampDataModel(S3Model):
             ADD_SHELTER_TYPE = T("Add Camp Type")
             SHELTER_TYPE_LABEL = T("Camp Type")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_TYPE,
+                label_create = ADD_SHELTER_TYPE,
                 title_display = T("Camp Type Details"),
                 title_list = T("Camp Types"),
                 title_update = T("Edit Camp Type"),
-                subtitle_create = T("Add New Camp Type"),
                 label_list_button = T("List Camp Types"),
-                label_create_button = ADD_SHELTER_TYPE,
                 msg_record_created = T("Camp Type added"),
                 msg_record_modified = T("Camp Type updated"),
                 msg_record_deleted = T("Camp Type deleted"),
@@ -96,16 +94,14 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Camp"),
                 name_nice_plural = T("Camps"))
         else:
-            ADD_SHELTER_TYPE = T("Add Shelter Type")
+            ADD_SHELTER_TYPE = T("Create Shelter Type")
             SHELTER_TYPE_LABEL = T("Shelter Type")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_TYPE,
+                label_create = ADD_SHELTER_TYPE,
                 title_display = T("Shelter Type Details"),
                 title_list = T("Shelter Types"),
                 title_update = T("Edit Shelter Type"),
-                subtitle_create = T("Add New Shelter Type"),
                 label_list_button = T("List Shelter Types"),
-                label_create_button = ADD_SHELTER_TYPE,
                 msg_record_created = T("Shelter Type added"),
                 msg_record_modified = T("Shelter Type updated"),
                 msg_record_deleted = T("Shelter Type deleted"),
@@ -145,13 +141,11 @@ class S3CampDataModel(S3Model):
             ADD_SHELTER_SERVICE = T("Add Camp Service")
             SHELTER_SERVICE_LABEL = T("Camp Service")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_SERVICE,
+                label_create = ADD_SHELTER_SERVICE,
                 title_display = T("Camp Service Details"),
                 title_list = T("Camp Services"),
                 title_update = T("Edit Camp Service"),
-                subtitle_create = T("Add New Camp Service"),
                 label_list_button = T("List Camp Services"),
-                label_create_button = ADD_SHELTER_SERVICE,
                 msg_record_created = T("Camp Service added"),
                 msg_record_modified = T("Camp Service updated"),
                 msg_record_deleted = T("Camp Service deleted"),
@@ -159,16 +153,14 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Camp Service"),
                 name_nice_plural = T("Camp Services"))
         else:
-            ADD_SHELTER_SERVICE = T("Add Shelter Service")
+            ADD_SHELTER_SERVICE = T("Create Shelter Service")
             SHELTER_SERVICE_LABEL = T("Shelter Service")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_SERVICE,
+                label_create = ADD_SHELTER_SERVICE,
                 title_display = T("Shelter Service Details"),
                 title_list = T("Shelter Services"),
                 title_update = T("Edit Shelter Service"),
-                subtitle_create = T("Add New Shelter Service"),
                 label_list_button = T("List Shelter Services"),
-                label_create_button = ADD_SHELTER_SERVICE,
                 msg_record_created = T("Shelter Service added"),
                 msg_record_modified = T("Shelter Service updated"),
                 msg_record_deleted = T("Shelter Service deleted"),
@@ -278,13 +270,11 @@ class S3CampDataModel(S3Model):
             SHELTER_LABEL = T("Camp")
             SHELTER_HELP = T("The Camp this Request is from")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER,
+                label_create = ADD_SHELTER,
                 title_display = T("Camp Details"),
                 title_list = T("Camps"),
                 title_update = T("Edit Camp"),
-                subtitle_create = T("Add New Camp"),
                 label_list_button = T("List Camps"),
-                label_create_button = ADD_SHELTER,
                 msg_record_created = T("Camp added"),
                 msg_record_modified = T("Camp updated"),
                 msg_record_deleted = T("Camp deleted"),
@@ -293,17 +283,15 @@ class S3CampDataModel(S3Model):
                 name_nice_plural = T("Camps"))
 
         else:
-            ADD_SHELTER = T("Add Shelter")
+            ADD_SHELTER = T("Create Shelter")
             SHELTER_LABEL = T("Shelter")
             SHELTER_HELP = T("The Shelter this Request is from")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER,
+                label_create = ADD_SHELTER,
                 title_display = T("Shelter Details"),
                 title_list = T("Shelters"),
                 title_update = T("Edit Shelter"),
-                subtitle_create = T("Add New Shelter"),
                 label_list_button = T("List Shelters"),
-                label_create_button = ADD_SHELTER,
                 msg_record_created = T("Shelter added"),
                 msg_record_modified = T("Shelter updated"),
                 msg_record_deleted = T("Shelter deleted"),
@@ -457,13 +445,11 @@ class S3CampDataModel(S3Model):
             ADD_SHELTER_STATUS = T("Add Camp Status")
             SHELTER_STATUS_LABEL = T("Camp Status")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_STATUS,
+                label_create = ADD_SHELTER_STATUS,
                 title_display = T("Camp Status Details"),
                 title_list = T("Camp Statuses"),
                 title_update = T("Edit Camp Status"),
-                subtitle_create = T("Add New Camp Status"),
                 label_list_button = T("List Camp Statuses"),
-                label_create_button = ADD_SHELTER_STATUS,
                 msg_record_created = T("Camp Status added"),
                 msg_record_modified = T("Camp Status updated"),
                 msg_record_deleted = T("Camp Status deleted"),
@@ -471,16 +457,14 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Camp Status"),
                 name_nice_plural = T("Camp Statuses"))
         else:
-            ADD_SHELTER_STATUS = T("Add Shelter Status")
+            ADD_SHELTER_STATUS = T("Create Shelter Status")
             SHELTER_STATUS_LABEL = T("Shelter Status")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_STATUS,
+                label_create = ADD_SHELTER_STATUS,
                 title_display = T("Shelter Status Details"),
                 title_list = T("Shelter Statuses"),
                 title_update = T("Edit Shelter Status"),
-                subtitle_create = T("Add New Shelter Status"),
                 label_list_button = T("List Shelter Statuses"),
-                label_create_button = ADD_SHELTER_STATUS,
                 msg_record_created = T("Shelter Status added"),
                 msg_record_modified = T("Shelter Status updated"),
                 msg_record_deleted = T("Shelter Status deleted"),

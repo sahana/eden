@@ -338,17 +338,15 @@ class S3IRSModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
         # CRUD strings
-        ADD_INC_REPORT = T("Add Incident Report")
+        ADD_INC_REPORT = T("Create Incident Report")
         crud_strings[tablename] = Storage(
-            title_create = ADD_INC_REPORT,
+            label_create = ADD_INC_REPORT,
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
             title_upload = T("Import Incident Reports"),
             title_map = T("Map of Incident Reports"),
-            subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
-            label_create_button = ADD_INC_REPORT,
             label_delete_button = T("Delete Incident Report"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
@@ -1258,7 +1256,7 @@ def irs_rheader(r, tabs=[]):
             #                          args="create",
             #                          vars={"format":"popup",
             #                                "caller":"irs_ireport"}),
-            #                _title=T("Add Task"))
+            #                _title=T("Create Task"))
             rheader = DIV(TABLE(
                             TR(
                                 TH("%s: " % table.name.label), report.name,

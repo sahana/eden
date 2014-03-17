@@ -393,7 +393,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             if native and not listadd and \
                s3_has_permission("create", tablename):
                 label = s3base.S3CRUD.crud_string(tablename,
-                                                  "label_create_button")
+                                                  "label_create")
                 hook = r.resource.components[name]
                 fkey = "%s.%s" % (name, hook.fkey)
                 vars = request.vars.copy()
