@@ -349,7 +349,7 @@ class S3Importer(S3Method):
                                      user_id=current.session.auth.user.id
                                      )
         else:
-            title=self.uploadTitle
+            title = self.uploadTitle
             form = self._upload_form(r, **attr)
 
             r = self.request

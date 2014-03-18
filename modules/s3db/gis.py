@@ -253,9 +253,8 @@ class S3LocationModel(S3Model):
                                               orderby="gis_location.name"))
 
         # CRUD Strings
-        ADD_LOCATION = messages.ADD_LOCATION
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_LOCATION,
+            label_create = messages.ADD_LOCATION,
             title_display = T("Location Details"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),

@@ -72,6 +72,7 @@ settings.ui.formstyle = "bootstrap"
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
     # Only needed to import the l10n names
+    ("ky", "Kyrgyz"),
     ("ru", "Russian"),
 ])
 # Default Language

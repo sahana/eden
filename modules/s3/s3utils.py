@@ -171,14 +171,14 @@ def s3_validate(table, field, value, record=None):
 
         try:
             v = record[field]
-        except KeyError:
+        except: # KeyError is now AttributeError
             v = None
         if v and v == value:
             return default
 
         try:
             self_id = record[table._id]
-        except KeyError:
+        except: # KeyError is now AttributeError
             pass
 
     requires = field.requires
