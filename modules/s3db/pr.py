@@ -910,7 +910,7 @@ class S3PersonModel(S3Model):
                                     represent = person_represent,
                                     label = T("Person"),
                                     comment = person_id_comment,
-                                    ondelete = "RESTRICT",
+                                    ondelete = "CASCADE",
                                     widget = S3PersonAutocompleteWidget())
 
         # Custom Methods for S3PersonAutocompleteWidget and S3AddPersonWidget2

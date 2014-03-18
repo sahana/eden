@@ -69,7 +69,32 @@ def shelter():
     def prep(r):
         # Location Filter
         s3db.gis_location_filter(r)
-        
+
+        if r.id:
+            rtable = current.db.cr_shelter_registration
+    
+            # How many people are registered for day and night?
+            query = (rtable.shelter_id == r.id) & \
+                     (rtable.day_or_night == 2) & \
+                     (rtable.registration_status != 3) & \
+                     (rtable.deleted != True)
+            population_day = current.db(query).count()
+
+            # How many people are registered for night only
+            query = (rtable.shelter_id == r.id) & \
+                     (rtable.day_or_night == 1) & \
+                     (rtable.registration_status != 3) & \
+                     (rtable.deleted != True)
+            population_night = current.db(query).count()
+    
+            # Update the value in the cr_shelter_table
+            db(table.id == r.id).update(population_day=population_day)
+            db(table.id == r.id).update(population_night=population_night)
+
+        if r.method == "create":
+            table.population_day.readable = False
+            table.population_night.readable = False
+
         if r.method == "import":
             table.organisation_id.default = None
 
@@ -217,6 +242,18 @@ def shelter():
                         msg_record_deleted = T("Registration entry deleted"),
                         msg_list_empty = T("No people currently registered in this shelter")
                     )
+
+                    # Show a non blocking warning in case the people in the shelter are more than its capacity
+                    if not r.method:
+                        cap_day = current.db(r.table.id == r.id).select(r.table.capacity_day).first().capacity_day
+                        pop_day = current.db(r.table.id == r.id).select(r.table.population_day).first().population_day
+                        if (cap_day is not None) and (pop_day > cap_day):
+                            current.response.error = T("Warning: this shelter is full for daytime")
+
+                        cap_night = current.db(r.table.id == r.id).select(r.table.capacity_night).first().capacity_night
+                        pop_night = current.db(r.table.id == r.id).select(r.table.population_night).first().population_night
+                        if (cap_night is not None) and (pop_night > cap_night):
+                            current.response.error = T("Warning: this shelter is full for the night")
 
                 elif r.component.name == "req":
                     if r.method != "update" and r.method != "read":
