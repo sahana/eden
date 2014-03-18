@@ -154,7 +154,7 @@ settings.L10n.decimal_separator = "."
 # Default Country Code for telephone numbers
 #settings.L10n.default_country_code = 1
 # Make last name in person/user records mandatory
-settings.L10n.mandatory_lastname = True
+#settings.L10n.mandatory_lastname = True
 # Configure the list of Religions
 settings.L10n.religions = {"christian": T("Christian"),
                            "muslim": T("Muslim"),

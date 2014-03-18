@@ -70,6 +70,10 @@ def person():
         pdtable.skin_marks.writable = pdtable.skin_marks.readable = False
         pdtable.medical_conditions.writable = pdtable.medical_conditions.readable = False
         
+        # Set mandatory fields
+        table.last_name.requires = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
+        table.date_of_birth.requires = IS_NOT_EMPTY(error_message = T("Please enter a date of birth"))
+        
         # This set is suitable for Italy
         evr_ethnicity_opts = {1: T("Italian"),
                               2: T("Chinese"),
