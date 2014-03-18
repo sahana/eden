@@ -329,7 +329,7 @@ class S3DeploymentModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("New Mission"),
+            label_create = T("Create Mission"),
             title_display = T("Mission"),
             title_list = T("Missions"),
             title_update = T("Edit Mission Details"),

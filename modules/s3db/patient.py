@@ -101,9 +101,8 @@ class S3PatientModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_PATIENT = T("New Patient")
         crud_strings[tablename] = Storage(
-            label_create = ADD_PATIENT,
+            label_create = T("Add New Patient"),
             title_display = T("Patient Details"),
             title_list = T("Patients"),
             title_update = T("Edit Patient"),
@@ -216,9 +215,8 @@ class S3PatientModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_HOME = T("New Home")
         crud_strings[tablename] = Storage(
-            label_create = ADD_HOME,
+            label_create = T("Add New Home"),
             title_display = T("Home Details"),
             title_list = T("Homes"),
             title_update = T("Edit Home"),

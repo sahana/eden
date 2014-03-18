@@ -423,7 +423,6 @@
 'Create Organization Type': 'Create Organization Type',
 'Add New Output': 'Add New Output',
 'Add New Participant': 'Add New Participant',
-'Add new Patient': 'Add new Patient',
 'Add New Patient': 'Add New Patient',
 'Add New People': 'Add New People',
 'Create Person to Commitment': 'Create Person to Commitment',

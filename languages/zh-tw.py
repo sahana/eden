@@ -300,7 +300,7 @@
 'Create Office': '新增新辦公室',
 'Create Organization': '新增組織',
 'Add New Partner': '新增夥伴',
-'Add new Patient': '新增病人',
+'Add New Patient': '新增病人',
 'Add New Peer': '新增同層級',
 'Add new person.': '新增人員。',
 'Create Photo': '新增新的照片',

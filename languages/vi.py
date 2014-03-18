@@ -142,7 +142,7 @@
 'Add Demographic Data': 'Thêm số liệu dân số',
 'Add Demographic Source': 'Thêm nguồn thông tin dân số',
 'Create Department': 'Thêm phòng/ban',
-'Add Disaster Assessments': 'Thêm báo cáo đánh giá thảm họa',
+'Create Disaster Assessment': 'Thêm báo cáo đánh giá thảm họa',
 'Add Distribution': 'Thêm thông tin hàng hóa đóng góp',
 'Add Donor': 'Thêm tên người quyên góp vào danh sách',
 'Add Education': 'Thêm trình độ học vấn',

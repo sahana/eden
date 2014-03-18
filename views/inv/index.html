@@ -44,26 +44,26 @@
 <div class='col2left'>
 <h4>{{=T("Orders") if settings.get_inv_shipment_name() == "order" else T("Receive/Incoming")}}</h4>
 <ul>
-  <li><a href='{{=URL(c="inv", f="recv", args="create")}}'>{{=T("Add")}}</a>
+  <li><a href='{{=URL(c="inv", f="recv", args="create")}}'>{{=T("Create")}}</a>
   <li><a href='{{=URL(c="inv", f="recv")}}'>{{=T("Search")}}</a>
 </ul>
 </div>
 <div class='col2right'>
 <h4>{{=T("Sent")}}</h4>
 <ul>
-  <li><a href='{{=URL(c="inv", f="send", args="create")}}'>{{=T("New")}}</a>
+  <li><a href='{{=URL(c="inv", f="send", args="create")}}'>{{=T("Create")}}</a>
   <li><a href='{{=URL(c="inv", f="send")}}'>{{=T("Search")}}</a>
 </div>
 <div class='col2left'>
 <h3>{{=T("Items")}}:</h3>
 <ul>
-  <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("New")}}</a>
+  <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("Create")}}</a>
   <li><a href='{{=URL(c="supply", f="item")}}'>{{=T("Search")}}</a>
       {{try:}}{{=XML(supply_items)}}{{except:}}{{pass}}
 </ul>
 <h4>{{=T("Catalogs")}}</h4>
 <ul>
-  <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("New")}}</a>
+  <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("Create")}}</a>
   <li><a href='{{=URL(c="supply", f="item")}}'>{{=T("List All")}}</a>
 </ul>
 </div>
@@ -71,7 +71,7 @@
 <div class='col2right'>
 <h3>{{=T("Item Categories")}}:</h3>
 <ul>
-  <li><a href='{{=URL(c="supply", f="item_category", args="create")}}'>{{=T("New")}}</a>
+  <li><a href='{{=URL(c="supply", f="item_category", args="create")}}'>{{=T("Create")}}</a>
   <li><a href='{{=URL(c="supply", f="item_category")}}'>{{=T("List All")}}</a>
 </ul>
 </div>
