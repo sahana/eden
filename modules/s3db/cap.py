@@ -310,6 +310,11 @@ class S3CAPModel(S3Model):
                                    requires=IS_IN_SET(cap_incident_type_opts,
                                                       multiple=True),
                                    represent = self.list_string_represent),
+                             Field("previously_selected_incidents",
+                                   label = T("Previously Selected Incidents"),
+                                   requires=IS_IN_SET(cap_incident_type_opts,
+                                                      multiple=True),
+                                   represent = self.list_string_represent),
                              *s3_meta_fields())
 
         filter_widgets = [

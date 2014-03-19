@@ -85,6 +85,34 @@ def alert():
     """ REST controller for CAP alerts """
 
     def prep(r):
+    	
+    	tab = db.cap_alert
+        prev_incidents = None
+        field = tab['previously_selected_incidents']
+        field.readable = False
+        field.writable = False
+        if len(r.args)==2 and r.args[1]=='update':
+            template_id = r.args[0]
+            rows = db(db.cap_alert.incidents!=None).select()
+            for row in rows:
+                if int(template_id)==row.id:
+                    prev_incidents = row.incidents
+                    prev_incidents = prev_incidents.split('|')
+                    p=[]
+                    for i in prev_incidents:
+                        if i!='':
+                            p.append(i)
+                    prev_incidents = p
+
+            myset = db(db.cap_alert.id == template_id)
+            myset.update(previously_selected_incidents = prev_incidents)
+            field.readable = True
+            field.writable = False
+            field.required = None
+        else:
+            field.readable = False
+            field.writable = False
+    	
         if r.id and s3db.cap_alert_is_template(r.id):
             redirect(URL(c="cap", f="template",
                          args=request.args,
@@ -204,6 +232,44 @@ def template():
 
     def prep(r):
         atable = db.cap_alert
+        arguments = r.args
+        prev_incidents = None
+        template_id = None
+        perform = None
+        if len(arguments)==1:
+        	perform = arguments[0]
+        elif len(arguments)==2:
+  			perform = arguments[1]
+  			template_id = int(arguments[0])
+        field = atable['previously_selected_incidents']
+        if perform!='create' and perform!='delete' and perform!='read':
+          if perform=='update':
+            if template_id!=None:
+    					rows = db(db.cap_alert.incidents!=None).select()
+    					for row in rows:
+    						if template_id==row.id:
+    							prev_incidents = row.incidents
+    							prev_incidents = prev_incidents.split('|')
+    							p=[]
+    							for i in prev_incidents:
+    								if i!='':
+    									p.append(i)
+    							prev_incidents = p
+    					field.readable = True
+    					field.writable = False
+    					field.required = None
+    					myset = db(db.cap_alert.id == template_id)
+    					myset.update(previously_selected_incidents = prev_incidents)
+            else:
+    					field.readable = False
+    					field.writable = False
+        else:
+    			field.readable = False
+    			field.writable = False
+        if len(r.args)==0:
+    			field.readable = False
+    			field.writable = False
+			
         for f in ["identifier", "msg_type"]:
             field = atable[f]
             field.writable = False
