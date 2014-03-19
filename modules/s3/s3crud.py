@@ -1353,14 +1353,17 @@ class S3CRUD(S3Method):
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
                     datatable = ""
-            else:
-                dtargs["dt_pagination"] = dt_pagination
-                dtargs["dt_displayLength"] = display_length
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                datatable = dt.html(totalrows,
-                                    displayrows,
-                                    id=list_id,
-                                    **dtargs)
+            #else:
+
+            # Always show the table (otherwise can't Ajax-update)
+            # @todo: ability to override the default empty-text
+            dtargs["dt_pagination"] = dt_pagination
+            dtargs["dt_displayLength"] = display_length
+            dtargs["dt_base_url"] = r.url(method="", vars={})
+            datatable = dt.html(totalrows,
+                                displayrows,
+                                id=list_id,
+                                **dtargs)
 
             # View + data
             response.view = self._view(r, "list_filter.html")

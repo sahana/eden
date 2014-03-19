@@ -56,54 +56,25 @@ def shelter():
 
     table = s3db.cr_shelter
 
-    # Access Presence from Shelters for Check-In/Check-Out
-    s3db.add_components("cr_shelter", pr_presence="shelter_id")
+    # Filter to open shelters by default (status=2)
+    s3base.s3_set_default_filter("~.status", [2, None], tablename = "cr_shelter")
 
     s3db.configure("cr_shelter",
                    # Go to People check-in for this shelter after creation
                    create_next = URL(c="cr", f="shelter",
-                                     args=["[id]", "presence"]))
+                                     args=["[id]", "shelter_registration"]))
 
     # Pre-processor
     def prep(r):
         # Location Filter
         s3db.gis_location_filter(r)
-        
+
+        if r.method == "create":
+            table.population_day.readable = False
+            table.population_night.readable = False
+
         if r.method == "import":
             table.organisation_id.default = None
-
-        if r.component and r.component.name == "presence":
-            prtable = s3db.pr_presence
-            pe_id = prtable.pe_id
-            pe_represent = s3db.pr_PersonEntityRepresent(show_label=True)
-            pe_id.represent = pe_represent
-            pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                       pe_represent,
-                                       filterby="instance_type",
-                                       orderby="instance_type",
-                                       filter_opts=("pr_person",
-                                                    "pr_group"))
-            if r.interactive:
-                gtable = s3db.pr_group
-                add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create")
-                if settings.get_ui_label_camp():
-                    REGISTER_LABEL = T("Register Person into this Camp")
-                    EMPTY_LIST = T("No People currently registered in this camp")
-                else:
-                    REGISTER_LABEL = T("Register Person into this Shelter")
-                    EMPTY_LIST = T("No People currently registered in this shelter")
-                pe_id.label = T("Person/Group")
-                pe_id.widget = S3PentityAutocompleteWidget("pr", "pentity")
-                pe_id.comment = \
-                    DIV(s3db.pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
-                        S3AddResourceLink(c="pr",
-                                          f="group",
-                                          vars = {"child": "pe_id"},
-                                          title=add_group_label,
-                                          tooltip=T("Create a group entry in the registry."))
-                       )
-                pe_id.readable = pe_id.writable = True
-            r.resource.add_filter(prtable.closed == False)
 
         if r.interactive:
             if r.id:
@@ -127,78 +98,32 @@ def shelter():
                     staff_id = auth.s3_logged_in_human_resource()
                     if staff_id:
                         db.assess_rat.staff_id.default = staff_id.id
-
-                elif r.component.name == "presence":
-                    field = prtable.shelter_id
-                    represent = s3base.S3Represent(lookup="cr_shelter")
-                    field.requires = IS_NULL_OR(IS_ONE_OF(db, "cr_shelter.id",
-                                                          represent,
-                                                          sort=True))
-                    field.represent = represent
-                    field.ondelete = "RESTRICT"
-                    if settings.get_ui_label_camp():
-                        HELP = T("The Camp this person is checking into.")
-                    else:
-                        HELP = T("The Shelter this person is checking into.")
-                    ADD_SHELTER = s3.ADD_SHELTER
-                    SHELTER_LABEL = s3.SHELTER_LABEL
-                    field.comment = S3AddResourceLink(c="cr",
-                                                      f="shelter",
-                                                      title=ADD_SHELTER,
-                                                      tooltip=HELP)
-                    field.label = SHELTER_LABEL
-                    field.readable = True
-                    field.writable = True
-
-                    # Make Persons a component of Presence to add to list_fields
-                    s3db.add_components("pr_presence",
-                                        pr_person={"joinby": "pe_id",
-                                                   "pkey": "pe_id",
-                                                  },
-                                        )
-
-                    s3db.configure("pr_presence",
-                                   # presence not deletable in this view! (need to register a check-out
-                                   # for the same person instead):
-                                   deletable=False,
-                                   list_fields=["id",
-                                                "pe_id",
-                                                "datetime",
-                                                "presence_condition",
-                                                #"proc_desc",
-                                                "person.age_group",
-                                                ])
-
-                    # Hide the Implied fields
-                    lfield = prtable.location_id
-                    lfield.writable = False
-                    lfield.default = r.record.location_id
-                    lfield.comment = ""
-                    prtable.proc_desc.readable = prtable.proc_desc.writable = False
-                    # Set defaults
-                    #prtable.datetime.default = request.utcnow
-                    #prtable.observer.default = s3_logged_in_person()
-                    popts = s3.pr_presence_opts
-                    pcnds = s3.pr_presence_conditions
-                    cr_shelter_presence_opts = {
-                        popts.CHECK_IN: pcnds[popts.CHECK_IN],
-                        popts.CHECK_OUT: pcnds[popts.CHECK_OUT]
-                    }
-                    prtable.presence_condition.requires = IS_IN_SET(
-                        cr_shelter_presence_opts, zero=None)
-                    prtable.presence_condition.default = popts.CHECK_IN
-                    # Change the Labels
-                    s3.crud_strings.pr_presence = Storage(
-                        label_create = T("Register Person"),
+                    
+                elif r.component.name == "shelter_registration":
+                    s3.crud_strings.cr_shelter_registration = Storage(
+                        title_create = T("Register Person"),
                         title_display = T("Registration Details"),
                         title_list = T("Registered People"),
                         title_update = T("Edit Registration"),
+                        subtitle_create = T("Register person to this shelter"),
                         label_list_button = T("List Registrations"),
                         msg_record_created = T("Registration added"),
                         msg_record_modified = T("Registration updated"),
                         msg_record_deleted = T("Registration entry deleted"),
-                        msg_list_empty = EMPTY_LIST
+                        msg_list_empty = T("No people currently registered in this shelter")
                     )
+
+                    # Show a non blocking warning in case the people in the shelter are more than its capacity
+                    if not r.method:
+                        cap_day = current.db(r.table.id == r.id).select(r.table.capacity_day).first().capacity_day
+                        pop_day = current.db(r.table.id == r.id).select(r.table.population_day).first().population_day
+                        if (cap_day is not None) and (pop_day > cap_day):
+                            current.response.warning = T("Warning: this shelter is full for daytime")
+
+                        cap_night = current.db(r.table.id == r.id).select(r.table.capacity_night).first().capacity_night
+                        pop_night = current.db(r.table.id == r.id).select(r.table.population_night).first().population_night
+                        if (cap_night is not None) and (pop_night > cap_night):
+                            current.response.warning = T("Warning: this shelter is full for the night")
 
                 elif r.component.name == "req":
                     if r.method != "update" and r.method != "read":

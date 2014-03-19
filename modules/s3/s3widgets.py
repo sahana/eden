@@ -4670,7 +4670,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
     def __init__(self,
                  filter = True,
-                 header = True,
+                 header = False,
                  selectedList = 3,
                  noneSelectedText = "Select"
                  ):
@@ -4720,7 +4720,8 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         # Filter and header for multiselect options list
         filter_opt = self.filter
         header_opt = self.header
-        if filter_opt == "auto" or isinstance(filter_opt, (int, long)):
+        if filter_opt and \
+           (filter_opt == "auto" or isinstance(filter_opt, (int, long))):
             max_options = 15 if filter_opt == "auto" else filter_opt
             if len(widget[0]) > max_options:
                 filter_opt = True

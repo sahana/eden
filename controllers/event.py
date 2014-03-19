@@ -156,6 +156,7 @@ def event_rheader(r):
             tabs = [(T("Event Details"), None)]
             #if settings.has_module("req"):
             #    tabs.append((T("Requests"), "req"))
+            tabs.append((T("Associated Shelters"), "event_shelter"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             event = r.record
