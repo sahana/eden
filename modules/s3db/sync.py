@@ -131,6 +131,7 @@ class SyncDataModel(S3Model):
         sync_repository_types = {
             "eden": "Sahana Eden",
             "ccrm": "CiviCRM",
+            "wrike": "Wrike",
         }
 
         tablename = "sync_repository"
