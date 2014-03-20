@@ -2103,17 +2103,16 @@ class S3FilterForm(object):
                     continue
                 if not isinstance(default, (list, type(None))):
                     default = [default]
-                filter_widget.values[variable] = default
-                default_filters[variable] = ",".join(s3_unicode(v) for v in default)
+                filter_widget.values[variable] = [str(v) if v is None else v
+                                                  for v in default]
+                default_filters[variable] = ",".join(s3_unicode(v)
+                                                     for v in default)
 
             # @todo: make sure the applied default options are available in
             #        the filter widget - otherwise the user can not deselect
             #        them! (critical) Maybe enforce this by adding the default
             #        values to the available options in S3OptionsFilter and
             #        S3LocationFilter?
-
-            # Store in widget
-            filter_widget.values.update(default_filters)
 
             # Apply to resource
             queries = S3URLQuery.parse(resource, default_filters)
