@@ -904,7 +904,7 @@ class S3PersonModel(S3Model):
                                     represent = person_represent,
                                     label = T("Person"),
                                     comment = person_id_comment,
-                                    ondelete = "CASCADE",
+                                    ondelete = "RESTRICT",
                                     widget = S3PersonAutocompleteWidget())
 
         # Custom Methods for S3PersonAutocompleteWidget and S3AddPersonWidget2
@@ -3796,14 +3796,7 @@ class S3PersonDescription(S3Model):
                            label = T("Complexion"),
                            represent = lambda opt: \
                                        pr_complexion_opts.get(opt, UNKNOWN_OPT)),
-                     Field("ethnicity_opts", "integer",
-                           #requires=IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
-                           readable=False,
-                           writable=False,
-                           label = T("Ethnicity"),
-                           #represent = lambda opt: \
-                           #             pr_ethnicity_opts.get(opt, UNKNOWN_OPT)
-                           ),
+                     # @todo: have an option list in the ethnicity field
                      Field("ethnicity", length=64, # Mayon Compatibility
                            #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
                            #readable=False,

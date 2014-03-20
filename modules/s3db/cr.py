@@ -741,6 +741,7 @@ class S3ShelterRegistrationModel(S3Model):
                           # The comment explains how to register a new person
                           # it should not be done in a popup
                           self.pr_person_id(
+                              ondelete="CASCADE",
                               comment=DIV(_class="tooltip",
                                           _title="%s|%s" % (T("Person"),
                                                             T("Type the name of a registered person \

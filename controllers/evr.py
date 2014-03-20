@@ -75,23 +75,24 @@ def person():
         table.date_of_birth.requires = IS_NOT_EMPTY(error_message = T("Please enter a date of birth"))
         
         # This set is suitable for Italy
-        evr_ethnicity_opts = {1: T("Italian"),
-                              2: T("Chinese"),
-                              3: T("Albanese"),
-                              4: T("Philippine"),
-                              5: T("Pakistani"),
-                              6: T("English"),
-                              7: T("African"),
-                              8: T("Other"),
-                              9: T("Unknown")
-                              }
-        pdtable.ethnicity_opts.writable = pdtable.ethnicity_opts.readable = True
-        pdtable.ethnicity_opts.requires = IS_EMPTY_OR(IS_IN_SET(evr_ethnicity_opts))
-        pdtable.ethnicity_opts.represent = lambda opt: \
-                                               evr_ethnicity_opts.get(
-                                                    opt,
-                                                    current.messages.UNKNOWN_OPT)
-        pdtable.ethnicity.label = T("Ethnicity comments")
+        # @todo: enable a select for ethnicity_opts
+#         evr_ethnicity_opts = {1: T("Italian"),
+#                               2: T("Chinese"),
+#                               3: T("Albanese"),
+#                               4: T("Philippine"),
+#                               5: T("Pakistani"),
+#                               6: T("English"),
+#                               7: T("African"),
+#                               8: T("Other"),
+#                               9: T("Unknown")
+#                               }
+#         pdtable.ethnicity_opts.writable = pdtable.ethnicity_opts.readable = True
+#         pdtable.ethnicity_opts.requires = IS_EMPTY_OR(IS_IN_SET(evr_ethnicity_opts))
+#         pdtable.ethnicity_opts.represent = lambda opt: \
+#                                                evr_ethnicity_opts.get(
+#                                                     opt,
+#                                                     current.messages.UNKNOWN_OPT)
+#         pdtable.ethnicity.label = T("Ethnicity comments")
         
         # Enable place of birth
         s3db.pr_person_details.place_of_birth.writable = True

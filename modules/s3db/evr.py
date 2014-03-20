@@ -51,7 +51,7 @@ class S3EVRCaseModel(S3Model):
         #
         tablename = "evr_case"
         self.define_table(tablename,
-                          self.pr_person_id(),
+                          self.pr_person_id(ondelete="CASCADE"),
                           Field("fiscal_code", "string",
                                 length=16,
                                 label=T("Fiscal Code"),
