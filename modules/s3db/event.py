@@ -42,6 +42,7 @@ __all__ = ["S3EventModel",
            #"S3EventRequestModel",
            "S3EventSiteModel",
            "S3EventTaskModel",
+           "S3EventShelterModel",
            ]
 
 from gluon import *
@@ -221,11 +222,12 @@ class S3EventModel(S3Model):
                                      "key": "location_id",
                                      "actuate": "hide",
                                     },
-                        event_event_location="event_id",
-                        req_req="event_id",
-                        event_event_tag={"name": "tag",
-                                         "joinby": "event_id",
+                       event_event_location="event_id",
+                       req_req="event_id",
+                       event_event_tag={"name": "tag",
+                                        "joinby": "event_id",
                                         },
+                       event_event_shelter="event_id"
                        )
 
         # ---------------------------------------------------------------------
@@ -479,7 +481,7 @@ class S3IncidentModel(S3Model):
                                                               sort=True)),
                                       represent = represent,
                                       label = T("Incident"),
-                                      ondelete = "RESTRICT",
+                                      ondelete = "CASCADE",
                                       # Uncomment these to use an Autocomplete & not a Dropdown
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",
@@ -1210,6 +1212,58 @@ class S3EventTaskModel(S3Model):
             msg_record_deleted = T("Task removed"),
             msg_list_empty = T("No Tasks currently registered in this incident"))
 
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
+class S3EventShelterModel(S3Model):
+    """
+        Link Shelters to Events
+    """
+
+    names = ["event_event_shelter"]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Shelters
+        #   Link table for cr_shelter <> event_event
+        tablename = "event_event_shelter"
+        self.define_table(tablename,
+                          self.event_event_id(),
+                          self.cr_shelter_id(),
+                          *s3_meta_fields()
+                          )
+
+        if current.request.function == "event":
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Shelter"),
+                title_display = T("Shelter Details"),
+                title_list = T("Shelters"),
+                title_update = T("Edit Shelter"),
+                label_list_button = T("List Shelters"),
+                label_delete_button = T("Remove Shelter for this Event"),
+                msg_record_created = T("Shelter added"),
+                msg_record_modified = T("Shelter updated"),
+                msg_record_deleted = T("Shelter removed"),
+                msg_list_empty = T("No Shelters currently tagged to this event")
+                )
+
+        elif current.request.function == "shelter":
+            current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Associate Event"),
+                title_display = T("Event Details"),
+                title_list = T("Events"),
+                title_update = T("Edit Event"),
+                label_list_button = T("List Events"),
+                label_delete_button = T("Remove Event for this Shelter"),
+                msg_record_created = T("Event added"),
+                msg_record_modified = T("Event updated"),
+                msg_record_deleted = T("Event removed"),
+                msg_list_empty = T("No Events currently tagged to this Shelter")
+                )
         # Pass names back to global scope (s3.*)
         return dict()
 

@@ -959,6 +959,25 @@ class S3PersonModel(S3Model):
                                            },
                        # Assets
                        asset_asset="assigned_to_id",
+
+                       # Evacuee Registry
+                       evr_case={"joinby": "person_id",
+                                 "multiple": False,
+                                },
+                       evr_medical_details={"joinby": "person_id",
+                                            "multiple": False,
+                                           },
+                       evr_background={"joinby": "person_id",
+                                       "multiple": False,
+                                      },
+                       
+                       # Shelter (Camp) Registry
+                       cr_shelter_registration={"joinby": "person_id",
+                                                # A person can be assigned to only one shelter
+                                                # @todo: when fully implemented this needs to allow
+                                                # multiple instances for tracking reasons
+                                                "multiple": False,
+                                                },
                       )
 
         # ---------------------------------------------------------------------
@@ -1483,11 +1502,18 @@ class S3GroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Group
         #
+        #TODO: move 6,7,8,9,10,11 into EVASS template
         pr_group_types = {1 : T("Family"),
                           2 : T("Tourist Group"),
                           3 : T("Relief Team"),
                           4 : T("other"),
                           5 : T("Mailing Lists"),
+                          6 : T("Society"),
+                          7 : T("Company"),
+                          8 : T("Orphanage"),
+                          9 : T("Convent"),
+                          10 : T("Hotel"),
+                          11 : T("Hospital")
                           }
 
         tablename = "pr_group"
@@ -1568,7 +1594,7 @@ class S3GroupModel(S3Model):
         represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    sortby = "name",
-                                   comment = S3AddResourceLink(#c="pr",
+                                   comment = S3AddResourceLink(c="pr",
                                                                f="group",
                                                                label=add_label,
                                                                title=title,
@@ -1586,6 +1612,14 @@ class S3GroupModel(S3Model):
         # Components
         self.add_components(tablename,
                             pr_group_membership="group_id",
+                            
+                            # Shelter (Camp) Registry
+                            cr_shelter_allocation={"joinby": "group_id",
+                                                    # A group can be assigned to only one shelter
+                                                    # @todo: when fully implemented this needs to allow
+                                                    # multiple instances for tracking reasons
+                                                    "multiple": False,
+                                                    },
                             )
 
         # ---------------------------------------------------------------------
@@ -3762,6 +3796,7 @@ class S3PersonDescription(S3Model):
                            label = T("Complexion"),
                            represent = lambda opt: \
                                        pr_complexion_opts.get(opt, UNKNOWN_OPT)),
+                     # @todo: have an option list in the ethnicity field
                      Field("ethnicity", length=64, # Mayon Compatibility
                            #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
                            #readable=False,

@@ -2103,7 +2103,8 @@ class S3FilterForm(object):
                     continue
                 if not isinstance(default, (list, type(None))):
                     default = [default]
-                filter_widget.values[variable] = default
+                filter_widget.values[variable] = [str(v) if v is None else v
+                                                  for v in default]
                 default_filters[variable] = ",".join(s3_unicode(v) for v in default)
 
             # @todo: make sure the applied default options are available in
@@ -2113,7 +2114,7 @@ class S3FilterForm(object):
             #        S3LocationFilter?
 
             # Store in widget
-            filter_widget.values.update(default_filters)
+            #filter_widget.values.update(default_filters)
 
             # Apply to resource
             queries = S3URLQuery.parse(resource, default_filters)

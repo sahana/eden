@@ -65,6 +65,7 @@ class S3Config(Storage):
         self.cms = Storage()
         self.database = Storage()
         self.deploy = Storage()
+        self.ev = Storage()
         self.fin = Storage()
         # @ToDo: Move to self.ui
         self.frontpage = Storage()
@@ -619,7 +620,7 @@ class S3Config(Storage):
             from gluon import HTTP
             raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
         return (db_string, pool_size)
-
+    
     # -------------------------------------------------------------------------
     # Finance settings
     # @ToDo: Make these customisable per Organisation
