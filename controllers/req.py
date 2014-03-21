@@ -1279,16 +1279,16 @@ def commit_req():
     citable = s3db.req_commit_item
     for req_item in req_items:
         req_item_quantity = req_item.req_req_item.quantity * \
-                            req_item.req_req_item.pack_quantity
+                            req_item.req_req_item.pack_quantity()
 
         inv_item_quantity = req_item.inv_inv_item.quantity * \
-                            req_item.inv_inv_item.pack_quantity
+                            req_item.inv_inv_item.pack_quantity()
 
         if inv_item_quantity > req_item_quantity:
             commit_item_quantity = req_item_quantity
         else:
             commit_item_quantity = inv_item_quantity
-        commit_item_quantity = commit_item_quantity / req_item.req_req_item.pack_quantity
+        commit_item_quantity = commit_item_quantity / req_item.req_req_item.pack_quantity()
 
         if commit_item_quantity:
             req_item_id = req_item.req_req_item.id
