@@ -651,20 +651,21 @@ S3OptionsFilter({
 
         # ---------------------------------------------------------------------
         # Reusable Field
+        item_pack_represent = self.item_pack_represent
         item_pack_id = S3ReusableField("item_pack_id", "reference %s" % tablename,
                     sortby="name",
                     # Do not display any packs initially
                     # will be populated by S3OptionsFilter
                     requires = IS_ONE_OF_EMPTY_SELECT(db,
                                          "supply_item_pack.id",
-                                         self.item_pack_represent,
+                                         item_pack_represent,
                                          sort=True,
                                          # @ToDo: Enforce "Required" for imports
                                          # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
                                          # filterby = "item_id",
                                          # filter_opts = [....],
                                          ),
-                    represent = self.item_pack_represent,
+                    represent = item_pack_represent,
                     label = T("Pack"),
                     #comment=S3AddResourceLink(c="supply",
                     #                          f="item_pack",
@@ -833,7 +834,7 @@ S3OptionsFilter({
                     supply_item_category_represent = item_category_represent,
                     supply_item_pack_quantity = SupplyItemPackQuantity,
                     supply_item_add = self.supply_item_add,
-                    supply_item_pack_represent = self.item_pack_represent,
+                    supply_item_pack_represent = item_pack_represent,
                     )
 
     # -------------------------------------------------------------------------

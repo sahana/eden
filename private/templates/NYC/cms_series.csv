@@ -1,2 +1,3 @@
 Name,Avatar,Location,Replies,Comments
 News,Y,Y,N,Default for News Feed
+Request,Y,Y,N,Parsed from Requests

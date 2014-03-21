@@ -30,7 +30,7 @@
 __all__ = ["S3ContentModel",
            "S3ContentMapModel",
            "S3ContentOrgModel",
-           #"S3ContentOrgGroupModel",
+           "S3ContentOrgGroupModel",
            "S3ContentUserModel",
            "cms_index",
            "cms_rheader",
@@ -62,7 +62,6 @@ class S3ContentModel(S3Model):
              "cms_post",
              "cms_post_id",
              "cms_post_module",
-             #"cms_post_record",
              "cms_tag",
              "cms_tag_post",
              "cms_comment",
@@ -319,15 +318,20 @@ class S3ContentModel(S3Model):
                                 "key": "tag_id",
                                 "actuate": "hide",
                                },
-                               
+
                        # For filter widget
                        cms_post_tag="post_id",
-                       
+
                        cms_post_organisation={"joinby": "post_id",
                                               # @ToDo: deployment_setting
                                               "multiple": False,
-                                             },
-                                             
+                                              },
+
+                       cms_post_organisation_group={"joinby": "post_id",
+                                                    # @ToDo: deployment_setting
+                                                    "multiple": False,
+                                                    },
+
                        # For InlineForm to tag Posts to Events
                        event_event_post="post_id",
 
@@ -370,6 +374,10 @@ class S3ContentModel(S3Model):
                            comment=T("If you specify a resource then this will be used as the text in that resource's summary page"),
                            label=T("Resource")
                            ),
+                     #Field("record",
+                     #      comment=T("If you specify a record then this will be used as a hyperlink to that resource"),
+                     #      label=T("Record")
+                     #      ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -384,18 +392,6 @@ class S3ContentModel(S3Model):
             msg_record_modified = T("Post updated"),
             msg_record_deleted = T("Post removed"),
             msg_list_empty = T("No posts currently set as module/resource homepages"))
-
-        # ---------------------------------------------------------------------
-        # Records <> Posts link table
-        # - used to handle record history
-        #
-        #tablename = "cms_post_record"
-        #define_table(tablename,
-        #             post_id(empty=False),
-        #             Field("tablename"),
-        #             Field("record", "integer"),
-        #             Field("url"),
-        #            *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Tags
@@ -794,8 +790,7 @@ class S3ContentOrgModel(S3Model):
 # =============================================================================
 class S3ContentOrgGroupModel(S3Model):
     """
-        Link Posts to Organisation Groups (Coalitions)
-        - currently unused
+        Link Posts to Organisation Groups (Coalitions/Networks)
     """
 
     names = ["cms_post_organisation_group",
@@ -1088,31 +1083,41 @@ def cms_customize_post_fields():
     s3db = current.s3db
     s3 = current.response.s3
     settings = current.deployment_settings
+    show_events = settings.get_cms_show_events()
 
     # Hide Labels when just 1 column in inline form
     s3db.doc_document.file.label = ""
-    # @ToDo: deployment_setting for Events
-    #s3db.event_event_post.event_id.label = ""
+    if show_events:
+        s3db.event_event_post.event_id.label = ""
 
-    # @ToDo: deployment_setting
-    #org_field = "created_by$organisation_id"
-    #current.auth.settings.table_user.organisation_id.represent = \
-    #    s3db.org_organisation_represent
-    org_field = "post_organisation.organisation_id"
-    s3db.cms_post_organisation.organisation_id.label = ""
+    org_field = settings.get_cms_organisation()
+    if org_field == "created_by$organisation_id":
+        current.auth.settings.table_user.organisation_id.represent = \
+            s3db.org_organisation_represent
+    elif org_field == "post_organisation.organisation_id":
+        s3db.cms_post_organisation.organisation_id.label = ""
+
+    org_group_field = settings.get_cms_organisation_group()
+    if org_group_field == "created_by$org_group_id":
+        current.auth.settings.table_user.org_group_id.represent = \
+            s3db.org_organisation_group_represent
+    elif org_group_field == "post_organisation_group.group_id":
+        s3db.cms_post_organisation_group.group_id.label = ""
 
     table = s3db.cms_post
     table.series_id.requires = table.series_id.requires.other
-    # @ToDo: deployment_setting
-    #contact_field = "created_by"
-    #table.created_by.represent = s3_auth_user_represent_name
-    contact_field = "person_id"
-    field = table.person_id
-    field.readable = True
-    field.writable = True
-    field.comment = None
-    field.requires = IS_ADD_PERSON_WIDGET2()
-    field.widget = S3AddPersonWidget2(controller="pr")
+
+    contact_field = settings.get_cms_person()
+    if contact_field == "created_by":
+        table.created_by.represent = s3_auth_user_represent_name
+    elif contact_field == "person_id":
+        field = table.person_id
+        field.readable = True
+        field.writable = True
+        field.comment = None
+        # Default now
+        #field.requires = IS_ADD_PERSON_WIDGET2()
+        field.widget = S3AddPersonWidget2(controller="pr")
 
     field = table.location_id
     field.label = ""
@@ -1128,12 +1133,26 @@ def cms_customize_post_fields():
     list_fields = ["series_id",
                    "location_id",
                    "date",
-                   "body",
-                   contact_field,
-                   org_field,
-                   "document.file",
-                   #"event_post.event_id",
                    ]
+
+    if settings.get_cms_show_titles():
+        list_fields.append("title")
+
+    list_fields.append("body")
+
+    if contact_field:
+        list_fields.append(contact_field)
+    if org_field:
+        list_fields.append(org_field)
+    if org_group_field:
+        list_fields.append(org_group_field)
+
+    list_fields.append("document.file")
+    if settings.get_cms_show_links():
+        list_fields.append("document.url")
+
+    if show_events:
+        list_fields.append("event_post.event_id")
 
     if settings.get_cms_show_tags():
         list_fields.append("tag.name")
@@ -1184,9 +1203,21 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     record_id = record["cms_post.id"]
     item_class = "thumbnail"
 
-    # @ToDo: deployment_setting or introspect based on list_fields
-    #org_field = "auth_user.organisation_id"
-    org_field = "cms_post_organisation.organisation_id"
+    db = current.db
+    s3db = current.s3db
+    settings = current.deployment_settings
+
+    org_field = settings.get_cms_organisation()
+    if org_field == "created_by$organisation_id":
+        org_field = "auth_user.organisation_id"
+    elif org_field == "post_organisation.organisation_id":
+        org_field = "cms_post_organisation.organisation_id"
+
+    org_group_field = settings.get_cms_organisation_group()
+    if org_group_field == "created_by$org_group_id":
+        org_group_field = "auth_user.org_group_id"
+    elif org_group_field == "post_organisation_group.group_id":
+        org_group_field = "cms_post_organisation_group.group_id"
 
     raw = record._row
     series_id = raw["cms_post.series_id"]
@@ -1205,47 +1236,78 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         location = ""
 
-    person_id = raw["cms_post.person_id"]
-    if person_id:
-        person = record["cms_post.person_id"]
-        person_url = URL(c="pr", f="person", args=[person_id])
+    person = ""
+    contact_field = settings.get_cms_person()
+    if contact_field == "created_by": 
+        author_id = raw["cms_post.created_by"]
+        person = record["cms_post.created_by"]
+
+        # @ToDo: Bulk lookup
+        ltable = s3db.pr_person_user
+        ptable = db.pr_person
+        query = (ltable.user_id == author_id) & \
+                (ltable.pe_id == ptable.pe_id)
+        row = db(query).select(ptable.id,
+                               limitby=(0, 1)
+                               ).first()
+        if row:
+            person_id = row.id
+    elif contact_field == "person_id":
+        person_id = raw["cms_post.person_id"]
+        if person_id:
+            person = record["cms_post.person_id"]
+
+    if person:
+        if person_id:
+            # @ToDo: deployment_setting for controller to use?
+            person_url = URL(c="pr", f="person", args=[person_id])
+        else:
+            person_url = "#"
         person = A(person,
                    _href=person_url,
                    )
-    else:
-        person = ""
 
     avatar = ""
-    db = current.db
 
-    organisation_id = raw[org_field]
-    if organisation_id:
-        organisation = record[org_field]
-        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-        organisation = A(organisation,
-                         _href=org_url,
-                         _class="card-organisation",
-                         )
+    organisation = ""
+    if org_field:
+        organisation_id = raw[org_field]
+        if organisation_id:
+            organisation = record[org_field]
+            org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+            organisation = A(organisation,
+                             _href=org_url,
+                             _class="card-organisation",
+                             )
 
-        # Avatar
-        # Try Organisation Logo
-        otable = db.org_organisation
-        row = db(otable.id == organisation_id).select(otable.logo,
-                                                      limitby=(0, 1)
-                                                      ).first()
-        if row and row.logo:
-            logo = URL(c="default", f="download", args=[row.logo])
-            avatar = IMG(_src=logo,
-                         _height=50,
-                         _width=50,
-                         _style="padding-right:5px;",
-                         _class="media-object")
-            avatar = A(avatar,
-                       _href=org_url,
-                       _class="pull-left",
-                       )
-    else:
-        organisation = ""
+            # Avatar
+            # Try Organisation Logo
+            otable = db.org_organisation
+            row = db(otable.id == organisation_id).select(otable.logo,
+                                                          limitby=(0, 1)
+                                                          ).first()
+            if row and row.logo:
+                logo = URL(c="default", f="download", args=[row.logo])
+                avatar = IMG(_src=logo,
+                             _height=50,
+                             _width=50,
+                             _style="padding-right:5px;",
+                             _class="media-object")
+                avatar = A(avatar,
+                           _href=org_url,
+                           _class="pull-left",
+                           )
+
+    org_group = ""
+    if org_group_field:
+        org_group_id = raw[org_group_field]
+        if org_group_id:
+            org_group = record[org_group_field]
+            org_group_url = URL(c="org", f="group", args=[org_group_id, "profile"])
+            org_group = A(org_group,
+                          _href=org_group_url,
+                          _class="card-org-group",
+                          )
 
     if not avatar and person_id:
         # Personal Avatar
@@ -1264,6 +1326,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                           organisation,
                           _class="card-person",
                           )
+    elif person and org_group:
+        card_person = DIV(person,
+                          " - ",
+                          org_group,
+                          _class="card-person",
+                          )
     elif person:
         card_person = DIV(person,
                           _class="card-person",
@@ -1272,12 +1340,15 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         card_person = DIV(organisation,
                           _class="card-person",
                           )
+    elif org_group:
+        card_person = DIV(org_group,
+                          _class="card-person",
+                          )
     else:
         card_person = DIV(_class="card-person",
                           )
 
     permit = current.auth.s3_has_permission
-    settings = current.deployment_settings
     table = db.cms_post
     updateable = permit("update", table, record_id=record_id)
 
@@ -1330,7 +1401,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         delete_btn = ""
     user = current.auth.user
     if user and settings.get_cms_bookmarks():
-        ltable = current.s3db.cms_post_user
+        ltable = s3db.cms_post_user
         query = (ltable.post_id == record_id) & \
                 (ltable.user_id == user.id)
         exists = db(query).select(ltable.id,
@@ -1398,10 +1469,32 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         docs = ""
 
+    links = raw["doc_document.url"]
+    if links:
+        if not isinstance(links, list):
+            links = [links]
+        link_list = DIV()
+        for link in links:
+            link_item = DIV(A(I(_class="icon-globe"),
+                              " ",
+                              link,
+                              _href=link,
+                              _target="_blank",
+                              ),
+                            )
+            link_list.append(link_item)
+    else:
+        link_list = ""
+
     request = current.request
     if "profile" in request.args:
         # Single resource list
-        card_label = SPAN(" ", _class="card-title")
+        if settings.get_cms_show_titles():
+            title = raw["cms_post.title"] or ""
+        else:
+            title = ""
+        card_label = SPAN(" %s" % title,
+                          _class="card-title")
     else:
         # Mixed resource lists (Home, News Feed)
         icon = series.lower().replace(" ", "_")
@@ -1414,7 +1507,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             item_class = "%s disaster" % item_class
 
     # Render the item
-    if series == "Event" and "newsfeed" not in request.args:
+    if series == "Event" and "newsfeed" not in request.args: # and request.function != "newsfeed"
         # Events on Homepage have a different header
         header = DIV(SPAN(date,
                           _class="date-title event",
@@ -1445,6 +1538,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                    ),
                tags,
                docs,
+               link_list,
                _class=item_class,
                _id=item_id,
                )

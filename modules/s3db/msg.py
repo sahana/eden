@@ -1096,12 +1096,12 @@ class S3RSSModel(S3ChannelModel):
             S3DateTime.datetime_represent(dt, utc=True)
 
         self.configure(tablename,
-                       super_entity = current.s3db.msg_message,
                        list_fields = ["title",
                                       "from_address",
                                       "created_on",
                                       "body"
                                       ],
+                       super_entity = current.s3db.msg_message,
                        )
 
         # ---------------------------------------------------------------------

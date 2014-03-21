@@ -141,10 +141,22 @@ settings.security.audit_write = audit_write
 # CMS
 # Uncomment to use Bookmarks in Newsfeed
 settings.cms.bookmarks = True
+# Uncomment to use have Filter form in Newsfeed be open by default
+settings.cms.filter_open = True
+# Uncomment to use organisation_id instead of created_by in Newsfeed
+settings.cms.organisation = "post_organisation.organisation_id"
+# Uncomment to use org_group_id in Newsfeed
+settings.cms.organisation_group = "post_organisation_group.group_id"
+# Uncomment to use person_id instead of created_by in Newsfeed
+settings.cms.person = "person_id"
 # Uncomment to use Rich Text editor in Newsfeed
 settings.cms.richtext = True
-# Uncomment to show tags in Newsfeed
+# Uncomment to show Links in Newsfeed
+settings.cms.show_links = True
+# Uncomment to show Tags in Newsfeed
 settings.cms.show_tags = True
+# Uncomment to show post Titles in Newsfeed
+settings.cms.show_titles = True
 
 # -----------------------------------------------------------------------------
 # Inventory Management
@@ -1360,37 +1372,100 @@ settings.req.type_inv_label = "Supplies"
 settings.req.summary = True
 
 # -----------------------------------------------------------------------------
-def customise_req_req_controller(**attr):
+def req_req_onaccept(form):
     """
-        Customise req_req controller
+        Custom onaccept to run after crud_form completes
     """
 
-    s3 = current.response.s3
+    req_id = form.vars.req_id
 
-    # Custom prep
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-        else:
-            result = True
+    # Create a cms_post in the newswire
+    db = current.db
+    s3db = current.s3db
+    # Build Title & Body from the Request details
+    rtable = s3db.req_req
+    row = db(rtable.id == req_id).select(rtable.type,
+                                         rtable.site_id,
+                                         rtable.requester_id,
+                                         rtable.priority,
+                                         rtable.date_required,
+                                         rtable.purpose,
+                                         rtable.comments,
+                                         limitby=(0, 1)
+                                         ).first()
+    date_required = row.date_required
+    if date_required:
+        title = "%(priority)s by %(date)s" % dict(priority=row.priority,
+                                                  date=date_required)
+    else:
+        title = row.priority
+    body = row.comments
+    # @ToDo: Components not yet created at this point, so move this to form_onaccept instead
+    if row.type == 1:
+        # Items
+        ritable = s3db.req_req_item
+        items = db(ritable.req_id == req_id).select(ritable.item_id,
+                                                    ritable.item_pack_id,
+                                                    ritable.quantity)
+        item_represent = s3db.supply_item_represent
+        pack_represent = s3db.supply_item_pack_represent
+        for item in items:
+            item = "%s %s %s" % (item.quantity, item_represent(item.item_id), pack_represent(item.item_pack_id))
+            body = "%s\n%s" % (item, body)
+    else:
+        # Skills
+        body = "%s\n%s" % (row.purpose, body)
+        rstable = s3db.req_req_skill
+        skills = db(rstable.req_id == req_id).select(rstable.skill_id,
+                                                     rstable.quantity)
+        skill_represent = s3db.hrm_multi_skill_represent
+        for skill in skills:
+            item = "%s %s" % (skill.quantity, skill_represent(skill.skill_id))
+            body = "%s\n%s" % (item, body)
 
-        if r.interactive:
-            from s3layouts import S3AddResourceLink
-            s3db = current.s3db
-            table = s3db.req_req
-            table.site_id.comment = S3AddResourceLink(c="org", f="facility",
-                                                      vars = dict(child="site_id"),
-                                                      title=T("Create Facility"),
-                                                      tooltip=T("Enter some characters to bring up a list of possible matches"))
+    # Lookup series_id
+    stable = s3db.cms_series
+    try:
+        series_id = db(stable.name == "Request").select(stable.id,
+                                                        cache=s3db.cache,
+                                                        limitby=(0, 1)
+                                                        ).first().id
+    except:
+        # Prepop hasn't been run
+        series_id = None
 
-        return result
-    s3.prep = custom_prep
+    # Location is that of the site
+    otable = s3db.org_site
+    location_id = db(otable.site_id == row.site_id).select(otable.location_id,
+                                                           limitby=(0, 1)
+                                                           ).first().location_id
+    # Create Post
+    ptable = s3db.cms_post
+    id = ptable.insert(series_id=series_id,
+                       title=title,
+                       body=body,
+                       location_id=location_id,
+                       person_id=row.requester_id,
+                       )
+    record = dict(id=id)
+    s3db.update_super(ptable, record)
 
-    return attr
+    # Add source link
+    s3db.doc_document.insert(doc_id=record["doc_id"],
+                             url=URL(c="req", f="req", args=req_id),
+                             )
 
-settings.customise_req_req_controller = customise_req_req_controller
+# -----------------------------------------------------------------------------
+def customise_req_req_resource(r, tablename):
+
+    from s3layouts import S3AddResourceLink
+    current.s3db.req_req.site_id.comment = \
+        S3AddResourceLink(c="org", f="facility",
+                          vars = dict(child="site_id"),
+                          title=T("Create Facility"),
+                          tooltip=T("Enter some characters to bring up a list of possible matches"))
+
+settings.customise_req_req_resource = customise_req_req_resource
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

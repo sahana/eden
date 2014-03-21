@@ -1473,6 +1473,7 @@ class S3HRSkillModel(S3Model):
              "hrm_course_id",
              "hrm_skill_id",
              "hrm_multi_skill_id",
+             "hrm_multi_skill_represent",
              ]
 
     def model(self):
@@ -1567,7 +1568,8 @@ class S3HRSkillModel(S3Model):
                             ondelete = "RESTRICT")
 
         configure(tablename,
-                  deduplicate=self.hrm_skill_type_duplicate)
+                  deduplicate = self.hrm_skill_type_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Skills
@@ -1624,6 +1626,8 @@ class S3HRSkillModel(S3Model):
                                    widget = widget
                                    )
 
+        multi_skill_represent = S3Represent(lookup=tablename,
+                                            multiple=True)
         multi_skill_id = S3ReusableField("skill_id", "list:reference hrm_skill",
                                          sortby = "name",
                                          label = T("Skills"),
@@ -1633,8 +1637,7 @@ class S3HRSkillModel(S3Model):
                                                                   sort=True,
                                                                   multiple=True
                                                                   )),
-                                         represent = S3Represent(lookup=tablename,
-                                                                 multiple=True),
+                                         represent = multi_skill_represent,
                                          #comment = skill_help,
                                          ondelete = "SET NULL",
                                          widget = S3MultiSelectWidget(header="",
@@ -1642,13 +1645,14 @@ class S3HRSkillModel(S3Model):
                                          )
 
         configure("hrm_skill",
-                  deduplicate=self.hrm_skill_duplicate)
+                  deduplicate = self.hrm_skill_duplicate,
+                  )
 
         # Components
         add_components(tablename,
                        # Requests
                        req_req_skill="skill_id",
-                      )
+                       )
 
         # =====================================================================
         # Competency Ratings
@@ -2288,13 +2292,14 @@ class S3HRSkillModel(S3Model):
             create_next = None
             
         configure(tablename,
-                  create_next=create_next,
-                  deduplicate=self.hrm_certificate_duplicate)
+                  create_next = create_next,
+                  deduplicate = self.hrm_certificate_duplicate,
+                  )
 
         # Components
         add_components(tablename,
                        hrm_certificate_skill="certificate_id",
-                      )
+                       )
 
         # =====================================================================
         # Certifications
@@ -2336,13 +2341,14 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  onaccept=self.hrm_certification_onaccept,
-                  ondelete=self.hrm_certification_onaccept,
                   list_fields = ["id",
                                  "certificate_id",
                                  "date",
                                  "comments",
-                                ])
+                                 ],
+                  onaccept = self.hrm_certification_onaccept,
+                  ondelete = self.hrm_certification_onaccept,
+                  )
 
         crud_strings[tablename] = Storage(
             label_create = T("Create Certification"),
@@ -2431,6 +2437,7 @@ class S3HRSkillModel(S3Model):
         return dict(hrm_course_id = course_id,
                     hrm_skill_id = skill_id,
                     hrm_multi_skill_id = multi_skill_id,
+                    hrm_multi_skill_represent = multi_skill_represent,
                     hrm_certification_onaccept = self.hrm_certification_onaccept,
                     )
 

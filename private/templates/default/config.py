@@ -342,10 +342,25 @@ settings.L10n.decimal_separator = "."
 # CMS
 # Uncomment to use Bookmarks in Newsfeed
 #settings.cms.bookmarks = True
+# Uncomment to use have Filter form in Newsfeed be open by default
+#settings.cms.filter_open = True
 # Uncomment to use Rich Text editor in Newsfeed
 #settings.cms.richtext = True
-# Uncomment to show tags in Newsfeed
+# Uncomment to show Events in Newsfeed
+#settings.cms.show_events = True
+# Uncomment to show Links in Newsfeed
+#settings.cms.show_links = True
+# Uncomment to show Tags in Newsfeed
 #settings.cms.show_tags = True
+# Uncomment to show post Titles in Newsfeed
+#settings.cms.show_titles = True
+# Uncomment to use organisation_id instead of created_by in Newsfeed
+#settings.cms.organisation = "post_organisation.organisation_id"
+# Uncomment to use org_group_id in Newsfeed
+#settings.cms.organisation_group = "created_by$org_group_id"
+#settings.cms.organisation_group = "post_organisation_group.group_id"
+# Uncomment to use person_id instead of created_by in Newsfeed
+#settings.cms.person = "person_id"
 
 # -----------------------------------------------------------------------------
 # Persons
