@@ -190,7 +190,7 @@ def volunteer():
 
     # Volunteers only
     s3.filter = s3base.S3FieldSelector("type") == 2
-    
+
     vol_experience = settings.get_hrm_vol_experience()
     
     def prep(r):
