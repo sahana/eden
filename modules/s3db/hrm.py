@@ -6927,7 +6927,7 @@ def hrm_human_resource_filters(resource_type=None,
                         filter = True,
                         header = "",
                         widget = "multiselect",
-                        hidden = True,
+                        #hidden = True,
                        )
     )
 

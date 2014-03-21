@@ -2548,7 +2548,7 @@ S3OptionsFilter({
             member_id = rows.first().id
             db(mtable.id == member_id).update(organisation_id = organisation_id)
             # Update record ownership
-            self.s3_set_record_owner(mtable, mtable, force_update=True)
+            self.s3_set_record_owner(mtable, member_id, force_update=True)
 
         # Create a Member record, if one doesn't already exist
         if isinstance(person_id, list):

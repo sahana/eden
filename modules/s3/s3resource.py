@@ -899,7 +899,9 @@ class S3Resource(object):
             return rows
 
         # Otherwise: initialize output
-        output = {"rfields": dfields, "numrows": totalrows, "ids": ids}
+        output = {"rfields": dfields,
+                  "numrows": 0 if totalrows is None else totalrows,
+                  "ids": ids}
 
         if not rows:
             output["rows"] = []

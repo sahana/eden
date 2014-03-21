@@ -1339,28 +1339,34 @@ class S3CRUD(S3Method):
 
             if not dt.data:
                 # Empty table - or just no match?
-                if dt.empty:
-                    datatable = DIV(self.crud_string(resource.tablename,
-                                                     "msg_list_empty"),
-                                    _class="empty")
-                else:
-                    datatable = DIV(self.crud_string(resource.tablename,
-                                                     "msg_no_match"),
-                                    _class="empty")
+                #if dt.empty:
+                    #datatable = DIV(self.crud_string(resource.tablename,
+                                                     #"msg_list_empty"),
+                                    #_class="empty")
+                #else:
+                    #datatable = DIV(self.crud_string(resource.tablename,
+                                                     #"msg_no_match"),
+                                    #_class="empty")
                 s3.no_formats = True
 
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
                     datatable = ""
-            else:
-                dtargs["dt_pagination"] = dt_pagination
-                dtargs["dt_displayLength"] = display_length
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                datatable = dt.html(totalrows,
-                                    displayrows,
-                                    id=list_id,
-                                    **dtargs)
+            #else:
+
+            # Always show table, otherwise it can't be Ajax-filtered
+            # @todo: need a better algorithm to determine total_rows
+            #        (which excludes URL filters), so that datatables
+            #        shows the right empty-message (ZeroRecords instead
+            #        of EmptyTable)
+            dtargs["dt_pagination"] = dt_pagination
+            dtargs["dt_displayLength"] = display_length
+            dtargs["dt_base_url"] = r.url(method="", vars={})
+            datatable = dt.html(totalrows,
+                                displayrows,
+                                id=list_id,
+                                **dtargs)
 
             # View + data
             response.view = self._view(r, "list_filter.html")

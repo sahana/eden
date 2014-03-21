@@ -1452,7 +1452,8 @@ class S3PersonModel(S3Model):
         if gender:
             item["gender"] = gender
         if date_of_birth:
-            item["date_of_birth"] = date_of_birth
+            represent = ptable.date_of_birth.represent
+            item["date_of_birth"] = represent(date_of_birth)
         if occupation:
             item["occupation"] = occupation
         output = json.dumps(item)

@@ -10,7 +10,7 @@ except:
 from gluon import current
 from gluon.storage import Storage
 
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
+from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox, s3_set_default_filter
 
 T = current.T
 settings = current.deployment_settings
@@ -395,6 +395,22 @@ def ns_only(f, required=True, branches=True, updateable=True):
         f.comment = ""
 
 # -----------------------------------------------------------------------------
+def user_org_default_filter(selector, tablename=None):
+    """
+        Default filter for organisation_id, use the user's
+        organisation if logged in and associated with an
+        organisation.
+    """
+
+    auth = current.auth
+    user_org_id = auth.is_logged_in() and auth.user.organisation_id
+    if user_org_id:
+        return user_org_id
+    else:
+        # no default
+        return {}
+
+# -----------------------------------------------------------------------------
 def customise_asset_asset_controller(**attr):
 
     # Organisation needs to be an NS/Branch
@@ -764,6 +780,10 @@ settings.customise_hrm_department_controller = customise_hrm_department_controll
 def customise_hrm_human_resource_controller(**attr):
 
     s3db = current.s3db
+
+    s3_set_default_filter("~.organisation_id",
+                          user_org_default_filter,
+                          tablename = "hrm_human_resource")
 
     if current.request.controller == "vol":
         # Special cases for Viet Nam Red Cross
