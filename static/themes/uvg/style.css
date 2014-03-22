@@ -13,33 +13,33 @@
 }
 
 /* Links should ALWAYS be unvisited (widget.css overrides foundation styles, so override it again) */
-#contents a:not(.action-btn):not(.delete-btn) {
+#content a:not(.action-btn):not(.delete-btn) {
     color: #039;
     text-decoration: underline;
     outline: 0;
 }
-#contents a:hover:not(.action-btn):not(.delete-btn) {
+#content a:hover:not(.action-btn):not(.delete-btn) {
     color: #c00;
     text-decoration: none;
     background-color: #ffffcc;
     outline: 0;
 }
-#contents a:active:not(.action-btn):not(.delete-btn),
-#contents a:focus:not(.action-btn):not(.delete-btn) {
+#content a:active:not(.action-btn):not(.delete-btn),
+#content a:focus:not(.action-btn):not(.delete-btn) {
     outline: 0;
 }
 
-#contents a.help,
-#contents a:link.help {
+#content a.help,
+#content a:link.help {
     color: #fff;
     text-decoration: none;
     margin-right: 10px;
 }
-#contents a:hover.help {
+#content a:hover.help {
     background-color: #336699;
     text-decoration: underline;
 }
-#contents a:visited.help {
+#content a:visited.help {
     font-weight: normal;
     color: #666;
 }
@@ -49,16 +49,29 @@
     max-width: 60%;
 }
 
-/* Form elements (widget.css overrides foundation styles, so override it again) */
-.form-container form input,
-.form-container form button,
+.dataTables_length label {
+    white-space: nowrap;
+    margin-right: 10em;
+    margin-bottom: 1em;
+}
+.dataTables_length label select {
+    height: auto;
+    padding: 2px;
+}
+
+/* Form elements (widget.css overrides foundation, so override it again) */
 .form-container form select,
+.form-container form input.string:not(.date),
 .form-container form textarea {
     margin: 0;
-}
-.form-container form input.string,
-.form-container form textarea  {
     width: 100%;
+}
+.gis_loc_select_btn {
+    font-size: 0.8em;
+}
+.gis_loc_select_btn i {
+    font-size: 1.0em;
+    margin-right: 4px;
 }
 
 input[type="text"],
@@ -97,7 +110,7 @@ select {
   color: white;
 }
 
-/* Adapt rheader tabs to theme */
+/* Adapt rheader tabs to foundation theme */
 div.tabs {
     border-bottom: 1px solid #2BA6CB;
     clear: left;
@@ -189,3 +202,293 @@ span.tab_other:hover {
     background-color: #a20c10;
 }
 
+/* Action buttons in datatables */
+.dataTable .action-btn,
+.dataTable .delete-btn-ajax,
+.dataTable .delete-btn {
+    color: #FFFFFF;
+}
+td.actions {
+    white-space: nowrap;
+}
+
+/* Form/item-containers */
+.form-container,
+.item-container{
+    width: auto;
+    overflow: inherit;
+}
+.form-row > .columns > label {
+    font-weight: bold;
+}
+.item-container .controls {
+    background: #FAFAFA;
+    padding: 0.35em;
+    min-height: 1.7em;
+}
+.form-container form,
+.item-container form {
+    background: #FEFEFE;
+    padding: 5px 10px;
+}
+
+/* Footer */
+#footer {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #EEEEEE;
+}
+#footer button.btn {
+    background: #DDDDDD;
+    font-size: 0.6875rem;
+    border: 0;
+    line-height: 1;
+    margin-bottom: inherit;
+    margin-left: 2px;
+    margin-right: 2px;
+    padding: 0.25rem 0.5rem 0.375rem;
+    cursor: pointer;
+}
+#footer button.btn:hover {
+    background: #A0A0A0;
+}
+
+/*** Typography ***/
+form {
+    font-size: 0.8em;
+}
+label.inline {
+    padding: 0;
+}
+
+#content h1,
+#content h2 {
+    font-size: 1.3em;
+    font-weight: bolder;
+    background: #F7F8F9;
+    padding: 5px 5px 5px 5px;
+}
+#content h2 {
+    margin-top: 10px;
+    padding-left: 10px;
+}
+p {
+    padding: 5px;
+    margin: 0;
+}
+
+/* Colours */
+
+/*
+.top-bar,
+.top-bar-section li:not(.has-form) a:not(.button) {
+    background-color: #0C0E0F;
+}
+*/
+.top-bar-section li.active:not(.has-form) a:not(.button) {
+    background-color: #73726F;
+}
+.top-bar-section li.active:not(.has-form) a:not(.button):hover {
+    background-color: #BDB6B0;
+}
+.top-bar-section li:not(.has-form) a:not(.button):hover {
+    background-color: #BDB6B0;
+}
+.sidebar {
+    background-color: #BDB6B0;
+}
+
+.side-nav li a:not(.button) {
+    color: #222222;
+}
+.side-nav li.active > a:first-child:not(.button) {
+    color: #FFFFFF;
+    background-color: #73726F;
+}
+.side-nav li a:not(.button):hover,
+.side-nav li a:not(.button):focus {
+    color: #222222 !important;
+    background-color: #F1EDEC !important;
+}
+.side-nav li.divider {
+    border-top-color: white;
+}
+.side-nav .heading {
+    border-top-color: #ADA6A0;
+}
+table.dataTable tbody tr.odd td.sorting_1 {
+    background-color: #F0F1F2;
+}
+table.dataTable tbody tr.even td.sorting_1 {
+    background-color: #FAFAFA;
+}
+table.dataTable tbody tr.odd {
+    background-color: #F7F8F9;
+}
+table.dataTable tbody tr.even {
+    background-color: #FFFFFF;
+}
+#table-container tr.odd td {
+    border-color: #CCCCCC;
+}
+.ui-widget-header {
+    background: none; 
+    border: 1px solid #ADA6A0;
+}
+.ui-state-active,
+.ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active {
+    border-color: #ADA6A0;
+}
+
+#summary-tabs {
+    margin-top: 10px;
+}
+
+#summary-tab-headers .ui-tabs-nav {
+    border: none;
+    margin: 0 10px;
+}
+
+#summary-tab-headers a {
+    border-color: #CCC;
+}
+
+#summary-tab-headers .ui-tabs-active a {
+    border-bottom: 1px solid white;
+}
+
+#summary-tab-headers li {
+    margin-right: 5px;
+    box-shadow: none;
+}
+
+#summary-tabs.ui-widget-content {
+    background: none;
+    border: none;
+}
+
+/* Fit Summary Map Inside Summary Section */
+#summary-sections .x-panel-body {
+    border: none;
+    border-radius: 4px;
+}
+.ui-widget-header a {
+    color: #222222 !important;
+    border-color: #C7C7C7;
+    margin-bottom: 0px;
+/*     background: none; */
+    font-weight: bold;
+    text-decoration: none !important;
+    font-size: 0.7em;
+}
+
+.ui-widget-header .ui-icon-check,
+.ui-widget-header .ui-icon-closethick {
+    background: none;
+    height: 0px;
+    width: 0px;
+}
+/* Page Elements */
+.form-container form.form-horizontal,
+#datalist-filter-form,
+#datatable-filter-form,
+#summary-filter-form,
+#summary-sections,
+/* #datatable_wrapper, */
+#pivottable,
+.thumbnail {
+    border: 1px solid #CCC;
+}
+/*#datatable_wrapper {
+    padding: 5px;
+}*/
+.ui-tabs .ui-tabs-panel {
+    padding: 0.5em;
+}
+
+.pt-chart-opts {
+    height: 1.0em;
+}
+.pt-chart-label {
+    font-size: 0.7em;
+}
+
+table.dataTable thead th,
+table.dataTable thead td {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #cccccc;
+    font-size: 1.0em;
+}
+table.dataTable th,
+table.dataTable td {
+    border: 1px solid #CCCCCC;
+    padding: 0.7em 0.7em 0.7em 0.5em;
+}
+table.dataTable tfoot th,
+table.dataTable tfoot td {
+    background-color: #F7F8F9;
+    border-top: 2px solid #CCCCCC;
+    padding: 0.5em;
+}
+
+.pt-chart-title h4 {
+    font-size: 1.0em;
+    font-weight: normal;
+}
+
+div.alert {
+    margin-top: 10px;
+}
+.empty,
+.pt-empty,
+.pt-no-data {
+    font-style: italic;
+    font-size: 0.8em;
+}
+
+/* Help Popup */
+.tooltip,
+.tooltipbody,
+.stickytip,
+.ajaxtip {
+    display: block;
+    padding: 0;
+}
+.inline-tooltip {
+    padding-top: 1.6em;
+}
+.filter-form .inline-tooltip {
+    padding-top: 0.2em;
+}
+#show-add-btn {
+    margin-bottom: 6px;
+}
+input.date.hasDatepicker {
+    display: inline-block;
+}
+.ui-datepicker-trigger {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("../../img/bootstrap/calendar.gif");
+    margin-left: 10px;
+}
+.ui-datepicker-trigger:hover {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("../../img/bootstrap/calendar.gif");
+    margin-left: 10px;
+}
+.alert.alert-error,
+.alert.alert-info,
+.alert.alert-warning,
+.alert.alert-success {
+    border: 1px solid #B2B2B2;
+    box-shadow: 0 1px 1px #AAAAA7;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    padding: 8px 35px 8px 14px;
+    position: relative;
+    min-width: 445px;
+    width: auto;
+    z-index: 999;
+    border-radius: 4px;
+}

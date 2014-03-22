@@ -76,9 +76,9 @@ class S3SkeletonDataModel(S3Model):
         # -> use s3_meta_fields to include meta fields (not s3_meta_fields!),
         #    of course this needs the s3 assignment above
         tablename = "skeleton_example"
-        table = self.define_table(tablename,
-                                  Field("name"),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          Field("name"),
+                          *s3_meta_fields())
 
         # Use self.configure to configure your model (or current.s3db.configure)
         self.configure(tablename,
@@ -114,7 +114,7 @@ class S3SkeletonDataModel(S3Model):
 
         # You can define ReusableFields,
         # -> make sure you prefix their names properly with the module prefix:
-        skeleton_example_id = S3ReusableField("skeleton_example_id", table,
+        skeleton_example_id = S3ReusableField("skeleton_example_id", "reference %s" % tablename,
                                                label = T("Skeleton Example"),
                                                requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                      "skeleton_example.id")))

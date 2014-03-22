@@ -58,27 +58,24 @@ class S3FireModel(S3Model):
         # -----------------------------------------------------------
         # Fire Zone Types
         tablename = "fire_zone_type"
-        table = define_table(tablename,
-                             Field("name",
-                                   label=T("Name")),
-                             # @ToDo: Currently unused - apply in layer_feature for now
-                             Field("style", "text",
-                                   label=T("Style")),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label=T("Name")),
+                     # @ToDo: Currently unused - apply in layer_feature for now
+                     Field("style", "text",
+                           label=T("Style")),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         ADD_ZONE_TYPE = T("Add Zone Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ZONE_TYPE,
+            label_create = ADD_ZONE_TYPE,
             title_display = T("Zone Type Details"),
             title_list = T("Zone Types"),
             title_update = T("Edit Zone Type"),
-            title_search = T("Search Zone Types"),
             title_upload = T("Import Zone Types"),
-            subtitle_create = T("Add New Zone Type"),
             label_list_button = T("List Zone Types"),
-            label_create_button = T("Add New Zone Type"),
             label_delete_button = T("Delete Zone Type"),
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
@@ -94,40 +91,37 @@ class S3FireModel(S3Model):
         # -----------------------------------------------------------
         # Fire Zones
         tablename = "fire_zone"
-        table = define_table(tablename,
-                             Field("name",
-                                   label=T("Name")),
-                             Field("zone_type_id", db.fire_zone_type,
-                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "fire_zone_type.id",
-                                                          zone_type_represent,
-                                                          sort=True)),
-                                   represent = zone_type_represent,
-                                   comment = S3AddResourceLink(c="fire",
-                                                               f="zone_type",
-                                                               label=ADD_ZONE_TYPE,
-                                                               tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
-                                   label=T("Type")),
-                             self.gis_location_id(
-                                widget = S3LocationSelectorWidget2(
-                                    catalog_layers=True,
-                                    polygons=True
-                                    )
-                                ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label=T("Name")),
+                     Field("zone_type_id", db.fire_zone_type,
+                           requires = IS_NULL_OR(
+                                         IS_ONE_OF(db, "fire_zone_type.id",
+                                                   zone_type_represent,
+                                                   sort=True)),
+                           represent = zone_type_represent,
+                           comment = S3AddResourceLink(c="fire",
+                                                       f="zone_type",
+                                                       label=ADD_ZONE_TYPE,
+                                                       tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                           label=T("Type")),
+                     self.gis_location_id(
+                       widget = S3LocationSelectorWidget2(
+                           catalog_layers=True,
+                           polygons=True
+                           )
+                       ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Zone"),
+            label_create = T("Add Zone"),
             title_display = T("Zone Details"),
             title_list = T("Zones"),
             title_update = T("Edit Zone"),
-            title_search = T("Search Zones"),
             title_upload = T("Import Zones"),
-            subtitle_create = T("Add New Zone"),
             label_list_button = T("List Zones"),
-            label_create_button = T("Add New Zone"),
             label_delete_button = T("Delete Zone"),
             msg_record_created = T("Zone added"),
             msg_record_modified = T("Zone updated"),
@@ -197,46 +191,46 @@ class S3FireStationModel(S3Model):
         }
 
         tablename = "fire_station"
-        table = define_table(tablename,
-                             self.super_link("site_id", "org_site"),
-                             Field("name", notnull=True, length=64,
-                                   label = T("Name")),
-                             Field("code", unique=True, length=64,
-                                   label = T("Code")),
-                             Field("facility_type", "integer",
-                                   label = T("Facility Type"),
-                                   requires = IS_NULL_OR(IS_IN_SET(fire_station_types)),
-                                   default = 1,
-                                   represent = lambda opt: \
+        define_table(tablename,
+                     self.super_link("site_id", "org_site"),
+                     Field("name", notnull=True, length=64,
+                           label = T("Name")),
+                     Field("code", unique=True, length=64,
+                           label = T("Code")),
+                     Field("facility_type", "integer",
+                           label = T("Facility Type"),
+                           requires = IS_NULL_OR(IS_IN_SET(fire_station_types)),
+                           default = 1,
+                           represent = lambda opt: \
                                        fire_station_types.get(opt, T("not specified"))
-                                   ),
-                             organisation_id(),
-                             location_id(),
-                             Field("phone", label = T("Phone"),
-                                   requires = IS_NULL_OR(s3_phone_requires)),
-                             Field("website", label=T("Website"),
-                                   requires = IS_NULL_OR(IS_URL()),
-                                   represent = lambda url: s3_url_represent(url)),
-                             Field("email", label = T("Email"),
-                                   requires = IS_NULL_OR(IS_EMAIL())
-                                   ),
-                             Field("fax", label = T("Fax"),
-                                   requires = IS_NULL_OR(s3_phone_requires)),
-                             Field("obsolete", "boolean",
-                                   label = T("Obsolete"),
-                                   represent = lambda bool: \
-                                     (bool and [T("Obsolete")] or [current.messages["NONE"]])[0],
-                                   default = False,
-                                   readable = False,
-                                   writable = False),
-                             s3_comments(),
-                             *s3_meta_fields())
+                           ),
+                     organisation_id(),
+                     location_id(),
+                     Field("phone", label = T("Phone"),
+                           requires = IS_NULL_OR(s3_phone_requires)),
+                     Field("website", label=T("Website"),
+                           requires = IS_NULL_OR(IS_URL()),
+                           represent = lambda url: s3_url_represent(url)),
+                     Field("email", label = T("Email"),
+                           requires = IS_NULL_OR(IS_EMAIL())
+                           ),
+                     Field("fax", label = T("Fax"),
+                           requires = IS_NULL_OR(s3_phone_requires)),
+                     Field("obsolete", "boolean",
+                           label = T("Obsolete"),
+                           represent = lambda opt: \
+                                       (opt and [T("Obsolete")] or [current.messages["NONE"]])[0],
+                           default = False,
+                           readable = False,
+                           writable = False),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         self.configure("fire_station",
                        super_entity = "org_site",
                        )
 
-        station_id = S3ReusableField("station_id", table,
+        station_id = S3ReusableField("station_id", "reference %s" % tablename,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "fire_station.id",
                                                               self.fire_station_represent)),
@@ -248,16 +242,13 @@ class S3FireStationModel(S3Model):
         # CRUD strings
         ADD_FIRE_STATION = T("Add Fire Station")
         crud_strings[tablename] = Storage(
-            title_create = ADD_FIRE_STATION,
+            label_create = ADD_FIRE_STATION,
             title_display = T("Fire Station Details"),
             title_list = T("Fire Stations"),
             title_update = T("Edit Station Details"),
-            title_search = T("Search for Fire Station"),
             title_upload = T("Upload Fire Stations List"),
             title_map = T("Map of Fire Stations"),
-            subtitle_create = T("Add New Fire Station"),
             label_list_button = T("List Fire Stations"),
-            label_create_button = ADD_FIRE_STATION,
             label_delete_button = T("Delete Fire Station"),
             msg_record_created = T("Fire Station added"),
             msg_record_modified = T("Fire Station updated"),
@@ -280,24 +271,21 @@ class S3FireStationModel(S3Model):
         # Vehicles of Fire stations
         #
         tablename = "fire_station_vehicle"
-        table = define_table(tablename,
-                             station_id(),
-                             vehicle_id(),
-                             *s3_meta_fields()
-                             )
+        define_table(tablename,
+                     station_id(),
+                     vehicle_id(),
+                     *s3_meta_fields()
+                     )
 
         # CRUD strings
         ADD_VEHICLE = T("Add Vehicle")
         crud_strings[tablename] = Storage(
-            title_create = ADD_VEHICLE,
+            label_create = ADD_VEHICLE,
             title_display = T("Vehicle Details"),
             title_list = T("Vehicles"),
             title_update = T("Edit Vehicle Details"),
-            title_search = T("Search for Vehicles"),
             title_upload = T("Upload Vehicles List"),
-            subtitle_create = T("Add New Vehicle"),
             label_list_button = T("List Vehicles"),
-            label_create_button = ADD_VEHICLE,
             label_delete_button = T("Delete Vehicle"),
             msg_record_created = T("Vehicle added"),
             msg_record_modified = T("Vehicle updated"),
@@ -313,80 +301,80 @@ class S3FireStationModel(S3Model):
         # Water Sources
         #
         tablename = "fire_water_source"
-        table = define_table(tablename,
-                             Field("name", "string"),
-                             location_id(),
-                             #Field("good_for_human_usage", "boolean"),
-                             #Field("fresh", "boolean"),
-                             #Field("Salt", "boolean"),
-                             #Field("toponymy", "string"),
-                             #Field("parish", "string"),
-                             #Field("type", "string"),
-                             #Field("owner", "string"),
-                             #person_id(),
-                             #organisation_id(),
-                             #Field("shape", "string"),
-                             #Field("diameter", "string"),
-                             #Field("depth", "string"),
-                             #Field("volume", "integer"),
-                             #Field("lenght", "integer"),
-                             #Field("height", "integer"),
-                             #Field("usefull_volume", "integer"),
-                             #Field("catchment", "integer"),
-                             #Field("area", "integer"),
-                             #Field("date", "date"),
-                             #Field("access_type", "string"),
-                             #Field("previews_usage", "boolean"),
-                             #Field("car_access", "string"),
-                             #Field("mid_truck_access", "string"),
-                             #Field("truck_access", "string"),
-                             #Field("distance_from_trees", "integer"),
-                             #Field("distance_from_buildings", "integer"),
-                             #Field("helicopter_access", "string"),
-                             #Field("previews_usage_air", "boolean"),
-                             #Field("car_movment_conditions", "string"),
-                             #Field("midtruck_movment_conditions", "string"),
-                             #Field("truck_movment_conditions", "string"),
-                             #Field("powerline_distance", "integer"),
-                             #Field("distance_other_risks", "integer"),
-                             #Field("anti_seismic_construction", "boolean"),
-                             #Field("isolated_from_air", "boolean"),
-                             #Field("hermetic", "boolean"),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", "string"),
+                     location_id(),
+                     #Field("good_for_human_usage", "boolean"),
+                     #Field("fresh", "boolean"),
+                     #Field("Salt", "boolean"),
+                     #Field("toponymy", "string"),
+                     #Field("parish", "string"),
+                     #Field("type", "string"),
+                     #Field("owner", "string"),
+                     #person_id(),
+                     #organisation_id(),
+                     #Field("shape", "string"),
+                     #Field("diameter", "string"),
+                     #Field("depth", "string"),
+                     #Field("volume", "integer"),
+                     #Field("lenght", "integer"),
+                     #Field("height", "integer"),
+                     #Field("usefull_volume", "integer"),
+                     #Field("catchment", "integer"),
+                     #Field("area", "integer"),
+                     #Field("date", "date"),
+                     #Field("access_type", "string"),
+                     #Field("previews_usage", "boolean"),
+                     #Field("car_access", "string"),
+                     #Field("mid_truck_access", "string"),
+                     #Field("truck_access", "string"),
+                     #Field("distance_from_trees", "integer"),
+                     #Field("distance_from_buildings", "integer"),
+                     #Field("helicopter_access", "string"),
+                     #Field("previews_usage_air", "boolean"),
+                     #Field("car_movment_conditions", "string"),
+                     #Field("midtruck_movment_conditions", "string"),
+                     #Field("truck_movment_conditions", "string"),
+                     #Field("powerline_distance", "integer"),
+                     #Field("distance_other_risks", "integer"),
+                     #Field("anti_seismic_construction", "boolean"),
+                     #Field("isolated_from_air", "boolean"),
+                     #Field("hermetic", "boolean"),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # =====================================================================
         # Hazards
         # - this is long-term hazards, not incidents
         #
         tablename = "fire_hazard_point"
-        table = define_table(tablename,
-                             location_id(),
-                             Field("name", "string"),
-                             # What are the Org & Person for? Contacts?
-                             organisation_id(),
-                             person_id(),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     location_id(),
+                     Field("name", "string"),
+                     # What are the Org & Person for? Contacts?
+                     organisation_id(),
+                     person_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # =====================================================================
         # Shifts
         #
         tablename = "fire_shift"
-        table = define_table(tablename,
-                             station_id(),
-                             Field("name"),
-                             s3_datetime("start_time",
-                                         empty=False,
-                                         default="now"
-                                         ),
-                             s3_datetime("end_time",
-                                         empty=False,
-                                         default="now"
-                                         ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     station_id(),
+                     Field("name"),
+                     s3_datetime("start_time",
+                                 empty=False,
+                                 default="now"
+                                 ),
+                     s3_datetime("end_time",
+                                 empty=False,
+                                 default="now"
+                                 ),
+                     *s3_meta_fields())
 
-        shift_id = S3ReusableField("shift_id", table,
+        shift_id = S3ReusableField("shift_id", "reference %s" % tablename,
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "fire_shift.id",
                                                           self.fire_shift_represent)),
@@ -396,11 +384,11 @@ class S3FireStationModel(S3Model):
 
         # ---------------------------------------------------------------------
         tablename = "fire_shift_staff"
-        table = define_table(tablename,
-                             station_id(),
-                             #shift_id(),
-                             human_resource_id(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     station_id(),
+                     #shift_id(),
+                     human_resource_id(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

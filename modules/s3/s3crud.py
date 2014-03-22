@@ -76,12 +76,8 @@ class S3CRUD(S3Method):
             @return: output object to send to the view
         """
 
-        sqlform = current.deployment_settings.get_ui_crud_form(self.tablename)
-        if not sqlform:
-            sqlform = self._config("crud_form", S3SQLDefaultForm())
-        self.sqlform = sqlform
-
         self.settings = current.response.s3.crud
+        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
 
         # Pre-populate create-form?
         self.data = None
@@ -153,11 +149,8 @@ class S3CRUD(S3Method):
         """
 
         # Settings
-        sqlform = current.deployment_settings.get_ui_crud_form(self.tablename)
-        if not sqlform:
-            sqlform = self._config("crud_form", S3SQLDefaultForm())
-        self.sqlform = sqlform
         self.settings = current.response.s3.crud
+        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
 
         _attr = Storage(attr)
         _attr["list_id"] = widget_id
@@ -236,14 +229,12 @@ class S3CRUD(S3Method):
                 else:
                     response.view = self._view(r, "create.html")
 
-                # Title and subtitle
+                # Title
                 if r.component:
                     title = crud_string(r.tablename, "title_display")
-                    subtitle = crud_string(tablename, "subtitle_create")
                     output["title"] = title
-                    output["subtitle"] = subtitle
                 else:
-                    title = crud_string(tablename, "title_create")
+                    title = crud_string(tablename, "label_create")
                     output["title"] = title
                 output["title_list"] = crud_string(tablename, "title_list")
 
@@ -391,7 +382,7 @@ class S3CRUD(S3Method):
             crud_string = self.crud_string
             message = crud_string(tablename, "msg_record_created")
             subheadings = _config("subheadings")
-            output["title"] = crud_string(tablename, "title_create")
+            output["title"] = crud_string(tablename, "label_create")
             output["details_btn"] = ""
             output["item"] = self.sqlform(request=request,
                                           resource=resource,
@@ -474,7 +465,7 @@ class S3CRUD(S3Method):
                         self.data = populate
                 view = current.response.view
                 form = self.create(r, **attr).get("form", None)
-                if form.accepted and self.next:
+                if form and form.accepted and self.next:
                     # Tell the summary handler that we're done
                     # and supposed to redirect to another view
                     return {"success": True, "next": self.next}
@@ -482,24 +473,27 @@ class S3CRUD(S3Method):
                 if form is not None:
                     add_btn = self.crud_button(
                                         tablename=tablename,
-                                        name="label_create_button",
+                                        name="label_create",
+                                        icon="icon-plus",
                                         _id="show-add-btn")
                     output = DIV(add_btn,
-                                    DIV(form,
-                                        _id="list-add",
-                                        _class="form-container",
-                                        )
-                                    )
+                                 DIV(form,
+                                     _id="list-add",
+                                     _class="form-container",
+                                     ),
+                                 _class="list-btn-add"
+                                 )
                     if r.http == "POST":
                         script = '''$('#list-add').show();$('#show-add-btn').hide()'''
                     else:
-                        script = '''$('#show-add-btn').click(function(){$('#list-add').show();$('#show-add-btn').hide()})'''
+                        script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown();$('#show-add-btn').hide()})'''
                     current.response.s3.jquery_ready.append(script)
             elif addbtn:
                 # No form, just Add-button linked to create-view
                 add_btn = self.crud_button(
                                     tablename=tablename,
-                                    name="label_create_button",
+                                    name="label_create",
+                                    icon="icon-plus",
                                     _id="add-btn")
                 output = DIV(add_btn)
 
@@ -992,6 +986,14 @@ class S3CRUD(S3Method):
 
             hide_filter = self.hide_filter
             filter_widgets = get_config("filter_widgets", None)
+
+            show_filter_form = False
+            if filter_widgets and not hide_filter and \
+               representation not in ("aadata", "dl"):
+                # Apply filter defaults (before rendering the data!)
+                from s3filter import S3FilterForm
+                show_filter_form = True
+                S3FilterForm.apply_filter_defaults(r, resource)
             
             # Data
             list_type = attr.get("list_type", "datatable")
@@ -1027,7 +1029,7 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # Filter-form
-            if filter_widgets and not hide_filter:
+            if show_filter_form:
 
                 # Where to retrieve filtered data from:
                 filter_submit_url = attr.get("filter_submit_url")
@@ -1041,7 +1043,6 @@ class S3CRUD(S3Method):
                                                  vars={},
                                                  representation="options"))
 
-                from s3filter import S3FilterForm
                 filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
@@ -1081,12 +1082,13 @@ class S3CRUD(S3Method):
                     form = self.create(r, **attr).get("form", None)
                     if form is not None:
                         output["form"] = form
-                        addtitle = self.crud_string(tablename, "subtitle_create")
+                        addtitle = self.crud_string(tablename, "label_create")
                         output["addtitle"] = addtitle
                         showadd_btn = self.crud_button(
                                             None,
                                             tablename=tablename,
-                                            name="label_create_button",
+                                            name="label_create",
+                                            icon="icon-plus",
                                             _id="show-add-btn")
                         output["showadd_btn"] = showadd_btn
                         
@@ -1337,28 +1339,34 @@ class S3CRUD(S3Method):
 
             if not dt.data:
                 # Empty table - or just no match?
-                if dt.empty:
-                    datatable = DIV(self.crud_string(resource.tablename,
-                                                     "msg_list_empty"),
-                                    _class="empty")
-                else:
-                    datatable = DIV(self.crud_string(resource.tablename,
-                                                     "msg_no_match"),
-                                    _class="empty")
+                #if dt.empty:
+                    #datatable = DIV(self.crud_string(resource.tablename,
+                                                     #"msg_list_empty"),
+                                    #_class="empty")
+                #else:
+                    #datatable = DIV(self.crud_string(resource.tablename,
+                                                     #"msg_no_match"),
+                                    #_class="empty")
                 s3.no_formats = True
 
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
                     datatable = ""
-            else:
-                dtargs["dt_pagination"] = dt_pagination
-                dtargs["dt_displayLength"] = display_length
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                datatable = dt.html(totalrows,
-                                    displayrows,
-                                    id=list_id,
-                                    **dtargs)
+            #else:
+
+            # Always show table, otherwise it can't be Ajax-filtered
+            # @todo: need a better algorithm to determine total_rows
+            #        (which excludes URL filters), so that datatables
+            #        shows the right empty-message (ZeroRecords instead
+            #        of EmptyTable)
+            dtargs["dt_pagination"] = dt_pagination
+            dtargs["dt_displayLength"] = display_length
+            dtargs["dt_base_url"] = r.url(method="", vars={})
+            datatable = dt.html(totalrows,
+                                displayrows,
+                                id=list_id,
+                                **dtargs)
 
             # View + data
             response.view = self._view(r, "list_filter.html")
@@ -2125,6 +2133,7 @@ class S3CRUD(S3Method):
     def crud_button(label=None,
                     tablename=None,
                     name=None,
+                    icon=None,
                     _href=None,
                     _id=None,
                     _class=None,
@@ -2136,6 +2145,7 @@ class S3CRUD(S3Method):
             @param label: the link label (None if using CRUD string)
             @param tablename: the name of table for CRUD string selection
             @param name: name of CRUD string for the button label
+            @param icon: class name of the glyphicon icon (e.g. "icon-plus")
             @param _href: the target URL
             @param _id: the HTML id of the link
             @param _class: the HTML class of the link
@@ -2165,12 +2175,18 @@ class S3CRUD(S3Method):
         else:
             labelstr = str(label)
 
-        # Button
-        button = A(labelstr, _id=_id, _class=_class)
+        # Show glyphicon icon on button?
+        if icon and \
+           current.deployment_settings.get_ui_use_button_glyphicons():
+            button = A(I(" ", _class=icon), labelstr, _id=_id, _class=_class)
+        else:
+            button = A(labelstr, _id=_id, _class=_class)
+
+        # Button attributes
         if _href:
-            button.update(_href=_href)
+            button["_href"] = _href
         if _title:
-            button.update(_title=_title)
+            button["_title"] = _title=_title
 
         # Additional classes?
         if bootstrap:
@@ -2247,10 +2263,11 @@ class S3CRUD(S3Method):
                 if ADD_BTN in custom_crud_buttons:
                     btn = crud_button(custom=custom_crud_buttons[ADD_BTN])
                 else:
-                    label = crud_string(tablename, "label_create_button")
+                    label = crud_string(tablename, "label_create")
                     _href = url(method="create",
                                 representation=representation)
                     btn = crud_button(label=label,
+                                      icon="icon-plus",
                                       _href=_href,
                                       _id="add-btn")
                 output[ADD_BTN] = btn
@@ -2268,6 +2285,7 @@ class S3CRUD(S3Method):
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
+                                      icon="icon-list",
                                       _href=_href,
                                       _id="list-btn")
                 output[LIST_BTN] = btn
@@ -2285,6 +2303,7 @@ class S3CRUD(S3Method):
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
+                                      icon="icon-list",
                                       _href=_href,
                                       _id="summary-btn")
                 output[SUMMARY_BTN] = btn
@@ -2304,6 +2323,7 @@ class S3CRUD(S3Method):
                     _href = url(method="update",
                                 representation=representation)
                     btn = crud_button(label=label,
+                                      icon="icon-edit",
                                       _href=_href,
                                       _id="edit-btn")
                 output[EDIT_BTN] = btn
@@ -2320,6 +2340,7 @@ class S3CRUD(S3Method):
                     _href = url(method="delete",
                                 representation=representation)
                     btn = crud_button(label=label,
+                                      icon="icon-trash",
                                       _href=_href,
                                       _id="delete-btn",
                                       _class="delete-btn")

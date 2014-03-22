@@ -69,23 +69,23 @@ class S3VolunteerModel(S3Model):
         # - extra details for volunteers
         #
         tablename = "vol_details"
-        table = self.define_table(tablename,
-                                  self.hrm_human_resource_id(ondelete = "CASCADE"),
-                                  Field("active", "boolean",
-                                        represent = self.vol_active_represent,
-                                        label = T("Active"),
-                                        default = False,
-                                       ),
-                                  Field("availability", "integer",
-                                        requires = IS_NULL_OR(
-                                                    IS_IN_SET(availability_opts)
-                                                    ),
-                                        represent = lambda opt: \
+        self.define_table(tablename,
+                          self.hrm_human_resource_id(ondelete = "CASCADE"),
+                          Field("active", "boolean",
+                                represent = self.vol_active_represent,
+                                label = T("Active"),
+                                default = False,
+                                ),
+                          Field("availability", "integer",
+                                requires = IS_NULL_OR(
+                                             IS_IN_SET(availability_opts)
+                                           ),
+                                represent = lambda opt: \
                                             availability_opts.get(opt,
-                                                                  UNKNOWN_OPT),
-                                        label = T("Availability"),
-                                        ),
-                                  *s3_meta_fields())
+                                                          UNKNOWN_OPT),
+                                label = T("Availability"),
+                                ),
+                          *s3_meta_fields())
 
     # =========================================================================
     @staticmethod
@@ -135,29 +135,26 @@ class S3VolunteerAwardModel(S3Model):
         # Volunteer Award
         #
         tablename = "vol_award"
-        table = define_table(tablename,
-                             Field("name",
-                                   label = T("Name")),
-                             # Only included in order to be able to set
-                             # realm_entity to filter appropriately
-                             self.org_organisation_id(default = root_org,
-                                                      readable = is_admin,
-                                                      writable = is_admin,
-                                                      ),
-                             s3_comments(label=T("Description"),
-                                         comment=None),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name")),
+                     # Only included in order to be able to set
+                     # realm_entity to filter appropriately
+                     self.org_organisation_id(default = root_org,
+                                              readable = is_admin,
+                                              writable = is_admin,
+                                              ),
+                     s3_comments(label=T("Description"),
+                                 comment=None),
+                     *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Award"),
+            label_create = T("Create Award"),
             title_display = T("Award"),
             title_list = T("Award"),
             title_update = T("Edit Award"),
-            title_search = T("Search Awards"),
             title_upload = T("Import Awards"),
-            subtitle_create = T("Add New Award"),
             label_list_button = T("List Awards"),
-            label_create_button = T("Add Award"),
             label_delete_button = T("Delete Award"),
             msg_record_created = T("Award added"),
             msg_record_modified = T("Award updated"),
@@ -166,12 +163,12 @@ class S3VolunteerAwardModel(S3Model):
 
         comment = S3AddResourceLink(c = "vol",
                                     f = "award",
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Award"),
                                     )
 
         represent = S3Represent(lookup=tablename)
-        award_id = S3ReusableField("award_id", table,
+        award_id = S3ReusableField("award_id", "reference %s" % tablename,
                                    label = T("Award"),
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db,
@@ -187,23 +184,20 @@ class S3VolunteerAwardModel(S3Model):
         # Volunteers <> Awards link table
         #
         tablename = "vol_volunteer_award"
-        table = define_table(tablename,
-                             self.pr_person_id(empty=False),
-                             award_id(),
-                             s3_date(),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     self.pr_person_id(empty=False),
+                     award_id(),
+                     s3_date(),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Award"),
+            label_create = T("Create Award"),
             title_display = T("Award"),
             title_list = T("Award"),
             title_update = T("Edit Award"),
-            title_search = T("Search Awards"),
             title_upload = T("Import Awards"),
-            subtitle_create = T("Add New Award"),
             label_list_button = T("List Awards"),
-            label_create_button = T("Add Award"),
             label_delete_button = T("Delete Award"),
             msg_record_created = T("Award added"),
             msg_record_modified = T("Award updated"),
@@ -237,23 +231,20 @@ class S3VolunteerClusterModel(S3Model):
         # ---------------------------------------------------------------------
         # Volunteer Cluster
         tablename = "vol_cluster_type"
-        table = define_table(tablename,
-                             Field("name",
-                                   length=255,
-                                   unique=True,
-                                   label = T("Name")),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           length=255,
+                           unique=True,
+                           label = T("Name")),
+                     *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Cluster Type"),
+            label_create = T("Create Volunteer Cluster Type"),
             title_display = T("Volunteer Cluster Type"),
             title_list = T("Volunteer Cluster Type"),
             title_update = T("Edit Volunteer Cluster Type"),
-            title_search = T("Search Volunteer Cluster Types"),
             title_upload = T("Import Volunteer Cluster Types"),
-            subtitle_create = T("Add New Volunteer Cluster Type"),
             label_list_button = T("List Volunteer Cluster Types"),
-            label_create_button = T("Add Volunteer Cluster Type"),
             label_delete_button = T("Delete Volunteer Cluster Type"),
             msg_record_created = T("Volunteer Cluster Type added"),
             msg_record_modified = T("Volunteer Cluster Type updated"),
@@ -264,12 +255,12 @@ class S3VolunteerClusterModel(S3Model):
                                     f = "cluster_type",
                                     vars = dict(child = "vol_cluster_type_id",
                                                 parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Volunteer Cluster Type"),
                                     )
 
         represent = S3Represent(lookup=tablename)
-        vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", table,
+        vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", "reference %s" % tablename,
                                               label = T("Volunteer Cluster Type"),
                                               requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
@@ -282,24 +273,21 @@ class S3VolunteerClusterModel(S3Model):
         # ---------------------------------------------------------------------
         # Volunteer Cluster
         tablename = "vol_cluster"
-        table = define_table(tablename,
-                             vol_cluster_type_id(),
-                             Field("name",
-                                   length=255,
-                                   unique=True,
-                                   label = T("Name")),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     vol_cluster_type_id(),
+                     Field("name",
+                           length=255,
+                           unique=True,
+                           label = T("Name")),
+                     *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Cluster"),
+            label_create = T("Create Volunteer Cluster"),
             title_display = T("Volunteer Cluster"),
             title_list = T("Volunteer Cluster"),
             title_update = T("Edit Volunteer Cluster"),
-            title_search = T("Search Volunteer Clusters"),
             title_upload = T("Import Volunteer Clusters"),
-            subtitle_create = T("Add New Volunteer Cluster"),
             label_list_button = T("List Volunteer Clusters"),
-            label_create_button = T("Add Volunteer Cluster"),
             label_delete_button = T("Delete Volunteer Cluster"),
             msg_record_created = T("Volunteer Cluster added"),
             msg_record_modified = T("Volunteer Cluster updated"),
@@ -310,12 +298,12 @@ class S3VolunteerClusterModel(S3Model):
                                     f = "cluster",
                                     vars = dict(child = "vol_cluster_id",
                                                 parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Volunteer Cluster"),
                                     )
 
         represent = S3Represent(lookup=tablename)
-        vol_cluster_id = S3ReusableField("vol_cluster_id", table,
+        vol_cluster_id = S3ReusableField("vol_cluster_id", "reference %s" % tablename,
                                          label = T("Volunteer Cluster"),
                                          requires = IS_NULL_OR(
                                                         IS_ONE_OF(db,
@@ -329,23 +317,20 @@ class S3VolunteerClusterModel(S3Model):
         # Volunteer Group Position
         #
         tablename = "vol_cluster_position"
-        table = define_table(tablename,
-                             Field("name",
-                                   length=255,
-                                   unique=True,
-                                   label = T("Name")),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           length=255,
+                           unique=True,
+                           label = T("Name")),
+                     *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Volunteer Cluster Position"),
+            label_create = T("Create Volunteer Cluster Position"),
             title_display = T("Volunteer Cluster Position"),
             title_list = T("Volunteer Cluster Position"),
             title_update = T("Edit Volunteer Cluster Position"),
-            title_search = T("Search Volunteer Cluster Positions"),
             title_upload = T("Import Volunteer Cluster Positions"),
-            subtitle_create = T("Add New Volunteer Cluster Position"),
             label_list_button = T("List Volunteer Cluster Positions"),
-            label_create_button = T("Add Volunteer Cluster Position"),
             label_delete_button = T("Delete Volunteer Cluster Position"),
             msg_record_created = T("Volunteer Cluster Position added"),
             msg_record_modified = T("Volunteer Cluster Position updated"),
@@ -356,12 +341,12 @@ class S3VolunteerClusterModel(S3Model):
                                     f = "cluster_position",
                                     vars = dict(child = "vol_cluster_position_id",
                                                 parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create_button,
+                                    label = crud_strings[tablename].label_create,
                                     title = T("Volunteer Cluster Position"),
                                     )
 
         represent = S3Represent(lookup=tablename)
-        vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", table,
+        vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", "reference %s" % tablename,
                                                 label = T("Volunteer Cluster Position"),
                                                 requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
@@ -383,14 +368,14 @@ S3OptionsFilter({
 })'''
 
         tablename = "vol_volunteer_cluster"
-        table = define_table(tablename,
-                             self.hrm_human_resource_id(ondelete = "CASCADE"),
-                             vol_cluster_type_id(script = cluster_type_filter), # This field is ONLY here to provide a filter
-                             vol_cluster_id(readable=False,
-                                            writable=False),
-                             vol_cluster_position_id(readable=False,
-                                                     writable=False),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     self.hrm_human_resource_id(ondelete = "CASCADE"),
+                     vol_cluster_type_id(script = cluster_type_filter), # This field is ONLY here to provide a filter
+                     vol_cluster_id(readable=False,
+                                    writable=False),
+                     vol_cluster_position_id(readable=False,
+                                             writable=False),
+                     *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict(vol_cluster_type_id = vol_cluster_type_id,

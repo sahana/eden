@@ -76,13 +76,12 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
 from gluon.dal import Rows
-from gluon.storage import Storage, Messages
+from gluon.storage import Storage
 
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3track import S3Trackable
-from s3utils import s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext, s3_unicode
+from s3utils import s3_include_ext, s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -1084,7 +1083,7 @@ class GIS(object):
             Only update tables which are already defined
         """
 
-        levels = ["L1", "L2", "L3", "L4"]
+        levels = ("L1", "L2", "L3", "L4", "L5")
         labels = self.get_location_hierarchy()
 
         db = current.db
@@ -1092,7 +1091,7 @@ class GIS(object):
             # Update the specific table which has just been defined
             table = db[tablename]
             if tablename == "gis_location":
-                labels["L0"] = current.messages["COUNTRY"]
+                labels["L0"] = current.messages.COUNTRY
                 table.level.requires = \
                     IS_NULL_OR(IS_IN_SET(labels))
             else:
@@ -1373,7 +1372,7 @@ class GIS(object):
             else:
                 return _levels
 
-        COUNTRY = current.messages["COUNTRY"]
+        COUNTRY = current.messages.COUNTRY
 
         if level == "L0":
             return COUNTRY
@@ -6070,6 +6069,8 @@ class MAP(DIV):
         select_stroke = settings.get_gis_select_stroke() 
         if select_stroke and select_stroke != 'ff9933':
             options["select_stroke"] = select_stroke
+        if not settings.get_gis_cluster_label():
+            options["cluster_label"] = False
 
         ########
         # Layout
@@ -8146,6 +8147,8 @@ class S3Map(S3Method):
 
                 request = self.request
                 from s3filter import S3FilterForm
+                # Apply filter defaults (before rendering the data!)
+                S3FilterForm.apply_filter_defaults(r, resource)
                 filter_formstyle = get_config("filter_formstyle", None)
                 submit = resource.get_config("map_submit", True)
                 filter_form = S3FilterForm(filter_widgets,

@@ -85,22 +85,6 @@ def alert():
     """ REST controller for CAP alerts """
 
     def prep(r):
-    	
-        table = db.cap_alert
-        prev_incidents = None
-        field = table['previously_selected_incidents']
-        field.readable = False
-        field.writable = False
-
-        record = r.record
-        if record and r.method=='update':
-          prev_incidents = record.incidents
-          prev_incidents = prev_incidents.replace('|',',')
-          prev_incidents = prev_incidents[1:-1]
-          record.update_record(previously_selected_incidents = prev_incidents)
-          field.readable = True
-          field.writable = False
-
         if r.id and s3db.cap_alert_is_template(r.id):
             redirect(URL(c="cap", f="template",
                          args=request.args,
@@ -220,24 +204,6 @@ def template():
 
     def prep(r):
         atable = db.cap_alert
-        prev_incidents = None
-        field = atable['previously_selected_incidents']
-        record = r.record
-        if record and r.method=='update':
-          prev_incidents = record.incidents
-          prev_incidents = prev_incidents.replace('|',',')
-          prev_incidents = prev_incidents[1:-1]
-          record.update_record(previously_selected_incidents = prev_incidents)
-          field.readable = True
-          field.writable = False
-        else:
-          field.readable = False
-          field.writable = False
-        for f in ["identifier", "msg_type"]:
-            field = atable[f]
-            field.writable = False
-            field.readable = False
-            field.requires = None
         for f in ["status", "scope"]:
             atable[f].requires = None
         atable.template_title.required = True

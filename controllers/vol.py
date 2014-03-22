@@ -190,7 +190,7 @@ def volunteer():
 
     # Volunteers only
     s3.filter = s3base.S3FieldSelector("type") == 2
-    
+
     vol_experience = settings.get_hrm_vol_experience()
     
     def prep(r):
@@ -285,7 +285,7 @@ def volunteer():
                                 
                 elif not r.component and r.method != "delete":
                     # Configure AddPersonWidget
-                    table.person_id.widget = S3AddPersonWidget(controller="vol")
+                    table.person_id.widget = S3AddPersonWidget2(controller="vol")
                     # Show location ID
                     location_id.writable = location_id.readable = True
                     # Hide unwanted fields

@@ -202,6 +202,9 @@
                 el.val(selected).change();
             });
 
+            // Apply cluetip (from S3.js)
+            self.menu.find('label[title]').cluetip({splitTitle: '|', showTitle:false});
+            
             self.menu.find('.s3-groupedopts-label').click(function() {
                 var div = $(this);
                 div.next('table').toggle();

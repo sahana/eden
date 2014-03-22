@@ -278,18 +278,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M()(
                     M(settings.get_hrm_staff_label(), c="hrm", f="staff",
                       check=manager_mode)(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
                     M(teams, c="hrm", f="group",
                       check=[manager_mode, use_teams])(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                     M("Facilities", c="org", f="facility", m="summary")(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search", m="summary"),
                         #M("Review/Approve New", m="review"),
                         M("Import", m="import")
@@ -297,11 +297,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Facility Types", c="org", f="facility_type",
                       restrict=[ADMIN]
                       )(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                     M("Organizations", c="org", f="organisation")(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                         M("Review/Approve New", m="review"),
                         M("Import", m="import")
@@ -309,28 +309,28 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Organization Types", c="org", f="organisation_type",
                       restrict=[ADMIN]
                       )(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                     M("Networks", c="org", f="group",
                       #restrict=[ADMIN]
                       )(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                     #M("Department Catalog", c="hrm", f="department",
                     #  check=manager_mode)(
-                    #    M("New", m="create"),
+                    #    M("Create", m="create"),
                     #    M("Search"),
                     #),
                     M("Job Title Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                     M("Skill Catalog", c="hrm", f="skill",
                       check=manager_mode)(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
@@ -350,14 +350,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        #current.s3db.inv_recv_crud_strings()
-        #crud_strings = current.response.s3.crud_strings
-        #inv_recv_list = crud_strings.inv_recv.title_list
-        #inv_recv_search = crud_strings.inv_recv.title_search
-
         return M()(
                     M("Facilities", c="inv", f="facility", m="summary")(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search", m="summary"),
                         M("Import", m="import")
                     ),
@@ -382,23 +377,23 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #  vars=dict(report="rel")),
                     ),
                     #M(inv_recv_list, c="inv", f="recv")(
-                    #    M("New", m="create"),
+                    #    M("Create", m="create"),
                     #    #M("Search"),
                     #),
                     M("Sent Shipments", c="inv", f="send")(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                         M("Search Shipped Items", f="track_item"),
                     ),
                     M("Items", c="supply", f="item")(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                         M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                 )
@@ -416,7 +411,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         menu = M(c="project")(
                     M("Projects", f="project")(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
@@ -449,27 +444,27 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search All Requested Skills", f="req_skill"),
                     ),
                     #M("Priority Items", f="summary_option")(
-                    #    M("New", m="create"),
+                    #    M("Create", m="create"),
                     #    M("Search"),
                     #),
                     M("Commitments", f="commit")(
                         #M("Search")
                     ),
                     M("Sent Shipments", f="send")(
-                        #M("New", m="create"),
+                        #M("Create", m="create"),
                         #M("Search"),
                         #M("Search Shipped Items", f="track_item"),
                     ),
                     M("Items", c="supply", f="item",
                       restrict=[SUPER])(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                         M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[SUPER])(
-                        M("New", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                 )

@@ -203,7 +203,7 @@ class S3SQLForm(object):
                         # S3SQLInlineComponent[CheckBox]
                         f = f[11:]
                     elif f.startswith("sub_"):
-                        # s3_checkboxes_widget
+                        # S3GroupedOptionsWidget
                         f = f[4:]
                     for k in subheadings.keys():
                         if k in done:
@@ -386,9 +386,10 @@ class S3SQLDefaultForm(S3SQLForm):
         # Process the form
         logged = False
         if not readonly:
-            link = options.get("link", None)
-            onvalidation = options.get("onvalidation", None)
-            onaccept = options.get("onaccept", None)
+            _get = options.get
+            link = _get("link", None)
+            onvalidation = _get("onvalidation", None)
+            onaccept = _get("onaccept", None)
             success, error = self.process(form,
                                           request.post_vars,
                                           onvalidation = onvalidation,
@@ -1845,6 +1846,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             _deletable = True
         _class = "read-row inline-form"
         if not multiple:
+            # Mark to client-side JS that we should open Edit Row
             _class = "%s single" % _class
         for i in xrange(len(items)):
             has_rows = True
@@ -1912,8 +1914,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
             insertable = has_permission("create", tablename)
         if insertable:
             _class = "add-row inline-form"
-            if not multiple and has_rows:
-                _class = "%s hide" % _class
+            if not multiple:
+                if has_rows:
+                    # Add Rows not relevant
+                    _class = "%s hide" % _class
+                else:
+                    # Mark to client-side JS that we should always validate
+                    _class = "%s single" % _class
             if required and not has_rows:
                 _class = "%s required" % _class
             has_rows = True

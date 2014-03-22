@@ -56,23 +56,23 @@ class S3TranslateModel(S3Model):
         langlist.sort()
 
         tablename = "translate_language"
-        table = define_table(tablename,
-                             Field("code", length=10,
-                                   notnull=True,
-                                   requires = IS_IN_SET(langlist),
-                                   label = T("Language Code"),
-                                   ),
-                             Field("file", "upload",
-                                   notnull=True,
-                                   requires = IS_UPLOAD_FILENAME(
-                                                   extension = "csv",
-                                                   error_message = T("CSV file required")),
-                                   label = T("Translated File")
-                                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("code", length=10,
+                           notnull=True,
+                           requires = IS_IN_SET(langlist),
+                           label = T("Language Code"),
+                           ),
+                     Field("file", "upload",
+                           notnull=True,
+                           requires = IS_UPLOAD_FILENAME(
+                                          extension = "csv",
+                                          error_message = T("CSV file required")),
+                           label = T("Translated File")
+                           ),
+                     *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Upload file"),
+            label_create = T("Upload file"),
             msg_record_created = T("File uploaded"))
 
         self.configure(tablename,
@@ -84,13 +84,13 @@ class S3TranslateModel(S3Model):
         # Translation Status
         #
         tablename = "translate_percentage"
-        table = define_table(tablename,
-                             Field("code", length=10, notnull=True),
-                             Field("module", length=32, notnull=True),
-                             Field("translated", "integer"),
-                             Field("untranslated", "integer"),
-                             Field("dirty", "boolean", default=False),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("code", length=10, notnull=True),
+                     Field("module", length=32, notnull=True),
+                     Field("translated", "integer"),
+                     Field("untranslated", "integer"),
+                     Field("dirty", "boolean", default=False),
+                     *s3_meta_fields())
 
         #----------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

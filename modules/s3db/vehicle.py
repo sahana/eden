@@ -88,51 +88,48 @@ class S3VehicleModel(S3Model):
 
         # Vehicles are a component of Assets
         tablename = "vehicle_vehicle"
-        table = self.define_table(tablename,
-                                  Field("type",
-                                        requires = IS_NULL_OR(IS_IN_SET(vehicle_type_opts)),
-                                        represent = lambda opt: \
+        self.define_table(tablename,
+                          Field("type",
+                                requires = IS_NULL_OR(IS_IN_SET(vehicle_type_opts)),
+                                represent = lambda opt: \
                                             vehicle_type_opts.get(opt, opt),
-                                        label=T("Type")),
-                                  Field("name",
-                                        label=T("ID")), # often the License Plate
-                                  asset_id(),
-                                  Field("gps",
-                                        label=T("GPS ID")),
-                                  Field("mileage", "integer",
-                                        label=T("Current Mileage"),
-                                        represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                                  Field("service_mileage", "integer",
-                                        label=T("Service Due"),
-                                        comment=T("Mileage"),
-                                        represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                                  s3_date("service_date",
-                                          label=T("Service Due")
-                                          ),
-                                  s3_date("insurance_date",
-                                          label=T("Insurance Renewal Due")
-                                          ),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+                                label=T("Type")),
+                          Field("name",
+                                label=T("ID")), # often the License Plate
+                          asset_id(),
+                          Field("gps",
+                                label=T("GPS ID")),
+                          Field("mileage", "integer",
+                                label=T("Current Mileage"),
+                                represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                          Field("service_mileage", "integer",
+                                label=T("Service Due"),
+                                comment=T("Mileage"),
+                                represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                          s3_date("service_date",
+                                  label=T("Service Due")
+                                  ),
+                          s3_date("insurance_date",
+                                  label=T("Insurance Renewal Due")
+                                  ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD strings
-        ADD_VEHICLE_DETAILS = T("Add Vehicle Detail")
+        ADD_VEHICLE_DETAILS = T("Create Vehicle Detail")
         crud_strings[tablename] = Storage(
-            title_create = ADD_VEHICLE_DETAILS,
+            label_create = ADD_VEHICLE_DETAILS,
             title_display = T("Vehicle Details"),
             title_list = T("Vehicles"),
             title_update = T("Edit Vehicle Details"),
-            title_search = T("Search Vehicle Details"),
-            subtitle_create = T("Add Vehicle Details"),
             label_list_button = T("List Vehicle Details"),
-            label_create_button = ADD_VEHICLE_DETAILS,
             label_delete_button = T("Delete Vehicle Details"),
             msg_record_created = T("Vehicle Details added"),
             msg_record_modified = T("Vehicle Details updated"),
             msg_record_deleted = T("Vehicle Details deleted"),
             msg_list_empty = T("No Vehicle Details currently defined"))
 
-        vehicle_id = S3ReusableField("vehicle_id", table,
+        vehicle_id = S3ReusableField("vehicle_id", "reference %s" % tablename,
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,
                                                               "vehicle_vehicle.id",
@@ -149,31 +146,28 @@ class S3VehicleModel(S3Model):
         # @ToDo: Move these to gis.py - nothing here is vehicle-specific
         #
         tablename = "vehicle_gps"
-        table = self.define_table(tablename,
-                                  asset_id(),
-                                  Field("lat",
-                                        requires=IS_LAT(),
-                                        label=T("Latitude")),
-                                  Field("lon",
-                                        requires=IS_LON(),
-                                        label=T("Longitude")),
-                                  Field("direction",
-                                        label=T("Direction")),
-                                  Field("speed",
-                                        label=T("Speed")),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          asset_id(),
+                          Field("lat",
+                                requires=IS_LAT(),
+                                label=T("Latitude")),
+                          Field("lon",
+                                requires=IS_LON(),
+                                label=T("Longitude")),
+                          Field("direction",
+                                label=T("Direction")),
+                          Field("speed",
+                                label=T("Speed")),
+                          *s3_meta_fields())
 
         # CRUD strings
-        ADD_GPS = T("Add GPS data")
+        ADD_GPS = T("Create GPS data")
         crud_strings[tablename] = Storage(
-            title_create = ADD_GPS,
+            label_create = ADD_GPS,
             title_display = T("GPS data"),
             title_list = T("GPS data"),
             title_update = T("Edit GPS data"),
-            title_search = T("Search GPS data"),
-            subtitle_create = T("Add GPS data"),
             label_list_button = T("List GPS data"),
-            label_create_button = ADD_GPS,
             label_delete_button = T("Delete GPS data"),
             msg_record_created = T("GPS data added"),
             msg_record_modified = T("GPS data updated"),

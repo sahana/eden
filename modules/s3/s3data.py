@@ -243,7 +243,7 @@ class S3DataTable(object):
                    '''i18n.sLast="%s"''' % T("Last"),
                    '''i18n.sNext="%s"''' % T("Next"),
                    '''i18n.sPrevious="%s"''' % T("Previous"),
-                   '''i18n.sEmptyTable="%s"''' % T("No data available in table"),
+                   '''i18n.sEmptyTable="%s"''' % T("No records found"), #T("No data available in table"),
                    '''i18n.sInfo="%s"''' % T("Showing _START_ to _END_ of _TOTAL_ entries"),
                    '''i18n.sInfoEmpty="%s"''' % T("Showing 0 to 0 of 0 entries"),
                    '''i18n.sInfoFiltered="%s"''' % T("(filtered from _MAX_ total entries)"),

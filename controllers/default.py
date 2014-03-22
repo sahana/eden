@@ -245,7 +245,7 @@ return false}})''' % (T("Please Select a Facility")))
             manage_facility_box = ""
 
         if has_permission("create", table):
-            create = A(T("Add Organization"),
+            create = A(T("Create Organization"),
                        _href = URL(c="org", f="organisation",
                                    args=["create"]),
                        _id = "add-btn",
@@ -485,23 +485,28 @@ def rapid():
 def user():
     """ Auth functions based on arg. See gluon/tools.py """
 
+    auth_settings = auth.settings
+    utable = auth_settings.table_user
+
     arg = request.args(0)
-    auth.settings.on_failed_authorization = URL(f="error")
+    if arg == "verify_email":
+        # Ensure we use the user's language
+        key = request.args[-1]
+        query = (utable.registration_key == key)
+        user = db(query).select(utable.language,
+                                limitby=(0, 1)).first()
+        if not user:
+            redirect(auth_settings.verify_email_next)
+        session.s3.language = user.language
+
+    auth_settings.on_failed_authorization = URL(f="error")
 
     auth.configure_user_fields()
-    auth.settings.register_onvalidation = register_validation
-
-    _table_user = auth.settings.table_user
-
-    auth.settings.profile_onaccept = auth.s3_user_profile_onaccept
+    auth_settings.profile_onaccept = auth.s3_user_profile_onaccept
+    auth_settings.register_onvalidation = register_validation
 
     self_registration = settings.get_security_self_registration()
     login_form = register_form = None
-
-    if request.args:
-        arg = request.args(0)
-    else:
-        arg = None
 
     # Check for template-specific customisations
     customize = settings.ui.get("customize_auth_user", None)
@@ -509,7 +514,7 @@ def user():
         customize(arg=arg)
 
     # Needs more work to integrate our form extensions
-    #auth.settings.formstyle = s3_formstyle
+    #auth_settings.formstyle = s3_formstyle
     if arg == "login":
         title = response.title = T("Login")
         # @ToDo: move this code to /modules/s3/s3aaa.py:def login()?
@@ -544,7 +549,7 @@ def user():
         # Used when adding organisations from registration form
         return s3_rest_controller(prefix="auth", resourcename="user")
     else:
-        # logout
+        # logout or verify_email
         title = ""
         form = auth()
 
@@ -837,11 +842,6 @@ def person():
     else:
         trainings_tab = None
 
-    if settings.get_search_save_widget():
-        searches_tab = (T("Saved Searches"), "saved_search")
-    else:
-        searches_tab = None
-
     tabs = [(T("Person Details"), None),
             (T("User Account"), "user"),
             (T("Staff/Volunteer Record"), "human_resource"),
@@ -857,8 +857,8 @@ def person():
             experience_tab,
             teams_tab,
             #(T("Assets"), "asset"),
+            #(T("My Subscriptions"), "subscription"),
             (T("My Maps"), "config"),
-            searches_tab,
             ]
     
     output = s3_rest_controller("pr", "person",

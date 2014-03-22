@@ -444,6 +444,12 @@ class S3Msg(object):
                 # Raise exception here to make the scheduler
                 # task fail permanently
                 raise ValueError("No SMS handler defined!")
+        elif contact_method == "TWITTER":
+            twitter_settings = self.get_twitter_api()
+            if not twitter_settings:
+                # Raise exception here to make the scheduler
+                # task fail permanently
+                raise ValueError("No Twitter API available!")
 
         def dispatch_to_pe_id(pe_id,
                               subject,
@@ -1126,7 +1132,6 @@ class S3Msg(object):
             Breaks long text to chunks if needed.
 
             @ToDo: Option to Send via Tropo
-            @ToDo: Store outgoing tweets in db.msg_twitter
         """
 
         # Initialize Twitter API
@@ -1140,44 +1145,48 @@ class S3Msg(object):
         twitter_api = twitter_settings[0]
         twitter_account = twitter_settings[1]
 
+        from_address = twitter_api.me().screen_name
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.msg_twitter
+        otable = s3db.msg_outbox
+
+        def log_tweet(tweet, recipient, from_address):
+            # Log in msg_twitter
+            id = table.insert(body=tweet,
+                              from_address=from_address,
+                              )
+            record = db(table.id == id).select(table.id,
+                                               limitby=(0, 1)
+                                               ).first()
+            s3db.update_super(table, record)
+            message_id = record.message_id
+
+            # Log in msg_outbox
+            otable.insert(message_id = message_id,
+                          address = recipient,
+                          status = 2,
+                          contact_method = "TWITTER",
+                          )
+
         if recipient:
             recipient = self._sanitise_twitter_account(recipient)
             try:
-                can_dm = recipient == twitter_account or\
+                can_dm = recipient == twitter_account or \
                          twitter_api.get_user(recipient).id in twitter_api.followers_ids(twitter_account)
-            except tweepy.TweepError: # recipient not found
+            except tweepy.TweepError:
+                # recipient not found
                 return False
             if can_dm:
-                chunks = self._break_to_chunks(text, TWITTER_MAX_CHARS)
+                chunks = self._break_to_chunks(text)
                 for c in chunks:
                     try:
                         # Note: send_direct_message() requires explicit kwargs (at least in tweepy 1.5)
                         # See http://groups.google.com/group/tweepy/msg/790fcab8bc6affb5
-                        rec = recipient
-                        if twitter_api.send_direct_message(screen_name=rec,
+                        if twitter_api.send_direct_message(screen_name=recipient,
                                                            text=c):
-                            s3db = current.s3db
-                            db = current.db
-
-                            table = s3db.msg_twitter
-                            myname = twitter_api.me().screen_name
-                            id = table.insert(body=c,
-                                              from_address=myname,
-                                              )
-                            query = (table.id == id)
-                            record = db(query).select(table.id,
-                                                      table.message_id,
-                                                      limitby=(0, 1)).first()
-                            s3db.update_super(table, record)
-                            message_id = record.message_id
-
-                            otable = s3db.msg_outbox
-
-                            otable.insert(message_id = message_id,
-                                          address = rec,
-                                          status = 2,
-                                          contact_method = "TWITTER",
-                                         )
+                            log_tweet(tweet, recipient, from_address)
 
                     except tweepy.TweepError:
                         current.log.error("Unable to Tweet DM")
@@ -1187,16 +1196,20 @@ class S3Msg(object):
                                                TWITTER_MAX_CHARS - len(prefix))
                 for c in chunks:
                     try:
-                        twitter_api.update_status(prefix + c)
+                        twitter_api.update_status("%s %s" % prefix, c)
                     except tweepy.TweepError:
                         current.log.error("Unable to Tweet @mention")
+                    else:
+                        log_tweet(tweet, recipient, from_address)
         else:
-            chunks = self._break_to_chunks(text, TWITTER_MAX_CHARS)
+            chunks = self._break_to_chunks(text)
             for c in chunks:
                 try:
                     twitter_api.update_status(c)
                 except tweepy.TweepError:
                     current.log.error("Unable to Tweet")
+                else:
+                    log_tweet(tweet, recipient, from_address)
 
         return True
 
@@ -1664,7 +1677,7 @@ class S3Msg(object):
 
             tags = entry.get("tags", None)
             if tags:
-                tags = [t.term for t in tags]
+                tags = [s3_unicode(t.term) for t in tags]
 
             location_id = None
             lat = entry.get("geo_lat", None)
@@ -2040,20 +2053,29 @@ class S3Compose(S3CRUD):
             Route the message
         """
 
-        vars = current.request.post_vars
+        post_vars = current.request.post_vars
+        contact_method = post_vars.contact_method
 
         recipients = self.recipients
         if not recipients:
-            if not vars.pe_id:
-                current.session.error = current.T("Please enter the recipient(s)")
-                redirect(self.url)
+            if not post_vars.pe_id:
+                if contact_method != "TWITTER": 
+                    current.session.error = current.T("Please enter the recipient(s)")
+                    redirect(self.url)
+                else:
+                    # This must be a Status Update
+                    if current.msg.send_tweet(post_vars.body):
+                        current.session.confirmation = current.T("Check outbox for the message status")
+                    else:
+                        current.session.error = current.T("Error sending message!")
+                    redirect(self.url)
             else:
-                recipients = vars.pe_id
+                recipients = post_vars.pe_id
 
         if current.msg.send_by_pe_id(recipients,
-                                     vars.subject,
-                                     vars.body,
-                                     vars.contact_method):
+                                     post_vars.subject,
+                                     post_vars.body,
+                                     contact_method):
             current.session.confirmation = current.T("Check outbox for the message status")
             redirect(self.url)
         else:
@@ -2073,7 +2095,7 @@ class S3Compose(S3CRUD):
         db = current.db
         s3db = current.s3db
         request = current.request
-        vars = request.get_vars
+        get_vars = request.get_vars
 
         mtable = s3db.msg_message
         otable = s3db.msg_outbox
@@ -2100,15 +2122,15 @@ class S3Compose(S3CRUD):
 
         recipient = self.recipient # from msg.compose()
         if not recipient:
-            if "pe_id" in vars:
-                recipient = vars.pe_id
-            elif "person_id" in vars:
+            if "pe_id" in get_vars:
+                recipient = get_vars.pe_id
+            elif "person_id" in get_vars:
                 # @ToDo
                 pass
-            elif "group_id" in vars:
+            elif "group_id" in get_vars:
                 # @ToDo
                 pass
-            elif "human_resource.id" in vars:
+            elif "human_resource.id" in get_vars:
                 # @ToDo
                 pass
 
@@ -2168,14 +2190,14 @@ class S3Compose(S3CRUD):
                         if controller == "hrm":
                             url = URL(c="hrm", f="person", args="contacts",
                                       vars={"group": "staff",
-                                            "human_resource.id": vars.get("human_resource.id")})
+                                            "human_resource.id": get_vars.get("human_resource.id")})
                         elif controller == "vol":
                             url = URL(c="vol", f="person", args="contacts",
                                       vars={"group": "volunteer",
-                                            "human_resource.id": vars.get("human_resource.id")})
+                                            "human_resource.id": get_vars.get("human_resource.id")})
                         elif controller == "member":
                             url = URL(c="member", f="person", args="contacts",
-                                      vars={"membership.id": vars.get("membership.id")})
+                                      vars={"membership.id": get_vars.get("membership.id")})
                         else:
                             # @ToDo: Lookup the type
                             url = URL(f="index")

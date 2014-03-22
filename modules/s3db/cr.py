@@ -69,27 +69,24 @@ class S3CampDataModel(S3Model):
         # Shelter types
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
         tablename = "cr_shelter_type"
-        table = define_table(tablename,
-                             Field("name", notnull=True,
-                                   label = NAME,
-                                   requires = IS_NOT_ONE_OF(db,
-                                                           "%s.name" % tablename)),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           label = NAME,
+                           requires = IS_NOT_ONE_OF(db,
+                                                    "%s.name" % tablename)),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_label_camp():
             ADD_SHELTER_TYPE = T("Add Camp Type")
             SHELTER_TYPE_LABEL = T("Camp Type")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_TYPE,
+                label_create = ADD_SHELTER_TYPE,
                 title_display = T("Camp Type Details"),
                 title_list = T("Camp Types"),
                 title_update = T("Edit Camp Type"),
-                title_search = T("Search Camp Types"),
-                subtitle_create = T("Add New Camp Type"),
                 label_list_button = T("List Camp Types"),
-                label_create_button = ADD_SHELTER_TYPE,
                 msg_record_created = T("Camp Type added"),
                 msg_record_modified = T("Camp Type updated"),
                 msg_record_deleted = T("Camp Type deleted"),
@@ -97,17 +94,14 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Camp"),
                 name_nice_plural = T("Camps"))
         else:
-            ADD_SHELTER_TYPE = T("Add Shelter Type")
+            ADD_SHELTER_TYPE = T("Create Shelter Type")
             SHELTER_TYPE_LABEL = T("Shelter Type")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_TYPE,
+                label_create = ADD_SHELTER_TYPE,
                 title_display = T("Shelter Type Details"),
                 title_list = T("Shelter Types"),
                 title_update = T("Edit Shelter Type"),
-                title_search = T("Search Shelter Types"),
-                subtitle_create = T("Add New Shelter Type"),
                 label_list_button = T("List Shelter Types"),
-                label_create_button = ADD_SHELTER_TYPE,
                 msg_record_created = T("Shelter Type added"),
                 msg_record_modified = T("Shelter Type updated"),
                 msg_record_deleted = T("Shelter Type deleted"),
@@ -120,7 +114,7 @@ class S3CampDataModel(S3Model):
                   )
 
         represent = S3Represent(lookup=tablename)
-        shelter_type_id = S3ReusableField("shelter_type_id", table,
+        shelter_type_id = S3ReusableField("shelter_type_id", "reference %s" % tablename,
                                           requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
                                                                   represent)),
@@ -135,26 +129,23 @@ class S3CampDataModel(S3Model):
         # Shelter services
         # e.g. medical, housing, food, ...
         tablename = "cr_shelter_service"
-        table = define_table(tablename,
-                             Field("name", notnull=True,
-                                   label = NAME,
-                                   ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           label = NAME,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_label_camp():
             ADD_SHELTER_SERVICE = T("Add Camp Service")
             SHELTER_SERVICE_LABEL = T("Camp Service")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_SERVICE,
+                label_create = ADD_SHELTER_SERVICE,
                 title_display = T("Camp Service Details"),
                 title_list = T("Camp Services"),
                 title_update = T("Edit Camp Service"),
-                title_search = T("Search Camp Services"),
-                subtitle_create = T("Add New Camp Service"),
                 label_list_button = T("List Camp Services"),
-                label_create_button = ADD_SHELTER_SERVICE,
                 msg_record_created = T("Camp Service added"),
                 msg_record_modified = T("Camp Service updated"),
                 msg_record_deleted = T("Camp Service deleted"),
@@ -162,17 +153,14 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Camp Service"),
                 name_nice_plural = T("Camp Services"))
         else:
-            ADD_SHELTER_SERVICE = T("Add Shelter Service")
+            ADD_SHELTER_SERVICE = T("Create Shelter Service")
             SHELTER_SERVICE_LABEL = T("Shelter Service")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_SERVICE,
+                label_create = ADD_SHELTER_SERVICE,
                 title_display = T("Shelter Service Details"),
                 title_list = T("Shelter Services"),
                 title_update = T("Edit Shelter Service"),
-                title_search = T("Search Shelter Services"),
-                subtitle_create = T("Add New Shelter Service"),
                 label_list_button = T("List Shelter Services"),
-                label_create_button = ADD_SHELTER_SERVICE,
                 msg_record_created = T("Shelter Service added"),
                 msg_record_modified = T("Shelter Service updated"),
                 msg_record_deleted = T("Shelter Service deleted"),
@@ -194,7 +182,9 @@ class S3CampDataModel(S3Model):
                                                                          f="shelter_service",
                                                                          label=ADD_SHELTER_SERVICE),
                                              ondelete = "RESTRICT",
-                                             #widget = SQLFORM.widgets.checkboxes.widget
+                                             widget = S3MultiSelectWidget(filter="auto",
+                                                                          header=False,
+                                                                          ),
                                              )
 
         # -------------------------------------------------------------------------
@@ -203,76 +193,76 @@ class S3CampDataModel(S3Model):
                            }
 
         tablename = "cr_shelter"
-        table = define_table(tablename,
-                             super_link("doc_id", "doc_entity"),
-                             super_link("pe_id", "pr_pentity"),
-                             super_link("site_id", "org_site"),
-                             #Field("code",
-                             #      length=10,           # Mayon compatibility
-                             #      notnull=True,
-                             #      unique=True, label=T("Code")),
-                             Field("name", notnull=True,
-                                   length=64,            # Mayon compatibility
-                                   requires = IS_NOT_EMPTY(),
-                                   label = T("Shelter Name")
-                                   ),
-                             self.org_organisation_id(
-                                widget = org_widget,
-                             ),
-                             shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
-                             shelter_service_id(),       # e.g. medical, housing, food, ...
-                             self.gis_location_id(),
-                             Field("phone",
-                                   label = T("Phone"),
-                                   requires = IS_NULL_OR(s3_phone_requires)),
-                             self.pr_person_id(label = T("Contact Person")),
-                             Field("capacity_day", "integer",
-                                   label = T("Capacity (Day)"),
-                                   requires = IS_NULL_OR(
-                                                IS_INT_IN_RANGE(0, 999999)),
-                                   represent=lambda v: \
-                                                IS_INT_AMOUNT.represent(v),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Capacity (Day / Evacuation)"),
-                                                                   T("Evacuation is short-term whilst storm passing e.g. 12 hours, hence people need less space."))),
-                                   ),
-                             Field("capacity_night", "integer",
-                                   label = T("Capacity (Night)"),
-                                   requires = IS_NULL_OR(
-                                                IS_INT_IN_RANGE(0, 999999)),
-                                   represent=lambda v: \
-                                                IS_INT_AMOUNT.represent(v),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Capacity (Night / Post-Impact)"),
-                                                                   T("Post-impact shelterees are there for a longer time, so need more space to Sleep."))),
-                                   ),
-                             Field("population", "integer",
-                                   label = T("Population"),
-                                   requires = IS_NULL_OR(
-                                                IS_INT_IN_RANGE(0, 999999)),
-                                   represent=lambda v: \
-                                                IS_INT_AMOUNT.represent(v)
-                                   ),
-                             Field("status", "integer",
-                                   requires = IS_NULL_OR(
-                                                IS_IN_SET(cr_shelter_opts)
-                                                ),
-                                   represent = lambda opt: \
-                                        cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
-                                   label = T("Status")),
-                             Field("source",
-                                   readable = False,
-                                   writable = False,
-                                   label = T("Source")),
-                             s3_comments(),
-                             Field("obsolete", "boolean",
-                                   label = T("Obsolete"),
-                                   represent = lambda bool: \
-                                     (bool and [T("Obsolete")] or [messages["NONE"]])[0],
-                                   default = False,
-                                   readable = False,
-                                   writable = False),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     super_link("doc_id", "doc_entity"),
+                     super_link("pe_id", "pr_pentity"),
+                     super_link("site_id", "org_site"),
+                     #Field("code",
+                     #      length=10,           # Mayon compatibility
+                     #      notnull=True,
+                     #      unique=True, label=T("Code")),
+                     Field("name", notnull=True,
+                           length=64,            # Mayon compatibility
+                           requires = IS_NOT_EMPTY(),
+                           label = T("Shelter Name")
+                           ),
+                     self.org_organisation_id(
+                         widget = org_widget,
+                     ),
+                     shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
+                     shelter_service_id(),       # e.g. medical, housing, food, ...
+                     self.gis_location_id(),
+                     Field("phone",
+                           label = T("Phone"),
+                           requires = IS_NULL_OR(s3_phone_requires)),
+                     self.pr_person_id(label = T("Contact Person")),
+                     Field("capacity_day", "integer",
+                           label = T("Capacity (Day)"),
+                           requires = IS_NULL_OR(
+                                      IS_INT_IN_RANGE(0, 999999)),
+                           represent=lambda v: \
+                                       IS_INT_AMOUNT.represent(v),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Capacity (Day / Evacuation)"),
+                                                           T("Evacuation is short-term whilst storm passing e.g. 12 hours, hence people need less space."))),
+                           ),
+                     Field("capacity_night", "integer",
+                           label = T("Capacity (Night)"),
+                           requires = IS_NULL_OR(
+                                       IS_INT_IN_RANGE(0, 999999)),
+                           represent=lambda v: \
+                                       IS_INT_AMOUNT.represent(v),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Capacity (Night / Post-Impact)"),
+                                                           T("Post-impact shelterees are there for a longer time, so need more space to Sleep."))),
+                           ),
+                     Field("population", "integer",
+                           label = T("Population"),
+                           requires = IS_NULL_OR(
+                                       IS_INT_IN_RANGE(0, 999999)),
+                           represent=lambda v: \
+                                       IS_INT_AMOUNT.represent(v)
+                           ),
+                     Field("status", "integer",
+                           requires = IS_NULL_OR(
+                                       IS_IN_SET(cr_shelter_opts)
+                                       ),
+                           represent = lambda opt: \
+                               cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
+                           label = T("Status")),
+                     Field("source",
+                           readable = False,
+                           writable = False,
+                           label = T("Source")),
+                     s3_comments(),
+                     Field("obsolete", "boolean",
+                           label = T("Obsolete"),
+                           represent = lambda opt: \
+                                       (opt and [T("Obsolete")] or [messages["NONE"]])[0],
+                           default = False,
+                           readable = False,
+                           writable = False),
+                     *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_label_camp():
@@ -280,14 +270,11 @@ class S3CampDataModel(S3Model):
             SHELTER_LABEL = T("Camp")
             SHELTER_HELP = T("The Camp this Request is from")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER,
+                label_create = ADD_SHELTER,
                 title_display = T("Camp Details"),
                 title_list = T("Camps"),
                 title_update = T("Edit Camp"),
-                title_search = T("Search Camps"),
-                subtitle_create = T("Add New Camp"),
                 label_list_button = T("List Camps"),
-                label_create_button = ADD_SHELTER,
                 msg_record_created = T("Camp added"),
                 msg_record_modified = T("Camp updated"),
                 msg_record_deleted = T("Camp deleted"),
@@ -296,18 +283,15 @@ class S3CampDataModel(S3Model):
                 name_nice_plural = T("Camps"))
 
         else:
-            ADD_SHELTER = T("Add Shelter")
+            ADD_SHELTER = T("Create Shelter")
             SHELTER_LABEL = T("Shelter")
             SHELTER_HELP = T("The Shelter this Request is from")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER,
+                label_create = ADD_SHELTER,
                 title_display = T("Shelter Details"),
                 title_list = T("Shelters"),
                 title_update = T("Edit Shelter"),
-                title_search = T("Search Shelters"),
-                subtitle_create = T("Add New Shelter"),
                 label_list_button = T("List Shelters"),
-                label_create_button = ADD_SHELTER,
                 msg_record_created = T("Shelter added"),
                 msg_record_modified = T("Shelter updated"),
                 msg_record_deleted = T("Shelter deleted"),
@@ -408,7 +392,7 @@ class S3CampDataModel(S3Model):
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
-        shelter_id = S3ReusableField("shelter_id", table,
+        shelter_id = S3ReusableField("shelter_id", "reference %s" % tablename,
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "cr_shelter.id",
                                                               represent,
@@ -436,39 +420,36 @@ class S3CampDataModel(S3Model):
         # - a historical record of shelter status: opening/closing dates & populations
         #
         tablename = "cr_shelter_status"
-        table = define_table(tablename,
-                             shelter_id(ondelete = "CASCADE"),
-                             s3_date(),
-                             Field("status", "integer",
-                                   requires = IS_NULL_OR(
-                                                IS_IN_SET(cr_shelter_opts)
-                                                ),
-                                   represent = lambda opt: \
-                                        cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
-                                   label = T("Status")),
-                             Field("population", "integer",
-                                   label = T("Population"),
-                                   requires = IS_NULL_OR(
-                                                IS_INT_IN_RANGE(0, 999999)),
-                                   represent=lambda v: \
-                                                IS_INT_AMOUNT.represent(v)
-                                   ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     shelter_id(ondelete = "CASCADE"),
+                     s3_date(),
+                     Field("status", "integer",
+                           requires = IS_NULL_OR(
+                                       IS_IN_SET(cr_shelter_opts)
+                                       ),
+                           represent = lambda opt: \
+                               cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
+                           label = T("Status")),
+                     Field("population", "integer",
+                           label = T("Population"),
+                           requires = IS_NULL_OR(
+                                       IS_INT_IN_RANGE(0, 999999)),
+                           represent=lambda v: \
+                                       IS_INT_AMOUNT.represent(v)
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_label_camp():
             ADD_SHELTER_STATUS = T("Add Camp Status")
             SHELTER_STATUS_LABEL = T("Camp Status")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_STATUS,
+                label_create = ADD_SHELTER_STATUS,
                 title_display = T("Camp Status Details"),
                 title_list = T("Camp Statuses"),
                 title_update = T("Edit Camp Status"),
-                title_search = T("Search Camp Statuses"),
-                subtitle_create = T("Add New Camp Status"),
                 label_list_button = T("List Camp Statuses"),
-                label_create_button = ADD_SHELTER_STATUS,
                 msg_record_created = T("Camp Status added"),
                 msg_record_modified = T("Camp Status updated"),
                 msg_record_deleted = T("Camp Status deleted"),
@@ -476,17 +457,14 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Camp Status"),
                 name_nice_plural = T("Camp Statuses"))
         else:
-            ADD_SHELTER_STATUS = T("Add Shelter Status")
+            ADD_SHELTER_STATUS = T("Create Shelter Status")
             SHELTER_STATUS_LABEL = T("Shelter Status")
             crud_strings[tablename] = Storage(
-                title_create = ADD_SHELTER_STATUS,
+                label_create = ADD_SHELTER_STATUS,
                 title_display = T("Shelter Status Details"),
                 title_list = T("Shelter Statuses"),
                 title_update = T("Edit Shelter Status"),
-                title_search = T("Search Shelter Statuses"),
-                subtitle_create = T("Add New Shelter Status"),
                 label_list_button = T("List Shelter Statuses"),
-                label_create_button = ADD_SHELTER_STATUS,
                 msg_record_created = T("Shelter Status added"),
                 msg_record_modified = T("Shelter Status updated"),
                 msg_record_deleted = T("Shelter Status deleted"),

@@ -66,13 +66,16 @@ def station():
 
         if r.interactive:
             if r.component:
-                # remove CRUD generated buttons in the tabs
-                s3db.configure("inv_inv_item",
-                               create=False,
-                               listadd=False,
-                               editable=False,
-                               deletable=False,
-                               )
+                if r.component.name == "human_resource":
+                    s3db.org_site_staff_config(r)
+                elif r.component.name == "inv_item":
+                    # remove CRUD generated buttons in the tabs
+                    s3db.configure("inv_inv_item",
+                                   create = False,
+                                   deletable = False,
+                                   editable = False,
+                                   listadd = False,
+                                   )
             elif r.method == "update":
                 field = r.table.obsolete
                 field.readable = field.writable = True

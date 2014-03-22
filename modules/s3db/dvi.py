@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ Sahana Eden Disaster Victim Identification Model
 
@@ -83,52 +84,49 @@ class S3DVIModel(S3Model):
         }
 
         tablename = "dvi_recreq"
-        table = define_table(tablename,
-                             s3_datetime(label = T("Date/Time of Find"),
-                                         empty=False,
-                                         default = "now",
-                                         future=0
-                                         ),
-                             Field("marker", length=64,
-                                   label = T("Marker"),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Marker"),
-                                                                   T("Number or code used to mark the place of find, e.g. flag code, grid coordinates, site reference number or similar (if available)")))),
-                             person_id(label = T("Finder")),
-                             Field("bodies_found", "integer",
-                                   label = T("Bodies found"),
-                                   requires = IS_INT_IN_RANGE(1, 99999),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
-                                   default = 0,
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Number of bodies found"),
-                                                                   T("Please give an estimated figure about how many bodies have been found.")))),
-                             Field("bodies_recovered", "integer",
-                                   label = T("Bodies recovered"),
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999)),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
-                                   default = 0),
-                             Field("description", "text"),
-                             location_id(label=T("Location")),
-                             Field("status", "integer",
-                                   requires = IS_IN_SET(task_status,
-                                                        zero=None),
-                                   default = 1,
-                                   label = T("Task Status"),
-                                   represent = lambda opt: \
-                                               task_status.get(opt, UNKNOWN_OPT)),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     s3_datetime(label = T("Date/Time of Find"),
+                                 empty=False,
+                                 default = "now",
+                                 future=0
+                                 ),
+                     Field("marker", length=64,
+                           label = T("Marker"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Marker"),
+                                                           T("Number or code used to mark the place of find, e.g. flag code, grid coordinates, site reference number or similar (if available)")))),
+                     person_id(label = T("Finder")),
+                     Field("bodies_found", "integer",
+                           label = T("Bodies found"),
+                           requires = IS_INT_IN_RANGE(1, 99999),
+                           represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
+                           default = 0,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Number of bodies found"),
+                                                           T("Please give an estimated figure about how many bodies have been found.")))),
+                     Field("bodies_recovered", "integer",
+                           label = T("Bodies recovered"),
+                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999)),
+                           represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
+                           default = 0),
+                     Field("description", "text"),
+                     location_id(label=T("Location")),
+                     Field("status", "integer",
+                           requires = IS_IN_SET(task_status,
+                                                zero=None),
+                           default = 1,
+                           label = T("Task Status"),
+                           represent = lambda opt: \
+                                       task_status.get(opt, UNKNOWN_OPT)),
+                     *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Body Recovery Request"),
+            label_create = T("Body Recovery Request"),
             title_display = T("Request Details"),
             title_list = T("Body Recovery Requests"),
             title_update = T("Update Request"),
-            title_search = T("Search Request"),
-            subtitle_create = T("Add New Request"),
             label_list_button = T("List Requests"),
-            label_create_button = T("Add Request"),
             label_delete_button = T("Delete Request"),
             msg_record_created = T("Recovery Request added"),
             msg_record_modified = T("Recovery Request updated"),
@@ -137,7 +135,7 @@ class S3DVIModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  orderby=~table.date,
+                  orderby="dvi_recreq.date desc",
                   list_fields = ["id",
                                  "date",
                                  "marker",
@@ -148,7 +146,7 @@ class S3DVIModel(S3Model):
                                  ])
 
         # Reusable fields
-        dvi_recreq_id = S3ReusableField("dvi_recreq_id", table,
+        dvi_recreq_id = S3ReusableField("dvi_recreq_id", "reference %s" % tablename,
                                         requires = IS_NULL_OR(IS_ONE_OF(db,
                                                         "dvi_recreq.id",
                                                         "[%(marker)s] %(date)s: %(bodies_found)s bodies")),
@@ -160,29 +158,29 @@ class S3DVIModel(S3Model):
         # Morgue
         #
         tablename = "dvi_morgue"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             super_link("site_id", "org_site"),
-                             Field("name",
-                                   length=255,
-                                   unique=True,
-                                   notnull=True,
-                                   label = T("Morgue")),
-                             self.org_organisation_id(),
-                             Field("description",
-                                   label = T("Description")),
-                             location_id(),
-                             Field("obsolete", "boolean",
-                                label = T("Obsolete"),
-                                represent = lambda bool: \
-                                  (bool and [T("Obsolete")] or [messages["NONE"]])[0],
-                                default = False,
-                                readable = False,
-                                writable = False),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     super_link("pe_id", "pr_pentity"),
+                     super_link("site_id", "org_site"),
+                     Field("name",
+                           length=255,
+                           unique=True,
+                           notnull=True,
+                           label = T("Morgue")),
+                     self.org_organisation_id(),
+                     Field("description",
+                           label = T("Description")),
+                     location_id(),
+                     Field("obsolete", "boolean",
+                     label = T("Obsolete"),
+                     represent = lambda opt: \
+                                 (opt and [T("Obsolete")] or [messages["NONE"]])[0],
+                     default = False,
+                     readable = False,
+                     writable = False),
+                     *s3_meta_fields())
 
         # Reusable Field
-        morgue_id = S3ReusableField("morgue_id", table,
+        morgue_id = S3ReusableField("morgue_id", "reference %s" % tablename,
                                     requires = IS_NULL_OR(IS_ONE_OF(db,
                                                     "dvi_morgue.id", "%(name)s")),
                                     represent = self.morgue_represent,
@@ -190,14 +188,11 @@ class S3DVIModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Morgue"),
+            label_create = T("Create Morgue"),
             title_display = T("Morgue Details"),
             title_list = T("Morgues"),
             title_update = T("Update Morgue Details"),
-            title_search = T("Search Morgues"),
-            subtitle_create = T("Add New Morgue"),
             label_list_button = T("List Morgues"),
-            label_create_button = T("Add Morgue"),
             label_delete_button = T("Delete Morgue"),
             msg_record_created = T("Morgue added"),
             msg_record_modified = T("Morgue updated"),
@@ -219,47 +214,44 @@ class S3DVIModel(S3Model):
         #
         bool_repr = lambda opt: (opt and [T("yes")] or [""])[0]
         tablename = "dvi_body"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             super_link("track_id", "sit_trackable"),
-                             self.pr_pe_label(requires = [IS_NOT_EMPTY(error_message=T("Enter a unique label!")),
-                                                          IS_NOT_ONE_OF(db, "dvi_body.pe_label")]),
-                             morgue_id(),
-                             dvi_recreq_id(label = T("Recovery Request")),
-                             s3_datetime("date_of_recovery",
-                                         label = T("Date of Recovery"),
-                                         empty=False,
-                                         default = "now",
-                                         future=0
-                                         ),
-                             Field("recovery_details","text"),
-                             Field("incomplete", "boolean",
-                                   label = T("Incomplete"),
-                                   represent = bool_repr),
-                             Field("major_outward_damage", "boolean",
-                                   label = T("Major outward damage"),
-                                   represent = bool_repr),
-                             Field("burned_or_charred", "boolean",
-                                   label = T("Burned/charred"),
-                                   represent = bool_repr),
-                             Field("decomposed","boolean",
-                                   label = T("Decomposed"),
-                                   represent = bool_repr),
-                             self.pr_gender(label=T("Apparent Gender")),
-                             self.pr_age_group(label=T("Apparent Age")),
-                             location_id(label=T("Place of Recovery")),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     super_link("pe_id", "pr_pentity"),
+                     super_link("track_id", "sit_trackable"),
+                     self.pr_pe_label(requires = [IS_NOT_EMPTY(error_message=T("Enter a unique label!")),
+                                                  IS_NOT_ONE_OF(db, "dvi_body.pe_label")]),
+                     morgue_id(),
+                     dvi_recreq_id(label = T("Recovery Request")),
+                     s3_datetime("date_of_recovery",
+                                 label = T("Date of Recovery"),
+                                 empty=False,
+                                 default = "now",
+                                 future=0
+                                 ),
+                     Field("recovery_details","text"),
+                     Field("incomplete", "boolean",
+                           label = T("Incomplete"),
+                           represent = bool_repr),
+                     Field("major_outward_damage", "boolean",
+                           label = T("Major outward damage"),
+                           represent = bool_repr),
+                     Field("burned_or_charred", "boolean",
+                           label = T("Burned/charred"),
+                           represent = bool_repr),
+                     Field("decomposed","boolean",
+                           label = T("Decomposed"),
+                           represent = bool_repr),
+                     self.pr_gender(label=T("Apparent Gender")),
+                     self.pr_age_group(label=T("Apparent Age")),
+                     location_id(label=T("Place of Recovery")),
+                     *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Dead Body Report"),
+            label_create = T("Create Dead Body Report"),
             title_display = T("Dead Body Details"),
             title_list = T("Dead Body Reports"),
             title_update = T("Edit Dead Body Details"),
-            title_search = T("Find Dead Body Report"),
-            subtitle_create = T("Add New Report"),
             label_list_button = T("List Reports"),
-            label_create_button = T("Add Report"),
             label_delete_button = T("Delete Report"),
             msg_record_created = T("Dead body report added"),
             msg_record_modified = T("Dead body report updated"),
@@ -312,37 +304,33 @@ class S3DVIModel(S3Model):
                                                      task_status.get(opt, UNKNOWN_OPT))
 
         tablename = "dvi_checklist"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             checklist_item("personal_effects",
-                                            label = T("Inventory of Effects")),
-                             checklist_item("body_radiology",
-                                            label = T("Radiology")),
-                             checklist_item("fingerprints",
-                                            label = T("Fingerprinting")),
-                             checklist_item("anthropology",
-                                            label = T("Anthropolgy")),
-                             checklist_item("pathology",
-                                            label = T("Pathology")),
-                             checklist_item("embalming",
-                                            label = T("Embalming")),
-                             checklist_item("dna",
-                                            label = T("DNA Profiling")),
-                             checklist_item("dental",
-                                            label = T("Dental Examination")),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     super_link("pe_id", "pr_pentity"),
+                     checklist_item("personal_effects",
+                                    label = T("Inventory of Effects")),
+                     checklist_item("body_radiology",
+                                    label = T("Radiology")),
+                     checklist_item("fingerprints",
+                                    label = T("Fingerprinting")),
+                     checklist_item("anthropology",
+                                    label = T("Anthropology")),
+                     checklist_item("pathology",
+                                    label = T("Pathology")),
+                     checklist_item("embalming",
+                                    label = T("Embalming")),
+                     checklist_item("dna",
+                                    label = T("DNA Profiling")),
+                     checklist_item("dental",
+                                    label = T("Dental Examination")),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        CREATE_CHECKLIST = T("Create Checklist")
         crud_strings[tablename] = Storage(
-            title_create = CREATE_CHECKLIST,
+            label_create = T("Create Checklist"),
             title_display = T("Checklist of Operations"),
             title_list = T("Checklists"),
             title_update = T("Update Task Status"),
-            title_search = T("Search Checklists"),
-            subtitle_create = T("New Checklist"),
             label_list_button = T("List Checklists"),
-            label_create_button = CREATE_CHECKLIST,
             msg_record_created = T("Checklist created"),
             msg_record_modified = T("Checklist updated"),
             msg_record_deleted = T("Checklist deleted"),
@@ -355,26 +343,23 @@ class S3DVIModel(S3Model):
         # Effects Inventory
         #
         tablename = "dvi_effects"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             Field("clothing", "text"),  # @todo: elaborate
-                             Field("jewellery", "text"), # @todo: elaborate
-                             Field("footwear", "text"),  # @todo: elaborate
-                             Field("watch", "text"),     # @todo: elaborate
-                             Field("other", "text"),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     super_link("pe_id", "pr_pentity"),
+                     Field("clothing", "text"),  # @todo: elaborate
+                     Field("jewellery", "text"), # @todo: elaborate
+                     Field("footwear", "text"),  # @todo: elaborate
+                     Field("watch", "text"),     # @todo: elaborate
+                     Field("other", "text"),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PERSONAL_EFFECTS = T("Add Personal Effects")
+        ADD_PERSONAL_EFFECTS = T("Create Personal Effects")
         crud_strings[tablename] = Storage(
-            title_create = ADD_PERSONAL_EFFECTS,
+            label_create = ADD_PERSONAL_EFFECTS,
             title_display = T("Personal Effects Details"),
             title_list = T("Personal Effects"),
             title_update = T("Edit Personal Effects Details"),
-            title_search = T("Search Personal Effects"),
-            subtitle_create = T("Add New Entry"),
             label_list_button = T("List Personal Effects"),
-            label_create_button = ADD_PERSONAL_EFFECTS,
             msg_record_created = T("Record added"),
             msg_record_modified = T("Record updated"),
             msg_record_deleted = T("Record deleted"),
@@ -401,42 +386,39 @@ class S3DVIModel(S3Model):
         }
 
         tablename = "dvi_identification"
-        table = define_table(tablename,
-                             super_link("pe_id", "pr_pentity"),
-                             Field("status", "integer",
-                                   requires = IS_IN_SET(dvi_id_status, zero=None),
-                                   default = 1,
-                                   label = T("Identification Status"),
-                                   represent = lambda opt: \
-                                               dvi_id_status.get(opt, UNKNOWN_OPT)),
-                             person_id("identity",
-                                       label=T("Identified as"),
-                                       comment = self.person_id_comment("identity"),
-                                       empty=False),
-                             person_id("identified_by",
-                                       default=current.auth.s3_logged_in_person(),
-                                       label=T("Identified by"),
-                                       comment = self.person_id_comment("identified_by"),
-                                       empty=False),
-                             Field("method", "integer",
-                                   requires = IS_IN_SET(dvi_id_methods, zero=None),
-                                   default = 1,
-                                   label = T("Method used"),
-                                   represent = lambda opt: \
-                                               dvi_id_methods.get(opt, UNKNOWN_OPT)),
-                             Field("comment", "text"),
-                             *s3_meta_fields())
-
+        define_table(tablename,
+                     super_link("pe_id", "pr_pentity"),
+                     Field("status", "integer",
+                           requires = IS_IN_SET(dvi_id_status, zero=None),
+                           default = 1,
+                           label = T("Identification Status"),
+                           represent = lambda opt: \
+                                       dvi_id_status.get(opt, UNKNOWN_OPT)),
+                     person_id("identity",
+                               label=T("Identified as"),
+                               comment = self.person_id_comment("identity"),
+                               empty=False),
+                     person_id("identified_by",
+                               default=current.auth.s3_logged_in_person(),
+                               label=T("Identified by"),
+                               comment = self.person_id_comment("identified_by"),
+                               empty=False),
+                     Field("method", "integer",
+                           requires = IS_IN_SET(dvi_id_methods, zero=None),
+                           default = 1,
+                           label = T("Method used"),
+                           represent = lambda opt: \
+                                       dvi_id_methods.get(opt, UNKNOWN_OPT)),
+                     Field("comment", "text"),
+                     *s3_meta_fields())
+ 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Identification Report"),
+            label_create = T("Create Identification Report"),
             title_display = T("Identification Report"),
             title_list = T("Identification Reports"),
             title_update = T("Edit Identification Report"),
-            title_search = T("Search Report"),
-            subtitle_create = T("Add New Report"),
             label_list_button = T("List Reports"),
-            label_create_button = T("Add Identification Report"),
             msg_record_created = T("Report added"),
             msg_record_modified = T("Report updated"),
             msg_record_deleted = T("Report deleted"),

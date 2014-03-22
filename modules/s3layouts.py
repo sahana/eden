@@ -293,7 +293,7 @@ class S3AddResourceLink(S3NavigationItem):
             @param f: the target function
             @param t: the target table (defaults to c_f)
             @param vars: the request vars (format="popup" will be added automatically)
-            @param label: the link label (falls back to label_create_button)
+            @param label: the link label (falls back to label_create)
             @param info: hover-title for the label
             @param title: the tooltip title
             @param tooltip: the tooltip text
@@ -309,10 +309,10 @@ class S3AddResourceLink(S3NavigationItem):
             c = current.request.controller
 
         if label is None:
-            # Fall back to label_create_button
+            # Fall back to label_create
             if t is None:
                 t = "%s_%s" % (c, f)
-            label = S3CRUD.crud_string(t, "label_create_button")
+            label = S3CRUD.crud_string(t, "label_create")
 
         return super(S3AddResourceLink, self).__init__(label,
                                                        c=c, f=f, t=t,

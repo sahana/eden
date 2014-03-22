@@ -10,14 +10,9 @@ except:
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.validators import IS_NOT_EMPTY
 
-from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent
-from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
-from s3.s3widgets import S3LocationSelectorWidget2
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
 T = current.T
 s3 = current.response.s3
@@ -117,6 +112,7 @@ settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["LY"]
+settings.gis.postcode_selector = False
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -216,7 +212,6 @@ settings.org.site_autocomplete_fields = ["location_id$L1",
                                          #"location_id$L3",
                                          #"location_id$L4",
                                          ]
-#settings.org.site_address_autocomplete = True
 
 # -----------------------------------------------------------------------------
 # Project
@@ -1286,9 +1281,9 @@ def render_site_needs(list_id, item_id, resource, rfields, record):
 s3.render_site_needs = render_site_needs
 
 # -----------------------------------------------------------------------------
-def customize_gis_location(**attr):
+def customise_gis_location_controller(**attr):
     """
-        Customize gis_location controller
+        Customise gis_location controller
         - Profile Page
     """
 
@@ -1351,10 +1346,10 @@ def customize_gis_location(**attr):
             elif r.method == "profile":
 
                 # Customise tables used by widgets
-                #customize_hrm_human_resource_fields()
-                customize_org_facility_fields()
-                s3db.req_customize_req_fields()
-                s3db.req_customize_commit_fields()
+                #customise_hrm_human_resource_fields()
+                customise_org_facility_fields()
+                s3db.req_customise_req_fields()
+                s3db.req_customise_commit_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -1381,7 +1376,7 @@ def customize_gis_location(**attr):
                                   )
                 #locations_widget = dict(label = "Locations",
                 #                        insert = False,
-                #                        #title_create = "Add New Location",
+                #                        #label_create = "Create Location",
                 #                        type = "datalist",
                 #                        tablename = "gis_location",
                 #                        context = "location",
@@ -1391,7 +1386,7 @@ def customize_gis_location(**attr):
                 #                        list_layout = render_locations_profile,
                 #                        )
                 #needs_widget = dict(label = "Needs",
-                #                    title_create = "Add New Need",
+                #                    label_create = "Add New Need",
                 #                    type = "datalist",
                 #                    tablename = "req_site_needs",
                 #                    context = "location",
@@ -1402,7 +1397,7 @@ def customize_gis_location(**attr):
                 #                    list_layout = render_site_needs,
                 #                    )
                 reqs_widget = dict(label = "Requests",
-                                   title_create = "Add New Request",
+                                   label_create = "Add New Request",
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "location",
@@ -1415,7 +1410,7 @@ def customize_gis_location(**attr):
                                    list_layout = s3db.req_req_list_layout,
                                    )
                 commits_widget = dict(label = "Donations",
-                                      title_create = "Add New Donation",
+                                      label_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "location",
@@ -1428,7 +1423,7 @@ def customize_gis_location(**attr):
                                       list_layout = s3db.req_commit_list_layout,
                                       )
                 sites_widget = dict(label = "Sites",
-                                    title_create = "Add New Site",
+                                    label_create = "Add New Site",
                                     type = "datalist",
                                     tablename = "org_facility",
                                     context = "location",
@@ -1494,14 +1489,15 @@ def customize_gis_location(**attr):
 
     return attr
 
-settings.ui.customize_gis_location = customize_gis_location
+settings.customise_gis_location_controller = customise_gis_location_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource_fields():
+def customise_hrm_human_resource_fields():
     """
-        Customize hrm_human_resource for Profile widgets and 'more' popups
+        Customise hrm_human_resource for Profile widgets and 'more' popups
     """
 
+    from s3.s3fields import S3Represent
     s3db = current.s3db
     table = s3db.hrm_human_resource
     table.site_id.represent = S3Represent(lookup="org_site")
@@ -1512,12 +1508,6 @@ def customize_hrm_human_resource_fields():
     if current.request.controller == "vol":
         settings.pr.request_dob = True
         settings.pr.request_gender = True
-
-        from s3.s3validators import IS_ADD_PERSON_WIDGET2
-        from s3.s3widgets import S3AddPersonWidget2
-        field = table.person_id
-        field.requires = IS_ADD_PERSON_WIDGET2()
-        field.widget = S3AddPersonWidget2(controller="vol")
 
     list_fields = ["person_id",
                    "person_id$pe_id",
@@ -1536,9 +1526,9 @@ def customize_hrm_human_resource_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_hrm_human_resource(**attr):
+def customise_hrm_human_resource_controller(**attr):
     """
-        Customize hrm_human_resource controller
+        Customise hrm_human_resource controller
         - used for 'more' popups
     """
 
@@ -1553,7 +1543,7 @@ def customize_hrm_human_resource(**attr):
             if not result:
                 return False
 
-        customize_hrm_human_resource_fields()
+        customise_hrm_human_resource_fields()
         if r.method == "datalist":
             current.s3db.configure("hrm_human_resource",
                                    # Don't include a Create form in 'More' popups
@@ -1566,13 +1556,10 @@ def customize_hrm_human_resource(**attr):
 
     return attr
 
-settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_hrm_job_title(**attr):
-    """
-        Customize hrm_job_title controller
-    """
+def customise_hrm_job_title_controller(**attr):
 
     s3 = current.response.s3
 
@@ -1649,12 +1636,12 @@ def customize_hrm_job_title(**attr):
 
     return attr
 
-settings.ui.customize_hrm_job_title = customize_hrm_job_title
+settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_facility_fields():
+def customise_org_facility_fields():
     """
-        Customize org_facility for Profile widgets and 'more' popups
+        Customise org_facility for Profile widgets and 'more' popups
     """
 
     # Truncate comments fields
@@ -1675,14 +1662,11 @@ def customize_org_facility_fields():
     # CRUD strings
     ADD_FAC = T("Add Site")
     current.response.s3.crud_strings[tablename] = Storage(
-        title_create = ADD_FAC,
+        label_create = ADD_FAC,
         title_display = T("Site Details"),
         title_list = T("Sites"),
         title_update = T("Edit Site"),
-        title_search = T("Search Sites"),
-        subtitle_create = ADD_FAC,
         label_list_button = T("List Sites"),
-        label_create_button = ADD_FAC,
         label_delete_button = T("Delete Site"),
         msg_record_created = T("Site Added"),
         msg_record_modified = T("Site Updated"),
@@ -1709,12 +1693,7 @@ def customize_org_facility_fields():
                    "comments",
                    ]
 
-    #from s3.s3validators import IS_ADD_PERSON_WIDGET2
-    #from s3.s3widgets import S3AddPersonWidget2
-    #field = s3db.hrm_human_resource_site.human_resource_id
-    #field.requires = IS_ADD_PERSON_WIDGET2()
-    #field.widget = S3AddPersonWidget2(controller="pr")
-
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
     crud_form = S3SQLCustomForm("name",
                                 "code",
                                 S3SQLInlineComponentMultiSelectWidget(
@@ -1755,10 +1734,7 @@ def customize_org_facility_fields():
                    )
 
 # -----------------------------------------------------------------------------
-def customize_org_facility(**attr):
-    """
-        Customize org_facility controller
-    """
+def customise_org_facility_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -1774,7 +1750,7 @@ def customize_org_facility(**attr):
                 return False
 
         if r.interactive:
-            customize_org_facility_fields()
+            customise_org_facility_fields()
 
             # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
@@ -1799,6 +1775,8 @@ def customize_org_facility(**attr):
             else:
                 # Don't add new Locations here
                 location_field.comment = None
+                from s3.s3validators import IS_LOCATION_SELECTOR2
+                from s3.s3widgets import S3LocationSelectorWidget2
                 location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
                 location_field.widget = S3LocationSelectorWidget2(levels=levels,
                                                                   show_address=True,
@@ -1870,9 +1848,9 @@ def customize_org_facility(**attr):
 
             elif r.method == "profile":
                 # Customise tables used by widgets
-                customize_hrm_human_resource_fields()
-                customize_site_needs_fields(profile=True)
-                s3db.req_customize_req_fields()
+                customise_hrm_human_resource_fields()
+                customise_site_needs_fields(profile=True)
+                s3db.req_customise_req_fields()
 
                 list_fields = ["name",
                                "id",
@@ -1889,7 +1867,7 @@ def customize_org_facility(**attr):
                                   width = 568,
                                   )
                 contacts_widget = dict(label = "Contacts",
-                                       title_create = "Add New Contact",
+                                       label_create = "Create Contact",
                                        type = "datalist",
                                        tablename = "hrm_human_resource",
                                        context = "site",
@@ -1900,7 +1878,7 @@ def customize_org_facility(**attr):
                                        list_layout = render_contacts,
                                        )
                 reqs_widget = dict(label = "Requests",
-                                   title_create = "Add New Request",
+                                   label_create = "Add New Request",
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "site",
@@ -1910,7 +1888,7 @@ def customize_org_facility(**attr):
                                    list_layout = s3db.req_req_list_layout,
                                    )
                 commits_widget = dict(label = "Donations",
-                                      #title_create = "Add New Donation",
+                                      #label_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "site",
@@ -2074,10 +2052,10 @@ def customize_org_facility(**attr):
     #attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_needs_fields(profile=False):
+def customise_org_needs_fields(profile=False):
 
     # Truncate details field(s)
     from s3.s3utils import s3_trunk8
@@ -2113,21 +2091,18 @@ def customize_org_needs_fields(profile=False):
     return
 
 # -----------------------------------------------------------------------------
-def customize_req_organisation_needs(**attr):
-    """
-        Customize req_organisation_needs controller
-    """
+def customise_req_organisation_needs_controller(**attr):
 
-    customize_org_needs_fields()
+    customise_org_needs_fields()
 
     return attr
 
-settings.ui.customize_req_organisation_needs = customize_req_organisation_needs
+settings.customise_req_organisation_needs_controller = customise_req_organisation_needs_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
         - Profile Page
         - Requests
     """
@@ -2161,12 +2136,12 @@ def customize_org_organisation(**attr):
 
             if r.method == "profile":
                 # Customise tables used by widgets
-                customize_hrm_human_resource_fields()
-                customize_org_facility_fields()
-                customize_org_needs_fields(profile=True)
+                customise_hrm_human_resource_fields()
+                customise_org_facility_fields()
+                customise_org_needs_fields(profile=True)
 
                 contacts_widget = dict(label = "Contacts",
-                                       title_create = "Add New Contact",
+                                       label_create = "Create Contact",
                                        type = "datalist",
                                        tablename = "hrm_human_resource",
                                        context = "organisation",
@@ -2184,7 +2159,7 @@ def customize_org_organisation(**attr):
                                   width = 568,
                                   )
                 needs_widget = dict(label = "Needs",
-                                    title_create = "Add New Need",
+                                    label_create = "Add New Need",
                                     type = "datalist",
                                     tablename = "req_organisation_needs",
                                     multiple = False,
@@ -2194,7 +2169,7 @@ def customize_org_organisation(**attr):
                                     list_layout = render_org_needs,
                                     )
                 reqs_widget = dict(label = "Requests",
-                                   title_create = "Add New Request",
+                                   label_create = "Add New Request",
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
@@ -2206,7 +2181,7 @@ def customize_org_organisation(**attr):
                                    list_layout = s3db.req_req_list_layout,
                                    )
                 commits_widget = dict(label = "Donations",
-                                      #title_create = "Add New Donation",
+                                      #label_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "organisation",
@@ -2218,7 +2193,7 @@ def customize_org_organisation(**attr):
                                       list_layout = s3db.req_commit_list_layout,
                                       )
                 sites_widget = dict(label = "Sites",
-                                    title_create = "Add New Site",
+                                    label_create = "Add New Site",
                                     type = "datalist",
                                     tablename = "org_facility",
                                     context = "organisation",
@@ -2349,7 +2324,7 @@ def customize_org_organisation(**attr):
                                                 vars={"refresh": "datalist"}),
                                       _class="btn btn-primary s3_modal",
                                       _role="button",
-                                      _title=T("Add New Organization"),
+                                      _title=T("Create Organization"),
                                       )
 
         # Call standard postp
@@ -2361,10 +2336,10 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_site_needs_fields(profile=False):
+def customise_site_needs_fields(profile=False):
 
     s3db = current.s3db
     table = s3db.req_site_needs
@@ -2398,13 +2373,10 @@ def customize_site_needs_fields(profile=False):
                    )
     return
 
-s3.customize_site_needs_fields = customize_site_needs_fields
+s3.customise_site_needs_fields = customise_site_needs_fields
 
 # -----------------------------------------------------------------------------
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -2431,16 +2403,13 @@ def customize_pr_person(**attr):
         if r.interactive or r.representation == "aadata":
             if controller == "vol":
                 # CRUD Strings
-                ADD_CONTACT = T("Add New Volunteer")
+                ADD_CONTACT = T("Create Volunteer")
                 s3.crud_strings[tablename] = Storage(
-                    title_create = T("Add Volunteer"),
+                    label_create = T("Create Volunteer"),
                     title_display = T("Volunteer Details"),
                     title_list = T("Volunteer Directory"),
                     title_update = T("Edit Volunteer Details"),
-                    title_search = T("Search Volunteers"),
-                    subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Volunteers"),
-                    label_create_button = ADD_CONTACT,
                     label_delete_button = T("Delete Volunteer"),
                     msg_record_created = T("Volunteer added"),
                     msg_record_modified = T("Volunteer details updated"),
@@ -2453,16 +2422,13 @@ def customize_pr_person(**attr):
                 s3db.hrm_competency.comments.widget = StringWidget().widget
             elif controller != "default":
                 # CRUD Strings
-                ADD_CONTACT = T("Add New Contact")
+                ADD_CONTACT = T("Create Contact")
                 s3.crud_strings[tablename] = Storage(
-                    title_create = T("Add Contact"),
+                    label_create = T("Create Contact"),
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Edit Contact Details"),
-                    title_search = T("Search Contacts"),
-                    subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
-                    label_create_button = ADD_CONTACT,
                     label_delete_button = T("Delete Contact"),
                     msg_record_created = T("Contact added"),
                     msg_record_modified = T("Contact details updated"),
@@ -2475,8 +2441,10 @@ def customize_pr_person(**attr):
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
             site_field = htable.site_id
+            from s3.s3fields import S3Represent
             represent = S3Represent(lookup="org_site")
             site_field.represent = represent
+            from s3.s3validators import IS_ONE_OF
             site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                             represent,
                                             orderby = "org_site.name")
@@ -2584,6 +2552,7 @@ def customize_pr_person(**attr):
                                                             options = "EMAIL")),
                                             )
 
+            from s3.s3forms import S3SQLCustomForm
             crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
             if r.id and controller == "default":
@@ -2642,13 +2611,10 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
-def customize_doc_document(**attr):
-    """
-        Customize doc_document controller
-    """
+def customise_doc_document_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -2667,14 +2633,11 @@ def customize_doc_document(**attr):
 
         if r.interactive:
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Document"),
+                label_create = T("Add Document"),
                 title_display = T("Document"),
                 title_list = T("Documents"),
                 title_update = T("Edit Document"),
-                title_search = T("Search Documents"),
-                subtitle_create = T("Add Document"),
                 label_list_button = T("List New Documents"),
-                label_create_button = T("Add Documents"),
                 label_delete_button = T("Remove Documents"),
                 msg_record_created = T("Documents added"),
                 msg_record_modified = T("Documents updated"),
@@ -2682,6 +2645,7 @@ def customize_doc_document(**attr):
                 msg_list_empty = T("No Documents currently recorded"))
 
             # Force added docs to have a name
+            from gluon.validators import IS_NOT_EMPTY
             table.name.requires = IS_NOT_EMPTY()
 
             list_fields = ["name",
@@ -2691,6 +2655,7 @@ def customize_doc_document(**attr):
                            "comments",
                            ]
 
+            from s3.s3forms import S3SQLCustomForm
             crud_form = S3SQLCustomForm(*list_fields)
 
             s3db.configure(tablename,
@@ -2702,7 +2667,70 @@ def customize_doc_document(**attr):
 
     return attr
 
-settings.ui.customize_doc_document = customize_doc_document
+settings.customise_doc_document_controller = customise_doc_document_controller
+
+# -----------------------------------------------------------------------------
+def customise_irs_ireport_resource(r, tablename):
+
+    from gluon.validators import IS_IN_SET
+    category_opts = {"inquiry" : T("Inquiry"),
+                     "request" : T("Request"),
+                     "complaint" : T("Complaint"),
+                     "emergency" : T("Emergency")
+                     }
+
+    table = current.db[tablename]
+    table.category.requires = IS_IN_SET(category_opts)
+    table.category.represent = lambda opt: category_opts.get(opt, opt)
+
+    if not current.auth.is_logged_in():
+
+        table.person.label = T("Your Contact Details")
+
+        from s3.s3forms import S3SQLCustomForm
+        crud_form = S3SQLCustomForm("name",
+                                    "message",
+                                    "category",
+                                    "person",
+                                    "datetime",
+                                    "location_id",
+                                    )
+    
+        current.s3db.configure(tablename,
+                               # No workflow
+                               create_next = None,
+                               crud_form = crud_form,
+                               )
+
+settings.customise_irs_ireport_resource = customise_irs_ireport_resource
+
+# -----------------------------------------------------------------------------
+def customise_irs_ireport_controller(**attr):
+
+    if not current.auth.is_logged_in():
+
+        attr["rheader"] = None
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and isinstance(output, dict):
+                output["buttons"] = {}
+
+            return output
+        s3.postp = custom_postp
+
+    
+
+    return attr
+
+settings.customise_irs_ireport_controller = customise_irs_ireport_controller
 
 # -----------------------------------------------------------------------------
 settings.req.req_type = ["Other"]
@@ -2718,10 +2746,7 @@ settings.req.commit_value = True
 # Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
 settings.req.requester_to_site = True
 
-def customize_req_req(**attr):
-    """
-        Customize req_req controller
-    """
+def customise_req_req_controller(**attr):
 
     s3 = current.response.s3
 
@@ -2734,20 +2759,20 @@ def customize_req_req(**attr):
 
         s3db = current.s3db
         if r.component_name == "commit":
-            s3db.req_customize_commit_fields()
+            s3db.req_customise_commit_fields()
         else:
-            s3db.req_customize_req_fields()
+            s3db.req_customise_req_fields()
         if r.method in ("datalist", "datalist.dl"):
             s3.filter = (r.table.req_status.belongs([0, 1]))
         elif r.method == "profile":
             # Customise tables used by widgets
-            s3db.req_customize_commit_fields()
-            customize_org_facility_fields()
+            s3db.req_customise_commit_fields()
+            customise_org_facility_fields()
 
             record = r.record
             record_id = record.id
             commits_widget = dict(label = "Donations",
-                                  title_create = "Add New Donation",
+                                  label_create = "Add New Donation",
                                   type = "datalist",
                                   tablename = "req_commit",
                                   context = "request",
@@ -2761,7 +2786,7 @@ def customize_req_req(**attr):
                                   )
             filter = (S3FieldSelector("obsolete") == False)
             sites_widget = dict(label = "Sites",
-                                #title_create = "Add New Site",
+                                #label_create = "Add New Site",
                                 type = "datalist",
                                 tablename = "org_facility",
                                 multiple = False,
@@ -2842,13 +2867,10 @@ def customize_req_req(**attr):
 
     return attr
 
-settings.ui.customize_req_req = customize_req_req
+settings.customise_req_req_controller = customise_req_req_controller
 
 # -----------------------------------------------------------------------------
-def customize_req_commit(**attr):
-    """
-        Customize req_commit controller
-    """
+def customise_req_commit_controller(**attr):
 
     s3 = current.response.s3
 
@@ -2859,7 +2881,7 @@ def customize_req_commit(**attr):
         #if callable(standard_prep):
         #    result = standard_prep(r)
 
-        current.s3db.req_customize_commit_fields()
+        current.s3db.req_customise_commit_fields()
 
         if r.method in ("datalist", "datalist.dl"):
             s3.filter = (r.table.cancel != True)
@@ -2872,7 +2894,7 @@ def customize_req_commit(**attr):
 
     return attr
 
-settings.ui.customize_req_commit = customize_req_commit
+settings.customise_req_commit_controller = customise_req_commit_controller
 
 # =============================================================================
 # Template Modules
@@ -2972,6 +2994,11 @@ settings.modules = OrderedDict([
     #    restricted = True,
     #    module_type = None
     #)),
+    ("irs", Storage(
+        name_nice = "Incident Reports",
+        restricted = True,
+        module_type = None
+    )),
     ("req", Storage(
             name_nice = "Requests",
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",

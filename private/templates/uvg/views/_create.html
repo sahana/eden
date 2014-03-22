@@ -1,15 +1,24 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
-{{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
-<div id='rheader'>
-{{try:}}{{=XML(rheader)}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+  {{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
+ </div>
 </div>
-<div id='component'>
+<div class='row'>
+ <div id='rheader' class='small-12 columns'>
+  {{try:}}{{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
 {{except:}}
+ </div>
 </div>
-<div>
+<div class='row'>
 {{pass}}
- {{include "key.html"}}
- <div class='form-container'>
- {{try:}}{{=form}}{{except:}}{{pass}}
+ <div class='small-12 columns'>
+  {{include "key.html"}}
+  <div class='form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
  </div>
 </div>

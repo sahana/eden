@@ -86,23 +86,20 @@ class S3EventModel(S3Model):
         # Event Types / Disaster Types
         #
         tablename = "event_event_type"
-        table = define_table(tablename,
-                             Field("name", notnull=True,
-                                   length=64,
-                                   label=T("Name")),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           length=64,
+                           label=T("Name")),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            title_create = T("Add Event Type"),
+            label_create = T("Create Event Type"),
             title_display = T("Event Type Details"),
             title_list = T("Event Types"),
             title_update = T("Edit Event Type"),
-            title_search = T("Search Event Types"),
             title_upload = T("Import Event Types"),
-            subtitle_create = T("Add New Event Type"),
             label_list_button = T("List Event Types"),
-            label_create_button = T("Add Event Type"),
             label_delete_button = T("Remove Event Type from this event"),
             msg_record_created = T("Event Type added"),
             msg_record_modified = T("Event Type updated"),
@@ -111,7 +108,7 @@ class S3EventModel(S3Model):
             )
 
         represent = S3Represent(lookup=tablename)
-        event_type_id = S3ReusableField("event_type_id", table,
+        event_type_id = S3ReusableField("event_type_id", "reference %s" % tablename,
                                         sortby="name",
                                         requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "event_event_type.id",
@@ -138,43 +135,40 @@ class S3EventModel(S3Model):
         #
         # ---------------------------------------------------------------------
         tablename = "event_event"
-        table = define_table(tablename,
-                             Field("name", notnull=True, # Name could be a code
-                                   length=64,    # Mayon compatiblity
-                                   label=T("Name")),
-                             event_type_id(),
-                             Field("exercise", "boolean",
-                                   represent = lambda opt: "√" if opt else NONE,
-                                   #comment = DIV(_class="tooltip",
-                                   #              _title="%s|%s" % (T("Exercise"),
-                                                                   # Should!
-                                   #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
-                                   label=T("Exercise?")),
-                             s3_datetime(name="zero_hour",
-                                         label = T("Zero Hour"),
-                                         default = "now",
-                                         comment = DIV(_class="tooltip",
-                                                       _title="%s|%s" % (T("Zero Hour"),
-                                                                         T("The time at which the Event started."))),
-                                         ),
-                             Field("closed", "boolean",
-                                   default = False,
-                                   represent = s3_yes_no_represent,
-                                   label=T("Closed")),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("name", notnull=True, # Name could be a code
+                           length=64,    # Mayon compatiblity
+                           label=T("Name")),
+                     event_type_id(),
+                     Field("exercise", "boolean",
+                           represent = lambda opt: "√" if opt else NONE,
+                           #comment = DIV(_class="tooltip",
+                           #              _title="%s|%s" % (T("Exercise"),
+                                                           # Should!
+                           #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
+                           label=T("Exercise?")),
+                     s3_datetime(name="zero_hour",
+                                 label = T("Zero Hour"),
+                                 default = "now",
+                                 comment = DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("Zero Hour"),
+                                                                 T("The time at which the Event started."))),
+                                 ),
+                     Field("closed", "boolean",
+                           default = False,
+                           represent = s3_yes_no_represent,
+                           label=T("Closed")),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         ADD_EVENT = T("New Event")
         crud_strings[tablename] = Storage(
-            title_create = ADD_EVENT,
+            label_create = ADD_EVENT,
             title_display = T("Event Details"),
             title_list = T("Events"),
             title_update = T("Edit Event"),
-            title_search = T("Search Events"),
-            subtitle_create = T("Add New Event"),
             label_list_button = T("List Events"),
-            label_create_button = ADD_EVENT,
             label_delete_button = T("Delete Event"),
             msg_record_created = T("Event added"),
             msg_record_modified = T("Event updated"),
@@ -182,7 +176,7 @@ class S3EventModel(S3Model):
             msg_list_empty = T("No Events currently registered"))
 
         represent = S3Represent(lookup=tablename)
-        event_id = S3ReusableField("event_id", table,
+        event_id = S3ReusableField("event_id", "reference %s" % tablename,
                                    sortby="name",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "event_event.id",
@@ -202,8 +196,8 @@ class S3EventModel(S3Model):
                                    )
 
         configure(tablename,
-                  orderby=~table.zero_hour,
-                  list_orderby=~table.zero_hour,
+                  orderby="event_event.zero_hour desc",
+                  list_orderby="event_event.zero_hour desc",
                   update_onaccept=self.event_update_onaccept,
                   deduplicate=self.event_duplicate,
                   context = {"location": "event_location.location_id",
@@ -238,19 +232,19 @@ class S3EventModel(S3Model):
         # Event Locations (link table)
         #
         tablename = "event_event_location"
-        table = define_table(tablename,
-                             event_id(),
-                             self.gis_location_id(
-                                widget = S3LocationAutocompleteWidget(),
-                                requires = IS_LOCATION(),
-                                represent = self.gis_LocationRepresent(sep=", "),
-                                comment = S3AddResourceLink(c="gis",
-                                                            f="location",
-                                                            label = T("Add Location"),
-                                                            title=T("Location"),
-                                                            tooltip=T("Enter some characters to bring up a list of possible matches")),
-                                ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     event_id(),
+                     self.gis_location_id(
+                     widget = S3LocationAutocompleteWidget(),
+                     requires = IS_LOCATION(),
+                     represent = self.gis_LocationRepresent(sep=", "),
+                     comment = S3AddResourceLink(c="gis",
+                                                 f="location",
+                                                 label = T("Create Location"),
+                                                 title=T("Location"),
+                                                 tooltip=T("Enter some characters to bring up a list of possible matches")),
+                     ),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Event Tags
@@ -265,13 +259,13 @@ class S3EventModel(S3Model):
         # - can be a Triple Store for Semantic Web support
         #
         tablename = "event_event_tag"
-        table = define_table(tablename,
-                             event_id(),
-                             # key is a reserved word in MySQL
-                             Field("tag", label=T("Key")),
-                             Field("value", label=T("Value")),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     event_id(),
+                     # key is a reserved word in MySQL
+                     Field("tag", label=T("Key")),
+                     Field("value", label=T("Value")),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         configure(tablename,
                   deduplicate=self.event_event_tag_deduplicate)
@@ -433,43 +427,40 @@ class S3IncidentModel(S3Model):
         #  They can be instantiated from Scenario Templates.
         #
         tablename = "event_incident"
-        table = self.define_table(tablename,
-                                  self.event_event_id(),
-                                  self.event_incident_type_id(),
-                                  self.scenario_scenario_id(),
-                                  Field("name", notnull=True, # Name could be a code
-                                        length=64,
-                                        label=T("Name")),
-                                  Field("exercise", "boolean",
-                                        represent = lambda opt: "√" if opt else NONE,
-                                        #comment = DIV(_class="tooltip",
-                                        #              _title="%s|%s" % (T("Exercise"),
-                                                                        # Should!
-                                        #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
-                                        label=T("Exercise?")),
-                                  s3_datetime(name="zero_hour",
-                                              label = T("Zero Hour"),
-                                              default = "now",
-                                              comment = DIV(_class="tooltip",
-                                                            _title="%s|%s" % (T("Zero Hour"),
-                                                                              T("The time at which the Incident started."))),
-                                              ),
-                                  Field("closed", "boolean",
-                                        default = False,
-                                        represent = s3_yes_no_represent,
-                                        label=T("Closed")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_event_id(),
+                          self.event_incident_type_id(),
+                          self.scenario_scenario_id(),
+                          Field("name", notnull=True, # Name could be a code
+                                length=64,
+                                label=T("Name")),
+                          Field("exercise", "boolean",
+                                represent = lambda opt: "√" if opt else None,
+                                #comment = DIV(_class="tooltip",
+                                #              _title="%s|%s" % (T("Exercise"),
+                                                                 # Should!
+                                #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
+                                label=T("Exercise?")),
+                          s3_datetime(name="zero_hour",
+                                      label = T("Zero Hour"),
+                                      default = "now",
+                                      comment = DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Zero Hour"),
+                                                                      T("The time at which the Incident started."))),
+                                      ),
+                          Field("closed", "boolean",
+                                default = False,
+                                represent = s3_yes_no_represent,
+                                label=T("Closed")),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident"),
+            label_create = T("Create Incident"),
             title_display = T("Incident Details"),
             title_list = T("Incidents"),
             title_update = T("Edit Incident"),
-            title_search = T("Search Incidents"),
-            subtitle_create = T("Add New Incident"),
             label_list_button = T("List Incidents"),
-            label_create_button = T("Add Incident"),
             label_delete_button = T("Remove Incident from this event"),
             msg_record_created = T("Incident added"),
             msg_record_modified = T("Incident updated"),
@@ -477,7 +468,7 @@ class S3IncidentModel(S3Model):
             msg_list_empty = T("No Incidents currently registered in this event"))
 
         represent = S3Represent(lookup=tablename)
-        incident_id = S3ReusableField("incident_id", table,
+        incident_id = S3ReusableField("incident_id", "reference %s" % tablename,
                                       sortby="name",
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "event_incident.id",
@@ -588,6 +579,7 @@ class S3IncidentModel(S3Model):
             # Set the Event in the session
             current.session.s3.event = event
         s3db = current.s3db
+        db = current.db
         ctable = s3db.gis_config
         mapconfig = None
         scenario = vars.get("scenario_id", None)
@@ -596,7 +588,6 @@ class S3IncidentModel(S3Model):
             # copy all resources from the Scenario to the Incident
 
             # Read the source resource tables
-            db = current.db
             table = db.scenario_scenario
             otable = s3db.scenario_organisation
             stable = s3db.scenario_site
@@ -662,7 +653,7 @@ class S3IncidentModel(S3Model):
             # Create a new Map Config
             config = ctable.insert(name = vars.name)
             mtable = db.event_config
-            mtable.insert(incident_id=id,
+            mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
             current.gis.set_config(config)
@@ -716,29 +707,26 @@ class S3IncidentReportModel(S3Model):
         # Incident Reports
         #
         tablename = "event_incident_report"
-        table = self.define_table(tablename,
-                                  self.super_link("doc_id", "doc_entity"),
-                                  # @ToDo: Use link tables?
-                                  #self.event_event_id(),
-                                  #self.event_incident_id(),
-                                  s3_datetime(),
-                                  Field("name", notnull=True,
-                                        label=T("Name")),
-                                  self.event_incident_type_id(),
-                                  self.gis_location_id(),
-                                  self.pr_person_id(label=T("Reported By")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
+                          # @ToDo: Use link tables?
+                          #self.event_event_id(),
+                          #self.event_incident_id(),
+                          s3_datetime(),
+                          Field("name", notnull=True,
+                                label=T("Name")),
+                          self.event_incident_type_id(),
+                          self.gis_location_id(),
+                          self.pr_person_id(label=T("Reported By")),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident Report"),
+            label_create = T("Create Incident Report"),
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
-            title_search = T("Search Incident Reports"),
-            subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
-            label_create_button = T("Add Incident Report"),
             label_delete_button = T("Remove Incident Report from this event"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
@@ -788,16 +776,16 @@ class S3IncidentGroupModel(S3Model):
         # Incident Reports <> Coalitions link table
         #
         tablename = "event_incident_report_group"
-        table = self.define_table(tablename,
-                                  Field("incident_report_id", self.event_incident_report,
-                                        requires = IS_ONE_OF(current.db, "event_incident_report.id",
-                                                             represent,
-                                                             sort=True,
-                                                             ),
-                                        represent = represent,
-                                        ),
-                                  self.org_group_id(empty=False),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          Field("incident_report_id", self.event_incident_report,
+                                requires = IS_ONE_OF(current.db, "event_incident_report.id",
+                                                     represent,
+                                                     sort=True,
+                                                     ),
+                                represent = represent,
+                                ),
+                          self.org_group_id(empty=False),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -821,24 +809,21 @@ class S3IncidentTypeModel(S3Model):
         # Incident Types
         #
         tablename = "event_incident_type"
-        table = self.define_table(tablename,
-                                  Field("name", notnull=True,
-                                        length=64,
-                                        label=T("Name"),
-                                        ),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          Field("name", notnull=True,
+                                length=64,
+                                label=T("Name"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident Type"),
+            label_create = T("Create Incident Type"),
             title_display = T("Incident Type Details"),
             title_list = T("Incident Types"),
             title_update = T("Edit Incident Type"),
-            title_search = T("Search Incident Types"),
             title_upload = T("Import Incident Types"),
-            subtitle_create = T("Add New Incident Type"),
             label_list_button = T("List Incident Types"),
-            label_create_button = T("Add Incident Type"),
             label_delete_button = T("Remove Incident Type from this event"),
             msg_record_created = T("Incident Type added"),
             msg_record_modified = T("Incident Type updated"),
@@ -848,7 +833,7 @@ class S3IncidentTypeModel(S3Model):
             )
 
         represent = S3Represent(lookup=tablename)
-        incident_type_id = S3ReusableField("incident_type_id", table,
+        incident_type_id = S3ReusableField("incident_type_id", "reference %s" % tablename,
                                            sortby="name",
                                            requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "event_incident_type.id",
@@ -931,13 +916,13 @@ class S3IncidentTypeTagModel(S3Model):
         # Incident Type Tags
         #
         tablename = "event_incident_type_tag"
-        table = self.define_table(tablename,
-                                  self.event_incident_type_id(),
-                                  # key is a reserved word in MySQL
-                                  Field("tag", label=T("Key")),
-                                  Field("value", label=T("Value")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_type_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag", label=T("Key")),
+                          Field("value", label=T("Value")),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -956,10 +941,10 @@ class S3EventActivityModel(S3Model):
             return None
 
         tablename = "event_activity"
-        table = self.define_table(tablename,
-                                  self.event_event_id(empty=False),
-                                  self.project_activity_id(empty=False),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_event_id(empty=False),
+                          self.project_activity_id(empty=False),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -974,9 +959,6 @@ class S3EventAssetModel(S3Model):
 
     def model(self):
 
-        if not current.deployment_settings.has_module("asset"):
-            return None
-
         T = current.T
 
         # ---------------------------------------------------------------------
@@ -984,20 +966,17 @@ class S3EventAssetModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "event_asset"
-        table = self.define_table(tablename,
-                                  self.event_incident_id(),
-                                  self.asset_asset_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_id(),
+                          self.asset_asset_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Assign Asset"),
+            label_create = T("Assign Asset"),
             title_display = T("Asset Details"),
             title_list = T("Assets"),
             title_update = T("Edit Asset"),
-            title_search = T("Search Assets"),
-            subtitle_create = T("Add New Asset"),
             label_list_button = T("List Assets"),
-            label_create_button = T("Add Asset"),
             label_delete_button = T("Remove Asset from this incident"),
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
@@ -1017,9 +996,6 @@ class S3EventCMSModel(S3Model):
 
     def model(self):
 
-        if not current.deployment_settings.has_module("cms"):
-            return None
-
         T = current.T
 
         # ---------------------------------------------------------------------
@@ -1028,20 +1004,17 @@ class S3EventCMSModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "event_event_post"
-        table = self.define_table(tablename,
-                                  self.event_event_id(),
-                                  self.cms_post_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_event_id(),
+                          self.cms_post_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Tag Post"),
+            label_create = T("Tag Post"),
             title_display = T("Tag Details"),
             title_list = T("Tags"),
             title_update = T("Edit Tag"),
-            title_search = T("Search Tags"),
-            subtitle_create = T("Add New Tag"),
             label_list_button = T("List Tags"),
-            label_create_button = T("Add Tag"),
             label_delete_button = T("Remove Tag for this Event from this Post"),
             msg_record_created = T("Tag added"),
             msg_record_modified = T("Tag updated"),
@@ -1070,20 +1043,17 @@ class S3EventHRModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "event_human_resource"
-        table = self.define_table(tablename,
-                                  self.event_incident_id(),
-                                  self.hrm_human_resource_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_id(),
+                          self.hrm_human_resource_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Assign Human Resource"),
+            label_create = T("Assign Human Resource"),
             title_display = T("Human Resource Details"),
             title_list = T("Assigned Human Resources"),
             title_update = T("Edit Human Resource"),
-            title_search = T("Search Assigned Human Resources"),
-            subtitle_create = T("Assign New Human Resource"),
             label_list_button = T("List Assigned Human Resources"),
-            label_create_button = T("Assign Human Resource"),
             label_delete_button = T("Remove Human Resource from this incident"),
             msg_record_created = T("Human Resource assigned"),
             msg_record_modified = T("Human Resource Assignment updated"),
@@ -1103,28 +1073,22 @@ class S3EventIReportModel(S3Model):
 
     def model(self):
 
-        if not current.deployment_settings.has_module("irs"):
-            return None
-
         T = current.T
 
         # ---------------------------------------------------------------------
         # Incident Reports
         tablename = "event_ireport"
-        table = self.define_table(tablename,
-                                  self.event_incident_id(),
-                                  self.irs_ireport_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_id(),
+                          self.irs_ireport_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Incident Report"),
+            label_create = T("Create Incident Report"),
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
-            title_search = T("Search Incident Reports"),
-            subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
-            label_create_button = T("Add Incident Report"),
             label_delete_button = T("Remove Incident Report from this incident"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
@@ -1149,20 +1113,17 @@ class S3EventMapModel(S3Model):
         # ---------------------------------------------------------------------
         # Map Config
         tablename = "event_config"
-        table = self.define_table(tablename,
-                                  self.event_incident_id(),
-                                  self.gis_config_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_id(),
+                          self.gis_config_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Map Configuration"),
+            label_create = T("Create Map Configuration"),
             title_display = T("Map Configuration Details"),
             title_list = T("Map Configurations"),
             title_update = T("Edit Map Configuration"),
-            title_search = T("Search Map Configurations"),
-            subtitle_create = T("Add New Map Configuration"),
             label_list_button = T("List Map Configurations"),
-            label_create_button = T("Add Map Configuration"),
             label_delete_button = T("Remove Map Configuration from this incident"),
             msg_record_created = T("Map Configuration added"),
             msg_record_modified = T("Map Configuration updated"),
@@ -1188,22 +1149,21 @@ class S3EventSiteModel(S3Model):
         # Facilities
         # @ToDo: Search Widget
         tablename = "event_site"
-        table = self.define_table(tablename,
-                                  self.event_incident_id(),
-                                  self.org_site_id,
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_id(),
+                          self.org_site_id,
+                          *s3_meta_fields())
 
+        # @todo: make lazy_table
+        table = current.db[tablename]
         table.site_id.readable = table.site_id.writable = True
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Assign Facility"),
+            label_create = T("Assign Facility"),
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
             title_update = T("Edit Facility"),
-            title_search = T("Search Facilities"),
-            subtitle_create = T("Add New Facility"),
             label_list_button = T("List Facilities"),
-            label_create_button = T("Add Facility"),
             label_delete_button = T("Remove Facility from this incident"),
             msg_record_created = T("Facility added"),
             msg_record_modified = T("Facility updated"),
@@ -1223,9 +1183,6 @@ class S3EventTaskModel(S3Model):
 
     def model(self):
 
-        if not current.deployment_settings.has_module("project"):
-            return None
-
         T = current.T
 
         # ---------------------------------------------------------------------
@@ -1236,20 +1193,17 @@ class S3EventTaskModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "event_task"
-        table = self.define_table(tablename,
-                                  self.event_incident_id(),
-                                  self.project_task_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_id(),
+                          self.project_task_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Task"),
+            label_create = T("Create Task"),
             title_display = T("Task Details"),
             title_list = T("Tasks"),
             title_update = T("Edit Task"),
-            title_search = T("Search Tasks"),
-            subtitle_create = T("Add New Task"),
             label_list_button = T("List Tasks"),
-            label_create_button = T("Add Task"),
             label_delete_button = T("Remove Task from this incident"),
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),

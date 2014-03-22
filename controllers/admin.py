@@ -178,17 +178,14 @@ def user():
                action=link_user)
 
     # CRUD Strings
-    ADD_USER = T("Add User")
+    ADD_USER = T("Create User")
     s3.crud_strings["auth_user"] = Storage(
-        title_create = ADD_USER,
+        label_create = ADD_USER,
         title_display = T("User Details"),
         title_list = T("Users"),
         title_update = T("Edit User"),
-        title_search = T("Search Users"),
         title_upload = T("Import Users"),
-        subtitle_create = T("Add New User"),
         label_list_button = T("List Users"),
-        label_create_button = ADD_USER,
         label_delete_button = T("Delete User"),
         msg_record_created = T("User added"),
         msg_record_modified = T("User updated"),
@@ -326,7 +323,7 @@ def user():
             form = output.get("form", None)
             if not form:
                 create_url = URL(args=["create"])
-                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Add User"),
+                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Create User"),
                                                                   _href=create_url)
                 return output
             form.attributes["_id"] = "regform"
@@ -411,16 +408,13 @@ def group():
                        deletable=False)
 
     # CRUD Strings
-    ADD_ROLE = T("Add Role")
+    ADD_ROLE = T("Create Role")
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_ROLE,
+        label_create = ADD_ROLE,
         title_display = T("Role Details"),
         title_list = T("Roles"),
         title_update = T("Edit Role"),
-        title_search = T("Search Roles"),
-        subtitle_create = T("Add New Role"),
         label_list_button = T("List Roles"),
-        label_create_button = ADD_ROLE,
         msg_record_created = T("Role added"),
         msg_record_modified = T("Role updated"),
         msg_record_deleted = T("Role deleted"),
@@ -443,14 +437,11 @@ def organisation():
     table = s3db[tablename]
 
     s3.crud_strings[tablename] = Storage(
-        title_create = T("Add Organization Domain"),
+        label_create = T("Add Organization Domain"),
         title_display = T("Organization Domain Details"),
         title_list = T("Organization Domains"),
         title_update = T("Edit Organization Domain"),
-        title_search = T("Search Organization Domains"),
-        subtitle_create = T("Add New Organization Domain"),
         label_list_button = T("List Organization Domains"),
-        label_create_button = T("Add Organization Domain"),
         label_delete_button = T("Delete Organization Domain"),
         msg_record_created = T("Organization Domain added"),
         msg_record_modified = T("Organization Domain updated"),

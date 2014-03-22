@@ -190,15 +190,11 @@ def project():
                         filter_opts = (1,)
                         human_resource_id.label = T("Staff")
                         crud_strings["project_human_resource"] = crud_strings["hrm_staff"]
-                        crud_strings["project_human_resource"] \
-                                    ["subtitle_create"] = T("Add Staff Member to Project")
 
                     elif hr_group == "volunteer":
                         filter_opts = (2,)
                         human_resource_id.label = T("Volunteer")
                         crud_strings["project_human_resource"] = crud_strings["hrm_volunteer"]
-                        crud_strings["project_human_resource"] \
-                                    ["subtitle_create"] = T("Add Volunteer to Project")
 
                 if filter_opts:
                     # Use the group to filter the form widget when
@@ -370,6 +366,12 @@ def project_theme_id_widget():
     return widget
 
 # =============================================================================
+def sector():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller("org", "sector")
+
+# -----------------------------------------------------------------------------
 def status():
     """ RESTful CRUD controller """
 
@@ -431,11 +433,12 @@ def theme_sector_widget():
         )
 
     resource = s3db.resource("project_project")
-    #(_instance , _nothing, _field) = widget.resolve(resource)
-    widget.resolve(resource)
+    instance, fieldname, field = widget.resolve(resource)
+    
     value = widget.extract(resource, record_id=None)
-
-    output = widget(s3db.project_theme_project.theme_id, value)
+    output = widget(s3db.project_theme_project.theme_id,
+                    value,
+                    _name=field.name)
 
     return output
 
@@ -736,15 +739,12 @@ def partners():
     # Modify CRUD Strings
     ADD_PARTNER = T("Add Partner Organization")
     s3.crud_strings.org_organisation = Storage(
-        title_create=ADD_PARTNER,
+        label_create=ADD_PARTNER,
         title_display=T("Partner Organization Details"),
         title_list=T("Partner Organizations"),
         title_update=T("Edit Partner Organization"),
-        title_search=T("Search Partner Organizations"),
         title_upload=T("Import Partner Organizations"),
-        subtitle_create=ADD_PARTNER,
         label_list_button=T("List Partner Organizations"),
-        label_create_button=ADD_PARTNER,
         label_delete_button=T("Delete Partner Organization"),
         msg_record_created=T("Partner Organization added"),
         msg_record_modified=T("Partner Organization updated"),

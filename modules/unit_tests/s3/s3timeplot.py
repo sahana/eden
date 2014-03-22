@@ -9,6 +9,7 @@ import datetime
 import random
 import unittest
 
+from gluon import *
 from s3.s3timeplot import *
 
 # =============================================================================
@@ -469,6 +470,408 @@ class EventFrameTests(unittest.TestCase):
             self.assertEqual(period.end, expected[i][1])
 
 # =============================================================================
+class DtParseTests(unittest.TestCase):
+    """ Test Parsing of Datetime Options """
+
+    # -------------------------------------------------------------------------
+    def testDtParseAbsolute(self):
+        """ Test dtparse with absolute dates """
+
+        assertTrue = self.assertTrue
+        assertRaises = self.assertRaises
+        assertEqual = self.assertEqual
+
+        tp = S3TimePlot()
+
+        result = tp.dtparse("5/2001")
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2001, 5, 1, 0, 0, 0))
+        
+        result = tp.dtparse("2007-03")
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2007, 3, 1, 0, 0, 0))
+        
+        result = tp.dtparse("1996")
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(1996, 1, 1, 0, 0, 0))
+        
+        result = tp.dtparse("2008-02-12")
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2008, 2, 12, 0, 0, 0))
+        
+        result = tp.dtparse("2008-02-31")
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2008, 3, 2, 0, 0, 0))
+
+        # Empty string defaults to now
+        now = datetime.datetime.utcnow()
+        result = tp.dtparse("")
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result.year, now.year)
+        assertEqual(result.month, now.month)
+        assertEqual(result.day, now.day)
+        assertEqual(result.hour, now.hour)
+        assertEqual(result.minute, now.minute)
+
+        # None defaults to now
+        now = datetime.datetime.utcnow()
+        result = tp.dtparse(None)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result.year, now.year)
+        assertEqual(result.month, now.month)
+        assertEqual(result.day, now.day)
+        assertEqual(result.hour, now.hour)
+        assertEqual(result.minute, now.minute)
+
+        assertRaises(ValueError, tp.dtparse, "1985-13")
+        assertRaises(ValueError, tp.dtparse, "68532")
+        assertRaises(ValueError, tp.dtparse, "invalid")
+        
+    # -------------------------------------------------------------------------
+    def testDtParseRelative(self):
+        """ Test dtparse with relative dates """
+
+        assertTrue = self.assertTrue
+        assertRaises = self.assertRaises
+        assertEqual = self.assertEqual
+
+        tp = S3TimePlot()
+        start = datetime.datetime(2014, 1, 3, 11, 30)
+
+        result = tp.dtparse("+1 year", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2015, 1, 3, 11, 30, 0))
+        
+        result = tp.dtparse("-3 days", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2013, 12, 31, 11, 30, 0))
+        
+        result = tp.dtparse("+5 hours", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2014, 1, 3, 16, 30, 0))
+        
+        result = tp.dtparse("-6 months", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2013, 7, 3, 11, 30, 0))
+        
+        result = tp.dtparse("+12 weeks", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result, datetime.datetime(2014, 3, 28, 11, 30, 0))
+        
+        # Empty string defaults to start
+        result = tp.dtparse("", start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result.year, start.year)
+        assertEqual(result.month, start.month)
+        assertEqual(result.day, start.day)
+        assertEqual(result.hour, start.hour)
+        assertEqual(result.minute, start.minute)
+
+        # None defaults to start
+        result = tp.dtparse(None, start=start)
+        assertTrue(isinstance(result, datetime.datetime))
+        assertEqual(result.year, start.year)
+        assertEqual(result.month, start.month)
+        assertEqual(result.day, start.day)
+        assertEqual(result.hour, start.hour)
+        assertEqual(result.minute, start.minute)
+
+        assertRaises(ValueError, tp.dtparse, "invalid")
+
+# =============================================================================
+class TimePlotTests(unittest.TestCase):
+    """ Test S3TimePlot Methods """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        db = current.db
+        db.define_table("tp_test_events",
+                        Field("event_start", "datetime"),
+                        Field("event_end", "datetime"),
+                        Field("parameter1", "integer"),
+                        Field("parameter2", "double"),
+                        Field("event_type"),
+                        )
+        event_table = db["tp_test_events"]
+
+        events = (("STARTEND",
+                   (2011, 1, 3, 0, 0, 0),
+                   (2011, 5, 4, 0, 0, 0),
+                   ),
+                  ("STARTEND",
+                   (2011, 4, 6, 0, 0, 0),
+                   (2011, 8, 7, 0, 0, 0),
+                   ),
+                  ("STARTEND",
+                   (2011, 7, 9, 0, 0, 0),
+                   (2011, 11, 10, 0, 0, 0),
+                   ),
+                  ("NOSTART",
+                   None,
+                   (2012, 2, 13, 0, 0, 0),
+                   ),
+                  ("NOSTART",
+                   None,
+                   (2012, 5, 16, 0, 0, 0),
+                   ),
+                  ("NOSTART",
+                   None,
+                   (2012, 8, 19, 0, 0, 0),
+                   ),
+                  ("NOEND",
+                   (2012, 7, 21, 0, 0, 0),
+                   None,
+                   ),
+                  ("NOEND",
+                   (2012, 10, 24, 0, 0, 0),
+                   None,
+                   ),
+                  ("NOEND",
+                   (2013, 1, 27, 0, 0, 0),
+                   None,
+                   ),
+                  ("PERMANENT",
+                   None,
+                   None,
+                   ),
+        )
+        
+        dt = datetime.datetime
+        for event_type, start, end in events:
+            event_start = dt(*start) if start else None
+            event_end = dt(*end) if end else None
+            record = {
+                "event_type": event_type,
+                "event_start": event_start,
+                "event_end": event_end,
+                "parameter1": 3,
+                "parameter2": 0.5,
+            }
+            event_table.insert(**record)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+        db.tp_test_events.drop()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+        
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testAutomaticInterval(self):
+        """ Test automatic determination of interval start and end """
+
+        s3db = current.s3db
+        dt = datetime.datetime
+        resource = s3db.resource("tp_test_events")
+        
+        event_start = resource.resolve_selector("event_start")
+        event_end =  resource.resolve_selector("event_end")
+
+        tp = S3TimePlot()
+
+        query = S3FieldSelector("event_type") == "STARTEND"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end)
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2011, 1, 3, 0, 0, 0))
+        self.assertTrue(self.is_now(ef.end))
+
+        query = S3FieldSelector("event_type") == "NOSTART"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end)
+        # falls back to first end date minus 1 day
+        self.assertEqual(ef.start, dt(2012, 2, 12, 0, 0, 0))
+        self.assertTrue(self.is_now(ef.end))
+
+        query = S3FieldSelector("event_type") == "NOEND"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end)
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2012, 7, 21, 0, 0, 0))
+        self.assertTrue(self.is_now(ef.end))
+
+        tp.resource = s3db.resource("tp_test_events")
+        ef = tp.create_event_frame(event_start, event_end)
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2011, 1, 3, 0, 0, 0))
+        self.assertTrue(self.is_now(ef.end))
+
+    # -------------------------------------------------------------------------
+    def testAutomaticSlotLength(self):
+        """ Test automatic determination of reasonable aggregation time slot """
+
+        s3db = current.s3db
+        dt = datetime.datetime
+        resource = s3db.resource("tp_test_events")
+
+        event_start = resource.resolve_selector("event_start")
+        event_end =  resource.resolve_selector("event_end")
+
+        tp = S3TimePlot()
+
+        end = "2011-03-01"
+        query = S3FieldSelector("event_type") == "STARTEND"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end, end=end)
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2011, 1, 3, 0, 0, 0))
+        self.assertEqual(ef.end, dt(2011, 3, 1, 0, 0, 0))
+        # ~8 weeks => reasonable intervall length: weeks
+        self.assertEqual(ef.slots, "weeks")
+
+        end = "2013-01-01"
+        query = S3FieldSelector("event_type") == "NOSTART"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end, end=end)
+        # falls back to first end date minus 1 day
+        self.assertEqual(ef.start, dt(2012, 2, 12, 0, 0, 0))
+        self.assertEqual(ef.end, dt(2013, 1, 1, 0, 0))
+        # ~11 months => reasonable intervall length: months
+        self.assertEqual(ef.slots, "months")
+
+        end = "2016-06-01"
+        query = S3FieldSelector("event_type") == "NOEND"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end, end=end)
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2012, 7, 21, 0, 0, 0))
+        self.assertEqual(ef.end, dt(2016, 6, 1, 0, 0))
+        # ~4 years => reasonable intervall length: 3 months
+        self.assertEqual(ef.slots, "3 months")
+
+        end = "2011-01-15"
+        tp.resource = s3db.resource("tp_test_events")
+        ef = tp.create_event_frame(event_start, event_end, end=end)
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2011, 1, 3, 0, 0, 0))
+        self.assertEqual(ef.end, dt(2011, 1, 15, 0, 0))
+        # ~12 days => reasonable intervall length: days
+        self.assertEqual(ef.slots, "days")
+
+        # Check with manual slot length
+        end = "2016-06-01"
+        query = S3FieldSelector("event_type") == "NOEND"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end, end=end, slots="years")
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2012, 7, 21, 0, 0, 0))
+        self.assertEqual(ef.end, dt(2016, 6, 1, 0, 0))
+        self.assertEqual(ef.slots, "years")
+
+        # Check with manual start date
+        start = "2011-02-15"
+        end = "2011-03-01"
+        query = S3FieldSelector("event_type") == "STARTEND"
+        tp.resource = s3db.resource("tp_test_events", filter = query)
+        ef = tp.create_event_frame(event_start, event_end, start=start, end=end)
+        # falls back to first start date
+        self.assertEqual(ef.start, dt(2011, 2, 15, 0, 0, 0))
+        self.assertEqual(ef.end, dt(2011, 3, 1, 0, 0, 0))
+        # ~14 days => reasonable intervall length: days
+        self.assertEqual(ef.slots, "days")
+
+    # -------------------------------------------------------------------------
+    def testEventDataAggregation(self):
+        """ Test aggregation of event data """
+        
+        s3db = current.s3db
+        resource = s3db.resource("tp_test_events")
+
+        tp = S3TimePlot()
+        tp.resource = resource
+        
+        event_start = resource.resolve_selector("event_start")
+        event_end =  resource.resolve_selector("event_end")
+        fact1 = resource.resolve_selector("parameter1")
+        fact2 = resource.resolve_selector("parameter2")
+        
+        end = "2013-01-01"
+        ef = tp.create_event_frame(event_start,
+                                   event_end,
+                                   end=end,
+                                   slots="months")
+        tp.add_event_data(ef, resource, event_start, event_end, [fact1, fact2])
+
+        dt = datetime.datetime
+        expected = [
+            ((2011,1,3), (2011,2,3), 15),        # 00 P NS1 NS2 NS3 SE1
+            ((2011,2,3), (2011,3,3), 15),        # 01 P NS1 NS2 NS3 SE1
+            ((2011,3,3), (2011,4,3), 15),        # 02 P NS1 NS2 NS3 SE1
+            ((2011,4,3), (2011,5,3), 18),        # 03 P NS1 NS2 NS3 SE1 SE2
+            ((2011,5,3), (2011,6,3), 18),        # 04 P NS1 NS2 NS3 SE1 SE2
+            ((2011,6,3), (2011,7,3), 15),        # 05 P NS1 NS2 NS3 SE2
+            ((2011,7,3), (2011,8,3), 18),        # 06 P NS1 NS2 NS3 SE2 SE3
+            ((2011,8,3), (2011,9,3), 18),        # 07 P NS1 NS2 NS3 SE2 SE3
+            ((2011,9,3), (2011,10,3), 15),       # 08 P NS1 NS2 NS3 SE3
+            ((2011,10,3), (2011,11,3), 15),      # 09 P NS1 NS2 NS3 SE3
+            ((2011,11,3), (2011,12,3), 15),      # 10 P NS1 NS2 NS3 SE3
+            ((2011,12,3), (2012,1,3), 12),       # 11 P NS1 NS2 NS3
+            ((2012,1,3), (2012,2,3), 12),        # 12 P NS1 NS2 NS3
+            ((2012,2,3), (2012,3,3), 12),        # 13 P NS1 NS2 NS3
+            ((2012,3,3), (2012,4,3), 9),         # 14 P NS2 NS3
+            ((2012,4,3), (2012,5,3), 9),         # 15 P NS2 NS3
+            ((2012,5,3), (2012,6,3), 9),         # 16 P NS2 NS3
+            ((2012,6,3), (2012,7,3), 6),         # 17 P NS3
+            ((2012,7,3), (2012,8,3), 9),         # 18 P NS3 NE1
+            ((2012,8,3), (2012,9,3), 9),         # 19 P NS3 NE1
+            ((2012,9,3), (2012,10,3), 6),        # 20 P NE1
+            ((2012,10,3), (2012,11,3), 9),       # 21 P NE1 NE2
+            ((2012,11,3), (2012,12,3), 9),       # 22 P NE1 NE2
+            ((2012,12,3), (2013,1,1), 9),        # 23 P NE1 NE2
+        ]
+        
+        self.assertEqual(ef.slots, "months")
+        for i, period in enumerate(ef):
+            expected_start, expected_end, expected_value = expected[i]
+            expected_start = dt(*expected_start)
+            expected_end = dt(*expected_end)
+
+            self.assertEqual(period.start, expected_start,
+                             msg="Period %s start should be %s, but is %s" %
+                             (i, expected_start, period.start))
+            self.assertEqual(period.end, expected_end,
+                             msg="Period %s end should be %s, but is %s" %
+                             (i, expected_end, period.end))
+            value1 = period.aggregate(method="sum",
+                                      field=fact1.colname,
+                                      event_type=resource.tablename)
+            self.assertEqual(value1, expected_value,
+                             msg="Period %s sum should be %s, but is %s" %
+                             (i, expected_value, value1))
+
+            # Indirect count-check: average should be constant
+            value2 = period.aggregate(method="avg",
+                                      field=fact2.colname,
+                                      event_type=resource.tablename)
+            self.assertEqual(value2, 0.5)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def is_now(dt):
+
+        now = datetime.datetime.utcnow()
+        if dt.year == now.year and \
+           dt.month == now.month and \
+           dt.day == now.day and \
+           dt.hour == now.hour and \
+           abs(dt.minute - now.minute) < 5:
+            return True
+        else:
+            return False
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -487,6 +890,8 @@ if __name__ == "__main__":
         EventTests,
         PeriodTests,
         EventFrameTests,
+        DtParseTests,
+        TimePlotTests,
     )
 
 # END ========================================================================

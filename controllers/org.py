@@ -66,7 +66,7 @@ def subsector():
 def site():
     """
         RESTful CRUD controller
-        - used by S3SiteAutocompleteWidget/S3SiteAddressAutocompleteWidget
+        - used by S3SiteAutocompleteWidget
           which doesn't yet support filtering to just updateable sites
         - used by site_contact_person()
         - used by S3OptionsFilter (e.g. Asset Log)
@@ -251,14 +251,11 @@ def donor():
 
     tablename = "org_donor"
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_DONOR,
+        label_create = ADD_DONOR,
         title_display = T("Donor Details"),
         title_list = T("Donors Report"),
         title_update = T("Edit Donor"),
-        title_search = T("Search Donors"),
-        subtitle_create = T("Add New Donor"),
         label_list_button = T("List Donors"),
-        label_create_button = ADD_DONOR,
         label_delete_button = T("Delete Donor"),
         msg_record_created = T("Donor added"),
         msg_record_modified = T("Donor updated"),

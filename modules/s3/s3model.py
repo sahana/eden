@@ -937,6 +937,8 @@ class S3Model(object):
 
         if supertable is None and default:
             return default
+        if isinstance(supertable, str):
+            supertable = cls.table(supertable)
         try:
             return supertable._id.name
         except AttributeError:

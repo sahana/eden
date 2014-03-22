@@ -199,7 +199,7 @@ def _newsfeed():
                                       ),
                       S3LocationFilter("location_id",
                                        label=T("Filter by Location"),
-                                       levels=["L1", "L2", "L3"],
+                                       levels=("L1", "L2", "L3"),
                                        widget="multiselect",
                                        hidden=True,
                                        ),

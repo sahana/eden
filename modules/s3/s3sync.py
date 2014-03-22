@@ -787,6 +787,7 @@ class S3SyncRepository(object):
         connectors = {
             "eden": S3SyncRepository,
             "ccrm": S3SyncCiviCRM,
+            "wrike": S3SyncWrike,
         }
 
         api = repository.apitype
@@ -1558,5 +1559,68 @@ class S3SyncCiviCRM(S3SyncRepository):
                 response = tree
 
         return response, message
+
+# =============================================================================
+class S3SyncWrike(S3SyncRepository):
+    """
+        Wrike REST-API connector
+
+        @status: experimental
+    """
+
+    # -------------------------------------------------------------------------
+    def register(self):
+        """
+            Register at the repository
+
+            @return: True if successful, otherwise False
+        """
+
+        error = "Wrike API registration not implemented"
+        current.log.error(error)
+        return False
+
+    # -------------------------------------------------------------------------
+    def login(self):
+        """
+            Login to the repository
+
+            @return: None if successful, otherwise error message
+        """
+
+        error = "Wrike API authentication not implemented"
+        current.log.error(error)
+        return error
+        
+    # -------------------------------------------------------------------------
+    def pull(self, task, onconflict=None):
+        """
+            Pull updates from this repository
+
+            @param task: the task Row
+            @param onconflict: synchronization conflict resolver
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record received
+        """
+
+        error = "Wrike API pull not implemented"
+        current.log.error(error)
+        return (error, None)
+
+    # -------------------------------------------------------------------------
+    def push(self, task):
+        """
+            Push data for a task
+
+            @param task: the task Row
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
+        """
+
+        error = "Wrike API push not implemented"
+        current.log.error(error)
+        return (error, None)
 
 # End =========================================================================

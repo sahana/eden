@@ -349,7 +349,7 @@ class S3Importer(S3Method):
                                      user_id=current.session.auth.user.id
                                      )
         else:
-            title=self.uploadTitle
+            title = self.uploadTitle
             form = self._upload_form(r, **attr)
 
             r = self.request
@@ -736,6 +736,7 @@ class S3Importer(S3Method):
                         formname="upload_form"):
             upload_id = table.insert(**table._filter_fields(form.vars))
             if self.csv_extra_fields:
+                # Convert Values to Represents
                 self.csv_extra_data = Storage()
                 for f in self.csv_extra_fields:
                     label = f.get("label", None)
@@ -1649,61 +1650,61 @@ class S3Importer(S3Method):
     def define_upload_table(cls):
         """ Defines the upload table """
 
+
+        # @todo: move into s3db/s3.py
         db = current.db
         if cls.UPLOAD_TABLE_NAME not in db:
-            upload_table = db.define_table(cls.UPLOAD_TABLE_NAME,
-                    Field("controller",
-                          readable=False,
-                          writable=False),
-                    Field("function",
-                          readable=False,
-                          writable=False),
-                    Field("file", "upload",
-                          uploadfolder=os.path.join(current.request.folder,
-                                                    "uploads", "imports"),
-                          autodelete=True),
-                    Field("filename",
-                          readable=False,
-                          writable=False),
-                    Field("status", "integer",
-                          default=1,
-                          readable=False,
-                          writable=False),
-                    Field("extra_data",
-                          readable=False,
-                          writable=False),
-                    Field("replace_option", "boolean",
-                          default=False,
-                          readable=False,
-                          writable=False),
-                    Field("job_id", length=128,
-                          readable=False,
-                          writable=False),
-                    Field("user_id", "integer",
-                          readable=False,
-                          writable=False),
-                    Field("created_on", "datetime",
-                          readable=False,
-                          writable=False),
-                    Field("modified_on", "datetime",
-                          readable=False,
-                          writable=False),
-                    Field("summary_added", "integer",
-                          readable=False,
-                          writable=False),
-                    Field("summary_error", "integer",
-                          readable=False,
-                          writable=False),
-                    Field("summary_ignored", "integer",
-                          readable=False,
-                          writable=False),
-                    Field("completed_details", "text",
-                          readable=False,
-                          writable=False))
-        else:
-            upload_table = db[cls.UPLOAD_TABLE_NAME]
-
-        return upload_table
+            db.define_table(cls.UPLOAD_TABLE_NAME,
+                            Field("controller",
+                                  readable=False,
+                                  writable=False),
+                            Field("function",
+                                  readable=False,
+                                  writable=False),
+                            Field("file", "upload",
+                                  uploadfolder=os.path.join(current.request.folder,
+                                                            "uploads", "imports"),
+                                  autodelete=True),
+                            Field("filename",
+                                  readable=False,
+                                  writable=False),
+                            Field("status", "integer",
+                                  default=1,
+                                  readable=False,
+                                  writable=False),
+                            Field("extra_data",
+                                  readable=False,
+                                  writable=False),
+                            Field("replace_option", "boolean",
+                                  default=False,
+                                  readable=False,
+                                  writable=False),
+                            Field("job_id", length=128,
+                                  readable=False,
+                                  writable=False),
+                            Field("user_id", "integer",
+                                  readable=False,
+                                  writable=False),
+                            Field("created_on", "datetime",
+                                  readable=False,
+                                  writable=False),
+                            Field("modified_on", "datetime",
+                                  readable=False,
+                                  writable=False),
+                            Field("summary_added", "integer",
+                                  readable=False,
+                                  writable=False),
+                            Field("summary_error", "integer",
+                                  readable=False,
+                                  writable=False),
+                            Field("summary_ignored", "integer",
+                                  readable=False,
+                                  writable=False),
+                            Field("completed_details", "text",
+                                  readable=False,
+                                  writable=False))
+                          
+        return db[cls.UPLOAD_TABLE_NAME]
 
 # =============================================================================
 class S3ImportItem(object):
@@ -3404,16 +3405,15 @@ class S3ImportJob():
 
         db = current.db
         if cls.JOB_TABLE_NAME not in db:
-            job_table = db.define_table(cls.JOB_TABLE_NAME,
-                                        Field("job_id", length=128,
-                                              unique=True,
-                                              notnull=True),
-                                        Field("tablename"),
-                                        Field("timestmp", "datetime",
-                                              default=datetime.utcnow()))
-        else:
-            job_table = db[cls.JOB_TABLE_NAME]
-        return job_table
+            db.define_table(cls.JOB_TABLE_NAME,
+                            Field("job_id", length=128,
+                                  unique=True,
+                                  notnull=True),
+                            Field("tablename"),
+                            Field("timestmp", "datetime",
+                                  default=datetime.utcnow()))
+                                  
+        return db[cls.JOB_TABLE_NAME]
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -3421,23 +3421,22 @@ class S3ImportJob():
 
         db = current.db
         if cls.ITEM_TABLE_NAME not in db:
-            item_table = db.define_table(cls.ITEM_TABLE_NAME,
-                                        Field("item_id", length=128,
-                                              unique=True,
-                                              notnull=True),
-                                        Field("job_id", length=128),
-                                        Field("tablename", length=128),
-                                        #Field("record_id", "integer"),
-                                        Field("record_uid"),
-                                        Field("error", "text"),
-                                        Field("data", "text"),
-                                        Field("element", "text"),
-                                        Field("ritems", "list:string"),
-                                        Field("citems", "list:string"),
-                                        Field("parent", length=128))
-        else:
-            item_table = db[cls.ITEM_TABLE_NAME]
-        return item_table
+            db.define_table(cls.ITEM_TABLE_NAME,
+                            Field("item_id", length=128,
+                                  unique=True,
+                                  notnull=True),
+                            Field("job_id", length=128),
+                            Field("tablename", length=128),
+                            #Field("record_id", "integer"),
+                            Field("record_uid"),
+                            Field("error", "text"),
+                            Field("data", "text"),
+                            Field("element", "text"),
+                            Field("ritems", "list:string"),
+                            Field("citems", "list:string"),
+                            Field("parent", length=128))
+                            
+        return db[cls.ITEM_TABLE_NAME]
 
     # -------------------------------------------------------------------------
     def store(self):

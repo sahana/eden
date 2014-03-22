@@ -305,15 +305,12 @@ class S3CAPModel(S3Model):
                                    #                           allow_create=False),
                                    represent=self.alert_reference_represent),
                              # @ToDo: Switch to using event_incident_type_id
-                             Field("incidents",
+                             Field("incidents", "list:string",
                                    label = T("Incidents"),
                                    requires=IS_IN_SET(cap_incident_type_opts,
                                                       multiple=True),
-                                   represent = self.list_string_represent),
-                             Field("previously_selected_incidents","list:string",
-                                   label = T("Previously Selected Incidents"),
-                                   requires=IS_IN_SET(cap_incident_type_opts,
-                                                      multiple=True),
+                                   represent = S3Represent(options = cap_incident_type_opts,
+                                    multiple = True),
                                    ),
                              *s3_meta_fields())
 

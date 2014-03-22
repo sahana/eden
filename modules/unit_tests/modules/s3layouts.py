@@ -45,7 +45,7 @@ class LayoutTests(unittest.TestCase):
 
         # Label should fall back to CRUD string
         from s3.s3crud import S3CRUD
-        crud_string = S3CRUD.crud_string("pr_person", "label_create_button")
+        crud_string = S3CRUD.crud_string("pr_person", "label_create")
         self.assertEqual(comment.label, crud_string)
 
         if "inv" in deployment_settings.modules:

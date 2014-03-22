@@ -171,14 +171,14 @@ def s3_validate(table, field, value, record=None):
 
         try:
             v = record[field]
-        except KeyError:
+        except: # KeyError is now AttributeError
             v = None
         if v and v == value:
             return default
 
         try:
             self_id = record[table._id]
-        except KeyError:
+        except: # KeyError is now AttributeError
             pass
 
     requires = field.requires
@@ -317,6 +317,28 @@ def s3_represent_value(field,
 
     return text
 
+# =============================================================================
+def s3_set_default_filter(selector, value, tablename=None):
+    """
+        Set a default filter for selector.
+
+        @param selector: the field selector
+        @param value: the value, can be a dict {operator: value},
+                      a list of values, or a single value, or a
+                      callable that returns any of these
+        @param tablename: the tablename
+    """
+
+    s3 = current.response.s3
+
+    filter_defaults = s3
+    for level in ("filter_defaults", tablename):
+        if level not in filter_defaults:
+            filter_defaults[level] = {}
+        filter_defaults = filter_defaults[level]
+    filter_defaults[selector] = value
+    return
+    
 # =============================================================================
 def s3_dev_toolbar():
     """
@@ -514,33 +536,6 @@ $(document).on('click','.s3-truncate-less',function(event){
 
     s3.jquery_ready.append(script)
     return
-
-# =============================================================================
-def s3_filter_staff(r):
-    """
-        Filter out people which are already staff for this facility
-
-        @todo: make the Person-AC pick up the filter options from
-               the person_id field (currently not implemented)
-    """
-
-    db = current.db
-    try:
-        hrtable = db.hrm_human_resource
-        site_id = r.record.site_id
-        person_id_field = r.target()[2].person_id
-    except:
-        return
-    query = (hrtable.site_id == site_id) & \
-            (hrtable.deleted == False)
-
-    staff = db(query).select(hrtable.person_id)
-    person_ids = [row.person_id for row in staff]
-    try:
-        person_id_field.requires.set_filter(not_filterby = "id",
-                                            not_filter_opts = person_ids)
-    except:
-        pass
 
 # =============================================================================
 def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):

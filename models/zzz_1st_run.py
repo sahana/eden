@@ -105,30 +105,12 @@ if len(pop_list) > 0:
                              timeout=300, # seconds
                              repeats=0    # unlimited
                              )
-        # Old saved search notifications
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"hourly"},
-        #                     period=3600,
-        #                     timeout=300,
-        #                     repeats=0
-        #                     )
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"daily"},
-        #                     period=86400,
-        #                     timeout=300,
-        #                     repeats=0
-        #                     )
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"weekly"},
-        #                     period=604800,
-        #                     timeout=300,
-        #                     repeats=0
-        #                     )
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"monthly"},
-        #                     period=2419200,
-        #                     timeout=300,
-        #                     repeats=0
+        # Tweets every minute
+        #s3task.schedule_task("msg_process_outbox",
+        #                     vars={"contact_method":"TWITTER"},
+        #                     period=120,  # seconds
+        #                     timeout=120, # seconds
+        #                     repeats=0    # unlimited
         #                     )
 
         # Subscription notifications

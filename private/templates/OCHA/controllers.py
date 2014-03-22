@@ -27,7 +27,7 @@ class index():
                                 appname
         s3.actions = None
         project_box = DIV(H3(T("Projects")),
-                          A(T("Add Project"),
+                          A(T("Create Project"),
                             _href = URL(c="project", f="project",
                                         args=["create"]),
                             _id = "add-btn",

@@ -50,7 +50,8 @@ if db_string.find("sqlite") != -1:
     db = DAL(db_string,
              check_reserved=check_reserved,
              migrate_enabled = migrate,
-             fake_migrate_all = fake_migrate)
+             fake_migrate_all = fake_migrate,
+             lazy_tables = not migrate)
     # on SQLite 3.6.19+ this enables foreign key support (included in Python 2.7+)
     # db.executesql("PRAGMA foreign_keys=ON")
 else:
@@ -67,14 +68,20 @@ else:
             #    pass
             if check_reserved:
                 check_reserved = ["postgres"]
-            db = DAL(db_string, check_reserved=check_reserved,
-                     pool_size=pool_size, migrate_enabled = migrate)
+            db = DAL(db_string,
+                     check_reserved = check_reserved,
+                     pool_size = pool_size,
+                     migrate_enabled = migrate,
+                     lazy_tables = not migrate)
         else:
             # PostgreSQL
             if check_reserved:
                 check_reserved = ["mysql"]
-            db = DAL(db_string, check_reserved=check_reserved,
-                     pool_size=pool_size, migrate_enabled = migrate)
+            db = DAL(db_string,
+                     check_reserved = check_reserved,
+                     pool_size = pool_size,
+                     migrate_enabled = migrate,
+                     lazy_tables = not migrate)
     except:
         db_type = db_string.split(":", 1)[0]
         db_location = db_string.split("@", 1)[1]

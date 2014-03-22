@@ -46,13 +46,13 @@ class S3HierarchyModel(S3Model):
         # Stored Object Hierarchy
         #
         tablename = "s3_hierarchy"
-        table = define_table(tablename,
-                             Field("tablename",
-                                   length=64),
-                             Field("dirty", "boolean",
-                                   default=False),
-                             Field("hierarchy", "json"),
-                             *s3_timestamp())
+        define_table(tablename,
+                     Field("tablename",
+                           length=64),
+                     Field("dirty", "boolean",
+                           default=False),
+                     Field("hierarchy", "json"),
+                     *s3_timestamp())
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #

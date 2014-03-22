@@ -1,7 +1,4 @@
 {{try:}}{{=H2(title, _class="summary-heading")}}{{except:}}{{pass}}
-<a href='{{=URL(args="create")}}' id = 'list-btn-add' class='btn btn-primary summary-create' type='button'>
-  <i class='icon-plus'></i> {{=T("Add")}}
-</a>
 <div id='summary-common'>
  {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
  <div id='filter-form' class='form-container'>

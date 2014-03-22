@@ -192,10 +192,7 @@ settings.ui.formstyle_row = formstyle_row
 settings.ui.formstyle = formstyle_row
 
 # -----------------------------------------------------------------------------
-def customize_project_project(**attr):
-    """
-        Customize project_project controller
-    """
+def customise_project_project_controller(**attr):
 
     db = current.db
     s3db = current.s3db
@@ -224,10 +221,6 @@ def customize_project_project(**attr):
                                       },
                                      ),
                        )
-
-    # Custom CRUD Strings
-    crud_strings = s3.crud_strings
-    crud_strings.project_project.title_search = T("Project List")
 
     # Custom Fields
     table.name.label = T("Project Title")
@@ -283,7 +276,7 @@ def customize_project_project(**attr):
             if not result:
                 return False
 
-        # Customize list_fields
+        # Customise list_fields
         if r.method == "review":
             list_fields = ["id",
                            "created_on",
@@ -346,7 +339,7 @@ def customize_project_project(**attr):
 
         resource.configure(list_fields = list_fields)
 
-        # Customize report_options
+        # Customise report_options
         if r.method == "report":
             report_fields = ["name",
                              (T("Countries"), "location.location_id"),
@@ -361,12 +354,12 @@ def customize_project_project(**attr):
                             
             # Report Settings for charts
             if "chart" in r.get_vars and r.representation != "json":
-                crud_strings[tablename].title_report  = T("Project Graph")
+                s3.crud_strings[tablename].title_report  = T("Project Graph")
                 report_fact_default = "count(id)"
                 report_facts = [(T("Number of Projects"), "count(id)")]
                 show_table = False
             else:
-                crud_strings[tablename].title_report  = T("Project Matrix")
+                s3.crud_strings[tablename].title_report  = T("Project Matrix")
                 report_fact_default = "count(id)"
                 report_facts = [(T("Number of Projects"), "count(id)"),
                                 (T("Number of Countries"), "count(location.location_id)"),
@@ -643,13 +636,10 @@ def customize_project_project(**attr):
     
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_framework(**attr):
-    """
-        Customize project_framework controller
-    """
+def customise_project_framework_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -682,13 +672,10 @@ def customize_project_framework(**attr):
 
     return attr
 
-settings.ui.customize_project_framework = customize_project_framework
+settings.customise_project_framework_controller = customise_project_framework_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_location(**attr):
-    """
-        Customize project_location controller
-    """
+def customise_project_location_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -792,12 +779,12 @@ def customize_project_location(**attr):
     
     return attr
 
-settings.ui.customize_project_location = customize_project_location
+settings.customise_project_location_controller = customise_project_location_controller
 
 # -----------------------------------------------------------------------------
-def customize_pr_person(**attr):
+def customise_pr_person_controller(**attr):
     """
-        Customize pr_person controller
+        Customise pr_person controller
 
         @todo: pr_saved_search no longer supported (S3Search deprecated)
     """
@@ -811,7 +798,7 @@ def customize_pr_person(**attr):
 
     attr["rheader"] = H3(T("Saved Searches"))
 
-    # Customize saved search
+    # Customise saved search
     table = s3db.pr_saved_search
     table.url.label = T("Display Search")
 
@@ -822,14 +809,17 @@ def customize_pr_person(**attr):
                     _class = "action-btn"
                     ),
                 A(T("Matrix"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("search", "report"),
                     _class = "action-btn"
                     ),
                 A(T("Chart"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("search", "report?chart=breakdown%3Arows"),
                     _class = "action-btn"
                     ),
                 A(T("Map"),
+                    # @ToDo: Fix for S3Search deprecation
                     _href = url.replace("project/search", "location/map"),
                     _class = "action-btn"
                     )
@@ -844,12 +834,12 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller to just show Name field
+        Customise org_organisation controller to just show Name field
     """
 
     s3 = current.response.s3
@@ -872,7 +862,7 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # =============================================================================
 # Enabled Modules

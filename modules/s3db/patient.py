@@ -64,52 +64,49 @@ class S3PatientModel(S3Model):
         # Patients
 
         tablename = "patient_patient"
-        table = self.define_table(tablename,
-                                  person_id(widget=S3AddPersonWidget(),
-                                            requires=IS_ADD_PERSON_WIDGET(),
-                                            label=T("Patient"),
-                                            comment=None),
-                                  #person_id(empty=False, label = T("Patient")),
-                                  Field("country",
-                                        label = T("Current Location Country"),
-                                        requires = IS_NULL_OR(IS_IN_SET_LAZY(
-                                            lambda: gis.get_countries(key_type="code"),
-                                            zero = messages.SELECT_LOCATION)),
-                                        represent = lambda code: \
-                                            gis.get_country(code, key_type="code") or \
-                                                messages.UNKNOWN_OPT),
-                                  self.hms_hospital_id(
-                                    empty=False,
-                                    label = T("Current Location Treating Hospital")
+        self.define_table(tablename,
+                          person_id(comment=None,
+                                    label=T("Patient"),
+                                    requires=IS_ADD_PERSON_WIDGET2(),
+                                    widget=S3AddPersonWidget2(),
                                     ),
-                                  Field("phone", requires=s3_phone_requires,
-                                        label=T("Current Location Phone Number")),
-                                  Field("treatment_date", "date",
-                                        label=T("Date of Treatment"),
-                                        represent = s3_date_represent,
-                                        requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                        widget = S3DateWidget()
-                                        ),
-                                  Field("return_date", "date",
-                                        label=T("Expected Return Home"),
-                                        represent = s3_date_represent,
-                                        requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                        widget = S3DateWidget()
-                                       ),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+                          #person_id(empty=False, label = T("Patient")),
+                          Field("country",
+                                label = T("Current Location Country"),
+                                requires = IS_NULL_OR(IS_IN_SET_LAZY(
+                                           lambda: gis.get_countries(key_type="code"),
+                                           zero = messages.SELECT_LOCATION)),
+                                represent = lambda code: \
+                                            gis.get_country(code, key_type="code") or \
+                                            messages.UNKNOWN_OPT),
+                          self.hms_hospital_id(
+                                empty=False,
+                                label = T("Current Location Treating Hospital")
+                          ),
+                          Field("phone", requires=s3_phone_requires,
+                                label=T("Current Location Phone Number")),
+                          Field("treatment_date", "date",
+                                label=T("Date of Treatment"),
+                                represent = s3_date_represent,
+                                requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                widget = S3DateWidget()
+                                ),
+                          Field("return_date", "date",
+                                label=T("Expected Return Home"),
+                                represent = s3_date_represent,
+                                requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                widget = S3DateWidget()
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD strings
-        ADD_PATIENT = T("New Patient")
         crud_strings[tablename] = Storage(
-            title_create = ADD_PATIENT,
+            label_create = T("Add New Patient"),
             title_display = T("Patient Details"),
             title_list = T("Patients"),
             title_update = T("Edit Patient"),
-            title_search = T("Search Patients"),
-            subtitle_create = T("Add New Patient"),
             label_list_button = T("List Patients"),
-            label_create_button = ADD_PATIENT,
             label_delete_button = T("Delete Patient"),
             msg_record_created = T("Patient added"),
             msg_record_modified = T("Patient updated"),
@@ -117,7 +114,7 @@ class S3PatientModel(S3Model):
             msg_list_empty = T("No Patients currently registered"))
 
         # Reusable Field for Component Link
-        patient_id = S3ReusableField("patient_id", db.patient_patient,
+        patient_id = S3ReusableField("patient_id", "reference %s" % tablename,
                                      requires = IS_ONE_OF(db,
                                                           "patient_patient.id",
                                                           self.patient_represent),
@@ -167,27 +164,24 @@ class S3PatientModel(S3Model):
         # Relatives
 
         tablename = "patient_relative"
-        table = self.define_table(tablename,
-                                  patient_id(readable=False, writable=False),
-                                  #person_id(label = T("Accompanying Relative")),
-                                  person_id(widget=S3AddPersonWidget(),
-                                            requires=IS_ADD_PERSON_WIDGET(),
-                                            label=T("Accompanying Relative"),
-                                            comment=None),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          patient_id(readable=False, writable=False),
+                          person_id(comment=None,
+                                    label=T("Accompanying Relative"),
+                                    requires=IS_ADD_PERSON_WIDGET2(),
+                                    widget=S3AddPersonWidget2(),
+                                    ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD strings
         ADD_RELATIVE = T("New Relative")
         crud_strings[tablename] = Storage(
-            title_create = ADD_RELATIVE,
+            label_create = ADD_RELATIVE,
             title_display = T("Relative Details"),
             title_list = T("Relatives"),
             title_update = T("Edit Relative"),
-            title_search = T("Search Relatives"),
-            subtitle_create = T("Add New Relative"),
             label_list_button = T("List Relatives"),
-            label_create_button = ADD_RELATIVE,
             label_delete_button = T("Delete Relative"),
             msg_record_created = T("Relative added"),
             msg_record_modified = T("Relative updated"),
@@ -201,35 +195,32 @@ class S3PatientModel(S3Model):
         # @ToDo: Onvalidation to set the Relative's Contact
 
         tablename = "patient_home"
-        table = self.define_table(tablename,
-                                  patient_id(readable=False, writable=False),
-                                  person_id(widget=S3AddPersonWidget(),
-                                            requires=IS_ADD_PERSON_WIDGET(),
-                                            label=T("Home Relative"),
-                                            comment=None),
-                                  #person_id(label = T("Home Relative")),
-                                  self.gis_location_id(
-                                    label=T("Home City"),
-                                    widget = S3LocationAutocompleteWidget(level="L2"),
-                                    requires = IS_LOCATION(level="L2")
+        self.define_table(tablename,
+                          patient_id(readable=False, writable=False),
+                          person_id(comment=None,
+                                    label=T("Home Relative"),
+                                    requires=IS_ADD_PERSON_WIDGET2(),
+                                    widget=S3AddPersonWidget2(),
                                     ),
-                                  Field("phone",
-                                        requires=IS_NULL_OR(s3_phone_requires),
-                                        label=T("Home Phone Number")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+                          #person_id(label = T("Home Relative")),
+                          self.gis_location_id(
+                              label=T("Home City"),
+                              widget = S3LocationAutocompleteWidget(level="L2"),
+                              requires = IS_LOCATION(level="L2")
+                          ),
+                          Field("phone",
+                                requires=IS_NULL_OR(s3_phone_requires),
+                                label=T("Home Phone Number")),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD strings
-        ADD_HOME = T("New Home")
         crud_strings[tablename] = Storage(
-            title_create = ADD_HOME,
+            label_create = T("Add New Home"),
             title_display = T("Home Details"),
             title_list = T("Homes"),
             title_update = T("Edit Home"),
-            title_search = T("Search Homes"),
-            subtitle_create = T("Add New Home"),
             label_list_button = T("List Homes"),
-            label_create_button = ADD_HOME,
             label_delete_button = T("Delete Home"),
             msg_record_created = T("Home added"),
             msg_record_modified = T("Home updated"),

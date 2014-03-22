@@ -204,14 +204,11 @@ class S3Task(object):
         response = current.response
         if response:
             response.s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Job"),
+                label_create = T("Create Job"),
                 title_display = T("Scheduled Jobs"),
                 title_list = T("Job Schedule"),
                 title_update = T("Edit Job"),
-                #title_search = T("Search for Job"),
-                subtitle_create = T("Add Job"),
                 label_list_button = T("List Jobs"),
-                label_create_button = T("Add Job"),
                 msg_record_created = T("Job added"),
                 msg_record_modified = T("Job updated"),
                 msg_record_deleted = T("Job deleted"),

@@ -39,7 +39,7 @@ class index():
                                     appname
             s3.actions = None
             hospital_box = DIV(H3(T("Hospitals")),
-                               A(T("Add Hospital"),
+                               A(T("Create Hospital"),
                                  _href = URL(c="hms", f="hospital",
                                              args=["create"]),
                                  _id = "add-btn",

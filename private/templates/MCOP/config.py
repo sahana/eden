@@ -132,6 +132,10 @@ settings.ui.summary = [#{"common": True,
                        # "name": "cms",
                        # "widgets": [{"method": "cms"}]
                        # },
+                       {"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
@@ -195,14 +199,13 @@ for item in current.response.menu:
 # =============================================================================
 # Module Settings
 
-# -----------------------------------------------------------------------------
 # =============================================================================
 # Custom Controllers
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
+def customise_org_organisation_controller(**attr):
     """
-        Customize org_organisation controller
+        Customise org_organisation controller
         - List Fields
         - Form
         - Filter
@@ -227,14 +230,11 @@ def customize_org_organisation(**attr):
 
             ADD_ORGANISATION = T("New Stakeholder")
             s3.crud_strings["org_organisation"] = Storage(
-                title_create = ADD_ORGANISATION,
+                label_create = ADD_ORGANISATION,
                 title_display = T("Stakeholder Details"),
                 title_list = T("Stakeholders"),
                 title_update = T("Edit Stakeholder"),
-                title_search = T("Search Stakeholders"),
-                subtitle_create = T("Add New Stakeholder"),
                 label_list_button = T("List Stakeholders"),
-                label_create_button = ADD_ORGANISATION,
                 label_delete_button = T("Delete Stakeholder"),
                 msg_record_created = T("Stakeholder added"),
                 msg_record_modified = T("Stakeholder updated"),
@@ -302,13 +302,10 @@ def customize_org_organisation(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_resource(**attr):
-    """
-        Customize org_resource controller
-    """
+def customise_org_resource_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -324,7 +321,7 @@ def customize_org_resource(**attr):
                 return False
 
         if r.interactive or r.representation == "aadata":
-            s3db.org_customize_org_resource_fields(r.method)
+            s3db.org_customise_org_resource_fields(r.method)
     
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False
@@ -391,13 +388,10 @@ def customize_org_resource(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_resource = customize_org_resource
+settings.customise_org_resource_controller = customise_org_resource_controller
 
 # -----------------------------------------------------------------------------
-def customize_cms_post(**attr):
-    """
-        Customize cms_post controller
-    """
+def customise_cms_post_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -456,13 +450,10 @@ def customize_cms_post(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_cms_post = customize_cms_post
+settings.customise_cms_post_controller = customise_cms_post_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_task(**attr):
-    """
-        Customize project_task controller
-    """
+def customise_project_task_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -485,21 +476,23 @@ def customize_project_task(**attr):
                        "priority",
                        (T("Project"), "task_activity.activity_id"),
                        "date_due",
+                       "location_id",
                        ]
     
         # Custom Form
         table.name.label = T("Name")
         table.description.label = T("Description")
+        table.location_id.readable = table.location_id.writable = True
         s3db.project_task_activity.activity_id.label = T("Project")
-        crud_form = S3SQLCustomForm(
-                        "status",
-                        "name",
-                        "description",
-                        "priority",
-                        "task_activity.activity_id",
-                        "pe_id",
-                        "date_due",
-                        )
+        crud_form = S3SQLCustomForm("status",
+                                    "name",
+                                    "description",
+                                    "priority",
+                                    "task_activity.activity_id",
+                                    "pe_id",
+                                    "date_due",
+                                    "location_id",
+                                    )
 
         # Remove Project Filter
         filter_widgets = s3db.get_config("project_task", 
@@ -511,12 +504,12 @@ def customize_project_task(**attr):
                          "priority",
                          "pe_id",
                          "task_activity.activity_id",
+                         "location_id",
                          ]
     
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
-                                 fact = ["count(name)"
-                                         ],
+                                 fact = ["count(name)"],
                                  defaults=Storage(rows = "status",
                                                   cols = "priority",
                                                   fact = "count(name)",
@@ -538,13 +531,10 @@ def customize_project_task(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_project_task = customize_project_task
+settings.customise_project_task_controller = customise_project_task_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_activity(**attr):
-    """
-        Customize project_activity controller
-    """
+def customise_project_activity_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -671,13 +661,10 @@ def customize_project_activity(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_project_activity = customize_project_activity
+settings.customise_project_activity_controller = customise_project_activity_controller
 
 # -----------------------------------------------------------------------------
-def customize_project_project(**attr):
-    """
-        Customize project_project controller
-    """
+def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
@@ -771,13 +758,10 @@ def customize_project_project(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_project_project = customize_project_project
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
-def customize_org_office(**attr):
-    """
-        Customize org_office controller
-    """
+def customise_org_office_controller(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -827,13 +811,10 @@ def customize_org_office(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_office = customize_org_office
+settings.customise_org_office_controller = customise_org_office_controller
 
 # -----------------------------------------------------------------------------
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
     request = current.request
@@ -843,16 +824,13 @@ def customize_pr_person(**attr):
     table = s3db.pr_person
 
     # CRUD Strings
-    ADD_CONTACT = T("Add New Contact")
+    ADD_CONTACT = T("Create Contact")
     s3.crud_strings[tablename] = Storage(
-        title_create = T("Add Contact"),
+        label_create = T("Create Contact"),
         title_display = T("Contact Details"),
         title_list = T("Contact Directory"),
         title_update = T("Edit Contact Details"),
-        title_search = T("Search Contacts"),
-        subtitle_create = ADD_CONTACT,
         label_list_button = T("List Contacts"),
-        label_create_button = ADD_CONTACT,
         label_delete_button = T("Delete Contact"),
         msg_record_created = T("Contact added"),
         msg_record_modified = T("Contact details updated"),
@@ -889,9 +867,9 @@ def customize_pr_person(**attr):
     from s3layouts import S3AddResourceLink
     site_field.comment = S3AddResourceLink(c="org", f="office",
                                            vars={"child": "site_id"},
-                                           label=T("Add New Office"),
+                                           label=T("Create Office"),
                                            title=T("Office"),
-                                           tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+                                           tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
 
     # Best to have no labels when only 1 field in the row
     s3db.pr_contact.value.label = ""
@@ -1066,7 +1044,7 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # =============================================================================
 # Modules

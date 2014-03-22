@@ -61,9 +61,10 @@ class S3SituationModel(S3Model):
                                   )
 
         tablename = "sit_situation"
-        table = super_entity(tablename, "sit_id", situation_types,
-                             Field("datetime", "datetime"),
-                             location_id())
+        super_entity(tablename, "sit_id", situation_types,
+                     Field("datetime", "datetime"),
+                     location_id(),
+                     )
 
         configure(tablename,
                   deletable = False,
@@ -84,11 +85,12 @@ class S3SituationModel(S3Model):
                                   )
 
         tablename = "sit_trackable"
-        sit_trackable = super_entity(tablename, "track_id",
-                                     trackable_types,
-                                     Field("track_timestmp", "datetime",
-                                           readable=False,
-                                           writable=False))
+        super_entity(tablename, "track_id",
+                     trackable_types,
+                     Field("track_timestmp", "datetime",
+                           readable=False,
+                           writable=False),
+                     )
 
         configure(tablename,
                   deletable = False,
@@ -99,8 +101,8 @@ class S3SituationModel(S3Model):
         # Components
         self.add_components(tablename,
                             # Presence
-                            sit_presence=self.super_key(sit_trackable),
-                           )
+                            sit_presence=self.super_key("sit_trackable"),
+                            )
 
         # ---------------------------------------------------------------------
         # Presence Records for trackables
@@ -109,17 +111,17 @@ class S3SituationModel(S3Model):
         #   - will be automatically available to all trackable types
         #
         tablename = "sit_presence"
-        table = self.define_table(tablename,
-                                  self.super_link("track_id", sit_trackable),
-                                  Field("timestmp", "datetime",
-                                        label = T("Date/Time"),
-                                        ),
-                                  location_id(),
-                                  Field("interlock",
-                                        readable = False,
-                                        writable = False,
-                                        ),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.super_link("track_id", "sit_trackable"),
+                          Field("timestmp", "datetime",
+                                label = T("Date/Time"),
+                                ),
+                          location_id(),
+                          Field("interlock",
+                                readable = False,
+                                writable = False,
+                                ),
+                          *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

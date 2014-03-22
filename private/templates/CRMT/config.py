@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import s3_avatar_represent
+from s3.s3utils import s3_avatar_represent, s3_set_default_filter
 
 T = current.T
 settings = current.deployment_settings
@@ -191,6 +191,10 @@ settings.ui.summary = [{"common": True,
                         "name": "cms",
                         "widgets": [{"method": "cms"}]
                         },
+                       {"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
@@ -339,10 +343,7 @@ def user_coalition(row):
     else:
         return current.messages["NONE"]
 
-def customize_pr_person(**attr):
-    """
-        Customize pr_person controller
-    """
+def customise_pr_person_controller(**attr):
 
     s3 = current.response.s3
 
@@ -390,16 +391,13 @@ def customize_pr_person(**attr):
         if r.interactive:
             if current.request.controller != "default":
                 # CRUD Strings
-                ADD_CONTACT = T("Add New Contact")
+                ADD_CONTACT = T("Create Contact")
                 s3.crud_strings[tablename] = Storage(
-                    title_create = T("Add Contact"),
+                    label_create = T("Create Contact"),
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Update Contact Details"),
-                    title_search = T("Search Contacts"),
-                    subtitle_create = ADD_CONTACT,
                     label_list_button = T("List Contacts"),
-                    label_create_button = ADD_CONTACT,
                     label_delete_button = T("Delete Contact"),
                     msg_record_created = T("Contact added"),
                     msg_record_modified = T("Contact details updated"),
@@ -460,7 +458,7 @@ def customize_pr_person(**attr):
             # S3SQLInlineComponent uses the link table, so cannot access org_group_id
             # => use a readonly virtual field instead
             from gluon import Field
-            s3db.pr_person_user.org_group_id = Field.Lazy(user_coalition)
+            s3db.pr_person_user.org_group_id = Field.Method("org_group_id", user_coalition)
 
             s3_sql_custom_fields = [
                     "first_name",
@@ -558,35 +556,37 @@ def customize_pr_person(**attr):
 
     return attr
 
-settings.ui.customize_pr_person = customize_pr_person
+settings.customise_pr_person_controller = customise_pr_person_controller
+
+# -----------------------------------------------------------------------------
+def default_coalition_filter(selector, tablename=None):
+    """
+        Default filter for coalitions (callback)
+    """
+
+    auth = current.auth
+    org_group_id = auth.is_logged_in() and auth.user.org_group_id
+    if org_group_id:
+        return org_group_id
+    else:
+        # Filter to all Coalitions
+        gtable = s3db.org_group
+        rows = current.db(gtable.deleted == False).select(gtable.id)
+        return [row.id for row in rows]
 
 # -----------------------------------------------------------------------------
 # Activities
 #
-def customize_project_activity(**attr):
-    """
-        Customize project_activity controller
-    """
+def customise_project_activity_controller(**attr):
 
     s3db = current.s3db
     request = current.request
+
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("activity_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["activity_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["activity_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("activity_group.group_id",
+                              default_coalition_filter,
+                              tablename = "project_activity")
 
     # Custom PreP
     s3 = current.response.s3
@@ -679,9 +679,8 @@ def customize_project_activity(**attr):
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
                 if method in ("create", "update"):
                     # Custom Widgets/Validators
-                    widgets = True
-                    from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2, S3SelectChosenWidget
+                    from s3.s3validators import IS_LOCATION_SELECTOR2
+                    from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
                     field.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
@@ -692,14 +691,8 @@ def customize_project_activity(**attr):
                                                              show_postcode=True,
                                                              )
                     s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
-                else:
-                    widgets = False
 
-                field = table.person_id
-                field.comment = None
-                if widgets:
-                    field.requires = IS_ADD_PERSON_WIDGET2()
-                    field.widget = S3AddPersonWidget2(controller="pr")
+                table.person_id.comment = None
                 
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
@@ -770,12 +763,10 @@ def customize_project_activity(**attr):
 
     return attr
 
-settings.ui.customize_project_activity = customize_project_activity
+settings.customise_project_activity_controller = customise_project_activity_controller
 
-def customize_project_activity_type(**attr):
-    """
-        Customize project_activity_type controller
-    """
+def customise_project_activity_type_controller(**attr):
+
     from s3.s3forms import S3SQLCustomForm
     current.s3db.configure("project_activity_type",
                            crud_form = S3SQLCustomForm("name",
@@ -784,7 +775,7 @@ def customize_project_activity_type(**attr):
 
     return attr
 
-settings.ui.customize_project_activity_type = customize_project_activity_type
+settings.customise_project_activity_type_controller = customise_project_activity_type_controller
 
 # -----------------------------------------------------------------------------
 # Organisations
@@ -812,10 +803,7 @@ def org_facility_types(row):
     return ",".join([r.name for r in rows])
 
 # -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
-    """
-        Customize org_organisation controller
-    """
+def customise_org_organisation_controller(**attr):
 
     # Custom PreP
     s3 = current.response.s3
@@ -939,7 +927,7 @@ def customize_org_organisation(**attr):
                 # We can't include components in an Inline Component
                 # => use a readonly virtual field instead
                 from gluon import Field
-                ftable.facility_types = Field.Lazy(org_facility_types)
+                ftable.facility_types = Field.Method("facility_types", org_facility_types)
 
                 hrtable = s3db.hrm_human_resource
                 hrtable.person_id.widget = None
@@ -1064,15 +1052,12 @@ def customize_org_organisation(**attr):
 
     return attr
 
-settings.ui.customize_org_organisation = customize_org_organisation
+settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
 # Coalitions (org_group)
 #
-def customize_org_group(**attr):
-    """
-        Customize org_group controller
-    """
+def customise_org_group_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -1102,7 +1087,7 @@ def customize_org_group(**attr):
     attr["rheader"] = None
     return attr
 
-settings.ui.customize_org_group = customize_org_group
+settings.customise_org_group_controller = customise_org_group_controller
 
 #-----------------------------------------------------------------------------
 # Places (org_facility)
@@ -1172,30 +1157,15 @@ settings.base.import_callbacks = {"org_facility": {"onaccept": facility_onaccept
                                                    },
                                   }
 
-def customize_org_facility(**attr):
-    """
-        Customize org_facility controller
-    """
+def customise_org_facility_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("site_org_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["site_org_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["site_org_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("site_org_group.group_id",
+                              default_coalition_filter,
+                              tablename = "org_facility")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1234,14 +1204,11 @@ def customize_org_facility(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Place"),
+                label_create = T("Add Place"),
                 title_display = T("Place Details"),
                 title_list = T("Places"),
                 title_update = T("Update Place"),
-                title_search = T("Search Places"),
-                subtitle_create = T("Add New Place"),
                 label_list_button = T("List Places"),
-                label_create_button = T("Add Place"),
                 label_delete_button = T("Remove Place"),
                 msg_record_created = T("Place added"),
                 msg_record_modified = T("Place updated"),
@@ -1329,14 +1296,8 @@ def customize_org_facility(**attr):
                                                              show_address=True,
                                                              show_postcode=True,
                                                              )
-                    #field.widget = None
-                    #field = s3db.hrm_human_resource.person_id
-                    #field.comment = None
-                    #field.requires = IS_ADD_PERSON_WIDGET2()
-                    #field.widget = S3AddPersonWidget2(controller="pr")
 
                     table.organisation_id.widget = S3SelectChosenWidget()
-                    #s3db.hrm_human_resource.person_id.widget = None
 
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
@@ -1385,8 +1346,7 @@ def customize_org_facility(**attr):
                                crud_form = crud_form,
                                )
 
-        elif representation == "plain" and \
-             method != "search":
+        elif representation == "plain":
             # Map Popups
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
@@ -1407,35 +1367,20 @@ def customize_org_facility(**attr):
 
     return attr
 
-settings.ui.customize_org_facility = customize_org_facility
+settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
 # People
 #
-def customize_stats_people(**attr):
-    """
-        Customize stats_people controller
-    """
+def customise_stats_people_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("people_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["people_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["people_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("people_group.group_id",
+                              default_coalition_filter,
+                              tablename = "stats_people")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1476,14 +1421,11 @@ def customize_stats_people(**attr):
             #table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add People"),
+                label_create = T("Add People"),
                 title_display = T("People Details"),
                 title_list = T("People"),
                 title_update = T("Update People"),
-                title_search = T("Search People"),
-                subtitle_create = T("Add New People"),
                 label_list_button = T("List People"),
-                label_create_button = T("Add People"),
                 label_delete_button = T("Remove People"),
                 msg_record_created = T("People added"),
                 msg_record_modified = T("People updated"),
@@ -1554,8 +1496,8 @@ def customize_stats_people(**attr):
                 if method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
-                    from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
+                    from s3.s3validators import IS_LOCATION_SELECTOR2
+                    from s3.s3widgets import S3LocationSelectorWidget2
                 else:
                     widgets = False
 
@@ -1585,10 +1527,7 @@ def customize_stats_people(**attr):
                     #field.widget = None
                     #field.label = T("City")
 
-                    field = table.person_id
-                    field.comment = None
-                    field.requires = IS_ADD_PERSON_WIDGET2()
-                    field.widget = S3AddPersonWidget2(controller="pr")
+                    table.person_id.comment = None
     
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
@@ -1627,35 +1566,20 @@ def customize_stats_people(**attr):
 
     return attr
 
-settings.ui.customize_stats_people = customize_stats_people
+settings.customise_stats_people_controller = customise_stats_people_controller
 
 # -----------------------------------------------------------------------------
 # Evacuation Routes
 #
-def customize_vulnerability_evac_route(**attr):
-    """
-        Customize vulnerability_evac_route controller
-    """
+def customise_vulnerability_evac_route_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("evac_route_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["evac_route_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["evac_route_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("evac_route_group.group_id",
+                              default_coalition_filter,
+                              tablename = "vulnerability_evac_route")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1794,35 +1718,20 @@ def customize_vulnerability_evac_route(**attr):
 
     return attr
 
-settings.ui.customize_vulnerability_evac_route = customize_vulnerability_evac_route
+settings.customise_vulnerability_evac_route_controller = customise_vulnerability_evac_route_controller
 
 # -----------------------------------------------------------------------------
 # Risks
 #
-def customize_vulnerability_risk(**attr):
-    """
-        Customize vulnerability_risk controller
-    """
+def customise_vulnerability_risk_controller(**attr):
 
     s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        get_vars = request.get_vars
-        w = get_vars.get("w", None)
-        if not w:
-            # This is an interactive request
-            coalition = get_vars.get("risk_group.group_id__belongs", None)
-            if not coalition:
-                # Default the Coalition Filter
-                auth = current.auth
-                org_group_id = auth.is_logged_in() and auth.user.org_group_id
-                if org_group_id:
-                    get_vars["risk_group.group_id__belongs"] = str(org_group_id)
-                else:
-                    # Filter to all Coalitions
-                    gtable = s3db.org_group
-                    rows = current.db(gtable.deleted == False).select(gtable.id)
-                    get_vars["risk_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
+        # @todo: why only in summary?
+        s3_set_default_filter("risk_group.group_id",
+                              default_coalition_filter,
+                              tablename = "vulnerability_risk")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1858,14 +1767,11 @@ def customize_vulnerability_risk(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Hazard"),
+                label_create = T("Create Hazard"),
                 title_display = T("Hazard Details"),
                 title_list = T("Hazards"),
                 title_update = T("Update Hazard"),
-                title_search = T("Search Hazards"),
-                subtitle_create = T("Add New Hazard"),
                 label_list_button = T("List Hazards"),
-                label_create_button = T("Add Hazard"),
                 label_delete_button = T("Remove Hazard"),
                 msg_record_created = T("Hazard added"),
                 msg_record_modified = T("Hazard updated"),
@@ -1993,15 +1899,12 @@ def customize_vulnerability_risk(**attr):
 
     return attr
 
-settings.ui.customize_vulnerability_risk = customize_vulnerability_risk
+settings.customise_vulnerability_risk_controller = customise_vulnerability_risk_controller
 
 # -----------------------------------------------------------------------------
 # Saved Maps
 #
-def customize_gis_config(**attr):
-    """
-        Customize gis_config controller
-    """
+def customise_gis_config_controller(**attr):
 
     # Custom PreP
     s3 = current.response.s3
@@ -2050,7 +1953,7 @@ def customize_gis_config(**attr):
 
     return attr
 
-settings.ui.customize_gis_config = customize_gis_config
+settings.customise_gis_config_controller = customise_gis_config_controller
 
 # -----------------------------------------------------------------------------
 # Site Activity Log
@@ -2192,10 +2095,7 @@ def render_log(list_id, item_id, resource, rfields, record):
 current.response.s3.render_log = render_log
 
 # -----------------------------------------------------------------------------
-def customize_s3_audit(**attr):
-    """
-        Customize s3_audit controller
-    """
+def customise_s3_audit_controller(**attr):
 
     from s3.s3utils import s3_auth_user_represent_name
     current.db.s3_audit.user_id.represent = s3_auth_user_represent_name
@@ -2218,7 +2118,7 @@ def customize_s3_audit(**attr):
 
     return attr
 
-settings.ui.customize_s3_audit = customize_s3_audit
+settings.customise_s3_audit_controller = customise_s3_audit_controller
 
 # =============================================================================
 # Template Modules

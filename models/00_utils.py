@@ -289,12 +289,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
 
     # Customise Controller from Template
-    attr = settings.ui_customize("%s_%s" % (prefix or request.controller,
-                                            resourcename or request.function),
-                                 **attr)
+    attr = settings.customise_controller("%s_%s" % (prefix or request.controller,
+                                                    resourcename or request.function),
+                                         **attr)
 
     # Parse the request
     r = s3_request(prefix, resourcename)
+
+    # Customize target resource(s) from Template
+    r.customise_resource()
 
     # Configure standard method handlers
     set_handler = r.set_handler
@@ -390,7 +393,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             if native and not listadd and \
                s3_has_permission("create", tablename):
                 label = s3base.S3CRUD.crud_string(tablename,
-                                                  "label_create_button")
+                                                  "label_create")
                 hook = r.resource.components[name]
                 fkey = "%s.%s" % (name, hook.fkey)
                 vars = request.vars.copy()

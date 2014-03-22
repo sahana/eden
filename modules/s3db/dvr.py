@@ -67,45 +67,42 @@ class S3DVRModel(S3Model):
         }
 
         tablename = "dvr_case"
-        table = self.define_table(tablename,
-                                  # @ToDo: Option to autogenerate these, like Waybills, et al
-                                  Field("reference",
-                                        label = T("Case Number")),
-                                  self.pr_person_id(
-                                    widget=S3AddPersonWidget(controller="pr"),
-                                    # @ToDo: Modify this to update location_id if the selected person has a Home Address already
-                                    requires=IS_ADD_PERSON_WIDGET(),
-                                    comment=None
-                                    ),
-                                  self.gis_location_id(label = T("Home Address")),
-                                  Field("damage", "integer",
-                                        requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
-                                        represent = lambda opt: \
-                                            dvr_damage_opts.get(opt, UNKNOWN_OPT),
-                                        label= T("Damage Assessment")),
-                                  Field("insurance", "boolean",
-                                        represent = s3_yes_no_represent,
-                                        label = T("Insurance")),
-                                  Field("status", "integer",
-                                        default = 1,
-                                        requires = IS_NULL_OR(IS_IN_SET(dvr_status_opts)),
-                                        represent = lambda opt: \
-                                            dvr_status_opts.get(opt, UNKNOWN_OPT),
-                                        label= T("Status")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          # @ToDo: Option to autogenerate these, like Waybills, et al
+                          Field("reference",
+                                label = T("Case Number")),
+                          self.pr_person_id(
+                            # @ToDo: Modify this to update location_id if the selected person has a Home Address already
+                            comment=None,
+                            requires=IS_ADD_PERSON_WIDGET2(),
+                            widget=S3AddPersonWidget2(controller="pr"),
+                          ),
+                          self.gis_location_id(label = T("Home Address")),
+                          Field("damage", "integer",
+                                requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
+                                represent = lambda opt: \
+                                    dvr_damage_opts.get(opt, UNKNOWN_OPT),
+                                label= T("Damage Assessment")),
+                          Field("insurance", "boolean",
+                                represent = s3_yes_no_represent,
+                                label = T("Insurance")),
+                          Field("status", "integer",
+                                default = 1,
+                                requires = IS_NULL_OR(IS_IN_SET(dvr_status_opts)),
+                                represent = lambda opt: \
+                                    dvr_status_opts.get(opt, UNKNOWN_OPT),
+                                label= T("Status")),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CASE = T("Add Case")
+        ADD_CASE = T("Create Case")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_CASE,
+            label_create = ADD_CASE,
             title_display = T("Case Details"),
             title_list = T("Cases"),
             title_update = T("Edit Case"),
-            title_search = T("Search Cases"),
-            subtitle_create = T("Add New Case"),
             label_list_button = T("List Cases"),
-            label_create_button = ADD_CASE,
             label_delete_button = T("Delete Case"),
             msg_record_created = T("Case added"),
             msg_record_modified = T("Case updated"),

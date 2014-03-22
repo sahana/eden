@@ -69,13 +69,13 @@ class S3ScenarioModel(S3Model):
         #
 
         tablename = "scenario_scenario"
-        table = self.define_table(tablename,
-                                  self.event_incident_type_id(),
-                                  Field("name", notnull=True,
-                                        length=64,    # Mayon compatiblity
-                                        label=T("Name")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.event_incident_type_id(),
+                          Field("name", notnull=True,
+                                length=64,    # Mayon compatiblity
+                                label=T("Name")),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         self.configure(tablename,
                        # Open Map Config to set the default Location
@@ -86,15 +86,12 @@ class S3ScenarioModel(S3Model):
         # CRUD strings
         ADD_SCENARIO = T("New Scenario")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_SCENARIO,
+            label_create = ADD_SCENARIO,
             title_display = T("Scenario Details"),
             title_list = T("Scenarios"),
             title_update = T("Edit Scenario"),
-            title_search = T("Search Scenarios"),
             title_upload = T("Import Scenarios"),
-            subtitle_create = T("Add New Scenario"),
             label_list_button = T("List Scenarios"),
-            label_create_button = ADD_SCENARIO,
             label_delete_button = T("Delete Scenario"),
             msg_record_created = T("Scenario added"),
             msg_record_modified = T("Scenario updated"),
@@ -152,7 +149,7 @@ class S3ScenarioModel(S3Model):
                                   },
                       )
 
-        scenario_id = S3ReusableField("scenario_id", table,
+        scenario_id = S3ReusableField("scenario_id", "reference %s" % tablename,
                                       sortby="name",
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "scenario_scenario.id",
@@ -251,20 +248,17 @@ class S3ScenarioAssetModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "scenario_asset"
-        table = self.define_table(tablename,
-                                  self.scenario_scenario_id(),
-                                  self.asset_asset_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.scenario_scenario_id(),
+                          self.asset_asset_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Asset"),
+            label_create = T("Create Asset"),
             title_display = T("Asset Details"),
             title_list = T("Assets"),
             title_update = T("Edit Asset"),
-            title_search = T("Search Assets"),
-            subtitle_create = T("Add New Asset"),
             label_list_button = T("List Assets"),
-            label_create_button = T("Add Asset"),
             label_delete_button = T("Remove Asset from this scenario"),
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
@@ -293,20 +287,17 @@ class S3ScenarioHRModel(S3Model):
         # @ToDo: Use Positions, not individual HRs (Typed resources?)
         # @ToDo: Search Widget
         tablename = "scenario_human_resource"
-        table = self.define_table(tablename,
-                                  self.scenario_scenario_id(),
-                                  self.hrm_human_resource_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.scenario_scenario_id(),
+                          self.hrm_human_resource_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Human Resource"),
+            label_create = T("Add Human Resource"),
             title_display = T("Human Resource Details"),
             title_list = T("Human Resources"),
             title_update = T("Edit Human Resource"),
-            title_search = T("Search Human Resources"),
-            subtitle_create = T("Add New Human Resource"),
             label_list_button = T("List Human Resources"),
-            label_create_button = T("Add Human Resource"),
             label_delete_button = T("Remove Human Resource from this scenario"),
             msg_record_created = T("Human Resource added"),
             msg_record_modified = T("Human Resource updated"),
@@ -336,20 +327,17 @@ class S3ScenarioMapModel(S3Model):
         #        that the Config is pre-created
 
         tablename = "scenario_config"
-        table = self.define_table(tablename,
-                                  self.scenario_scenario_id(),
-                                  self.gis_config_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.scenario_scenario_id(),
+                          self.gis_config_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Map Configuration"),
+            label_create = T("Create Map Configuration"),
             title_display = T("Map Configuration Details"),
             title_list = T("Map Configurations"),
             title_update = T("Edit Map Configuration"),
-            title_search = T("Search Map Configurations"),
-            subtitle_create = T("Add New Map Configuration"),
             label_list_button = T("List Map Configurations"),
-            label_create_button = T("Add Map Configuration"),
             label_delete_button = T("Remove Map Configuration from this scenario"),
             msg_record_created = T("Map Configuration added"),
             msg_record_modified = T("Map Configuration updated"),
@@ -380,20 +368,17 @@ class S3ScenarioOrganisationModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "scenario_organisation"
-        table = self.define_table(tablename,
-                                  self.scenario_scenario_id(),
-                                  self.org_organisation_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.scenario_scenario_id(),
+                          self.org_organisation_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Organization"),
+            label_create = T("Create Organization"),
             title_display = T("Organization Details"),
             title_list = T("Organizations"),
             title_update = T("Edit Organization"),
-            title_search = T("Search Organizations"),
-            subtitle_create = T("Add New Organization"),
             label_list_button = T("List Organizations"),
-            label_create_button = T("Add Organization"),
             label_delete_button = T("Remove Organization from this scenario"),
             msg_record_created = T("Organization added"),
             msg_record_modified = T("Organization updated"),
@@ -422,20 +407,17 @@ class S3ScenarioSiteModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "scenario_site"
-        table = self.define_table(tablename,
-                                  self.scenario_scenario_id(),
-                                  self.org_site_id,
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.scenario_scenario_id(),
+                          self.org_site_id,
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Facility"),
+            label_create = T("Create Facility"),
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
             title_update = T("Edit Facility"),
-            title_search = T("Search Facilities"),
-            subtitle_create = T("Add New Facility"),
             label_list_button = T("List Facilities"),
-            label_create_button = T("Add Facility"),
             label_delete_button = T("Remove Facility from this scenario"),
             msg_record_created = T("Facility added"),
             msg_record_modified = T("Facility updated"),
@@ -467,20 +449,17 @@ class S3ScenarioTaskModel(S3Model):
         # @ToDo: Search Widget
 
         tablename = "scenario_task"
-        table = self.define_table(tablename,
-                                  self.scenario_scenario_id(),
-                                  self.project_task_id(),
-                                  *s3_meta_fields())
+        self.define_table(tablename,
+                          self.scenario_scenario_id(),
+                          self.project_task_id(),
+                          *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Task"),
+            label_create = T("Create Task"),
             title_display = T("Task Details"),
             title_list = T("Tasks"),
             title_update = T("Edit Task"),
-            title_search = T("Search Tasks"),
-            subtitle_create = T("Add New Task"),
             label_list_button = T("List Tasks"),
-            label_create_button = T("Add Task"),
             label_delete_button = T("Remove Task from this scenario"),
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),

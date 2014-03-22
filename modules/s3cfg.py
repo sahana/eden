@@ -123,6 +123,28 @@ class S3Config(Storage):
         return self.base.get("xtheme", None)
 
     # -------------------------------------------------------------------------
+    # Customise Hooks
+    def customise_controller(self, tablename, **attr):
+        """
+            Customise a Controller
+            - runs before resource customisation
+            - but prep runs after resource customisation
+        """
+        customise = self.get("customise_%s_controller" % tablename)
+        if customise:
+            return customise(**attr)
+        else:
+            return attr
+
+    def customise_resource(self, tablename):
+        """
+            Get customisation callback for a resource
+            - runs after controller customisation
+            - but runs before prep
+        """
+        return self.get("customise_%s_resource" % tablename)
+
+    # -------------------------------------------------------------------------
     def has_module(self, module_name):
         """
             List of Active Modules
@@ -655,6 +677,12 @@ class S3Config(Storage):
         """
         return self.gis.get("cluster_fill", None)
 
+    def get_gis_cluster_label(self):
+        """
+            Label Clustered points on Map?
+        """
+        return self.gis.get("cluster_label", True)
+
     def get_gis_cluster_stroke(self):
         """
             Stroke for Clustered points on Map, else default
@@ -1073,22 +1101,6 @@ class S3Config(Storage):
         """
         return self.ui.get("confirm", True)
 
-    def get_ui_crud_form(self, tablename):
-        """
-            Get custom crud_forms for diffent tables
-        """
-        return self.ui.get("crud_form_%s" % tablename, None)
-
-    def ui_customize(self, tablename, **attr):
-        """
-            Customize a Controller
-        """
-        customize = self.ui.get("customize_%s" % tablename)
-        if customize:
-            return customize(**attr)
-        else:
-            return attr
-
     def get_ui_export_formats(self):
         """
             Which export formats should we display?
@@ -1220,6 +1232,12 @@ class S3Config(Storage):
         """
         return self.ui.get("report_auto_submit", 800)
 
+    def get_ui_use_button_glyphicons(self):
+        """
+            Use glyphicons on action buttons (requires bootstrap CSS)
+        """
+        return self.ui.get("use_button_glyphicons", False)
+
     # =========================================================================
     # Messaging
     #
@@ -1327,14 +1345,6 @@ class S3Config(Storage):
             Lower this number to get extra performance from an overloaded server.
         """
         return self.search.get("max_results", 200)
-
-    # -------------------------------------------------------------------------
-    # Save Search and Subscription
-    def get_search_save_widget(self):
-        """
-            Enable the Saved Search widget
-        """
-        return self.search.get("save_widget", False)
 
     # -------------------------------------------------------------------------
     # Filter Manager Widget
@@ -1473,17 +1483,68 @@ class S3Config(Storage):
         """
         return self.cms.get("bookmarks", False)
 
+    def get_cms_filter_open(self):
+        """
+            Whether the filter form on the Newsfeed should default to Open or Closed
+        """
+        return self.cms.get("filter_open", False)
+
+    def get_cms_organisation(self):
+        """
+            Which field to use for the Organisation of Posts:
+                * None
+                * created_by$organisation_id
+                * post_organisation.organisation_id
+        """
+        return self.cms.get("organisation", "created_by$organisation_id")
+
+    def get_cms_organisation_group(self):
+        """
+            Which field to use for the Organisation Group of Posts:
+                * None
+                * created_by$org_group_id
+                * post_organisation_group.group_id
+        """
+        return self.cms.get("organisation_group", None)
+
+    def get_cms_person(self):
+        """
+            Which field to use for the Author of Posts:
+                * None
+                * created_by
+                * person_id
+        """
+        return self.cms.get("person", "created_by")
+
     def get_cms_richtext(self):
         """
             Whether to use RichText editor in News feed
         """
         return self.cms.get("richtext", False)
 
+    def get_cms_show_events(self):
+        """
+            Whether to show Events in News Feed
+        """
+        return self.cms.get("show_events", False)
+
+    def get_cms_show_links(self):
+        """
+            Whether to show Links (such as Sources) in News Feed
+        """
+        return self.cms.get("show_links", False)
+
     def get_cms_show_tags(self):
         """
             Whether to show Tags in News Feed
         """
         return self.cms.get("show_tags", False)
+
+    def get_cms_show_titles(self):
+        """
+            Whether to show post Titles in News Feed
+        """
+        return self.cms.get("show_titles", False)
 
     # -------------------------------------------------------------------------
     # Deployments
@@ -1842,13 +1903,7 @@ class S3Config(Storage):
         """
             Which extra fields should be returned in S3SiteAutocompleteWidget
         """
-        return self.org.get("site_autocomplete_fields", ["instance_type"])
-
-    def get_org_site_address_autocomplete(self):
-        """
-            Whether site_id Autocomplete fields should search Address fields as well as name
-        """
-        return self.org.get("site_address_autocomplete", False)
+        return self.org.get("site_autocomplete_fields", ("instance_type",))
 
     def get_org_site_last_contacted(self):
         """
@@ -1927,6 +1982,13 @@ class S3Config(Storage):
                 group = "60+"
         return group
 
+    def get_pr_import_update_requires_email(self):
+        """
+            During imports, records are only updated if the import
+            item contains a (matching) email address
+        """
+        return self.pr.get("import_update_requires_email", True)
+
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget[2] """
         return self.pr.get("request_dob", True)
@@ -1951,12 +2013,11 @@ class S3Config(Storage):
         """
         return self.pr.get("select_existing", True)
 
-    def get_pr_import_update_requires_email(self):
+    def get_pr_search_shows_hr_details(self):
         """
-            During imports, records are only updated if the import
-            item contains a (matching) email address
+            Whether S3PersonAutocompleteWidget results show the details of their HR record
         """
-        return self.pr.get("import_update_requires_email", True)
+        return self.pr.get("search_shows_hr_details", True)
 
     # -------------------------------------------------------------------------
     # Proc
