@@ -1372,18 +1372,20 @@ settings.req.type_inv_label = "Supplies"
 settings.req.summary = True
 
 # -----------------------------------------------------------------------------
-def req_req_onaccept(form):
+def req_req_postprocess(form):
     """
-        Custom onaccept to run after crud_form completes
+        Runs after crud_form completes
+        - creates a cms_post in the newswire
+        - @ToDo: Send out Tweets
     """
 
-    req_id = form.vars.req_id
+    req_id = form.vars.id
 
-    # Create a cms_post in the newswire
     db = current.db
     s3db = current.s3db
-    # Build Title & Body from the Request details
     rtable = s3db.req_req
+
+    # Read the full record
     row = db(rtable.id == req_id).select(rtable.type,
                                          rtable.site_id,
                                          rtable.requester_id,
@@ -1393,14 +1395,17 @@ def req_req_onaccept(form):
                                          rtable.comments,
                                          limitby=(0, 1)
                                          ).first()
+
+    # Build Title & Body from the Request details
+    priority = rtable.priority.represent(row.priority)
     date_required = row.date_required
     if date_required:
-        title = "%(priority)s by %(date)s" % dict(priority=row.priority,
-                                                  date=date_required)
+        date = rtable.date_required.represent(date_required)
+        title = "%(priority)s by %(date)s" % dict(priority=priority,
+                                                  date=date)
     else:
-        title = row.priority
+        title = priority
     body = row.comments
-    # @ToDo: Components not yet created at this point, so move this to form_onaccept instead
     if row.type == 1:
         # Items
         ritable = s3db.req_req_item
@@ -1410,7 +1415,9 @@ def req_req_onaccept(form):
         item_represent = s3db.supply_item_represent
         pack_represent = s3db.supply_item_pack_represent
         for item in items:
-            item = "%s %s %s" % (item.quantity, item_represent(item.item_id), pack_represent(item.item_pack_id))
+            item = "%s %s %s" % (item.quantity,
+                                 pack_represent(item.item_pack_id),
+                                 item_represent(item.item_id))
             body = "%s\n%s" % (item, body)
     else:
         # Skills
@@ -1451,8 +1458,10 @@ def req_req_onaccept(form):
     s3db.update_super(ptable, record)
 
     # Add source link
+    url = "%s%s" % (settings.get_base_public_url(),
+                    URL(c="req", f="req", args=req_id))
     s3db.doc_document.insert(doc_id=record["doc_id"],
-                             url=URL(c="req", f="req", args=req_id),
+                             url=url,
                              )
 
 # -----------------------------------------------------------------------------
@@ -1464,6 +1473,8 @@ def customise_req_req_resource(r, tablename):
                           vars = dict(child="site_id"),
                           title=T("Create Facility"),
                           tooltip=T("Enter some characters to bring up a list of possible matches"))
+
+    current.response.s3.req_req_postprocess = req_req_postprocess
 
 settings.customise_req_req_resource = customise_req_req_resource
 

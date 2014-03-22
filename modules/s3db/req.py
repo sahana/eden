@@ -697,12 +697,14 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
         T = current.T
         s3db = current.s3db
         table = s3db.req_req
+        s3 = current.response.s3
+        postprocess = s3.req_req_postprocess
 
         if type == 1:
             # Dropdown not Autocomplete
             itable = s3db.req_req_item
             itable.item_id.widget = None
-            jquery_ready = current.response.s3.jquery_ready
+            jquery_ready = s3.jquery_ready
             jquery_ready.append('''
 S3OptionsFilter({
  'triggerName':'item_id',
@@ -766,7 +768,10 @@ S3OptionsFilter({
             if settings.get_req_use_req_number() and \
                not settings.get_req_generate_req_number():
                 fields.insert(0, "req_ref")
-            crud_form = S3SQLCustomForm(*fields)
+            if postprocess:
+                crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
+            else:
+                crud_form = S3SQLCustomForm(*fields)
             s3db.configure("req_req", crud_form=crud_form)
 
         elif type == 3:
@@ -804,7 +809,7 @@ S3OptionsFilter({
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
-                    current.response.s3.jquery_ready.append('''
+                    s3.jquery_ready.append('''
 S3OptionsFilter({
  'triggerName':'site_id',
  'targetName':'requester_id',
@@ -825,7 +830,10 @@ S3OptionsFilter({
             if settings.get_req_use_req_number() and \
                not settings.get_req_generate_req_number():
                 fields.insert(0, "req_ref")
-            crud_form = S3SQLCustomForm(*fields)
+            if postprocess:
+                crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
+            else:
+                crud_form = S3SQLCustomForm(*fields)
             s3db.configure("req_req", crud_form=crud_form)
 
     # -------------------------------------------------------------------------

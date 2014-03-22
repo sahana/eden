@@ -1300,12 +1300,13 @@ class S3ProjectActivityTypeModel(S3Model):
                     )
 
         self.configure(tablename,
-                       crud_form=crud_form,
-                       list_fields=["id",
-                                    "name",
-                                    (T("Sectors"), "activity_type_sector.sector_id"),
-                                    "comments",
-                                    ])
+                       crud_form = crud_form,
+                       list_fields = ["id",
+                                      "name",
+                                      (T("Sectors"), "activity_type_sector.sector_id"),
+                                      "comments",
+                                      ],
+                       )
 
         # ---------------------------------------------------------------------
         # Activity Type - Sector Link Table

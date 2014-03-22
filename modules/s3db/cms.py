@@ -381,9 +381,8 @@ class S3ContentModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_POST = T("Create Post")
         crud_strings[tablename] = Storage(
-            label_create = ADD_POST,
+            label_create = T("Create Post"),
             title_display = T("Post Details"),
             title_list = T("Posts"),
             title_update = T("Edit Post"),
@@ -408,9 +407,8 @@ class S3ContentModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_TAG = T("Create Tag")
         crud_strings[tablename] = Storage(
-            label_create = ADD_TAG,
+            label_create = T("Create Tag"),
             title_display = T("Tag Details"),
             title_list = T("Tags"),
             title_update = T("Edit Tag"),
@@ -431,9 +429,8 @@ class S3ContentModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_TAG = T("Tag Post")
         crud_strings[tablename] = Storage(
-            label_create = ADD_TAG,
+            label_create = T("Tag Post"),
             title_display = T("Tag Details"),
             title_list = T("Tags"),
             title_update = T("Edit Tag"),
@@ -468,11 +465,12 @@ class S3ContentModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  list_fields=["id",
-                               "post_id",
-                               "created_by",
-                               "modified_on"
-                               ])
+                  list_fields = ["id",
+                                 "post_id",
+                                 "created_by",
+                                 "modified_on"
+                                 ],
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -496,17 +494,15 @@ class S3ContentModel(S3Model):
             Cascade values down to all component Posts
         """
 
-        vars = form.vars
+        form_vars = form.vars
 
         db = current.db
         table = db.cms_post
-        query = (table.series_id == vars.id)
-        db(query).update(avatar = vars.avatar,
-                         replies = vars.replies,
-                         roles_permitted = vars.roles_permitted,
+        query = (table.series_id == form_vars.id)
+        db(query).update(avatar = form_vars.avatar,
+                         replies = form_vars.replies,
+                         roles_permitted = form_vars.roles_permitted,
                          )
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1221,8 +1217,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     series_id = raw["cms_post.series_id"]
-    date = record["cms_post.date"]
     body = record["cms_post.body"]
+
+    date = record["cms_post.date"]
+    date = SPAN(date,
+                _class="date-title",
+                )
 
     location_id = raw["cms_post.location_id"]
     if location_id:
@@ -1375,11 +1375,11 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         series = record["cms_post.series_id"]
         translate = settings.get_L10n_translate_cms_series()
         if translate:
-            title = T(series)
+            series_title = T(series)
         else:
-            title = series
+            series_title = series
     else:
-        title = series = ""
+        series_title = series = ""
 
     # Tool box
     if updateable:
@@ -1389,7 +1389,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                vars={"refresh": list_id,
                                      "record": record_id}),
                      _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=title),
+                     _title=T("Edit %(type)s") % dict(type=series_title),
                      )
     else:
         edit_btn = ""
@@ -1489,6 +1489,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     request = current.request
     if "profile" in request.args:
         # Single resource list
+        # - don't show series_title
         if settings.get_cms_show_titles():
             title = raw["cms_post.title"] or ""
         else:
@@ -1498,9 +1499,17 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         # Mixed resource lists (Home, News Feed)
         icon = series.lower().replace(" ", "_")
-        card_label = TAG[""](I(_class="icon icon-%s" % icon),
-                             SPAN(" %s" % title,
-                                  _class="card-title"))
+        series_title = SPAN(" %s" % series_title,
+                            _class="card-title")
+        if settings.get_cms_show_titles() and raw["cms_post.title"]:
+            title = SPAN(raw["cms_post.title"],
+                         _class="card-title2")
+            card_label = TAG[""](I(_class="icon icon-%s" % icon),
+                                 series_title,
+                                 title)
+        else:
+            card_label = TAG[""](I(_class="icon icon-%s" % icon),
+                                 series_title)
         # Type cards
         if series == "Alert": 
             # Apply additional highlighting for Alerts
@@ -1509,9 +1518,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     # Render the item
     if series == "Event" and "newsfeed" not in request.args: # and request.function != "newsfeed"
         # Events on Homepage have a different header
-        header = DIV(SPAN(date,
-                          _class="date-title event",
-                          ),
+        date.add_class("event")
+        header = DIV(date,
                      location,
                      toolbox,
                      _class="card-header",
@@ -1519,9 +1527,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         header = DIV(card_label,
                      location,
-                     SPAN(date,
-                          _class="date-title",
-                          ),
+                     date,
                      toolbox,
                      _class="card-header",
                      )
