@@ -24,8 +24,7 @@ def gauge():
     def prep(r):
         if r.interactive:
             pass
-        elif r.representation == "plain" and \
-             r.method !="search":
+        elif r.representation == "plain":
             # Map Popups
             r.table.image_url.readable = False
         return True
@@ -35,8 +34,7 @@ def gauge():
     def postp(r, output):
         if r.interactive:
             pass
-        elif r.representation == "plain" and \
-             r.method !="search":
+        elif r.representation == "plain":
             # Map Popups
             # use the Image URL
             # @ToDo: The default photo not the 1st

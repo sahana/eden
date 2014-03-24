@@ -7072,7 +7072,7 @@ class S3RecordMerger(object):
         duplicate = None
         query = table._id.belongs([original_id, duplicate_id])
         if "deleted" in table.fields:
-            query &= table.deleted != True
+            query &= (table.deleted != True)
         rows = db(query).select(table.ALL, limitby=(0, 2))
         for row in rows:
             record_id = row[table._id]

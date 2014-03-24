@@ -1293,7 +1293,8 @@ class S3CRUD(S3Method):
         session = current.session
 
         left = []
-        distinct = self.method == "search"
+        #distinct = self.method == "search"
+        distinct = False
         dtargs = attr.get("dtargs", {})
 
         if r.interactive:
@@ -1323,8 +1324,8 @@ class S3CRUD(S3Method):
                         dt_sorting["iSortCol_0"] = "0"
 
                     q, orderby, left = resource.datatable_filter(list_fields, dt_sorting)
-                if r.method == "search" and not orderby:
-                    orderby = default_orderby
+                #if r.method == "search" and not orderby:
+                #    orderby = default_orderby
             else:
                 dt_pagination = "false"
 
@@ -1384,8 +1385,8 @@ class S3CRUD(S3Method):
                 totalrows = None
 
             # Orderby fallbacks
-            if r.method == "search" and not orderby:
-                orderby = default_orderby
+            #if r.method == "search" and not orderby:
+            #    orderby = default_orderby
             if orderby is None:
                 orderby = get_config("orderby", None)
 
@@ -1758,8 +1759,8 @@ class S3CRUD(S3Method):
                     del get_vars["iSortingCols"]
                     del get_vars["iSortCol_0"]
                     del get_vars["sSortDir_0"]
-                if r.method == "search" and not orderby:
-                    orderby = fields[0]
+                #if r.method == "search" and not orderby:
+                #    orderby = fields[0]
             else:
                 dt_pagination = "false"
 
@@ -1802,8 +1803,8 @@ class S3CRUD(S3Method):
                 totalrows = None
 
             # Orderby fallbacks
-            if r.method == "search" and not orderby:
-                orderby = fields[0]
+            #if r.method == "search" and not orderby:
+            #    orderby = fields[0]
             if orderby is None:
                 orderby = _config("orderby", None)
 

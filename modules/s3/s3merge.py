@@ -350,9 +350,10 @@ class S3Merge(S3Method):
             if len(record_ids) < 2:
                 output["add_btn"] = DIV(
                     SPAN(T("You need to have at least 2 records in this list in order to merge them."),
-                      _style="float:left; padding-right:10px;"),
+                         # @ToDo: Move to CSS
+                         _style="float:left;padding-right:10px;"),
                     A(T("Find more"),
-                      _href=r.url(method="search", id=0, component_id=0, vars={}))
+                      _href=r.url(method="", id=0, component_id=0, vars={}))
                 )
             else:
                 output["add_btn"] = DIV(
@@ -612,7 +613,7 @@ class S3Merge(S3Method):
 
             # Go back to bookmark list
             if search:
-                self.next = r.url(method="search", id=0, vars={})
+                self.next = r.url(method="", id=0, vars={})
             else:
                 self.next = r.url(id=0, vars={})
 
