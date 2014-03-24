@@ -184,7 +184,8 @@ class S3HRModel(S3Model):
                                 ondelete = "SET NULL")
 
         configure("hrm_department",
-                  deduplicate=self.hrm_department_duplicate)
+                  deduplicate = self.hrm_department_duplicate,
+                  )
 
         # =========================================================================
         # Job Titles (Mayon: StaffResourceType)
@@ -294,7 +295,8 @@ class S3HRModel(S3Model):
             )
 
         configure("hrm_job_title",
-                  deduplicate=self.hrm_job_title_duplicate)
+                  deduplicate = self.hrm_job_title_duplicate,
+                  )
 
         # =========================================================================
         # Human Resource
@@ -1711,7 +1713,7 @@ class S3HRSkillModel(S3Model):
                                         ondelete = "RESTRICT")
 
         configure("hrm_competency_rating",
-                  deduplicate = self.hrm_competency_rating_duplicate
+                  deduplicate = self.hrm_competency_rating_duplicate,
                   )
 
         # ---------------------------------------------------------------------
@@ -3394,7 +3396,7 @@ class S3HRProgrammeModel(S3Model):
 
         configure(tablename,
                   deduplicate = self.hrm_programme_duplicate,
-                 )
+                  )
 
         # Components
         self.add_components(tablename,
@@ -5792,8 +5794,8 @@ def hrm_person_controller(**attr):
                  csv_extra_fields=[dict(label="Type",
                                         field=s3db.hrm_human_resource.type),
                                   ],
-                 # Better in the native person controller:
-                 deduplicate="",
+                 # Better in the native person controller (but this isn't always accessible):
+                 #deduplicate="",
                  orgname=orgname,
                  replace_option=T("Remove existing data before import"),
                  rheader=hrm_rheader,

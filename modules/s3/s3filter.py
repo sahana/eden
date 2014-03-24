@@ -2097,6 +2097,8 @@ class S3FilterForm(object):
                 if isinstance(applicable_defaults, dict):
                     if operator in applicable_defaults:
                         default = applicable_defaults[operator]
+                    else:
+                        continue
                 elif operator in (None, "belongs", "eq"):
                     default = applicable_defaults
                 else:
