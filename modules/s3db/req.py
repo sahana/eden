@@ -3053,8 +3053,8 @@ class S3CommitItemModel(S3Model):
                         currency = rim.currency,
                         #req_quantity = quantity_needed,
                         quantity = row.req_commit_item.quantity,
+                        recv_quantity = row.req_commit_item.quantity,
                         )
-            tracktable(tracktable.id == id).update(tracking_no = "TN:%6d" % (10000 + id))
 
         # Create the Waybill
         form = Storage()

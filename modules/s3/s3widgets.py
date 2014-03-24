@@ -989,6 +989,7 @@ class S3AutocompleteWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
+        s3 = current.response.s3
         default = dict(
             _type = "text",
             value = (value != None and str(value)) or "",
@@ -1032,7 +1033,7 @@ class S3AutocompleteWidget(FormWidget):
                 dict(postprocess = post_process)
 
         script = '''%s%s)''' % (script, options)
-        current.response.s3.jquery_ready.append(script)
+        s3.jquery_ready.append(script)
 
         if value:
             try:
@@ -1045,6 +1046,8 @@ class S3AutocompleteWidget(FormWidget):
             represent = text
         else:
             represent = ""
+
+        s3.js_global.append('''i18n.none_of_the_above="%s"''' % current.T("None of the above"))
 
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
