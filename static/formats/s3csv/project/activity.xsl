@@ -99,101 +99,103 @@
         <xsl:variable name="Status" select="col[@field='Status']/text()"/>
         <xsl:variable name="Themes" select="col[@field='Themes']/text()"/>
 
-        <resource name="project_activity">
-            <data field="name"><xsl:value-of select="$Activity"/></data>
-            <data field="date"><xsl:value-of select="col[@field='Start Date']"/></data>
-            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+        <xsl:if test="$Activity !='' or col[starts-with(@field, 'Item')]/text() !=''">
+            <resource name="project_activity">
+                <data field="name"><xsl:value-of select="$Activity"/></data>
+                <data field="date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
 
-            <!-- Link to Activity Types -->
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list">
-                    <xsl:value-of select="$ActivityType"/>
-                </xsl:with-param>
-                <xsl:with-param name="listsep" select="';'"/>
-                <xsl:with-param name="arg">activity_type_ref</xsl:with-param>
-            </xsl:call-template>
-
-            <!-- Link to Beneficiaries -->
-            <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
-                <xsl:call-template name="ActivityBeneficiaries">
-                    <xsl:with-param name="ProjectName">
-                        <xsl:value-of select="$Project"/>
+                <!-- Link to Activity Types -->
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list">
+                        <xsl:value-of select="$ActivityType"/>
                     </xsl:with-param>
-                    <xsl:with-param name="ActivityName">
-                        <xsl:value-of select="$Activity"/>
-                    </xsl:with-param>
+                    <xsl:with-param name="listsep" select="';'"/>
+                    <xsl:with-param name="arg">activity_type_ref</xsl:with-param>
                 </xsl:call-template>
-            </xsl:for-each>
 
-            <!-- Link to Contact -->
-            <xsl:call-template name="ContactPersonReference"/>
+                <!-- Link to Beneficiaries -->
+                <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
+                    <xsl:call-template name="ActivityBeneficiaries">
+                        <xsl:with-param name="ProjectName">
+                            <xsl:value-of select="$Project"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="ActivityName">
+                            <xsl:value-of select="$Activity"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:for-each>
 
-            <!-- Link to Distributions -->
-            <xsl:for-each select="col[starts-with(@field, 'Item')]">
-                <xsl:call-template name="Distribution" />
-            </xsl:for-each>
+                <!-- Link to Contact -->
+                <xsl:call-template name="ContactPersonReference"/>
 
-            <!-- Link to Location -->
-            <xsl:call-template name="LocationReference"/>
+                <!-- Link to Distributions -->
+                <xsl:for-each select="col[starts-with(@field, 'Item')]">
+                    <xsl:call-template name="Distribution" />
+                </xsl:for-each>
 
-            <!-- Link to Organisations -->
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list">
-                    <xsl:value-of select="$Org"/>
-                </xsl:with-param>
-                <xsl:with-param name="arg">org_ref</xsl:with-param>
-            </xsl:call-template>
+                <!-- Link to Location -->
+                <xsl:call-template name="LocationReference"/>
 
-            <!-- Link to Organisation Group -->
-            <xsl:if test="col[@field='Organisation Group']!=''">
-                <resource name="project_activity_group">
-                    <reference field="group_id" resource="org_group">
+                <!-- Link to Organisations -->
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list">
+                        <xsl:value-of select="$Org"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="arg">org_ref</xsl:with-param>
+                </xsl:call-template>
+
+                <!-- Link to Organisation Group -->
+                <xsl:if test="col[@field='Organisation Group']!=''">
+                    <resource name="project_activity_group">
+                        <reference field="group_id" resource="org_group">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('OrganisationGroup:',
+                                                             col[@field='Organisation Group'])"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </xsl:if>
+
+                <!-- Link to Project -->
+                <xsl:if test="$Project!=''">
+                    <reference field="project_id" resource="project_project">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('OrganisationGroup:',
-                                                         col[@field='Organisation Group'])"/>
+                            <xsl:value-of select="concat($ProjectPrefix, $Project)"/>
                         </xsl:attribute>
                     </reference>
-                </resource>
-            </xsl:if>
+                </xsl:if>
 
-            <!-- Link to Project -->
-            <xsl:if test="$Project!=''">
-	            <reference field="project_id" resource="project_project">
-	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="concat($ProjectPrefix, $Project)"/>
-	                </xsl:attribute>
-	            </reference>
-            </xsl:if>
+                <!-- Link to Sectors -->
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list">
+                        <xsl:value-of select="$Sectors"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="listsep" select="';'"/>
+                    <xsl:with-param name="arg">sector_ref</xsl:with-param>
+                </xsl:call-template>
 
-            <!-- Link to Sectors -->
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list">
-                    <xsl:value-of select="$Sectors"/>
-                </xsl:with-param>
-                <xsl:with-param name="listsep" select="';'"/>
-                <xsl:with-param name="arg">sector_ref</xsl:with-param>
-            </xsl:call-template>
+                <!-- Link to Status -->
+                <xsl:if test="$Status!=''">
+                    <reference field="status_id" resource="project_status">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($StatusPrefix, $Status)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
 
-            <!-- Link to Status -->
-            <xsl:if test="$Status!=''">
-	            <reference field="status_id" resource="project_status">
-	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="concat($StatusPrefix, $Status)"/>
-	                </xsl:attribute>
-	            </reference>
-            </xsl:if>
+                <!-- Link to Themes -->
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list">
+                        <xsl:value-of select="$Themes"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="listsep" select="';'"/>
+                    <xsl:with-param name="arg">theme_ref</xsl:with-param>
+                </xsl:call-template>
 
-            <!-- Link to Themes -->
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list">
-                    <xsl:value-of select="$Themes"/>
-                </xsl:with-param>
-                <xsl:with-param name="listsep" select="';'"/>
-                <xsl:with-param name="arg">theme_ref</xsl:with-param>
-            </xsl:call-template>
-
-        </resource>
+            </resource>
+        </xsl:if>
         
         <!-- Activity Types -->
         <xsl:call-template name="splitList">

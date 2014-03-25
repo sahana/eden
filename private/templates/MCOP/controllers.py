@@ -19,7 +19,18 @@ class index(S3CustomController):
         s3db = current.s3db
         output = {}
         self._view(THEME, "index.html")
-        
+
+        gis = current.gis
+        #config = gis.get_config()
+        #config.zoom = 8
+        map = gis.show_map(width=770,
+                           height=295,
+                           catalogue_layers=True,
+                           collapsed=True,
+                           save=False,
+                           )
+        output["map"] = map
+
         # Organisations Data List
         resource = s3db.resource("org_organisation")
         
@@ -43,16 +54,40 @@ class index(S3CustomController):
                        "event_post.event_id",
                        ]
         resource = s3db.resource("cms_post")
+        resource.add_filter(S3FieldSelector("series_id$name").belongs(["Alert", "Incident"]))
         resource.add_filter(S3FieldSelector("post.series_id") != None)
         datalist, numrows, ids = resource.datalist(list_id = "cms_post_datalist",
                                                    fields=list_fields,
                                                    #start=None,
-                                                   limit=10,
+                                                   limit=5,
                                                    #list_id=list_id,
                                                    #orderby=orderby,
                                                    layout = s3db.cms_post_list_layout
                                                    )
         output["cms_post_datalist"] = datalist.html()
+
+        #MCOP News Feed
+
+        #s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
+        s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
+        s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
+        # feedCycleTime: milliseconds before feed is reloaded (5 minutes)
+        s3.js_global.append(
+"""
+function LoadDynamicFeedControl(){
+ var feeds=[{title:'News', url:'http://psmcop.org/?feed=rss2'}]
+ var options={
+  feedCycleTime:300000,
+  numResults:5,
+  stacked:true,
+  horizontal:false,
+ }
+ new GFdynamicFeedControl(feeds,'feed-control',options);
+}
+google.load('feeds','1');
+google.setOnLoadCallback(LoadDynamicFeedControl);
+"""
+)
 
         # Data Buttons
         # Description of available data

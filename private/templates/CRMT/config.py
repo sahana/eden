@@ -570,7 +570,7 @@ def default_coalition_filter(selector, tablename=None):
         return org_group_id
     else:
         # Filter to all Coalitions
-        gtable = s3db.org_group
+        gtable = current.s3db.org_group
         rows = current.db(gtable.deleted == False).select(gtable.id)
         return [row.id for row in rows]
 
