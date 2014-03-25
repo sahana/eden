@@ -1189,6 +1189,9 @@ class S3Model(object):
         update_record = record.update_record
         for sname in keys:
             key, value = keys[sname]
+            if not value:
+                # Skip if we don't have a super-key
+                continue
 
             # Remove the super key
             update_record(**{key: None})

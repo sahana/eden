@@ -1712,7 +1712,7 @@ class S3Resource(object):
               duplicate_id,
               replace=None,
               update=None,
-              main=None):
+              main=True):
         """ Merge two records, see also S3RecordMerger.merge """
 
         return S3RecordMerger(self).merge(original_id,
@@ -6999,7 +6999,7 @@ class S3RecordMerger(object):
             alias, fn = key.split(".", 1)
             if alias not in ("~", self.resource.alias):
                 fn = None
-        elif self.main is None:
+        elif self.main:
             fn = key
         return fn
 
@@ -7009,7 +7009,7 @@ class S3RecordMerger(object):
               duplicate_id,
               replace=None,
               update=None,
-              main=None):
+              main=True):
         """
             Merge a duplicate record into its original and remove the
             duplicate, updating all references in the database.
@@ -7064,7 +7064,7 @@ class S3RecordMerger(object):
 
         # Load all models
         s3db = current.s3db
-        if main is None:
+        if main:
             s3db.load_all_models()
 
         # Get the records
@@ -7179,7 +7179,7 @@ class S3RecordMerger(object):
                         cresource.merge(osub_id, dsub_id,
                                         replace=replace,
                                         update=update,
-                                        main=resource)
+                                        main=False)
                     continue
 
             # Find the foreign key
@@ -7211,22 +7211,42 @@ class S3RecordMerger(object):
                 update_record(rtable, row[rtable._id], row, data)
 
         # Merge super-entity records
-        se = s3db.get_config(tablename, "super_entity")
-        if se is not None:
-            if not isinstance(se, (list, tuple)):
-                se = [se]
-            for entity in se:
-                supertable = s3db[entity]
-                # Get the super-keys
-                superkey = supertable._id.name
+        super_entities = resource.get_config("super_entity")
+        if super_entities is not None:
+            
+            if not isinstance(super_entities, (list, tuple)):
+                super_entities = [super_entities]
+                
+            for super_entity in super_entities:
+                
+                super_table = s3db.table(super_entity)
+                if not super_table:
+                    continue
+                superkey = super_table._id.name
+                
                 skey_o = original[superkey]
+                if not skey_o:
+                    msg = "No %s found in %s.%s" % (superkey,
+                                                    tablename,
+                                                    original_id)
+                    current.log.warning(msg)
+                    s3db.update_super(table, original)
+                    skey_o = original[superkey]
+                if not skey_o:
+                    continue
                 skey_d = duplicate[superkey]
-                # Merge the super-records
-                sresource = define_resource(entity)
+                if not skey_d:
+                    msg = "No %s found in %s.%s" % (superkey,
+                                                    tablename,
+                                                    duplicate_id)
+                    current.log.warning(msg)
+                    continue
+
+                sresource = define_resource(super_entity)
                 sresource.merge(skey_o, skey_d,
                                 replace=replace,
                                 update=update,
-                                main=resource)
+                                main=False)
 
         # Merge and update original data
         data = Storage()

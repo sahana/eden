@@ -2349,6 +2349,99 @@ class MergeOrganisationsTests(unittest.TestCase):
         self.assertEqual(org2.website, "http://www.example.com")
 
     # -------------------------------------------------------------------------
+    def testMergeMissingOriginalSE(self):
+        """ Test merge where original record lacks SEs """
+
+        resource = self.resource
+        get_records = self.get_records
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
+        org1, org2 = get_records()
+        success = current.s3db.delete_super(resource.table, org1)
+        assertTrue(success)
+        org1, org2 = get_records()
+        assertEqual(org1.pe_id, None)
+
+        success = resource.merge(self.id1, self.id2)
+        assertTrue(success)
+        org1, org2 = get_records()
+
+        assertNotEqual(org1, None)
+        assertNotEqual(org2, None)
+
+        self.assertFalse(org1.deleted)
+        assertTrue(org2.deleted)
+        assertEqual(str(self.id1), str(org2.deleted_rb))
+
+        assertNotEqual(org1.pe_id, None)
+
+    # -------------------------------------------------------------------------
+    def testMergeMissingDuplicateSE(self):
+        """ Test merge where duplicate record lacks SEs """
+
+        resource = self.resource
+        get_records = self.get_records
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
+        org1, org2 = get_records()
+        success = current.s3db.delete_super(resource.table, org2)
+        assertTrue(success)
+        org1, org2 = get_records()
+        assertEqual(org2.pe_id, None)
+
+        success = resource.merge(self.id1, self.id2)
+        assertTrue(success)
+        org1, org2 = get_records()
+
+        assertNotEqual(org1, None)
+        assertNotEqual(org2, None)
+
+        self.assertFalse(org1.deleted)
+        assertTrue(org2.deleted)
+        assertEqual(str(self.id1), str(org2.deleted_rb))
+
+        assertEqual(org2.pe_id, None)
+
+    # -------------------------------------------------------------------------
+    def testMergeMissingSE(self):
+        """ Test merge where both records lack SEs """
+
+        resource = self.resource
+        get_records = self.get_records
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
+        org1, org2 = get_records()
+        success = current.s3db.delete_super(resource.table, org1)
+        success = current.s3db.delete_super(resource.table, org2)
+        assertTrue(success)
+        org1, org2 = get_records()
+        assertEqual(org1.pe_id, None)
+        assertEqual(org2.pe_id, None)
+
+        success = resource.merge(self.id1, self.id2)
+        assertTrue(success)
+        org1, org2 = get_records()
+
+        assertNotEqual(org1, None)
+        assertNotEqual(org2, None)
+
+        self.assertFalse(org1.deleted)
+        assertTrue(org2.deleted)
+        assertEqual(str(self.id1), str(org2.deleted_rb))
+
+        assertNotEqual(org1.pe_id, None)
+        assertEqual(org2.pe_id, None)
+
+    # -------------------------------------------------------------------------
     def testMergeReplace(self):
         """ Test merge with replace """
 
