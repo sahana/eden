@@ -281,9 +281,8 @@ class S3DocumentLibrary(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_IMAGE = T("Create Photo")
         crud_strings[tablename] = Storage(
-            label_create = ADD_IMAGE,
+            label_create = T("Add Photo"),
             title_display = T("Photo Details"),
             title_list = T("Photos"),
             title_update = T("Edit Photo"),

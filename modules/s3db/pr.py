@@ -345,7 +345,7 @@ class S3PersonEntity(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Affiliation"),
+            label_create = T("Add Affiliation"),
             title_display = T("Affiliation Details"),
             title_list = T("Affiliations"),
             title_update = T("Edit Affiliation"),
@@ -1533,7 +1533,7 @@ class S3GroupModel(S3Model):
             msg_list_empty = T("No Groups currently registered"))
 
         # CRUD Strings
-        ADD_GROUP = T("Add Mailing List")
+        ADD_GROUP = T("Create Mailing List")
         mailing_list_crud_strings = Storage(
             label_create = ADD_GROUP,
             title_display = T("Mailing List Details"),
@@ -1783,7 +1783,7 @@ class S3ContactModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Contact Information"),
+            label_create = T("Add Contact Information"),
             title_display = T("Contact Details"),
             title_list = T("Contact Information"),
             title_update = T("Edit Contact Information"),
@@ -1970,7 +1970,7 @@ class S3AddressModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ADDRESS = T("Create Address")
+        ADD_ADDRESS = T("Add Address")
         s3.crud_strings[tablename] = Storage(
             label_create = ADD_ADDRESS,
             title_display = T("Address Details"),
@@ -2451,7 +2451,7 @@ class S3PersonIdentityModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_IDENTITY = T("Create Identity")
+        ADD_IDENTITY = T("Add Identity")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_IDENTITY,
             title_display = T("Identity Details"),
@@ -2544,9 +2544,8 @@ class S3PersonEducationModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_IDENTITY = T("Create Educational Achievements")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_IDENTITY,
+            label_create = T("Add Education Detail"),
             title_display = T("Education Details"),
             title_list = T("Education Details"),
             title_update = T("Edit Education Details"),
@@ -2697,7 +2696,7 @@ class S3PersonDetailsModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_DETAILS = T("Create Person's Details")
+        ADD_DETAILS = T("Add Person's Details")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_DETAILS,
             title_display = T("Person's Details"),
@@ -3331,7 +3330,7 @@ class S3PersonPresence(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_LOG_ENTRY = T("Create Log Entry")
+        ADD_LOG_ENTRY = T("Add Log Entry")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_LOG_ENTRY,
             title_display = T("Log Entry Details"),

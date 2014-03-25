@@ -498,7 +498,7 @@ class S3InventoryModel(S3Model):
 
         # CRUD strings
         INV_ITEM = T("Warehouse Stock")
-        ADD_INV_ITEM = T("Create Stock to Warehouse")
+        ADD_INV_ITEM = T("Add Stock to Warehouse")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_INV_ITEM,
             title_display = T("Warehouse Stock Details"),
@@ -1509,9 +1509,9 @@ class S3InventoryTrackingModel(S3Model):
                              #comment = S3AddResourceLink(
                              #   c="supply",
                              #   f="item",
-                             #   label=T("Create New Kit"),
+                             #   label=T("Create Kit"),
                              #   title=T("Kit"),
-                             #   tooltip=T("Type the name of an existing catalog kit OR Click 'Create New Kit' to add a kit which is not in the catalog.")),
+                             #   tooltip=T("Type the name of an existing catalog kit OR Click 'Create Kit' to add a kit which is not in the catalog.")),
                              comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (T("Kit"),
                                                              T("Type the name of an existing catalog kit"))),
@@ -1537,7 +1537,7 @@ class S3InventoryTrackingModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_KIT = T("Create New Kit")
+        ADD_KIT = T("Create Kit")
         crud_strings[tablename] = Storage(
             label_create = ADD_KIT,
             title_display = T("Kit Details"),
@@ -1682,7 +1682,7 @@ S3OptionsFilter({
                      )
 
         # CRUD strings
-        ADD_TRACK_ITEM = T("Create Item to Shipment")
+        ADD_TRACK_ITEM = T("Add Item to Shipment")
         crud_strings[tablename] = Storage(
             label_create = ADD_TRACK_ITEM,
             title_display = T("Shipment Item Details"),
@@ -4035,9 +4035,8 @@ class S3InventoryAdjustModel(S3Model):
                                       ondelete = "RESTRICT")
 
         # CRUD strings
-        ADJUST_STOCK = T("Create New Stock Items")
         crud_strings["inv_adj_item"] = Storage(
-            label_create = ADJUST_STOCK,
+            label_create = T("Add Item to Stock"),
             title_display = T("Item Details"),
             title_list = T("Items in Stock"),
             title_update = T("Adjust Item Quantity"),

@@ -3812,7 +3812,7 @@ def customise_project_project_controller(**attr):
                              label = T("Search Projects"),
                              ),
                 S3OptionsFilter("organisation_id",
-                                label = T("Lead Organisation"),
+                                label = T("Lead Organization"),
                                 widget="multiselect"
                                 ),
                 S3LocationFilter("location.location_id",
@@ -3947,7 +3947,7 @@ def customise_project_beneficiary_controller(**attr):
             #S3DateFilter("date",
             #             )
             #S3OptionsFilter("project_id$organisation_id",
-            #                label = T("Lead Organisation"),
+            #                label = T("Lead Organization"),
             #                widget="multiselect"
             #                ),
             ]

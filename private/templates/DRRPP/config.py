@@ -499,7 +499,7 @@ def customise_project_project_controller(**attr):
                                 hidden = True,
                                ),
                 S3OptionsFilter("organisation_id",
-                                label = T("Lead Organisation"),
+                                label = T("Lead Organization"),
                                 cols = 3,
                                 hidden = True,
                                ),

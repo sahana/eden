@@ -2427,7 +2427,7 @@ class S3LayerEntityModel(S3Model):
         # since there are many diff layers
         # - override for single Config -> Layer
         crud_strings[tablename] = Storage(
-            label_create = T("Create Profile Configuration for this Layer"),
+            label_create = T("Add Profile Configuration for this Layer"),
             title_display = T("Profile Configuration"),
             title_list = T("Profile Configurations"),
             title_update = T("Edit Profile Configuration"),
@@ -2467,7 +2467,7 @@ class S3LayerEntityModel(S3Model):
         # since there are many diff layers
         # - override for single Symbology -> Layer
         crud_strings[tablename] = Storage(
-            label_create = T("Create Symbology for Layer"),
+            label_create = T("Add Symbology to Layer"),
             title_display = T("Symbology"),
             title_list = T("Symbologies"),
             title_update = T("Edit Symbology"),
@@ -4103,7 +4103,7 @@ class S3MapModel(S3Model):
             shapefile = "%s.shp" % layerName
             ds = ogr.Open(shapefile)
             if ds is None:
-                current.response.error = current.T("Couldn't open %s!" % shapefile)
+                current.response.error = current.T("Couldn't open %s!") % shapefile
                 # Revert back to the working directory as before.
                 os.chdir(cwd)
                 return
@@ -4336,9 +4336,8 @@ class S3GISThemeModel(S3Model):
                            label = T("Value")),
                      *s3_meta_fields())
 
-        ADD_THEME = T("Create Data to Theme Layer")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_THEME,
+            label_create = T("Add Data to Theme Layer"),
             title_display = T("Theme Data"),
             title_list = T("Theme Data"),
             title_update = T("Edit Theme Data"),

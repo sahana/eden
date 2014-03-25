@@ -871,7 +871,6 @@ class S3ProjectActivityModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ACTIVITY = T("Activity")
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Create Activity'.")
         ADD_ACTIVITY = T("Create Activity")
         crud_strings[tablename] = Storage(
@@ -1033,7 +1032,7 @@ class S3ProjectActivityModel(S3Model):
                         comment = S3AddResourceLink(ADD_ACTIVITY,
                                                     c="project", f="activity",
                                                     tooltip=ACTIVITY_TOOLTIP),
-                        label = ACTIVITY,
+                        label = T("Activity"),
                         ondelete = "CASCADE",
                         represent = represent,
                         requires = IS_NULL_OR(
@@ -1356,7 +1355,7 @@ class S3ProjectActivityTypeModel(S3Model):
 # =============================================================================
 class S3ProjectActivityOrganisationModel(S3Model):
     """
-        Project Activity Organisation Model
+        Project Activity Organization Model
 
         This model links Organisations with Activities
         - useful when we don't have the details of the Projects
@@ -1384,17 +1383,16 @@ class S3ProjectActivityOrganisationModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ACTIVITY_ORG = T("Create Activity Organisation")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_ACTIVITY_ORG,
-            title_display = T("Activity Organisation"),
-            title_list = T("Activity Organisations"),
-            title_update = T("Edit Activity Organisation"),
-            label_list_button = T("List Activity Organisations"),
-            msg_record_created = T("Activity Organisation Added"),
-            msg_record_modified = T("Activity Organisation Updated"),
-            msg_record_deleted = T("Activity Organisation Deleted"),
-            msg_list_empty = T("No Activity Organisations Found")
+            label_create = T("Add Organization to Activity"),
+            title_display = T("Activity Organization"),
+            title_list = T("Activity Organizations"),
+            title_update = T("Edit Activity Organization"),
+            label_list_button = T("List Activity Organizations"),
+            msg_record_created = T("Activity Organization Added"),
+            msg_record_modified = T("Activity Organization Updated"),
+            msg_record_deleted = T("Activity Organization Deleted"),
+            msg_list_empty = T("No Activity Organizations Found")
         )
 
         configure(tablename,
@@ -1562,7 +1560,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("New Annual Budget"),
+            label_create = T("Add Annual Budget"),
             title_display = T("Annual Budget"),
             title_list = T("Annual Budgets"),
             title_update = T("Edit Annual Budget"),
@@ -1627,7 +1625,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_BNF_TYPE = T("Add Beneficiary Type")
+        ADD_BNF_TYPE = T("Create Beneficiary Type")
         crud_strings[tablename] = Storage(
             label_create = ADD_BNF_TYPE,
             title_display = T("Beneficiary Type"),
@@ -2097,7 +2095,7 @@ class S3ProjectCampaignModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CAMPAIGN = T("Add Campaign")
+        ADD_CAMPAIGN = T("Create Campaign")
         crud_strings[tablename] = Storage(
             label_create = ADD_CAMPAIGN,
             title_display = T("Campaign"),
@@ -2158,17 +2156,16 @@ class S3ProjectCampaignModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CAMPAIGN = T("Add Campaign")
         crud_strings[tablename] = Storage(
-            label_create = ADD_CAMPAIGN,
-            title_display = T("Campaign"),
-            title_list = T("Campaigns"),
-            title_update = T("Edit Campaign"),
-            label_list_button = T("List Campaigns"),
-            msg_record_created = T("Campaign Added"),
-            msg_record_modified = T("Campaign Updated"),
-            msg_record_deleted = T("Campaign Deleted"),
-            msg_list_empty = T("No Campaigns Found")
+            label_create = T("Add Campaign Message"),
+            title_display = T("Campaign Message"),
+            title_list = T("Campaign Messages"),
+            title_update = T("Edit Campaign Message"),
+            label_list_button = T("List Campaign Messages"),
+            msg_record_created = T("Campaign Message Added"),
+            msg_record_modified = T("Campaign Message Updated"),
+            msg_record_deleted = T("Campaign Message Deleted"),
+            msg_list_empty = T("No Campaign Messages Found")
         )
 
         # Reusable Field
@@ -2656,8 +2653,8 @@ class S3ProjectLocationModel(S3Model):
         # CRUD Strings
         if community:
             LOCATION = T("Community")
-            LOCATION_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
-            ADD_LOCATION = T("Add Community")
+            LOCATION_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Create Community'.")
+            ADD_LOCATION = T("Create Community")
             crud_strings[tablename] = Storage(
                     label_create = ADD_LOCATION,
                     title_display = T("Community Details"),
@@ -2990,7 +2987,7 @@ class S3ProjectOrganisationModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PROJECT_ORG = T("Create Organization to Project")
+        ADD_PROJECT_ORG = T("Add Organization to Project")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_PROJECT_ORG,
             title_display = T("Project Organization Details"),

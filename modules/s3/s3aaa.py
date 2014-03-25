@@ -7465,7 +7465,7 @@ class S3RoleManager(S3Method):
                 list_btn = A(T("Back to Users List"),
                              _href=URL(c="admin", f="user"),
                              _class="action-btn")
-                add_btn = A(T("Create New Role"),
+                add_btn = A(T("Create Role"),
                             _href=URL(c="admin", f="role",
                                       args="create"),
                             _class="action-lnk")
@@ -7727,7 +7727,7 @@ class S3RoleManager(S3Method):
                                  _class="action-lnk")
                 else:
                     edit_btn = ""
-                add_btn = A(T("Create New User"),
+                add_btn = A(T("Create User"),
                             _href=URL(c="admin", f="user",
                                       args="create"),
                             _class="action-lnk")

@@ -286,7 +286,6 @@ s3db.configure(tablename,
 resourcename = "nzseel2"
 tablename = "%s_%s" % (module, resourcename)
 
-ADD_IMAGE = T("Create Photo")
 db.define_table(tablename,
                 Field("ticket_id",
                       type=s3uuid_8char,
@@ -518,7 +517,7 @@ db.define_table(tablename,
                       label=T("Sketch"),
                       comment=S3AddResourceLink(c="doc",
                                                 f="image",
-                                                label=ADD_IMAGE,
+                                                label=T("Add Photo"),
                                                 title=T("Sketch"),
                                                 tooltip=T("Provide an optional sketch of the entire building or damage points. Indicate damage points.")
                                                 )),

@@ -96,8 +96,9 @@ class S3MembersModel(S3Model):
                      s3_comments(label=T("Description"), comment=None),
                      *s3_meta_fields())
 
+        ADD_MEMBERSHIP_TYPE = T("Create Membership Type")
         crud_strings[tablename] = Storage(
-            label_create = T("Add Membership Type"),
+            label_create = ADD_MEMBERSHIP_TYPE,
             title_display = T("Membership Type Details"),
             title_list = T("Membership Types"),
             title_update = T("Edit Membership Type"),
@@ -108,8 +109,6 @@ class S3MembersModel(S3Model):
             msg_record_modified = T("Membership Type updated"),
             msg_record_deleted = T("Membership Type deleted"),
             msg_list_empty = T("No membership types currently registered"))
-
-        label_create = crud_strings[tablename].label_create
 
         represent = S3Represent(lookup=tablename)
         membership_type_id = S3ReusableField("membership_type_id", "reference %s" % tablename,
@@ -122,8 +121,8 @@ class S3MembersModel(S3Model):
                                                                       filter_opts=filter_opts)),
                                              represent = represent,
                                              comment=S3AddResourceLink(f="membership_type",
-                                                                       label=label_create,
-                                                                       title=label_create,
+                                                                       label=ADD_MEMBERSHIP_TYPE,
+                                                                       title=ADD_MEMBERSHIP_TYPE,
                                                                        tooltip=T("Add a new membership type to the catalog.")),
                                              ondelete = "SET NULL")
 

@@ -869,7 +869,7 @@ class S3OrganisationBranchModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_BRANCH = T("Create Branch Organization")
+        ADD_BRANCH = T("Add Branch Organization")
         crud_strings[tablename] = Storage(
             label_create=ADD_BRANCH,
             title_display=T("Branch Organization Details"),
@@ -1063,7 +1063,7 @@ class S3OrganisationGroupModel(S3Model):
         label = current.deployment_settings.get_org_groups()
         if label == "Coalition":
             current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Add Coalition"),
+                label_create = T("Create Coalition"),
                 title_display = T("Coalition Details"),
                 title_list = T("Coalitions"),
                 title_update = T("Update Coalition"),
@@ -1075,7 +1075,7 @@ class S3OrganisationGroupModel(S3Model):
                 msg_list_empty = T("No Coalitions currently recorded"))
         elif label == "Network":
             current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Add Network"),
+                label_create = T("Create Network"),
                 title_display = T("Network Details"),
                 title_list = T("Networks"),
                 title_update = T("Edit Network"),
@@ -1553,10 +1553,10 @@ class S3OrganisationSectorModel(S3Model):
         # CRUD strings
         if current.deployment_settings.get_ui_label_cluster():
             SECTOR = T("Cluster")
-            ADD_SECTOR = T("Add New Cluster")
+            ADD_SECTOR = T("Create Cluster")
             help = T("If you don't see the Cluster in the list, you can add a new one by clicking link 'Add New Cluster'.")
             crud_strings[tablename] = Storage(
-                label_create=T("Add Cluster"),
+                label_create=ADD_SECTOR,
                 title_display=T("Cluster Details"),
                 title_list=T("Clusters"),
                 title_update=T("Edit Cluster"),
@@ -1571,7 +1571,7 @@ class S3OrganisationSectorModel(S3Model):
             ADD_SECTOR = T("Create Sector")
             help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Create Sector'.")
             crud_strings[tablename] = Storage(
-                label_create=T("Create Sector"),
+                label_create=ADD_SECTOR,
                 title_display=T("Sector Details"),
                 title_list=T("Sectors"),
                 title_update=T("Edit Sector"),
@@ -1650,7 +1650,7 @@ class S3OrganisationSectorModel(S3Model):
         # if settings.get_ui_label_cluster():
             # SUBSECTOR = T("Cluster Subsector")
             # crud_strings[tablename] = Storage(
-                # label_create = T("Add Cluster Subsector"),
+                # label_create = T("Create Cluster Subsector"),
                 # title_display = T("Cluster Subsector Details"),
                 # title_list = T("Cluster Subsectors"),
                 # title_update = T("Edit Cluster Subsector"),
@@ -2558,7 +2558,7 @@ class S3SiteDetailsModel(S3Model):
         # CRUD Strings
         site_label = settings.get_org_site_label()
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create %(site_label)s Status") % site_label,
+            label_create = T("Add %(site_label)s Status") % site_label,
             title_display = T("%(site_label)s Status") % site_label,
             title_list = T("%(site_label)s Status") % site_label,
             title_update = T("Edit %(site_label)s Status") % site_label,

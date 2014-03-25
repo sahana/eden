@@ -407,7 +407,7 @@ S3OptionsFilter({
         #table.item_category_id_2.readable = table.item_category_id_2.writable = False
 
         # CRUD strings
-        ADD_ITEM = T("Create New Item")
+        ADD_ITEM = T("Create Item")
         crud_strings[tablename] = Storage(
             label_create = ADD_ITEM,
             title_display = T("Item Details"),
@@ -439,7 +439,7 @@ S3OptionsFilter({
                                       f="item",
                                       label=ADD_ITEM,
                                       title=T("Item"),
-                                      tooltip=T("Type the name of an existing catalog item OR Click 'Create New Item' to add an item which is not in the catalog.")),
+                                      tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")),
             ondelete = "RESTRICT",
             )
 

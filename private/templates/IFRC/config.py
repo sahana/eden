@@ -189,8 +189,11 @@ settings.gis.display_L0 = True
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
-    ("km", "ភាសាខ្មែរ"),
-    ("vi", "Tiếng Việt"),
+    ("km", "ភាសាខ្មែរ"),          # Khmer
+    ("ne", "नेपाली"),          # Nepali
+    ("prs", "دری"),         # Dari
+    ("ps", "پښتو"),         # Pashto
+    ("vi", "Tiếng Việt"),   # Vietnamese
     ("zh-cn", "中文 (简体)"),
 ])
 # Default Language
@@ -379,7 +382,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
         add_link = S3AddResourceLink(c="org",
                                      f="organisation",
                                      vars={"organisation.organisation_type_id$name":"Red Cross / Red Crescent"},
-                                     label=T("Add National Society"),
+                                     label=T("Create National Society"),
                                      title=T("National Society"),
                                      )
         comment = f.comment
@@ -540,7 +543,7 @@ def customise_deploy_assignment_controller(**attr):
     
     # CRUD Strings
     current.response.s3.crud_strings["deploy_assignment"] = Storage(
-        label_create = T("New Deployment"),
+        label_create = T("Add Deployment"),
         title_display = T("Deployment Details"),
         title_list = T("Deployments"),
         title_update = T("Edit Deployment Details"),
@@ -1129,7 +1132,7 @@ def customise_org_organisation_controller(**attr):
                         filter_widgets.pop(1)
 
                         # Modify CRUD Strings
-                        ADD_NS = T("Add National Society")
+                        ADD_NS = T("Create National Society")
                         s3.crud_strings.org_organisation = Storage(
                             label_create=ADD_NS,
                             title_display=T("National Society Details"),

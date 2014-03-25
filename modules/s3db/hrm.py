@@ -372,6 +372,7 @@ class S3HRModel(S3Model):
                                 ),
                      self.pr_person_id(
                         comment = None,
+                        ondelete = "CASCADE",
                         requires = IS_ADD_PERSON_WIDGET2(),
                         widget = S3AddPersonWidget2(controller="hrm"),
                      ),
@@ -771,8 +772,14 @@ class S3HRModel(S3Model):
         #
         tablename = "hrm_job_title_human_resource"
         define_table(tablename,
-                     human_resource_id(empty=False),
-                     job_title_id(empty=False),
+                     human_resource_id(
+                        empty = False,
+                        ondelete = "CASCADE",
+                        ),
+                     job_title_id(
+                        empty = False,
+                        ondelete = "CASCADE",
+                        ),
                      Field("main", "boolean",
                            default = True,
                            represent = s3_yes_no_represent,
@@ -1893,7 +1900,7 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Credential"),
+            label_create = T("Add Credential"),
             title_display = T("Credential Details"),
             title_list = T("Credentials"),
             title_update = T("Edit Credential"),
@@ -2105,11 +2112,12 @@ class S3HRSkillModel(S3Model):
         tablename = "hrm_training"
         define_table(tablename,
                      # @ToDo: Create a way to add new people to training as staff/volunteers
-                     person_id(empty=False,
-                               comment = self.pr_person_comment(
+                     person_id(comment = self.pr_person_comment(
                                   T("Participant"),
                                   T("Type the first few characters of one of the Participant's names."),
                                   child="person_id"),
+                               empty = False,
+                               ondelete = "CASCADE",
                                ),
                      # Just used when created from participation in an Event
                      Field("training_event_id", db.hrm_training_event,
@@ -2142,7 +2150,7 @@ class S3HRSkillModel(S3Model):
         # Suitable for use when adding a Training to a Person
         # The ones when adding a Participant to an Event are done in the Controller
         crud_strings[tablename] = Storage(
-            label_create = T("Create Training"),
+            label_create = T("Add Training"),
             title_display = T("Training Details"),
             title_list = T("Trainings"),
             title_update = T("Edit Training"),
@@ -2353,7 +2361,7 @@ class S3HRSkillModel(S3Model):
                   )
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Certification"),
+            label_create = T("Add Certification"),
             title_display = T("Certification Details"),
             title_list = T("Certifications"),
             title_update = T("Edit Certification"),
@@ -2382,7 +2390,7 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Skill Equivalence"),
+            label_create = T("Add Skill Equivalence"),
             title_display = T("Skill Equivalence Details"),
             title_list = T("Skill Equivalences"),
             title_update = T("Edit Skill Equivalence"),
@@ -2410,7 +2418,7 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Course Certificate"),
+            label_create = T("Add Certificate for Course"),
             title_display = T("Course Certificate Details"),
             title_list = T("Course Certificates"),
             title_update = T("Edit Course Certificate"),
@@ -3059,7 +3067,7 @@ class S3HRAppraisalModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_APPRAISAL = T("Create Appraisal")
+        ADD_APPRAISAL = T("Add Appraisal")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_APPRAISAL,
             title_display = T("Appraisal Details"),
@@ -3265,7 +3273,7 @@ class S3HRExperienceModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-        ADD_EXPERIENCE = T("Create Professional Experience")
+        ADD_EXPERIENCE = T("Add Professional Experience")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_EXPERIENCE,
             title_display = T("Professional Experience Details"),
@@ -3437,7 +3445,7 @@ class S3HRProgrammeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Hours"),
+            label_create = T("Add Hours"),
             title_display = T("Hours Details"),
             title_list = T("Hours"),
             title_update = T("Edit Hours"),
@@ -4074,7 +4082,7 @@ def hrm_human_resource_onaccept(form):
             
         elif record.location_id:
             location_id = record.location_id
-            # Create Address from newly-created HRM
+            # Add Address from newly-created HRM
             query = (ptable.id == person_id)
             pe = db(query).select(ptable.pe_id,
                                   limitby=(0, 1)).first()
@@ -5244,7 +5252,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                    orderby = "priority asc",
                                    )
             address_widget = dict(label = "Address",
-                                  label_create = "Create Address",
+                                  label_create = "Add Address",
                                   type = "datalist",
                                   tablename = "pr_address",
                                   filter = S3FieldSelector("pe_id") == pe_id,
@@ -5272,7 +5280,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                  #list_layout = hrm_competency_list_layout,
                                  )
             trainings_widget = dict(label = "Trainings",
-                                    label_create = "Create Training",
+                                    label_create = "Add Training",
                                     type = "datalist",
                                     tablename = "hrm_training",
                                     filter = S3FieldSelector("person_id") == person_id,
@@ -6066,7 +6074,7 @@ def hrm_cv(r, **attr):
             profile_widgets.append(experience_widget)
         if settings.get_hrm_use_trainings():
             training_widget = dict(label = "Training",
-                                   label_create = "Create Training",
+                                   label_create = "Add Training",
                                    type = "datatable",
                                    actions = dt_row_actions("training"),
                                    tablename = "hrm_training",

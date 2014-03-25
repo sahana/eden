@@ -2959,7 +2959,7 @@ class S3LocationSelectorWidget(FormWidget):
         It requires the IS_LOCATION_SELECTOR() validator to process Location details upon form submission.
 
         Create form
-            Active Tab: 'Create New Location'
+            Active Tab: 'Create Location'
                 Country Dropdown (to set the Number & Labels of Hierarchy)
                 Building Name (deployment_setting to hide)
                 Street Address (Line1/Line2?)
@@ -2990,7 +2990,7 @@ class S3LocationSelectorWidget(FormWidget):
             Assume location is shared by other resources
                 Active Tab: 'View Location Details' (Fields are read-only)
                 Inactive Tab: 'Edit Location Details' (Fields are writable)
-                @ToDo: Inactive Tab: 'Move Location': Defaults to Searching for an Existing Location, with a button to 'Create New Location'
+                @ToDo: Inactive Tab: 'Move Location': Defaults to Searching for an Existing Location, with a button to 'Create Location'
 
         @see: http://eden.sahanafoundation.org/wiki/BluePrintGISLocationSelector
 
@@ -3340,7 +3340,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                         _style="cursor:pointer; cursor:hand",
                         _id="gis_location_edit-btn")
 
-        add_button = A(T("Create New Location"),
+        add_button = A(T("Create Location"),
                        _style="cursor:pointer; cursor:hand",
                        _id="gis_location_add-btn")
 

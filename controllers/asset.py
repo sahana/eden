@@ -33,9 +33,9 @@ def asset():
 
     # Use the item() controller in this module to set options correctly
     s3db.asset_asset.item_id.comment = S3AddResourceLink(f="item",
-        label=T("Create New Item"),
+        label=T("Create Item"),
         title=T("Item"),
-        tooltip=T("Type the name of an existing catalog item OR Click 'Create New Item' to add an item which is not in the catalog."))
+        tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."))
 
     # Defined in Model for use from Multiple Controllers for unified menus
     return s3db.asset_controller()

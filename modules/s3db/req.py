@@ -2890,7 +2890,7 @@ class S3CommitItemModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_COMMIT_ITEM = T("Create Item to Commitment")
+        ADD_COMMIT_ITEM = T("Add Item to Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_COMMIT_ITEM,
             title_display = T("Commitment Item Details"),
@@ -3097,7 +3097,7 @@ class S3CommitPersonModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_COMMIT_PERSON = T("Create Person to Commitment")
+        ADD_COMMIT_PERSON = T("Add Person to Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = ADD_COMMIT_PERSON,
             title_display = T("Committed Person Details"),
@@ -3179,9 +3179,8 @@ class S3CommitSkillModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_COMMIT_SKILL = T("Create People to Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_COMMIT_SKILL,
+            label_create = T("Add People to Commitment"),
             title_display = T("Committed People Details"),
             title_list = T("Committed People"),
             title_update = T("Edit Committed People"),

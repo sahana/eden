@@ -3259,7 +3259,7 @@ class S3SurveyTranslateModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create new translation language"),
+            label_create = T("Add Translation Language"),
         )
 
         self.configure(tablename,

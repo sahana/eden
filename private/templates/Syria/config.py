@@ -1626,7 +1626,7 @@ def customise_project_project_controller(**attr):
                              label = T("Search Projects"),
                              ),
                 S3OptionsFilter("organisation_id",
-                                label = T("Lead Organisation"),
+                                label = T("Lead Organization"),
                                 widget="multiselect"
                                 ),
                 S3LocationFilter("location.location_id",
