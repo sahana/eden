@@ -20,20 +20,31 @@
 
         // Default options
         options: {
-            selected: null
+            selected: null,
+            hint: 'Select'
         },
 
         _create: function() {
             // Create the widget
-            var el = $(this.element);
-
-            this.treeID = el.attr('id') + '-tree';
-            
-            this.input = el.find('.s3-hierarchy-input').first();
-            this.tree = el.find('.s3-hierarchy-tree').first();
+            var el = $(this.element),
+                hint = this.options.hint;
 
             this.id = hierarchicaloptsID;
             hierarchicaloptsID += 1;
+
+            this._namespace = '.hierarchicalopts' + hierarchicaloptsID;
+            
+            this.treeID = el.attr('id') + '-tree';
+
+            // The hidden input field
+            this.input = el.find('.s3-hierarchy-input').first();
+
+            // The button
+            this.button = $('<button type="button" class="s3-hierarchy-button ui-multiselect ui-widget ui-state-default ui-corner-all"><span class="ui-icon ui-icon-triangle-1-s"></span><span>' + hint + '</span></button>');
+
+            // The tree
+            this.tree = el.find('.s3-hierarchy-tree').first().hide().before(this.button);
+            this._isOpen = false;
         },
 
         _init: function() {
@@ -42,7 +53,12 @@
         },
 
         _destroy: function() {
-            // @todo: Remove generated elements & reset other changes
+            // Remove generated elements & reset other changes
+            $.Widget.prototype.destroy.call(this);
+            
+            this._unbindEvents();
+            $(this.button).remove();
+            $(this.tree).show();
         },
 
         refresh: function() {
@@ -163,28 +179,106 @@
             return;
         },
 
+        open: function() {
+            // Open the tree
+
+            if (this._isOpen) {
+                this._close();
+            }
+            
+            var button = $(this.button);
+            var pos = button.position();
+            
+            $(this.tree).css({
+                position: 'absolute',
+                top: pos.top + button.outerHeight() + 3,
+                left: pos.left,
+                minWidth: button.outerWidth(),
+                'z-index': 999999
+            }).show();
+            this._isOpen = true;
+            button.addClass('ui-state-active');
+            $(this).trigger('open');
+        },
+
+        close: function() {
+            // Close the tree
+            
+            $(this.tree).hide();
+            this._isOpen = false;
+            $(this.button).removeClass('ui-state-active');
+            $(this).trigger('close');
+        },
+
         _bindEvents: function() {
             // Bind events to generated elements (after refresh)
 
-            var tree = $(this.tree);
+            var widget = this,
+                tree = $(this.tree),
+                button = $(this.button),
+                namespace = this._namespace;
 
-            var hw = this;
             tree.bind('check_node.jstree', function (event, data) {
-                hw._updateSelectedNodes();
+                widget._updateSelectedNodes();
             }).bind('uncheck_node.jstree', function (event, data) {
-                hw._updateSelectedNodes();
+                widget._updateSelectedNodes();
             });
-            
+
+            button.bind('click' + namespace, function() {
+                if (!widget._isOpen) {
+                    widget.open();
+                } else {
+                    widget.close();
+                }
+            }).bind('keyup' + namespace, function(event) {
+                event.preventDefault();
+                switch(event.keyCode) {
+                    case 27: // esc
+                    case 38: // up
+                    case 37: // left
+                        widget.close();
+                        break;
+                    case 39: // right
+                    case 40: // down
+                        widget.open();
+                        break;
+                }
+            }).bind('mouseenter' + namespace, function() {
+                if (!button.hasClass('ui-state-disabled')) {
+                    $(this).addClass('ui-state-hover');
+                }
+            }).bind('mouseleave' + namespace, function() {
+                $(this).removeClass('ui-state-hover');
+            }).bind('focus' + namespace, function() {
+                if (!button.hasClass('ui-state-disabled')) {
+                    $(this).addClass('ui-state-focus');
+                }
+            }).bind('blur' + namespace, function() {
+                $(this).removeClass('ui-state-focus');
+            });
+            $(document).bind('mousedown' + namespace, function(event) {
+                var target = event.target
+                if (!tree.is(target) && !button.is(target) &&
+                    tree.has(event.target).length === 0 &&
+                    button.has(event.target).length === 0) {
+                    widget.close();
+                }
+            });
             return true;
         },
         
         _unbindEvents: function() {
             // Unbind events (before refresh)
 
-            var tree = $(this.tree);
+            var tree = $(this.tree),
+                button = $(this.button),
+                namespace = this._namespace;
 
             tree.unbind('check_node.jstree')
                 .unbind('uncheck_node.jstree');
+
+            $(this.button).unbind(namespace);
+            $(document).unbind(namespace);
 
             return true;
         }
