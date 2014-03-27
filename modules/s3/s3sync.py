@@ -1063,7 +1063,7 @@ class S3SyncRepository(object):
 
             # Import the data
             resource = current.s3db.resource(resource_name)
-            onconflict = lambda item: onconflict(item, self, resource)
+            onconflict_callback = lambda item: onconflict(item, self, resource)
             count = 0
             try:
                 success = resource.import_xml(
@@ -1073,7 +1073,7 @@ class S3SyncRepository(object):
                                 update_policy=update_policy,
                                 conflict_policy=conflict_policy,
                                 last_sync=last_pull,
-                                onconflict=onconflict)
+                                onconflict=onconflict_callback)
                 count = resource.import_count
             except IOError, e:
                 result = log.FATAL
@@ -1400,7 +1400,7 @@ class S3SyncCiviCRM(S3SyncRepository):
 
                 # Import the data
                 resource = current.s3db.resource(resource_name)
-                onconflict = lambda item: onconflict(item, self, resource)
+                onconflict_callback = lambda item: onconflict(item, self, resource)
                 count = 0
                 success = True
                 try:
@@ -1411,7 +1411,7 @@ class S3SyncCiviCRM(S3SyncRepository):
                                                update_policy=update_policy,
                                                conflict_policy=conflict_policy,
                                                last_sync=task.last_pull,
-                                               onconflict=onconflict,
+                                               onconflict=onconflict_callback,
                                                site=hostname)
                     count = resource.import_count
                 except IOError, e:
