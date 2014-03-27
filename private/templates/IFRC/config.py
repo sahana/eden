@@ -470,8 +470,7 @@ def _customise_assignment_fields(**attr):
     hr_comment =  \
         DIV(_class="tooltip",
             _title="%s|%s" % (MEMBER,
-                              T("Enter some characters to bring up "
-                                "a list of possible matches")))
+                              current.messages.AUTOCOMPLETE_HELP))
 
     from s3.s3validators import IS_ONE_OF
     atable = current.s3db.deploy_assignment
@@ -577,8 +576,7 @@ def customise_deploy_mission_controller(**attr):
     hr_comment =  \
         DIV(_class="tooltip",
             _title="%s|%s" % (MEMBER,
-                              T("Enter some characters to bring up "
-                                "a list of possible matches")))
+                              current.messages.AUTOCOMPLETE_HELP))
 
     table = s3db.deploy_mission
     table.code.label = T("Appeal Code")

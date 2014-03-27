@@ -177,10 +177,11 @@ def kit_export_xls():
         Sheet 1 is a list of Kits
         Then there is a separate sheet per kit, listing it's component items
     """
+
     try:
         import xlwt
     except ImportError:
-        session.error = XLWT_ERROR
+        session.error = "xlwt module not available within the running Python - this needs installing for XLS output!"
         redirect(URL(c="kit"))
 
     import cStringIO
@@ -268,13 +269,13 @@ def kit_export_pdf():
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.enums import TA_CENTER, TA_RIGHT
     except ImportError:
-        session.error = REPORTLAB_ERROR
+        session.error = "Python needs the ReportLab module installed for PDF export"
         redirect(URL(c="kit"))
     try:
         from geraldo import Report, ReportBand, SubReport, Label, ObjectValue, SystemField, landscape, BAND_WIDTH
         from geraldo.generators import PDFGenerator
     except ImportError:
-        session.error = GERALDO_ERROR
+        session.error = "Python needs the Geraldo module installed for PDF export"
         redirect(URL(c="kit"))
 
     table = db.budget_kit
@@ -437,13 +438,13 @@ def item_export_pdf():
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.enums import TA_CENTER, TA_RIGHT
     except ImportError:
-        session.error = REPORTLAB_ERROR
+        session.error = "Python needs the ReportLab module installed for PDF export"
         redirect(URL(c="item"))
     try:
         from geraldo import Report, ReportBand, ReportGroup, Label, ObjectValue, SystemField, landscape, BAND_WIDTH
         from geraldo.generators import PDFGenerator
     except ImportError:
-        session.error = GERALDO_ERROR
+        session.error = "Python needs the Geraldo module installed for PDF export"
         redirect(URL(c="item"))
 
     table = db.budget_item

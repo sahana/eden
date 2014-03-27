@@ -163,7 +163,7 @@ class S3ScenarioModel(S3Model):
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",
                                       #              _title="%s|%s" % (T("Scenario"),
-                                      #                                T("Enter some characters to bring up a list of possible matches")))
+                                      #                                current.messages.AUTOCOMPLETE_HELP))
                                     )
 
         # ---------------------------------------------------------------------

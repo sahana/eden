@@ -109,7 +109,6 @@ class S3Request(object):
         """
 
         # Common settings
-        self.UNAUTHORISED = current.T("Not Authorized")
 
         # XSLT Paths
         self.XSLT_PATH = "static/formats"

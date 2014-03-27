@@ -2807,7 +2807,7 @@ def feature_query():
     r = s3_request()
 
     if r.representation != "geojson":
-        session.error = BADFORMAT
+        session.error = ERROR.BAD_FORMAT
         redirect(URL(c="default", f="index", args=None, vars=None))
 
     # Execute the request

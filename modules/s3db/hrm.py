@@ -105,6 +105,7 @@ class S3HRModel(S3Model):
 
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+        AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
         ORGANISATION = messages.ORGANISATION
 
         add_components = self.add_components
@@ -321,7 +322,7 @@ class S3HRModel(S3Model):
 
         organisation_label = settings.get_hrm_organisation_label()
 
-        if group == "volunteer" or s3.bulk:
+        if group == "volunteer" or s3.bulk or not group:
             # Volunteers don't have a Site
             # Don't set a Site for Bulk Imports unless set explicitly
             default_site = None
@@ -337,7 +338,7 @@ class S3HRModel(S3Model):
             site_widget = S3SiteAutocompleteWidget()
             site_comment = DIV(_class="tooltip",
                                _title="%s|%s" % (T("Requested By Facility"),
-                                                 T("Enter some characters to bring up a list of possible matches")))
+                                                 AUTOCOMPLETE_HELP))
         else:
             site_widget = None
             site_comment = None
@@ -520,7 +521,7 @@ class S3HRModel(S3Model):
 
         tooltip = DIV(_class="tooltip",
                       _title="%s|%s" % (T("Human Resource"),
-                                        T("Enter some characters to bring up a list of possible matches")))
+                                        AUTOCOMPLETE_HELP))
         comment = S3AddResourceLink(c = "vol" if group == "volunteer" else "hrm",
                                     f = group or "staff",
                                     vars = dict(child="human_resource_id"),
@@ -1502,6 +1503,7 @@ class S3HRSkillModel(S3Model):
         messages = current.messages
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+        AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
@@ -1611,7 +1613,7 @@ class S3HRSkillModel(S3Model):
             # NB FilterField widget needs fixing for that too
             widget = S3AutocompleteWidget(request.controller,
                                           "skill")
-            tooltip = T("Enter some characters to bring up a list of possible matches")
+            tooltip = AUTOCOMPLETE_HELP
         else:
             widget = None
             tooltip = None
@@ -1960,7 +1962,7 @@ class S3HRSkillModel(S3Model):
         else:
             course_help = DIV(_class="tooltip",
                               _title="%s|%s" % (T("Course"),
-                              T("Enter some characters to bring up a list of possible matches")))
+                                                AUTOCOMPLETE_HELP))
 
         represent = S3Represent(lookup=tablename)
         course_id = S3ReusableField("course_id", "reference %s" % tablename,
@@ -2047,7 +2049,7 @@ class S3HRSkillModel(S3Model):
         else:
             course_help = DIV(_class="tooltip",
                               _title="%s|%s" % (T("Training Event"),
-                              T("Enter some characters to bring up a list of possible matches")))
+                                                AUTOCOMPLETE_HELP))
 
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
@@ -6123,7 +6125,7 @@ def hrm_cv(r, **attr):
         return output
 
     else:
-        raise HTTP(501, current.messages.BADMETHOD)
+        raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 def hrm_record(r, **attr):
@@ -6250,7 +6252,7 @@ def hrm_record(r, **attr):
         return output
 
     else:
-        raise HTTP(501, current.messages.BADMETHOD)
+        raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 def hrm_configure_pr_group_membership():

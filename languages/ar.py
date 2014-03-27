@@ -1002,7 +1002,7 @@
 'Non-structural Hazards': 'مخاطر غير متعلقة بالبنية',
 'Not Applicable': 'غير قابل للتطبيق',
 'Not Possible': 'غيرممكن',
-'Not authorised!': 'غير مرخص!',
+'Not Authorized': 'غير مرخص',
 'Not installed or incorrectly configured.': 'غير مثبت أو تم تكوينها بشكل غير صحيح.',
 'Not yet a Member of any Group': 'لا عضوية مسجلة حاليا',
 'Note that this list only shows active volunteers. To see all people registered in the system, search from this screen instead': 'علما أن هذه القائمة تظهر فقط المتطوعين الناشطين.لرؤية جميع الأشخاص المسجلين في هذا النظام،إبحث من خلال هذا هذه الشاشة بدلا',

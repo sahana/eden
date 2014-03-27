@@ -1382,7 +1382,7 @@ Thank you"""
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
             #organisation_id.comment = DIV(_class="tooltip",
             #                              _title="%s|%s" % (T("Organization"),
-            #                                                T("Enter some characters to bring up a list of possible matches")))
+            #                                                cmessages.AUTOCOMPLETE_HELP))
 
         # Organisation Group
         if deployment_settings.get_auth_registration_requests_organisation_group():

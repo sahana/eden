@@ -104,8 +104,8 @@ class S3RL_PDF(S3Codec):
         # Error codes
         T = current.T
         self.ERROR = Storage(
-            PIL_ERROR = T("PIL (Python Image Library) not installed, images cannot be embedded in the PDF report"),
-            RL_ERROR = T("Reportlab not installed")
+            PIL_ERROR = "PIL (Python Image Library) not installed, images cannot be embedded in the PDF report",
+            RL_ERROR = "Python needs the ReportLab module installed for PDF export"
         )
 
     # -------------------------------------------------------------------------

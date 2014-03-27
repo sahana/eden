@@ -80,7 +80,10 @@ class S3EventModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        NONE = current.messages["NONE"]
+
+        messages = current.messages
+        NONE = messages["NONE"]
+        AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
         # ---------------------------------------------------------------------
         # Event Types / Disaster Types
@@ -122,7 +125,7 @@ class S3EventModel(S3Model):
                                         #widget = S3AutocompleteWidget()
                                         #comment = DIV(_class="tooltip",
                                         #              _title="%s|%s" % (T("Event Type"),
-                                        #                                T("Enter some characters to bring up a list of possible matches")))
+                                        #                                AUTOCOMPLETE_HELP))
                                         )
         configure(tablename,
                   deduplicate=self.event_type_duplicate
@@ -192,7 +195,7 @@ class S3EventModel(S3Model):
                                    #widget = S3AutocompleteWidget()
                                    #comment = DIV(_class="tooltip",
                                    #              _title="%s|%s" % (T("Event"),
-                                   #                                T("Enter some characters to bring up a list of possible matches")))
+                                   #                                AUTOCOMPLETE_HELP))
                                    )
 
         configure(tablename,
@@ -242,7 +245,7 @@ class S3EventModel(S3Model):
                                                  f="location",
                                                  label = T("Create Location"),
                                                  title=T("Location"),
-                                                 tooltip=T("Enter some characters to bring up a list of possible matches")),
+                                                 tooltip=AUTOCOMPLETE_HELP),
                      ),
                      *s3_meta_fields())
 
@@ -484,7 +487,7 @@ class S3IncidentModel(S3Model):
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",
                                       #              _title="%s|%s" % (T("Incident"),
-                                      #                                T("Enter some characters to bring up a list of possible matches")))
+                                      #                                current.messages.AUTOCOMPLETE_HELP))
                                       )
 
         if settings.has_module("project"):
@@ -847,7 +850,7 @@ class S3IncidentTypeModel(S3Model):
                                            #widget = S3AutocompleteWidget()
                                            #comment = DIV(_class="tooltip",
                                            #              _title="%s|%s" % (T("Incident Type"),
-                                           #                                T("Enter some characters to bring up a list of possible matches")))
+                                           #                                current.messages.AUTOCOMPLETE_HELP))
                                            )
         self.configure(tablename,
                        deduplicate=self.incident_type_duplicate

@@ -427,7 +427,7 @@ class S3InventoryModel(S3Model):
                                           #widget = S3SiteAutocompleteWidget(),
                                           #comment = DIV(_class="tooltip",
                                           #              _title="%s|%s" % (WAREHOUSE,
-                                          #                                T("Enter some characters to bring up a list of possible matches"))),
+                                          #                                messages.AUTOCOMPLETE_HELP)),
                                           represent=self.org_site_represent),
                           self.supply_item_entity_id,
                           self.supply_item_id(ondelete = "RESTRICT",

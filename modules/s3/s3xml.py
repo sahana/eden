@@ -2227,6 +2227,7 @@ class S3XML(S3Codec):
                 if hasattr(source, "seek"):
                     source.seek(0)
                 wb = xlrd.open_workbook(file_contents=source.read(),
+                                        # requires xlrd 0.7.x or higher
                                         on_demand=True)
             elif isinstance(source, xlrd.book.Book):
                 # Source is an open work book

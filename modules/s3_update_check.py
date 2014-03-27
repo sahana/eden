@@ -215,7 +215,13 @@ def s3_check_python_lib():
     try:
         import xlrd
     except ImportError:
-        warnings.append("S3XLS unresolved dependency: xlrd required for XLS import")
+        warnings.append("S3XLS unresolved dependency: xlrd required for XLS export")
+    else:
+        from xlrd import __VERSION__ as xlrd_version
+        if xlrd_version < "0.7":
+            warnings.append("S3Import unresolved dependency: xlrd v0.8+ required for .xls import")
+        elif xlrd_version < "0.8":
+            warnings.append("S3Import unresolved dependency: xlrd v0.9+ required for .xlsx import")
     try:
         import xlwt
     except ImportError:

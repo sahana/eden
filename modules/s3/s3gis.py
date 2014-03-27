@@ -8689,6 +8689,6 @@ class S3ImportPOI(S3Method):
             return output
 
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

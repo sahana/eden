@@ -643,7 +643,7 @@ class S3ProjectModel(S3Model):
             response.view = "map.html"
             return output
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -767,7 +767,7 @@ class S3ProjectModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2636,7 +2636,7 @@ class S3ProjectLocationModel(S3Model):
                                                  f="location",
                                                  label = T("Create Location"),
                                                  title=T("Location"),
-                                                 tooltip=T("Enter some characters to bring up a list of possible matches")),
+                                                 tooltip=messages.AUTOCOMPLETE_HELP),
                      ),
                      # % breakdown by location
                      Field("percentage", "decimal(3,2)",
@@ -4078,7 +4078,7 @@ class S3ProjectTaskModel(S3Model):
                                 #widget = S3PentityWidget(),
                                 #comment = DIV(_class="tooltip",
                                 #              _title="%s|%s" % (T("Assigned to"),
-                                #                                T("Enter some characters to bring up a list of possible matches")))
+                                #                                messages.AUTOCOMPLETE_HELP))
                                 ),
                      s3_datetime("date_due",
                                  label = T("Date Due"),
@@ -5066,7 +5066,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5181,7 +5181,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):

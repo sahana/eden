@@ -224,7 +224,7 @@ def s3_barchart(r, **attr):
         except ValueError:
             raise HTTP(400, "Bad Request")
     else:
-        raise HTTP(501, body=BADFORMAT)
+        raise HTTP(501, body=ERROR.BAD_FORMAT)
 
 
 # -----------------------------------------------------------------------------

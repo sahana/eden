@@ -1472,7 +1472,7 @@ def customise_req_req_resource(r, tablename):
         S3AddResourceLink(c="org", f="facility",
                           vars = dict(child="site_id"),
                           title=T("Create Facility"),
-                          tooltip=T("Enter some characters to bring up a list of possible matches"))
+                          tooltip=current.messages.AUTOCOMPLETE_HELP)
 
     current.response.s3.req_req_postprocess = req_req_postprocess
 

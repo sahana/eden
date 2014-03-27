@@ -327,7 +327,7 @@ class S3OrganisationModel(S3Model):
             msg_list_empty=T("No Organizations currently registered"))
 
         if settings.get_org_autocomplete():
-            help = T("Enter some characters to bring up a list of possible matches")
+            help = messages.AUTOCOMPLETE_HELP
             org_widget = S3OrganisationAutocompleteWidget()
         else:
             help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Create Organization'.")
@@ -2065,6 +2065,7 @@ class S3SiteModel(S3Model):
 
         T = current.T
         auth = current.auth
+        messages = current.messages
 
         add_components = self.add_components
         set_method = self.set_method
@@ -2099,7 +2100,7 @@ class S3SiteModel(S3Model):
                                 label=T("Obsolete"),
                                 represent=lambda opt: \
                                           (opt and [T("Obsolete")] or
-                                          [current.messages["NONE"]])[0],
+                                          [messages["NONE"]])[0],
                                 default=False,
                                 readable=False,
                                 writable=False),
@@ -2113,7 +2114,7 @@ class S3SiteModel(S3Model):
             widget=S3SiteAutocompleteWidget(),
             comment=DIV(_class="tooltip",
                         _title="%s|%s" % (org_site_label,
-                                          T("Enter some characters to bring up a list of possible matches")))
+                                          messages.AUTOCOMPLETE_HELP))
         else:
             widget = None
             comment = None

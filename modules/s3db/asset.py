@@ -200,7 +200,7 @@ S3OptionsFilter({
                                 #widget = S3SiteAutocompleteWidget(),
                                 #comment = DIV(_class="tooltip",
                                 #              _title="%s|%s" % (T("Warehouse"),
-                                #                                T("Enter some characters to bring up a list of possible matches"))),
+                                #                                messages.AUTOCOMPLETE_HELP)),
                                 ),
                      Field("sn",
                            label = T("Serial Number"),

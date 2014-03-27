@@ -395,7 +395,7 @@ def rss():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_rss"
@@ -653,7 +653,7 @@ def email_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_email_channel"
@@ -729,7 +729,7 @@ def mcommons_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_mcommons_channel"
@@ -808,7 +808,7 @@ def rss_channel():
 
     if not auth.s3_has_role(ADMIN):
 
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_rss_channel"
@@ -882,7 +882,7 @@ def twilio_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_twilio_channel"
@@ -1521,7 +1521,7 @@ def parser():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     def prep(r):

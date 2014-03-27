@@ -91,7 +91,7 @@ class S3ProcurementModel(S3Model):
                                      #widget = S3SiteAutocompleteWidget(),
                                      #comment = DIV(_class="tooltip",
                                      #              _title="%s|%s" % (T("Inventory"),
-                                     #                                T("Enter some characters to bring up a list of possible matches"))),
+                                     #                                messages.AUTOCOMPLETE_HELP)),
                                      represent=self.org_site_represent),
                      # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
                      #project_id(),

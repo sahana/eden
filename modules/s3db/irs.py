@@ -769,7 +769,7 @@ class S3IRSModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -886,7 +886,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -986,7 +986,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class S3IRSResponseModel(S3Model):

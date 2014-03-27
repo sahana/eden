@@ -1767,7 +1767,7 @@ def deploy_response_select_mission(r, **attr):
                                        _class="filter-form",
                                        _id="datatable-filter-form",
                                        )
-            fresource = current.s3db.resource(resource.tablename)
+            fresource = s3db.resource(resource.tablename)
             alias = resource.alias if r.component else None
             ff = filter_form.html(fresource,
                                   r.get_vars,
@@ -1811,8 +1811,7 @@ def deploy_response_select_mission(r, **attr):
             widget = widget(field, None)
             comment = DIV(_class="tooltip",
                           _title="%s|%s" % (title,
-                                            T("Enter some characters to bring up "
-                                              "a list of possible matches")))
+                                            current.messages.AUTOCOMPLETE_HELP))
             # @ToDo: Handle non-callable formstyles
             row = s3.crud.formstyle(id, label, widget, comment)
             if isinstance(row, tuple):

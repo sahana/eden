@@ -790,7 +790,7 @@ S3OptionsFilter({
                              #widget = S3ItemAutocompleteWidget(),
                              #comment = DIV(_class="tooltip",
                              #              _title="%s|%s" % (T("Item"),
-                             #                                T("Enter some characters to bring up a list of possible matches")))
+                             #                                current.messages.AUTOCOMPLETE_HELP))
                              )
 
         # Filter Widgets

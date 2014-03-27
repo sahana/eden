@@ -44,17 +44,6 @@ class S3Exporter(object):
         Exporter toolkit
     """
 
-    def __init__(self):
-        """ Constructor """
-
-        T = current.T
-
-        self.ERROR = Storage(
-            REPORTLAB_ERROR = T("%(module)s not installed") % dict(module="ReportLab"),
-            NO_RECORDS = T("No records in this resource"),
-            XLWT_ERROR = T("%(module)s not installed") % dict(module="xlwt"),
-        )
-
     # -------------------------------------------------------------------------
     def csv(self, resource):
         """

@@ -400,6 +400,7 @@ class S3Importer(S3Method):
                 upload_file = r.files[ofilename]
             if extension == "xls":
                 if "xls_parser" in s3:
+                    # Survey module currently
                     upload_file.seek(0)
                     upload_file = s3.xls_parser(upload_file.read())
                     extension = "csv"

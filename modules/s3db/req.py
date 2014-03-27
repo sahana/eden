@@ -88,6 +88,7 @@ class S3RequestModel(S3Model):
         messages = current.messages
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+        AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
         s3_string_represent = lambda str: str if str else NONE
 
@@ -165,7 +166,7 @@ class S3RequestModel(S3Model):
             site_comment = S3AddResourceLink(c="org", f="facility",
                                              vars = dict(child="site_id"),
                                              title=T("Create Facility"),
-                                             tooltip=T("Enter some characters to bring up a list of possible matches"))
+                                             tooltip=AUTOCOMPLETE_HELP)
         else:
             site_widget = None
             site_comment = S3AddResourceLink(c="org", f="facility",
@@ -240,7 +241,7 @@ class S3RequestModel(S3Model):
                                 default = False,
                                 comment = DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Recurring Request?"),
-                                                                T("If this is a request template to be added repeatedly then the schedule can be set on the next page."))),
+                                                                  T("If this is a request template to be added repeatedly then the schedule can be set on the next page."))),
                                 ),
                           s3_datetime("date_required",
                                       label = T("Date Needed By"),
@@ -264,7 +265,7 @@ class S3RequestModel(S3Model):
                                                                 vars = dict(child="requester_id",
                                                                             parent="req"),
                                                                 title=crud_strings["pr_person"].label_create,
-                                                                tooltip=T("Enter some characters to bring up a list of possible matches")),
+                                                                tooltip=AUTOCOMPLETE_HELP),
                                     default = requester_default
                                     ),
                           person_id("assigned_to_id", # This field should be in req_commit, but that complicates the UI
@@ -2335,7 +2336,7 @@ class S3CommitModel(S3Model):
             site_widget = S3SiteAutocompleteWidget()
             site_comment = DIV(_class="tooltip",
                                _title="%s|%s" % (T("From Facility"),
-                                                 T("Enter some characters to bring up a list of possible matches")))
+                                                 current.messages.AUTOCOMPLETE_HELP))
         else:
             site_widget = None
             site_comment = None

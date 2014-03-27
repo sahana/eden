@@ -3427,7 +3427,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
             POSTCODE_LABEL = settings.get_ui_label_postcode()
         LAT_LABEL = T("Latitude")
         LON_LABEL = T("Longitude")
-        AUTOCOMPLETE_HELP = T("Enter some characters to bring up a list of possible matches")
+        AUTOCOMPLETE_HELP = current.messages.AUTOCOMPLETE_HELP
         NEW_HELP = T("If not found, you can have a new location created.")
         def ac_help_widget(level):
             try:
