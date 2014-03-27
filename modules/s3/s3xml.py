@@ -884,7 +884,7 @@ class S3XML(S3Codec):
                tablename in auth.org_site_types:
                 # Lookup the right pre-prepared data for mapping by site_id
                 root = element.getparent()
-                if root.tag == self.TAG.root:
+                if root and root.tag == self.TAG.root:
                     #print self.tostring(root)
                     first = root[0]
                     _tablename = first.get(ATTRIBUTE.name, None)
