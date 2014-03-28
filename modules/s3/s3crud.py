@@ -486,7 +486,7 @@ class S3CRUD(S3Method):
                     if r.http == "POST":
                         script = '''$('#list-add').show();$('#show-add-btn').hide()'''
                     else:
-                        script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown();$('#show-add-btn').hide()})'''
+                        script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown("slow",function(){$('#show-add-btn').hide()})})'''
                     current.response.s3.jquery_ready.append(script)
             elif addbtn:
                 # No form, just Add-button linked to create-view

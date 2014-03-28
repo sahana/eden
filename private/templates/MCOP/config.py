@@ -70,6 +70,7 @@ settings.base.system_name_short = T("Sahana")
 settings.base.theme = "MCOP"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
+#settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
@@ -125,6 +126,21 @@ settings.gis.legend = "float"
 #settings.ui.export_formats = ["xls"]
 
 settings.ui.update_label = "Edit"
+# -----------------------------------------------------------------------------
+# Disable rheaders
+def customise_no_rheader_controller(**attr):
+    # Remove rheader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_org_organisation_controller = customise_no_rheader_controller
+settings.customise_org_resource_controller = customise_no_rheader_controller
+settings.customise_cms_post_controller = customise_no_rheader_controller
+settings.customise_project_task_controller = customise_no_rheader_controller
+settings.customise_project_activity_controller = customise_no_rheader_controller
+settings.customise_project_project_controller = customise_no_rheader_controller
+settings.customise_org_office_controller = customise_no_rheader_controller
+settings.customise_pr_person_controller = customise_no_rheader_controller
 
 # -----------------------------------------------------------------------------
 # Summary Pages
@@ -146,7 +162,7 @@ settings.ui.summary = [#{"common": True,
                         },
                        {"name": "charts",
                         "label": "Reports",
-                        "widgets": [{"method": "report2", "ajax_init": True}]
+                        "widgets": [{"method": "report", "ajax_init": True}]
                         },
                        ]
 
@@ -154,41 +170,51 @@ settings.search.filter_manager = False
 # =============================================================================
 # Menu
 current.response.menu = [
-    {"name": T("Stakeholders"),
-     "c":"org", 
-     "f":"organisation",
-     "icon": "sitemap"
-     },
-    {"name": T("News Feed"),
-     "c":"cms", 
-     "f":"post",
-     "icon": "news"
-     },
-    {"name": T("Resources"),
-     "c":"org", 
-     "f":"resource",
-     "icon": "wrench"
-     },
-    {"name": T("Projects"),
-     "c":"project", 
-     "f":"activity",
-     "icon": "tasks"
+    {"name": T("Events"),
+     "c":"event", 
+     "f":"event",
+     "icon": "incident"
      },
     {"name": T("Tasks"),
      "c":"project", 
      "f":"task",
      "icon": "check"
      },
-    {"name": T("Offices"),
+    {"name": T("Resources"),
+     "c":"org", 
+     "f":"resource",
+     "icon": "wrench"
+     },
+    {"name": T("News"),
+     "c":"cms", 
+     "f":"post",
+     "icon": "news"
+     },
+    {"name": T("Map"),
+     "c":"gis", 
+     "f":"index",
+     "icon": "map"
+     },
+#    {"name": T("Projects"),
+#     "c":"project", 
+#     "f":"activity",
+#     "icon": "tasks"
+#     },
+    {"name": T("Contact Directory"),
+     "c":"pr", 
+     "f":"person",
+     "icon": "group"
+     },
+    {"name": T("Stakeholders"),
+     "c":"org", 
+     "f":"organisation",
+     "icon": "sitemap"
+     },
+    {"name": T("Facilities"),
      "c":"org", 
      "f":"office",
      "icon": "building"
      },
-    {"name": T("Contacts"),
-     "c":"pr", 
-     "f":"person",
-     "icon": "group"
-     }
     ]
 
 for item in current.response.menu:
@@ -203,195 +229,180 @@ for item in current.response.menu:
 # Custom Controllers
 
 # -----------------------------------------------------------------------------
-def customise_org_organisation_controller(**attr):
+def customise_org_organisation_resource(r, tablename):
     """
-        Customise org_organisation controller
+        Customise org_organisation resource
         - List Fields
+        - CRUD Strings
         - Form
         - Filter
-        - Report 
+        Runs after controller customisation
+        But runs before prep
     """
-
-    s3 = current.response.s3
-
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        if r.interactive or r.representation == "aadata":
-            # Load normal Model
-            s3db = current.s3db
-            table = s3db.org_organisation
-
-            ADD_ORGANISATION = T("New Stakeholder")
-            s3.crud_strings["org_organisation"] = Storage(
-                label_create = ADD_ORGANISATION,
-                title_display = T("Stakeholder Details"),
-                title_list = T("Stakeholders"),
-                title_update = T("Edit Stakeholder"),
-                label_list_button = T("List Stakeholders"),
-                label_delete_button = T("Delete Stakeholder"),
-                msg_record_created = T("Stakeholder added"),
-                msg_record_modified = T("Stakeholder updated"),
-                msg_record_deleted = T("Stakeholder deleted"),
-                msg_list_empty = T("No Stakeholders currently registered"))
-
-            list_fields = ["id",
-                           "name",
-                           "logo",
-                           "phone",
-                           "website",
-                           ]
-
-            if r.method == "datalist":
-                # Stakeholder selection page
-                # 2-column datalist, 6 rows per page
-                s3.dl_pagelength = 12
-                s3.dl_rowsize = 2
-
-                from s3.s3filter import S3TextFilter, S3OptionsFilter
-                filter_widgets = [S3TextFilter(["name",
-                                                "acronym",
-                                                "website",
-                                                "comments",
-                                                ],
-                                              label = T("Search")),
-                                  S3OptionsFilter("organisation_type_id",
-                                                  label = T("Type"),
-                                                  widget = "multiselect",
-                                                  ),
-                                  ]
-
-                s3db.configure("org_organisation",
-                               filter_widgets=filter_widgets
-                               )
-
-            # Labels
-            table.comments.label = T("Description")
-
-            crud_form = S3SQLCustomForm("id",
-                                        "name",
-                                        "organisation_type_id",
-                                        "logo",
-                                        "phone",
-                                        "website",
-                                        "comments")
-            
-            # Return to List view after create/update/delete (unless done via Modal)
-            url_next = URL(c="org", f="organisation", args="datalist")
-
-            s3db.configure("org_organisation",
-                           create_next = url_next,
-                           crud_form = crud_form,
-                           delete_next = url_next,
-                           # We want the Create form to be in a modal, not inline, for consistency
-                           #listadd = False,
-                           list_fields = list_fields,
-                           update_next = url_next,
-                           )
-
-        return True
-    s3.prep = custom_prep
-
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_org_organisation_controller = customise_org_organisation_controller
-
-# -----------------------------------------------------------------------------
-def customise_org_resource_controller(**attr):
-
-    s3 = current.response.s3
+    # Load normal Model
     s3db = current.s3db
-    table = s3db.org_resource
+    table = s3db.org_organisation
 
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
+    list_fields = ["id",
+                   "name",
+                   "logo",
+                   "phone",
+                   "website",
+                   ]
 
-        if r.interactive or r.representation == "aadata":
-            s3db.org_customise_org_resource_fields(r.method)
+    if r.interactive:
+        # Labels
+        table.comments.label = T("Description")
+
+        s3.crud_strings["org_organisation"] = Storage(
+            label_create = T("Create Stakeholder"),
+            title_display = T("Stakeholder Details"),
+            title_list = T("Stakeholders"),
+            title_update = T("Edit Stakeholder"),
+            label_list_button = T("List Stakeholders"),
+            label_delete_button = T("Delete Stakeholder"),
+            msg_record_created = T("Stakeholder added"),
+            msg_record_modified = T("Stakeholder updated"),
+            msg_record_deleted = T("Stakeholder deleted"),
+            msg_list_empty = T("No Stakeholders currently registered"))
+
+        crud_form = S3SQLCustomForm("id",
+                                    "name",
+                                    "organisation_type_id",
+                                    "logo",
+                                    "phone",
+                                    "website",
+                                    "comments")
+        s3db.configure("org_organisation",
+                       crud_form=crud_form
+                       )
+
+        if r.method == "datalist":
+            # Stakeholder selection page
+            # 2-column datalist, 6 rows per page
+            s3.dl_pagelength = 12
+            s3.dl_rowsize = 2
     
-            # Configure fields
-            #table.site_id.readable = table.site_id.readable = False
-            location_field = table.location_id
-            #location_field.label = T("District")
-
             from s3.s3filter import S3TextFilter, S3OptionsFilter
-            filter_widgets = [S3TextFilter(["organisation_id$name",
-                                            "location_id",
-                                            "parameter_id$name",
+            filter_widgets = [S3TextFilter(["name",
+                                            "acronym",
+                                            "website",
                                             "comments",
                                             ],
                                           label = T("Search")),
-                              S3OptionsFilter("parameter_id",
+                              S3OptionsFilter("organisation_type_id",
                                               label = T("Type"),
                                               widget = "multiselect",
                                               ),
                               ]
 
-            s3db.configure("org_resource",
+            s3db.configure("org_organisation",
                            filter_widgets=filter_widgets
                            )
 
+    # Return to List view after create/update/delete (unless done via Modal)
+    url_next = URL(c="org", f="organisation", args="datalist")
 
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            get_vars = current.request.get_vars
-            location_id = get_vars.get("~.(location)", None)
-            organisation_id = get_vars.get("~.(organisation)", None)
-            if organisation_id:
-                org_field = table.organisation_id
-                org_field.default = organisation_id
-                org_field.readable = org_field.writable = False
-            if location_id:
-                location_field.default = location_id
-                # We still want to be able to specify a precise location
-                #location_field.readable = location_field.writable = False    
-            location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-            location_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                              show_address=True,
-                                                              show_map=True)
-
-            # Don't add new Locations here
-            location_field.comment = None
-
-            # Return to Sumamry view after create/update/delete (unless done via Modal)
-            url_next = URL(c="org", f="resource", args="summary")
-
-            s3db.configure("org_resource",
-                           create_next = url_next,
-                           delete_next = url_next,
-                           update_next = url_next,
-                           # Don't include a Create form in 'More' popups
-                           listadd = False if r.method=="datalist" else True,
-                           )
-
-            # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
-            #s3.cancel = URL(c="org", f="resource")
-
-        return True
-    s3.prep = custom_prep
-
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_org_resource_controller = customise_org_resource_controller
+    s3db.configure("org_organisation",
+                   create_next = url_next,
+                   delete_next = url_next,
+                   # We want the Create form to be in a modal, not inline, for consistency
+                   #listadd = False,
+                   list_fields = list_fields,
+                   update_next = url_next,
+                   )
+settings.customise_org_organisation_resource = customise_org_organisation_resource
 
 # -----------------------------------------------------------------------------
-def customise_cms_post_controller(**attr):
+def customise_org_resource_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - Fields
+        - Filter
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    table = s3db.org_resource
+
+
+    if r.interactive:
+        location_field = table.location_id
+        # Filter from a Profile page?
+        # If so, then default the fields we know
+        get_vars = current.request.get_vars
+        location_id = get_vars.get("~.(location)", None)
+        organisation_id = get_vars.get("~.(organisation)", None)
+        if organisation_id:
+            org_field = table.organisation_id
+            org_field.default = organisation_id
+            org_field.readable = org_field.writable = False
+        if location_id:
+            location_field.default = location_id
+            # We still want to be able to specify a precise location
+            #location_field.readable = location_field.writable = False    
+        location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+        location_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                          show_address=True,
+                                                          show_map=True)
+
+        # Don't add new Locations here
+        location_field.comment = None
+
+        s3db.org_customise_org_resource_fields(r.method)
+
+        # Configure fields
+        #table.site_id.readable = table.site_id.readable = False
+        #location_field.label = T("District")
+
+        from s3.s3filter import S3TextFilter, S3OptionsFilter
+        filter_widgets = [S3TextFilter(["organisation_id$name",
+                                        "location_id",
+                                        "parameter_id$name",
+                                        "comments",
+                                        ],
+                                      label = T("Search")),
+                          S3OptionsFilter("parameter_id",
+                                          label = T("Type"),
+                                          widget = "multiselect",
+                                          ),
+                          ]
+
+        s3db.configure("org_resource",
+                       filter_widgets=filter_widgets
+                       )
+
+        # Return to Sumamry view after create/update/delete (unless done via Modal)
+        url_next = URL(c="org", f="resource", args="summary")
+
+        s3db.configure("org_resource",
+                       create_next = url_next,
+                       delete_next = url_next,
+                       update_next = url_next,
+                       # Don't include a Create form in 'More' popups
+                       listadd = False if r.method=="datalist" else True,
+                       )
+
+        # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
+        #s3.cancel = URL(c="org", f="resource")
+
+    return True
+
+settings.customise_org_resource_resource = customise_org_resource_resource
+
+# -----------------------------------------------------------------------------
+def customise_cms_post_resource(r, tablename):
+    """
+        Customise cms_post resource
+        - CRD Strings
+        - Datatable
+        - Fields
+        - Form
+        Runs after controller customisation
+        But runs before prep
+    """
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -399,8 +410,21 @@ def customise_cms_post_controller(**attr):
 
     s3.dl_pagelength = 12
     s3.dl_rowsize = 2
+
+    s3.crud_strings["cms_post"] = Storage(
+        label_create = T("Create News Post"),
+        title_display = T("News Post Details"),
+        title_list = T("News"),
+        title_update = T("Edit News Post"),
+        label_list_button = T("List News Posts"),
+        label_delete_button = T("Delete News Post"),
+        msg_record_created = T("News Post added"),
+        msg_record_modified = T("News Post updated"),
+        msg_record_deleted = T("News Post deleted"),
+        msg_list_empty = T("No News Post currently registered"))
+
+
     # CRUD Form
-    
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
     table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
                                                          show_address=True,
@@ -422,8 +446,7 @@ def customise_cms_post_controller(**attr):
         "location_id",
         S3SQLInlineComponent(
             "event_post",
-            #label = T("Disaster(s)"),
-            label = T("Disaster"),
+            label = T("Event"),
             multiple = False,
             fields = ["event_id"],
             orderby = "event_id$name",
@@ -446,118 +469,106 @@ def customise_cms_post_controller(**attr):
                    crud_form = crud_form,
                    )
 
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_cms_post_controller = customise_cms_post_controller
+settings.customise_cms_post_resource = customise_cms_post_resource
 
 # -----------------------------------------------------------------------------
-def customise_project_task_controller(**attr):
-
+def customise_project_task_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - List Fields
+        - Fields
+        - Form
+        - Filter Widgets
+        - Report Options
+        Runs after controller customisation
+        But runs before prep
+    """
     s3 = current.response.s3
     s3db = current.s3db
     table = s3db.project_task
 
+    list_fields = ["id",
+                   "status",
+                   "name",
+                   "priority",
+                   (T("Project"), "task_activity.activity_id"),
+                   "date_due",
+                   "location_id",
+                   ]
 
-    # In Custom PreP to over-write defaults
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            # Called first so that we can unhide the Type field
-            result = standard_prep(r)
-            if not result:
-                return False
+    # Custom Form
+    table.name.label = T("Name")
+    table.description.label = T("Description")
+    table.location_id.readable = table.location_id.writable = True
+    s3db.project_task_activity.activity_id.label = T("Project")
+    crud_form = S3SQLCustomForm("status",
+                                "name",
+                                "description",
+                                "priority",
+                                "task_activity.activity_id",
+                                "pe_id",
+                                "date_due",
+                                "location_id",
+                                )
 
-        list_fields = ["id",
-                       "status",
-                       "name",
-                       "priority",
-                       (T("Project"), "task_activity.activity_id"),
-                       "date_due",
-                       "location_id",
-                       ]
-    
-        # Custom Form
-        table.name.label = T("Name")
-        table.description.label = T("Description")
-        table.location_id.readable = table.location_id.writable = True
-        s3db.project_task_activity.activity_id.label = T("Project")
-        crud_form = S3SQLCustomForm("status",
-                                    "name",
-                                    "description",
-                                    "priority",
-                                    "task_activity.activity_id",
-                                    "pe_id",
-                                    "date_due",
-                                    "location_id",
-                                    )
+    # Remove Project Filter
+    filter_widgets = s3db.get_config("project_task", 
+                                     "filter_widgets")
+    filter_widgets.pop(2)
 
-        # Remove Project Filter
-        filter_widgets = s3db.get_config("project_task", 
-                                         "filter_widgets")
-        filter_widgets.pop(2)
-    
-        # Report options
-        report_fields = ["status",
-                         "priority",
-                         "pe_id",
-                         "task_activity.activity_id",
-                         "location_id",
-                         ]
-    
-        report_options = Storage(rows = report_fields,
-                                 cols = report_fields,
-                                 fact = ["count(name)"],
-                                 defaults=Storage(rows = "status",
-                                                  cols = "priority",
-                                                  fact = "count(name)",
-                                                  totals = True,
-                                                  chart = "barchart:rows",
-                                                  #table = "collapse",
-                                                  )
-                                 )
-    
-        s3db.configure("project_task",
-                       crud_form = crud_form,
-                       list_fields = list_fields,
-                       report_options = report_options,
-                       )
-        return True
-    s3.prep = custom_prep
+    # Report options
+    report_fields = ["status",
+                     "priority",
+                     "pe_id",
+                     "task_activity.activity_id",
+                     "location_id",
+                     ]
 
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
+    report_options = Storage(rows = report_fields,
+                             cols = report_fields,
+                             fact = ["count(name)"],
+                             defaults=Storage(rows = "status",
+                                              cols = "priority",
+                                              fact = "count(name)",
+                                              totals = True,
+                                              chart = "barchart:rows",
+                                              )
+                             )
 
-settings.customise_project_task_controller = customise_project_task_controller
+    s3db.configure("project_task",
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   list_fields = list_fields,
+                   report_options = report_options,
+                   )
+
+settings.customise_project_task_resource = customise_project_task_resource
 
 # -----------------------------------------------------------------------------
-def customise_project_activity_controller(**attr):
+def customise_project_activity_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - List Fields
+        - Fields
+        - Form
+        - Filter Widgets
+        - Report Options
+        Runs after controller customisation
+        But runs before prep
+    """
 
     s3 = current.response.s3
     s3db = current.s3db
     table = s3db.project_activity
 
-    #Use activities as projects (Temporary - location widget broken inline
+    #Use activities as projects (Temporary - location widget broken inline)
     s3.crud_strings["project_activity"] = s3.crud_strings["project_project"]
 
-    # Custom PreP
-    #standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        #if callable(standard_prep):
-        #    result = standard_prep(r)
-        #    if not result:
-        #        return False
 
-        if r.method in ["create", "update"]:
-            # hide inline labels
-            s3db.project_activity_organisation.organisation_id.label = ""
-            s3db.project_activity_activity_type.activity_type_id.label = ""
-        return True
-    s3.prep = custom_prep
+    if r.method in ["create", "update"]:
+        # hide inline labels
+        s3db.project_activity_organisation.organisation_id.label = ""
+        s3db.project_activity_activity_type.activity_type_id.label = ""
 
     list_fields = ["id",
                    "status_id",
@@ -651,117 +662,115 @@ def customise_project_activity_controller(**attr):
                              )
 
     s3db.configure("project_activity",
-                   list_fields = list_fields,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
+                   list_fields = list_fields,
                    report_options = report_options,
                    )
 
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_project_activity_controller = customise_project_activity_controller
+settings.customise_project_activity_resource = customise_project_activity_resource
 
 # -----------------------------------------------------------------------------
-def customise_project_project_controller(**attr):
+def customise_project_project_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - Fields
+        - Form
+        - Filter Widgets
+        Runs after controller customisation
+        But runs before prep
+    """
 
     s3 = current.response.s3
 
     # Custom PreP
     standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
 
-        s3db = current.s3db
-        if r.method == "validate":
-            from s3.s3validators import IS_LOCATION
-            s3db.project_location.location_id.requires = IS_LOCATION()
-        else:
-            # Custom Form
-            location_id_field = s3db.project_location.location_id
-            location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-            location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                                 show_address=True,
-                                                                 show_map=True)
-            # Don't add new Locations here
-            location_id_field.comment = None
+    if r.method == "validate":
+        from s3.s3validators import IS_LOCATION
+        s3db.project_location.location_id.requires = IS_LOCATION()
+    else:
+        # Custom Form
+        location_id_field = s3db.project_location.location_id
+        location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+        location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                             show_address=True,
+                                                             show_map=True)
+        # Don't add new Locations here
+        location_id_field.comment = None
 
-            table = s3db.project_project
-            table.name.label = T("Description")
-            table.comments.label = T("Details")
-            #s3db.project_project_organisation.organisation_id.label = ""
-            #s3db.project_project_project_type.project_type_id.label = ""
-            crud_form = S3SQLCustomForm(
-                            "status_id",
-                            "name",
-                            "description",
-                            #"location.location_id",
-                            "organisation_id",
-                            S3SQLInlineComponent("location",
-                                                 label = T("Location"),
-                                                 fields = ["location_id"],
-                                                 #orderby = "location_id$name",
-                                                 multiple = False,
-                                                 ),
-                            "start_date",
-                            "end_date",
-                            )
+        table = s3db.project_project
+        table.name.label = T("Description")
+        table.comments.label = T("Details")
+        #s3db.project_project_organisation.organisation_id.label = ""
+        #s3db.project_project_project_type.project_type_id.label = ""
+        crud_form = S3SQLCustomForm(
+                        "status_id",
+                        "name",
+                        "description",
+                        #"location.location_id",
+                        "organisation_id",
+                        S3SQLInlineComponent("location",
+                                             label = T("Location"),
+                                             fields = ["location_id"],
+                                             #orderby = "location_id$name",
+                                             multiple = False,
+                                             ),
+                        "start_date",
+                        "end_date",
+                        )
 
-            filter_widgets = [S3TextFilter(["name",
-                                            ],
-                                           label=T("Description"),
-                                           _class="filter-search",
+        filter_widgets = [S3TextFilter(["name",
+                                        ],
+                                       label=T("Description"),
+                                       _class="filter-search",
+                                       ),
+                          S3LocationFilter("location_id",
+                                           widget="multiselect",
+                                           levels = levels,
                                            ),
-                              S3LocationFilter("location_id",
-                                               widget="multiselect",
-                                               levels = levels,
-                                               ),
-                              S3OptionsFilter("status_id",
-                                              label = T("Status"),
-                                              # Doesn't support translation
-                                              #represent="%(name)s",
-                                              # @ToDo: Introspect cols
-                                              cols = 3,
-                                              #widget="multiselect",
-                                              ),
-                              S3OptionsFilter("project_project_type.project_type_id",
-                                              # Doesn't support translation
-                                              #represent="%(name)s",
-                                              widget="multiselect",
-                                              ),
-                              S3OptionsFilter("project_organisation.organisation_id",
-                                              # Doesn't support translation
-                                              #represent="%(name)s",
-                                              widget="multiselect",
-                                              ),
-                              S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
-                                              # Doesn't support translation
-                                              #represent="%(name)s",
-                                              widget="multiselect",
-                                              ),
-                              ]
+                          S3OptionsFilter("status_id",
+                                          label = T("Status"),
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          # @ToDo: Introspect cols
+                                          cols = 3,
+                                          #widget="multiselect",
+                                          ),
+                          S3OptionsFilter("project_project_type.project_type_id",
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          S3OptionsFilter("project_organisation.organisation_id",
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
+                                          # Doesn't support translation
+                                          #represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          ]
 
-            s3db.configure("project_project",
-                           crud_form = crud_form,
-                           #filter_widgets = filter_widgets,
-                           )
+        s3db.configure("project_project",
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       )
 
-        return True
-    s3.prep = custom_prep
-
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_project_project_controller = customise_project_project_controller
+settings.customise_project_project_resource = customise_project_project_resource
 
 # -----------------------------------------------------------------------------
-def customise_org_office_controller(**attr):
+def customise_org_office_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - List Fields
+        - Form
+        - Report Options
+        Runs after controller customisation
+        But runs before prep
+    """
 
     s3 = current.response.s3
     s3db = current.s3db
@@ -807,14 +816,20 @@ def customise_org_office_controller(**attr):
                    report_options = report_options,
                    )
 
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_org_office_controller = customise_org_office_controller
+settings.customise_org_office_resource = customise_org_office_resource
 
 # -----------------------------------------------------------------------------
-def customise_pr_person_controller(**attr):
+def customise_pr_person_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - List Fields
+        - Fields
+        - Form
+        - Filter Widgets
+        - Report Options
+        Runs after controller customisation
+        But runs before prep
+    """
 
     s3db = current.s3db
     request = current.request
@@ -837,19 +852,10 @@ def customise_pr_person_controller(**attr):
         msg_record_deleted = T("Contact deleted"),
         msg_list_empty = T("No Contacts currently registered"))
 
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        if r.method == "validate":
-            # Can't validate image without the file
-            image_field = s3db.pr_image.image
-            image_field.requires = None
+    if r.method == "validate":
+        # Can't validate image without the file
+        image_field = s3db.pr_image.image
+        image_field.requires = None
 
     MOBILE = settings.get_ui_label_mobile_phone()
     EMAIL = T("Email")
@@ -1024,13 +1030,13 @@ def customise_pr_person_controller(**attr):
             output = standard_postp(r, output)
 
         if r.interactive and isinstance(output, dict):
-            output["rheader"] = ""
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
                             url=URL(c="pr", f="person",
                                     args=["[id]", "read"]))
                        ]
             s3.actions = actions
+
             if "form" in output:
                 output["form"].add_class("pr_person")
             elif "item" in output and hasattr(output["item"], "add_class"):
@@ -1039,12 +1045,7 @@ def customise_pr_person_controller(**attr):
         return output
     s3.postp = custom_postp
 
-    # Remove rheader
-    attr["rheader"] = None
-
-    return attr
-
-settings.customise_pr_person_controller = customise_pr_person_controller
+settings.customise_pr_person_resource = customise_pr_person_resource
 
 # =============================================================================
 # Modules
