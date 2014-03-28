@@ -1237,6 +1237,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         location = ""
 
     person = ""
+    person_id = None
     contact_field = settings.get_cms_person()
     if contact_field == "created_by": 
         author_id = raw["cms_post.created_by"]

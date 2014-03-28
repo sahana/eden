@@ -67,14 +67,14 @@
     <span class='icon-bar'></span>
     <span class='icon-bar'></span>
    </button>
-   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/S3menu_logo.png" style="width:29px;margin:0 0 -20px 0" alt=""/></a>
+   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/themes/OCHAROCCA/img/UN-OCHA-Logo_hor-blu660-block.jpg" style="height:28px;margin:0 0 -20px 0" alt=""/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-     <li><a href='/{{=appname}}/gis/location/summary'><i class='icon-globe'></i> {{=T("Places")}}</a></li>
-     <li><a href='/{{=appname}}/stats/demographic_data/summary'><i class='icon-group'></i> {{=T("Demographics")}}</a></li>
-     <li><a href='/{{=appname}}/stats/demographic_data/summary'><i class='icon-signal'></i> {{=T("Baseline Data")}}</a></li>
-     <li><a href='/{{=appname}}/org/organisation/summary'><i class='icon-sitemap'></i> {{=T("Organisations")}}</a></li>
-     <li><a href='/{{=appname}}/event/event/summary'><i class='icon-bolt'></i> {{=T("Disasters")}}</a></li>
+       {{for opt in response.menu:}}
+        <li role='menuitem'>
+         <a href='{{=opt["url"]}}' tabindex='-1' class='menu-item'> <i class='icon-{{=opt["icon"]}}'></i> {{=opt["name"]}}</a>
+        </li>
+       {{pass}}
     </ul>
     <ul class='nav pull-right'>
      {{if auth.is_logged_in():}}
@@ -93,7 +93,9 @@
      {{else:}}{{if request.controller == "default" and request.function == "user" or "login" in request.args:}} {{else:}}
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-signin'></i><b class='caret'></b></a>
       <ul class='dropdown-menu'>
-      {{=auth.login()}}
+      {{form=auth.login()}}
+      {{form[0][-1][1].append(A(T("Register for Account"), _href=URL(f=controller, args="register"), _id="register-btn", _class="action-lnk"))}}
+      {{=form}}
       </ul>
      </li>
      {{pass}}{{pass}}

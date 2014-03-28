@@ -1,21 +1,28 @@
+/* OCHA Colours:
+background: #002D80;
+background: #026CB6;
+background: #66B2FF
+background: #99CCFF
+background: #CCE6FF
+*/
 body {
-    padding: 60px 20px 10px 20px; /* REVIEW - breaks footer - Test this with other templates as this should be sufficient to avoid the top nav menu + give side padding */
+    padding: 60px 0 10px 0; /* REVIEW Test this with other templates as this should be sufficient to avoid the top nav menu + give side padding */
 }
 
 .navbar-inner {
-    background: #37518b;
+    background: #026CB6;
     border: none;
 }
 .navbar .nav > li > a {
-    border-left: 1px solid #8797B9;
+    border-left: 1px solid #99CCFF;
 }
 
 .navbar .nav > li:last-child {
-    border-right: 1px solid #8797B9;
+    border-right: 1px solid #99CCFF;
 }
 
 .navbar .nav > li > a:hover {
-    background: #5F74A2;
+    background: #002D80;
     box-shadow: none;
 }
 
@@ -25,11 +32,6 @@ body {
     float: left
 }
 
-#register-btn {
-    margin-left: 15px !important;
-}
-
-/*
 .btn-login, .btn-register {
     float: right;
     margin-top: 10px !important;
@@ -38,35 +40,41 @@ body {
 .btn-register {
     clear: right;
 }
-*/
 .homepage.row {
     clear: both;
 }
 
- h1, h2 {
+ h1, h2, h3 {
     font-family: NeoSans;
     font-weight: normal;
     color: #444444;
     /*text-shadow: 2px 2px 1px black;*/
 }
 
-.title .span8 {
-    margin-left: 0;
-}
-
 .title h1, .title h2 {
     background: url('../../img/semi_white_75.png');
     display: table;
 }
+.title {
+    padding: 0 15px;
+}
+
 .title h1 {
     font-size: 50px;
-    padding: 15px 10px 5px 10px;
+    padding: 15px 0;
+    margin: 0 0 15px 0;
 }
 
 .title h2 {
     font-size: 25px;
-    padding: 10px 10px 0px 10px;
-    margin-top: 0;
+    line-height: 30px;
+    padding: 10px 0;
+    margin: 0;
+}
+
+.intro {
+    float: left;
+    padding: 10px 15px;
 }
 
 h1, h2, h3 {
@@ -82,23 +90,12 @@ h3 {
     font-family: NeoSans;
     font-weight: normal;
     color: #444444;
-    font-size: 25px;
+    font-size: 18px;
     line-height: 35px;
 }
-.title .intro {
-    margin: 10px;
-    padding: 10px;
-    height: 100px; 
-    background: url('../../img/semi_white_75.png');
-}
-
-.homepage .map {
-    margin-bottom: 15px;
-}
-
 .homepage .link {
     padding: 5px 10px 5px 10px;
-    margin-bottom:  10px;
+    margin: 5px 0;
     background: url('../../img/semi_white_75.png');
 }
 
@@ -114,6 +111,8 @@ h3 {
 .dl {
     padding: 5px 2px;
 }
+
+
 
 .thumbnail {
     background: url('../../img/semi_white_75.png') !important;
@@ -131,21 +130,6 @@ h3 {
 .cms-edit {
     display: none;
 }
-
-/* RSS Feed */
-.gfg-title,
-.gfg-entry,
-.gfg-subtitle {
-    display: none;
-}
-
-
-.gfg-listentry {
-    background: url('../../img/semi_white_75.png');
-    margin-bottom: 5px;
-    padding: 3px;
-}
-
 /***********************************************/
 h2, #list-btn-add {
     float: left
@@ -160,4 +144,65 @@ h2, #list-btn-add {
 #table-container,
 .form-container {
     clear: both;
+}
+
+
+/***********************************************/
+.homepage {
+    clear: both;
+    padding: 0 0;
+}
+
+.countries {
+    height: 85px;
+}
+.menus {
+    margin: 0 1.25% 50px 1.25%;
+    padding: 50px 0;
+    height: 50px;
+    text-align: center;
+    background: #66B2FF
+}
+
+.country,
+.menu {
+    float: left;
+}
+
+.country {
+    width: 9%;
+    margin: 0 1.25%;
+    padding: 10px 0.5% 5px;
+    background: #66B2FF;
+    text-align: center;
+    height: 55px;
+}
+.menu {
+    width: 20%;
+}
+
+.flag {
+    height: 20px;
+}
+
+.country:hover,
+.menu:hover {
+    heigth: 50px;
+}
+
+.country:hover {
+    height: 70px;
+}
+
+.country:hover,
+.menu h3:hover {
+    background: #99CCFF;
+}
+
+.badge {
+    line-height: 25px;
+    font-size: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: auto;
 }
