@@ -2869,9 +2869,9 @@ S3OptionsFilter({
                 # Add a new item
                 source_type = 0
                 if form_vars.send_inv_item_id:
-                    source_type = db(inv_item_table.id = form_vars.send_inv_item_id).select(inv_item_table.source_type,
-                                                                                            limitby=(0, 1)
-                                                                                            ).first().source_type
+                    source_type = db(inv_item_table.id == form_vars.send_inv_item_id).select(inv_item_table.source_type,
+                                                                                             limitby=(0, 1)
+                                                                                             ).first().source_type
                 else:
                     if recv_rec.type == 2:
                         source_type = 1 # Donation
