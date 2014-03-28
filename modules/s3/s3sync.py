@@ -813,6 +813,7 @@ class S3SyncRepository(object):
         self.username = repository.username
         self.password = repository.password
         self.site_key = repository.site_key
+        self.refresh_token = repository.refresh_token
         self.proxy = repository.proxy
 
     # -------------------------------------------------------------------------
@@ -1569,6 +1570,34 @@ class S3SyncWrike(S3SyncRepository):
     """
 
     # -------------------------------------------------------------------------
+    def __init__(self, repository):
+        """
+            Constructor
+        """
+
+        super(S3SyncWrike, self).__init__(repository)
+        
+        self.access_token = None
+        self.token_type = None
+
+    # -------------------------------------------------------------------------
+    def update_refresh_token(self):
+        """
+            Store the current refresh token in the db, also invalidated
+            the site_key (authorization code) because it can not be used
+            again.
+        """
+
+        self.site_key = None
+        
+        table = current.s3db.sync_repository
+        current.db(table.id == self.id).update(
+            refresh_token = self.refresh_token,
+            site_key = self.site_key
+        )
+        return
+
+    # -------------------------------------------------------------------------
     def register(self):
         """
             Register at the repository
@@ -1576,9 +1605,69 @@ class S3SyncWrike(S3SyncRepository):
             @return: True if successful, otherwise False
         """
 
-        error = "Wrike API registration not implemented"
-        current.log.error(error)
-        return False
+        log = self.log
+        success = False
+        remote = False
+        skip = False
+
+        site_key = self.site_key
+        if not site_key:
+            if not self.refresh_token:
+                # Can't register without authorization code
+                result = log.WARNING
+                message = "No site key to obtain access token " \
+                          "with, skipping registration"
+            else:
+                # Already registered
+                result = log.SUCCESS
+                success = True
+                message = None
+            skip = True
+        else:
+            self.refresh_token = None
+            self.access_token = None
+
+            # Get refresh token from peer
+            data = {
+                "client_id": self.username,
+                "client_secret": self.password,
+                "grant_type": "authorization_code",
+                "code": self.site_key
+            }
+            response, message = self.send(method = "POST",
+                                          data = data,
+                                          auth = True)
+
+            if not response:
+                self.update_refresh_token()
+                result = log.FATAL
+                remote = True
+            else:
+                refresh_token = response.get("refresh_token")
+                if not refresh_token:
+                    self.update_refresh_token()
+                    result = log.FATAL
+                    message = "No refresh token received"
+                else:
+                    self.refresh_token = refresh_token
+                    self.access_token = response.get("access_token")
+                    self.update_refresh_token()
+                    result = log.SUCCESS
+                    success = True
+                    message = "Registration successful"
+
+        # Log the operation
+        log.write(repository_id=self.id,
+                  transmission=log.OUT,
+                  mode=log.PUSH,
+                  action="request access token",
+                  remote=remote,
+                  result=result,
+                  message=message)
+
+        if not success:
+            current.log.error(message)
+        return success if not skip else True
 
     # -------------------------------------------------------------------------
     def login(self):
@@ -1588,8 +1677,50 @@ class S3SyncWrike(S3SyncRepository):
             @return: None if successful, otherwise error message
         """
 
-        error = "Wrike API authentication not implemented"
-        current.log.error(error)
+        log = self.log
+        error = None
+        remote = False
+
+        refresh_token = self.refresh_token
+        if not refresh_token:
+            result = log.FATAL
+            error = "Login failed: no refresh token available (registration failed?)"
+        else:
+            data = {
+                "client_id": self.username,
+                "client_secret": self.password,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token
+            }
+            response, message = self.send(method = "POST",
+                                          data = data,
+                                          auth = True)
+            if not response:
+                result = log.FATAL
+                remote = True
+                error = message
+            else:
+                access_token = response.get("access_token")
+                if not access_token:
+                    result = log.FATAL
+                    error = "No access token received"
+                else:
+                    result = log.SUCCESS
+                    self.access_token = access_token
+                    self.token_type = response.get("token_type", "bearer")
+                    
+
+        # Log the operation
+        log.write(repository_id=self.id,
+                  transmission=log.OUT,
+                  mode=log.PUSH,
+                  action="request access token",
+                  remote=remote,
+                  result=result,
+                  message=error)
+
+        if error:
+            current.log.error(error)
         return error
         
     # -------------------------------------------------------------------------
@@ -1622,5 +1753,75 @@ class S3SyncWrike(S3SyncRepository):
         error = "Wrike API push not implemented"
         current.log.error(error)
         return (error, None)
+
+    # -------------------------------------------------------------------------
+    def send(self, method="GET", path=None, args=None, data=None, auth=False):
+        """
+            Send a request to the Wrike API
+
+            @param method: the HTTP method
+            @param path: the path relative to the repository URL
+            @param data: the data to send
+            @param auth: this is an authorization request
+        """
+
+        # Request URL
+        api = "oauth2/token" if auth else "api/v3"
+        url = "/".join((self.url.rstrip("/"), api))
+        if path:
+            url = "/".join((url, path.lstrip("/")))
+        if args:
+            url = "?".join(url, urllib.urlencode(args))
+
+        # Create the request
+        req = urllib2.Request(url=url)
+        handlers = []
+
+        if not auth:
+            # Install access token header
+            access_token = self.access_token
+            if not access_token:
+                message = "Authorization failed: no access token"
+                current.log.error(message)
+                return None, message
+            req.add_header("Authorization", "%s %s" %
+                                            (self.token_type, access_token))
+            # JSONify request data
+            request_data = json.dumps(data) if data else ""
+        else:
+            # URL-encode request data for auth
+            request_data = urllib.urlencode(data) if data else ""
+                
+        # Proxy handling
+        config = self.get_config()
+        proxy = self.proxy or config.proxy or None
+        if proxy:
+            _debug("using proxy=%s" % proxy)
+            proxy_handler = urllib2.ProxyHandler({"https": proxy})
+            handlers.append(proxy_handler)
+
+        # Install all handlers
+        if handlers:
+            opener = urllib2.build_opener(*handlers)
+            urllib2.install_opener(opener)
+
+        # Execute the request
+        response = None
+        message = None
+        try:
+            if method == "POST":
+                f = urllib2.urlopen(req, data=request_data)
+            else:
+                f = urllib2.urlopen(req)
+        except urllib2.HTTPError, e:
+            message = e.read()
+        else:
+            # Parse the response
+            try:
+                response = json.load(f)
+            except ValueError, e:
+                message = sys.exc_info()[1]
+
+        return response, message
 
 # End =========================================================================
