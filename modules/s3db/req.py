@@ -3015,6 +3015,11 @@ class S3CommitItemModel(S3Model):
                                   req_table.req_ref,
                                   limitby=(0, 1)).first()
 
+        # @ToDo: Identify if we have stock items which match the commit items
+        # If we have a single match per item then proceed automatically (as-now) & then decrement the stock quantity
+        # If we have no match then warn the user & ask if they should proceed anyway
+        # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
+
         # Create an inv_send and link to the commit
         vars = Storage(sender_id = record.req_commit.committer_id,
                        site_id = record.req_commit.site_id,

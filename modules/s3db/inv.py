@@ -2285,25 +2285,26 @@ S3OptionsFilter({
 
         # If this is linked to a request then update the quantity in transit
         req_ref = send_record.req_ref
-        query = (rrtable.req_ref == req_ref)
-        req_rec = db(query).select(rrtable.id,
-                                   limitby=(0, 1)).first()
+        req_rec = db(rrtable.req_ref == req_ref).select(rrtable.id,
+                                                        limitby=(0, 1)).first()
         if req_rec:
             req_id = req_rec.id
             for track_item in track_items:
-                if track_item.req_item_id:
-                    req_i = db(ritable.id == track_item.req_item_id).select(ritable.item_pack_id,
-                                                                            limitby=(0, 1)).first()
-                    req_p_qnty = db(siptable.id == req_i.item_pack_id).select(siptable.quantity,
-                                                                              limitby=(0, 1)
-                                                                              ).first().quantity
+                req_item_id = track_item.req_item_id
+                if req_item_id:
+                    req_pack_id = db(ritable.id == req_item_id).select(ritable.item_pack_id,
+                                                                       limitby=(0, 1)
+                                                                       ).first().item_pack_id
+                    req_p_qnty = db(siptable.id == req_pack_id).select(siptable.quantity,
+                                                                       limitby=(0, 1)
+                                                                       ).first().quantity
                     t_qnty = track_item.quantity
                     t_pack_id = track_item.item_pack_id
                     inv_p_qnty = db(siptable.id == t_pack_id).select(siptable.quantity,
                                                                      limitby=(0, 1)
                                                                      ).first().quantity
                     transit_quantity = t_qnty * inv_p_qnty / req_p_qnty
-                    db(ritable.id == track_item.req_item_id).update(quantity_transit = ritable.quantity_transit + transit_quantity)
+                    db(ritable.id == req_item_id).update(quantity_transit = ritable.quantity_transit + transit_quantity)
             s3db.req_update_status(req_id)
 
         # Create a Receive record
@@ -2608,7 +2609,7 @@ S3OptionsFilter({
                          _href = URL(c = "inv",
                                      f = "recv",
                                      args = [recv_row.id, "form"]
-                                    ),
+                                     ),
                         )
             else:
                 return B(value)
@@ -2762,11 +2763,12 @@ S3OptionsFilter({
         siptable = db.supply_item_pack
         supply_item_add = s3db.supply_item_add
         oldTotal = 0
-        id = form.vars.id
+        form_vars = form.vars
+        id = form_vars.id
         record = form.record
 
-        if form.vars.send_inv_item_id:
-            stock_item = db(inv_item_table.id == form.vars.send_inv_item_id).select(inv_item_table.id,
+        if form_vars.send_inv_item_id:
+            stock_item = db(inv_item_table.id == form_vars.send_inv_item_id).select(inv_item_table.id,
                                                                                     inv_item_table.quantity,
                                                                                     inv_item_table.item_pack_id,
                                                                                     limitby=(0, 1)).first()
@@ -2776,66 +2778,71 @@ S3OptionsFilter({
             # will get here for a recv (from external donor / local supplier)
             stock_item = None
 
-        # only modify the original inv. item total if we have a quantity on the form
+        # Modify the original inv. item total only if we have a quantity on the form
         # and a stock item to take it from.
         # There will not be a quantity if it is being received since by then it is read only
         # It will be there on an import and so the value will be deducted correctly
-        if form.vars.quantity and stock_item:
+        if form_vars.quantity and stock_item:
             stock_quantity = stock_item.quantity
-            # @ToDo: Optimise
-            stock_pack = siptable[stock_item.item_pack_id].quantity
+            stock_pack = db(siptable.id == stock_item.item_pack_id).select(siptable.quantity,
+                                                                           limitby=(0, 1)
+                                                                           ).first().quantity
             if record:
                 if record.send_inv_item_id != None:
                     # Items have already been removed from stock, so first put them back
-                    # @ToDo: Optimise
-                    old_track_pack_quantity = siptable[record.item_pack_id].quantity
+                    old_track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
+                                                                                            limitby=(0, 1)
+                                                                                            ).first().quantity
                     stock_quantity = supply_item_add(stock_quantity,
                                                      stock_pack,
                                                      record.quantity,
                                                      old_track_pack_quantity
                                                      )
             try:
-                # @ToDo: Optimise
-                new_track_pack_quantity = siptable[form.vars.item_pack_id].quantity
+                new_track_pack_quantity = db(siptable.id == form_vars.item_pack_id).select(siptable.quantity,
+                                                                                           limitby=(0, 1)
+                                                                                           ).first().quantity
             except:
                 new_track_pack_quantity = record.item_pack_id.quantity
             newTotal = supply_item_add(stock_quantity,
                                        stock_pack,
-                                       - float(form.vars.quantity),
+                                       - float(form_vars.quantity),
                                        new_track_pack_quantity
                                        )
             db(inv_item_table.id == stock_item).update(quantity = newTotal)
-        if form.vars.send_id and form.vars.recv_id:
-            # @ToDo: Optimise
-            db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
+        if form_vars.send_id and form_vars.recv_id:
+            send_ref = db(stable.id == form_vars.send_id).select(stable.send_ref,
+                                                                 limitby=(0, 1)
+                                                                 ).first().send_ref
+            db(rtable.id == form_vars.recv_id).update(send_ref = send_ref)
 
         rrtable = s3db.table("req_req")
-        ritable = s3db.table("req_req_item")
-        if rrtable and ritable:
+        if rrtable:
             use_req = True
+            ritable = s3db.req_req_item
         else:
             # Req module deactivated
             use_req = False
             
-        # If this item is linked to a request, then
-        # copy the req_ref to the send item
+        # If this item is linked to a request, then copy the req_ref to the send item
         if use_req and record and record.req_item_id:
             
-            # @ToDo: Optimise
-            req_id = ritable[record.req_item_id].req_id
-            # @ToDo: Optimise
-            req_ref = rrtable[req_id].req_ref
-            db(stable.id == form.vars.send_id).update(req_ref = req_ref)
-            if form.vars.recv_id:
-                db(rtable.id == form.vars.recv_id).update(req_ref = req_ref)
+            req_id = db(ritable.id == record.req_item_id).select(ritable.req_id,
+                                                                 limitby=(0, 1)
+                                                                 ).first().req_id
+            req_ref = db(rrtable.id == req_id).select(rrtable.req_ref,
+                                                      limitby=(0, 1)
+                                                      ).first().req_ref
+            db(stable.id == form_vars.send_id).update(req_ref = req_ref)
+            if form_vars.recv_id:
+                db(rtable.id == form_vars.recv_id).update(req_ref = req_ref)
 
-        # if the status is 3 unloading
+        # If the status is 'unloading':
         # Move all the items into the site, update any request & make any adjustments
-        # Finally change the status to 4 arrived
+        # Finally change the status to 'arrived'
         if record and record.status == TRACK_STATUS_UNLOADING and \
                       record.recv_quantity:
             # Look for the item in the site already
-            # @ToDo: Optimise
             recv_rec = db(rtable.id == record.recv_id).select(rtable.site_id,
                                                               rtable.type,
                                                               ).first()
@@ -2861,9 +2868,10 @@ S3OptionsFilter({
             else:
                 # Add a new item
                 source_type = 0
-                if form.vars.send_inv_item_id:
-                    # @ToDo: Optimise
-                    source_type = inv_item_table[form.vars.send_inv_item_id].source_type
+                if form_vars.send_inv_item_id:
+                    source_type = db(inv_item_table.id = form_vars.send_inv_item_id).select(inv_item_table.source_type,
+                                                                                            limitby=(0, 1)
+                                                                                            ).first().source_type
                 else:
                     if recv_rec.type == 2:
                         source_type = 1 # Donation
@@ -2883,16 +2891,19 @@ S3OptionsFilter({
                                                     source_type = source_type,
                                                     status = record.inv_item_status,
                                                     )
-            # If this item is linked to a request, then update
-            # the quantity fulfil
+            # If this item is linked to a request, then update the quantity fulfil
             if use_req and record.req_item_id:
-                # @ToDo: Optimise
-                req_item = ritable[record.req_item_id]
+                req_item = db(ritable.id == record.req_item_id).select(ritable.quantity_fulfil,
+                                                                       ritable.item_pack_id,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
                 req_quantity = req_item.quantity_fulfil
-                # @ToDo: Optimise
-                req_pack_quantity = siptable[req_item.item_pack_id].quantity
-                # @ToDo: Optimise
-                track_pack_quantity = siptable[record.item_pack_id].quantity
+                req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
+                                                                                    limitby=(0, 1)
+                                                                                    ).quantity
+                track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
+                                                                                    limitby=(0, 1)
+                                                                                    ).quantity
                 quantity_fulfil = supply_item_add(req_quantity,
                                                   req_pack_quantity,
                                                   record.recv_quantity,
@@ -2914,13 +2925,17 @@ S3OptionsFilter({
                                            limitby = (0, 1)).first()
                 adjitemtable = s3db.inv_adj_item
                 if adj_rec:
-                    # @ToDo: Optimise
-                    adj_id = adjitemtable[adj_rec.adj_item_id].adj_id
+                    adj_id = db(adjitemtable.id == adj_rec.adj_item_id).select(adjitemtable.adj_id,
+                                                                               limitby=(0, 1)
+                                                                               ).first().adj_id
                 # If we don't yet have an adj record then create it
                 else:
                     adjtable = s3db.inv_adj
-                    # @ToDo: Optimise
-                    recv_rec = s3db.inv_recv[record.recv_id]
+                    irtable = s3db.inv_recv
+                    recv_rec = db(irtable.id == record.recv_id).select(irtable.recipient_id,
+                                                                       irtable.site_id,
+                                                                       irtable.comments,
+                                                                       limitby=(0, 1)).first()
                     adj_id = adjtable.insert(adjuster_id = recv_rec.recipient_id,
                                              site_id = recv_rec.site_id,
                                              adjustment_date = current.request.now.date(),
@@ -2943,7 +2958,7 @@ S3OptionsFilter({
                                                   bin = record.recv_bin,
                                                   comments = record.comments,
                                                   )
-                # copy the adj_item_id to the tracking record
+                # Copy the adj_item_id to the tracking record
                 db(tracktable.id == id).update(adj_item_id = adj_item_id)
 
     # -------------------------------------------------------------------------

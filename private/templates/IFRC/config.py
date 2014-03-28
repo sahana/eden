@@ -189,7 +189,7 @@ settings.gis.display_L0 = True
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
-    ("km", "ភាសាខ្មែរ"),          # Khmer
+    ("km", "ភាសាខ្មែរ"),        # Khmer
     ("ne", "नेपाली"),          # Nepali
     ("prs", "دری"),         # Dari
     ("ps", "پښتو"),         # Pashto
