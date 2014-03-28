@@ -561,12 +561,11 @@ def customise_project_activity_resource(r, tablename):
     s3db = current.s3db
     table = s3db.project_activity
 
-    #Use activities as projects (Temporary - location widget broken inline)
+    # Use activities as projects (Temporary - location widget doesn't yet work inline)
     s3.crud_strings["project_activity"] = s3.crud_strings["project_project"]
 
-
     if r.method in ["create", "update"]:
-        # hide inline labels
+        # Hide inline labels
         s3db.project_activity_organisation.organisation_id.label = ""
         s3db.project_activity_activity_type.activity_type_id.label = ""
 
