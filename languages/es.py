@@ -2524,7 +2524,7 @@
 'Iraq': 'Irak',
 'Ireland': 'Irlanda',
 'Is adequate food and water available for these institutions?': '¿Hay alimentos adecuados y agua disponible para estas instituciones?',
-'Is editing level L%d locations allowed?': '¿Está permitida la edición de las ubicaciones de nivel L%?',
+'Is editing level L%d locations allowed?': '¿Está permitida la edición de las ubicaciones de nivel L%d?',
 'Is it safe to collect water?': '¿Es seguro recoger agua?',
 'Is there any industrial or agro-chemical production close to the affected area/village?': '¿Existe algun área de producción agro-quimico o industrial cerca al pueblo/area afectada?',
 'Is this a strict hierarchy?': '¿Se trata de una jerarquía estricta?',

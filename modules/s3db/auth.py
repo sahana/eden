@@ -107,7 +107,7 @@ class S3UserOptions(S3Model):
                                 label = T("OpenStreetMap OAuth Consumer Key"),
                                 comment = DIV(_class="stickytip",
                                                 _title="%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
-                                                                     T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % \
+                                                                     T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.") % \
                                                                             dict(name_short=current.deployment_settings.get_system_name_short()),
                                                                      T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
                                                                             dict(url=A("http://www.openstreetmap.org",

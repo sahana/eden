@@ -109,14 +109,16 @@ def mission():
                               # (rheader includes the title)
                               notitle=lambda r: {"title": ""} \
                                              if r.component else None,
-                              rheader=s3db.deploy_rheader)
+                              rheader=s3db.deploy_rheader,
+                              )
 
 # =============================================================================
 def response_message():
     """ RESTful CRUD Controller """
 
     return s3_rest_controller("deploy", "response",
-                              custom_crud_buttons = {"list_btn": None})
+                              custom_crud_buttons = {"list_btn": None},
+                              )
 
 # =============================================================================
 def human_resource():
@@ -509,7 +511,7 @@ def alert():
                               hide_filter={"recipient": False,
                                            "_default": True,
                                           }
-                             )
+                              )
 
 # -----------------------------------------------------------------------------
 def email_inbox():
@@ -599,7 +601,8 @@ def email_channel():
         table = r.table
         tablename = "msg_email_channel"
         s3db.configure(tablename,
-                       deletable=False)
+                       deletable = False,
+                       )
 
         if not r.id:
             # Have we got a channel defined?

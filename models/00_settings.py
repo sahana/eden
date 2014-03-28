@@ -132,9 +132,7 @@ else:
     s3.language = "%s_%s" % (lang_parts[0], lang_parts[1].upper())
 
 # List of Languages which use a Right-to-Left script (Arabic, Hebrew, Farsi, Urdu)
-s3_rtl_languages = ["ur", "ar"]
-
-if T.accepted_language in s3_rtl_languages:
+if language in ("ar", "prs", "ps", "ur"):
     s3.rtl = True
 else:
     s3.rtl = False

@@ -2964,7 +2964,6 @@
 'In Progress': 'In Progress',
 'In Stock': 'In Stock',
 'In error': 'In error',
-'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.': 'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.',
 'In transit': 'In transit',
 'In': 'In',
 'In-Progress': 'In-Progress',

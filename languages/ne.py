@@ -1328,7 +1328,7 @@
 'Import Volunteers': 'राख्नु स्वयम्-सेवक(हरू)',
 'Improved Production Techniques': 'सुधारिएको उत्पादन उपाय(हरू)',
 'In error': 'गल्तीमा',
-'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.': 'आन्तरिकबा खुलासडकनक्सा आँकडालाई परिवर्तन गर्नको निम्ति %(name_short)s,  खुलासडक सर्भरमा तपाईंले एउटा एकाउन्ट दर्ता गर्नु पर्दछ ।',
+'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.': 'आन्तरिकबा खुलासडकनक्सा आँकडालाई परिवर्तन गर्नको निम्ति %(name_short)s, खुलासडक सर्भरमा तपाईंले एउटा एकाउन्ट दर्ता गर्नु पर्दछ ।',
 'Inactive': 'निस्कृय',
 'InBox': 'इनबक्स',
 'Incident': 'भवितब्य',

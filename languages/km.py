@@ -1257,7 +1257,7 @@
 'Import': 'នាំចូល',
 'Improved Production Techniques': 'បច្ចេកទេស​ផលិតកម្មដ៏​ប្រសើរ',
 'In error': 'មាន​កំហុស',
-'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.': 'ដើម្បី​អាច​កែសម្រួល​ទិន្នន័យ​ OpenStreetMap ពីក្នុង %(name_short)s បាន អ្នក​ចាំបាច់ត្រូវតែចុះឈ្មោះ​សុំ​គណនី​នៅ​លើ​ម៉ាស៊ីនបម្រើ OpenStreet ជាមុនសិន ។',
+'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.': 'ដើម្បី​អាច​កែសម្រួល​ទិន្នន័យ​ OpenStreetMap ពីក្នុង %(name_short)s បាន អ្នក​ចាំបាច់ត្រូវតែចុះឈ្មោះ​សុំ​គណនី​នៅ​លើ​ម៉ាស៊ីនបម្រើ OpenStreetMap ជាមុនសិន ។',
 'InBox': 'ប្រអប់ទទួល',
 'Inactive': 'អសកម្ម',
 'Incident Categories': 'ប្រភេទ​ឧប្បត្តិហេតុ',

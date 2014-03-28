@@ -904,7 +904,7 @@
 'Edit Job Title': 'تصحیح عنوان وظیفه',
 'Edit Keyword': 'تصحیح کلمه کلیدی',
 'Edit Layer': 'تصحیح لایه ',
-'Edit Level %d Locations?': 'موقعیت ها؟ %d تصحیح درجه',
+'Edit Level %d Locations?': 'تصحیح درجه %d موقعیت ها؟',
 'Edit Location': 'تصحیح موقعیت',
 'Edit Location Details': 'تصحیح جزئیات موقعیت',
 'Edit Location Hierarchy': 'تصحیح سلسله مراتب موقعیت',
@@ -1117,8 +1117,7 @@
 'getting': 'گرفتن',
 'Give a brief description of the image, e.g. what can be seen where on the picture (optional).': 'در مورد عکس خلص توضیحات را بدهید، مثال: چی چیز بالای عکس قابل دید است (اختیاری)',
 'Go': 'برو',
-BAD"Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.": 'برو به %(آدرس) ثبت نام کردن و برنامه خود را ثبت نمایید. شما هر آدرس را گذاشته می توانید و شما فقط باید اجازه "اصلاح نقشه" را انتخاب نمایید',
-'برو به %(آدرس) ثبت نام کردن و برنامه خود را ثبت نمایید. شما هر آدرس را گذاشته می توانید و شما فقط باید اجازه "اصلاح نقشه" را انتخاب نمایید'
+"Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.": 'ثبت نام کردن و برنامه خود را ثبت نمایید. شما هر آدرس را گذاشته می توانید و شما فقط باید اجازه "اصلاح نقشه" را انتخاب نمایید %(url)s برو به',
 'Go to Functional Map': 'برو به نقشه عملیاتی',
 'Goatee': 'گواتی',
 'Good': 'خوب',
@@ -1325,7 +1324,7 @@ BAD"Go to %(url)s, sign up & then register your application. You can put any URL
 'Import Volunteers': 'ورود داوطلبین',
 'Improved Production Techniques': 'تکنیک های تولید توسعه یافته',
 'In error': 'در خطا',
-BAD'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.': 'جهت قابل تصحیح ساختن معلومات باز کردن نقشه سرک از %(نام_ کوتاه)، شما باید یک حساب در سرور باز کردن سرک ثبت نام نمایید',
+'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.': 'شما باید یک حساب در سرور باز کردن سرک ثبت نام نمایید ، %(name_short)s جهت قابل تصحیح ساختن معلومات باز کردن نقشه سرک از',
 'Inactive': 'غیر فعال',
 'InBox': 'صندوق پیام ها',
 'Incident': 'حادثه',
@@ -1347,7 +1346,7 @@ BAD'In order to be able to edit OpenStreetMap data from within %(name_short)s, y
 'Insurance ': 'اطمینان',
 'Integrity error: record can not be deleted while it is referenced by other records': 'خطای کلی: زمانی که ثبت در مرجع ثبت دیگری است غیر قابل حذف می باشد',
 'Intergovernmental': 'چند دولتی',
-BAD'Invalid data: record %(id)s not accessible in table %(table)s': '%(table)s معلومات غیر معتبر: ثبت% (هوویت) در جدول قابل دسترسی نیست',
+'Invalid data: record %(id)s not accessible in table %(table)s': '%(table)s در جدول قابل دسترسی نیست %(id)s معلومات غیر معتبر: ثبت',
 'Invalid form (re-opened in another window?)': 'شکل غیر معتبر (در پنجره دیگر نیز باز شده؟)',
 'Invalid Location!': 'موقعیت غیر معتبر!',
 'Invalid phone number': 'شماره تماس غیر معتبر',
@@ -1358,7 +1357,7 @@ BAD'Invalid data: record %(id)s not accessible in table %(table)s': '%(table)s �
 'Inventory': 'فهرست',
 'Inventory Items': 'بخش های موجودی',
 'Irrigation and Watershed Management': 'مدیریت آبگردان و آبیاری',
-BAD'Is editing level L%d locations allowed?': 'آیا تصحیح موقعیت های درجه L%d اجازه دارد؟',
+'Is editing level L%d locations allowed?': 'آیا تصحیح موقعیت های درجه L%d اجازه دارد؟',
 'Is this a strict hierarchy?': 'آیا این نص صریح سلسله مراتب است؟',
 'Issuing Authority': 'صدور اختیار',
 'It captures not only the places where they are active, but also captures information on the range of projects they are providing in each area.': 'این تنها مکان ها فعال را تسخیر نمی کند، بلکه معلومات که آنها بالای محدوده هر پروژه در هر ساحه تهیه می کنند را نیز تسخیر می کند',
@@ -1451,7 +1450,7 @@ BAD'Is editing level L%d locations allowed?': 'آیا تصحیح موقعیت ه
 'light': 'روشن',
 'Link to this result': 'اتصال به این نتیجه',
 'List': 'لست',
-BAD'List %(site_label)s Status': 'لست% (لیبل_ ساحه) حالات',
+'List %(site_label)s Status': 'لست %(site_label)s حالات',
 'List Activities': 'لست فعالیت ها',
 'List Activity Organizations': 'لست فعالیت موسسه ها',
 'List Activity Types': 'لست انواع فعالیت',
@@ -1657,8 +1656,7 @@ BAD'List %(site_label)s Status': 'لست% (لیبل_ ساحه) حالات',
 'Map is already your Default': 'نقشه قبلاً منحیث پیش فرض تعیین شده است',
 'Map not available: Cannot write projection file - %s': '%s - نقشه موجود نیست: قابلیت نوشتن فایل تصویر نیست',
 'Map not available: No Projection configured': 'نقشه موجود نیست: هیچ تصویری تنظیم نشده',
-'Map not available: Projection %(projection)s not supported - please add definition to %(path)s': 'نقشه موجود نیست: تصویر % (تصویر) تایید نشد - لطفا به (مسیر) تعریف اضافه نمایید',
-BAD'نقشه موجود نیست: تصویر % (تصویر) تایید نشد - لطفا به (مسیر) تعریف اضافه نمایید',
+'Map not available: Projection %(projection)s not supported - please add definition to %(path)s': 'نقشه موجود نیست: تصویر %(projection)s تایید نشد - لطفا به %(path)s تعریف اضافه نمایید',
 'Map of Communities': 'نقشه انجمن ها',
 'Map of Facilities': 'نقشه تسهیلات',
 'Map of Offices': 'نقشه دفاتر',
@@ -1881,8 +1879,7 @@ BAD'نقشه موجود نیست: تصویر % (تصویر) تایید نشد - 
 'No Networks currently recorded': 'فعلاً هیچ شبکه ثبت نشده است',
 'No Office Types currently registered': 'فعلاً هیچ نوع دفتر ثبت نشده است',
 'No Offices currently registered': 'فعلاً هیچ دفتر ثبت نشده است',
-'No Open Tasks for %(project)s': 'هیچ وظایف باز برای %(پروژه) موجود نیست'
-BAD'هیچ وظایف باز برای %(پروژه) موجود نیست',
+'No Open Tasks for %(project)s': 'هیچ وظایف باز برای %(project)s موجود نیست',
 'No options available': 'هیچ اختیار موجود نیست',
 'no options available': 'هیچ اختیار موجود نیست',
 'No options currently available': 'فعلاً هیچ اختیار موجود نیست',
@@ -1954,8 +1951,8 @@ BAD'هیچ وظایف باز برای %(پروژه) موجود نیست',
 'Nonexistent or invalid resource': 'معدوم یا منبع غیر معتبر',
 'Normal': 'عادی',
 'Normal Job': 'وظیفه عادی',
-BAD'NOT %s AND NOT %s': 'نه % و نه %s',
-BAD'NOT %s OR NOT %s': 'نه %  یا نه %s',
+'NOT %s AND NOT %s': 'نه %s و نه %s',
+'NOT %s OR NOT %s': 'یا نه %s نه %s',
 'Not Authorized': 'اجازه داده نشد',
 'Not implemented': 'اجرا نشد',
 'Not installed or incorrectly configured.': 'نصب نشد یا نادرست تنظیم شد',
@@ -2279,7 +2276,7 @@ BAD'NOT %s OR NOT %s': 'نه %  یا نه %s',
 'RDRT Type': 'نوع RDRT',
 'READ': 'خواندن',
 'Ready': 'آماده',
-BAD'Receive %(opt_in)s updates:': 'دریافت %(opt_in)s تجدید ها',
+'Receive %(opt_in)s updates:': 'دریافت %(opt_in)s تجدید ها',
 'Receive updates': 'دریافت تازه ها',
 'Received Shipments': 'محموله ها دریافت شد',
 'Record': 'ضبط',
@@ -2313,7 +2310,7 @@ BAD'Receive %(opt_in)s updates:': 'دریافت %(opt_in)s تجدید ها',
 'Register': 'ثبت کردن',
 'Register As': 'ثبت کردن منحیث',
 'Register for Account': 'ثبت کردن برای حساب',
-BAD'Registered users can %(login)s to access the system': 'استفاده کننده های ثبت شده می توانند% (وارد شوند) در دسترسی سیستم',
+'Registered users can %(login)s to access the system': 'استفاده کننده های ثبت شده می توانند %(login)s در دسترسی سیستم',
 'Registration not permitted': 'ثبت اجازه داده نشد',
 'Reject': 'رد کردن',
 'Relationship': 'رابطه',
@@ -2445,7 +2442,7 @@ BAD'Registered users can %(login)s to access the system': 'استفاده کنن
 'School Safety and Children Education,': 'محفوظیت مکتب و تحصیلات اطفال',
 'Seaport': 'ساحل',
 'Search': 'جستجو',
-BAD'Search %(site_label)s Status': 'جستجو % (لیبل _ ساحه) حالات',
+'Search %(site_label)s Status': 'جستجو %(site_label)s حالات',
 'Search Activities': 'فعالیت های جستجو',
 'Search Activity Types': 'انواع فعالیت جستجو',
 'Search Addresses': 'آدرس های جستجو',
@@ -2583,7 +2580,7 @@ BAD'Search %(site_label)s Status': 'جستجو % (لیبل _ ساحه) حالا�
 'see comment': 'دیدن توضیحات',
 'see more': 'دیدن بیشتر',
 'Seen': 'دیده شد',
-BAD'Select %(location)s': '(موقعیت) ها را انتخاب نمایید',
+'Select %(location)s': 'ها را انتخاب نمایید %(location)s',
 "Select 2 records from this list, then click 'Merge'.": 'ازین لست دو ضبط را انتخاب نمایید، بعداً کلید "یکجا سازی" را فشار دهید',
 "Select a Room from the list or click 'Add Room'": 'یک اتاق را از لست انتخاب نمایید یا "اضافه کردن اتاق" را فشار دهید',
 'Select all': 'انتخاب همه',
@@ -2682,8 +2679,8 @@ BAD'Select %(location)s': '(موقعیت) ها را انتخاب نمایید',
 'Social Mobilisation': 'تحرک اجتماعی',
 'Solid Waste Management': 'مدیریت ضایعات جامد',
 'Sops and Guidelines Development': 'گسترش هدایت ها و غذاهای مایع',
-BAD'Sorry location %(location)s appears to be outside the area of parent %(parent)s.': 'متاسفانه ظاهرا موقعیت %(موقعیت) ها خارج از ساحه سطح بالا است.',
-BAD'Sorry location %(location)s appears to be outside the area supported by this deployment.': 'متاسفانه ظاهراً موقعیت%(موقعیت)ها خارج از ساحه تمویل شده این گسترش است.',
+'Sorry location %(location)s appears to be outside the area of parent %(parent)s.': 'متاسفانه ظاهرا موقعیت %(location)s ها خارج از ساحه سطح بالا است %(parent)s.',
+'Sorry location %(location)s appears to be outside the area supported by this deployment.': 'متاسفانه ظاهراً موقعیت %(location)s ها خارج از ساحه تمویل شده این گسترش است.',
 'Sorry location appears to be outside the area of parent %(parent)s.': 'ببخشید، به نظر می رسد که موقعیت بیرون از ساحه parent %(parent)s باشد.',
 'Sorry location appears to be outside the area supported by this deployment.': 'ببخشید، به نظر می رسد که موقعیت بیرون از ساحه  حمایت شده توسط این گسترش باشد.',
 'Sorry, only users with the MapAdmin role are allowed to edit these locations': 'ببخشید، فقط استعمال کنندگان همراه با نقش مدیر نقشه اجازه دارند تا این به این موقعیت ها تغییر وارد کنند',
@@ -2717,7 +2714,7 @@ BAD'Sorry location %(location)s appears to be outside the area supported by this
 'Staff/Volunteer Record': 'کارمند/ ضبط داوطلب',
 'Start Date': 'تاریخ شروع',
 'Status': 'حالات',
-BAD"Status 'assigned' requires the %(fieldname)s to not be blank": 'حالات "تعیین شده" درخواست%(نام رشته) خالی نباشد',
+"Status 'assigned' requires the %(fieldname)s to not be blank": 'حالات "تعیین شده" درخواست %(fieldname)s خالی نباشد',
 'Status added': 'حالات اضافه گردید',
 'Status deleted': 'حالات حذف گردید',
 'Status Details': 'جزئیات حالات',
@@ -2728,7 +2725,7 @@ BAD"Status 'assigned' requires the %(fieldname)s to not be blank": 'حالات "
 'Strategy Development': 'ایجاد استراتیژی',
 'Street Address': 'آدرس سرک',
 'Street View': 'نمایش سرک',
-BAD'String used to configure Proj4js. Can be found from %(url)s': 'برای ترتیب کردن Proj4js رشته استفاده شد. از (آدرس)های % پیدا شده می تواند',
+'String used to configure Proj4js. Can be found from %(url)s': 'برای ترتیب کردن Proj4js رشته استفاده شد. از %(url)s های  پیدا شده می تواند',
 'Strong': 'قوی',
 'Style': 'روش',
 'Style invalid': 'روش غیر معتبر',
@@ -3076,7 +3073,7 @@ BAD'String used to configure Proj4js. Can be found from %(url)s': 'برای تر
 'You can set the modem settings for SMS here.': 'شما می توانید تنظیمات modem را برای پیام اینجا ترتیب نمایید',
 'You do not have permission for any facility to perform this action.': 'شما برای هیچ تسهیلات اجازه اجرای این عمل را ندارید.',
 'You do not have permission for any organization to perform this action.': 'شما برای هیچ موسسه اجازه اجرای این عمل را ندارید.',
-"You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.": 'شما تغییرات ذخیره ناشده دارید. دکمه لغو کردن را فشار دهید، بعداً "ذخیره کردن" را برای ذخیره سازی فشار دهید. برای دور ساختن آن کلید OK را فشار دهید.',
+"You have unsaved changes. Click Cancel now, then 'Save' to save them. Click OK now to discard them.": "شما تغییرات ذخیره ناشده دارید. دکمه لغو کردن را فشار دهید، بعداً 'ذخیره کردن' را برای ذخیره سازی فشار دهید. برای دور ساختن آن کلید OK را فشار دهید.",
 'You have unsaved changes. You need to press the Save button to save them': 'شما تغییرات ذخیره ناشده دارید برای ذخیره کردن آن شما باید کلید ذخیره کردن را فشار دهید.',
 'You must agree to the Terms of Service': 'شما باید با جملات خدمت موافقت نمایید',
 'You must enter a minimum of %d characters': 'شما حداقل باید %d حروف اضافه نمایید.',
