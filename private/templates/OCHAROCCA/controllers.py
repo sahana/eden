@@ -15,6 +15,11 @@ class index(S3CustomController):
     def __call__(self):
 
         response = current.response
+        response.s3.jquery_ready.append("""
+$( ".country" ).hover(
+function() { $( ".menus" ).css("background-color","#99CCFF") },
+function() { $( ".menus" ).css("background-color","#66B2FF") }
+);""")
         output = {}
         self._view(THEME, "index.html")
         return output

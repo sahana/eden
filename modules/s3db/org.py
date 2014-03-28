@@ -1471,8 +1471,8 @@ class S3OrganisationResourceModel(S3Model):
 
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
-                                 fact = ["sum(value)",
-                                         "count(value)",
+                                 fact = [(T("Total Number of Resources"), "sum(value)"),
+                                         (T("Number of Resources"), "count(value)"),
                                          ],
                                  defaults=Storage(rows = "organisation_id",
                                                   cols = "parameter_id",
