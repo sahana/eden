@@ -1341,7 +1341,9 @@ class S3Msg(object):
             update_super(mtable, record)
             message_id = record["message_id"]
             for a in attachments:
-                filename = a[0]
+                # Linux ext2/3 max filename length = 255
+                # b16encode doubles length & need to leave room for doc_document.file.16charsuuid.
+                filename = a[0][:92]
                 fp = StringIO()
                 fp.write(a[1])
                 newfilename = store(fp, filename)
