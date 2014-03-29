@@ -1343,7 +1343,8 @@ class S3Msg(object):
             for a in attachments:
                 # Linux ext2/3 max filename length = 255
                 # b16encode doubles length & need to leave room for doc_document.file.16charsuuid.
-                filename = a[0][:92]
+                # store doesn't support unicode, so need an ascii string
+                filename = s3_unicode(a[0][:92]).encode("ascii", "ignore")
                 fp = StringIO()
                 fp.write(a[1])
                 newfilename = store(fp, filename)
