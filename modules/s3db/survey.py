@@ -39,7 +39,6 @@ __all__ = ["S3SurveyTemplateModel",
            "S3SurveyCompleteModel",
            "S3SurveyTranslateModel",
            "survey_template_represent",
-           "survey_series_represent",
            "survey_answer_list_represent",
            "survey_template_rheader",
            "survey_series_rheader",
@@ -173,21 +172,23 @@ class S3SurveyTemplateModel(S3Model):
         define_table(tablename,
                      Field("name", "string", length=120,
                            notnull=True, unique=True,
+                           default = "",
                            label = T("Template Name"),
-                           default="",
                            ),
                      Field("description", "text", length=500,
+                           default = "",
                            label = T("Description"),
-                           default=""),
+                           ),
                      Field("status", "integer",
+                           default = 1,
                            label = T("Status"),
                            requires = IS_IN_SET(template_status,
                                                 zero=None),
-                           default=1,
                            represent = lambda index: \
                                        template_status[index],
-                           readable=True,
-                           writable=False),
+                           #readable=True,
+                           writable = False,
+                           ),
                      # Standard questions which may belong to all template
                      # competion_qstn: who completed the assessment
                      Field("competion_qstn", "string", length=200,
@@ -244,12 +245,12 @@ class S3SurveyTemplateModel(S3Model):
         add_components(tablename,
                        survey_series="template_id",
                        survey_translate="template_id",
-                      )
+                       )
 
         configure(tablename,
-                  onvalidation = self.template_onvalidate,
-                  onaccept = self.template_onaccept,
                   deduplicate = self.survey_template_duplicate,
+                  onaccept = self.template_onaccept,
+                  onvalidation = self.template_onvalidate,
                   )
 
         # ---------------------------------------------------------------------
@@ -262,17 +263,16 @@ class S3SurveyTemplateModel(S3Model):
         tablename = "survey_section"
         define_table(tablename,
                      Field("name", "string", length=120,
-                           notnull=True,
-                           default="",
+                           notnull = True,
+                           default = "",
                            ),
                      Field("description", "text", length=500,
-                           default="",
+                           default = "",
                            ),
-                     Field("posn", "integer",
-                           ),
+                     Field("posn", "integer"),
                      Field("cloned_section_id", "integer",
-                           readable=False,
-                           writable=False,
+                           readable = False,
+                           writable = False,
                            ),
                      template_id(),
                      *s3_meta_fields())
@@ -290,17 +290,21 @@ class S3SurveyTemplateModel(S3Model):
             msg_record_deleted = T("Template Section deleted"),
             msg_list_empty = T("No Template Sections"))
 
-        configure(tablename, orderby = tablename+".posn",
-                  deduplicate=self.survey_section_duplicate
+        configure(tablename,
+                  deduplicate=self.survey_section_duplicate,
+                  orderby = tablename+".posn",
                   )
 
-        section_id = S3ReusableField("section_id", "reference %s" % tablename)
+        section_id = S3ReusableField("section_id", "reference %s" % tablename,
+                                     readable = False,
+                                     writable = False,
+                                     )
+
         # Pass names back to global scope (s3.*)
-        return Storage(
-            survey_template_id = template_id,
-            survey_template_status = template_status,
-            survey_section_id = section_id
-        )
+        return dict(survey_template_id = template_id,
+                    survey_template_status = template_status,
+                    survey_section_id = section_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -835,7 +839,7 @@ class S3SurveyQuestionModel(S3Model):
              "survey_question_id",
              "survey_question_metadata",
              "survey_question_list",
-             "survey_qstn_name_represent"
+             "survey_qstn_name_represent",
              ]
 
     def model(self):
@@ -894,12 +898,16 @@ class S3SurveyQuestionModel(S3Model):
             msg_list_empty = T("No Assessment Questions"))
 
         configure(tablename,
-                  onvalidation = self.question_onvalidate,
-                  onaccept = self.question_onaccept,
                   deduplicate = self.survey_question_duplicate,
+                  onaccept = self.question_onaccept,
+                  onvalidation = self.question_onvalidate,
                   )
 
-        question_id = S3ReusableField("question_id", "reference %s" % tablename)
+        question_id = S3ReusableField("question_id", "reference %s" % tablename,
+                                      readable = False,
+                                      writable = False,
+                                      )
+
         # ---------------------------------------------------------------------
         # survey_question_metadata
         # referenced by
@@ -945,7 +953,7 @@ class S3SurveyQuestionModel(S3Model):
             )
 
         configure(tablename,
-                  deduplicate = self.survey_question_metadata_duplicate
+                  deduplicate = self.survey_question_metadata_duplicate,
                   )
 
         # -------------------------------------------------------------------------
@@ -980,10 +988,9 @@ class S3SurveyQuestionModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         # ---------------------------------------------------------------------
-        return Storage(
-                survey_qstn_name_represent = self.qstn_name_represent,
-                survey_question_id = question_id
-            )
+        return dict(survey_qstn_name_represent = self.qstn_name_represent,
+                    survey_question_id = question_id
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1390,24 +1397,25 @@ class S3SurveyFormatterModel(S3Model):
                           self.survey_template_id(),
                           self.survey_section_id(),
                           Field("method", "integer",
+                                default = 1,
                                 requires = IS_IN_SET(survey_formatter_methods,
                                                         zero=None),
-                                default=1,
                                 represent = lambda index: \
                                     survey_formatter_methods[index],
-                                readable=True,
-                                writable=False),
+                                #readable = True,
+                                writable = False,
+                                ),
                           Field("rules", "text", default=""),
                           *s3_meta_fields()
                           )
 
         self.configure(tablename,
+                       deduplicate = self.survey_formatter_duplicate,
                        onaccept = self.formatter_onaccept,
-                       deduplicate=self.survey_formatter_duplicate
                        )
 
         # ---------------------------------------------------------------------
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1573,16 +1581,18 @@ class S3SurveySeriesModel(S3Model):
         tablename = "survey_series"
         self.define_table(tablename,
                           Field("name", "string", length=120,
-                                default="",
-                                requires = IS_NOT_EMPTY()),
+                                default = "",
+                                requires = IS_NOT_EMPTY(),
+                                ),
                           Field("description", "text", default="", length=500),
                           Field("status", "integer",
+                                default = 1,
                                 requires = IS_IN_SET(series_status,
                                                     zero=None),
-                                default=1,
                                 represent = lambda index: series_status[index],
-                                readable=True,
-                                writable=False),
+                                #readable = True,
+                                writable = False,
+                                ),
                           self.survey_template_id(empty=False,
                                                   ondelete="RESTRICT"),
                           person_id(),
@@ -1590,15 +1600,17 @@ class S3SurveySeriesModel(S3Model):
                           Field("logo", "string", default="", length=512),
                           Field("language", "string", default="en", length=8),
                           Field("start_date", "date",
+                                default = None,
                                 requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
                                 represent = s3_date_represent,
                                 widget = S3DateWidget(),
-                                default=None),
+                                ),
                           Field("end_date", "date",
+                                default = None,
                                 requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
                                 represent = s3_date_represent,
                                 widget = S3DateWidget(),
-                                default=None),
+                                ),
                           #self.super_link("source_id", "doc_source_entity"),
                           *s3_meta_fields())
 
@@ -1625,8 +1637,8 @@ class S3SurveySeriesModel(S3Model):
         self.configure(tablename,
                        create_next = URL(f="newAssessment",
                                          vars={"viewing":"survey_series.[id]"}),
-                       onaccept = self.series_onaccept,
                        deduplicate = self.survey_series_duplicate,
+                       onaccept = self.series_onaccept,
                        )
 
         # Components
@@ -1634,22 +1646,28 @@ class S3SurveySeriesModel(S3Model):
                             survey_complete="series_id",
                            )
 
-        series_id = S3ReusableField("series_id", "reference %s" % tablename)
+        series_id = S3ReusableField("series_id", "reference %s" % tablename,
+                                    label = T("Series"),
+                                    represent = S3Represent(lookup=tablename),
+                                    readable = False,
+                                    writable = False,
+                                    )
+
         # Custom Methods
-        set_method("survey", "series", method="summary", action=self.seriesSummary)
-        set_method("survey", "series", method="graph", action=self.seriesGraph)
-        set_method("survey", "series", method="map", action=self.seriesMap)
-        set_method("survey", "series",
-                   method="series_chart_download",
-                   action=self.seriesChartDownload
-                   )
+        set_method("survey", "series", method="summary", # NB This conflicts with the global summary method!
+                   action=self.seriesSummary)
+        set_method("survey", "series", method="graph",
+                   action=self.seriesGraph)
+        set_method("survey", "series", method="map", # NB This conflicts with the global map method!
+                   action=self.seriesMap)
+        set_method("survey", "series", method="series_chart_download",
+                   action=self.seriesChartDownload)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return Storage(
-            survey_series_status = series_status,
-            survey_series_id = series_id
-        )
+        return dict(survey_series_status = series_status,
+                    survey_series_id = series_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2259,17 +2277,6 @@ def survey_serieslist_dataTable_post(r):
                   ]
 
 # =============================================================================
-def survey_series_represent(value):
-    """
-        This will display the series name, rather than the id
-    """
-
-    table = current.s3db.survey_series
-    row = current.db(table.id == value).select(table.name,
-                                               limitby=(0, 1)).first()
-    return row.name
-
-# =============================================================================
 def survey_series_rheader(r):
     """
         The series rheader
@@ -2559,7 +2566,6 @@ class S3SurveyCompleteModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        survey_question_id = self.survey_question_id
 
         # ---------------------------------------------------------------------
         #    The survey_complete table holds all of the answers for a completed
@@ -2575,11 +2581,11 @@ class S3SurveyCompleteModel(S3Model):
         define_table(tablename,
                      self.survey_series_id(),
                      Field("answer_list", "text",
-                           represent = survey_answer_list_represent
+                           represent = survey_answer_list_represent,
                            ),
                      Field("location", "text",
-                           readable=False,
-                           writable=False
+                           readable = False,
+                           writable = False,
                            ),
                      *s3_meta_fields())
 
@@ -2601,15 +2607,19 @@ class S3SurveyCompleteModel(S3Model):
             )
 
         configure(tablename,
-                  onvalidation = self.complete_onvalidate,
+                  deduplicate = self.survey_complete_duplicate,
                   onaccept = self.complete_onaccept,
-                  deduplicate=self.survey_complete_duplicate,
+                  onvalidation = self.complete_onvalidate,
                   )
-        complete_id = S3ReusableField("complete_id", "reference %s" % tablename)
+
+        complete_id = S3ReusableField("complete_id", "reference %s" % tablename,
+                                      readable = False,
+                                      writable = False,
+                                      )
 
         self.add_components(tablename,
                             survey_complete="series_id",
-                           )
+                            )
 
         # ---------------------------------------------------------------------
         # The survey_answer table holds the answer for a single response
@@ -2618,11 +2628,8 @@ class S3SurveyCompleteModel(S3Model):
         tablename = "survey_answer"
         define_table(tablename,
                      complete_id(),
-                     survey_question_id(),
-                     Field("value", "text",
-                           readable=True,
-                           writable=True
-                           ),
+                     self.survey_question_id(),
+                     Field("value", "text"),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -2638,12 +2645,12 @@ class S3SurveyCompleteModel(S3Model):
             msg_list_empty = T("No Assessment Answers"))
 
         configure(tablename,
+                  deduplicate = self.survey_answer_duplicate,
                   onaccept = self.answer_onaccept,
-                  deduplicate = self.survey_answer_duplicate
                   )
 
         # ---------------------------------------------------------------------
-        return Storage(survey_complete_id = complete_id)
+        return dict(survey_complete_id = complete_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3224,15 +3231,11 @@ class S3SurveyTranslateModel(S3Model):
         self.define_table(tablename,
                           self.survey_template_id(),
                           Field("language",
-                                readable=True,
-                                writable=True,
                                 comment = DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Language"),
                                                                 LANG_HELP))
                                 ),
                           Field("code",
-                                readable=True,
-                                writable=True,
                                 comment = DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Language Code"),
                                                                 CODE_HELP))
@@ -3240,8 +3243,9 @@ class S3SurveyTranslateModel(S3Model):
                           Field("file", "upload",
                                 autodelete=True),
                           Field("filename",
-                                readable=False,
-                                writable=False),
+                                readable = False,
+                                writable = False,
+                                ),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -3250,9 +3254,9 @@ class S3SurveyTranslateModel(S3Model):
 
         self.configure(tablename,
                        onaccept = self.translate_onaccept,
-                      )
+                       )
         # ---------------------------------------------------------------------
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
