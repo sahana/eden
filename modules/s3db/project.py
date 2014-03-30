@@ -62,6 +62,8 @@ __all__ = ["S3ProjectModel",
            "project_pifacc_opts",
            "project_rfa_opts",
            "project_project_filters",
+           "project_project_list_layout",
+           "project_task_list_layout",
           ]
 
 import datetime
@@ -278,6 +280,7 @@ class S3ProjectModel(S3Model):
             append((T("Total Annual Budget"), "total_annual_budget"))
         append("start_date")
         append("end_date")
+        append("location.location_id")
 
         report_fields = list_fields
         report_col_default = "location.location_id"
@@ -292,6 +295,7 @@ class S3ProjectModel(S3Model):
                              "organisation": "organisation_id",
                              },
                   list_fields = list_fields,
+                  list_layout = project_project_list_layout,
                   create_next = create_next,
                   deduplicate = self.project_project_deduplicate,
                   onaccept = self.project_project_onaccept,
@@ -4271,6 +4275,7 @@ class S3ProjectTaskModel(S3Model):
                   filter_widgets = filter_widgets,
                   report_options = report_options,
                   list_fields = list_fields,
+                  list_layout = project_task_list_layout,
                   extra_fields = ["id"],
                   crud_form = crud_form,
                   extra = "description"
@@ -6170,6 +6175,20 @@ def project_task_controller():
                                   args=[r.id],
                                   ajax=True)
 
+        #Set list_fields for datalist
+        if r.method == "datalist":
+            s3db.configure("project_task",
+                           list_fields = ["name",
+                                          "description",
+                                          "location_id",
+                                          "date_due",
+                                          "pe_id",
+                                          "task_project.project_id",
+                                          #"organisation_id$logo",
+                                          "modified_by",
+                                           ]
+                           )
+
         elif "mine" in vars:
             # Show the Open Tasks for this User
             if auth.user:
@@ -6591,5 +6610,228 @@ def project_location_filters():
     ])
 
     return filter_widgets
-    
+
+# =============================================================================
+def project_project_list_layout(list_id, item_id, resource, rfields, record, icon = "tasks"):
+    """
+        Default dataList item renderer for Resources on the Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["project_project.id"]
+    item_class = "thumbnail"
+
+    raw = record._row
+    author = record["project_project.modified_by"]
+    date = record["project_project.modified_on"]
+
+    name = record["project_project.name"]
+    description = record["project_project.description"]
+    start_date = record["project_project.start_date"]
+
+    organisation = record["project_project.organisation_id"]
+    organisation_id = raw["project_project.organisation_id"]
+    location = record["project_location.location_id"]
+    location_id = raw["project_location.location_id"]
+
+    comments = raw["project_project.comments"]
+
+    org_logo = raw["org_organisation.logo"]
+
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    if org_url:
+        org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
+                        _class="media-object",
+                        ),
+                    _href=org_url,
+                    _class="pull-left",
+                    )
+    else:
+        #@ToDo: use a dummy logo image
+        org_logo = ""
+
+    # Edit Bar
+    #@ToDo: Investigate if there's framework support for auth checking a link 
+    permit = current.auth.s3_has_permission
+    table = current.db.project_project
+    if permit("update", table, record_id=record_id):
+        vars = {"refresh": list_id,
+                "record": record_id,
+                }
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="project", f="project",
+                               args=[record_id, "update.popup"]
+                               ),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.project_project.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-trash"),
+                       _class="dl-item-delete",
+                       _title=current.response.s3.crud_strings.project_project.label_delete_button,
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    item = DIV(DIV(I(_class="icon icon-%s" % icon),
+                   SPAN(A(name,
+                          _href =  URL(c="project", f="project", args = [record_id, "profile"])),
+                        _class="card-title"),
+                   SPAN(location, _class="location-title"),
+                   SPAN(start_date, _class="date-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(org_logo,
+                   DIV(DIV((description or ""),
+                           DIV(author,
+                               " - ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+# =============================================================================
+def project_task_list_layout(list_id, item_id, resource, rfields, record, icon = "tasks"):
+    """
+        Default dataList item renderer for Resources on the Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["project_task.id"]
+    item_class = "thumbnail"
+
+    raw = record._row
+    author = record["project_task.modified_by"]
+    date = record["project_task.modified_on"]
+
+    name = record["project_task.name"]
+    description = record["project_task.description"]
+    date_due = record["project_task.date_due"]
+
+    project = record["project_task_project.project_id"]
+    project_id = raw["project_task_project.project_id"]
+
+    assigned_to = record["project_task_project.pe_id"] or ""
+
+    if project:
+        project = TAG[""](A(project,
+                            _href = URL(c="project", f="project", args = [project_id, "profile"])
+                            ),
+                          " > "
+                          )
+    else:
+        project = ""
+
+    location = record["project_task.location_id"]
+    location_id = raw["project_task.location_id"]
+
+    comments = raw["project_task.comments"]
+
+    org_logo = raw["org_organisation.logo"]
+
+    org_url = ""#URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    if org_url:
+        org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
+                        _class="media-object",
+                        ),
+                    _href=org_url,
+                    _class="pull-left",
+                    )
+    else:
+        #@ToDo: use a dummy logo image
+        org_logo = ""
+
+    # Edit Bar
+    #@ToDo: Investigate if there's framework support for auth checking a link 
+    permit = current.auth.s3_has_permission
+    table = current.db.project_task
+    if permit("update", table, record_id=record_id):
+        vars = {"refresh": list_id,
+                "record": record_id,
+                }
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="project", f="task",
+                               args=[record_id, "update.popup"]
+                               ),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.project_task.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-trash"),
+                       _class="dl-item-delete",
+                       _title=current.response.s3.crud_strings.project_task.label_delete_button,
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    item = DIV(DIV(I(_class="icon icon-%s" % icon),
+                   SPAN(project,
+                        name, _class="card-title"),
+                   SPAN(location, _class="location-title"),
+                   SPAN(date_due, _class="date-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(org_logo,
+                   DIV(DIV((description or ""),
+                           DIV(author,
+                               " - ",
+                               assigned_to,
+                               #A(organisation,
+                               #  _href=org_url,
+                               #  _class="card-organisation",
+                               #  ),
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
 # END =========================================================================

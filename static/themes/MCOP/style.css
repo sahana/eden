@@ -146,10 +146,20 @@ h3 {
     padding: 3px;
 }
 
+/* Customise Datalist Cards */
+#cms_post_datalist .card-title, 
+.homepage .card-header > .icon {
+    display: none;
+}
+
+
+
 /***********************************************/
+
+/* Needs fixing - test profile page
 h2, #list-btn-add {
     float: left
-}
+} */
 
 #list-btn-add {
     margin: 15px 0 0 15px;

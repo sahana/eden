@@ -46,7 +46,20 @@ def project():
         component_name = component.name if component else None
 
         hr_group = r.get_vars.get("group")
-        
+
+        #Set list_fields for datalist
+        if r.method == "datalist":
+            s3db.configure("project_project",
+                           list_fields = ["name",
+                                          "description",
+                                          "location.location_id",
+                                          "start_date",
+                                          "organisation_id",
+                                          "organisation_id$logo",
+                                          "modified_by",
+                                           ]
+                           )
+
         # Show activity name in tasks list
         if component_name == "task":
             list_fields = component.get_config("list_fields")
