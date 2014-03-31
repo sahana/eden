@@ -456,10 +456,14 @@ a.popup_link:hover {
     <td>%(Pass)s</td>
     <td>%(fail)s</td>
     <td>%(error)s</td>
+""" # variables: (style, desc, count, Pass, fail, error, cid)
+    # Use it with REPORT_CLASS_TMPL_ADD_LINK to complete the table
+
+    REPORT_CLASS_TMPL_ADD_LINK = r"""
     <td><a href="javascript:showClassDetail('%(cid)s',%(count)s)">Detail</a></td>
 </tr>
-""" # variables: (style, desc, count, Pass, fail, error, cid)
-
+""" # variables: (cid, count)
+    # Use it after REPORT_CLASS_TMPL
 
     REPORT_TEST_WITH_OUTPUT_TMPL = r"""
 <tr id='%(tid)s' class='%(Class)s'>
@@ -570,8 +574,8 @@ class _TestResult(TestResult):
 
 
     def addSuccess(self, test):
-        # broken_links testcase passes by default; calling addSuccess. 
-        # Below condition checks if a link failed in smoke tests and if it did; addFailure 
+        # broken_links testcase passes by default; calling addSuccess.
+        # Below condition checks if a link failed in smoke tests and if it did; addFailure
         # is called
         if "smoke_results" in current.data:
             if current.data['smoke_results']['broken_links_count'] != 0:
@@ -766,6 +770,16 @@ class HTMLTestRunner(Template_mixin):
                 error = ne,
                 cid = 'c%s' % (cid+1),
             )
+            # Only one row is generated in smoke tests
+            if 'smoke_results' in current.data:
+                total_count = 1
+            else:
+                total_count = np+nf+ne
+            row = row + self.REPORT_CLASS_TMPL_ADD_LINK % dict(
+                count = total_count,
+                cid = 'c%s' % (cid+1),
+            )
+
             rows.append(row)
 
             for tid, (n,t,o,e) in enumerate(cls_results):
