@@ -1,5 +1,5 @@
 {{extend "layout.html"}}{{theme=response.s3.theme}}
-<style>body{background:none;}div.container.main-container{width:100%!important;padding-left:0;}
+<style>div.container.main-container{width:100%!important;padding-left:0;}
 @media(min-width:1200px){div.container.main-container{width:1200px!important;}}</style>
 
 <style media="screen" type="text/css">
@@ -21,38 +21,36 @@ body {
 </div>
 <div class="row homepage">
  <div class="row">
-  <div class="span4 resources">
-   {{for opt in response.menu:}} 
-    {{if opt["f"] not in []:#"organisation","post"]:}}
-     <div class='link'>
-      <a href='{{=opt["url"]}}'>
-       <h3><i class='icon-{{=opt["icon"]}}'></i> {{=opt["name"]}}</h3>
-       {{=opt["cms"]}}
-      </a>
-     </div>
-    {{pass}}
-   {{pass}}
-  </div>
-  <div class="span8 map">
-   {{=XML(map)}}
-  </div>
-  <div class="span4">
+  <div class="span3">
    <div class='link'> 
     <a href='/{{=appname}}/cms/post/datalist'>
-     <h3 ><i class='icon-news'></i> {{=T("MCOP News")}}</h3>
-    </a>
-   </div>
-    <div id='feed-control'>
-     <div class = "throbber"></div>
-    </div>
-  </div>
-  <div class="span4">
-   <div class='link'> 
-    <a href='/{{=appname}}/cms/post/datalist'>
-     <h3 ><i class='icon-news'></i> {{=T("Alerts & Incidents")}}</h3>
+     <h3 ><i class='icon-alert'></i> {{=T("Alerts")}}</h3>
     </a>
    </div>
    {{=cms_post_datalist}}
+   <div class='link'>
+    <h3 ><i class='icon-news'></i> {{=T("MCOP News")}}</h3>
+   </div>
+   <div id='feed-control'>
+    <div class = "throbber"></div>
+   </div>
+  </div>
+  <div class="span6 map">
+   {{=XML(map)}}
+  </div>
+  <div class="span3">
+   <div class='link'>
+    <a href='/{{=appname}}/project/project/datalist'>
+     <h3 ><i class='icon-incident'></i> {{=T("Incidents")}}</h3>
+    </a>
+   </div>
+   {{=project_project_datalist}}
+   <div class='link'>
+    <a href='/{{=appname}}/project/task/datalist'>
+     <h3 ><i class='icon-tasks'></i> {{=T("Tasks")}}</h3>
+    </a>
+   </div>
+   {{=project_task_datalist}}
   </div>
  </div>
 </div>
