@@ -5474,7 +5474,7 @@ def org_organisation_list_layout(list_id, item_id, resource, rfields, record):
 # =============================================================================
 def org_resource_list_layout(list_id, item_id, resource, rfields, record):
     """
-        Default dataList item renderer for Resources on the Profile pages
+        Default dataList item renderer for Resources on Profile pages
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -5499,9 +5499,9 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
     location_id = raw["org_resource.location_id"]
     location_url = URL(c="gis", f="location",
                        args=[location_id, "profile"])
-    logo = raw["org_organisation.logo"]
 
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    logo = raw["org_organisation.logo"]
     if logo:
         logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
                      _class="media-object",
@@ -5510,8 +5510,11 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
                  _class="pull-left",
                  )
     else:
-        logo = DIV(IMG(_class="media-object"),
-                   _class="pull-left")
+        # @ToDo: use a dummy logo image
+        logo = A(IMG(_class="media-object"),
+                 _href=org_url,
+                 _class="pull-left",
+                 )
 
     # Edit Bar
     permit = current.auth.s3_has_permission

@@ -7381,7 +7381,7 @@ class S3RoleManager(S3Method):
                     for opt in rmvform.vars:
                         if rmvform.vars[opt] == "on" and opt.startswith("d_"):
                             membership_id = opt[2:]
-                            query = mtable.id == membership_id
+                            query = (mtable.id == membership_id)
                             row = db(query).select(mtable.user_id,
                                                    mtable.group_id,
                                                    mtable.pe_id,

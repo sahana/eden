@@ -47,11 +47,10 @@ class index(S3CustomController):
             org_group_id = auth.user.org_group_id
             if org_group_id:
                 # Lookup Coalition Name
-                db = current.db
                 table = s3db.org_group
-                query = (table.id == org_group_id)
-                row = db(query).select(table.name,
-                                       limitby=(0, 1)).first()
+                row = db(table.id == org_group_id).select(table.name,
+                                                          limitby=(0, 1)
+                                                          ).first()
                 if row:
                     callback = '''S3.gis.show_map();
 var layer,layers=S3.gis.maps.default_map.layers;

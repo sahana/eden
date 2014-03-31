@@ -217,13 +217,13 @@ class S3DocumentLibrary(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename)
         document_id = S3ReusableField("document_id", "reference %s" % tablename,
+                                      label = T("Document"),
+                                      ondelete = "CASCADE",
+                                      represent = represent,
                                       requires = IS_ONE_OF(db,
                                                            "doc_document.id",
                                                            represent),
-                                      represent = represent,
-                                      label = T("Document"),
-                                      ondelete = "CASCADE",
-                                     )
+                                      )
 
         # ---------------------------------------------------------------------
         # Images

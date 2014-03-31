@@ -411,7 +411,7 @@ class S3MessageModel(S3Model):
 
         self.add_components(tablename,
                             msg_attachment="message_id",
-                           )
+                            )
 
         # ---------------------------------------------------------------------
         # Outbound Messages

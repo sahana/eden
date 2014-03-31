@@ -2185,7 +2185,7 @@ class GIS(object):
                                        represent=True)
 
                 rfields = data["rfields"]
-                attr_cols = []
+                attr_cols = {}
                 _popup_cols = {}
                 for f in rfields:
                     fname = f.fname
@@ -2195,7 +2195,14 @@ class GIS(object):
                     elif selector in popup_fields:
                         _popup_cols[selector] = f.colname
                     if fname in attr_fields or selector in attr_fields:
-                        attr_cols.append(f.colname)
+                        fieldname = f.colname
+                        tname, fname = fieldname.split(".")
+                        try:
+                            ftype = db[tname][fname].type
+                        except AttributeError:
+                            # FieldMethod
+                            ftype = None
+                        attr_cols[fieldname] = (ftype, fname)
 
                 # Want to control sort order
                 popup_cols = []
@@ -2214,8 +2221,8 @@ class GIS(object):
                             represent = row[fieldname]
                             if represent and represent != NONE:
                                 # Skip empty fields
-                                tname, fname = fieldname.split(".")
-                                ftype = db[tname][fname].type
+                                _attr = attr_cols[fieldname]
+                                ftype = _attr[0]
                                 if ftype == "integer":
                                     # Attributes should be numbers not Strings
                                     try:
@@ -2237,7 +2244,7 @@ class GIS(object):
                                         # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
                                         #        (although we *do* want the represent in the tooltips!)
                                         pass
-                                attribute[fname] = represent
+                                attribute[_attr[1]] = represent
                         attr[record_id] = attribute
 
                     if popup_cols:

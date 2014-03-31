@@ -7,6 +7,8 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from datetime import timedelta
+
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
@@ -223,11 +225,9 @@ for item in current.response.menu:
                       item["f"], 
                       args = ["summary" if item["f"] not in ["organisation","post"]
                                         else "datalist"])
-# =============================================================================
-# Module Settings
 
 # =============================================================================
-# Custom Controllers
+# Customise Resources
 
 # -----------------------------------------------------------------------------
 def customise_org_organisation_resource(r, tablename):
@@ -513,6 +513,30 @@ def customise_org_resource_resource(r, tablename):
 
 settings.customise_org_resource_resource = customise_org_resource_resource
 
+# =============================================================================
+def cms_post_age(row):
+    """
+        The age of the post
+        - used for colour-coding markers of Alerts
+    """
+
+    if hasattr(row, "cms_post"):
+        row = row.cms_post
+    try:
+        date = row.date
+    except:
+        # not available
+        return current.messages["NONE"]
+
+    now = current.request.utcnow
+    age = now - date
+    if age < timedelta(days=2):
+        return 1
+    elif age < timedelta(days=7):
+        return 2
+    else:
+        return 3
+
 # -----------------------------------------------------------------------------
 def customise_cms_post_resource(r, tablename):
     """
@@ -591,6 +615,11 @@ def customise_cms_post_resource(r, tablename):
     s3db.configure("cms_post",
                    crud_form = crud_form,
                    )
+
+    if r.representation == "geojson":
+        # Add Virtual field to allow colour-coding by age
+        from gluon.dal import Field
+        table.age = Field.Method("age", cms_post_age)
 
 settings.customise_cms_post_resource = customise_cms_post_resource
 
@@ -889,15 +918,15 @@ def customise_project_project_resource(r, tablename):
             #customise_project_project_fields()
 
             tasks_widget = dict(label = "Tasks",
-                                   label_create = "Create Task",
-                                   type = "datalist",
-                                   tablename = "project_task",
-                                   context = "project",
-                                   icon = "icon-task",
-                                   show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                   colspan = 2,
-                                   list_layout = s3db.project_task_list_layout,
-                                   )
+                                label_create = "Create Task",
+                                type = "datalist",
+                                tablename = "project_task",
+                                context = "project",
+                                icon = "icon-task",
+                                show_on_map = False, # No Marker yet & only show at L1-level anyway
+                                colspan = 2,
+                                list_layout = s3db.project_task_list_layout,
+                                )
             record = r.record
             title = "%s : %s" % (s3.crud_strings["project_project"].title_list,record.name)
             s3db.configure("project_project",

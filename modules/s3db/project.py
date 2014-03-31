@@ -64,7 +64,7 @@ __all__ = ["S3ProjectModel",
            "project_project_filters",
            "project_project_list_layout",
            "project_task_list_layout",
-          ]
+           ]
 
 import datetime
 
@@ -278,9 +278,10 @@ class S3ProjectModel(S3Model):
             append((T("Total Funding Amount"), "total_organisation_amount"))
         if multi_budgets:
             append((T("Total Annual Budget"), "total_annual_budget"))
-        append("start_date")
-        append("end_date")
-        append("location.location_id")
+        list_fields += ["start_date",
+                        "end_date",
+                        "location.location_id",
+                        ]
 
         report_fields = list_fields
         report_col_default = "location.location_id"
@@ -4264,21 +4265,21 @@ class S3ProjectTaskModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = "doc_entity",
                   copyable = True,
-                  orderby = "project_task.priority,project_task.date_due asc",
-                  realm_entity = self.project_task_realm_entity,
-                  onvalidation = self.project_task_onvalidation,
                   #create_next = URL(f="task", args=["[id]"]),
                   create_onaccept = self.project_task_create_onaccept,
-                  update_onaccept = self.project_task_update_onaccept,
+                  crud_form = crud_form,
+                  extra = "description",
+                  extra_fields = ["id"],
                   filter_widgets = filter_widgets,
-                  report_options = report_options,
                   list_fields = list_fields,
                   list_layout = project_task_list_layout,
-                  extra_fields = ["id"],
-                  crud_form = crud_form,
-                  extra = "description"
+                  onvalidation = self.project_task_onvalidation,
+                  orderby = "project_task.priority,project_task.date_due asc",
+                  realm_entity = self.project_task_realm_entity,
+                  report_options = report_options,
+                  super_entity = "doc_entity",
+                  update_onaccept = self.project_task_update_onaccept,
                   )
 
         # Reusable field
@@ -6175,8 +6176,8 @@ def project_task_controller():
                                   args=[r.id],
                                   ajax=True)
 
-        #Set list_fields for datalist
         if r.method == "datalist":
+            # Set list_fields for renderer (project_task_list_layout)
             s3db.configure("project_task",
                            list_fields = ["name",
                                           "description",
@@ -6186,7 +6187,7 @@ def project_task_controller():
                                           "task_project.project_id",
                                           #"organisation_id$logo",
                                           "modified_by",
-                                           ]
+                                          ]
                            )
 
         elif "mine" in vars:
@@ -6614,7 +6615,7 @@ def project_location_filters():
 # =============================================================================
 def project_project_list_layout(list_id, item_id, resource, rfields, record, icon = "tasks"):
     """
-        Default dataList item renderer for Resources on the Profile pages
+        Default dataList item renderer for Projects on Profile pages
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -6641,22 +6642,24 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record, ico
 
     comments = raw["project_project.comments"]
 
-    org_logo = raw["org_organisation.logo"]
-
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-    if org_url:
+    org_logo = raw["org_organisation.logo"]
+    if org_logo:
         org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
-                        _class="media-object",
-                        ),
-                    _href=org_url,
-                    _class="pull-left",
-                    )
+                         _class="media-object",
+                         ),
+                     _href=org_url,
+                     _class="pull-left",
+                     )
     else:
-        #@ToDo: use a dummy logo image
-        org_logo = ""
+        # @ToDo: use a dummy logo image
+        org_logo = A(IMG(_class="media-object"),
+                     _href=org_url,
+                     _class="pull-left",
+                     )
 
     # Edit Bar
-    #@ToDo: Investigate if there's framework support for auth checking a link 
+    # @ToDo: Consider using S3NavigationItem to hide the auth-related parts
     permit = current.auth.s3_has_permission
     table = current.db.project_project
     if permit("update", table, record_id=record_id):
@@ -6716,10 +6719,11 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record, ico
                )
 
     return item
+
 # =============================================================================
 def project_task_list_layout(list_id, item_id, resource, rfields, record, icon = "tasks"):
     """
-        Default dataList item renderer for Resources on the Profile pages
+        Default dataList item renderer for Tasks on Profile pages
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -6758,22 +6762,25 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record, icon =
 
     comments = raw["project_task.comments"]
 
-    org_logo = raw["org_organisation.logo"]
-
-    org_url = ""#URL(c="org", f="organisation", args=[organisation_id, "profile"])
-    if org_url:
-        org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
-                        _class="media-object",
-                        ),
-                    _href=org_url,
-                    _class="pull-left",
-                    )
-    else:
-        #@ToDo: use a dummy logo image
-        org_logo = ""
+    org_logo = ""
+    #org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    #org_logo = raw["org_organisation.logo"]
+    #if org_logo:
+    #    org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
+    #                     _class="media-object",
+    #                     ),
+    #                 _href=org_url,
+    #                 _class="pull-left",
+    #                 )
+    #else:
+    #    # @ToDo: use a dummy logo image
+    #    org_logo = A(IMG(_class="media-object"),
+    #                 _href=org_url,
+    #                 _class="pull-left",
+    #                 )
 
     # Edit Bar
-    #@ToDo: Investigate if there's framework support for auth checking a link 
+    # @ToDo: Consider using S3NavigationItem to hide the auth-related parts
     permit = current.auth.s3_has_permission
     table = current.db.project_task
     if permit("update", table, record_id=record_id):

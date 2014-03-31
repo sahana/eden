@@ -47,8 +47,8 @@ def project():
 
         hr_group = r.get_vars.get("group")
 
-        #Set list_fields for datalist
         if r.method == "datalist":
+            # Set list_fields for renderer (project_project_list_layout)
             s3db.configure("project_project",
                            list_fields = ["name",
                                           "description",
@@ -57,7 +57,7 @@ def project():
                                           "organisation_id",
                                           "organisation_id$logo",
                                           "modified_by",
-                                           ]
+                                          ]
                            )
 
         # Show activity name in tasks list

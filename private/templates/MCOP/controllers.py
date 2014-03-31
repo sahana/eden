@@ -20,11 +20,20 @@ class index(S3CustomController):
         output = {}
         self._view(THEME, "index.html")
 
+        # Map
+        # Enable Layers by default
+        callback = '''S3.gis.show_map()
+var layer,layers=S3.gis.maps.default_map.layers
+for(var i=0,len=layers.length;i<len;i++){
+ layer=layers[i]
+ layer_name=layer.name
+ if((layer_name=='Alerts')||(layer_name=='Incidents')||(layer_name=='Tasks')){layer.setVisibility(true)}}'''
         gis = current.gis
         #config = gis.get_config()
         #config.zoom = 8
         map = gis.show_map(width=600,
                            height=600,
+                           callback=callback,
                            catalogue_layers=True,
                            collapsed=True,
                            save=False,
@@ -66,8 +75,8 @@ class index(S3CustomController):
                                                    )
         output["cms_post_datalist"] = datalist.html()
 
-        #Project ("Incident") Data List
-        resource = s3db.resource("project_project")
+        # Incidents Data List
+        resource = s3db.resource("project_project") # Temp: Uses relabelled project_project
         list_fields = ["name",
                        "description",
                        "location.location_id",
@@ -86,7 +95,7 @@ class index(S3CustomController):
                                                    )
         output["project_project_datalist"] = datalist.html()
 
-        # Task Data List
+        # Tasks Data List
         resource = s3db.resource("project_task")
         list_fields = ["name",
                        "description",
@@ -106,8 +115,8 @@ class index(S3CustomController):
                                                    layout = s3db.project_task_list_layout
                                                    )
         output["project_task_datalist"] = datalist.html()
-        #MCOP News Feed
 
+        # MCOP News Feed
         #s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
         s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
         s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
