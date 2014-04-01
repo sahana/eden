@@ -838,12 +838,13 @@ def customise_project_project_resource(r, tablename):
                         "name",
                         "description",
                         "organisation_id",
-                        S3SQLInlineComponent("location",
-                                             label = T("Location"),
-                                             fields = ["location_id"],
-                                             #orderby = "location_id$name",
-                                             multiple = False,
-                                             ),
+                        # Disable until LocationSelectorWidget can be made to work Inline
+                        #S3SQLInlineComponent("location",
+                        #                     label = T("Location"),
+                        #                     fields = ["location_id"],
+                        #                     #orderby = "location_id$name",
+                        #                     multiple = False,
+                        #                     ),
                         #"end_date",
                         )
 
@@ -852,12 +853,11 @@ def customise_project_project_resource(r, tablename):
                                        label=T("Description"),
                                        _class="filter-search",
                                        ),
-                          # Disable until LocationSelectorWidget can be made to work Inline
-                          #S3LocationFilter("project_location.location_id",
-                          #                 label=T("Location"),
-                          #                 widget="multiselect",
-                          #                 levels = levels,
-                          #                 ),
+                          S3LocationFilter("project_location.location_id",
+                                           label=T("Location"),
+                                           widget="multiselect",
+                                           levels = levels,
+                                           ),
                           #S3OptionsFilter("status_id",
                           #                label = T("Status"),
                                           # Doesn't support translation
