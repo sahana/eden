@@ -704,6 +704,13 @@ class S3ReportForm(object):
         T = current.T
         RECORDS = T("Records")
         mname = S3PivotTable._get_method_label
+
+        def layer_label(rfield, method):
+            """ Helper to construct a layer label """
+            mlabel = mname(method)
+            flabel = rfield.label if rfield.label != "Id" else RECORDS
+            return T("%s (%s)") % (flabel, mlabel)
+        
         prefix = resource.prefix_selector
         
         layer_opts = []
@@ -758,12 +765,12 @@ class S3ReportForm(object):
                     mopts = ["count", "list"]
                 for method in mopts:
                     if method in methods:
-                        mlabel = mname(method)
-                        flabel = rfield.label if rfield.label != "Id" else RECORDS
-                        label = T("%s (%s)") % (flabel, mlabel)
+                        label = layer_label(rfield, method)
                         layer_opts.append(("%s(%s)" % (method, selector), label))
             else:
                 # Explicit method specified
+                if label is None:
+                    label = layer_label(rfield, m)
                 layer_opts.append(("%s(%s)" % (m, selector), label))
 
         # Get current value
