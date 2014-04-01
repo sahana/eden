@@ -5491,7 +5491,6 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
     date = record["org_resource.modified_on"]
     quantity = record["org_resource.value"]
     resource_type = record["org_resource.parameter_id"]
-    body = "%s %s" % (quantity, current.T(resource_type))
     comments = raw["org_resource.comments"]
     organisation = record["org_resource.organisation_id"]
     organisation_id = raw["org_resource.organisation_id"]
@@ -5550,9 +5549,8 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
 
     # Render the item
     avatar = logo
-    body = TAG[""](body, BR(), comments)
 
-    item = DIV(DIV(SPAN(" ", _class="card-title"),
+    item = DIV(DIV(SPAN("%s %s" % (quantity, current.T(resource_type)), _class="card-title"),
                    SPAN(A(location,
                           _href=location_url,
                           ),
@@ -5565,8 +5563,8 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
                    _class="card-header",
                    ),
                DIV(avatar,
-                   DIV(DIV(body,
-                           DIV(author,
+                   DIV(DIV(comments,
+                           DIV(author or "" ,
                                " - ",
                                A(organisation,
                                  _href=org_url,

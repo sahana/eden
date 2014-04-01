@@ -4311,6 +4311,17 @@ class S3ProjectTaskModel(S3Model):
                                         "autocomplete": "name",
                                         "autodelete": False,
                                        },
+                       # Task - for S3SQLForm field in sub-Table 
+                       #project_task_project={"link": "project_task_project",
+                       #                       "joinby": "task_id",
+                       #                       "key": "project_id",
+                       #                       "actuate": "embed",
+                       #                       "autocomplete": "name",
+                       #                       "autodelete": False,
+                       #                       "multiple": False
+                       #                       },
+                       project_task_project="task_id",
+                       #project_activity_group="activity_id",
                        # Activities
                        project_activity={"link": "project_task_activity",
                                          "joinby": "task_id",
@@ -4319,7 +4330,7 @@ class S3ProjectTaskModel(S3Model):
                                          "autocomplete": "name",
                                          "autodelete": False,
                                         },
-                       # Activitie - for S3SQLForm field in sub-Table 
+                       # Activities - for S3SQLForm field in sub-Table 
                        project_task_activity={"link": "project_task_activity",
                                               "joinby": "task_id",
                                               "key": "activity_id",
@@ -6699,7 +6710,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record, ico
                    ),
                DIV(org_logo,
                    DIV(DIV((description or ""),
-                           DIV(author,
+                           DIV(author or "",
                                " - ",
                                A(organisation,
                                  _href=org_url,
@@ -6746,13 +6757,14 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record, icon =
     project = record["project_task_project.project_id"]
     project_id = raw["project_task_project.project_id"]
 
-    assigned_to = record["project_task_project.pe_id"] or ""
+    assigned_to = record["project_task.pe_id"] or ""
 
     if project:
-        project = TAG[""](A(project,
+        project = SPAN(A(project,
                             _href = URL(c="project", f="project", args = [project_id, "profile"])
                             ),
-                          " > "
+                          " > ",
+                          _class="task_project_title"
                           )
     else:
         project = ""
