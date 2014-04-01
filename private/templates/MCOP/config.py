@@ -19,6 +19,7 @@ from s3.s3widgets import S3LocationSelectorWidget2
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
 from s3.s3utils import s3_avatar_represent
+from s3.s3resource import S3FieldSelector
 
 T = current.T
 s3 = current.response.s3
@@ -304,6 +305,9 @@ def customise_org_organisation_resource(r, tablename):
                            )
 
         if r.method == "profile":
+            # Ensure the correct list_fields are set - shouldn't these be called automitcally?
+            customise_pr_person_resource(r, "pr_person")
+            customise_project_project_resource(r, "project_project")
             # Customise tables used by widgets
             #customise_cms_post_fields()
             #customise_hrm_human_resource_fields()
@@ -429,10 +433,10 @@ def customise_org_organisation_resource(r, tablename):
     s3db.configure("org_organisation",
                    create_next = url_next,
                    delete_next = url_next,
+                   update_next = url_next,
                    # We want the Create form to be in a modal, not inline, for consistency
                    #listadd = False,
                    list_fields = list_fields,
-                   update_next = url_next,
                    )
 
 settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -590,7 +594,7 @@ def customise_cms_post_resource(r, tablename):
     s3db.doc_document.file.label = ""
     crud_form = S3SQLCustomForm(
         "date",
-        "series_id",
+        #"series_id",
         "body",
         "location_id",
         S3SQLInlineComponent(
@@ -612,9 +616,12 @@ def customise_cms_post_resource(r, tablename):
 
     # Return to List view after create/update/delete
     # We now do all this in Popups
-    #url_next = URL(c="default", f="index", args="newsfeed")
+    url_next = URL(c="default", f="index", args="datalist")
 
     s3db.configure("cms_post",
+                   create_next = url_next,
+                   delete_next = url_next,
+                   update_next = url_next,
                    crud_form = crud_form,
                    )
 
@@ -642,25 +649,58 @@ def customise_project_task_resource(r, tablename):
     s3db = current.s3db
     table = s3db.project_task
 
-    list_fields = ["id",
-                   "status",
-                   "name",
-                   "priority",
-                   (T("Project"), "task_activity.activity_id"),
-                   "date_due",
-                   "location_id",
-                   ]
+    # Needed because the project task controller messes with the PREP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        if r.method == "profile":
+            # Set list_fields for renderer (project_task_list_layout)
+            s3db.configure("project_task",
+                           list_fields = ["name",
+                                          "description",
+                                          "location_id",
+                                          "date_due",
+                                          "pe_id",
+                                          "task_project.project_id",
+                                          #"organisation_id$logo",
+                                          "pe_id",
+                                          "modified_by",
+                                          ]
+                           )
+        else:
+            list_fields = ["id",
+                           "status",
+                           "priority",
+                           (T("Incident"), "task_project.project_id"),
+                           "name",
+                           (T("Location"), "location_id"),
+                           "date_due",
+                           ]
+            s3db.configure("project_task",
+                           list_fields = list_fields,
+                           )
+        return True
+    s3.prep = custom_prep
 
     # Custom Form
     table.name.label = T("Name")
     table.description.label = T("Description")
     table.location_id.readable = table.location_id.writable = True
-    s3db.project_task_activity.activity_id.label = T("Project")
+    s3db.project_task_project.project_id.label = ""#T("Incident")
+    s3db.project_task_project.project_id.comment = ""
     crud_form = S3SQLCustomForm("status",
+                                "priority",
                                 "name",
                                 "description",
-                                "priority",
-                                "task_activity.activity_id",
+                                #"task_project.project_id",
+                                #"task_activity.activity_id",
+                                S3SQLInlineComponent("task_project",
+                                                     label = T("Incident"),
+                                                     fields = ["project_id"],
+                                                     multiple = False,
+                                                     ),
                                 "pe_id",
                                 "date_due",
                                 "location_id",
@@ -690,10 +730,15 @@ def customise_project_task_resource(r, tablename):
                                               )
                              )
 
+    url_next = URL(c="project", f="task", args="summary")
+
     s3db.configure("project_task",
+                   create_next = url_next,
+                   delete_next = url_next,
+                   update_next = url_next,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
-                   list_fields = list_fields,
+                   #list_fields = list_fields,
                    report_options = report_options,
                    )
 
@@ -716,11 +761,19 @@ def customise_project_project_resource(r, tablename):
     # User Projects as Incidents (Temporary to link with tasks & support Wrike integration)
     s3db.event_incident
     s3.crud_strings["project_project"] = s3.crud_strings["event_incident"]
+    s3.crud_strings["project_project"].label_delete_button = T("Delete Incident")
 
     if r.method == "validate":
         from s3.s3validators import IS_LOCATION
         s3db.project_location.location_id.requires = IS_LOCATION()
     else:
+        list_fields = ["start_date",
+                       "name",
+                       "description",
+                       "organisation_id",
+                       (T("Location"), "project_location.location_id"),
+                       ]
+        
         # Custom Form
         location_id_field = s3db.project_location.location_id
         location_id_field.label = ""
@@ -733,12 +786,13 @@ def customise_project_project_resource(r, tablename):
 
         table = s3db.project_project
         table.name.label = T("Name")
-        table.organisation_id.label = T("Organization")
+        table.organisation_id.label = T("Lead Organization")
         table.start_date.label = T("Date")
         #s3db.project_project_organisation.organisation_id.label = ""
         #s3db.project_project_project_type.project_type_id.label = ""
         crud_form = S3SQLCustomForm(
                         #"status_id",
+                        "start_date",
                         "name",
                         "description",
                         #"location.location_id",
@@ -749,7 +803,6 @@ def customise_project_project_resource(r, tablename):
                                              #orderby = "location_id$name",
                                              multiple = False,
                                              ),
-                        "start_date",
                         #"end_date",
                         )
 
@@ -759,6 +812,7 @@ def customise_project_project_resource(r, tablename):
                                        _class="filter-search",
                                        ),
                           S3LocationFilter("project_location.location_id",
+                                           label=T("Location"),
                                            widget="multiselect",
                                            levels = levels,
                                            ),
@@ -770,21 +824,27 @@ def customise_project_project_resource(r, tablename):
                           #                cols = 3,
                                           #widget="multiselect",
                           #                ),
-                          S3OptionsFilter("project_organisation.organisation_id",
+                          S3OptionsFilter("organisation_id",
                                           # Doesn't support translation
                                           #represent="%(name)s",
                                           widget="multiselect",
                                           ),
-                          S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
-                                          # Doesn't support translation
+                          #S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
+                          #                # Doesn't support translation
                                           #represent="%(name)s",
-                                          widget="multiselect",
-                                          ),
+                          #                widget="multiselect",
+                          #                ),
                           ]
 
+        url_next = URL(c="project", f="project", args="summary")
+
         s3db.configure("project_project",
+                       create_next = url_next,
+                       delete_next = url_next,
+                       update_next = url_next,
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
+                       list_fields = list_fields,
                        )
 
         if r.method == "profile":
@@ -792,6 +852,7 @@ def customise_project_project_resource(r, tablename):
             #customise_cms_post_fields()
             #customise_hrm_human_resource_fields()
             #customise_org_office_fields()
+            customise_project_task_resource(r, "project_task")
             s3db.org_customise_org_resource_fields("profile")
             #customise_project_project_fields()
 
@@ -799,7 +860,10 @@ def customise_project_project_resource(r, tablename):
                                 label_create = "Create Task",
                                 type = "datalist",
                                 tablename = "project_task",
-                                context = "project",
+                                #@ToDo - do this with context? Not clear how with link table
+                                # But this WORKS! So don't change without testing!
+                                #context = "project",
+                                filter = S3FieldSelector("task_project.project_id") == r.id,
                                 icon = "icon-task",
                                 show_on_map = False, # No Marker yet & only show at L1-level anyway
                                 colspan = 2,
@@ -816,6 +880,41 @@ def customise_project_project_resource(r, tablename):
                                               ],
                            #profile_cols = 3
                            )
+
+            # Set list_fields for renderer (project_project_list_layout)
+            # @ ToDo: move this to somewhere in trunk where it is called when projects are used in a profile page
+            s3db.configure("project_project",
+                           list_fields = ["name",
+                                          "description",
+                                          "location.location_id",
+                                          "start_date",
+                                          "organisation_id",
+                                          "organisation_id$logo",
+                                          "modified_by",
+                                          ]
+                           )
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="project", f="project",
+                                    args=["[id]", "profile"])),
+                       dict(label=str(T("Edit")),
+                            _class="action-btn",
+                            url=URL(c="project", f="project",
+                                    args=["[id]", "update"]))
+                       ]
+            s3.actions = actions
+
+        return output
+    s3.postp = custom_postp
 
 settings.customise_project_project_resource = customise_project_project_resource
 
@@ -844,6 +943,7 @@ def customise_org_office_resource(r, tablename):
 
     list_fields = ["name",
                    "organisation_id",
+                   #(T("Type"), "facility_type.name"),
                    "location_id",
                    "phone1",
                    "comments",
@@ -868,7 +968,12 @@ def customise_org_office_resource(r, tablename):
                                               )
                              )
 
+    url_next = URL(c="org", f="office", args="summary")
+
     s3db.configure("org_office",
+                   create_next = url_next,
+                   delete_next = url_next,
+                   update_next = url_next,
                    crud_form = crud_form,
                    list_fields = list_fields,
                    report_options = report_options,
@@ -1049,7 +1154,7 @@ def customise_pr_person_resource(r, tablename):
 
 
     # Return to List view after create/update/delete (unless done via Modal)
-    #url_next = URL(c="pr", f="person", )
+    url_next = URL(c="pr", f="person", )
 
     # Report options
     report_fields = ["organisation_id",
@@ -1069,16 +1174,32 @@ def customise_pr_person_resource(r, tablename):
                              )
 
     s3db.configure(tablename,
-                   #create_next = url_next,
-                   #delete_next = url_next,
-                   #update_next = url_next,
+                   create_next = url_next,
+                   delete_next = url_next,
+                   update_next = url_next,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
                    list_fields = list_fields,
                    report_options = report_options,
                    # Don't include a Create form in 'More' popups
                    #listadd = False if r.method=="datalist" else True,
-                   list_layout = render_contacts,
+                   #list_layout = render_contacts,
+                   )
+
+    #HR Fields For Datalist Cards
+    list_fields = ["person_id",
+                   "organisation_id",
+                   "site_id$location_id",
+                   "site_id$location_id$addr_street",
+                   "job_title_id",
+                   "email.value",
+                   "phone.value",
+                   #"modified_by",
+                   "modified_on",
+                   ]
+
+    s3db.configure("hrm_human_resource",
+                   list_fields = list_fields,
                    )
 
     # Custom postp
@@ -1200,35 +1321,27 @@ def render_contacts(list_id, item_id, resource, rfields, record):
                )
 
     # Render the item
-    body = TAG[""](P(fullname,
-                     " ",
-                     SPAN(job_title),
-                     _class="person_pos",
-                     ),
-                   P(I(_class="icon-phone"),
+    body = TAG[""](P(I(_class="icon-phone"),
                      " ",
                      SPAN(phone),
                      " ",
-                     I(_class="icon-envelope-alt"),
+                     ),
+                   P(I(_class="icon-envelope-alt"),
                      " ",
                      SPAN(email),
                      _class="main_contact_ph",
                      ),
-                   P(I(_class="icon-home"),
-                     " ",
-                     address,
-                     _class="main_office-add",
-                     ))
+                   #P(I(_class="icon-home"),
+                   #  " ",
+                   #  address,
+                   #  _class="main_office-add",
+                   #  )
+                   )
 
-    item = DIV(DIV(SPAN(" ", _class="card-title"),
-                   SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        ),
-                   SPAN(date,
-                        _class="date-title",
-                        ),
+    item = DIV(DIV(SPAN(fullname,
+                        " ",
+                        job_title, 
+                        _class="card-title"),
                    edit_bar,
                    _class="card-header",
                    ),
@@ -1282,6 +1395,7 @@ def render_offices(list_id, item_id, resource, rfields, record):
     location_url = URL(c="gis", f="location",
                        args=[location_id, "profile"])
     address = raw["gis_location.addr_street"]
+    phone = raw["org_office.phone1"]
     office_type = record["org_office.office_type_id"]
     logo = raw["org_organisation.logo"]
 
@@ -1329,12 +1443,16 @@ def render_offices(list_id, item_id, resource, rfields, record):
 
     # Render the item
     avatar = logo
-    body = TAG[""](P(name),
-                   P(I(_class="icon-flag"),
+    body = TAG[""](#P(I(_class="icon-flag"),
+                   #  " ",
+                   #  SPAN(office_type),
+                   #  " ",
+                   #  _class="main_contact_ph",
+                   #  ),
+                   P(I(_class="icon-phone"),
                      " ",
-                     SPAN(office_type),
+                     SPAN(phone),
                      " ",
-                     _class="main_contact_ph",
                      ),
                    P(I(_class="icon-home"),
                      " ",
@@ -1342,27 +1460,19 @@ def render_offices(list_id, item_id, resource, rfields, record):
                      _class="main_office-add",
                      ))
 
-    item = DIV(DIV(SPAN(" ", _class="card-title"),
-                   SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        ),
-                   SPAN(date,
-                        _class="date-title",
-                        ),
+    item = DIV(DIV(SPAN(name, _class="card-title"),
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(avatar,
+               DIV(#avatar,
                    DIV(DIV(body,
-                           DIV(author,
-                               " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               _class="card-person",
+                           DIV(#author,
+                               #" - ",
+                               #A(organisation,
+                               #  _href=org_url,
+                               #  _class="card-organisation",
+                               #  ),
+                               #_class="card-person",
                                ),
                            _class="media",
                            ),

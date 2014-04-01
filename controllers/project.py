@@ -49,6 +49,7 @@ def project():
 
         if r.method == "datalist":
             # Set list_fields for renderer (project_project_list_layout)
+            # @ ToDo: move this to somewhere in trunk where it is called when projects are used in a profile page
             s3db.configure("project_project",
                            list_fields = ["name",
                                           "description",
