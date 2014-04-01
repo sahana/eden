@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<wrike-data>
+  <account id="IEAAHYFJ">
+    <name>Dominic König’s Team</name>
+  </account>
+  <account id="IEAAAAQE">
+    <name>Puget Sound MCOP</name>
+  </account>
+  <folder id="IEAAHYFJI4AXHLPV">
+    <title>New Test Folder</title>
+    <accountId>IEAAHYFJ</accountId>
+  </folder>
+  <folder id="IEAAHYFJI4AXFAXJ" deleted="True"/>
+  <task id="IEAAHYFJKQAXHLP3">
+    <parentId>IEAAHYFJI4AXHLPV</parentId>
+    <title>Test Task D</title>
+    <description>Test Task D Description&lt;br&gt;&lt;br&gt;</description>
+    <status>Active</status>
+    <importance>Normal</importance>
+    <permalink>https://www.wrike.com/open.htm?id=24358395</permalink>
+    <createdDate>2014-03-31T11:45:12Z</createdDate>
+    <updatedDate>2014-03-31T18:27:14Z</updatedDate>
+  </task>
+  <task id="IEAAHYFJKQAXHMBK">
+    <parentId>IEAAHYFJI4AXHLPV</parentId>
+    <title>Task E</title>
+    <description>Some funny description for task E&lt;br&gt;&lt;br&gt;</description>
+    <status>Active</status>
+    <importance>Normal</importance>
+    <permalink>https://www.wrike.com/open.htm?id=24358954</permalink>
+    <createdDate>2014-03-31T12:03:03Z</createdDate>
+    <updatedDate>2014-03-31T12:05:03Z</updatedDate>
+  </task>
+  <task id="IEAAHYFJKQAXF5QQ" deleted="True"/>
+  <task id="IEAAHYFJKQAXFAXQ" deleted="True"/>
+</wrike-data>
