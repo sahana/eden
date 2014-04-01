@@ -755,28 +755,6 @@ def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-        if r.method == "profile":
-            # Set list_fields for renderer (project_task_list_layout)
-            current.s3db.configure("project_task",
-                                   list_fields = ["name",
-                                                  "description",
-                                                  "location_id",
-                                                  "date_due",
-                                                  "pe_id",
-                                                  "task_project.project_id",
-                                                  #"organisation_id$logo",
-                                                  "pe_id",
-                                                  "modified_by",
-                                                  ],
-                                   )
-        return True
-    s3.prep = custom_prep
-
     # Custom postp
     standard_postp = s3.postp
     def custom_postp(r, output):
@@ -836,14 +814,15 @@ def customise_project_project_resource(r, tablename):
                        ]
         
         # Custom Form
-        location_id_field = s3db.project_location.location_id
-        location_id_field.label = ""
-        location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-        location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                             show_address=True,
-                                                             show_map=True)
-        # Don't add new Locations here
-        location_id_field.comment = None
+        # Disable until LocationSelectorWidget can be made to work Inline
+        #location_id_field = s3db.project_location.location_id
+        #location_id_field.label = ""
+        #location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+        #location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
+        #                                                     show_address=True,
+        #                                                     show_map=True)
+        ## Don't add new Locations here
+        #location_id_field.comment = None
 
         table = s3db.project_project
         table.name.label = T("Name")
@@ -858,7 +837,6 @@ def customise_project_project_resource(r, tablename):
                         "start_date",
                         "name",
                         "description",
-                        #"location.location_id",
                         "organisation_id",
                         S3SQLInlineComponent("location",
                                              label = T("Location"),
@@ -874,11 +852,12 @@ def customise_project_project_resource(r, tablename):
                                        label=T("Description"),
                                        _class="filter-search",
                                        ),
-                          S3LocationFilter("project_location.location_id",
-                                           label=T("Location"),
-                                           widget="multiselect",
-                                           levels = levels,
-                                           ),
+                          # Disable until LocationSelectorWidget can be made to work Inline
+                          #S3LocationFilter("project_location.location_id",
+                          #                 label=T("Location"),
+                          #                 widget="multiselect",
+                          #                 levels = levels,
+                          #                 ),
                           #S3OptionsFilter("status_id",
                           #                label = T("Status"),
                                           # Doesn't support translation
@@ -918,6 +897,21 @@ def customise_project_project_resource(r, tablename):
             customise_project_task_resource(r, "project_task")
             s3db.org_customise_org_resource_fields("profile")
             #customise_project_project_fields()
+
+            if r.method == "profile":
+                # Set list_fields for renderer (project_task_list_layout)
+                s3db.configure("project_task",
+                               list_fields = ["name",
+                                              "description",
+                                              "location_id",
+                                              "date_due",
+                                              "pe_id",
+                                              "task_project.project_id",
+                                              #"organisation_id$logo",
+                                              "pe_id",
+                                              "modified_by",
+                                              ],
+                               )
 
             from s3.s3resource import S3FieldSelector
             tasks_widget = dict(label = "Tasks",
