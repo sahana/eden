@@ -111,7 +111,7 @@ h3 {
     text-decoration:none;
 }
 
-.dl {
+.homepage .dl {
     padding: 5px 2px;
 }
 
@@ -148,7 +148,11 @@ h3 {
 
 /* Customise Datalist Cards */
 #cms_post_datalist .card-title, 
-.homepage .card-header > .icon {
+.homepage .card-header > .icon,
+#profile-list-project_project-3 .card-header > .icon,
+#profile-list-org_resource-2 img,
+#profile-list-project_project-3 img, 
+#profile-list-project_task-0 .task_project_title {
     display: none;
 }
 
@@ -170,4 +174,14 @@ h2, #list-btn-add {
 #table-container,
 .form-container {
     clear: both;
+}
+
+.card-holder .location-title {
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    margin-left: 10px;
+    padding-bottom: 7px;
+    padding-left: 10px;
+    padding-top: 7px;
+    text-shadow: 0 1px 0 #FFFFFF;
+    width: 10px;
 }
