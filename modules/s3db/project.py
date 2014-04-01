@@ -919,7 +919,6 @@ class S3ProjectActivityModel(S3Model):
         rappend = report_fields.append
         
         fact_fields = [(T("Number of Activities"), "count(id)"),
-                       (T("Number of Beneficiaries"), "sum(beneficiary.value)"),
                        ]
 
         if settings.get_project_activity_types():
@@ -960,6 +959,10 @@ class S3ProjectActivityModel(S3Model):
         # @ToDo: deployment_setting
         if settings.has_module("stats"):
             rappend("beneficiary.parameter_id")
+            fact_fields.insert(0,
+                               (T("Number of Beneficiaries"), "sum(beneficiary.value)")
+                               )
+            default_fact = "sum(beneficiary.value)"
             filter_widgets.append(
                     S3OptionsFilter("beneficiary.parameter_id",
                                     # Doesn't support translation
@@ -5427,7 +5430,7 @@ class project_LocationRepresent(S3Represent):
         level = row.level
         if level == "L0":
             location = name
-        else:
+        elif name:
             locations = [name]
             lappend = locations.append
             matched = False
@@ -5478,6 +5481,13 @@ class project_LocationRepresent(S3Represent):
                         matched = True
                     else:
                         lappend(L0)
+            location = ", ".join(locations)
+        else:
+            locations = [row[level] for level in ("L5", "L4", "L3", "L2", "L1") if row[level]]
+            if self.multi_country:
+                L0 = row.L0
+                if L0:
+                    locations.append(L0)
             location = ", ".join(locations)
 
         if community:

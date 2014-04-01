@@ -273,9 +273,11 @@ def customise_org_organisation_resource(r, tablename):
                                     "logo",
                                     "phone",
                                     "website",
-                                    "comments")
+                                    "comments",
+                                    )
+
         s3db.configure("org_organisation",
-                       crud_form=crud_form
+                       crud_form = crud_form,
                        )
 
         if r.method == "datalist":
@@ -298,7 +300,7 @@ def customise_org_organisation_resource(r, tablename):
                               ]
 
             s3db.configure("org_organisation",
-                           filter_widgets=filter_widgets
+                           filter_widgets = filter_widgets,
                            )
 
         if r.method == "profile":
@@ -432,6 +434,7 @@ def customise_org_organisation_resource(r, tablename):
                    list_fields = list_fields,
                    update_next = url_next,
                    )
+
 settings.customise_org_organisation_resource = customise_org_organisation_resource
 
 # -----------------------------------------------------------------------------
@@ -447,7 +450,6 @@ def customise_org_resource_resource(r, tablename):
     s3 = current.response.s3
     s3db = current.s3db
     table = s3db.org_resource
-
 
     if r.interactive:
         location_field = table.location_id
@@ -635,6 +637,7 @@ def customise_project_task_resource(r, tablename):
         Runs after controller customisation
         But runs before prep
     """
+
     s3 = current.response.s3
     s3db = current.s3db
     table = s3db.project_task
@@ -695,131 +698,6 @@ def customise_project_task_resource(r, tablename):
                    )
 
 settings.customise_project_task_resource = customise_project_task_resource
-
-# -----------------------------------------------------------------------------
-def customise_project_activity_resource(r, tablename):
-    """
-        Customise org_resource resource
-        - List Fields
-        - Fields
-        - Form
-        - Filter Widgets
-        - Report Options
-        Runs after controller customisation
-        But runs before prep
-    """
-
-    s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.project_activity
-
-    # Use activities as projects (Temporary - location widget doesn't yet work inline)
-    s3.crud_strings["project_activity"] = s3.crud_strings["project_project"]
-
-    if r.method in ["create", "update"]:
-        # Hide inline labels
-        s3db.project_activity_organisation.organisation_id.label = ""
-        s3db.project_activity_activity_type.activity_type_id.label = ""
-
-    list_fields = ["id",
-                   "status_id",
-                   "name",
-                   "location_id",
-                   "activity_organisation.organisation_id",
-                   "date",
-                   "end_date",
-                   ]
-
-    # Custom Form
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         show_address=True,
-                                                         show_map=True)
-    # Don't add new Locations here
-    table.location_id.comment = None
-
-    table.name.label = T("Name")
-    table.comments.label = T("Description")
-    
-    crud_form = S3SQLCustomForm(
-                    "status_id",
-                    "name",
-                    "comments",
-                    "location_id",
-                    S3SQLInlineComponent("activity_organisation",
-                                         label = T("Organization"),
-                                         fields = ["organisation_id"],
-                                         multiple = False,
-                                         ),
-                    #S3SQLInlineComponent("activity_activity_type",
-                    #                     label = T("Activity Type"),
-                    #                     fields = ["activity_type_id"],
-                    #                     multiple = False,
-                    #                     ),
-                    "date",
-                    "end_date",
-                    )
-
-    filter_widgets = [S3TextFilter(["name",
-                                    ],
-                                   label=T("Description"),
-                                   _class="filter-search",
-                                   ),
-                      S3LocationFilter("location_id",
-                                       widget="multiselect",
-                                       levels = levels,
-                                       ),
-                      S3OptionsFilter("status_id",
-                                      label = T("Status"),
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                                      # @ToDo: Introspect cols
-                                      cols = 3,
-                                      #widget="multiselect",
-                                      ),
-                      #S3OptionsFilter("activity_activity_type.activity_type_id",
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                      #                widget="multiselect",
-                      #                ),
-                      S3OptionsFilter("activity_organisation.organisation_id",
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      S3OptionsFilter("activity_organisation.organisation_id$organisation_type_id",
-                                      # Doesn't support translation
-                                      #represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      ]
-
-    # Report options
-    report_fields = ["activity_organisation.organisation_id",
-                     "status_id",
-                     ]
-
-    report_options = Storage(rows = report_fields,
-                             cols = report_fields,
-                             fact = ["count(id)"
-                                     ],
-                             defaults=Storage(rows = "activity_organisation.organisation_id",
-                                              cols = "status_id",
-                                              fact = "count(id)",
-                                              totals = True,
-                                              chart = "barchart:rows",
-                                              #table = "collapse",
-                                              )
-                             )
-
-    s3db.configure("project_activity",
-                   crud_form = crud_form,
-                   filter_widgets = filter_widgets,
-                   list_fields = list_fields,
-                   report_options = report_options,
-                   )
-
-settings.customise_project_activity_resource = customise_project_activity_resource
 
 # -----------------------------------------------------------------------------
 def customise_project_project_resource(r, tablename):

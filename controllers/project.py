@@ -66,7 +66,7 @@ def project():
             list_fields.insert(3, (T("Activity"), "activity.name"))
 
         # Filter human resource records if "group" in get_vars
-        if component_name == "human_resource":
+        elif component_name == "human_resource":
             type_field = s3base.S3FieldSelector("human_resource.type")
             if hr_group == "staff":
                 query = (type_field == 1)
@@ -78,7 +78,6 @@ def project():
                 r.resource.add_component_filter("human_resource", query)
 
         if r.interactive:
-            
             htable = s3db.hrm_human_resource
             htable.person_id.comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (T("Person"),
@@ -99,7 +98,6 @@ def project():
                 set_theme_requires(sector_ids)
 
             if not r.component:
-                
                 if r.method in ("create", "update"):
                     # Context from a Profile page?"
                     location_id = request.get_vars.get("(location)", None)
@@ -127,9 +125,7 @@ def project():
                         r.table.status_id.writable = False
                         
             elif component_name == "organisation":
-                    
                 if r.method != "update":
-                    
                     allowed_roles = dict(settings.get_project_organisation_roles())
                     if settings.get_template() == "DRRPP":
                         # Partner NS should only come via sync from RMS
@@ -149,12 +145,10 @@ def project():
                     otable.role.requires = IS_NULL_OR(IS_IN_SET(allowed_roles))
 
             elif component_name == "activity":
-
                 # Filter Activity Type based on Sector
                 set_activity_type_requires("project_activity_activity_type", sector_ids)
 
             elif component_name == "task":
-
                 if not auth.s3_has_role("STAFF"):
                     # Hide fields which are meant for staff members
                     # (avoid confusion both of inputters & recipients)
@@ -177,7 +171,6 @@ def project():
                     r.resource.add_component_filter("task", query)
 
             elif component_name == "beneficiary":
-
                 # Filter the location selector to the project's locations
                 component.table.project_location_id.requires = \
                     IS_NULL_OR(IS_ONE_OF(db, "project_location.id",
@@ -222,7 +215,6 @@ def project():
                         )
 
             elif component_name == "document":
-
                 # Hide unnecessary fields
                 dtable = component.table
                 dtable.organisation_id.readable = \
