@@ -53,6 +53,7 @@ from gluon.storage import Storage
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3resource import S3URLQuery
+from s3utils import s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -1564,7 +1565,7 @@ class S3SyncCiviCRM(S3SyncRepository):
 # =============================================================================
 class S3SyncWrike(S3SyncRepository):
     """
-        Wrike REST-API connector
+        Wrike® REST-API connector
 
         @status: experimental
     """
@@ -1581,26 +1582,15 @@ class S3SyncWrike(S3SyncRepository):
         self.token_type = None
 
     # -------------------------------------------------------------------------
-    def update_refresh_token(self):
-        """
-            Store the current refresh token in the db, also invalidated
-            the site_key (authorization code) because it can not be used
-            again.
-        """
-
-        self.site_key = None
-        
-        table = current.s3db.sync_repository
-        current.db(table.id == self.id).update(
-            refresh_token = self.refresh_token,
-            site_key = self.site_key
-        )
-        return
-
-    # -------------------------------------------------------------------------
     def register(self):
         """
-            Register at the repository
+            Register at the repository, in Wrike: use client ID (username)
+            and the authorization code (site key) to obtain the refresh_token
+            and store it in the repository config.
+
+            @note: this invalidates the authorization code, so it will be
+                   set to None regardless whether this operation succeeds
+                   or not
 
             @return: True if successful, otherwise False
         """
@@ -1615,7 +1605,7 @@ class S3SyncWrike(S3SyncRepository):
             if not self.refresh_token:
                 # Can't register without authorization code
                 result = log.WARNING
-                message = "No site key to obtain access token " \
+                message = "No site key to obtain refresh token " \
                           "with, skipping registration"
             else:
                 # Already registered
@@ -1637,30 +1627,27 @@ class S3SyncWrike(S3SyncRepository):
             response, message = self.send(method = "POST",
                                           data = data,
                                           auth = True)
-
             if not response:
-                self.update_refresh_token()
                 result = log.FATAL
                 remote = True
             else:
                 refresh_token = response.get("refresh_token")
                 if not refresh_token:
-                    self.update_refresh_token()
                     result = log.FATAL
                     message = "No refresh token received"
                 else:
                     self.refresh_token = refresh_token
                     self.access_token = response.get("access_token")
-                    self.update_refresh_token()
                     result = log.SUCCESS
                     success = True
                     message = "Registration successful"
+            self.update_refresh_token()
 
         # Log the operation
         log.write(repository_id=self.id,
                   transmission=log.OUT,
                   mode=log.PUSH,
-                  action="request access token",
+                  action="request refresh token",
                   remote=remote,
                   result=result,
                   message=message)
@@ -1672,7 +1659,9 @@ class S3SyncWrike(S3SyncRepository):
     # -------------------------------------------------------------------------
     def login(self):
         """
-            Login to the repository
+            Login to the repository, in Wrike: use the client ID (username),
+            the client secret (password) and the refresh token to obtain the
+            access token for subsequent requests.
 
             @return: None if successful, otherwise error message
         """
@@ -1734,10 +1723,188 @@ class S3SyncWrike(S3SyncRepository):
                      else error=message, and mtime=modification timestamp
                      of the youngest record received
         """
+        
+        resource_name = task.resource_name
+        
+        current.log.debug("S3SyncWrike.pull(%s, %s)" %
+                          (self.url, resource_name))
 
-        error = "Wrike API pull not implemented"
-        current.log.error(error)
-        return (error, None)
+        xml = current.xml
+        log = self.log
+
+        # Last pull time
+        last_pull = task.last_pull
+        if last_pull and task.update_policy not in ("THIS", "OTHER"):
+            msince = xml.encode_iso_datetime(last_pull)
+        else:
+            msince = None
+
+        # Create the root node of the data tree
+        root = etree.Element("wrike-data")
+        
+        # Fetch accounts and add them to the tree
+        accounts, error = self.fetch_accounts(root)
+        if accounts is not None:
+
+            error = None
+
+            def log_fetch_error(action, account_name, message):
+                """ Helper to log non-fatal errors during fetch """
+                action = "%s for account '%s'" % (action, account_name)
+                log.write(repository_id = self.id,
+                          resource_name = resource_name,
+                          transmission = log.OUT,
+                          mode = log.PULL,
+                          action = action,
+                          remote = True,
+                          result = log.ERROR,
+                          message = message)
+                return
+
+            for account_id, account_data in accounts.items():
+                
+                account_name, root_folder_id, recycle_bin_id = account_data
+
+                # Fetch folders
+                response, message = self.fetch_folders(root, account_id)
+                if response is None:
+                    log_fetch_error("fetch folders",
+                                    account_name,
+                                    message)
+                    continue
+                
+                # Fetch active tasks
+                response, message = self.fetch_tasks(root,
+                                                     root_folder_id,
+                                                     msince=msince)
+                if response is None:
+                    log_fetch_error("fetch active tasks",
+                                    account_name,
+                                    message)
+
+                # Fetch deleted tasks
+                response, message = self.fetch_tasks(root,
+                                                     recycle_bin_id,
+                                                     msince=msince,
+                                                     deleted = True)
+                if response is None:
+                    log_fetch_error("fetch deleted tasks",
+                                    account_name,
+                                    message)
+
+        if error:
+            # Error during fetch_accounts (fatal)
+            result = log.FATAL
+            remote = True
+            message = error
+            output = xml.json_message(False, 400, error)
+
+        elif len(root):
+            result = log.SUCCESS
+            remote = False
+            message = None
+            output = None
+
+            # Convert into ElementTree
+            tree = etree.ElementTree(root)
+
+            # Get import strategy and update policy
+            strategy = task.strategy
+            update_policy = task.update_policy
+            conflict_policy = task.conflict_policy
+
+            # Import stylesheet
+            folder = current.request.folder
+            import os
+            stylesheet = os.path.join(folder,
+                                      "static",
+                                      "formats",
+                                      "wrike",
+                                      "import.xsl")
+
+            # Host name of the peer, used by the import stylesheet
+            import urlparse
+            hostname = urlparse.urlsplit(self.url).hostname
+
+            # Conflict resolution callback
+            resource = current.s3db.resource(resource_name)
+            if onconflict is not None:
+                onconflict_callback = lambda item: \
+                                      onconflict(item, self, resource)
+            else:
+                onconflict_callback = None
+                
+            # Import the data
+            count = 0
+            try:
+                success = resource.import_xml(tree,
+                                              stylesheet=stylesheet,
+                                              ignore_errors=True,
+                                              strategy=strategy,
+                                              update_policy=update_policy,
+                                              conflict_policy=conflict_policy,
+                                              last_sync=task.last_pull,
+                                              onconflict=onconflict_callback,
+                                              site=hostname)
+                count = resource.import_count
+            except IOError:
+                success = False
+                result = log.FATAL
+                message = sys.exc_info()[1]
+                output = xml.json_message(False, 400, message)
+                
+            mtime = resource.mtime
+
+            # Log all validation errors (@todo: doesn't work)
+            if resource.error_tree is not None:
+                result = log.WARNING
+                message = "%s" % resource.error
+                #print xml.tostring(resource.error_tree, pretty_print=True)
+                for element in resource.error_tree.findall("resource"):
+                    for field in element.findall("data[@error]"):
+                        error_msg = field.get("error", None)
+                        if error_msg:
+                            msg = "(UID: %s) %s.%s=%s: %s" % \
+                                  (element.get("uuid", None),
+                                   element.get("name", None),
+                                   field.get("field", None),
+                                   field.get("value", field.text),
+                                   field.get("error", None))
+                            message = "%s, %s" % (message, msg)
+
+            # Check for failure
+            if not success:
+                result = log.FATAL
+                if not message:
+                    message = "%s" % resource.error
+                output = xml.json_message(False, 400, message)
+                mtime = None
+
+            # ...or report success
+            elif not message:
+                message = "data imported successfully (%s records)" % count
+                output = None
+
+        else:
+            # No data received from peer
+            result = log.WARNING
+            remote = True
+            message = "no data received from peer"
+            output = None
+
+        # Log the operation
+        log.write(repository_id=self.id,
+                  resource_name=resource_name,
+                  transmission=log.OUT,
+                  mode=log.PULL,
+                  action=None,
+                  remote=remote,
+                  result=result,
+                  message=message)
+                  
+        current.log.debug("S3SyncWrike.pull import %s: %s" % (result, message))
+        
+        return (output, mtime)
 
     # -------------------------------------------------------------------------
     def push(self, task):
@@ -1753,6 +1920,152 @@ class S3SyncWrike(S3SyncRepository):
         error = "Wrike API push not implemented"
         current.log.error(error)
         return (error, None)
+
+    # -------------------------------------------------------------------------
+    def fetch_accounts(self, root):
+        """
+            Get all accessible accounts
+
+            @return: dict {account_id: (rootFolderId, recycleBinId)}
+        """
+
+        response, message = self.send(path="accounts")
+        if not response:
+            return None, message
+
+        accounts = {}
+        data = response.get("data")
+        if data and type(data) is list:
+            SubElement = etree.SubElement
+            for account_data in data:
+                account_id = account_data.get("id")
+                account = SubElement(root, "account",
+                                     id = str(account_id))
+                account_name = account_data.get("name")
+                name = SubElement(account, "name")
+                name.text = account_name
+                
+                accounts[account_id] = (account_name,
+                                        account_data.get("rootFolderId"),
+                                        account_data.get("recycleBinId"))
+        return accounts, None
+
+    # -------------------------------------------------------------------------
+    def fetch_folders(self, root, account_id):
+        """
+            Fetch folders from a Wrike account and add them to the
+            data tree
+
+            @param root: the root element of the data tree
+            @param account_id: the Wrike account ID
+        """
+
+        response, message = self.send(path="accounts/%s/folders" % account_id)
+        if not response:
+            return None, message
+
+        folders = {}
+        data = response.get("data")
+        if data and type(data) is list:
+            SubElement = etree.SubElement
+            for folder_data in data:
+                scope = folder_data.get("scope")
+                if scope not in ("WsFolder", "RbFolder"):
+                    continue
+                folder_id = folder_data.get("id")
+                folder = SubElement(root, "folder",
+                                    id = str(folder_id))
+                folders[folder_id] = folder
+                if scope == "RbFolder":
+                    folder.set("deleted", str(True))
+                else:
+                    title = SubElement(folder, "title")
+                    title.text = folder_data.get("title")
+                    account = SubElement(folder, "accountId")
+                    account.text = str(account_id)
+
+        return folders, None
+
+    # -------------------------------------------------------------------------
+    def fetch_tasks(self, root, folder_id, deleted=False, msince=None):
+        """
+            Fetch all tasks in a folder
+
+            @param root: the root element of the data tree
+            @param folder_id: the ID of the folder to read from
+            @param deleted: mark the tasks as deleted in the data
+                            tree (when reading tasks from a recycle bin)
+            @param msince: only retrieve tasks that have been modified
+                           after this date/time (ISO-formatted string)
+        """
+        
+        fields = json.dumps(["parentIds", "description"])
+        args = {"descendants": "true",
+                "fields": json.dumps(["parentIds",
+                                      "description",
+                                      ]
+                                     ),
+                }
+        if msince is not None:
+            args["updatedDate"] = "%sZ," % msince
+        response, message = self.send(path = "folders/%s/tasks" % folder_id,
+                                      args = args)
+        if not response:
+            return None, message
+
+        details = ("title",
+                   "description",
+                   "status",
+                   "importance",
+                   "permalink",
+                   "createdDate",
+                   "updatedDate",
+                   )
+
+        tasks = {}
+        data = response.get("data")
+        if data and type(data) is list:
+            SubElement = etree.SubElement
+            for task_data in data:
+                scope = task_data.get("scope")
+                if scope not in ("WsTask", "RbTask"):
+                    continue
+                task_id = task_data.get("id")
+                task = SubElement(root, "task", id = str(task_id))
+                tasks[task_id] = task
+                deleted = scope == "RbTask"
+                if deleted:
+                    task.set("deleted", str(True))
+                    continue
+                parent_ids = task_data.get("parentIds")
+                if parent_ids:
+                    for parent_id in parent_ids:
+                        parent = SubElement(task, "parentId")
+                        parent.text = str(parent_id)
+                for key in details:
+                    data = task_data.get(key)
+                    if data is not None:
+                        detail = SubElement(task, key)
+                        detail.text = s3_unicode(data)
+
+        return tasks, None
+
+    # -------------------------------------------------------------------------
+    def update_refresh_token(self):
+        """
+            Store the current refresh token in the db, also invalidated
+            the site_key (authorization code) because it can not be used
+            again.
+        """
+
+        self.site_key = None
+
+        table = current.s3db.sync_repository
+        current.db(table.id == self.id).update(
+            refresh_token = self.refresh_token,
+            site_key = self.site_key
+        )
+        return
 
     # -------------------------------------------------------------------------
     def send(self, method="GET", path=None, args=None, data=None, auth=False):
@@ -1771,7 +2084,7 @@ class S3SyncWrike(S3SyncRepository):
         if path:
             url = "/".join((url, path.lstrip("/")))
         if args:
-            url = "?".join(url, urllib.urlencode(args))
+            url = "?".join((url, urllib.urlencode(args)))
 
         # Create the request
         req = urllib2.Request(url=url)
