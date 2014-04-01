@@ -182,7 +182,7 @@ def _newsfeed():
             get_vars.pop("~.series_id$name")
             get_vars["~.series_id__belongs"] = series_id
 
-    current.deployment_settings.ui.customize_cms_post()
+    current.deployment_settings.customise_controller("cms_post")
 
     list_layout = s3.render_posts
 
