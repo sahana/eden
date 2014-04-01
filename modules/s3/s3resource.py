@@ -6330,7 +6330,7 @@ class S3URLQuery(object):
                     if w in NONE:
                         w = None
                     else:
-                        w = uquote(w)
+                        w = uquote(w).encode("utf-8")
                     vlist.append(w)
                     w = ""
                 else:
@@ -6342,7 +6342,7 @@ class S3URLQuery(object):
             if w in NONE:
                 w = None
             else:
-                w = uquote(w)
+                w = uquote(w).encode("utf-8")
             vlist.append(w)
         if len(vlist) == 1:
             return vlist[0]
