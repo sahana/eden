@@ -37,7 +37,25 @@ def update_check(settings):
 
     # -------------------------------------------------------------------------
     # Check Python libraries
-    errors, warnings = s3_check_python_lib()
+
+    # Get mandatory global dependencies
+    app_path = request.folder
+
+    gr_path = os.path.join(app_path, "requirements.txt")
+    tr_path = os.path.join(app_path, "private", "templates", settings.get_template(), "requirements.txt")
+    or_path = os.path.join(app_path, "optional_requirements.txt")
+
+    global_dep = parse_requirements(gr_path)
+    template_dep = parse_requirements(tr_path)
+    optional_dep = parse_requirements(or_path)
+
+    # remove optional dependencies which are already accounted for in template dependencies
+    unique = set(optional_dep.keys()).difference(set(template_dep.keys()))
+    for dependency in optional_dep.keys():
+        if dependency not in unique:
+            del optional_dep[dependency]
+
+    errors, warnings = s3_check_python_lib(global_dep, template_dep, optional_dep)
     # @ToDo: Load settings before running this
     # for now this is done in s3db.climate_first_run()
     if settings.has_module("climate"):
@@ -94,7 +112,6 @@ def update_check(settings):
 
     # -------------------------------------------------------------------------
     # Create required directories if needed
-    app_path = request.folder
     databases_dir = os.path.join(app_path, "databases")
     try:
         os.stat(databases_dir)
@@ -194,99 +211,83 @@ def update_check(settings):
     return {"error_messages": errors, "warning_messages": warnings}
 
 # -------------------------------------------------------------------------
-def s3_check_python_lib():
+
+def parse_requirements(filepath):
+    output = {}
+    try:
+        with open(filepath) as filehandle:
+            dependencies = filehandle.read().splitlines()
+            msg = ""
+            for dependency in dependencies:
+                if dependency[0] == '#':
+                    # either a normal comment or custom message
+                    if dependency[:9] == "# Warning" or dependency[7] == "# Error:":
+                        msg = dependency.split(":", 1)[1]
+                else:
+                    import re
+                    # check if the module name is different from the package name
+                    if '#' in dependency:
+                        dep = dependency.split("#", 1)[1]
+                        output[dep] = msg
+                    else:
+                        pattern = re.compile(r'([A-Za-z0-9_-]+)')
+                        try:
+                            dep = pattern.match(dependency).group(1)
+                            output[dep] = msg
+                        except AttributeError:
+                            # Invalid dependency syntax
+                            pass
+                    msg = ""
+    except IOError:
+        pass
+
+    return output
+
+# -------------------------------------------------------------------------
+
+def s3_check_python_lib(global_mandatory, template_mandatory, global_optional):
     """
         checks for optional as well as mandatory python libraries
     """
     errors = []
     warnings = []
-    try:
-        import dateutil
-    except ImportError:
-        errors.append("S3 unresolved dependency: dateutil required for Sahana to run")
-    try:
-        import lxml
-    except ImportError:
-        errors.append("S3XML unresolved dependency: lxml required for Sahana to run")
-    try:
-        import shapely
-    except ImportError:
-        warnings.append("S3GIS unresolved dependency: shapely required for GIS support")
-    try:
-        import xlrd
-    except ImportError:
-        warnings.append("S3XLS unresolved dependency: xlrd required for XLS export")
-    else:
-        from xlrd import __VERSION__ as xlrd_version
-        if xlrd_version < "0.7":
-            warnings.append("S3Import unresolved dependency: xlrd v0.8+ required for .xls import")
-        elif xlrd_version < "0.8":
-            warnings.append("S3Import unresolved dependency: xlrd v0.9+ required for .xlsx import")
-    try:
-        import xlwt
-    except ImportError:
-        warnings.append("S3XLS unresolved dependency: xlwt required for XLS export")
-    try:
-        from PIL import Image
-    except ImportError:
+
+    for dependency, err in global_mandatory.iteritems():
         try:
-            import Image
+            if "from" in dependency:
+                exec dependency
+            else:
+                exec 'import %s' % dependency
         except ImportError:
-            warnings.append("S3PDF unresolved dependency: Python Imaging required for PDF export")
-    try:
-        import reportlab
-    except ImportError:
-        warnings.append("S3PDF unresolved dependency: reportlab required for PDF export")
-    try:
-        from osgeo import ogr
-    except ImportError:
-        warnings.append("S3GIS unresolved dependency: GDAL required for Shapefile support")
-    try:
-        import tweepy
-    except ImportError:
-        warnings.append("S3Msg unresolved dependency: "\
-            "tweepy required for non-Tropo Twitter support")
-    try:
-        import sunburnt
-    except ImportError:
-        warnings.append("S3Doc unresolved dependency:"\
-            " sunburnt required for Full-Text Search support")
-    try:
-        import pyth
-    except ImportError:
-        warnings.append("S3Doc unresolved dependency:"\
-            " pyth required for RTF document support in Full-Text Search")
-    # @ToDo: Load settings before running this
-    #if settings.has_module("survey"):
-    #    mandatory = True
-    #else:
-    #    mandatory = False
-    try:
-        import matplotlib
-    except ImportError:
-        #if mandatory:
-        #    errors.append(msg)
-        #else:
-        warnings.append("S3Chart unresolved dependency: matplotlib required for charting in Survey module")
-    try:
-        import PyRTF
-    except ImportError:
-        msg = "Survey unresolved dependency: PyRTF required if you want"\
-         "to export assessment/survey templates as a Word document"
-        #if mandatory:
-        #    errors.append(msg)
-        #else:
-        warnings.append(msg)
-    try:
-        import numpy
-    except ImportError:
-        warnings.append("Vulnerability unresolved dependency:"\
-            " numpy required for Vulnerability module support")
-    try:
-        import TwitterSearch
-    except ImportError:
-        warnings.append("Message Parsing unresolved dependency:" \
-            "TwitterSearch required for fetching results from twitter keyword queries")
+            if err:
+                errors.append(err)
+            else:
+                errors.append("S3 unresolved dependency: %s required for Sahana to run" % dependency)
+
+    for dependency, err in template_mandatory.iteritems():
+        try:
+            if "from" in dependency:
+                exec dependency
+            else:
+                exec 'import %s' % dependency
+        except ImportError:
+            if err:
+                errors.append(err)
+            else:
+                errors.append("Unresolved template dependency: %s required" % dependency)
+
+    for dependency, warn in global_optional.iteritems():
+        try:
+            if "from" in dependency:
+                exec dependency
+            else:
+                exec 'import %s' % dependency
+        except ImportError:
+            if warn:
+                warnings.append(warn)
+            else:
+                warnings.append("Unresolved optional dependency: %s required" % dependency)
+
     return errors, warnings
 
 # END =========================================================================
