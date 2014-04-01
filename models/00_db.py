@@ -122,18 +122,18 @@ if update_check_needed:
 else:
     import s3 as s3base
 
-# Use session for persistent per-user variables
-# - beware of a user having multiple tabs open!
-# - don't save callables or class instances as these can't be pickled
-if not session.s3:
-    session.s3 = Storage()
-
 # Set up logger (before any module attempts to use it!)
 import s3log
 s3log.S3Log.setup()
     
 # AAA
 current.auth = auth = s3base.AuthS3()
+
+# Use session for persistent per-user variables
+# - beware of a user having multiple tabs open!
+# - don't save callables or class instances as these can't be pickled
+if not session.s3:
+    session.s3 = Storage()
 
 # Use username instead of email address for logins
 # - would probably require further customisation
