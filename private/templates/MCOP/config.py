@@ -651,7 +651,7 @@ def customise_project_task_controller(**attr):
                                           #"organisation_id$logo",
                                           "pe_id",
                                           "modified_by",
-                                          ]
+                                          ],
                            )
         else:
             list_fields = ["id",
@@ -755,6 +755,28 @@ def customise_project_project_controller(**attr):
 
     s3 = current.response.s3
 
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        if r.method == "profile":
+            # Set list_fields for renderer (project_task_list_layout)
+            current.s3db.configure("project_task",
+                                   list_fields = ["name",
+                                                  "description",
+                                                  "location_id",
+                                                  "date_due",
+                                                  "pe_id",
+                                                  "task_project.project_id",
+                                                  #"organisation_id$logo",
+                                                  "pe_id",
+                                                  "modified_by",
+                                                  ],
+                                   )
+        return True
+    s3.prep = custom_prep
+
     # Custom postp
     standard_postp = s3.postp
     def custom_postp(r, output):
@@ -826,6 +848,8 @@ def customise_project_project_resource(r, tablename):
         table = s3db.project_project
         table.name.label = T("Name")
         table.organisation_id.label = T("Lead Organization")
+        from gluon.validators import IS_EMPTY_OR
+        table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
         table.start_date.label = T("Date")
         #s3db.project_project_organisation.organisation_id.label = ""
         #s3db.project_project_project_type.project_type_id.label = ""
@@ -910,7 +934,7 @@ def customise_project_project_resource(r, tablename):
                                 list_layout = s3db.project_task_list_layout,
                                 )
             record = r.record
-            title = "%s : %s" % (s3.crud_strings["project_project"].title_list,record.name)
+            title = "%s : %s" % (s3.crud_strings["project_project"].title_list, record.name)
             s3db.configure("project_project",
                            profile_title = title,
                            profile_header = DIV(H2(title),

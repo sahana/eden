@@ -4956,12 +4956,12 @@ def org_facility_controller():
                     # Filter out items which are already in this inventory
                     s3db.inv_prep(r)
 
-                    # remove CRUD generated buttons in the tabs
+                    # remove CRUD-generated buttons in the tabs
                     s3db.configure("inv_inv_item",
-                                   create=False,
-                                   listadd=False,
-                                   editable=False,
-                                   deletable=False,
+                                   create = False,
+                                   deletable = False,
+                                   editable = False,
+                                   listadd = False,
                                    )
 
                 elif cname == "human_resource":

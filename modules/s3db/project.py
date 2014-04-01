@@ -4214,6 +4214,8 @@ class S3ProjectTaskModel(S3Model):
         list_fields=["id",
                      (T("ID"), "task_id"),
                      "priority",
+                     (T("Project"), "task_project.project_id"),
+                     (T("Activity"), "task_activity.activity_id"),
                      "name",
                      "pe_id",
                      "date_due",
@@ -6211,6 +6213,14 @@ def project_task_controller():
                                           ]
                            )
 
+        elif r.method in ("create", "create.popup"):
+            project_id = r.get_vars.get("task_project.project_id", None)
+            if project_id:
+                # Coming from a profile page
+                s3db.project_task_project.project_id.default = project_id
+                # Can't do this for an inline form
+                #field.readable = field.writable = False
+
         elif "mine" in vars:
             # Show the Open Tasks for this User
             if auth.user:
@@ -6220,19 +6230,28 @@ def project_task_controller():
             crud_strings.title_list = T("My Open Tasks")
             crud_strings.msg_list_empty = T("No Tasks Assigned")
             s3db.configure(tablename,
-                           copyable=False,
-                           listadd=False)
+                           copyable = False,
+                           listadd = False,
+                           )
             try:
                 # Add Project
                 list_fields = s3db.get_config(tablename,
                                               "list_fields")
-                list_fields.insert(4, (T("Project"), "task_project.project_id"))
                 # Hide the Assignee column (always us)
-                list_fields.remove("pe_id")
+                try:
+                    list_fields.remove("pe_id")
+                except:
+                    # Already removed
+                    pass
                 # Hide the Status column (always 'assigned' or 'reopened')
-                list_fields.remove("status")
+                try:
+                    list_fields.remove("status")
+                except:
+                    # Already removed
+                    pass
                 s3db.configure(tablename,
-                               list_fields=list_fields)
+                               list_fields = list_fields,
+                               )
             except:
                 pass
 
@@ -6242,7 +6261,8 @@ def project_task_controller():
             ptable = s3db.project_project
             try:
                 name = current.db(ptable.id == project).select(ptable.name,
-                                                               limitby=(0, 1)).first().name
+                                                               limitby=(0, 1)
+                                                               ).first().name
             except:
                 current.session.error = T("Project not Found")
                 redirect(URL(args=None, vars=None))
@@ -6254,23 +6274,25 @@ def project_task_controller():
             # Add Activity
             list_fields = s3db.get_config(tablename,
                                           "list_fields")
-            list_fields.insert(2, (T("Activity"), "task_activity.activity_id"))
+            try:
+                # Hide the project column since we know that already
+                list_fields.remove((T("Project"), "task_project.project_id"))
+            except:
+                # Already removed
+                pass
             s3db.configure(tablename,
+                           copyable = False,
+                           deletable = False,
                            # Block Add until we get the injectable component lookups
-                           insertable=False,
-                           deletable=False,
-                           copyable=False,
-                           list_fields=list_fields)
+                           insertable = False,
+                           list_fields = list_fields,
+                           )
         elif "open" in vars:
             # Show Only Open Tasks
             crud_strings.title_list = T("All Open Tasks")
             s3.filter = (table.status.belongs(statuses))
         else:
             crud_strings.title_list = T("All Tasks")
-            list_fields = s3db.get_config(tablename,
-                                          "list_fields")
-            list_fields.insert(3, (T("Project"), "task_project.project_id"))
-            list_fields.insert(4, (T("Activity"), "task_activity.activity_id"))
 
         if r.component:
             if r.component_name == "req":
