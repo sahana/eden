@@ -19,7 +19,6 @@ from s3.s3widgets import S3LocationSelectorWidget2
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
 from s3.s3utils import s3_avatar_represent
-from s3.s3resource import S3FieldSelector
 
 T = current.T
 s3 = current.response.s3
@@ -137,14 +136,10 @@ def customise_no_rheader_controller(**attr):
     attr["rheader"] = None
     return attr
 
+settings.customise_cms_post_controller = customise_no_rheader_controller
+settings.customise_org_office_controller = customise_no_rheader_controller
 settings.customise_org_organisation_controller = customise_no_rheader_controller
 settings.customise_org_resource_controller = customise_no_rheader_controller
-settings.customise_cms_post_controller = customise_no_rheader_controller
-settings.customise_project_task_controller = customise_no_rheader_controller
-settings.customise_project_activity_controller = customise_no_rheader_controller
-settings.customise_project_project_controller = customise_no_rheader_controller
-settings.customise_org_office_controller = customise_no_rheader_controller
-settings.customise_pr_person_controller = customise_no_rheader_controller
 
 # -----------------------------------------------------------------------------
 # Summary Pages
@@ -315,6 +310,7 @@ def customise_org_organisation_resource(r, tablename):
             s3db.org_customise_org_resource_fields("profile")
             #customise_project_project_fields()
 
+            from s3.s3resource import S3FieldSelector
             contacts_widget = dict(label = "Directory",
                                    label_create = "Create Contact",
                                    type = "datalist",
@@ -433,10 +429,10 @@ def customise_org_organisation_resource(r, tablename):
     s3db.configure("org_organisation",
                    create_next = url_next,
                    delete_next = url_next,
-                   update_next = url_next,
                    # We want the Create form to be in a modal, not inline, for consistency
                    #listadd = False,
                    list_fields = list_fields,
+                   update_next = url_next,
                    )
 
 settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -507,9 +503,9 @@ def customise_org_resource_resource(r, tablename):
         s3db.configure("org_resource",
                        create_next = url_next,
                        delete_next = url_next,
-                       update_next = url_next,
                        # Don't include a Create form in 'More' popups
                        listadd = False if r.method=="datalist" else True,
+                       update_next = url_next,
                        )
 
         # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
@@ -616,13 +612,13 @@ def customise_cms_post_resource(r, tablename):
 
     # Return to List view after create/update/delete
     # We now do all this in Popups
-    url_next = URL(c="default", f="index", args="datalist")
+    url_next = URL(c="cms", f="post", args="datalist")
 
     s3db.configure("cms_post",
                    create_next = url_next,
+                   crud_form = crud_form,
                    delete_next = url_next,
                    update_next = url_next,
-                   crud_form = crud_form,
                    )
 
     if r.representation == "geojson":
@@ -633,28 +629,16 @@ def customise_cms_post_resource(r, tablename):
 settings.customise_cms_post_resource = customise_cms_post_resource
 
 # -----------------------------------------------------------------------------
-def customise_project_task_resource(r, tablename):
-    """
-        Customise org_resource resource
-        - List Fields
-        - Fields
-        - Form
-        - Filter Widgets
-        - Report Options
-        Runs after controller customisation
-        But runs before prep
-    """
+def customise_project_task_controller(**attr):
 
     s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.project_task
 
-    # Needed because the project task controller messes with the PREP
     standard_prep = s3.prep
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+        s3db = current.s3db
         if r.method == "profile":
             # Set list_fields for renderer (project_task_list_layout)
             s3db.configure("project_task",
@@ -683,6 +667,28 @@ def customise_project_task_resource(r, tablename):
                            )
         return True
     s3.prep = custom_prep
+
+    # Remove RHeader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_project_task_controller = customise_project_task_controller
+
+# -----------------------------------------------------------------------------
+def customise_project_task_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - List Fields
+        - Fields
+        - Form
+        - Filter Widgets
+        - Report Options
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    s3db = current.s3db
+    table = s3db.project_task
 
     # Custom Form
     table.name.label = T("Name")
@@ -734,15 +740,48 @@ def customise_project_task_resource(r, tablename):
 
     s3db.configure("project_task",
                    create_next = url_next,
-                   delete_next = url_next,
-                   update_next = url_next,
                    crud_form = crud_form,
+                   delete_next = url_next,
                    filter_widgets = filter_widgets,
                    #list_fields = list_fields,
                    report_options = report_options,
+                   update_next = url_next,
                    )
 
 settings.customise_project_task_resource = customise_project_task_resource
+
+# -----------------------------------------------------------------------------
+def customise_project_project_controller(**attr):
+
+    s3 = current.response.s3
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="project", f="project",
+                                    args=["[id]", "profile"])),
+                       dict(label=str(T("Edit")),
+                            _class="action-btn",
+                            url=URL(c="project", f="project",
+                                    args=["[id]", "update"]))
+                       ]
+            s3.actions = actions
+
+        return output
+    s3.postp = custom_postp
+
+    # Remove RHeader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
 def customise_project_project_resource(r, tablename):
@@ -840,11 +879,11 @@ def customise_project_project_resource(r, tablename):
 
         s3db.configure("project_project",
                        create_next = url_next,
-                       delete_next = url_next,
-                       update_next = url_next,
                        crud_form = crud_form,
+                       delete_next = url_next,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
+                       update_next = url_next,
                        )
 
         if r.method == "profile":
@@ -856,11 +895,12 @@ def customise_project_project_resource(r, tablename):
             s3db.org_customise_org_resource_fields("profile")
             #customise_project_project_fields()
 
+            from s3.s3resource import S3FieldSelector
             tasks_widget = dict(label = "Tasks",
                                 label_create = "Create Task",
                                 type = "datalist",
                                 tablename = "project_task",
-                                #@ToDo - do this with context? Not clear how with link table
+                                # @ToDo - do this with context? Not clear how with link table
                                 # But this WORKS! So don't change without testing!
                                 #context = "project",
                                 filter = S3FieldSelector("task_project.project_id") == r.id,
@@ -893,28 +933,6 @@ def customise_project_project_resource(r, tablename):
                                           "modified_by",
                                           ]
                            )
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        if r.interactive and isinstance(output, dict):
-            actions = [dict(label=str(T("Open")),
-                            _class="action-btn",
-                            url=URL(c="project", f="project",
-                                    args=["[id]", "profile"])),
-                       dict(label=str(T("Edit")),
-                            _class="action-btn",
-                            url=URL(c="project", f="project",
-                                    args=["[id]", "update"]))
-                       ]
-            s3.actions = actions
-
-        return output
-    s3.postp = custom_postp
 
 settings.customise_project_project_resource = customise_project_project_resource
 
@@ -972,15 +990,49 @@ def customise_org_office_resource(r, tablename):
 
     s3db.configure("org_office",
                    create_next = url_next,
-                   delete_next = url_next,
-                   update_next = url_next,
                    crud_form = crud_form,
+                   delete_next = url_next,
                    list_fields = list_fields,
                    report_options = report_options,
                    list_layout = render_offices,
+                   update_next = url_next,
                    )
 
 settings.customise_org_office_resource = customise_org_office_resource
+
+# -----------------------------------------------------------------------------
+def customise_pr_person_controller(**attr):
+
+    s3 = current.response.s3
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="pr", f="person",
+                                    args=["[id]", "read"]))
+                       ]
+            s3.actions = actions
+
+            if "form" in output:
+                output["form"].add_class("pr_person")
+            elif "item" in output and hasattr(output["item"], "add_class"):
+                output["item"].add_class("pr_person")
+
+        return output
+    s3.postp = custom_postp
+
+    # Remove RHeader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_pr_person_controller = customise_pr_person_controller
 
 # -----------------------------------------------------------------------------
 def customise_pr_person_resource(r, tablename):
@@ -1175,18 +1227,18 @@ def customise_pr_person_resource(r, tablename):
 
     s3db.configure(tablename,
                    create_next = url_next,
-                   delete_next = url_next,
-                   update_next = url_next,
                    crud_form = crud_form,
+                   delete_next = url_next,
                    filter_widgets = filter_widgets,
                    list_fields = list_fields,
                    report_options = report_options,
                    # Don't include a Create form in 'More' popups
                    #listadd = False if r.method=="datalist" else True,
                    #list_layout = render_contacts,
+                   update_next = url_next,
                    )
 
-    #HR Fields For Datalist Cards
+    # HR Fields For dataList Cards
     list_fields = ["person_id",
                    "organisation_id",
                    "site_id$location_id",
@@ -1201,29 +1253,6 @@ def customise_pr_person_resource(r, tablename):
     s3db.configure("hrm_human_resource",
                    list_fields = list_fields,
                    )
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        if r.interactive and isinstance(output, dict):
-            actions = [dict(label=str(T("Open")),
-                            _class="action-btn",
-                            url=URL(c="pr", f="person",
-                                    args=["[id]", "read"]))
-                       ]
-            s3.actions = actions
-
-            if "form" in output:
-                output["form"].add_class("pr_person")
-            elif "item" in output and hasattr(output["item"], "add_class"):
-                output["item"].add_class("pr_person")
-
-        return output
-    s3.postp = custom_postp
 
 settings.customise_pr_person_resource = customise_pr_person_resource
 

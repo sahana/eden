@@ -14,7 +14,6 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3fields import S3Represent
-from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_avatar_represent
 
 T = current.T
@@ -830,6 +829,7 @@ def customise_org_organisation_controller(**attr):
                 #customise_org_office_fields()
                 customise_project_project_fields()
 
+                from s3.s3resource import S3FieldSelector
                 contacts_widget = dict(label = "Contacts",
                                        label_create = "Create Contact",
                                        type = "datalist",
