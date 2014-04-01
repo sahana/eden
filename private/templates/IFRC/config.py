@@ -258,9 +258,9 @@ settings.org.dependent_fields = \
     {"pr_person.middle_name"                     : ["Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)", "Viet Nam Red Cross"],
      "pr_person_details.mother_name"             : ["Bangladesh Red Crescent Society"],
      "pr_person_details.father_name"             : ["Bangladesh Red Crescent Society"],
-     "pr_person_details.company"                 : ["Philippine Red Cross"],
      "pr_person_details.affiliations"            : ["Philippine Red Cross"],
-     "vol_details.active"                        : ["Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"],
+     "pr_person_details.company"                 : ["Philippine Red Cross"],
+     "vol_details.active"                        : ["Afghan Red Crescent Society", "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"],
      "vol_details.availability"                  : ["Viet Nam Red Cross"],
      "vol_volunteer_cluster.vol_cluster_type_id"     : ["Philippine Red Cross"],
      "vol_volunteer_cluster.vol_cluster_id"          : ["Philippine Red Cross"],
@@ -1260,47 +1260,44 @@ settings.customise_pr_group_controller = customise_pr_group_controller
 def customise_pr_person_controller(**attr):
 
     # Special cases for Viet Nam Red Cross & Indonesian Red Crescent
+    vnrc = False
     db = current.db
     s3db = current.s3db
     otable = s3db.org_organisation
-    try:
-        vnrc = db(otable.name == "Viet Nam Red Cross").select(otable.id,
-                                                              limitby=(0, 1),
-                                                              cache=s3db.cache,
-                                                              ).first().id
-    except:
-        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
-        vnrc = False
-    else:
+    orgs = ("Afghan Red Crescent Society", "Indonesian Red Cross Society (Pelang Merah Indonesia)", "Viet Nam Red Cross")
+    rows = db(otable.name.belongs(orgs)).select(otable.id,
+                                                otable.name,
+                                                cache=s3db.cache,
+                                                )
+    if rows:
+        orgs = rows.as_dict()
         root_org = current.auth.root_org()
-        if root_org == vnrc:
-            vnrc = True
-            gis = current.gis
-            gis.get_location_hierarchy()
-            try:
-                gis.hierarchy_levels.pop("L3")
-            except:
-                # Must be already removed
-                pass
-            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
-            settings.hrm.use_skills = True
-            settings.hrm.vol_experience = "both"
-            settings.pr.reverse_names = True
-            try:
-                settings.modules.pop("asset")
-            except:
-                # Must be already removed
-                pass
-        else:
-            vnrc = False
-            idrc = db(otable.name == "Indonesian Red Cross Society (Pelang Merah Indonesia)").select(otable.id,
-                                                                                                     limitby=(0, 1),
-                                                                                                     cache=s3db.cache,
-                                                                                                     ).first().id
-            if root_org == idrc:
+        if root_org in orgs:
+            root_org = orgs[root_org]["name"]
+            if root_org == "Afghan Red Crescent Society":
+                settings.hrm.use_skills = True
+            elif root_org == "Indonesian Red Cross Society (Pelang Merah Indonesia)":
                 settings.hrm.use_skills = True
                 settings.hrm.staff_experience = "experience"
                 settings.hrm.vol_experience = "both"
+            elif root_org == "Viet Nam Red Cross":
+                vnrc = True
+                gis = current.gis
+                gis.get_location_hierarchy()
+                try:
+                    gis.hierarchy_levels.pop("L3")
+                except:
+                    # Must be already removed
+                    pass
+                settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
+                settings.hrm.use_skills = True
+                settings.hrm.vol_experience = "both"
+                settings.pr.reverse_names = True
+                try:
+                    settings.modules.pop("asset")
+                except:
+                    # Must be already removed
+                    pass
 
     if current.request.controller == "deploy":
         # Replace default title in imports:
@@ -1413,6 +1410,7 @@ def pr_rheader(r, vnrc):
     """
 
     if vnrc and current.request.controller == "vol":
+        # Simplify RHeader
         settings.hrm.vol_experience = None
 
     return current.s3db.hrm_rheader(r)

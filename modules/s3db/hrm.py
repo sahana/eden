@@ -3661,10 +3661,11 @@ def hrm_programme_hours_onaccept(form):
         else:
             # Create record
             row = db(htable.person_id == person_id).select(htable.id,
-                                                           limitby=(0, 1)).first()
+                                                           limitby=(0, 1)
+                                                           ).first()
             if row:
                 dtable.insert(human_resource_id=row.id,
-                            active=active)
+                              active=active)
     return
 
 # =============================================================================
@@ -4569,7 +4570,8 @@ def hrm_rheader(r, tabs=[],
                     if hr:
                         dtable = s3db.vol_details
                         row = db(dtable.human_resource_id == hr).select(dtable.active,
-                                                                        limitby=(0, 1)).first()
+                                                                        limitby=(0, 1)
+                                                                        ).first()
                         if row and row.active:
                             active = TD(DIV(T("Yes"),
                                             _style="color:green"))

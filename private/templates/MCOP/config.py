@@ -94,6 +94,14 @@ settings.L10n.date_format = "%b %d %Y"
 settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
+# Default Country Code for telephone numbers
+settings.L10n.default_country_code = 1
+# Enable this to change the label for 'Mobile Phone'
+settings.ui.label_mobile_phone = "Cell Phone"
+# Enable this to change the label for 'Postcode'
+settings.ui.label_postcode = "ZIP Code"
+# PDF to Letter
+settings.base.paper_size = T("Letter")
 
 # Uncomment this to Translate CMS Series Names
 # - we want this on when running s3translate but off in normal usage as we use the English names to lookup icons in render_posts
