@@ -41,9 +41,12 @@ def update_check(settings):
     # Get mandatory global dependencies
     app_path = request.folder
 
+    template = settings.get_template()
     gr_path = os.path.join(app_path, "requirements.txt")
-    tr_path = os.path.join(app_path, "private", "templates", settings.get_template(), "requirements.txt")
+    tr_path = os.path.join(app_path, "private", "templates", template, "requirements.txt")
     or_path = os.path.join(app_path, "optional_requirements.txt")
+    # @ToDo
+    #tor_path = os.path.join(app_path, "private", "templates", template, "requirements.txt")
 
     global_dep = parse_requirements(gr_path)
     template_dep = parse_requirements(tr_path)
@@ -56,7 +59,7 @@ def update_check(settings):
             del optional_dep[dependency]
 
     errors, warnings = s3_check_python_lib(global_dep, template_dep, optional_dep)
-    # @ToDo: Load settings before running this
+    # @ToDo: Move these to Template
     # for now this is done in s3db.climate_first_run()
     if settings.has_module("climate"):
         if settings.get_database_type() != "postgres":
@@ -211,22 +214,24 @@ def update_check(settings):
     return {"error_messages": errors, "warning_messages": warnings}
 
 # -------------------------------------------------------------------------
-
 def parse_requirements(filepath):
+    """
+    """
+
     output = {}
     try:
         with open(filepath) as filehandle:
             dependencies = filehandle.read().splitlines()
             msg = ""
             for dependency in dependencies:
-                if dependency[0] == '#':
+                if dependency[0] == "#":
                     # either a normal comment or custom message
                     if dependency[:9] == "# Warning" or dependency[7] == "# Error:":
                         msg = dependency.split(":", 1)[1]
                 else:
                     import re
-                    # check if the module name is different from the package name
-                    if '#' in dependency:
+                    # Check if the module name is different from the package name
+                    if "#" in dependency:
                         dep = dependency.split("#", 1)[1]
                         output[dep] = msg
                     else:
@@ -239,16 +244,17 @@ def parse_requirements(filepath):
                             pass
                     msg = ""
     except IOError:
+        # No override for Template
         pass
 
     return output
 
 # -------------------------------------------------------------------------
-
 def s3_check_python_lib(global_mandatory, template_mandatory, global_optional):
     """
         checks for optional as well as mandatory python libraries
     """
+
     errors = []
     warnings = []
 
@@ -257,7 +263,7 @@ def s3_check_python_lib(global_mandatory, template_mandatory, global_optional):
             if "from" in dependency:
                 exec dependency
             else:
-                exec 'import %s' % dependency
+                exec "import %s" % dependency
         except ImportError:
             if err:
                 errors.append(err)
@@ -269,7 +275,7 @@ def s3_check_python_lib(global_mandatory, template_mandatory, global_optional):
             if "from" in dependency:
                 exec dependency
             else:
-                exec 'import %s' % dependency
+                exec "import %s" % dependency
         except ImportError:
             if err:
                 errors.append(err)
@@ -281,7 +287,7 @@ def s3_check_python_lib(global_mandatory, template_mandatory, global_optional):
             if "from" in dependency:
                 exec dependency
             else:
-                exec 'import %s' % dependency
+                exec "import %s" % dependency
         except ImportError:
             if warn:
                 warnings.append(warn)
