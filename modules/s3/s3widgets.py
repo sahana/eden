@@ -57,6 +57,7 @@ __all__ = ["S3ACLWidget",
            "S3LocationSelectorWidget",
            "S3LocationSelectorWidget2",
            "S3MultiSelectWidget",
+           "S3HierarchySelectWidget",
            "S3OrganisationAutocompleteWidget",
            "S3OrganisationHierarchyWidget",
            "S3PersonAutocompleteWidget",
@@ -4760,6 +4761,134 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         current.response.s3.jquery_ready.append(script)
 
         return widget
+
+# =============================================================================
+class S3HierarchySelectWidget(FormWidget):
+    """ Selector Widget for Hierarchies """
+
+    def __init__(self,
+                 lookup=None,
+                 represent=None):
+        """
+            Constructor
+
+            @param lookup: name of the lookup table (must have a hierarchy
+                           configured)
+            @param represent: alternative representation method (falls back
+                              to the field's represent-method)
+        """
+
+        self.lookup = lookup
+        self.represent = represent
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attr):
+        """
+            Widget renderer
+
+            @param field: the Field
+            @param value: the current value(s)
+            @param attr: additional HTML attributes for the widget
+        """
+
+        if isinstance(field, Field):
+            selector = str(field).replace(".", "_")
+        else:
+            selector = field.name.replace(".", "_")
+
+        # Widget ID
+        widget_id = attr.get("_id")
+        if widget_id == None:
+            widget_id = attr["_id"] = "%s-hierarchy" % selector
+
+        # Get the lookup table
+        lookup = self.lookup
+        if not lookup:
+            lookup = s3_get_foreign_key(field)[0]
+            if not lookup:
+                raise SyntaxError("No lookup table known for %s" % field)
+
+        # Get the representation
+        represent = self.represent
+        if not represent:
+            represent = field.represent
+
+        # Instantiate the hierarchy
+        from s3hierarchy import S3Hierarchy
+        h = S3Hierarchy(tablename=lookup, represent=represent)
+        if not h.config:
+            raise AttributeError("No hierarchy configured for %s" % lookup)
+
+        # Generate the widget
+        widget = DIV(INPUT(_type = "hidden",
+                           _multiple = "multiple",
+                           _name = field.name,
+                           _id = selector,
+                           _class = "s3-hierarchy-input",
+                           requires = self.parse),
+                     DIV(h.html("%s-tree" % widget_id),
+                         _class = "s3-hierarchy-tree"),
+                     **attr)
+        widget.add_class("s3-hierarchy-widget")
+
+        s3 = current.response.s3
+        scripts = s3.scripts
+        script_dir = "/%s/static/scripts" % current.request.application
+
+        # Currently selected values
+        selected = []
+        append = selected.append
+        if not isinstance(value, (list, tuple, set)):
+            values = [value]
+        else:
+            values = value
+        for v in values:
+            if isinstance(v, (int, long)) or str(v).isdigit():
+                append(v)
+
+        if s3.debug:
+            script = "%s/jquery.jstree.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+            script = "%s/S3/s3.jquery.ui.hierarchicalopts.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+        else:
+            script = "%s/S3/s3.jstree.min.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+
+        script = '''
+$('#%(widget_id)s').hierarchicalopts({
+    appname: '%(appname)s',
+    selected: %(selected)s
+});''' % {
+            "appname": current.request.application,
+            "widget_id": widget_id,
+            "selected": json.dumps(selected) if selected else "null",
+        }
+        s3.jquery_ready.append(script)
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    def parse(self, value):
+        """
+            Value parser for the hidden input field of the widget
+
+            @param value: the value received from the client, JSON string
+
+            @return: a list
+        """
+
+        if value is None:
+            return None, None
+        try:
+            value = json.loads(value)
+        except ValueError:
+            return [], None
+
+        return value, None
 
 # =============================================================================
 class S3OptionsMatrixWidget(FormWidget):
