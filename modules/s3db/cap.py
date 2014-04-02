@@ -347,7 +347,8 @@ class S3CAPModel(S3Model):
         ]
 
         configure(tablename,
-                  filter_widgets = filter_widgets)
+                  filter_widgets = filter_widgets,
+                  onvalidation = self.cap_alert_form_validation)
 
         # Components
         add_components(tablename,
@@ -751,6 +752,18 @@ class S3CAPModel(S3Model):
         """
 
         return S3CAPModel.list_string_represent(v, S3CAPModel.alert_represent)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_alert_form_validation(form):
+        """
+            On Validation for CAP alert form
+        """
+        T = current.T
+        vars = form.vars
+        if vars["scope"] == "Private" and vars["addresses"]=="":
+            form.errors["addresses"] = T("'Recipients' field mandatory in case of 'Private' scope")
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod
