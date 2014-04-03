@@ -2244,7 +2244,9 @@ class S3SyncCommandBridge(S3SyncRepository):
         log = self.log
         if data and count:
 
-            response, message = self.send(method="POST", data=data)
+            response, message = self.send(method = "POST",
+                                          path = "BulkStream",
+                                          data = data)
 
             if response is None:
                 result = log.FATAL
@@ -2345,8 +2347,11 @@ class S3SyncCommandBridge(S3SyncRepository):
                 message = "%s (%s)" % (message, details)
         else:
             response = xml.parse(f)
-            if response is None and xml.error:
-                message = xml.error
+            if response is None:
+                if method == "POST":
+                    response = True
+                elif xml.error:
+                    message = xml.error
 
         return response, message
 
