@@ -207,8 +207,7 @@ settings.L10n.utc_offset = "UTC +0700"
 settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
-# Unsortable 'pretty' date format
-#settings.L10n.date_format = T("%d-%b-%Y")
+# Unsortable 'pretty' date format (for use in English)
 settings.L10n.date_format = "%d-%b-%Y"
 # Make last name in person/user records mandatory
 settings.L10n.mandatory_lastname = True

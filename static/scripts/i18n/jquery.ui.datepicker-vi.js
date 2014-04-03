@@ -14,7 +14,7 @@ jQuery(function($){
 		dayNamesShort: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
 		dayNamesMin: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
 		weekHeader: 'Tu',
-		//dateFormat: 'dd/mm/yy',
+		dateFormat: 'dd/mm/yy',
 		firstDay: 0,
 		isRTL: false,
 		showMonthAfterYear: false,

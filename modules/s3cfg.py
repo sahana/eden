@@ -57,6 +57,31 @@ class S3Config(Storage):
         "default_inline": formstyle_default_inline,
     }
 
+    # Formats from static/scripts/i18n/jquery-ui-i18n.js converted to Python style
+    date_formats = {"ar": "%d/%m/%Y",
+                    "de": "%d.%m.%Y",
+                    "el": "%d/%m/%Y",
+                    "es": "%d/%m/%Y",
+                    "fr": "%d/%m/%Y",
+                    "it": "%d/%m/%Y",
+                    "ja": "%Y/%m/%d",
+                    "km": "%d-%m-%Y",
+                    "ko": "%Y-%m-%d",
+                    #"ne": "",
+                    "prs": "%Y/%m/%d",
+                    "ps": "%Y/%m/%d",
+                    "pt": "%d/%m/%Y",
+                    "pt-br": "%d/%m/%Y",
+                    "ru": "%d.%m.%Y",
+                    "sv": "%Y-%m-%d",
+                    #"tet": "",
+                    #"tl": "",
+                    #"ur": "",
+                    "vi": "%d/%m/%Y",
+                    "zh-cn": "%Y-%m-%d",
+                    "zh-tw": "%Y/%m/%d",
+                    }
+
     def __init__(self):
         self.auth = Storage()
         self.auth.email_domains = []
@@ -937,8 +962,11 @@ class S3Config(Storage):
                                                        ("es", "Español"),
                                                        ("it", "Italiano"),
                                                        ("ja", "日本語"),
-                                                       ("km", "ភាសាខ្មែរ"),
+                                                       ("km", "ភាសាខ្មែរ"),         # Khmer
                                                        ("ko", "한국어"),
+                                                       ("ne", "नेपाली"),          # Nepali
+                                                       ("prs", "دری"),         # Dari
+                                                       ("ps", "پښتو"),         # Pashto
                                                        ("pt", "Português"),
                                                        ("pt-br", "Português (Brasil)"),
                                                        ("ru", "русский"),
@@ -957,29 +985,41 @@ class S3Config(Storage):
             http://eden.sahanafoundation.org/ticket/594
         """
         T = current.T
-        return self.L10n.get("religions", {
-                "none":T("none"),
-                "christian":T("Christian"),
-                "muslim":T("Muslim"),
-                "jewish":T("Jewish"),
-                "buddhist":T("Buddhist"),
-                "hindu":T("Hindu"),
-                "bahai":T("Bahai"),
-                "other":T("other")
-            })
+        return self.L10n.get("religions", {"none": T("none"),
+                                           "christian": T("Christian"),
+                                           "muslim": T("Muslim"),
+                                           "jewish": T("Jewish"),
+                                           "buddhist": T("Buddhist"),
+                                           "hindu": T("Hindu"),
+                                           "bahai": T("Bahai"),
+                                           "other": T("other")
+                                           })
+
     def get_L10n_date_format(self):
-        return self.L10n.get("date_format", "%Y-%m-%d")
+        """
+            Lookup the Date Format - either by locale or by global setting
+        """
+        language = current.session.s3.language
+        if language in self.date_formats:
+            return self.date_formats.get(language)
+        else:
+            return self.L10n.get("date_format", "%Y-%m-%d")
+
     def get_L10n_time_format(self):
         return self.L10n.get("time_format", "%H:%M")
+
     def get_L10n_datetime_separator(self):
         return self.L10n.get("datetime_separator", " ")
+
     def get_L10n_datetime_format(self):
         return "%s%s%s" % (self.get_L10n_date_format(),
                            self.get_L10n_datetime_separator(),
                            self.get_L10n_time_format()
                            )
+
     def get_L10n_utc_offset(self):
         return self.L10n.get("utc_offset", "UTC +0000")
+
     def get_L10n_firstDOW(self):
         return self.L10n.get("firstDOW", 1)
 

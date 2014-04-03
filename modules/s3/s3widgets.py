@@ -1199,6 +1199,29 @@ class S3DateWidget(FormWidget):
         if not error:
             value = v.isoformat()
 
+        request = current.request
+        s3 = current.response.s3
+        localised = False
+        language = current.session.s3.language
+        if language in settings.date_formats:
+            # Localise if we have configured a Date Format and we have a jQueryUI options file
+            # Do we have a suitable locale file?
+            if language in ("prs", "ps"):
+                # Dari & Pashto use Farsi
+                language = "fa"
+            #elif language == "ur":
+            #    # Urdu uses Arabic
+            #    language = "ar"
+            elif "-" in language:
+                parts = language.split("_", 1)
+                language = "%s-%s" % (parts[0], parts[1].upper())
+            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            if os.path.exists(path):
+                localised = True
+                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                if lscript not in s3.scripts:
+                    s3.scripts.append(lscript)
+
         if self.format:
             # default: "yy-mm-dd"
             format = str(self.format)
@@ -1220,7 +1243,6 @@ class S3DateWidget(FormWidget):
             selector = str(field).replace(".", "_")
 
         # Convert to Days
-        request = current.request
         now = current.request.utcnow
         past = self.past
         if past:
@@ -1245,31 +1267,30 @@ class S3DateWidget(FormWidget):
         else:
             maxDate = "+0"
 
-        script = \
-'''$('#%(selector)s').datepicker('option',{
+        if not localised:
+            # Can provide options in initial instantiation
+            script = \
+'''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
+ dateFormat:'%(format)s',
  minDate:%(past)s,
- maxDate:%(future)s,
- yearRange:'c-100:c+100',
- dateFormat:'%(format)s'})''' % \
-        dict(selector = selector,
-             past = minDate,
-             future = maxDate,
-             format = format)
-
-        s3 = current.response.s3
-        language = current.session.s3.language
-        if language != settings.get_L10n_default_language():
-            # Do we have a suitable locale file?
-            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
-            if os.path.exists(path):
-                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
-                if lscript not in s3.scripts:
-                    s3.scripts.append(lscript)
-                script = '''%s
-$('#%s').datepicker('option',$.datepicker.regional['%s'])''' % (script,
-                                                                selector,
-                                                                language)
-
+ maxDate:%(future)s})''' % dict(selector = selector,
+                                format = format,
+                                past = minDate,
+                                future = maxDate,
+                                )
+        else:
+            # Load locale file & then override options
+            script = \
+'''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100'})
+$('#%(selector)s').datepicker('option',$.datepicker.regional['%(language)s'])
+$('#%(selector)s').datepicker('option','minDate','%(past)s')
+$('#%(selector)s').datepicker('option','maxDate','%(future)s')''' % \
+    dict(selector = selector,
+         language = language,
+         past = minDate,
+         future = maxDate,
+         )
+         
         s3.jquery_ready.append(script)
 
         return TAG[""](widget, requires = field.requires)
@@ -1371,6 +1392,29 @@ class S3DateTimeWidget(FormWidget):
                              settings.get_L10n_datetime_separator())
         datetime_format = "%s%s%s" % (date_format, separator, time_format)
 
+        request = current.request
+        s3 = current.response.s3
+        localised = False
+        language = current.session.s3.language
+        if language in settings.date_formats:
+            # Localise if we have configured a Date Format and we have a jQueryUI options file
+            # Do we have a suitable locale file?
+            if language in ("prs", "ps"):
+                # Dari & Pashto use Farsi
+                language = "fa"
+            #elif language == "ur":
+            #    # Urdu uses Arabic
+            #    language = "ar"
+            elif "-" in language:
+                parts = language.split("_", 1)
+                language = "%s-%s" % (parts[0], parts[1].upper())
+            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            if os.path.exists(path):
+                localised = True
+                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                if lscript not in s3.scripts:
+                    s3.scripts.append(lscript)
+
         # Option to hide the time slider
         hide_time = opts.get("hide_time", False)
         if hide_time:
@@ -1383,7 +1427,6 @@ class S3DateTimeWidget(FormWidget):
             dtformat = datetime_format
 
         # Limits
-        request = current.request
         now = request.utcnow
         timedelta = datetime.timedelta
         offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
@@ -1474,7 +1517,7 @@ class S3DateTimeWidget(FormWidget):
  firstDay:%(firstDOW)s,
  min%(limit)s:new Date(Date.parse('%(earliest)s')),
  max%(limit)s:new Date(Date.parse('%(latest)s')),
- dateFormat:'%(date_format)s',
+ %(date_format)s
  timeFormat:'%(time_format)s',
  separator:'%(separator)s',
  stepMinute:%(minute_step)s,
@@ -1486,15 +1529,15 @@ class S3DateTimeWidget(FormWidget):
  useLocalTimezone:true,
  defaultValue:'%(default)s',
  onClose:%(onclose)s
-});
+})
 var clear_button=$('<input id="%(selector)s_clear" type="button" value="%(clear)s"/>').click(function(){
  $('#%(selector)s').val('');%(onclear)s;$('#%(selector)s').closest('.filter-form').trigger('optionChanged')
-});
+})
 if($('#%(selector)s_clear').length==0){
  $('#%(selector)s').after(clear_button)
 }''' %  dict(selector=selector,
              widget=widget,
-             date_format=date_format,
+             date_format="dateFormat:'%s'," % date_format if not localised else "",
              time_format=time_format,
              separator=separator,
              weeknumber = getopt("weeknumber", False),
@@ -1512,20 +1555,14 @@ if($('#%(selector)s_clear').length==0){
              onclose=onclose,
              onclear=onclear,
              )
-
-        s3 = current.response.s3
-        language = current.session.s3.language
-        if language != settings.get_L10n_default_language():
-            # Do we have a suitable locale file?
-            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
-            if os.path.exists(path):
-                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
-                if lscript not in s3.scripts:
-                    s3.scripts.append(lscript)
-                script = '''%s
-$('#%s').datepicker('option',$.datepicker.regional['%s'])''' % (script,
-                                                                selector,
-                                                                language)
+        if localised:
+            script = \
+'''%(script)s
+$('#%(selector)s').%(widget)s('option',$.datepicker.regional['%(language)s'])
+}''' %  dict(script=script,
+             widget=widget,
+             language = language,
+             )
 
         s3.jquery_ready.append(script)
 
