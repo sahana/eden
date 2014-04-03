@@ -89,7 +89,7 @@ def alert():
             redirect(URL(c="cap", f="template",
                          args=request.args,
                          vars=request.vars))
-
+            
         if r.interactive:
             alert_fields_comments()
 
@@ -116,8 +116,8 @@ def alert():
         """
             REST post-processor:
              - check to see if "Save and add information" was pressed
-        """
-
+        """ 
+        
         lastid = r.resource.lastid
         if lastid and request.post_vars.get("edit_info", False):
             table = db.cap_alert
@@ -212,7 +212,7 @@ def template():
         for f in ["status", "scope"]:
             atable[f].requires = None
         atable.template_title.required = True
-
+        atable.status.readable = atable.status.writable = False
         itable = db.cap_info
         for f in ["urgency", "certainty",
                   "priority", "severity",

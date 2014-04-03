@@ -277,6 +277,7 @@ class S3CAPModel(S3Model):
                            readable=True,
                            ),
                      Field("status",
+                           default = "Draft",
                            label = T("Status"),
                            requires=IS_IN_SET(cap_alert_status_code_opts),
                            ),
