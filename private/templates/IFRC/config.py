@@ -1268,6 +1268,8 @@ def customise_pr_person_controller(**attr):
     if root_org == ARCS:
         arcs = True
         settings.L10n.mandatory_lastname = False
+        # Override what has been set in the model already
+        s3db.pr_person.last_name.requires = None
         settings.hrm.use_code = True
         settings.hrm.use_skills = True
         settings.hrm.vol_active = True
