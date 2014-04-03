@@ -1,6 +1,5 @@
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns="http://schemas.datacontract.org/2004/07/PortfolioAPI.Models"
   xmlns:d3p1="http://schemas.datacontract.org/2004/07/System.Globalization"
   xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
 
@@ -63,9 +62,7 @@
             <Id>0</Id>
             <OriginationId><xsl:value-of select="@uuid"/></OriginationId>
             <xsl:call-template name="SystemInfo"/>
-            <CultureInfo>
-                <d3p1:m_name>en-US</d3p1:m_name>
-            </CultureInfo>
+            <CultureInfo>en-US</CultureInfo>
             <ContentType>text/html</ContentType>
             <xsl:call-template name="Body"/>
             <xsl:apply-templates select="reference[@field='location_id'][1]"/>
@@ -76,7 +73,7 @@
     <!-- TimeStamps -->
 
     <xsl:template name="TimeStamps">
-        <CreatedDateTime><xsl:value-of select="@created_on"/></CreatedDateTime>
+        <CreateDateTime><xsl:value-of select="@created_on"/></CreateDateTime>
         <LastUpdateDateTime><xsl:value-of select="@modified_on"/></LastUpdateDateTime>
     </xsl:template>
     
