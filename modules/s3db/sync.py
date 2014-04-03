@@ -132,6 +132,7 @@ class SyncDataModel(S3Model):
             "eden": "Sahana Eden",
             "ccrm": "CiviCRM",
             "wrike": "Wrike",
+            "mcb": "Mariner CommandBridge",
         }
 
         tablename = "sync_repository"

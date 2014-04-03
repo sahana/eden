@@ -789,6 +789,7 @@ class S3SyncRepository(object):
             "eden": S3SyncRepository,
             "ccrm": S3SyncCiviCRM,
             "wrike": S3SyncWrike,
+            "mcb": S3SyncCommandBridge,
         }
 
         api = repository.apitype
@@ -1544,7 +1545,7 @@ class S3SyncCiviCRM(S3SyncRepository):
             else:
                 f = urllib2.urlopen(req)
         except urllib2.HTTPError, e:
-            message = e.read()
+            message = "HTTP %s: %s" % (e.code, e.reason)
         else:
             # Parse the response
             tree = current.xml.parse(f)
@@ -2101,10 +2102,15 @@ class S3SyncWrike(S3SyncRepository):
                                             (self.token_type, access_token))
             # JSONify request data
             request_data = json.dumps(data) if data else ""
+            if request_data:
+                req.add_header("Content-Type", "application/json")
         else:
             # URL-encode request data for auth
             request_data = urllib.urlencode(data) if data else ""
                 
+        # Indicate that we expect JSON response
+        req.add_header("Accept", "application/json")
+
         # Proxy handling
         config = self.get_config()
         proxy = self.proxy or config.proxy or None
@@ -2127,7 +2133,135 @@ class S3SyncWrike(S3SyncRepository):
             else:
                 f = urllib2.urlopen(req)
         except urllib2.HTTPError, e:
-            message = e.read()
+            message = "HTTP %s: %s" % (e.code, e.reason)
+        else:
+            # Parse the response
+            try:
+                response = json.load(f)
+            except ValueError, e:
+                message = sys.exc_info()[1]
+
+        return response, message
+
+# =============================================================================
+class S3SyncCommandBridge(S3SyncRepository):
+    """
+        Mariner CommandBridge REST-API connector
+
+        @status: experimental
+    """
+
+    # -------------------------------------------------------------------------
+    def register(self):
+        """
+            Register at the repository (does nothing in CommandBridge)
+
+            @return: True if successful, otherwise False
+        """
+        
+        return True
+
+    # -------------------------------------------------------------------------
+    def login(self):
+        """
+            Login to the repository (does nothing in CommandBridge)
+
+            @return: None if successful, otherwise error message
+        """
+
+        return None
+
+    # -------------------------------------------------------------------------
+    def pull(self, task, onconflict=None):
+        """
+            Pull updates from this repository
+
+            @param task: the task Row
+            @param onconflict: synchronization conflict resolver
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record received
+        """
+
+        error = "CommandBridge API pull not implemented"
+        current.log.error(error)
+        return (error, None)
+
+    # -------------------------------------------------------------------------
+    def push(self, task):
+        """
+            Push data for a task
+
+            @param task: the task Row
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
+        """
+
+        error = "CommandBridge API push not implemented"
+        current.log.error(error)
+        return (error, None)
+
+    # -------------------------------------------------------------------------
+    def send(self, method="GET", path=None, args=None, data=None, auth=False):
+        """
+            Send a request to the CommandBridge API
+
+            @param method: the HTTP method
+            @param path: the path relative to the repository URL
+            @param data: the data to send
+            @param auth: this is an authorization request
+        """
+
+        # Request URL
+        url = self.url.rstrip("/")
+        if path:
+            url = "/".join((url, path.lstrip("/")))
+        if args:
+            url = "?".join((url, urllib.urlencode(args)))
+
+        # Create the request
+        req = urllib2.Request(url=url)
+        handlers = []
+
+        site_key = self.site_key
+        if not site_key:
+            message = "CommandBridge Authorization failed: no access token (site key)"
+            current.log.error(message)
+            return None, message
+        req.add_header("Authorization-Token", "%s" % site_key)
+
+        # JSONify request data
+        request_data = json.dumps(data) if data else ""
+        if request_data:
+            req.add_header("Content-Type", "application/json")
+
+        # Indicate that we expect JSON response
+        req.add_header("Accept", "application/json")
+
+        # Proxy handling
+        config = self.get_config()
+        proxy = self.proxy or config.proxy or None
+        if proxy:
+            _debug("using proxy=%s" % proxy)
+            proxy_handler = urllib2.ProxyHandler({"https": proxy})
+            handlers.append(proxy_handler)
+
+        # Install all handlers
+        if handlers:
+            opener = urllib2.build_opener(*handlers)
+            urllib2.install_opener(opener)
+
+        # Execute the request
+        response = None
+        message = None
+        try:
+            if method == "POST":
+                f = urllib2.urlopen(req, data=request_data)
+            else:
+                f = urllib2.urlopen(req)
+        except urllib2.HTTPError, e:
+            message = "HTTP %s: %s" % (e.code, e.reason)
         else:
             # Parse the response
             try:
