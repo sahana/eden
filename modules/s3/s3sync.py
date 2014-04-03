@@ -34,6 +34,11 @@ import time
 import traceback
 
 try:
+    from cStringIO import StringIO # Faster, where available
+except:
+    from StringIO import StringIO
+
+try:
     from lxml import etree
 except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
@@ -2198,9 +2203,76 @@ class S3SyncCommandBridge(S3SyncRepository):
                      of the youngest record sent
         """
 
-        error = "CommandBridge API push not implemented"
-        current.log.error(error)
-        return (error, None)
+        xml = current.xml
+        config = self.get_config()
+        
+        resource_name = task.resource_name
+        current.log.debug("S3SyncCommandBridge.push(%s, %s)" % (self.url, resource_name))
+
+        # Define the resource
+        resource = current.s3db.resource(resource_name,
+                                         include_deleted=True)
+
+        # Export stylesheet
+        folder = current.request.folder
+        import os
+        stylesheet = os.path.join(folder,
+                                  "static",
+                                  "formats",
+                                  "mcb",
+                                  "export.xsl")
+
+        # Last push
+        last_push = task.last_push
+        
+        # Apply sync filters for this task
+        filters = current.sync.get_filters(task.id)
+
+        # Export the resource as S3XML
+        data = resource.export_xml(filters = filters,
+                                   msince = last_push,
+                                   stylesheet = stylesheet,
+                                   pretty_print = True,
+                                   )
+
+        count = resource.results or 0
+        mtime = resource.muntil
+
+        # Transmit the data via HTTP
+        remote = False
+        output = None
+        log = self.log
+        if data and count:
+
+            response, message = self.send(method="POST", data=data)
+
+            if response is None:
+                result = log.FATAL
+                remote = True
+                if not message:
+                    message = "unknown error"
+                output = message
+            else:
+                result = log.SUCCESS
+                message = "data sent successfully (%s records)" % count
+        else:
+            # No data to send
+            result = log.WARNING
+            message = "no data to send"
+
+        # Log the operation
+        log.write(repository_id = self.id,
+                  resource_name = resource_name,
+                  transmission = log.OUT,
+                  mode = log.PUSH,
+                  action = "send data",
+                  remote = remote,
+                  result = result,
+                  message = message)
+
+        if output is not None:
+            mtime = None
+        return (output, mtime)
 
     # -------------------------------------------------------------------------
     def send(self, method="GET", path=None, args=None, data=None, auth=False):
@@ -2212,6 +2284,8 @@ class S3SyncCommandBridge(S3SyncRepository):
             @param data: the data to send
             @param auth: this is an authorization request
         """
+
+        xml = current.xml
 
         # Request URL
         url = self.url.rstrip("/")
@@ -2231,13 +2305,13 @@ class S3SyncCommandBridge(S3SyncRepository):
             return None, message
         req.add_header("Authorization-Token", "%s" % site_key)
 
-        # JSONify request data
-        request_data = json.dumps(data) if data else ""
+        # Request Data
+        request_data = data if data is not None else ""
         if request_data:
-            req.add_header("Content-Type", "application/json")
+            req.add_header("Content-Type", "application/xml")
 
-        # Indicate that we expect JSON response
-        req.add_header("Accept", "application/json")
+        # Indicate that we expect XML response
+        req.add_header("Accept", "application/xml")
 
         # Proxy handling
         config = self.get_config()
@@ -2257,17 +2331,22 @@ class S3SyncCommandBridge(S3SyncRepository):
         message = None
         try:
             if method == "POST":
+                #print >> sys.stderr, request_data
                 f = urllib2.urlopen(req, data=request_data)
             else:
                 f = urllib2.urlopen(req)
         except urllib2.HTTPError, e:
             message = "HTTP %s: %s" % (e.code, e.reason)
+            # More details may be in the response body
+            error_response = xml.parse(e)
+            if error_response:
+                error_messages = error_response.findall("Message")
+                details = " / ".join(item.text for item in error_messages)
+                message = "%s (%s)" % (message, details)
         else:
-            # Parse the response
-            try:
-                response = json.load(f)
-            except ValueError, e:
-                message = sys.exc_info()[1]
+            response = xml.parse(f)
+            if response is None and xml.error:
+                message = xml.error
 
         return response, message
 

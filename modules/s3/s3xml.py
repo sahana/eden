@@ -1188,7 +1188,9 @@ class S3XML(S3Codec):
             # Get the representation
             is_lazy = False
             if fieldtype not in ("upload", "password", "blob"):
-                if represent is not None and fieldtype != "id":
+                if represent is not None and \
+                   fieldtype != "id" and \
+                   f not in ("created_on", "modified_on"):
                     if lazy is not None and hasattr(represent, "bulk"):
                         is_lazy = True
                         text = S3RepresentLazy(v, represent)
@@ -2476,6 +2478,9 @@ class S3XMLFormat(object):
         """
 
         self.tree = current.xml.parse(stylesheet)
+        if not self.tree:
+            current.log.error("%s parse error: %s" %
+                              (stylesheet, current.xml.error))
         
         self.select = None
         self.skip = None
@@ -2492,7 +2497,7 @@ class S3XMLFormat(object):
         """
 
         ANY = "ANY"
-        default = None
+        default = (None, None)
 
         tree = self.tree
         if not tree:
@@ -2580,6 +2585,10 @@ class S3XMLFormat(object):
             @param tree: the element tree
             @param args: parameters for the stylesheet
         """
+
+        if not self.tree:
+            current.log.error("XMLFormat: no stylesheet available")
+            return tree
 
         return current.xml.transform(tree, self.tree, **args)
 

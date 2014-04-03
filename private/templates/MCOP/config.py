@@ -1571,13 +1571,13 @@ settings.modules = OrderedDict([
 #        restricted = False,
 #        module_type = None  # No Menu
 #    )),
-#    ("sync", Storage(
-#        name_nice = "Synchronization",
-#        #description = "Synchronization",
-#        restricted = True,
-#        access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
-#        module_type = None  # This item is handled separately for the menu
-#    )),
+   ("sync", Storage(
+       name_nice = "Synchronization",
+       #description = "Synchronization",
+       restricted = True,
+       access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
+       module_type = None  # This item is handled separately for the menu
+   )),
     ("translate", Storage(
         name_nice = "Translation Functionality",
         #description = "Selective translation of strings based on module.",
