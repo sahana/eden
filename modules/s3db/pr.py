@@ -880,9 +880,9 @@ class S3PersonModel(S3Model):
                        )
 
         person_id_comment = pr_person_comment(
-                                    T("Person"),
-                                    T("Type the first few characters of one of the Person's names."),
-                                    child="person_id")
+            T("Person"),
+            T("Type the first few characters of one of the Person's names."),
+            child="person_id")
 
         person_represent = pr_PersonRepresent()
 
@@ -905,7 +905,8 @@ class S3PersonModel(S3Model):
                                     label = T("Person"),
                                     comment = person_id_comment,
                                     ondelete = "RESTRICT",
-                                    widget = S3PersonAutocompleteWidget())
+                                    widget = S3PersonAutocompleteWidget(),
+                                    )
 
         # Custom Methods for S3PersonAutocompleteWidget and S3AddPersonWidget2
         set_method = self.set_method

@@ -53,13 +53,14 @@ class S3Migration(object):
         m = local_import("s3migration")
         migrate = m.S3Migration()
         migrate.prep(foreigns=[],
-                     uniques=[],
-                     strints=[],
+                     ondeletes=[],
                      strbools=[],
+                     strints=[],
+                     uniques=[],
                      )
         #migrate.migrate()
-        migrate.post(strints=[],
-                     strbools=[],
+        migrate.post(strbools=[],
+                     strints=[],
                      )
 
         FYI: If you need to access a filename in eden/databases/ then here is how:
@@ -113,15 +114,21 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, foreigns=[], uniques=[], strints=[], strbools=[]):
+    def prep(self, foreigns=[],
+                   ondeletes=[],
+                   strbools=[],
+                   strints=[],
+                   uniques=[],
+                   ):
         """
             Preparation before migration
 
-            @param foreigns : List of tuples (tablename, fieldname) to have the foreign keys removed
+            @param foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
                               - if tablename == "all" then all tables are checked
-            @param uniques  : List of tuples (tablename, fieldname) to have the unique indices removed,
-            @param strints  : List of tuples (tablename, fieldname) to convert from string to integer
-            @param strbools : List of tuples (tablename, fieldname) to convert from string/integer to bools
+            @param ondeletes : List of tuples (tablename, fieldname, reftable, ondelete) to have the ondelete modified to
+            @param strbools  : List of tuples (tablename, fieldname) to convert from string/integer to bools
+            @param strints   : List of tuples (tablename, fieldname) to convert from string to integer
+            @param uniques   : List of tuples (tablename, fieldname) to have the unique indices removed,
         """
 
         # Backup current database
@@ -135,10 +142,14 @@ class S3Migration(object):
         for tablename, fieldname in uniques:
             self.remove_unique(tablename, fieldname)
 
+        # Modify ondeletes
+        for tablename, fieldname, reftable, ondelete in uniques:
+            self.ondelete(tablename, fieldname, reftable, ondelete)
+
         # Remove fields which need to be altered in next code
-        for tablename, fieldname in strints:
-            self.drop(tablename, fieldname)
         for tablename, fieldname in strbools:
+            self.drop(tablename, fieldname)
+        for tablename, fieldname in strints:
             self.drop(tablename, fieldname)
 
         self.db.commit()
@@ -159,12 +170,14 @@ class S3Migration(object):
         pass
 
     # -------------------------------------------------------------------------
-    def post(self, strints=[], strbools=[]):
+    def post(self, strbools=[],
+                   strints=[],
+                   ):
         """
             Cleanup after migration
 
-            @param strints : List of tuples (tablename, fieldname) to convert from string to integer
             @param strbools : List of tuples (tablename, fieldname) to convert from string/integer to bools
+            @param strints : List of tuples (tablename, fieldname) to convert from string to integer
         """
 
         db = self.db
@@ -305,7 +318,7 @@ class S3Migration(object):
                 dict(tablename=tablename, fieldname=fieldname)
 
         elif db_engine == "postgres":
-            # http://www.postgresql.org/docs/8.4/static/sql-altertable.html
+            # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
             sql = "ALTER TABLE %(tablename)s DROP COLUMN %(fieldname)s;" % \
                 dict(tablename=tablename, fieldname=fieldname)
 
@@ -328,6 +341,47 @@ class S3Migration(object):
         db.define_table(tablename, *fields,
                         # Rebuild the .table file from this definition
                         fake_migrate=True)
+
+    # -------------------------------------------------------------------------
+    def ondelete(self, tablename, fieldname, reftable, ondelete):
+        """
+            Modify the ondelete constraint for a foreign key
+        """
+
+        db = self.db
+        db_engine = self.db_engine
+        executesql = db.executesql
+
+        if tablename == "all":
+            tables = db.tables
+        else:
+            tables = [tablename]
+
+        for tablename in tables:
+            if fieldname not in db[tablename].fields:
+                continue
+
+            # Modify the database
+            if db_engine == "sqlite":
+                # @ToDo: http://www.sqlite.org/lang_altertable.html
+                raise NotImplementedError
+
+            elif db_engine == "mysql":
+                # @ToDo: http://dev.mysql.com/doc/refman/5.1/en/alter-table.html
+                raise NotImplementedError
+
+            elif db_engine == "postgres":
+                # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
+                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey, ALTER TABLE hrm_programme_hours ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s ON DELETE %(ondelete)s;" % \
+                    dict(tablename=tablename, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
+
+            try:
+                executesql(sql)
+            except:
+                print "Error: Table %s with FK %s" % (tablename, fk)
+                import sys
+                e = sys.exc_info()[1]
+                print >> sys.stderr, e
 
     # -------------------------------------------------------------------------
     def remove_foreign(self, tablename, fieldname):
@@ -363,7 +417,7 @@ class S3Migration(object):
                     dict(tablename=tablename, fk=fk)
 
             elif db_engine == "postgres":
-                # http://www.postgresql.org/docs/8.4/static/sql-altertable.html
+                # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
                 sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey;" % \
                     dict(tablename=tablename, fieldname=fieldname)
 
@@ -395,7 +449,7 @@ class S3Migration(object):
                 dict(tablename=tablename, fieldname=fieldname)
 
         elif db_engine == "postgres":
-            # http://www.postgresql.org/docs/8.4/static/sql-altertable.html
+            # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
             sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_key;" % \
                 dict(tablename=tablename, fieldname=fieldname)
 

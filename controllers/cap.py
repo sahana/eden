@@ -89,7 +89,7 @@ def alert():
             redirect(URL(c="cap", f="template",
                          args=request.args,
                          vars=request.vars))
-            
+
         if r.interactive:
             alert_fields_comments()
 

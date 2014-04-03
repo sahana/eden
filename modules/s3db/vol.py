@@ -31,7 +31,6 @@
 __all__ = ["S3VolunteerModel",
            "S3VolunteerAwardModel",
            "S3VolunteerClusterModel",
-           "vol_active",
            "vol_service_record",
            ]
 
@@ -72,18 +71,26 @@ class S3VolunteerModel(S3Model):
         self.define_table(tablename,
                           self.hrm_human_resource_id(ondelete = "CASCADE"),
                           Field("active", "boolean",
-                                represent = self.vol_active_represent,
-                                label = T("Active"),
                                 default = False,
+                                label = T("Active"),
+                                represent = self.vol_active_represent,
                                 ),
                           Field("availability", "integer",
-                                requires = IS_NULL_OR(
-                                             IS_IN_SET(availability_opts)
-                                           ),
+                                label = T("Availability"),
                                 represent = lambda opt: \
                                             availability_opts.get(opt,
                                                           UNKNOWN_OPT),
-                                label = T("Availability"),
+                                requires = IS_NULL_OR(
+                                             IS_IN_SET(availability_opts)
+                                           ),
+                                ),
+                          Field("card", "boolean",
+                                default = False,
+                                label = T("Card holder"),
+                                represent = self.vol_active_represent,
+                                # Enable in-template when-required
+                                readable = False,
+                                writable = False,
                                 ),
                           *s3_meta_fields())
 
@@ -92,16 +99,15 @@ class S3VolunteerModel(S3Model):
     def vol_active_represent(opt):
         """ Represent the Active status of a Volunteer """
 
-        args = current.request.args
-        if "report" in args:
+        if "report" in current.request.args:
             # We can't use a represent
             return opt
 
         # List view, so HTML represent is fine
         if opt:
-            output = DIV(current.T("Yes"), _style="color:green;")
+            output = DIV(current.T("Yes"), _style="color:green")
         else:
-            output = DIV(current.T("No"), _style="color:red;")
+            output = DIV(current.T("No"), _style="color:red")
         return output
 
 # =============================================================================
@@ -217,7 +223,7 @@ class S3VolunteerClusterModel(S3Model):
     names = ["vol_cluster_type",
              "vol_cluster",
              "vol_cluster_position",
-             "vol_volunteer_cluster"
+             "vol_volunteer_cluster",
              ]
 
     def model(self):
@@ -232,9 +238,7 @@ class S3VolunteerClusterModel(S3Model):
         # Volunteer Cluster
         tablename = "vol_cluster_type"
         define_table(tablename,
-                     Field("name",
-                           length=255,
-                           unique=True,
+                     Field("name", length=255, unique=True,
                            label = T("Name")),
                      *s3_meta_fields())
 
@@ -275,9 +279,7 @@ class S3VolunteerClusterModel(S3Model):
         tablename = "vol_cluster"
         define_table(tablename,
                      vol_cluster_type_id(),
-                     Field("name",
-                           length=255,
-                           unique=True,
+                     Field("name", length=255, unique=True,
                            label = T("Name")),
                      *s3_meta_fields())
 
@@ -318,9 +320,7 @@ class S3VolunteerClusterModel(S3Model):
         #
         tablename = "vol_cluster_position"
         define_table(tablename,
-                     Field("name",
-                           length=255,
-                           unique=True,
+                     Field("name", length=255, unique=True,
                            label = T("Name")),
                      *s3_meta_fields())
 
@@ -398,62 +398,6 @@ S3OptionsFilter({
             )
 
 # =============================================================================
-def vol_active(person_id):
-    """
-        Whether a Volunteer counts as 'Active' based on the number of hours
-        they've done (both Trainings & Programmes) per month, averaged over
-        the last year.
-        If nothing recorded for the last 3 months, don't penalise as assume
-        that data entry hasn't yet been done.
-
-        @ToDo: Move to Template
-        @ToDo: This should be based on the HRM record, not Person record
-               - could be active with Org1 but not with Org2
-        @ToDo: allow to be calculated differently per-Org
-    """
-
-    now = current.request.utcnow
-
-    # Time spent on Programme work
-    htable = current.s3db.hrm_programme_hours
-    query = (htable.deleted == False) & \
-            (htable.person_id == person_id) & \
-            (htable.date != None)
-    programmes = current.db(query).select(htable.hours,
-                                          htable.date,
-                                          orderby=htable.date)
-    if programmes:
-        # Ignore up to 3 months of records
-        three_months_prior = (now - datetime.timedelta(days=92))
-        end = max(programmes.last().date, three_months_prior.date())
-        last_year = end - datetime.timedelta(days=365)
-        # Is this the Volunteer's first year?
-        if programmes.first().date > last_year:
-            # Only start counting from their first month
-            start = programmes.first().date
-        else:
-            # Start from a year before the latest record
-            start = last_year
-
-        # Total hours between start and end
-        programme_hours = 0
-        for programme in programmes:
-            if programme.date >= start and programme.date <= end and programme.hours:
-                programme_hours += programme.hours
-
-        # Average hours per month
-        months = max(1, (end - start).days / 30.5)
-        average = programme_hours / months
-
-        # Active?
-        if average >= 8:
-            return True
-        else:
-            return False
-    else:
-        return False
-
-# =============================================================================
 def vol_service_record(r, **attr):
     """
         Generate a Volunteer Service Record
@@ -496,7 +440,7 @@ def vol_service_record(r, **attr):
             root_org = current.cache.ram(
                 # Common key with auth.root_org
                 "root_org_%s" % org_id,
-                lambda: s3db.org_root_organisation(organisation_id=org_id)[0],
+                lambda: s3db.org_root_organisation(org_id),
                 time_expire=120
                 )
             logo = s3db.org_organisation_logo(root_org)

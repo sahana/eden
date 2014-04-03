@@ -235,19 +235,17 @@ def volunteer():
         if vol_experience in ("programme", "both"):
             # Don't use status field
             table.status.readable = table.status.writable = False
-            # Use active-field?
-            enable_active = settings.set_org_dependent_field("vol_details",
-                                                             "active",
-                                                             enable_field=False)
-            # Add active and programme to List Fields
-            if enable_active:
+            # Use active field?
+            vol_active = settings.get_hrm_vol_active()
+            if vol_active:
                 list_fields.insert(3, (T("Active?"), "details.active"))
+            # Add Programme to List Fields
             list_fields.insert(6, "person_id$hours.programme_id")
             
             # Add active and programme to Report Options
             report_fields = report_options.rows
             report_fields.append("person_id$hours.programme_id")
-            if enable_active:
+            if vol_active:
                 report_fields.append((T("Active?"), "details.active"))
             report_options.rows = report_fields
             report_options.cols = report_fields

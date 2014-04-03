@@ -11,6 +11,7 @@
 'Ability to customize the list of important facilities needed at a Shelter': 'Ability to customise the list of important facilities needed at a Shelter',
 'Add Branch Organization': 'Add New Branch Organisation',
 'Add Item to Catalog': 'Add Item to Catalogue',
+'Add New Program': 'Add New Programme',
 'Add Organization Domain': 'Add Organisation Domain',
 'Add Organization to Project': 'Add Organisation to Project',
 'Add Partner Organization': 'Add Partner Organisation',

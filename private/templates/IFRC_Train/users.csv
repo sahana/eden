@@ -45,6 +45,39 @@ Vulnerability,Reader,vul_reader@example.com,eden,"reader/0,vulnerability_reader/
 Vulnerability,Data Entry,vul_data_entry@example.com,eden,"reader/0,vulnerability_data_entry/0",International Federation of Red Cross and Red Crescent Societies,
 Vulnerability,Editor,vul_editor@example.com,eden,"reader/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies,
 Vulnerability,Super Editor,vul_super@example.com,eden,"reader/0,vulnerability_super/0",International Federation of Red Cross and Red Crescent Societies,
+Afghanistan,Volunteer Data Entry,af_dataentry@example.com,eden,"vol_data_entry",Afghan Red Crescent Society,prs
+Afghanistan,Volunteer Editor,af_editor@example.com,eden,"vol_editor",Afghan Red Crescent Society,prs
+Afghanistan,Volunteer Super Editor,af_super@example.com,eden,"vol_super",Afghan Red Crescent Society,prs
+Bangladesh,Volunteer Data Entry,bd_dataentry@example.com,eden,"vol_data_entry",Bangladesh Red Crescent Society,
+Bangladesh,Volunteer Editor,bd_editor@example.com,eden,"vol_editor",Bangladesh Red Crescent Society,
+Bangladesh,Volunteer Super Editor,bd_super@example.com,eden,"vol_super",Bangladesh Red Crescent Society,
+Cambodia,Volunteer Data Entry,kh_dataentry@example.com,eden,"vol_data_entry",Cambodian Red Cross Society,km
+Cambodia,Volunteer Editor,kh_editor@example.com,eden,"vol_editor",Cambodian Red Cross Society,km
+Cambodia,Volunteer Super Editor,kh_super@example.com,eden,"vol_super",Cambodian Red Cross Society,km
+Indonesia,Volunteer Data Entry,id_dataentry@example.com,eden,"vol_data_entry",Indonesian Red Cross Society (Pelang Merah Indonesia),
+Indonesia,Volunteer Editor,id_editor@example.com,eden,"vol_editor",Indonesian Red Cross Society (Pelang Merah Indonesia),
+Indonesia,Volunteer Super Editor,id_super@example.com,eden,"vol_super",Indonesian Red Cross Society (Pelang Merah Indonesia),
+Malaysia,Volunteer Data Entry,my_dataentry@example.com,eden,"vol_data_entry",Malaysian Red Crescent Society,
+Malaysia,Volunteer Editor,my_editor@example.com,eden,"vol_editor",Malaysian Red Crescent Society,
+Malaysia,Volunteer Super Editor,my_super@example.com,eden,"vol_super",Malaysian Red Crescent Society,
+Maldives,Volunteer Data Entry,mv_dataentry@example.com,eden,"vol_data_entry",Maldivian Red Crescent,
+Maldives,Volunteer Editor,mv_editor@example.com,eden,"vol_editor",Maldivian Red Crescent,
+Maldives,Volunteer Super Editor,mv_super@example.com,eden,"vol_super",Maldivian Red Crescent,
+Mongolia,Volunteer Data Entry,mn_dataentry@example.com,eden,"vol_data_entry",Mongolian Red Cross Society,
+Mongolia,Volunteer Editor,mn_editor@example.com,eden,"vol_editor",Mongolian Red Cross Society,
+Mongolia,Volunteer Super Editor,mn_super@example.com,eden,"vol_super",Mongolian Red Cross Society,
+Myanmar,Volunteer Data Entry,mm_dataentry@example.com,eden,"vol_data_entry",Myanmar Red Cross Society,
+Myanmar,Volunteer Editor,mm_editor@example.com,eden,"vol_editor",Myanmar Red Cross Society,
+Myanmar,Volunteer Super Editor,mm_super@example.com,eden,"vol_super",Myanmar Red Cross Society,
+Nepal,Volunteer Data Entry,np_dataentry@example.com,eden,"vol_data_entry",Nepal Red Cross Society,ne
+Nepal,Volunteer Editor,np_editor@example.com,eden,"vol_editor",Nepal Red Cross Society,ne
+Nepal,Volunteer Super Editor,np_super@example.com,eden,"vol_super",Nepal Red Cross Society,ne
+Philippines,Volunteer Data Entry,ph_dataentry@example.com,eden,"vol_data_entry",Philippine Red Cross,
+Philippines,Volunteer Editor,ph_editor@example.com,eden,"vol_editor",Philippine Red Cross,
+Philippines,Volunteer Super Editor,ph_super@example.com,eden,"vol_super",Philippine Red Cross,
+Timor,Volunteer Data Entry,tl_dataentry@example.com,eden,"vol_data_entry",Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste),
+Timor,Volunteer Editor,tl_editor@example.com,eden,"vol_editor",Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste),
+Timor,Volunteer Super Editor,tl_super@example.com,eden,"vol_super",Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste),
 Vietnam,Volunteer Data Entry,vn_dataentry@example.com,eden,"vol_data_entry",Viet Nam Red Cross,vi
 Vietnam,Volunteer Editor,vn_editor@example.com,eden,"vol_editor",Viet Nam Red Cross,vi
 Vietnam,Volunteer Super Editor,vn_super@example.com,eden,"vol_super",Viet Nam Red Cross,vi

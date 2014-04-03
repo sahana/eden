@@ -1635,6 +1635,20 @@ class S3Config(Storage):
         """
         return self.hrm.get("staff_experience", "experience")
 
+    def get_hrm_vol_active(self):
+        """
+            Whether to use a 'Active' field for Volunteers &, if so, whether
+            this is set manually or calculated by a function
+            - options are: False, True or a function
+        """
+        return self.hrm.get("vol_active", False)
+
+    def get_hrm_vol_active_tooltip(self):
+        """
+            The tooltip to show when viewing the Active status in the Volunteer RHeader
+        """
+        return self.hrm.get("vol_active_tooltip", None)
+
     def get_hrm_vol_experience(self):
         """
             Whether to use Experience for Volunteers &, if so, which table to use
@@ -1685,6 +1699,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_certificates", True)
 
+    def get_hrm_use_code(self):
+        """
+            Whether Human Resources should use Staff/Volunteer IDs
+        """
+        return self.hrm.get("use_code", False)
+
     def get_hrm_use_credentials(self):
         """
             Whether Human Resources should use Credentials
@@ -1705,7 +1725,7 @@ class S3Config(Storage):
 
     def get_hrm_use_id(self):
         """
-            Whether Human Resources should use Staff ID
+            Whether Human Resources should show ID Tab
         """
         return self.hrm.get("use_id", True)
 
@@ -1941,15 +1961,8 @@ class S3Config(Storage):
                     # Admins see all fields unless disabled for all orgs in this deployment
                     enabled = True
                 else:
-                    s3db = current.s3db
-                    otable = s3db.org_organisation
-                    root_org_id = auth.root_org()
-                    root_org = current.db(otable.id == root_org_id).select(otable.name,
-                                                                           limitby=(0, 1),
-                                                                           cache=s3db.cache
-                                                                           ).first()
-                    if root_org:
-                        enabled = root_org.name in org_name_list
+                    root_org = auth.root_org_name()
+                    enabled = root_org in org_name_list
 
         if enable_field:
             field = current.s3db[tablename][fieldname]

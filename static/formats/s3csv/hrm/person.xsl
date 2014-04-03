@@ -48,7 +48,6 @@
          Emergency Contact Name.........optional.....pr_contact_emergency name
          Emergency Contact Relationship.optional.....pr_contact_emergency relationship
          Emergency Contact Phone........optional.....pr_contact_emergency phone
-         Home Street Address............optional.....person home address
          Home Postcode..................optional.....person home address postcode
          Home Lat.......................optional.....person home address latitude
          Home Lon.......................optional.....person home address longitude
@@ -78,13 +77,18 @@
          Volunteer Cluster Type.........optional.....volunteer_cluster cluster_type name
          Volunteer Cluster..............optional.....volunteer_cluster cluster name
          Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
+         Active.........................optional.....volunteer_details.active
          Deployable.....................optional.....link to deployments module (true|false)
          Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
 
          Column headers looked up in labels.xml:
 
-         PersonGender...................optional.....person gender
+         HomeAddress....................optional.....Home Street Address
          JobTitle.......................optional.....HR Job Title/Volunteer Role/Position
+         HRMType........................optional.....
+         MemberType.....................optional.....
+         PersonGender...................optional.....person gender
+         StaffID........................optional.....Staff ID/Volunteer ID
 
          @ToDo:
             - add more labels.xml lookups
@@ -101,12 +105,6 @@
 
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
-
-    <xsl:variable name="PersonGender">
-        <xsl:call-template name="ResolveColumnHeader">
-            <xsl:with-param name="colname">PersonGender</xsl:with-param>
-        </xsl:call-template>
-    </xsl:variable>
 
     <xsl:variable name="HomeAddress">
         <xsl:call-template name="ResolveColumnHeader">
@@ -129,6 +127,18 @@
     <xsl:variable name="MemberType">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">MemberType</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="PersonGender">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">PersonGender</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="StaffID">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">StaffID</xsl:with-param>
         </xsl:call-template>
     </xsl:variable>
 
@@ -481,6 +491,12 @@
             </xsl:call-template>
         </xsl:variable>
 
+        <xsl:variable name="staffID">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$StaffID"/>
+            </xsl:call-template>
+        </xsl:variable>
+
 <!--        <xsl:if test="position()=1">
             <xsl:for-each select="col[starts-with(@name, 'Course')]">
                 <xsl:call-template name="Course"/>
@@ -609,6 +625,7 @@
                         <xsl:with-param name="BranchName" select="$BranchName"/>
                         <xsl:with-param name="OfficeName" select="col[@field='Office']/text()"/>
                         <xsl:with-param name="FacilityType" select="col[@field='Facility Type']/text()"/>
+                        <xsl:with-param name="StaffID" select="$staffID"/>
                         <xsl:with-param name="Status">
                             <xsl:call-template name="lowercase">
                                 <xsl:with-param name="string">
@@ -736,12 +753,16 @@
         <xsl:param name="BranchName"/>
         <xsl:param name="OfficeName"/>
         <xsl:param name="FacilityType"/>
+        <xsl:param name="StaffID"/>
         <xsl:param name="Status"/>
         <xsl:param name="type"/>
 
         <resource name="hrm_human_resource">
 
             <!-- HR data -->
+            <xsl:if test="$StaffID!=''">
+                <data field="code"><xsl:value-of select="$StaffID"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Start Date']!=''">
                 <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             </xsl:if>
@@ -816,7 +837,14 @@
                 </resource>
             </xsl:if>
 
-            <!-- Volunteer Cluster (voluteers only) -->
+            <!-- Volunteer Details -->
+            <xsl:if test="col[@field='Active'] = 'true'">
+                <resource name="vol_details">
+                    <data field="active" value="true"/>
+                </resource>
+            </xsl:if>
+
+            <!-- Volunteer Cluster -->
             <xsl:if test="col[@field='Volunteer Cluster Type'] != '' or col[@field='Volunteer Cluster'] != '' or col[@field='Volunteer Cluster Position'] != ''">
               <resource name="vol_volunteer_cluster">
                 <xsl:if test="col[@field='Volunteer Cluster Type'] != ''">

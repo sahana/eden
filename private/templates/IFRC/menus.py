@@ -424,30 +424,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.hrm()
     
     # -------------------------------------------------------------------------
-    @staticmethod
-    def check_org(org_name):
-        """ Check whether User is of the given Org """
-
-        db = current.db
-        s3db = current.s3db
-        otable = s3db.org_organisation
-        try:
-            org_id = db(otable.name == org_name).select(otable.id,
-                                                        limitby=(0, 1),
-                                                        cache=s3db.cache,
-                                                        ).first().id
-        except:
-            # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
-            return False
-        else:
-            root_org = current.auth.root_org()
-            if root_org == org_id:
-                return True
-
-    # -------------------------------------------------------------------------
     def vol(self):
         """ Volunteer Management """
 
+        auth = current.auth
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
 
@@ -457,8 +437,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         personal_mode = lambda i: s3.hrm.mode is not None
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
-        is_super_editor = lambda i: current.auth.s3_has_role("vol_super") or \
-                                    current.auth.s3_has_role("staff_super")
+        is_super_editor = lambda i: auth.s3_has_role("vol_super") or \
+                                    auth.s3_has_role("staff_super")
 
         settings = current.deployment_settings
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
@@ -467,7 +447,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
 
-        not_vnrc = lambda i: not self.check_org("Viet Nam Red Cross")
+        not_vnrc = lambda i: auth.root_org_name() != "Viet Nam Red Cross"
+        skills_menu = lambda i: auth.root_org_name() in ("Afghan Red Crescent Society",
+                                                         "Indonesian Red Cross Society (Pelang Merah Indonesia)",
+                                                         "Viet Nam Red Cross",
+                                                         )
 
         check_org_dependent_field = lambda tablename, fieldname: \
             settings.set_org_dependent_field(tablename, fieldname,
@@ -502,12 +486,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Search"),
                         M("Import", m="import", p="create", check=is_org_admin),
                     ),
-                    #M("Skill Catalog", f="skill",
-                    #  check=manager_mode)(
-                    #    M("Create", m="create"),
-                    #    #M("Search"),
-                    #    #M("Skill Provisions", f="skill_provision"),
-                    #),
+                    M("Skill Catalog", f="skill",
+                      check=[manager_mode, skills_menu])(
+                        M("Create", m="create"),
+                        #M("Search"),
+                        #M("Skill Provisions", f="skill_provision"),
+                    ),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("Create", m="create"),

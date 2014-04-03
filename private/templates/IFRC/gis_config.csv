@@ -1,6 +1,7 @@
 "UUID","Name","OU","OU Type","Region Country","Default Country","Zoom","Lat","Lon","Projection","Symbology","LatMin","LatMax","LonMin","LonMax","WMS Browser"
 "SITE_DEFAULT","Default",,,,,3,4.9,125,900913,"IFRC",-90,90,-180,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"WGS84",,,,,3,4.9,125,4326,"IFRC",-90,90,-180,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+,"AF","Afghan Red Crescent Society","organisation","AF","AF",6,33.8407969,67.816162109,900913,"IFRC",29,39,60,75,
 ,"AU","Australian Red Cross","organisation","AU","AU",6,-24.764639,136.180729,900913,"IFRC",-45,-4,105,165,
 ,"FI","Finnish Red Cross","organisation","FI","FI",5,65.4758,26.359,900913,"IFRC",59,71,18,32,
 ,"ID",Indonesian Red Cross Society (Pelang Merah Indonesia),"organisation",ID,ID,4,1.478086,117.8369,900913,"IFRC",-12,8,94,142,

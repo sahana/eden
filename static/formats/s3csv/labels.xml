@@ -114,6 +114,11 @@
         <label>Volunteer Role</label>
     </column>
 
+    <column name="StaffID">
+        <label>Staff ID</label>
+        <label>Volunteer ID</label>
+    </column>
+
     <column name="MemberType">
         <label>HRMType</label>
         <label>PersonType</label>

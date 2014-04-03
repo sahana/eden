@@ -424,7 +424,7 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
-# Uncomment to chage the label for 'Staff'
+# Uncomment to change the label for 'Staff'
 #settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 #settings.hrm.email_required = False
@@ -442,6 +442,11 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.skill_types = True
 # Uncomment to disable Staff experience
 #settings.hrm.staff_experience = False
+# Uncomment to enable Volunteer 'active' field
+# - can also be made a function which is called to calculate the status based on recorded hours
+#settings.hrm.vol_active = True
+# Uncomment to define a Tooltip to show when viewing the Volunteer 'active' field
+#settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
 # Uncomment to disable Volunteer experience
 #settings.hrm.vol_experience = False
 # Uncomment to show the Organisation name in HR represents
@@ -454,13 +459,15 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.use_awards = False
 # Uncomment to disable the use of HR Certificates
 #settings.hrm.use_certificates = False
+# Uncomment to enable the use of Staff/Volunteer IDs
+#settings.hrm.use_code = True
 # Uncomment to disable the use of HR Credentials
 #settings.hrm.use_credentials = False
 # Uncomment to disable the use of HR Description
 #settings.hrm.use_description = False
 # Uncomment to enable the use of HR Education
 #settings.hrm.use_education = True
-# Uncomment to disable the use of HR ID
+# Uncomment to disable the use of HR ID Tab
 #settings.hrm.use_id = False
 # Uncomment to disable the use of HR Skills
 #settings.hrm.use_skills = False

@@ -5064,8 +5064,12 @@ def gis_layer_represent(id, row=None, show_link=True):
     if show_link:
         table = s3db[instance_type]
         query = (table.layer_id == row.layer_id)
-        id = db(query).select(table.id,
-                              limitby=(0, 1)).first().id
+        try:
+            id = db(query).select(table.id,
+                                  limitby=(0, 1)).first().id
+        except:
+            # Not found?
+            return represent
         c, f = instance_type.split("_", 1)
         represent = A(represent,
                       _href=URL(c=c, f=f,

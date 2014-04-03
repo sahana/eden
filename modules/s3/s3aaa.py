@@ -4550,7 +4550,7 @@ S3OptionsFilter({
     # -------------------------------------------------------------------------
     def root_org(self):
         """
-            Return the current user's root organisation or None
+            Return the current user's root organisation ID or None
         """
 
         if not self.user:
@@ -4563,7 +4563,36 @@ S3OptionsFilter({
         return current.cache.ram(
                     # Common key for all users of this org & vol_service_record()
                     "root_org_%s" % org_id,
-                    lambda: current.s3db.org_root_organisation(organisation_id=org_id)[0],
+                    lambda: current.s3db.org_root_organisation(org_id),
+                    time_expire=120
+                )
+
+    # -------------------------------------------------------------------------
+    def root_org_name(self):
+        """
+            Return the current user's root organisation name or None
+        """
+
+        if not self.user:
+            return None
+        org_id = self.user.organisation_id
+        if not org_id:
+            return None
+        if not current.deployment_settings.get_org_branches():
+            s3db = current.s3db
+            table = s3db.org_organisation
+            row = current.db(table.id == org_id).select(table.name,
+                                                        cache = s3db.cache,
+                                                        limitby=(0, 1)).first()
+            try:
+                return row.name
+            except:
+                # Org not found!
+                return None
+        return current.cache.ram(
+                    # Common key for all users of this org
+                    "root_org_name_%s" % org_id,
+                    lambda: current.s3db.org_root_organisation_name(org_id),
                     time_expire=120
                 )
 

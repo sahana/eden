@@ -2502,7 +2502,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 for f in ptable._filter_fields(_vars):
                     value, error = s3_validate(ptable, f, _vars[f])
                     if error:
-                        return (None, None)
+                        return (None, error)
                     elif f == "date_of_birth" and \
                         value:
                         _vars[f] = value.isoformat()

@@ -50,6 +50,7 @@ __all__ = ["S3OrganisationModel",
            "org_organisation_logo",
            "org_organisation_address",
            "org_root_organisation",
+           "org_root_organisation_name",
            "org_organisation_requires",
            "org_region_options",
            "org_rheader",
@@ -3777,17 +3778,18 @@ def org_organisation_logo(id,
     return DIV() # no logo so return an empty div
 
 # =============================================================================
-def org_root_organisation(organisation_id=None, pe_id=None):
+def org_root_organisation(organisation_id):
     """
         Lookup the root organisation of a branch organisation
 
-        @param organisation_id: the organisation's record ID or a record
-                                which contains the organisation_id
-        @param pe_id: the organisation's pe_id
+        @param organisation_id: the organisation's record ID
 
-        @return: tuple of (id, pe_id) of the root organisation,
-                  or (None, None) if no root organisation can be found
+        @return: id of the root organisation,
+                 or None if no root organisation can be found
     """
+
+    if not organisation_id:
+        return None
 
     db = current.db
     s3db = current.s3db
@@ -3795,42 +3797,64 @@ def org_root_organisation(organisation_id=None, pe_id=None):
     btable = s3db.org_organisation.with_alias("org_branch_organisation")
     ltable = s3db.org_organisation_branch
 
-    if isinstance(organisation_id, Row):
-        row = organisation_id
-        if "organisation_id" in row:
-            organisation_id = row.organisation_id
-        elif "pe_id" in row:
-            organisation_id = None
-            pe_id = row.pe_id
-        else:
-            organisation_id = None
-    if not organisation_id and not pe_id:
-        return None, None
-
-    if organisation_id is None:
-        query = (btable.pe_id == pe_id)
-    else:
-        query = (btable.id == organisation_id)
-
+    query = (btable.id == organisation_id)
     join = (ltable.deleted != True) & \
            (btable.deleted != True) & \
            (otable.deleted != True) & \
            (btable.id == ltable.branch_id) & \
            (otable.id == ltable.organisation_id)
-    row = db(query & join).select(btable.id,
-                                  btable.pe_id,
-                                  otable.id, limitby=(0, 1)).first()
+    row = db(query & join).select(otable.id,
+                                  limitby=(0, 1)).first()
 
     if row is not None:
-        return org_root_organisation(row[otable.id])
+        # Parent exists
+        return org_root_organisation(row.id)
     else:
-        row = db(query).select(btable.id,
-                               btable.pe_id,
-                               limitby=(0, 1)).first()
-        if row:
-            return (row.id, row.pe_id)
+        # This is the root org
+        return organisation_id
 
-    return None, None
+    return None
+
+# =============================================================================
+def org_root_organisation_name(organisation_id):
+    """
+        Lookup the root organisation name of a branch organisation
+
+        @param organisation_id: the organisation's record ID
+
+        @return: name of the root organisation,
+                 or None if no root organisation can be found
+    """
+
+    if not organisation_id:
+        return None
+
+    db = current.db
+    s3db = current.s3db
+    otable = s3db.org_organisation
+    btable = s3db.org_organisation.with_alias("org_branch_organisation")
+    ltable = s3db.org_organisation_branch
+
+    query = (btable.id == organisation_id)
+    join = (ltable.deleted != True) & \
+           (btable.deleted != True) & \
+           (otable.deleted != True) & \
+           (btable.id == ltable.branch_id) & \
+           (otable.id == ltable.organisation_id)
+    row = db(query & join).select(otable.id,
+                                  limitby=(0, 1)).first()
+
+    if row is not None:
+        # Parent exists
+        return org_root_organisation_name(row.id)
+    else:
+        # This is the root org
+        row = db(otable.id == organisation_id).select(otable.name,
+                                                      limitby=(0, 1)).first()
+        if row:
+            return row.name
+
+    return None
 
 # =============================================================================
 def org_organisation_requires(required = False,
