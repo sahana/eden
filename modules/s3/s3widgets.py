@@ -1201,7 +1201,6 @@ class S3DateWidget(FormWidget):
 
         request = current.request
         s3 = current.response.s3
-        localised = False
         language = current.session.s3.language
         if language in settings.date_formats:
             # Localise if we have configured a Date Format and we have a jQueryUI options file
@@ -1217,10 +1216,12 @@ class S3DateWidget(FormWidget):
                 language = "%s-%s" % (parts[0], parts[1].upper())
             path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
             if os.path.exists(path):
-                localised = True
                 lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
                 if lscript not in s3.scripts:
+                    # 1st Datepicker
                     s3.scripts.append(lscript)
+                    script = '''$.datepicker.setDefaults($.datepicker.regional["%s"])''' % language
+                    s3.jquery_ready.append(script)
 
         if self.format:
             # default: "yy-mm-dd"
@@ -1267,9 +1268,7 @@ class S3DateWidget(FormWidget):
         else:
             maxDate = "+0"
 
-        if not localised:
-            # Can provide options in initial instantiation
-            script = \
+        script = \
 '''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
  dateFormat:'%(format)s',
  minDate:%(past)s,
@@ -1278,18 +1277,6 @@ class S3DateWidget(FormWidget):
                                 past = minDate,
                                 future = maxDate,
                                 )
-        else:
-            # Load locale file & then override options
-            script = \
-'''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100'})
-$('#%(selector)s').datepicker('option',$.datepicker.regional['%(language)s'])
-$('#%(selector)s').datepicker('option','minDate','%(past)s')
-$('#%(selector)s').datepicker('option','maxDate','%(future)s')''' % \
-    dict(selector = selector,
-         language = language,
-         past = minDate,
-         future = maxDate,
-         )
          
         s3.jquery_ready.append(script)
 
@@ -1394,7 +1381,6 @@ class S3DateTimeWidget(FormWidget):
 
         request = current.request
         s3 = current.response.s3
-        localised = False
         language = current.session.s3.language
         if language in settings.date_formats:
             # Localise if we have configured a Date Format and we have a jQueryUI options file
@@ -1410,10 +1396,12 @@ class S3DateTimeWidget(FormWidget):
                 language = "%s-%s" % (parts[0], parts[1].upper())
             path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
             if os.path.exists(path):
-                localised = True
                 lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
                 if lscript not in s3.scripts:
+                    # 1st Datepicker
                     s3.scripts.append(lscript)
+                    script = '''$.datepicker.setDefaults($.datepicker.regional["%s"])''' % language
+                    s3.jquery_ready.append(script)
 
         # Option to hide the time slider
         hide_time = opts.get("hide_time", False)
@@ -1517,7 +1505,7 @@ class S3DateTimeWidget(FormWidget):
  firstDay:%(firstDOW)s,
  min%(limit)s:new Date(Date.parse('%(earliest)s')),
  max%(limit)s:new Date(Date.parse('%(latest)s')),
- %(date_format)s
+ dateFormat:'%(date_format)s',
  timeFormat:'%(time_format)s',
  separator:'%(separator)s',
  stepMinute:%(minute_step)s,
@@ -1537,7 +1525,7 @@ if($('#%(selector)s_clear').length==0){
  $('#%(selector)s').after(clear_button)
 }''' %  dict(selector=selector,
              widget=widget,
-             date_format="dateFormat:'%s'," % date_format if not localised else "",
+             date_format=date_format,
              time_format=time_format,
              separator=separator,
              weeknumber = getopt("weeknumber", False),
@@ -1547,22 +1535,13 @@ if($('#%(selector)s_clear').length==0){
              firstDOW=firstDOW,
              year_range=year_range,
              minute_step=minute_step,
-             limit=limit,
-             earliest=earliest.strftime(ISO),
-             latest=latest.strftime(ISO),
+             limit = limit,
+             earliest = earliest.strftime(ISO),
+             latest = latest.strftime(ISO),
              default=default,
              clear=current.T("clear"),
              onclose=onclose,
              onclear=onclear,
-             )
-        if localised:
-            script = \
-'''%(script)s
-$('#%(selector)s').%(widget)s('option',$.datepicker.regional['%(language)s'])
-}''' %  dict(script=script,
-             selector=selector,
-             widget=widget,
-             language = language,
              )
 
         s3.jquery_ready.append(script)
