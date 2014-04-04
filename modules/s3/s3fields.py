@@ -605,7 +605,7 @@ class S3Represent(object):
                 
         table = self.table
         if table is None or not lookup:
-            return items
+            return items, rows
 
         if table and self.hierarchy:
             # Does the lookup table have a hierarchy?
@@ -631,7 +631,7 @@ class S3Represent(object):
         try:
             key = ogetattr(table, pkey)
         except AttributeError:
-            return items
+            return items, rows
 
         # Use the given rows to lookup the values
         pop = lookup.pop
