@@ -1560,6 +1560,7 @@ if($('#%(selector)s_clear').length==0){
 '''%(script)s
 $('#%(selector)s').%(widget)s('option',$.datepicker.regional['%(language)s'])
 }''' %  dict(script=script,
+             selector=selector,
              widget=widget,
              language = language,
              )
