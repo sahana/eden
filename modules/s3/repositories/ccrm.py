@@ -156,7 +156,15 @@ class S3SyncCiviCRM(S3SyncRepository):
 
                 # Import the data
                 resource = current.s3db.resource(resource_name)
-                onconflict_callback = lambda item: onconflict(item, self, resource)
+                if onconflict:
+                    onconflict_callback = lambda item, \
+                                                 repository = self, \
+                                                 resource = resource: \
+                                                 onconflict(item,
+                                                            repository,
+                                                            resource)
+                else:
+                    onconflict_callback = None
                 count = 0
                 success = True
                 try:

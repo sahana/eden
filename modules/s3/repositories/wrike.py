@@ -315,9 +315,13 @@ class S3SyncWrike(S3SyncRepository):
 
             # Conflict resolution callback
             resource = current.s3db.resource(resource_name)
-            if onconflict is not None:
-                onconflict_callback = lambda item: \
-                                      onconflict(item, self, resource)
+            if onconflict:
+                onconflict_callback = lambda item, \
+                                             repository = self, \
+                                             resource = resource: \
+                                             onconflict(item,
+                                                        repository,
+                                                        resource)
             else:
                 onconflict_callback = None
 
@@ -601,7 +605,7 @@ class S3SyncWrike(S3SyncRepository):
         config = self.get_config()
         proxy = self.proxy or config.proxy or None
         if proxy:
-            _debug("using proxy=%s" % proxy)
+            current.log.debug("using proxy=%s" % proxy)
             proxy_handler = urllib2.ProxyHandler({"https": proxy})
             handlers.append(proxy_handler)
 

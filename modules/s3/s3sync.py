@@ -1073,7 +1073,15 @@ class S3SyncRepository(object):
 
             # Import the data
             resource = current.s3db.resource(resource_name)
-            onconflict_callback = lambda item, self=self, resource=resource: onconflict(item, self, resource)
+            if onconflict:
+                onconflict_callback = lambda item, \
+                                             repository = self, \
+                                             resource = resource: \
+                                             onconflict(item,
+                                                        repository,
+                                                        resource)
+            else:
+                onconflict_callback = None
             count = 0
             try:
                 success = resource.import_xml(
