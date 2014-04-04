@@ -193,11 +193,12 @@ def email_outbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   listadd=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
+                   listadd = False,
                    list_fields = ["id",
+                                  "date",
                                   "to_address",
                                   "subject",
                                   "body",
@@ -359,10 +360,24 @@ def email_inbox():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
+    from s3.s3resource import S3FieldSelector
+    s3.filter = (S3FieldSelector("inbound") == True)
+
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    crud_form = S3SQLCustomForm("date",
+                                "subject",
+                                "from_address",
+                                "body",
+                                S3SQLInlineComponent(
+                                    "attachment",
+                                    name = "document_id",
+                                    label = T("Attachments"),
+                                    fields = ["document_id",
+                                              ],
+                                    ),                                                                
+                                )
+
     tablename = "msg_email"
-    table = s3db.msg_email
-    s3.filter = (table.inbound == True)
-    table.inbound.readable = False
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -375,16 +390,26 @@ def email_inbox():
     )
 
     s3db.configure(tablename,
+                   crud_form = crud_form,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
                    list_fields = ["id",
+                                  "date",
                                   "from_address",
                                   "subject",
                                   "body",
+                                  (T("Attachments"), "attachment.document_id"),
                                   ],
                    )
+
+    def prep(r):
+        s3db.msg_email.inbound.readable = False
+        if r.id:
+            s3db.msg_attachment.document_id.label = ""
+        return True
+    s3.prep = prep
 
     return s3_rest_controller(module, "email")
 
@@ -1432,7 +1457,7 @@ def twitter_result():
     from s3.s3filter import S3DateFilter, S3TextFilter
 
     filter_widgets = [
-        S3DateFilter("created_on",
+        S3DateFilter("date",
                      label=T("Tweeted On"),
                      hide_time=True,
                      _class="date-filter-class",
@@ -1446,7 +1471,7 @@ def twitter_result():
         ]
 
     report_fields = ["search_id",
-                     "created_on",
+                     "date",
                      "lang",
                      ]
 

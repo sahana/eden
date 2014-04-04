@@ -12,8 +12,6 @@ from datetime import timedelta
 from gluon import current
 from gluon.storage import Storage
 
-from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox, s3_set_default_filter
-
 T = current.T
 settings = current.deployment_settings
 
@@ -773,6 +771,7 @@ def customise_hrm_human_resource_controller(**attr):
 
     s3db = current.s3db
 
+    from s3 import s3_set_default_filter
     s3_set_default_filter("~.organisation_id",
                           user_org_default_filter,
                           tablename = "hrm_human_resource")
@@ -1641,6 +1640,7 @@ settings.customise_project_project_controller = customise_project_project_contro
 
 # -----------------------------------------------------------------------------
 def customise_project_location_resource(r, tablename):
+
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
     crud_form = S3SQLCustomForm(
         "project_id",

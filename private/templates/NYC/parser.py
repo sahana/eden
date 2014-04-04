@@ -69,7 +69,7 @@ class S3Parser(object):
                                                                    table.title,
                                                                    table.from_address,
                                                                    table.body,
-                                                                   table.created_on,
+                                                                   table.date,
                                                                    table.location_id,
                                                                    table.tags,
                                                                    table.author,
@@ -118,7 +118,7 @@ class S3Parser(object):
         table = db.cms_post
         post_id = table.insert(title = record.title,
                                body = body,
-                               created_on = record.created_on,
+                               created_on = record.date,
                                location_id = record.location_id,
                                person_id = person_id,
                                series_id = series_id,

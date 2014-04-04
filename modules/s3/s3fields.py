@@ -387,7 +387,7 @@ class S3Represent(object):
         # Lookup the representation
         if value:
             rows = [row] if row is not None else None
-            items = self._lookup([value], rows=rows)
+            items, rows = self._lookup([value], rows=rows)
             if value in items:
                 r = self.link(value, items[value], rows) \
                     if show_link else items[value]
@@ -429,7 +429,7 @@ class S3Represent(object):
         # Lookup the representations
         if values:
             default = self.default
-            items = self._lookup(values, rows=rows)
+            items, rows = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
                 labels = [[link(v, s3_unicode(items[v]), rows), ", "]
@@ -485,7 +485,7 @@ class S3Represent(object):
 
         # Lookup the representations
         if values:
-            labels = self._lookup(values, rows=rows)
+            labels, rows = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
                 labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])
@@ -675,7 +675,7 @@ class S3Represent(object):
                 items[k] = self.default
 
         # Done
-        return items
+        return items, rows
 
     # -------------------------------------------------------------------------
     def _represent_path(self, value, row, rows=None, hierarchy=None):

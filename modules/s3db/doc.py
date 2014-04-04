@@ -215,7 +215,10 @@ class S3DocumentLibrary(S3Model):
                   )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = doc_DocumentRepresent(lookup = tablename,
+                                          fields = ["name", "file"],
+                                          labels = "%(name)s",
+                                          show_link = True)
         document_id = S3ReusableField("document_id", "reference %s" % tablename,
                                       label = T("Document"),
                                       ondelete = "CASCADE",
@@ -621,5 +624,31 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
+# =============================================================================
+class doc_DocumentRepresent(S3Represent):
+    """ Representation of Documents """
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, rows=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+            @param k: the key (doc_document.id)
+            @param v: the representation of the key
+            @param rows: the rows
+        """
+
+        if not k:
+            # None
+            return v
+        elif not rows:
+            # We have no way to determine the linkto
+            return v
+
+        row = rows.find(lambda row: row["doc_document.id"] == k).first()
+        filename = row["doc_document.file"]
+        url = URL(c="default", f="download", args=filename)
+        return A(v, _href=url)
 
 # END =========================================================================

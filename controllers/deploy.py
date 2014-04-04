@@ -541,9 +541,31 @@ def email_inbox():
     s3.filter = (S3FieldSelector("response.id") == None) & \
                 (S3FieldSelector("inbound") == True)
 
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    crud_form = S3SQLCustomForm("date",
+                                "subject",
+                                "from_address",
+                                "body",
+                                S3SQLInlineComponent(
+                                    "attachment",
+                                    name = "document_id",
+                                    label = T("Attachments"),
+                                    fields = ["document_id",
+                                              ],
+                                    ),                                                                
+                                )
+
     s3db.configure(tablename,
+                   crud_form = crud_form,
                    editable = False,
                    insertable = False,
+                   list_fields = ["id",
+                                  "date",
+                                  "from_address",
+                                  "subject",
+                                  "body",
+                                  (T("Attachments"), "attachment.document_id"),
+                                  ],
                    )
 
     # CRUD Strings
@@ -558,6 +580,8 @@ def email_inbox():
     )
 
     def prep(r):
+        if r.id:
+            s3db.msg_attachment.document_id.label = ""
         if r.component and r.component.alias == "select":
             if not r.method:
                 r.method = "select"

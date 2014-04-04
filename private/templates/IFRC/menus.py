@@ -730,9 +730,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(M("Missions",
                      c="deploy", f="mission", m="summary")(
+                        M("Create", m="create"),
                         M("Active Missions", m="summary",
                           vars={"~.status__belongs": "2"}),
-                        M("Create", m="create"),
                    ),
                    M("Alerts",
                      c="deploy", f="alert")(

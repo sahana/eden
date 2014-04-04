@@ -1275,6 +1275,9 @@ class S3Msg(object):
         import mimetypes
         import socket
 
+        from dateutil import parser
+        date_parse = parser.parse
+
         username = channel.username
         password = channel.password
         host = channel.server
@@ -1310,6 +1313,7 @@ class S3Msg(object):
             # Parse the Headers
             sender = msg["from"]
             subject = msg.get("subject", "")
+            date_sent = msg.get("date", None)
             # Store the whole raw message
             raw = msg.as_string()
             # Parse out the 'Body'
@@ -1331,12 +1335,16 @@ class S3Msg(object):
                 attachments.append((filename, part.get_payload(decode=True)))
 
             # Store in DB
-            id = minsert(channel_id=channel_id,
-                         from_address=sender,
-                         subject=subject[:78],
-                         body=body,
-                         raw=raw,
-                         inbound=True)
+            data = dict(channel_id=channel_id,
+                        from_address=sender,
+                        subject=subject[:78],
+                        body=body,
+                        raw=raw,
+                        inbound=True,
+                        )
+            if date_sent:
+                data["date"] = date_parse(date_sent)
+            id = minsert(**data)
             record = dict(id=id)
             update_super(mtable, record)
             message_id = record["message_id"]
@@ -1347,6 +1355,7 @@ class S3Msg(object):
                 filename = s3_unicode(a[0][:92]).encode("ascii", "ignore")
                 fp = StringIO()
                 fp.write(a[1])
+                fp.seek(0)
                 newfilename = store(fp, filename)
                 fp.close()
                 document_id = dinsert(name=filename,
@@ -1708,7 +1717,7 @@ class S3Msg(object):
                          from_address = entry.get("link", None),
                          body = content,
                          author = entry.get("author", None),
-                         created_on = date_published,
+                         date = date_published,
                          location_id = location_id,
                          tags = tags,
                          # @ToDo: Enclosures
@@ -1747,7 +1756,7 @@ class S3Msg(object):
         query = (table.channel_id == channel_id) & \
                 (table.inbound == True)
         latest = db(query).select(table.msg_id,
-                                  orderby=~table.created_on,
+                                  orderby=~table.date,
                                   limitby=(0, 1)
                                   ).first()
 
@@ -1770,7 +1779,7 @@ class S3Msg(object):
                          body = message.text,
                          from_address = message.sender_screen_name,
                          to_address = message.recipient_screen_name,
-                         created_on = message.created_at,
+                         date = message.created_at,
                          inbound = True,
                          msg_id = message.id,
                          )
@@ -1852,7 +1861,7 @@ class S3Msg(object):
             body = tweet["text"]
             tweet_id = tweet["id_str"]
             lang = tweet["lang"]
-            created_on = date_parse(tweet["created_at"])
+            created_at = date_parse(tweet["created_at"])
             lat = None
             lon = None
             if tweet["coordinates"]:
@@ -1866,7 +1875,7 @@ class S3Msg(object):
                                body = body,
                                tweet_id = tweet_id,
                                lang = lang,
-                               created_on = created_on,
+                               date = created_at,
                                inbound = True,
                                location_id = location_id,
                                )

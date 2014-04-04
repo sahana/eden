@@ -4070,7 +4070,7 @@ class org_SiteRepresent(S3Represent):
     def custom_lookup_rows(self, key, values, fields=[]):
         """
             Custom lookup method for site rows, does a
-            left join with anyb instance_types found. Parameters
+            left join with any instance_types found. Parameters
             key and fields are not used, but are kept for API
             compatibility reasons.
 

@@ -371,6 +371,7 @@ class S3MessageModel(S3Model):
                           # came in on allows correlation to Outbound
                           # messages (campaign_message, deployment_alert, etc)
                           self.msg_channel_id(),
+                          s3_datetime(default="now"),
                           Field("body", "text",
                                 label = T("Message"),
                                 ),
@@ -410,7 +411,7 @@ class S3MessageModel(S3Model):
                                      ondelete = "RESTRICT")
 
         self.add_components(tablename,
-                            msg_attachment="message_id",
+                            msg_attachment = "message_id",
                             )
 
         # ---------------------------------------------------------------------
@@ -470,12 +471,13 @@ class S3MessageModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
+                  list_fields = ["id",
+                                 "message_id",
+                                 "pe_id",
+                                 "status",
+                                 ],
                   orderby = "msg_outbox.created_on desc",
-                  list_fields=["id",
-                               "message_id",
-                               "pe_id",
-                               "status",
-                               ])
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -586,6 +588,7 @@ class S3EmailModel(S3ChannelModel):
                      # Instance
                      super_link("message_id", "msg_message"),
                      self.msg_channel_id(),
+                     s3_datetime(default="now"),
                      Field("subject", length=78,    # RFC 2822
                            label = T("Subject")
                            ),
@@ -615,6 +618,7 @@ class S3EmailModel(S3ChannelModel):
                      *s3_meta_fields())
 
         configure(tablename,
+                  orderby = "msg_email.date desc",
                   super_entity = "msg_message",
                   )
 
@@ -1062,6 +1066,9 @@ class S3RSSModel(S3ChannelModel):
                      # Instance
                      super_link("message_id", "msg_message"),
                      self.msg_channel_id(),
+                     s3_datetime(default="now",
+                                 label = T("Published on"),
+                                 ),
                      Field("title",
                            label = T("Title"),
                            ),
@@ -1088,17 +1095,10 @@ class S3RSSModel(S3ChannelModel):
                            ),
                      *s3_meta_fields())
 
-        # @todo: make lazy_table
-        table = current.db[tablename]
-        table.created_on.readable = True
-        table.created_on.label = T("Published on")
-        table.created_on.represent = lambda dt: \
-            S3DateTime.datetime_represent(dt, utc=True)
-
         self.configure(tablename,
                        list_fields = ["title",
                                       "from_address",
-                                      "created_on",
+                                      "date",
                                       "body"
                                       ],
                        super_entity = current.s3db.msg_message,
@@ -1134,6 +1134,7 @@ class S3SMSModel(S3Model):
                           # Instance
                           self.super_link("message_id", "msg_message"),
                           self.msg_channel_id(),
+                          s3_datetime(default="now"),
                           Field("body", "text",
                                 # Allow multi-part SMS
                                 #length = 160,
@@ -1562,6 +1563,9 @@ class S3TwitterModel(S3Model):
                      # Instance
                      self.super_link("message_id", "msg_message"),
                      self.msg_channel_id(),
+                     s3_datetime(default="now",
+                                 label = T("Posted on"),
+                                 ),
                      Field("body", length=140,
                            label = T("Message"),
                            ),
@@ -1587,13 +1591,6 @@ class S3TwitterModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.created_on.readable = True
-        table.created_on.label = T("Posted on")
-        table.created_on.represent = lambda dt: \
-            S3DateTime.datetime_represent(dt, utc=True)
-
         configure(tablename,
                   super_entity = "msg_message",
                   #orderby=~table.priority,
@@ -1602,7 +1599,7 @@ class S3TwitterModel(S3Model):
                                #"category",
                                "body",
                                "from_address",
-                               "created_on",
+                               "date",
                                #"location_id",
                                ],
                   )
@@ -1776,8 +1773,14 @@ class S3TwitterSearchModel(S3ChannelModel):
         #
         tablename = "msg_twitter_result"
         define_table(tablename,
+                     # Instance
                      self.super_link("message_id", "msg_message"),
+                     # Just present for Super Entity
+                     #self.msg_channel_id(),
                      search_id(),
+                     s3_datetime(default="now",
+                                 label = T("Tweeted on"),
+                                 ),
                      Field("tweet_id",
                            label = T("Tweet ID")),
                      Field("lang",
@@ -1797,19 +1800,12 @@ class S3TwitterSearchModel(S3ChannelModel):
                      #      ),
                      self.gis_location_id(),
                      # Just present for Super Entity
-                     Field("inbound", "boolean",
-                           default = True,
-                           readable = False,
-                           writable = False,
-                           ),
+                     #Field("inbound", "boolean",
+                     #      default = True,
+                     #      readable = False,
+                     #      writable = False,
+                     #      ),
                      *s3_meta_fields())
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        table.created_on.readable = True
-        table.created_on.label = T("Tweeted on")
-        table.created_on.represent = lambda dt: \
-            S3DateTime.datetime_represent(dt, utc=True)
 
         configure(tablename,
                   super_entity = "msg_message",
@@ -1818,7 +1814,7 @@ class S3TwitterSearchModel(S3ChannelModel):
                                  #"priority",
                                  "body",
                                  "from_address",
-                                 "created_on",
+                                 "date",
                                  "location_id",
                                  ],
                   )
@@ -1893,7 +1889,7 @@ class S3TwitterSearchModel(S3ChannelModel):
                 # Multiple records
                 # @ToDo: Load all records & sort to closest in time
                 # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
-                rows = r.resource.select(["created_on", "body"], limit=2000, as_rows=True)
+                rows = r.resource.select(["date", "body"], limit=2000, as_rows=True)
 
             data = {"dateTimeFormat": "iso8601",
                     }
@@ -1904,7 +1900,7 @@ class S3TwitterSearchModel(S3ChannelModel):
             import re
             for row in rows:
                 # Dates
-                start = row.created_on or ""
+                start = row.date or ""
                 if start:
                     if start < tl_start:
                         tl_start = start
