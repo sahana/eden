@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Synchronization: Peer Repository API Adapter
+""" S3 Synchronization: Peer Repository Adapter
 
     @copyright: 2011-14 (c) Sahana Software Foundation
     @license: MIT
@@ -32,12 +32,12 @@ import urllib, urllib2
 
 from gluon import *
 
-from ..s3sync import S3SyncRepository
+from ..s3sync import S3SyncBaseAdapter
 
 # =============================================================================
-class S3SyncCommandBridge(S3SyncRepository):
+class S3SyncAdapter(S3SyncBaseAdapter):
     """
-        Mariner CommandBridge REST-API connector
+        Mariner CommandBridge Synchronization Adapter
 
         @status: experimental
     """
@@ -90,10 +90,11 @@ class S3SyncCommandBridge(S3SyncRepository):
         """
 
         xml = current.xml
-        config = self.get_config()
-
+        repository = self.repository
+        
         resource_name = task.resource_name
-        current.log.debug("S3SyncCommandBridge.push(%s, %s)" % (self.url, resource_name))
+        current.log.debug("S3SyncCommandBridge.push(%s, %s)" %
+                          (repository.url, resource_name))
 
         # Define the resource
         resource = current.s3db.resource(resource_name,
@@ -127,7 +128,7 @@ class S3SyncCommandBridge(S3SyncRepository):
         # Transmit the data via HTTP
         remote = False
         output = None
-        log = self.log
+        log = repository.log
         if data and count:
 
             response, message = self.send(method = "POST",
@@ -149,7 +150,7 @@ class S3SyncCommandBridge(S3SyncRepository):
             message = "no data to send"
 
         # Log the operation
-        log.write(repository_id = self.id,
+        log.write(repository_id = repository.id,
                   resource_name = resource_name,
                   transmission = log.OUT,
                   mode = log.PUSH,
@@ -163,7 +164,12 @@ class S3SyncCommandBridge(S3SyncRepository):
         return (output, mtime)
 
     # -------------------------------------------------------------------------
-    def send(self, method="GET", path=None, args=None, data=None, auth=False):
+    def send(self,
+             method="GET",
+             path=None,
+             args=None,
+             data=None,
+             auth=False):
         """
             Send a request to the CommandBridge API
 
@@ -174,9 +180,10 @@ class S3SyncCommandBridge(S3SyncRepository):
         """
 
         xml = current.xml
+        repository = self.repository
 
         # Request URL
-        url = self.url.rstrip("/")
+        url = repository.url.rstrip("/")
         if path:
             url = "/".join((url, path.lstrip("/")))
         if args:
@@ -186,7 +193,7 @@ class S3SyncCommandBridge(S3SyncRepository):
         req = urllib2.Request(url=url)
         handlers = []
 
-        site_key = self.site_key
+        site_key = repository.site_key
         if not site_key:
             message = "CommandBridge Authorization failed: no access token (site key)"
             current.log.error(message)
@@ -202,8 +209,8 @@ class S3SyncCommandBridge(S3SyncRepository):
         req.add_header("Accept", "application/xml")
 
         # Proxy handling
-        config = self.get_config()
-        proxy = self.proxy or config.proxy or None
+        config = repository.config
+        proxy = repository.proxy or config.proxy or None
         if proxy:
             current.log.debug("using proxy=%s" % proxy)
             proxy_handler = urllib2.ProxyHandler({"https": proxy})

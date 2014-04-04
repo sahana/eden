@@ -187,7 +187,7 @@ class S3Sync(S3Method):
                 (ttable.deleted != True)
         tasks = current.db(query).select()
 
-        connector = S3SyncRepository.factory(repository)
+        connector = S3SyncRepository(repository)
         error = connector.login()
         if error:
             log.write(repository_id=repository.id,
@@ -766,55 +766,17 @@ class S3SyncLog(S3Method):
 
 # =============================================================================
 class S3SyncRepository(object):
-    """
-        Synchronization API connector base class
+    """ Class representation a peer repository """
 
-        The base class handles Sahana Eden's Sync API, whilst other
-        repository types may be handled by subclasses. Subclasses
-        must implement (override) the following methods:
-
-        register()              - register at the peer site
-        login()                 - login to the peer site
-        pull(task)              - pull data for a task
-        push(task)              - push data for a task
-    """
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def factory(repository):
-        """
-            Factory method to generate an instance of the
-            appropriate subclass of the API for the repository
-
-            @param repository: the repository record
-        """
-
-        from repositories import S3SyncCiviCRM, S3SyncWrike, S3SyncCommandBridge
-
-        # Available connectors
-        connectors = {
-            "eden": S3SyncRepository,
-            "ccrm": S3SyncCiviCRM,
-            "wrike": S3SyncWrike,
-            "mcb": S3SyncCommandBridge,
-        }
-
-        api = repository.apitype
-        if api in connectors:
-            return connectors[api](repository)
-        else:
-            raise NotImplementedError
-
-    # -------------------------------------------------------------------------
     def __init__(self, repository):
         """
             Constructor
 
-            @param sync: the calling S3Sync instance
-            @param repository: the repository record
+            @param repository: the repository record (Row)
         """
 
         self.log = S3SyncLog
+        self._config = None
 
         self.id = repository.id
         self.name = repository.name
@@ -824,474 +786,66 @@ class S3SyncRepository(object):
         self.site_key = repository.site_key
         self.refresh_token = repository.refresh_token
         self.proxy = repository.proxy
+        self.apitype = repository.apitype
+        
+        import sync_adapter
+        api = sync_adapter.__dict__.get(self.apitype)
+        if api:
+            adapter = api.S3SyncAdapter(self)
+        else:
+            adapter = S3SyncBaseAdapter(self)
+            
+        self.adapter = adapter
 
     # -------------------------------------------------------------------------
-    def get_config(self):
-        """ Read the sync settings, avoid repeated DB lookups """
+    @property
+    def config(self):
+        """
+            Lazy access to synchronization settings
+        """
 
-        if not hasattr(self, "config"):
-
+        if self._config is None:
             table = current.s3db.sync_config
             row = current.db().select(table.ALL, limitby=(0, 1)).first()
-            self.config = row
+            self._config = row
+        return self._config
+            
+    # -------------------------------------------------------------------------
+    def __getattr__(self, name):
+        """
+            Delegate other attributes and methods to the adapter
 
-        return self.config
+            @param name: the attribute/method
+        """
 
+        return object.__getattribute__(self.adapter, name)
+
+# =============================================================================
+class S3SyncBaseAdapter(object):
+
+    def __init__(self, repository):
+
+        self.repository = repository
+        self.log = repository.log
+    
     # -------------------------------------------------------------------------
     def register(self):
-        """ Register at the repository """
 
-        if not self.url:
-            return True
-
-        _debug("S3SyncRepository.register(%s)" % (self.url))
-
-        # Construct the URL
-        config = self.get_config()
-        url = "%s/sync/repository/register.xml?repository=%s" % \
-              (self.url, config.uuid)
-
-        _debug("...send to URL %s" % url)
-
-        # Generate the request
-        req = urllib2.Request(url=url)
-        handlers = []
-
-        # Proxy handling
-        proxy = self.proxy or config.proxy or None
-        if proxy:
-            proxy_handler = urllib2.ProxyHandler({"http": proxy})
-            handlers.append(proxy_handler)
-
-        # Authentication
-        username = self.username
-        password = self.password
-        if username and password:
-            import base64
-            base64string = base64.encodestring('%s:%s' %
-                                               (username, password))[:-1]
-            req.add_header("Authorization", "Basic %s" % base64string)
-            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passwd_manager.add_password(realm=None,
-                                        uri=url,
-                                        user=username,
-                                        passwd=password)
-            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-            handlers.append(auth_handler)
-
-        # Install all handlers
-        if handlers:
-            opener = urllib2.build_opener(*handlers)
-            urllib2.install_opener(opener)
-
-        # Execute the request
-        log = self.log
-        success = True
-        remote = False
-        try:
-            f = urllib2.urlopen(req)
-        except urllib2.HTTPError, e:
-            result = log.FATAL
-            remote = True # Peer error
-            code = e.code
-            message = e.read()
-            success = False
-            try:
-                message_json = json.loads(message)
-                message = message_json.get("message", message)
-            except:
-                pass
-        except:
-            result = log.FATAL
-            code = 400
-            message = sys.exc_info()[1]
-            success = False
-        else:
-            ruid = None
-            message = f.read()
-            try:
-                message_json = json.loads(message)
-                message = message_json.get("message", message)
-                ruid = message_json.get("sender", None)
-            except:
-                message = "registration successful"
-            result = log.SUCCESS
-            if ruid is not None:
-                db = current.db
-                rtable = current.s3db.sync_repository
-                try:
-                    db(rtable.id == self.id).update(uuid=ruid)
-                except:
-                    pass
-
-        # Log the operation
-        log.write(repository_id=self.id,
-                  transmission=log.OUT,
-                  mode=log.PUSH,
-                  action="request registration",
-                  remote=remote,
-                  result=result,
-                  message=message)
-
-        return success
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def login(self):
-        """ Login to the repository """
 
-        # Sahana Eden uses HTTP Basic Auth, no login required
-        return None
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def pull(self, task, onconflict=None):
-        """
-            Outgoing pull
 
-            @param task: the task (sync_task Row)
-        """
-
-        xml = current.xml
-        config = self.get_config()
-        resource_name = task.resource_name
-
-        _debug("S3SyncRepository.pull(%s, %s)" % (self.url, resource_name))
-
-        # Construct the URL
-        url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
-              (self.url, resource_name, config.uuid)
-        last_pull = task.last_pull
-        if last_pull and task.update_policy not in ("THIS", "OTHER"):
-            url += "&msince=%s" % xml.encode_iso_datetime(last_pull)
-        url += "&include_deleted=True"
-
-        # Send sync filters to peer
-        filters = current.sync.get_filters(task.id)
-        filter_string = None
-        resource_name = task.resource_name
-        for tablename in filters:
-            prefix = "~" if not tablename or tablename == resource_name \
-                            else tablename
-            for k, v in filters[tablename].items():
-                urlfilter = "[%s]%s=%s" % (prefix, k, v)
-                url += "&%s" % urlfilter
-                
-        _debug("...pull from URL %s" % url)
-
-        # Figure out the protocol from the URL
-        url_split = url.split("://", 1)
-        if len(url_split) == 2:
-            protocol, path = url_split
-        else:
-            protocol, path = "http", None
-
-        # Create the request
-        req = urllib2.Request(url=url)
-        handlers = []
-
-        # Proxy handling
-        proxy = self.proxy or config.proxy or None
-        if proxy:
-            _debug("using proxy=%s" % proxy)
-            proxy_handler = urllib2.ProxyHandler({protocol: proxy})
-            handlers.append(proxy_handler)
-
-        # Authentication handling
-        username = self.username
-        password = self.password
-        if username and password:
-            # Send auth data unsolicitedly (the only way with Eden instances):
-            import base64
-            base64string = base64.encodestring('%s:%s' %
-                                               (username, password))[:-1]
-            req.add_header("Authorization", "Basic %s" % base64string)
-            # Just in case the peer does not accept that, add a 401 handler:
-            passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            passwd_manager.add_password(realm=None,
-                                        uri=url,
-                                        user=username,
-                                        passwd=password)
-            auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-            handlers.append(auth_handler)
-
-        # Install all handlers
-        if handlers:
-            opener = urllib2.build_opener(*handlers)
-            urllib2.install_opener(opener)
-
-        # Execute the request
-        remote = False
-        output = None
-        response = None
-        log = self.log
-        try:
-            f = urllib2.urlopen(req)
-        except urllib2.HTTPError, e:
-            result = log.ERROR
-            remote = True # Peer error
-            code = e.code
-            message = e.read()
-            try:
-                # Sahana-Eden would send a JSON message,
-                # try to extract the actual error message:
-                message_json = json.loads(message)
-                message = message_json.get("message", message)
-            except:
-                pass
-            # Prefix as peer error and strip XML markup from the message
-            # @todo: better method to do this?
-            message = "<message>%s</message>" % message
-            try:
-                markup = etree.XML(message)
-                message = markup.xpath(".//text()")
-                if message:
-                    message = " ".join(message)
-                else:
-                    message = ""
-            except etree.XMLSyntaxError:
-                pass
-            output = xml.json_message(False, code, message, tree=None)
-        except:
-            result = log.FATAL
-            code = 400
-            message = sys.exc_info()[1]
-            output = xml.json_message(False, code, message)
-        else:
-            result = log.SUCCESS
-            response = f
-
-        # Process the response
-        mtime = None
-        if response:
-
-            # Get import strategy and update policy
-            strategy = task.strategy
-            update_policy = task.update_policy
-            conflict_policy = task.conflict_policy
-
-            success = True
-            message = ""
-
-            # Import the data
-            resource = current.s3db.resource(resource_name)
-            if onconflict:
-                onconflict_callback = lambda item: onconflict(item,
-                                                              self,
-                                                              resource)
-            else:
-                onconflict_callback = None
-            count = 0
-            try:
-                success = resource.import_xml(
-                                response,
-                                ignore_errors=True,
-                                strategy=strategy,
-                                update_policy=update_policy,
-                                conflict_policy=conflict_policy,
-                                last_sync=last_pull,
-                                onconflict=onconflict_callback)
-                count = resource.import_count
-            except IOError, e:
-                result = log.FATAL
-                message = "%s" % e
-                output = xml.json_message(False, 400, message)
-            except Exception, e:
-                # If we end up here, an uncaught error during import
-                # has occured which indicates a code defect! We log it
-                # and continue here, however - in order to maintain a
-                # valid sync status, so that developers can restart
-                # the process more easily after fixing the defect.
-                result = log.FATAL
-                message = "Uncaught Exception During Import: %s" % \
-                          traceback.format_exc()
-                output = xml.json_message(False, 500, sys.exc_info()[1])
-                
-            mtime = resource.mtime
-
-            # Log all validation errors
-            if resource.error_tree is not None:
-                result = log.WARNING
-                message = "%s" % resource.error
-                for element in resource.error_tree.findall("resource"):
-                    for field in element.findall("data[@error]"):
-                        error_msg = field.get("error", None)
-                        if error_msg:
-                            msg = "(UID: %s) %s.%s=%s: %s" % \
-                                   (element.get("uuid", None),
-                                    element.get("name", None),
-                                    field.get("field", None),
-                                    field.get("value", field.text),
-                                    field.get("error", None))
-                            message = "%s, %s" % (message, msg)
-
-            # Check for failure
-            if not success:
-                result = log.FATAL
-                if not message:
-                    message = "%s" % resource.error
-                output = xml.json_message(False, 400, message)
-                mtime = None
-
-            # ...or report success
-            elif not message:
-                message = "data imported successfully (%s records)" % count
-
-        elif result == log.SUCCESS:
-            # No data received from peer
-            result = log.ERROR
-            remote = True
-            message = "no data received from peer"
-
-        # Log the operation
-        log.write(repository_id=self.id,
-                  resource_name=task.resource_name,
-                  transmission=log.OUT,
-                  mode=log.PULL,
-                  action=None,
-                  remote=remote,
-                  result=result,
-                  message=message)
-
-        _debug("S3SyncRepository.pull import %s: %s" % (result, message))
-        return (output, mtime)
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def push(self, task):
-        """
-            Outgoing push
 
-            @param task: the sync_task Row
-        """
-
-        xml = current.xml
-        config = self.get_config()
-        resource_name = task.resource_name
-
-        _debug("S3SyncRepository.push(%s, %s)" % (self.url, resource_name))
-
-        # Construct the URL
-        url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
-              (self.url, resource_name, config.uuid)
-        strategy = task.strategy
-        if strategy:
-            url += "&strategy=%s" % ",".join(strategy)
-        update_policy = task.update_policy
-        if update_policy:
-            url += "&update_policy=%s" % update_policy
-        conflict_policy = task.conflict_policy
-        if conflict_policy:
-            url += "&conflict_policy=%s" % conflict_policy
-        last_push = task.last_push
-        if last_push and update_policy not in ("THIS", "OTHER"):
-            url += "&msince=%s" % xml.encode_iso_datetime(last_push)
-        else:
-            last_push = None
-        _debug("...push to URL %s" % url)
-
-        # Define the resource
-        resource = current.s3db.resource(resource_name,
-                                         include_deleted=True)
-
-        # Apply sync filters for this task
-        filters = current.sync.get_filters(task.id)
-        
-        # Export the resource as S3XML
-        data = resource.export_xml(filters=filters,
-                                   msince=last_push)
-        count = resource.results or 0
-        mtime = resource.muntil
-
-        # Transmit the data via HTTP
-        remote = False
-        output = None
-        log = self.log
-        if data and count:
-
-            # Find the protocol
-            url_split = url.split("://", 1)
-            if len(url_split) == 2:
-                protocol, path = url_split
-            else:
-                protocol, path = "http", None
-
-            # Generate the request
-            import urllib2
-            req = urllib2.Request(url=url, data=data)
-            req.add_header('Content-Type', "text/xml")
-            handlers = []
-
-            # Proxy handling
-            proxy = self.proxy or config.proxy or None
-            if proxy:
-                _debug("using proxy=%s" % proxy)
-                proxy_handler = urllib2.ProxyHandler({protocol: proxy})
-                handlers.append(proxy_handler)
-
-            # Authentication
-            username = self.username
-            password = self.password
-            if username and password:
-                # send auth credentials unsolicitedly
-                import base64
-                base64string = base64.encodestring('%s:%s' %
-                                                   (username, password))[:-1]
-                req.add_header("Authorization", "Basic %s" % base64string)
-                # Just in case the peer does not accept that
-                # => add a 401 handler:
-                passwd_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
-                passwd_manager.add_password(realm=None,
-                                            uri=url,
-                                            user=username,
-                                            passwd=password)
-                auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
-                handlers.append(auth_handler)
-
-            # Install all handlers
-            if handlers:
-                opener = urllib2.build_opener(*handlers)
-                urllib2.install_opener(opener)
-
-            # Execute the request
-            try:
-                f = urllib2.urlopen(req)
-            except urllib2.HTTPError, e:
-                result = log.FATAL
-                remote = True # Peer error
-                code = e.code
-                message = e.read()
-                try:
-                    # Sahana-Eden sends a JSON message,
-                    # try to extract the actual error message:
-                    message_json = json.loads(message)
-                    message = message_json.get("message", message)
-                except:
-                    pass
-                output = xml.json_message(False, code, message)
-            except:
-                result = log.FATAL
-                code = 400
-                message = sys.exc_info()[1]
-                output = xml.json_message(False, code, message)
-            else:
-                result = log.SUCCESS
-                message = "data sent successfully (%s records)" % count
-
-        else:
-            # No data to send
-            result = log.WARNING
-            message = "No data to send"
-
-        # Log the operation
-        log.write(repository_id=self.id,
-                  resource_name=task.resource_name,
-                  transmission=log.OUT,
-                  mode=log.PUSH,
-                  action=None,
-                  remote=remote,
-                  result=result,
-                  message=message)
-
-        if output is not None:
-            mtime = None
-        return (output, mtime)
+        raise NotImplementedError
 
 # End =========================================================================

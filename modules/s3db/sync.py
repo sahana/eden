@@ -655,7 +655,7 @@ class SyncDataModel(S3Model):
             repository = current.db(query).select(limitby=(0, 1)).first()
             if repository and repository.url:
                 from s3.s3sync import S3SyncRepository
-                connector = S3SyncRepository.factory(repository)
+                connector = S3SyncRepository(repository)
                 success = connector.register()
                 if not success:
                     current.response.warning = \

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Synchronization: Peer Repository API Adapter
+""" S3 Synchronization: Peer Repository Adapter
 
     @copyright: 2011-14 (c) Sahana Software Foundation
     @license: MIT
@@ -46,13 +46,13 @@ except ImportError:
 
 from gluon import *
 
-from ..s3sync import S3SyncRepository
+from ..s3sync import S3SyncBaseAdapter
 from ..s3utils import s3_unicode
 
 # =============================================================================
-class S3SyncWrike(S3SyncRepository):
+class S3SyncAdapter(S3SyncBaseAdapter):
     """
-        Wrike® REST-API connector
+        Wrike® Synchronization Adapter
 
         @status: experimental
     """
@@ -63,7 +63,7 @@ class S3SyncWrike(S3SyncRepository):
             Constructor
         """
 
-        super(S3SyncWrike, self).__init__(repository)
+        super(S3SyncAdapter, self).__init__(repository)
 
         self.access_token = None
         self.token_type = None
@@ -82,14 +82,16 @@ class S3SyncWrike(S3SyncRepository):
             @return: True if successful, otherwise False
         """
 
-        log = self.log
+        repository = self.repository
+
+        log = repository.log
         success = False
         remote = False
         skip = False
 
-        site_key = self.site_key
+        site_key = repository.site_key
         if not site_key:
-            if not self.refresh_token:
+            if not repository.refresh_token:
                 # Can't register without authorization code
                 result = log.WARNING
                 message = "No site key to obtain refresh token " \
@@ -101,15 +103,15 @@ class S3SyncWrike(S3SyncRepository):
                 message = None
             skip = True
         else:
-            self.refresh_token = None
+            repository.refresh_token = None
             self.access_token = None
 
             # Get refresh token from peer
             data = {
-                "client_id": self.username,
-                "client_secret": self.password,
+                "client_id": repository.username,
+                "client_secret": repository.password,
                 "grant_type": "authorization_code",
-                "code": self.site_key
+                "code": repository.site_key
             }
             response, message = self.send(method = "POST",
                                           data = data,
@@ -123,7 +125,7 @@ class S3SyncWrike(S3SyncRepository):
                     result = log.FATAL
                     message = "No refresh token received"
                 else:
-                    self.refresh_token = refresh_token
+                    repository.refresh_token = refresh_token
                     self.access_token = response.get("access_token")
                     result = log.SUCCESS
                     success = True
@@ -131,7 +133,7 @@ class S3SyncWrike(S3SyncRepository):
             self.update_refresh_token()
 
         # Log the operation
-        log.write(repository_id=self.id,
+        log.write(repository_id=repository.id,
                   transmission=log.OUT,
                   mode=log.PUSH,
                   action="request refresh token",
@@ -153,18 +155,20 @@ class S3SyncWrike(S3SyncRepository):
             @return: None if successful, otherwise error message
         """
 
-        log = self.log
+        repository = self.repository
+
+        log = repository.log
         error = None
         remote = False
 
-        refresh_token = self.refresh_token
+        refresh_token = repository.refresh_token
         if not refresh_token:
             result = log.FATAL
             error = "Login failed: no refresh token available (registration failed?)"
         else:
             data = {
-                "client_id": self.username,
-                "client_secret": self.password,
+                "client_id": repository.username,
+                "client_secret": repository.password,
                 "grant_type": "refresh_token",
                 "refresh_token": refresh_token
             }
@@ -187,7 +191,7 @@ class S3SyncWrike(S3SyncRepository):
 
 
         # Log the operation
-        log.write(repository_id=self.id,
+        log.write(repository_id=repository.id,
                   transmission=log.OUT,
                   mode=log.PUSH,
                   action="request access token",
@@ -211,13 +215,15 @@ class S3SyncWrike(S3SyncRepository):
                      of the youngest record received
         """
 
+        repository = self.repository
+
         resource_name = task.resource_name
 
         current.log.debug("S3SyncWrike.pull(%s, %s)" %
-                          (self.url, resource_name))
+                          (repository.url, resource_name))
 
         xml = current.xml
-        log = self.log
+        log = repository.log
 
         # Last pull time
         last_pull = task.last_pull
@@ -238,7 +244,7 @@ class S3SyncWrike(S3SyncRepository):
             def log_fetch_error(action, account_name, message):
                 """ Helper to log non-fatal errors during fetch """
                 action = "%s for account '%s'" % (action, account_name)
-                log.write(repository_id = self.id,
+                log.write(repository_id = repository.id,
                           resource_name = resource_name,
                           transmission = log.OUT,
                           mode = log.PULL,
@@ -311,13 +317,13 @@ class S3SyncWrike(S3SyncRepository):
 
             # Host name of the peer, used by the import stylesheet
             import urlparse
-            hostname = urlparse.urlsplit(self.url).hostname
+            hostname = urlparse.urlsplit(repository.url).hostname
 
             # Conflict resolution callback
             resource = current.s3db.resource(resource_name)
             if onconflict:
                 onconflict_callback = lambda item: onconflict(item,
-                                                              self,
+                                                              repository,
                                                               resource)
             else:
                 onconflict_callback = None
@@ -381,7 +387,7 @@ class S3SyncWrike(S3SyncRepository):
             output = None
 
         # Log the operation
-        log.write(repository_id=self.id,
+        log.write(repository_id=repository.id,
                   resource_name=resource_name,
                   transmission=log.OUT,
                   mode=log.PULL,
@@ -546,12 +552,13 @@ class S3SyncWrike(S3SyncRepository):
             again.
         """
 
-        self.site_key = None
+        repository = self.repository
+        repository.site_key = None
 
         table = current.s3db.sync_repository
-        current.db(table.id == self.id).update(
-            refresh_token = self.refresh_token,
-            site_key = self.site_key
+        current.db(table.id == repository.id).update(
+            refresh_token = repository.refresh_token,
+            site_key = repository.site_key
         )
         return
 
@@ -566,9 +573,11 @@ class S3SyncWrike(S3SyncRepository):
             @param auth: this is an authorization request
         """
 
+        repository = self.repository
+
         # Request URL
         api = "oauth2/token" if auth else "api/v3"
-        url = "/".join((self.url.rstrip("/"), api))
+        url = "/".join((repository.url.rstrip("/"), api))
         if path:
             url = "/".join((url, path.lstrip("/")))
         if args:
@@ -599,8 +608,8 @@ class S3SyncWrike(S3SyncRepository):
         req.add_header("Accept", "application/json")
 
         # Proxy handling
-        config = self.get_config()
-        proxy = self.proxy or config.proxy or None
+        config = repository.config
+        proxy = repository.proxy or config.proxy or None
         if proxy:
             current.log.debug("using proxy=%s" % proxy)
             proxy_handler = urllib2.ProxyHandler({"https": proxy})
