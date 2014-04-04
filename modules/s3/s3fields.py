@@ -657,24 +657,31 @@ class S3Represent(object):
                               for f in self.fields if hasattr(table, f)]
             else:
                 fields = []
-            rows = self.lookup_rows(key, lookup.keys(), fields=fields)
+            new_rows = self.lookup_rows(key, lookup.keys(), fields=fields)
             if h:
-                rows = dict((row[key], row) for row in rows)
+                _new_rows = dict((row[key], row) for row in new_rows)
                 represent_path = self._represent_path
-                for k, row in rows.items():
+                for k, row in _new_rows.items():
                     lookup.pop(k, None)
-                    items[k] = represent_path(k, row, rows=rows, hierarchy=h)
+                    items[k] = represent_path(k, row, rows=_new_rows, hierarchy=h)
             else:
-                for row in rows:
+                for row in new_rows:
                     k = row[key]
                     lookup.pop(k, None)
                     items[k] = theset[k] = represent_row(row)
+        else:
+            new_rows = None
 
         if lookup:
             for k in lookup:
                 items[k] = self.default
 
-        # Done
+        if new_rows and not rows:
+            rows = new_rows
+        elif new_rows:
+            # Merge original rows with new_rows
+            rows = rows | new_rows
+
         return items, rows
 
     # -------------------------------------------------------------------------
