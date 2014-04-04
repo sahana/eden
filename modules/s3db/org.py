@@ -4053,7 +4053,7 @@ class org_SiteRepresent(S3Represent):
 
         # Lookup the representations
         if values:
-            labels = self._lookup(values, rows=rows)
+            labels, rows = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
                 labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])

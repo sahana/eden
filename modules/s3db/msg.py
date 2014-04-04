@@ -624,15 +624,15 @@ class S3EmailModel(S3ChannelModel):
 
         # Components
         add_components(tablename,
-                       deploy_response="message_id",
+                       deploy_response = "message_id",
                        # Used to link to custom tab deploy_response_select_mission:
-                       deploy_mission={"name": "select",
-                                       "link": "deploy_response",
-                                       "joinby": "message_id",
-                                       "key": "mission_id",
-                                       "autodelete": False,
-                                      },
-                      )
+                       deploy_mission = {"name": "select",
+                                         "link": "deploy_response",
+                                         "joinby": "message_id",
+                                         "key": "mission_id",
+                                         "autodelete": False,
+                                         },
+                       )
 
         # ---------------------------------------------------------------------
         return dict()

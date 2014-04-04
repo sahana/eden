@@ -190,6 +190,7 @@ class S3DeploymentModel(S3Model):
                        "message_id$from_address",
                        "message_id$attachment.document_id$file",
                        ]
+
         response_widget = dict(label = "Responses",
                                insert = False,
                                type = "datalist",
@@ -322,10 +323,10 @@ class S3DeploymentModel(S3Model):
 
         # Components
         add_components(tablename,
-                       deploy_assignment="mission_id",
-                       deploy_alert="mission_id",
-                       deploy_response="mission_id",
-                      )
+                       deploy_assignment = "mission_id",
+                       deploy_alert = "mission_id",
+                       deploy_response = "mission_id",
+                       )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -454,7 +455,7 @@ class S3DeploymentModel(S3Model):
                                       "key": "appraisal_id",
                                       "autodelete": False,
                                      },
-                      )
+                       )
 
         assignment_id = S3ReusableField("assignment_id",
                                         "reference %s" % tablename,
@@ -777,7 +778,7 @@ class S3DeploymentAlertModel(S3Model):
                                            "key": "human_resource_id",
                                            "autodelete": False,
                                           },
-                      )
+                       )
 
         # Custom method to send alerts
         self.set_method("deploy", "alert",
