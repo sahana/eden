@@ -25,7 +25,10 @@ def info_prep(r):
         - whether accessed via /eden/info or /eden/alert/x/info
     """
 
-    s3.scripts.append("/%s/static/scripts/S3/s3.cap.js" % appname)
+    if s3.debug:
+        s3.scripts.append("/%s/static/scripts/S3/s3.cap.js" % appname)
+    else:
+        s3.scripts.append("/%s/static/scripts/S3/s3.cap.min.js" % appname)
     s3.stylesheets.append("S3/cap.css")
 
     table = db.cap_info
@@ -242,7 +245,10 @@ def template():
         if r.representation == "html":
             alert_fields_comments()
             s3.scripts.append("/%s/static/scripts/json2.min.js" % appname)
-            s3.scripts.append("/%s/static/scripts/S3/s3.cap.js" % appname)
+            if s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.cap.js" % appname)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.cap.min.js" % appname)
             s3.stylesheets.append("S3/cap.css")
 
         return True
