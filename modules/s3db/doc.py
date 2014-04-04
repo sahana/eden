@@ -630,25 +630,24 @@ class doc_DocumentRepresent(S3Represent):
     """ Representation of Documents """
 
     # -------------------------------------------------------------------------
-    def link(self, k, v, rows=None):
+    def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
 
             @param k: the key (doc_document.id)
             @param v: the representation of the key
-            @param rows: the rows
+            @param row: the row with this key
         """
 
-        if not k:
-            # None
+        if row:
+            try:
+                filename = row["doc_document.file"]
+            except AttributeError:
+                return v
+            else:
+                url = URL(c="default", f="download", args=filename)
+                return A(v, _href=url)
+        else:
             return v
-        elif not rows:
-            # We have no way to determine the linkto
-            return v
-
-        row = rows.find(lambda row: row["doc_document.id"] == k).first()
-        filename = row["doc_document.file"]
-        url = URL(c="default", f="download", args=filename)
-        return A(v, _href=url)
 
 # END =========================================================================

@@ -3746,13 +3746,13 @@ class hrm_HumanResourceRepresent(S3Represent):
         self.types = {}
 
     # -------------------------------------------------------------------------
-    def link(self, k, v, rows=None):
+    def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link
 
             @param k: the key (hrm_human_resource.id)
             @param v: the representation of the key
-            @param rows: unused (retained for API compatibility)
+            @param row: the row with this key (unused here)
         """
 
         # Link to specific controller for type

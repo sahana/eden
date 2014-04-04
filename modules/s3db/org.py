@@ -4053,10 +4053,12 @@ class org_SiteRepresent(S3Represent):
 
         # Lookup the representations
         if values:
-            labels, rows = self._lookup(values, rows=rows)
+            labels = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])
+                rows = self.rows
+                labels = dict((k, link(k, v, rows.get(k)))
+                               for k, v in labels.items())
             for v in values:
                 if v not in labels:
                     labels[v] = self.default
@@ -4141,27 +4143,30 @@ class org_SiteRepresent(S3Represent):
         return rows
 
     # -------------------------------------------------------------------------
-    def link(self, k, v, rows=None):
+    def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
 
             @param k: the key (site_id)
             @param v: the representation of the key
-            @param rows: used to lookup the controller, function & ID
+            @param row: the row with this key
         """
 
-        if not rows:
+        if row:
+            try:
+                instance_type = row["org_site.instance_type"]
+                id = row[instance_type].id
+            except AttributeError:
+                return v
+            else:
+                c, f = instance_type.split("_", 1)
+                return A(v, _href=URL(c=c, f=f, args=[id],
+                                      # remove the .aaData extension in paginated views
+                                      extension=""
+                                      ))
+        else:
             # We have no way to determine the linkto
             return v
-
-        row = rows.find(lambda row: row["org_site.site_id"] == k).first()
-        instance_type = row["org_site.instance_type"]
-        id = row[instance_type].id
-        c, f = instance_type.split("_", 1)
-        return A(v, _href=URL(c=c, f=f, args=[id],
-                              # remove the .aaData extension in paginated views
-                              extension=""
-                              ))
 
     # -------------------------------------------------------------------------
     def represent_row(self, row):

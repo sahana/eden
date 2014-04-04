@@ -4813,12 +4813,13 @@ class gis_LocationRepresent(S3Represent):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def link(k, v):
+    def link(k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
 
             @param k: the key
             @param v: the representation of the key
+            @param row: the row with this key (unused here)
         """
 
         return A(v,

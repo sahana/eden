@@ -4171,7 +4171,7 @@ class pr_PersonEntityRepresent(S3Represent):
                                                        )
 
     # -------------------------------------------------------------------------
-    def link(self, k, v, rows=None):
+    def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
 
@@ -4184,7 +4184,7 @@ class pr_PersonEntityRepresent(S3Represent):
 
             @param k: the key
             @param v: the representation of the key
-            @param rows: the rows
+            @param row: the row with this key
         """
 
         if not k:

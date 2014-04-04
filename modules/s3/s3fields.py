@@ -265,6 +265,8 @@ class S3Represent(object):
         self.queries = 0
         self.lazy = []
         self.lazy_show_link = False
+
+        self.rows = {}
         
         # Attributes to simulate being a function for sqlhtml's represent()
         # Make sure we indicate only 1 position argument
@@ -336,7 +338,7 @@ class S3Represent(object):
         return output
 
     # -------------------------------------------------------------------------
-    def link(self, k, v, rows=None):
+    def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
 
@@ -349,8 +351,7 @@ class S3Represent(object):
 
             @param k: the key
             @param v: the representation of the key
-            @param rows: the rows (unused in the base class but can be used in
-                                   custom links)
+            @param row: the row with this key (unused in the base class)
         """
 
         if self.linkto:
@@ -387,9 +388,10 @@ class S3Represent(object):
         # Lookup the representation
         if value:
             rows = [row] if row is not None else None
-            items, rows = self._lookup([value], rows=rows)
+            items = self._lookup([value], rows=rows)
             if value in items:
-                r = self.link(value, items[value], rows) \
+                k, v = value, items[value]
+                r = self.link(k, v, row=self.rows.get(k)) \
                     if show_link else items[value]
             else:
                 r = self.default
@@ -429,19 +431,20 @@ class S3Represent(object):
         # Lookup the representations
         if values:
             default = self.default
-            items, rows = self._lookup(values, rows=rows)
+            items = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = [[link(v, s3_unicode(items[v]), rows), ", "]
-                          if v in items else [default, ", "]
-                          for v in values]
+                rows = self.rows
+                labels = [[link(k, s3_unicode(items[k]), row=rows.get(k)), ", "]
+                          if k in items else [default, ", "]
+                          for k in values]
                 if labels:
                     return TAG[""](list(chain.from_iterable(labels))[:-1])
                 else:
                     return ""
             else:
-                labels = [s3_unicode(items[v])
-                          if v in items else default for v in values]
+                labels = [s3_unicode(items[k])
+                          if k in items else default for k in values]
                 if labels:
                     return ", ".join(labels)
         return self.none
@@ -452,7 +455,7 @@ class S3Represent(object):
             Represent multiple values as dict {value: representation}
 
             @param values: list of values
-            @param rows: the referenced rows (if values are foreign keys)
+            @param rows: the rows
             @param show_link: render each representation as link
 
             @return: a dict {value: representation}
@@ -469,7 +472,14 @@ class S3Represent(object):
         # Get the values
         if rows and self.table:
             key = self.key
-            values = [row[key] for row in rows]
+            _rows = self.rows
+            values = set()
+            add_value = values.add
+            for row in rows:
+                value = row[key]
+                _rows[value] = row
+                add_value(value)
+            values = list(values)
         elif self.list_type and list_type:
             try:
                 hasnone = None in values
@@ -485,13 +495,15 @@ class S3Represent(object):
 
         # Lookup the representations
         if values:
-            labels, rows = self._lookup(values, rows=rows)
+            labels = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])
-            for v in values:
-                if v not in labels:
-                    labels[v] = self.default
+                rows = self.rows
+                labels = dict((k, link(k, v, rows.get(k)))
+                               for k, v in labels.items())
+            for k in values:
+                if k not in labels:
+                    labels[k] = self.default
         else:
             labels = {}
         labels[None] = self.none
@@ -605,7 +617,7 @@ class S3Represent(object):
                 
         table = self.table
         if table is None or not lookup:
-            return items, rows
+            return items
 
         if table and self.hierarchy:
             # Does the lookup table have a hierarchy?
@@ -631,14 +643,16 @@ class S3Represent(object):
         try:
             key = ogetattr(table, pkey)
         except AttributeError:
-            return items, rows
+            return items
 
         # Use the given rows to lookup the values
         pop = lookup.pop
         represent_row = self.represent_row
         if rows and not self.custom_lookup:
+            _rows = self.rows
             for row in rows:
                 k = row[key]
+                _rows[k] = row
                 if k not in theset:
                     theset[k] = represent_row(row)
                 if pop(k, None):
@@ -657,32 +671,24 @@ class S3Represent(object):
                               for f in self.fields if hasattr(table, f)]
             else:
                 fields = []
-            new_rows = self.lookup_rows(key, lookup.keys(), fields=fields)
+            rows = self.lookup_rows(key, lookup.keys(), fields=fields)
+            rows = dict((row[key], row) for row in rows)
+            self.rows.update(rows)
             if h:
-                _new_rows = dict((row[key], row) for row in new_rows)
                 represent_path = self._represent_path
-                for k, row in _new_rows.items():
+                for k, row in rows.items():
                     lookup.pop(k, None)
-                    items[k] = represent_path(k, row, rows=_new_rows, hierarchy=h)
+                    items[k] = represent_path(k, row, rows=rows, hierarchy=h)
             else:
-                for row in new_rows:
-                    k = row[key]
+                for k, row in rows.items():
                     lookup.pop(k, None)
                     items[k] = theset[k] = represent_row(row)
-        else:
-            new_rows = None
-
+                    
         if lookup:
             for k in lookup:
                 items[k] = self.default
 
-        if new_rows and not rows:
-            rows = new_rows
-        elif new_rows:
-            # Merge original rows with new_rows
-            rows = rows | new_rows
-
-        return items, rows
+        return items
 
     # -------------------------------------------------------------------------
     def _represent_path(self, value, row, rows=None, hierarchy=None):
