@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Synchronization: Peer Repository API Adapter
+""" S3 Synchronization: Peer Repository Adapter
 
     @copyright: 2011-14 (c) Sahana Software Foundation
     @license: MIT
@@ -33,12 +33,12 @@ import urllib, urllib2
 from gluon import *
 from gluon.storage import Storage
 
-from ..s3sync import S3SyncRepository
+from ..s3sync import S3SyncBaseAdapter
 
 # =============================================================================
-class S3SyncCiviCRM(S3SyncRepository):
+class S3SyncAdapter(S3SyncBaseAdapter):
     """
-        CiviCRM REST-API connector
+        CiviCRM Synchronization Adapter
 
         @status: experimental
     """
@@ -64,10 +64,12 @@ class S3SyncCiviCRM(S3SyncRepository):
 
         _debug("S3SyncCiviCRM.login()")
 
+        repository = self.repository
+
         request = {
             "q": "civicrm/login",
-            "name": self.username,
-            "pass": self.password,
+            "name": repository.username,
+            "pass": repository.password,
         }
         response, error = self.send(**request)
 
@@ -103,10 +105,11 @@ class S3SyncCiviCRM(S3SyncRepository):
         """
 
         xml = current.xml
-        log = self.log
+        repository = self.repository
+        log = repository.log
         resource_name = task.resource_name
 
-        _debug("S3SyncCiviCRM.pull(%s, %s)" % (self.url, resource_name))
+        _debug("S3SyncCiviCRM.pull(%s, %s)" % (repository.url, resource_name))
 
         mtime = None
         message = ""
@@ -152,13 +155,13 @@ class S3SyncCiviCRM(S3SyncRepository):
                 # Host name of the peer,
                 # used by the import stylesheet
                 import urlparse
-                hostname = urlparse.urlsplit(self.url).hostname
+                hostname = urlparse.urlsplit(repository.url).hostname
 
                 # Import the data
                 resource = current.s3db.resource(resource_name)
                 if onconflict:
                     onconflict_callback = lambda item: onconflict(item,
-                                                                  self,
+                                                                  repository,
                                                                   resource)
                 else:
                     onconflict_callback = None
@@ -218,7 +221,7 @@ class S3SyncCiviCRM(S3SyncRepository):
                 output = None
 
         # Log the operation
-        log.write(repository_id=self.id,
+        log.write(repository_id=repository.id,
                   resource_name=resource_name,
                   transmission=log.OUT,
                   mode=log.PULL,
@@ -239,10 +242,12 @@ class S3SyncCiviCRM(S3SyncRepository):
         """
 
         xml = current.xml
-        log = self.log
+        repository = self.repository
+        
+        log = repository.log
         resource_name = task.resource_name
 
-        _debug("S3SyncCiviCRM.push(%s, %s)" % (self.url, resource_name))
+        _debug("S3SyncCiviCRM.push(%s, %s)" % (repository.url, resource_name))
 
         result = log.FATAL
         remote = False
@@ -250,7 +255,7 @@ class S3SyncCiviCRM(S3SyncRepository):
         output = xml.json_message(False, 400, message)
 
         # Log the operation
-        log.write(repository_id=self.id,
+        log.write(repository_id=repository.id,
                   resource_name=resource_name,
                   transmission=log.OUT,
                   mode=log.PUSH,
@@ -265,7 +270,8 @@ class S3SyncCiviCRM(S3SyncRepository):
     # -------------------------------------------------------------------------
     def send(self, method="GET", **args):
 
-        config = self.get_config()
+        repository = self.repository
+        config = repository.config
 
         # Authentication
         args = Storage(args)
@@ -273,16 +279,16 @@ class S3SyncCiviCRM(S3SyncRepository):
             args["PHPSESSID"] = self.PHPSESSID
         if hasattr(self, "api_key") and self.api_key:
             args["api_key"] = self.api_key
-        if hasattr(self, "site_key") and self.site_key:
-            args["key"] = self.site_key
+        if repository.site_key:
+            args["key"] = repository.site_key
 
         # Create the request
-        url = self.url + "?" + urllib.urlencode(args)
+        url = repository.url + "?" + urllib.urlencode(args)
         req = urllib2.Request(url=url)
         handlers = []
 
         # Proxy handling
-        proxy = self.proxy or config.proxy or None
+        proxy = repository.proxy or config.proxy or None
         if proxy:
             _debug("using proxy=%s" % proxy)
             proxy_handler = urllib2.ProxyHandler({protocol: proxy})
