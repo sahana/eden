@@ -1061,7 +1061,10 @@ class S3LocationNameModel(S3Model):
         #
         tablename = "gis_location_name"
         self.define_table(tablename,
-                          self.gis_location_id(),
+                          self.gis_location_id(
+                            empty = False,
+                            ondelete = "CASCADE",
+                            ),
                           Field("language",
                                 label = T("Language"),
                                 requires = IS_IN_SET(l10n_languages),
@@ -1137,7 +1140,10 @@ class S3LocationTagModel(S3Model):
         #
         tablename = "gis_location_tag"
         self.define_table(tablename,
-                          self.gis_location_id(),
+                          self.gis_location_id(
+                            empty = False,
+                            ondelete = "CASCADE",
+                            ),
                           # key is a reserved word in MySQL
                           Field("tag", label=T("Key")),
                           Field("value", label=T("Value")),
@@ -1227,7 +1233,10 @@ class S3LocationGroupModel(S3Model):
                      Field("name",
                            label = T("Name")),
                      # Optional Polygon for the overall Group
-                     location_id(),
+                     location_id(
+                        empty = False,
+                        ondelete = "CASCADE",
+                        ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1244,7 +1253,10 @@ class S3LocationGroupModel(S3Model):
                            "reference gis_location_group",
                            label = T("Location Group"),
                            ondelete = "RESTRICT"),
-                     location_id(),
+                     location_id(
+                        empty = False,
+                        ondelete = "CASCADE",
+                        ),
                      s3_comments(),
                      *s3_meta_fields())
 

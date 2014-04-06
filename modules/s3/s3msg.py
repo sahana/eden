@@ -1658,6 +1658,8 @@ class S3Msg(object):
         import feedparser
         if channel.etag:
             # http://pythonhosted.org/feedparser/http-etag.html
+            # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
+            # - consider logging cases where we get entries but none are new to be able to report on this & get remote sites to be configured more nicely
             d = feedparser.parse(channel.url, etag=channel.etag)
         elif channel.date:
             d = feedparser.parse(channel.url, modified=channel.date.utctimetuple())
@@ -1673,6 +1675,19 @@ class S3Msg(object):
         utcfromtimestamp = datetime.datetime.utcfromtimestamp
         from time import mktime, struct_time
         for entry in d.entries:
+            link = entry.get("link", None)
+
+            # Check for duplicates
+            # (ETag just saves bandwidth, doesn't filter the contents of the feed)
+            exists = db(mtable.from_address == link).select(mtable.id,
+                                                            mtable.location_id,
+                                                            limitby=(0, 1)
+                                                            ).first()
+            if exists:
+                location_id = exists.location_id
+            else:
+                location_id = None
+
             content = entry.get("content", None)
             if content:
                 content = content[0].value
@@ -1697,9 +1712,12 @@ class S3Msg(object):
                 lon = entry.get("geo_long", None)
                 if lon is not None:
                     try:
-                        location_id = ginsert(lat=lat, lon=lon)
+                        if location_id:
+                            db(gtable.id == location_id).update(lat=lat, lon=lon)
+                        else:
+                            location_id = ginsert(lat=lat, lon=lon)
                     except:
-                        # Don't die on badly-formed GeoRSS
+                        # Don't die on badly-formed Geo
                         pass
             else:
                 # Try GeoRSS
@@ -1707,26 +1725,41 @@ class S3Msg(object):
                 if georss:
                     try:
                         lat, lon = georss.split(" ")
-                        location_id = ginsert(lat=lat, lon=lon)
+                        if location_id:
+                            db(gtable.id == location_id).update(lat=lat, lon=lon)
+                        else:
+                            location_id = ginsert(lat=lat, lon=lon)
                     except:
                         # Don't die on badly-formed GeoRSS
                         pass
 
-            id = minsert(channel_id = channel_id,
-                         title = entry.title,
-                         from_address = entry.get("link", None),
-                         body = content,
-                         author = entry.get("author", None),
-                         date = date_published,
-                         location_id = location_id,
-                         tags = tags,
-                         # @ToDo: Enclosures
-                         )
-            record = dict(id=id)
-            update_super(mtable, record)
-            if parser:
-                pinsert(message_id = record["message_id"],
-                        channel_id = channel_id)
+            if exists:
+                db(mtable.id == exists.id).update(channel_id = channel_id,
+                                                  title = entry.title,
+                                                  from_address = link,
+                                                  body = content,
+                                                  author = entry.get("author", None),
+                                                  date = date_published,
+                                                  location_id = location_id,
+                                                  tags = tags,
+                                                  # @ToDo: Enclosures
+                                                  )
+            else:
+                id = minsert(channel_id = channel_id,
+                             title = entry.title,
+                             from_address = link,
+                             body = content,
+                             author = entry.get("author", None),
+                             date = date_published,
+                             location_id = location_id,
+                             tags = tags,
+                             # @ToDo: Enclosures
+                             )
+                record = dict(id=id)
+                update_super(mtable, record)
+                if parser:
+                    pinsert(message_id = record["message_id"],
+                            channel_id = channel_id)
 
         return "OK"
 

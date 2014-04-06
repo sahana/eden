@@ -1096,7 +1096,9 @@ class S3RSSModel(S3ChannelModel):
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       list_fields = ["title",
+                       deduplicate = self.msg_rss_duplicate,
+                       list_fields = ["channel_id",
+                                      "title",
                                       "from_address",
                                       "date",
                                       "body"
@@ -1106,6 +1108,25 @@ class S3RSSModel(S3ChannelModel):
 
         # ---------------------------------------------------------------------
         return dict()
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def msg_rss_duplicate(item):
+        """
+            Import item deduplication, match by link (from_address)
+
+            @param item: the S3ImportItem instance
+        """
+
+        if item.tablename == "msg_rss":
+            table = item.table
+            from_address = item.data.get("from_address")
+            query = (table.from_address == from_address)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3SMSModel(S3Model):
