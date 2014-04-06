@@ -386,6 +386,10 @@ class S3DeploymentModel(S3Model):
                            ),
                      *s3_meta_fields())
 
+        configure(tablename,
+                  delete_next = URL(c="deploy", f="human_resource", args="summary"),
+                  )
+
         # ---------------------------------------------------------------------
         # Assignment of human resources
         # - actual assignment of an HR to a mission
