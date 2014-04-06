@@ -114,7 +114,10 @@ def mission():
 
 # =============================================================================
 def response_message():
-    """ RESTful CRUD Controller """
+    """
+        RESTful CRUD Controller
+        - can't be called 'response' as this clobbbers web2py global!
+    """
 
     return s3_rest_controller("deploy", "response",
                               custom_crud_buttons = {"list_btn": None},

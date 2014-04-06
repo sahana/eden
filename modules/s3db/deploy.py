@@ -195,10 +195,14 @@ class S3DeploymentModel(S3Model):
                                insert = False,
                                type = "datalist",
                                tablename = "deploy_response",
+                               # Can't be 'response' as this clobbers web2py global
+                               function = "response_message",
                                list_fields = list_fields,
                                context = "mission",
                                list_layout = list_layout,
-                               pagesize = 10,
+                               # The popup datalist isn't currently functional (needs card layout applying) and not ideal UX anyway
+                               #pagesize = 10,
+                               pagesize = None,
                                )
 
         hr_label = current.deployment_settings.get_deploy_hr_label()

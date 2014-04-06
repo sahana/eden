@@ -404,6 +404,7 @@ class S3Profile(S3CRUD):
                 for f in filters:
                     vars[f] = filters[f]
             c, f = tablename.split("_", 1)
+            f = widget.get("function", f)
             url = URL(c=c, f=f, args=["datalist.popup"],
                       vars=vars)
             more = DIV(A(BUTTON("%s (%s)" % (T("see more"), more),
