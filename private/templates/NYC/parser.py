@@ -222,7 +222,7 @@ class S3Parser(object):
                     s3db.cms_post_organisation.insert(post_id=post_id,
                                                       organisation_id=org_id,
                                                       )
-                elif pe_type == "org_organisation_group":
+                elif pe_type == "org_group":
                     s3db.cms_post_organisation_group.insert(post_id=post_id,
                                                             group_id=org_id,
                                                             )
