@@ -675,6 +675,73 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def geocode_r(lat, lon):
+        """
+            Geocode an Address
+            - used by S3LocationSelectorWidget2
+                      settings.get_gis_geocode_imported_addresses
+
+            @param address: street address
+            @param postcode: postcode
+            @param Lx_ids: list of ancestor IDs
+            @param geocoder: which geocoder service to use
+        """
+
+        if not lat or not lon:
+            return "Need Lat & Lon"
+
+        results = ""
+        # Check vaguely valid
+        try:
+            lat = float(lat)
+        except ValueError:
+            results = "Latitude is Invalid!"
+        try:
+            lon = float(lon)
+        except ValueError:
+            results += "Longitude is Invalid!"
+
+        if not results:
+            if lon > 180 or lon < -180:
+                results = "Longitude must be between -180 & 180!"
+            elif lat > 90 or lat < -90:
+                results = "Latitude must be between -90 & 90!"
+            else:
+                table = current.s3db.gis_location
+                query = (table.level != None) & \
+                        (table.deleted != True)
+                if current.deployment_settings.get_gis_spatialdb():
+                    point = "POINT(%s %s)" % (lon, lat)
+                    query &= (table.the_geom.st_intersects(point))
+                    rows = current.db(query).select(table.id,
+                                                    table.level,
+                                                    )
+                    results = {}
+                    for row in rows:
+                        results[row.level] = row.id
+                else:
+                    # Oh dear, this is going to be slow :/
+                    query &= (table.lat_min < lat) & \
+                             (table.lat_max > lat) & \
+                             (table.lon_min < lon) & \
+                             (table.lon_max > lon)
+                    rows = current.db(query).select(table.id,
+                                                    table.level,
+                                                    table.wkt,
+                                                    )
+                    from shapely.geometry import point
+                    from shapely.wkt import loads as wkt_loads
+                    test = point.Point(lon, lat)
+                    results = {}
+                    for row in rows:
+                        shape = wkt_loads(row.wkt)
+                        ok = test.intersects(shape)
+                        if ok:
+                            results[row.level] = row.id
+        return results
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def get_bearing(lat_start, lon_start, lat_end, lon_end):
         """
             Given a Start & End set of Coordinates, return a Bearing

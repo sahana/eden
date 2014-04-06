@@ -1660,6 +1660,7 @@ class S3Msg(object):
             # http://pythonhosted.org/feedparser/http-etag.html
             # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
             # - consider logging cases where we get entries but none are new to be able to report on this & get remote sites to be configured more nicely
+            # - we can also back off the frequency of any recurring scheduler_task entry
             d = feedparser.parse(channel.url, etag=channel.etag)
         elif channel.date:
             d = feedparser.parse(channel.url, modified=channel.date.utctimetuple())
@@ -1672,6 +1673,9 @@ class S3Msg(object):
         if etag:
             data["etag"] = etag
         db(query).update(**data)
+        gis = current.gis
+        geocode_r = gis.geocode_r
+        hierarchy_level_keys = gis.hierarchy_level_keys
         utcfromtimestamp = datetime.datetime.utcfromtimestamp
         from time import mktime, struct_time
         for entry in d.entries:
@@ -1681,12 +1685,15 @@ class S3Msg(object):
             # (ETag just saves bandwidth, doesn't filter the contents of the feed)
             exists = db(mtable.from_address == link).select(mtable.id,
                                                             mtable.location_id,
+                                                            mtable.message_id,
                                                             limitby=(0, 1)
                                                             ).first()
             if exists:
                 location_id = exists.location_id
             else:
                 location_id = None
+
+            title = entry.title
 
             content = entry.get("content", None)
             if content:
@@ -1706,36 +1713,48 @@ class S3Msg(object):
             if tags:
                 tags = [s3_unicode(t.term) for t in tags]
 
-            location_id = None
             lat = entry.get("geo_lat", None)
-            if lat is not None:
-                lon = entry.get("geo_long", None)
-                if lon is not None:
-                    try:
-                        if location_id:
-                            db(gtable.id == location_id).update(lat=lat, lon=lon)
-                        else:
-                            location_id = ginsert(lat=lat, lon=lon)
-                    except:
-                        # Don't die on badly-formed Geo
-                        pass
-            else:
+            lon = entry.get("geo_long", None)
+            if lat is None or lon is None:
                 # Try GeoRSS
                 georss = entry.get("georss_point", None)
                 if georss:
-                    try:
-                        lat, lon = georss.split(" ")
+                    location = True
+                    lat, lon = georss.split(" ")
+            else:
+                location = True
+            if location:
+                try:
+                    query = (gtable.lat == lat) &\
+                            (gtable.lon == lon)
+                    exists = db(query).select(gtable.id,
+                                              limitby=(0, 1)
+                                              ).first()
+                    if exists:
+                        location_id = exists.id
+                    else:
+                        data = dict(lat=lat,
+                                    lon=lon,
+                                    )
+                        results = geocode_r(lat, lon)
+                        if isinstance(results, dict):
+                            for key in hierarchy_level_keys:
+                                v = results.get(key, None)
+                                if v:
+                                    data[key] = v
                         if location_id:
-                            db(gtable.id == location_id).update(lat=lat, lon=lon)
+                            # Location has been changed
+                            #db(gtable.id == location_id).update(**data)
+                            location_id = ginsert(**data)
                         else:
-                            location_id = ginsert(lat=lat, lon=lon)
-                    except:
-                        # Don't die on badly-formed GeoRSS
-                        pass
+                            location_id = ginsert(**data)
+                except:
+                    # Don't die on badly-formed Geo
+                    pass
 
             if exists:
                 db(mtable.id == exists.id).update(channel_id = channel_id,
-                                                  title = entry.title,
+                                                  title = title,
                                                   from_address = link,
                                                   body = content,
                                                   author = entry.get("author", None),
@@ -1744,6 +1763,10 @@ class S3Msg(object):
                                                   tags = tags,
                                                   # @ToDo: Enclosures
                                                   )
+                if parser:
+                    pinsert(message_id = exists.message_id,
+                            channel_id = channel_id)
+                
             else:
                 id = minsert(channel_id = channel_id,
                              title = entry.title,

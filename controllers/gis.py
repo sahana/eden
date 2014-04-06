@@ -3109,57 +3109,11 @@ def geocode_r():
     vars = request.post_vars
     lat = vars.get("lat", None)
     lon = vars.get("lon", None)
-    if not lat or not lon:
-       results = "Need Lat & Lon"
-    else:
-        results = ""
-        # Check vaguely valid
-        try:
-            lat = float(lat)
-        except ValueError:
-            results += "Latitude is Invalid!"
-        try:
-            lon = float(lon)
-        except ValueError:
-            results += "Longitude is Invalid!"
-        if not results:
-            if lon > 180 or lon < -180:
-                results = "Longitude must be between -180 & 180!"
-            elif lat > 90 or lat < -90:
-                results = "Latitude must be between -90 & 90!"
-            else:
-                table = s3db.gis_location
-                query = (table.level != None) & \
-                        (table.deleted != True)
-                if settings.get_gis_spatialdb():
-                    point = "POINT(%s %s)" % (lon, lat)
-                    query &= (table.the_geom.st_intersects(point))
-                    rows = db(query).select(table.id,
-                                            table.level,
-                                            )
-                    results = {}
-                    for row in rows:
-                        results[row.level] = row.id
-                else:
-                    # Oh dear, this is going to be slow :/
-                    query &= (table.lat_min < lat) & \
-                             (table.lat_max > lat) & \
-                             (table.lon_min < lon) & \
-                             (table.lon_max > lon)
-                    rows = db(query).select(table.id,
-                                            table.level,
-                                            table.wkt,
-                                            )
-                    from shapely.geometry import point
-                    from shapely.wkt import loads as wkt_loads
-                    test = point.Point(lon, lat)
-                    results = {}
-                    for row in rows:
-                        shape = wkt_loads(row.wkt)
-                        ok = test.intersects(shape)
-                        if ok:
-                            results[row.level] = row.id
 
+    # Reverse Geocode
+    results = gis.geocode_r(lat, lon)
+
+    # Return the results
     results = json.dumps(results)
     response.headers["Content-Type"] = "application/json"
     return results
