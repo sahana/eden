@@ -84,7 +84,7 @@ class S3Parser(object):
                                                      limitby=(0, 1)
                                                      ).first()
             if exists:
-                exists = db(post_table.doc_id == exists.doc_id).select(post_table.id
+                exists = db(post_table.doc_id == exists.doc_id).select(post_table.id,
                                                                        limitby=(0, 1)
                                                                        ).first()
                 
