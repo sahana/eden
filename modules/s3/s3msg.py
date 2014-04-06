@@ -1713,6 +1713,7 @@ class S3Msg(object):
             if tags:
                 tags = [s3_unicode(t.term) for t in tags]
 
+            location = False
             lat = entry.get("geo_lat", None)
             lon = entry.get("geo_long", None)
             if lat is None or lon is None:
