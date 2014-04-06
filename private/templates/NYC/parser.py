@@ -80,7 +80,7 @@ class S3Parser(object):
         url = record.from_address
         if url:
             doc_table = s3db.doc_document
-            exists = db(doc_table.url == url).select(doc_table.doc_id
+            exists = db(doc_table.url == url).select(doc_table.doc_id,
                                                      limitby=(0, 1)
                                                      ).first()
             if exists:
