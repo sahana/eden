@@ -5442,7 +5442,21 @@ def hrm_human_resource_controller(extra_filter=None):
                 redirect(URL(c=c, f=f,
                              args=request.args,
                              vars=request.vars))
-            elif method in ("delete", "profile"):
+            elif method == "delete":
+                if deploy:
+                    # Delete the Application, not the HR
+                    atable = s3db.deploy_application
+                    app = current.db(atable.human_resource_id == r.id).select(atable.id,
+                                                                              limitby=(0, 1)
+                                                                              ).first()
+                    if not app:
+                        current.session.error = "Cannot find Application to delete!"
+                        redirect(URL(args="summary"))
+                    redirect(URL(f="application", args=[app.id, "delete"]))
+                else:
+                    # Don't redirect
+                    pass
+            elif method == "profile":
                 # Don't redirect
                 pass
             elif method == "deduplicate":
@@ -5470,22 +5484,24 @@ def hrm_human_resource_controller(extra_filter=None):
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
                 if r.controller == "deploy":
+                    # Application is deleted, not HR
+                    deletable = True
                     # Open Profile page
                     read_url = URL(args = ["[id]", "profile"])
                     update_url = URL(args = ["[id]", "profile"])
                 else:
+                    deletable = settings.get_hrm_deletable(),
                     # Standard CRUD buttons
                     read_url = None
                     update_url = None
                 S3CRUD.action_buttons(r,
-                                      deletable = settings.get_hrm_deletable(),
+                                      deletable = deletable,
                                       read_url = read_url,
                                       update_url = update_url)
                 if "msg" in settings.modules and \
                    current.auth.permission.has_permission("update",
                                                           c="hrm",
                                                           f="compose"):
-                    # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"human_resource.id": "[id]"}),

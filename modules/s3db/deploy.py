@@ -92,6 +92,7 @@ class S3DeploymentModel(S3Model):
                      super_link("doc_id", "doc_entity"),
                      Field("name",
                            label = T("Name"),
+                           represent = self.deploy_mission_name_represent,
                            requires = IS_NOT_EMPTY(),
                            ),
                      # @ToDo: Link to location via link table
@@ -525,6 +526,21 @@ class S3DeploymentModel(S3Model):
                 
     # -------------------------------------------------------------------------
     @staticmethod
+    def deploy_mission_name_represent(name):
+
+        table = current.s3db.deploy_mission
+        mission = current.db(table.name == name).select(table.id,
+                                                        limitby=(0, 1)
+                                                        ).first()
+        if not mission:
+            return name
+
+        return A(name,
+                 _href=URL(c="deploy", f="mission",
+                           args=[mission.id, "profile"]))
+                
+    # -------------------------------------------------------------------------
+    @staticmethod
     def deploy_assignment_create_onaccept(form):
         """
             Create linked hrm_experience record
@@ -719,7 +735,7 @@ class S3DeploymentAlertModel(S3Model):
                            default = 1,
                            label = T("Send By"),
                            represent = lambda opt: \
-                           contact_method_opts.get(opt, NONE),
+                            contact_method_opts.get(opt, NONE),
                            requires = IS_IN_SET(contact_method_opts),
                            ),
                      Field("subject", length=78,    # RFC 2822
@@ -765,6 +781,7 @@ class S3DeploymentAlertModel(S3Model):
                   context = {"mission": "mission_id"},
                   crud_form = crud_form,
                   list_fields = ["mission_id",
+                                 "contact_method",
                                  "subject",
                                  "body",
                                  "alert_recipient.human_resource_id",

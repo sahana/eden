@@ -190,8 +190,11 @@ def application():
         return True
     s3.prep = prep
 
-    #return s3db.hrm_human_resource_controller()
-    return s3_rest_controller("hrm", "human_resource")
+    if "delete" in request.args:
+        return s3_rest_controller()
+    else:
+        #return s3db.hrm_human_resource_controller()
+        return s3_rest_controller("hrm", "human_resource")
 
 # -----------------------------------------------------------------------------
 def assignment():
@@ -686,5 +689,13 @@ def email_channel():
     s3.postp = postp
 
     return s3_rest_controller("msg")
+
+# =============================================================================
+# Messaging
+# =============================================================================
+def compose():
+    """ Send message to people/teams """
+
+    return s3db.hrm_compose()
 
 # END =========================================================================
