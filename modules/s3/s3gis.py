@@ -2423,22 +2423,14 @@ class GIS(object):
                         # Do the Simplify & GeoJSON direct from the DB
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
-                        if join:
-                            for row in rows:
-                                geojsons[row[tablename].id] = row.geojson
-                        else:
-                            for row in rows:
-                                geojsons[row.id] = row.geojson
+                        for row in rows:
+                            geojsons[row[tablename].id] = row.geojson
                     else:
                         # Do the Simplify direct from the DB
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
-                        if join:
-                            for row in rows:
-                                wkts[row[tablename].id] = row.wkt
-                        else:
-                            for row in rows:
-                                wkts[row.id] = row.wkt
+                        for row in rows:
+                            wkts[row[tablename].id] = row.wkt
                 else:
                     rows = db(query).select(table.id,
                                             gtable.wkt)
