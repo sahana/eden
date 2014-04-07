@@ -63,6 +63,9 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3LocationModel(S3Model):
     """
@@ -918,7 +921,7 @@ class S3LocationModel(S3Model):
            resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
                 dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
+                ], separators=SEPARATORS)
 
         elif loc_select:
             # LocationSelector
@@ -1034,7 +1037,7 @@ class S3LocationModel(S3Model):
 
                 iappend(item)
 
-            output = json.dumps(items)
+            output = json.dumps(items, separators=SEPARATORS)
                                        
         response.headers["Content-Type"] = "application/json"
         return output

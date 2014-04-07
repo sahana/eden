@@ -46,6 +46,9 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3IRSModel(S3Model):
 
@@ -858,7 +861,7 @@ class S3IRSModel(S3Model):
                                #"color" : "blue',
                             })
             data["events"] = events
-            data = json.dumps(data)
+            data = json.dumps(data, separators=SEPARATORS)
 
             code = "".join((
 '''S3.timeline.data=''', data, '''

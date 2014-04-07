@@ -1729,7 +1729,8 @@ class S3Msg(object):
                     query = (gtable.lat == lat) &\
                             (gtable.lon == lon)
                     exists = db(query).select(gtable.id,
-                                              limitby=(0, 1)
+                                              limitby=(0, 1),
+                                              orderby=gtable.level,
                                               ).first()
                     if exists:
                         location_id = exists.id
@@ -1743,12 +1744,12 @@ class S3Msg(object):
                                 v = results.get(key, None)
                                 if v:
                                     data[key] = v
-                        if location_id:
-                            # Location has been changed
-                            #db(gtable.id == location_id).update(**data)
-                            location_id = ginsert(**data)
-                        else:
-                            location_id = ginsert(**data)
+                        #if location_id:
+                        # Location has been changed
+                        #db(gtable.id == location_id).update(**data)
+                        location_id = ginsert(**data)
+                        data["id"] = location_id
+                        gis.update_location_tree(data)
                 except:
                     # Don't die on badly-formed Geo
                     pass

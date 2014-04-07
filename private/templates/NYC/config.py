@@ -143,6 +143,8 @@ settings.security.audit_write = audit_write
 settings.cms.bookmarks = True
 # Uncomment to use have Filter form in Newsfeed be open by default
 settings.cms.filter_open = True
+# Uncomment to adjust filters in Newsfeed when clicking on locations instead of opening the profile page
+settings.cms.location_click_filters = True
 # Uncomment to use organisation_id instead of created_by in Newsfeed
 settings.cms.organisation = "post_organisation.organisation_id"
 # Uncomment to use org_group_id in Newsfeed

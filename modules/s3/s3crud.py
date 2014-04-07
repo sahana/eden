@@ -59,6 +59,9 @@ from s3rest import S3Method
 from s3utils import s3_unicode, s3_validate, s3_represent_value
 from s3widgets import S3EmbedComponentWidget
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3CRUD(S3Method):
     """
@@ -2125,7 +2128,7 @@ class S3CRUD(S3Method):
         if single and len(output) == 1:
             output = output[0]
 
-        return json.dumps(output)
+        return json.dumps(output, separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
     # Utility functions

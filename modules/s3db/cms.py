@@ -1130,28 +1130,45 @@ def cms_customize_post_fields():
                    "location_id",
                    "date",
                    ]
+    lappend = list_fields.append
 
     if settings.get_cms_show_titles():
-        list_fields.append("title")
+        lappend("title")
 
-    list_fields.append("body")
+    lappend("body")
 
     if contact_field:
-        list_fields.append(contact_field)
+        lappend(contact_field)
     if org_field:
-        list_fields.append(org_field)
+        lappend(org_field)
     if org_group_field:
-        list_fields.append(org_group_field)
+        lappend(org_group_field)
 
-    list_fields.append("document.file")
+    lappend("document.file")
     if settings.get_cms_show_links():
-        list_fields.append("document.url")
+        lappend("document.url")
 
     if show_events:
-        list_fields.append("event_post.event_id")
+        lappend("event_post.event_id")
+
+    if settings.get_cms_location_click_filters():
+        script = \
+'''S3.filter_location=function(d){var cb
+for(var p in d){cb=$('input[name="multiselect_post-cms_post_location_id-location-filter-L'+p+'"][value="'+d[p]+'"]')
+if(!cb.prop('checked')){cb.click()}}}'''
+        s3.jquery_ready.append(script)
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
+            levels.remove("L0")
+
+        for level in levels:
+            lappend("location_id$%s" % level)
 
     if settings.get_cms_show_tags():
-        list_fields.append("tag.name")
+        lappend("tag.name")
         if s3.debug:
             s3.scripts.append("/%s/static/scripts/tag-it.js" % current.request.application)
         else:
@@ -1227,12 +1244,31 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     location_id = raw["cms_post.location_id"]
     if location_id:
         location = record["cms_post.location_id"]
-        location_url = URL(c="gis", f="location", args=[location_id, "profile"])
-        location = SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        )
+        if settings.get_cms_location_click_filters():
+            # Which levels of Hierarchy are we using?
+            hierarchy = current.gis.get_location_hierarchy()
+            levels = hierarchy.keys()
+            if len(settings.get_gis_countries()) == 1 or \
+               current.response.s3.gis.config.region_location_id:
+                levels.remove("L0")
+
+            data = {}
+            for level in levels:
+                data[level[1:]] = raw["gis_location.%s" % level]
+            onclick = '''S3.filter_location(%s)''' % json.dumps(data, separators=(",", ":"))
+            location = SPAN(A(location,
+                              _href="#",
+                              _onclick=onclick,
+                              ),
+                            _class="location-title",
+                            )
+        else:
+            location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+            location = SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title",
+                            )
     else:
         location = ""
 

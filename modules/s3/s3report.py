@@ -51,6 +51,9 @@ from s3rest import S3Method
 
 layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3Report(S3Method):
     """ RESTful method for pivot table reports """
@@ -214,7 +217,7 @@ class S3Report(S3Method):
 
         elif r.representation == "json":
 
-            output = json.dumps(pivotdata)
+            output = json.dumps(pivotdata, separators=SEPARATORS)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -370,7 +373,7 @@ class S3ReportForm(object):
             labels = pivotdata["labels"]
         else:
             labels = None
-        hidden = {"pivotdata": json.dumps(pivotdata)}
+        hidden = {"pivotdata": json.dumps(pivotdata, separators=SEPARATORS)}
 
         empty = T("No report specified.")
         hide = T("Hide Table")
@@ -510,7 +513,7 @@ class S3ReportForm(object):
         script = '''$('#%(widget_id)s').pivottable(%(opts)s)''' % \
                                         dict(widget_id = widget_id,
                                              opts = json.dumps(opts,
-                                                               separators=(",", ":")),
+                                                               separators=SEPARATORS),
                                              )
 
         s3.jquery_ready.append(script)

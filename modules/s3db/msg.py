@@ -50,6 +50,9 @@ from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3ChannelModel(S3Model):
     """
@@ -1938,7 +1941,7 @@ class S3TwitterSearchModel(S3ChannelModel):
                                "description": row.body,
                                })
             data["events"] = events
-            data = json.dumps(data)
+            data = json.dumps(data, separators=SEPARATORS)
 
             code = "".join((
 '''S3.timeline.data=''', data, '''

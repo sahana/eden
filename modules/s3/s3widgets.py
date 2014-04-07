@@ -118,6 +118,9 @@ from s3validators import *
 ogetattr = object.__getattribute__
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3ACLWidget(CheckboxesWidget):
     """
@@ -1165,7 +1168,7 @@ class S3ColorPickerWidget(FormWidget):
         s3.jquery_ready.append('''
 var sp_options=%s
 sp_options.change=function(color){this.value=color.toHex()}
-$('.color').spectrum(sp_options)''' % json.dumps(self.options) if self.options else "")
+$('.color').spectrum(sp_options)''' % json.dumps(self.options, separators=SEPARATORS) if self.options else "")
 
         attr = self._attributes(field, {"_class": "color",
                                         "_value": value
@@ -2597,7 +2600,7 @@ class S3KeyValueWidget(ListWidget):
             value = "[]"
         if not isinstance(value, str):
             try:
-                value = json.dumps(value)
+                value = json.dumps(value, separators=SEPARATORS)
             except:
                 raise("Bad value for key-value pair field")
         appname = current.request.application
@@ -4527,9 +4530,9 @@ class S3LocationSelectorWidget2(FormWidget):
         if not location_selector_loaded:
             global_append = s3.js_global.append
             # @ToDo: Check whether relevant ls & ds in the previous instance of locationselector or need appending
-            script = '''l=%s''' % json.dumps(location_dict)
+            script = '''l=%s''' % json.dumps(location_dict, separators=SEPARATORS)
             global_append(script)
-            script = '''h=%s''' % json.dumps(hdict)
+            script = '''h=%s''' % json.dumps(hdict, separators=SEPARATORS)
             global_append(script)
             script = '''i18n.select="%s"''' % T("Select")
             global_append(script)
@@ -4879,11 +4882,10 @@ class S3HierarchySelectWidget(FormWidget):
 $('#%(widget_id)s').hierarchicalopts({
     appname: '%(appname)s',
     selected: %(selected)s
-});''' % {
-            "appname": current.request.application,
-            "widget_id": widget_id,
-            "selected": json.dumps(selected) if selected else "null",
-        }
+});''' % {"appname": current.request.application,
+          "widget_id": widget_id,
+          "selected": json.dumps(selected, separators=SEPARATORS) if selected else "null",
+          }
         s3.jquery_ready.append(script)
 
         return widget
@@ -5069,7 +5071,7 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
                     raise SyntaxError, "widget cannot determine options of %s" % field
 
         javascript_array = '''%s_options=%s''' % (name,
-                                                  json.dumps(options))
+                                                  json.dumps(options, separators=SEPARATORS))
         s3 = current.response.s3
         s3.js_global.append(javascript_array)
         s3.scripts.append("/%s/static/scripts/S3/s3.orghierarchy.js" % \
@@ -5236,7 +5238,7 @@ class S3PentityAutocompleteWidget(FormWidget):
 
         if self.types:
             # Something other than default: ("pr_person", "pr_group")
-            types = json.dumps(self.types)
+            types = json.dumps(self.types, separators=SEPARATORS)
         else:
             types = ""
 
@@ -5387,7 +5389,7 @@ class S3SiteAutocompleteWidget(FormWidget):
         for instance_type in site_types:
             # Change from T()
             site_types[instance_type] = s3_unicode(site_types[instance_type])
-        site_types = '''S3.org_site_types=%s''' % json.dumps(site_types)
+        site_types = '''S3.org_site_types=%s''' % json.dumps(site_types, separators=SEPARATORS)
         js_global = s3.js_global
         if site_types not in js_global:
             js_global.append(site_types)
@@ -5877,7 +5879,7 @@ def search_ac(r, **attr):
            resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
                 dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
+                ], separators=SEPARATORS)
 
     if output is None:
         rows = resource.select(fields,
@@ -5894,6 +5896,6 @@ def search_ac(r, **attr):
             append(record)
 
     current.response.headers["Content-Type"] = "application/json"
-    return json.dumps(output)
+    return json.dumps(output, separators=SEPARATORS)
 
 # END =========================================================================

@@ -82,6 +82,9 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3OrganisationModel(S3Model):
     """
@@ -779,7 +782,7 @@ class S3OrganisationModel(S3Model):
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
                 dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
+                ], separators=SEPARATORS)
         else:
             field = table.name
             field2 = table.acronym
@@ -833,7 +836,7 @@ class S3OrganisationModel(S3Model):
                         record["match"] = "acronym"
 
                 append(record)
-            output = json.dumps(output)
+            output = json.dumps(output, separators=SEPARATORS)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -2374,7 +2377,7 @@ class S3SiteModel(S3Model):
             return s3db.pr_person_lookup(fake, **attr)
         else:
             current.response.headers["Content-Type"] = "application/json"
-            output = json.dumps(None)
+            output = json.dumps(None, separators=SEPARATORS)
             return output
 
     # -------------------------------------------------------------------------
@@ -2429,7 +2432,7 @@ class S3SiteModel(S3Model):
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
                 dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
+                ], separators=SEPARATORS)
         else:
             from s3.s3widgets import set_match_strings
             s3db = current.s3db
@@ -2479,7 +2482,7 @@ class S3SiteModel(S3Model):
                 # Populate match information (if applicable)
                 set_match_strings(record, value)
                 append(record)
-            output = json.dumps(output)
+            output = json.dumps(output, separators=SEPARATORS)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -3100,7 +3103,7 @@ class S3FacilityModel(S3Model):
             y = float(format(y, formatter))
             shape = Point(x, y)
             # Compact Encoding
-            geojson = dumps(shape, separators=(",", ":"))
+            geojson = dumps(shape, separators=SEPARATORS)
             o = f.org_facility
             properties = {"id": o.id,
                           "name": o.name,
@@ -3150,7 +3153,7 @@ class S3FacilityModel(S3Model):
         data = dict(type = "FeatureCollection",
                     features = features
                     )
-        output = json.dumps(data)
+        output = json.dumps(data, separators=SEPARATORS)
         if jsonp:
             filename = "facility.geojsonp"
             output = "grid(%s)" % output

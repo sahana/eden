@@ -1158,6 +1158,9 @@ def s3_date(name="date", **attr):
             default == "now" (in addition to usual meanings)
             past = x months
             future = x months
+
+        @ToDo: Different default field name in case we need to start supporting
+               Oracle, where 'date' is a reserved word
     """
 
     if "past" in attr:
@@ -1280,7 +1283,7 @@ def s3_date(name="date", **attr):
 # =============================================================================
 def s3_datetime(name="date", **attr):
     """
-        Return a standard Datetime field
+        Return a standard DateTime field
 
         Additional options to normal S3ReusableField:
             default = "now" (in addition to usual meanings)
@@ -1288,6 +1291,9 @@ def s3_datetime(name="date", **attr):
             widget = "date" (in addition to usual meanings)
             past = x hours
             future = x hours
+
+        @ToDo: Different default field name in case we need to start supporting
+               Oracle, where 'date' is a reserved word
     """
 
     if "past" in attr:

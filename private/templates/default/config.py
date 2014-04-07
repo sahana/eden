@@ -348,6 +348,8 @@ settings.L10n.decimal_separator = "."
 #settings.cms.bookmarks = True
 # Uncomment to use have Filter form in Newsfeed be open by default
 #settings.cms.filter_open = True
+# Uncomment to adjust filters in Newsfeed when clicking on locations instead of opening the profile page
+#settings.cms.location_click_filters = True
 # Uncomment to use Rich Text editor in Newsfeed
 #settings.cms.richtext = True
 # Uncomment to show Events in Newsfeed

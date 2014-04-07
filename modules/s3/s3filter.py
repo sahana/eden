@@ -58,6 +58,9 @@ from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, S3SelectChosenWidget
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3FilterWidget(object):
     """ Filter widget for interactive search forms (base class) """
@@ -1038,13 +1041,13 @@ class S3LocationFilter(S3FilterWidget):
         if inject_hierarchy:
             # Inject the Location Hierarchy
             hierarchy = "S3.location_filter_hierarchy=%s" % \
-                json.dumps(hierarchy, separators=(",", ":"))
+                json.dumps(hierarchy, separators=SEPARATORS)
             js_global = current.response.s3.js_global
             js_global.append(hierarchy)
             if translate:
                 # Inject lookup list
                 name_l10n = "S3.location_name_l10n=%s" % \
-                    json.dumps(name_l10n, separators=(",", ":"))
+                    json.dumps(name_l10n, separators=SEPARATORS)
                 js_global.append(name_l10n)
 
         return (ftype, levels, None)
@@ -1607,11 +1610,10 @@ class S3HierarchyFilter(S3FilterWidget):
 $('#%(widget_id)s').hierarchicalopts({
     appname: '%(appname)s',
     selected: %(selected)s
-});''' % {
-            "appname": current.request.application,
-            "widget_id": widget_id,
-            "selected": json.dumps(selected) if selected else "null",
-        }
+});''' % {"appname": current.request.application,
+          "widget_id": widget_id,
+          "selected": json.dumps(selected, separators=SEPARATORS) if selected else "null",
+          }
         s3.jquery_ready.append(script)
 
         return widget
@@ -2014,8 +2016,9 @@ class S3FilterForm(object):
         if load_text:
             config["loadText"] = _t(load_text)
             
-        script = '''$("#%s").filtermanager(%s)''' % (widget_id,
-                                                     json.dumps(config))
+        script = '''$("#%s").filtermanager(%s)''' % \
+                    (widget_id,
+                     json.dumps(config, separators=SEPARATORS))
 
         current.response.s3.jquery_ready.append(script)
 
@@ -2202,7 +2205,7 @@ class S3Filter(S3Method):
                     if opts and isinstance(opts, dict):
                         options.update(opts)
 
-        options = json.dumps(options)
+        options = json.dumps(options, separators=SEPARATORS)
         current.response.headers["Content-Type"] = "application/json"
         return options
 
@@ -2411,7 +2414,7 @@ class S3Filter(S3Method):
 
         # JSON response
         current.response.headers["Content-Type"] = "application/json"
-        return json.dumps(filters)
+        return json.dumps(filters, separators=SEPARATORS)
 
 # =============================================================================
 class S3FilterString(object):

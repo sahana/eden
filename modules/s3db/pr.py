@@ -111,6 +111,9 @@ from s3layouts import S3AddResourceLink
 OU = 1 # role type which indicates hierarchy, see role_types
 OTHER_ROLE = 9
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3PersonEntity(S3Model):
     """ Person Super-Entity """
@@ -513,7 +516,7 @@ class S3PersonEntity(S3Model):
         items = [{"id" : item[0],
                   "name" : item[1]
                   } for item in items ]
-        output = json.dumps(items)
+        output = json.dumps(items, separators=SEPARATORS)
         response.headers["Content-Type"] = "application/json"
         return output
 
@@ -1286,7 +1289,7 @@ class S3PersonModel(S3Model):
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
                 dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
+                ], separators=SEPARATORS)
         else:
             fields = ["id",
                       "first_name",
@@ -1331,7 +1334,7 @@ class S3PersonModel(S3Model):
                          if org:
                             item["org"] = org
                 iappend(item)
-            output = json.dumps(items)
+            output = json.dumps(items, separators=SEPARATORS)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -1458,7 +1461,7 @@ class S3PersonModel(S3Model):
             item["date_of_birth"] = represent(date_of_birth)
         if occupation:
             item["occupation"] = occupation
-        output = json.dumps(item)
+        output = json.dumps(item, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"
         return output

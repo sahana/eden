@@ -78,6 +78,9 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3HRModel(S3Model):
 
@@ -959,7 +962,7 @@ class S3HRModel(S3Model):
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
                 dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ])
+                ], separators=SEPARATORS)
         else:
             fields = ["id",
                       "person_id$first_name",
@@ -998,7 +1001,7 @@ class S3HRModel(S3Model):
                 if job_title:
                     item["job"] = job_title
                 iappend(item)
-            output = json.dumps(items)
+            output = json.dumps(items, separators=SEPARATORS)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -1119,7 +1122,7 @@ class S3HRModel(S3Model):
             item["occupation"] = occupation
         if organisation_id:
             item["organisation_id"] = organisation_id
-        output = json.dumps(item)
+        output = json.dumps(item, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"
         return output

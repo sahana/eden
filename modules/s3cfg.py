@@ -1529,6 +1529,13 @@ class S3Config(Storage):
         """
         return self.cms.get("filter_open", False)
 
+    def get_cms_location_click_filters(self):
+        """
+            Whether clicking on a location in the Newsfeed should activate
+            the filter to that location, instead of opening the profile page
+        """
+        return self.cms.get("location_click_filters", False)
+
     def get_cms_organisation(self):
         """
             Which field to use for the Organisation of Posts:

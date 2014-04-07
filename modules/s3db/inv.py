@@ -119,6 +119,9 @@ send_type_opts.update(settings.get_inv_send_types())
 recv_type_opts = settings.get_inv_shipment_types()
 recv_type_opts.update(settings.get_inv_recv_types())
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3WarehouseModel(S3Model):
 
@@ -3089,7 +3092,7 @@ S3OptionsFilter({
                                })
 
             data["events"] = events
-            data = json.dumps(data)
+            data = json.dumps(data, separators=SEPARATORS)
 
             code = "".join((
 '''S3.timeline.data=''', data, '''
