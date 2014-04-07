@@ -27,7 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import os
 from itertools import chain
 
 try:
@@ -276,7 +275,6 @@ class S3SQLDefaultForm(S3SQLForm):
             self.tablename = resource.tablename
             self.table = resource.table
 
-        session = current.session
         response = current.response
         s3 = response.s3
         settings = s3.crud
@@ -982,13 +980,13 @@ class S3SQLCustomForm(S3SQLForm):
 
             rows = self.subrows
             if alias in rows and rows[alias] is not None:
-                subid = rows[alias][subtable._id]
+                #subid = rows[alias][subtable._id]
                 subonvalidation = get_config(subtable._tablename,
                                              "update_onvalidation",
                                   get_config(subtable._tablename,
                                              "onvalidation", None))
             else:
-                subid = None
+                #subid = None
                 subonvalidation = get_config(subtable._tablename,
                                              "create_onvalidation",
                                   get_config(subtable._tablename,
@@ -1102,13 +1100,13 @@ class S3SQLCustomForm(S3SQLForm):
         else:
             subform = Storage()
             alias_length = len(alias)
-            vars = form.vars
-            for k in vars:
+            form_vars = form.vars
+            for k in form_vars:
                 if k[:4] == "sub_" and \
-                   vars[k] != None and \
+                   form_vars[k] != None and \
                    k[4:4 + alias_length + 1] == "%s_" % alias:
                     fn = k[4 + alias_length + 1:]
-                    subform[fn] = vars[k]
+                    subform[fn] = form_vars[k]
             return subform
 
     # -------------------------------------------------------------------------
@@ -2586,7 +2584,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if requires:
             r = requires[0]
             if isinstance(r, IS_EMPTY_OR):
-                empty = True
+                #empty = True
                 r = r.other
             # Currently only supporting IS_IN_SET
             if not isinstance(r, IS_IN_SET):
@@ -2754,7 +2752,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     row_id = row[pkey]
                     item = {"_id": row_id}
 
-                    cid = row[component.table._id]
+                    #cid = row[component.table._id]
                     permitted = has_permission("read", tablename, row_id)
                     if not permitted:
                         continue
@@ -2967,14 +2965,14 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     else:
                         found = False
                         if lookuptable:
-                           # Need to load component
-                           hooks = s3db.get_components(_table)
-                           for alias in hooks:
-                               if hooks[alias].rkey == rkey:
-                                   found = True
-                                   _resource._attach(alias, hooks[alias])
-                                   _component = _resource.components[alias]
-                                   break
+                            # Need to load component
+                            hooks = s3db.get_components(_table)
+                            for alias in hooks:
+                                if hooks[alias].rkey == rkey:
+                                    found = True
+                                    _resource._attach(alias, hooks[alias])
+                                    _component = _resource.components[alias]
+                                    break
                         else:
                             # Components are already loaded
                             components = _resource.components
@@ -3072,7 +3070,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     except:
                         # e.g. Theme filtered by Sector
                         current.session.error = \
-                            T("Invalid data: record %(id)s not accessible in table %(table)s") % \
+                            current.T("Invalid data: record %(id)s not accessible in table %(table)s") % \
                                 dict(id=id, table=table)
                         redirect(URL(args=None, vars=None))
 

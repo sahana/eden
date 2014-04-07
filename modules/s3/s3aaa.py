@@ -57,9 +57,9 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-from gluon.dal import Row, Rows, Query, Set, Table, Expression
+from gluon.dal import Row, Rows, Query, Table
 from gluon.sqlhtml import OptionsWidget
-from gluon.storage import Storage, Messages
+from gluon.storage import Storage
 from gluon.tools import Auth, callback, addrow
 from gluon.utils import web2py_uuid
 
@@ -474,7 +474,6 @@ Thank you"""
         """
 
         utable = self.settings.table_user
-        table_membership = self.settings.table_membership
 
         if self.settings.login_userfield:
             userfield = self.settings.login_userfield
@@ -487,7 +486,6 @@ Thank you"""
         user = current.db(query).select(limitby=(0, 1)).first()
         password = utable[passfield].validate(password)[0]
         if user:
-            user_id = user.id
             if not user.registration_key and user[passfield] == password:
                 user = Storage(utable._filter_fields(user, id=True))
                 current.session.auth = Storage(user=user,
@@ -1037,6 +1035,7 @@ Thank you"""
              Overrides Web2Py's email_reset_password() to modify the message structure
         """
 
+        import time
         settings = self.settings
         if not settings.mailer:
             return False
@@ -1091,7 +1090,6 @@ Thank you"""
 
         settings = self.settings
         messages = self.messages
-        deployment_settings = current.deployment_settings
 
         key = current.request.args[-1]
         utable = settings.table_user
@@ -1176,6 +1174,8 @@ Thank you"""
                     selected.append(opt_in)
                 else:
                     removed.append(opt_in)
+            db = current.db
+            s3db = current.s3db
             ptable = s3db.pr_person
             putable = s3db.pr_person_user
             query = (putable.user_id == request.post_vars.id) & \
@@ -1210,40 +1210,42 @@ Thank you"""
                         team_id = team_rec.id
                     gm_table.insert(group_id = team_id,
                                     person_id = person_id)
+        form = SQLFORM(
+            utable,
+            self.user.id,
+            fields = self.settings.profile_fields,
+            labels = labels,
+            hidden = dict(_next=next),
+            showid = self.settings.showid,
+            submit_button = self.messages.profile_save_button,
+            delete_label = self.messages.delete_label,
+            upload = self.settings.download_url,
+            formstyle = self.settings.formstyle,
+            separator = ""
+            )
         if settings.get_auth_openid():
+            from gluon.contrib.login_methods.openid_auth import OpenIDAuth
+            openid_login_form = OpenIDAuth(self)
             form = DIV(form, openid_login_form.list_user_openids())
-        else:
-            form = SQLFORM(
-                utable,
-                self.user.id,
-                fields = self.settings.profile_fields,
-                labels = labels,
-                hidden = dict(_next=next),
-                showid = self.settings.showid,
-                submit_button = self.messages.profile_save_button,
-                delete_label = self.messages.delete_label,
-                upload = self.settings.download_url,
-                formstyle = self.settings.formstyle,
-                separator = ""
-                )
-            if form.accepts(request, session,
-                            formname="profile",
-                            onvalidation=onvalidation,
-                            hideerror=self.settings.hideerror):
-                self.user.update(utable._filter_fields(form.vars))
-                session.flash = self.messages.profile_updated
-                if log:
-                    self.log_event(log % self.user)
-                callback(onaccept, form)
-                if not next:
-                    next = self.url(args=request.args)
-                elif isinstance(next, (list, tuple)): ### fix issue with 2.6
-                    next = next[0]
-                elif next and not next[0] == "/" and next[:4] != "http":
-                    next = self.url(next.replace("[id]", str(form.vars.id)))
-                redirect(next)
+        if form.accepts(request, session,
+                        formname="profile",
+                        onvalidation=onvalidation,
+                        hideerror=self.settings.hideerror):
+            self.user.update(utable._filter_fields(form.vars))
+            session.flash = self.messages.profile_updated
+            if log:
+                self.log_event(log % self.user)
+            callback(onaccept, form)
+            if not next:
+                next = self.url(args=request.args)
+            elif isinstance(next, (list, tuple)): ### fix issue with 2.6
+                next = next[0]
+            elif next and not next[0] == "/" and next[:4] != "http":
+                next = self.url(next.replace("[id]", str(form.vars.id)))
+            redirect(next)
 
         if settings.get_auth_opt_in_to_email():
+            T = current.T
             ptable = s3db.pr_person
             ltable = s3db.pr_person_user
             opt_list = settings.get_auth_opt_in_team_list()
@@ -1252,7 +1254,7 @@ Thank you"""
             db_opt_in_list = db(query).select(ptable.opt_in,
                                               limitby=(0, 1)).first().opt_in
             for opt_in in opt_list:
-                field_id = "%s_opt_in_%s" % (_table_user, opt_list)
+                field_id = "%s_opt_in_%s" % (utable, opt_list)
                 if opt_in in db_opt_in_list:
                     checked = "selected"
                 else:
@@ -1303,9 +1305,9 @@ Thank you"""
             last_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty)
 
         if settings.username_field:
-            table.username.requires = IS_NOT_IN_DB(db,
-                                                   "%s.username" %
-                                                   utable._tablename)
+            utable.username.requires = IS_NOT_IN_DB(db,
+                                                    "%s.username" %
+                                                    utable._tablename)
 
         email = utable.email
         email.label = T("Email") #messages.label_email
@@ -1779,26 +1781,26 @@ S3OptionsFilter({
         utable = self.settings.table_user
         temptable = s3db.auth_user_temp
 
-        vars = form.vars
-        user_id = vars.id
+        form_vars = form.vars
+        user_id = form_vars.id
 
         if not user_id:
             return None
 
         # If the user hasn't set a personal UTC offset,
         # then read the UTC offset from the form:
-        if not vars.utc_offset:
+        if not form_vars.utc_offset:
             db(utable.id == user_id).update(utc_offset = session.s3.utc_offset)
 
         record  = dict(user_id = user_id)
 
         # Add the mobile to pr_contact
-        mobile = vars.mobile
+        mobile = form_vars.mobile
         if mobile:
             record["mobile"] = mobile
 
         # Insert the profile picture
-        image = vars.image
+        image = form_vars.image
         if image != None and  hasattr(image, "file"):
             # @ToDo: DEBUG!!!
             source_file = image.file
@@ -1809,7 +1811,7 @@ S3OptionsFilter({
                                       original_filename,
                                       field.uploadfolder)
             if isinstance(field.uploadfield, str):
-                fields[field.uploadfield] = source_file.read()
+                form_vars[field.uploadfield] = source_file.read()
             record["image"] = newfilename
 
         if len(record) > 1:
@@ -1900,7 +1902,7 @@ S3OptionsFilter({
         first_name = user.first_name
         last_name = user.last_name
         email = user.email
-        id = user.id
+        user_id = user.id
         base_url = current.response.s3.base_url
         system_name = deployment_settings.get_system_name()
         for language in languages:
@@ -1916,7 +1918,7 @@ S3OptionsFilter({
                                  email = email,
                                  url = "%(base_url)s/admin/user/%(id)s" % \
                                     dict(base_url=base_url,
-                                         id=id))
+                                         id=user_id))
             elif message == "new_user":
                 subjects[language] = \
                     T("%(system_name)s - New User Registered") % \
@@ -1972,12 +1974,9 @@ S3OptionsFilter({
 
         db = current.db
         s3db = current.s3db
-        session = current.session
         deployment_settings = current.deployment_settings
 
         utable = self.settings.table_user
-        ptable = s3db.pr_person
-        ltable = s3db.pr_person_user
 
         # Add to 'Authenticated' role
         authenticated = self.id_group("Authenticated")
@@ -1987,7 +1986,6 @@ S3OptionsFilter({
         entity_roles = deployment_settings.get_auth_registration_roles()
         if entity_roles:
             gtable = self.settings.table_group
-            mtable = self.settings.table_membership
             for entity in entity_roles.keys():
                 roles = entity_roles[entity]
 
@@ -2125,8 +2123,7 @@ S3OptionsFilter({
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
         atable = s3db.pr_address
-        etable = s3db.pr_pentity
-        gtable = s3db.gis_config
+        gctable = s3db.gis_config
         ltable = s3db.pr_person_user
 
         # Organisation becomes the realm entity of the person record
@@ -2161,6 +2158,11 @@ S3OptionsFilter({
                                 left=left, distinct=True)
 
         person_ids = [] # Collect the person IDs
+
+        if current.request.vars.get("opt_in", None):
+            opt_in = current.deployment_settings.get_auth_opt_in_team_list()
+        else:
+            opt_in = []
 
         for row in rows:
 
@@ -2226,8 +2228,9 @@ S3OptionsFilter({
                                 realm_entity=realm_entity)
 
                 if person:
-                    query = ltable.pe_id == person.pe_id
-                    other = db(query).select(ltable.id, limitby=(0, 1)).first()
+                    other = db(ltable.pe_id == person.pe_id).select(ltable.id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
                 if person and not other:
                     # Match found, and it isn't linked to another user account
                     # => link to this person record (+update it)
@@ -2241,16 +2244,13 @@ S3OptionsFilter({
                     person.update_record(**owner)
 
                     # Assign ownership of the Contact record(s)
-                    query = (ctable.pe_id == pe_id)
-                    db(query).update(**owner)
+                    db(ctable.pe_id == pe_id).update(**owner)
 
                     # Assign ownership of the Address record(s)
-                    query = (atable.pe_id == pe_id)
-                    db(query).update(**owner)
+                    db(atable.pe_id == pe_id).update(**owner)
 
-                    # Assign ownership of the Config record(s)
-                    query = (gtable.pe_id == pe_id)
-                    db(query).update(**owner)
+                    # Assign ownership of the GIS Config record(s)
+                    db(gctable.pe_id == pe_id).update(**owner)
 
                     # Set pe_id if this is the current user
                     if self.user and self.user.id == user.id:
@@ -2261,11 +2261,6 @@ S3OptionsFilter({
                 else:
                     # There is no match or it is linked to another user account
                     # => create a new person record (+link to it)
-
-                    if current.request.vars.get("opt_in", None):
-                        opt_in = current.deployment_settings.get_auth_opt_in_team_list()
-                    else:
-                        opt_in = []
 
                     # Create a new person record
                     person_id = ptable.insert(first_name = first_name,
@@ -2292,22 +2287,22 @@ S3OptionsFilter({
                                       **owner)
 
                         # Add the user to each team if they have chosen to opt-in
-                        g_table = s3db["pr_group"]
-                        m_table = s3db["pr_group_membership"]
+                        gtable = s3db.pr_group
+                        mtable = s3db.pr_group_membership
 
                         for team in opt_in:
-                            query = (g_table.name == team)
-                            team_rec = db(query).select(g_table.id,
-                                                        limitby=(0, 1)).first()
+                            team_rec = db(gtable.name == team).select(gtable.id,
+                                                                      limitby=(0, 1)
+                                                                      ).first()
 
                             # if the team doesn't exist then add it
                             if team_rec == None:
-                                team_id = g_table.insert(name = team,
-                                                         group_type = 5)
+                                team_id = gtable.insert(name = team,
+                                                        group_type = 5)
                             else:
                                 team_id = team_rec.id
-                            gm_table.insert(group_id = team_id,
-                                            person_id = person_id)
+                            mtable.insert(group_id = team_id,
+                                          person_id = person_id)
 
                         person_ids.append(person_id)
 
@@ -2394,8 +2389,8 @@ S3OptionsFilter({
 
                 # Update user record
                 user.organisation_id = organisation_id
-                query = (utable.id == user_id)
-                db(query).update(organisation_id=organisation_id)
+                utable = self.settings.table_user
+                db(utable.id == user_id).update(organisation_id=organisation_id)
 
         if not organisation_id:
             return None
@@ -2786,7 +2781,6 @@ S3OptionsFilter({
         """ Update pe_id, roles and realms for the current user """
 
         session = current.session
-        settings = current.deployment_settings
 
         s3 = current.response.s3
         if "permissions" in s3:
@@ -3204,7 +3198,6 @@ S3OptionsFilter({
         memberships = db(query).select()
 
         # Archive the memberships
-        import gluon.contrib.simplejson as json
         for m in memberships:
             deleted_fk = {"user_id": m.user_id,
                           "group_id": m.group_id}
@@ -3450,6 +3443,7 @@ S3OptionsFilter({
                 role_id = row.id
             if role_id:
                 if receivers is not None:
+                    pr_rebuild_path = s3db.pr_rebuild_path
                     for pe_id in receivers:
                         atable.insert(role_id=role_id,
                                       pe_id=pe_id)
@@ -3504,15 +3498,15 @@ S3OptionsFilter({
         # Find the group IDs
         gtable = self.settings.table_group
         query = None
-        uuids = None
+        #uuids = None
         if isinstance(group_id, (list, tuple)):
             if isinstance(group_id[0], str):
-                uuids = group_id
+                #uuids = group_id
                 query = (gtable.uuid.belongs(group_id))
             else:
                 group_ids = group_id
         elif isinstance(group_id, str) and not group_id.isdigit():
-            uuids = [group_id]
+            #uuids = [group_id]
             query = (gtable.uuid == group_id)
         else:
             group_ids = [group_id]
@@ -5347,7 +5341,7 @@ class S3Permission(object):
         
         # Multiple methods?
         if isinstance(method, (list, tuple)):
-            query = None
+            #query = None
             for m in method:
                 if self.has_permission(m, c=c, f=f, t=t, record=record):
                     return True
@@ -5489,7 +5483,7 @@ class S3Permission(object):
             if not hasattr(t, "_tablename"):
                 table = current.s3db.table(t)
                 if not table:
-                    raise AttributeError("undefined table %s" % tablename)
+                    raise AttributeError("undefined table %s" % t)
             else:
                 table = t
             if "approved_by" in table.fields:
@@ -5675,7 +5669,7 @@ class S3Permission(object):
         no_realm = []
         check_owner_acls = True
 
-        OENT = "realm_entity"
+        #OENT = "realm_entity"
 
         if "ANY" in uacls:
             _debug("==> permitted for any records")
@@ -6389,11 +6383,11 @@ class S3Audit(object):
         elif method == "create":
             if audit_write:
                 if form:
-                    vars = form.vars
+                    form_vars = form.vars
                     if not record:
-                        record = vars["id"]
-                    new_value = ["%s:%s" % (var, str(vars[var]))
-                                 for var in vars if vars[var]]
+                        record = form_vars["id"]
+                    new_value = ["%s:%s" % (var, str(form_vars[var]))
+                                 for var in form_vars if form_vars[var]]
                 else:
                     new_value = []
                 table.insert(timestmp = now,
@@ -6482,7 +6476,7 @@ class S3Audit(object):
         output = []
         oappend = output.append
         for record in records:
-            table = s3db[tablename]
+            table = s3db[record.tablename]
             method = record.method
             if method == "create":
                 new_value = record.new_value
@@ -6612,27 +6606,27 @@ class S3RoleManager(S3Method):
             auth = current.auth
             options = auth.permission.PERMISSION_OPTS
             NONE = auth.permission.NONE
-            vars = self.request.get_vars
+            get_vars = self.request.get_vars
             table = self.table
 
             # Show permission matrix?
             # (convert value to a boolean)
-            show_matrix = vars.get("matrix", False) and True
+            show_matrix = get_vars.get("matrix", False) and True
 
             # Title and subtitle
             output.update(title = T("List of Roles"))
 
             # System roles
-            query = ((table.deleted != True) & \
-                     (table.system == True))
-            rows = db(query).select(table.id)
-            system_roles = [row.id for row in rows]
+            #query = ((table.deleted != True) & \
+            #         (table.system == True))
+            #rows = db(query).select(table.id)
+            #system_roles = [row.id for row in rows]
 
             # Protected roles
-            query = ((table.deleted != True) & \
-                     (table.protected == True))
-            rows = db(query).select(table.id)
-            protected_roles = [row.id for row in rows]
+            #query = ((table.deleted != True) & \
+            #         (table.protected == True))
+            #rows = db(query).select(table.id)
+            #protected_roles = [row.id for row in rows]
 
             # Filter out hidden roles
             resource.add_filter((~(table.id.belongs(self.HIDE_ROLES))) &
@@ -6699,7 +6693,7 @@ class S3RoleManager(S3Method):
 
                 edit_btn = A(T("Edit"),
                              _href=URL(c="admin", f="role",
-                                       args=[role_id], vars=vars),
+                                       args=[role_id], vars=get_vars),
                              _class="action-btn")
 
                 users_btn = A(T("Users"),
@@ -6716,7 +6710,7 @@ class S3RoleManager(S3Method):
                     delete_btn = A(T("Delete"),
                                 _href=URL(c="admin", f="role",
                                           args=[role_id, "delete"],
-                                          vars=vars),
+                                          vars=get_vars),
                                 _class="delete-btn")
                     tdata = [TD(edit_btn,
                                 XML("&nbsp;"),
@@ -6763,7 +6757,11 @@ class S3RoleManager(S3Method):
             tbody = TBODY(trows)
 
             # Create datatable
-            items = TABLE(thead, tbody, _class="dataTable display", _id="datatable")
+            items = TABLE(thead,
+                          tbody,
+                          _class="dataTable display",
+                          _id="datatable",
+                          )
             s3 = response.s3
             s3.no_formats = True
             s3.actions = []

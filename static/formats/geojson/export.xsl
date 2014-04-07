@@ -94,14 +94,66 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='gis_location']">
-        <xsl:variable name="uid" select="./@uuid"/>
+        <xsl:variable name="uuid" select="./@uuid"/>
+        <xsl:variable name="geometry" select="./geometry/@value"/>
+        <xsl:variable name="attributes" select="@attributes"/>
         <xsl:choose>
-            <xsl:when test="//reference[@resource='gis_location' and @uuid=$uid]">
-                <xsl:for-each select="//reference[@resource='gis_location' and @uuid=$uid]">
+            <xsl:when test="//reference[@resource='gis_location' and @uuid=$uuid]">
+                <xsl:for-each select="//reference[@resource='gis_location' and @uuid=$uuid]">
                     <xsl:if test="not(../@name='gis_location')">
                         <xsl:apply-templates select=".."/>
                     </xsl:if>
                 </xsl:for-each>
+            </xsl:when>
+            <xsl:when test="$geometry!='null'">
+                <!-- Use pre-prepared GeoJSON -->
+                <type>Feature</type>
+                <geometry>
+                    <xsl:attribute name="value">
+                        <xsl:value-of select="$geometry"/>
+                    </xsl:attribute>
+                </geometry>
+                <properties>
+                    <id>
+                        <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
+                    </id>
+                    <xsl:if test="@marker!=''">
+                        <marker>
+                            <xsl:value-of select="@marker"/>
+                        </marker>
+                    </xsl:if>
+                    <xsl:if test="@popup!=''">
+                        <popup>
+                            <xsl:value-of select="@popup"/>
+                        </popup>
+                    </xsl:if>
+                    <xsl:if test="@popup_url!=''">
+                        <url>
+                            <xsl:value-of select="@popup_url"/>
+                        </url>
+                    </xsl:if>
+                    
+                    <xsl:if test="@marker_url">
+                        <!-- Per-feature Marker -->
+                        <marker_url>
+                            <xsl:value-of select="@marker_url"/>
+                        </marker_url>
+                        <marker_height>
+                            <xsl:value-of select="@marker_height"/>
+                        </marker_height>
+                        <marker_width>
+                            <xsl:value-of select="@marker_width"/>
+                        </marker_width>
+                    </xsl:if>
+
+                    <xsl:if test="$attributes!=''">
+                        <xsl:call-template name="Attributes">
+                            <xsl:with-param name="attributes">
+                                <xsl:value-of select="$attributes"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                    </xsl:if>
+                </properties>
             </xsl:when>
             <xsl:otherwise>
                 <type>Feature</type>
@@ -118,7 +170,7 @@
                 </geometry>
                 <properties>
                     <id>
-                        <xsl:value-of select="substring-after($uid, 'urn:uuid:')"/>
+                        <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
                     </id>
                     <name>
                         <xsl:value-of select="data[@field='name']"/>

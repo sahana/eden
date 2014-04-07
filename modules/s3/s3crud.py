@@ -48,7 +48,6 @@ except ImportError:
     raise
 
 from gluon import *
-from gluon.dal import Row
 from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
@@ -516,7 +515,6 @@ class S3CRUD(S3Method):
         if not authorised:
             r.unauthorised()
 
-        session = current.session
         request = self.request
         response = current.response
 
@@ -530,7 +528,7 @@ class S3CRUD(S3Method):
 
         _config = self._config
         editable = _config("editable", True)
-        deletable = _config("deletable", True)
+        #deletable = _config("deletable", True)
         list_fields = _config("list_fields")
 
         # List fields
@@ -630,14 +628,21 @@ class S3CRUD(S3Method):
         elif representation == "plain":
             T = current.T
             if r.component:
-                record = table[record_id] if record_id else None
+                if record_id:
+                    record = current.db(table._id == record_id).select(limitby=(0, 1)).first()
+                else:
+                    record = None
             else:
                 record = r.record
             if record:
                 # Hide empty fields from popups on map
                 for field in table:
                     if field.readable:
-                        value = record[field]
+                        try:
+                            value = record[field]
+                        except:
+                            # e.g. gis_location.wkt
+                            value = None
                         if value is None or value == "" or value == []:
                             field.readable = False
                 item = self.sqlform(request=request,
@@ -732,7 +737,7 @@ class S3CRUD(S3Method):
         # Get table configuration
         _config = self._config
         editable = _config("editable", True)
-        deletable = _config("deletable", True)
+        #deletable = _config("deletable", True)
 
         # Get callbacks
         onvalidation = _config("update_onvalidation") or \
@@ -1118,7 +1123,7 @@ class S3CRUD(S3Method):
                     self.record_id = self._record_id(r)
                     if "update" in r.get_vars and \
                        self._permitted(method="update"):
-                         items = self.update(r, **attr).get("form", None)
+                        items = self.update(r, **attr).get("form", None)
                     else:
                         items = self.sqlform(request=self.request,
                                              resource=self.resource,
@@ -1236,7 +1241,7 @@ class S3CRUD(S3Method):
         get_config = resource.get_config
 
         # Get table-specific parameters
-        sortby = get_config("sortby", [[1, "asc"]])
+        #sortby = get_config("sortby", [[1, "asc"]])
         linkto = get_config("linkto", None)
 
         # List ID
@@ -1247,14 +1252,14 @@ class S3CRUD(S3Method):
 
         # Default orderby
         orderby = get_config("orderby", None)
-        if orderby is None:
-            for f in list_fields:
-                rfield = resource.resolve_selector(f)
-                if rfield.field:
-                    default_orderby = rfield.field
-                    break
-        else:
-            default_orderby = None
+        #if orderby is None:
+        #    for f in list_fields:
+        #        rfield = resource.resolve_selector(f)
+        #        if rfield.field:
+        #            default_orderby = rfield.field
+        #            break
+        #else:
+        #    default_orderby = None
 
         representation = r.representation
 
@@ -1447,8 +1452,8 @@ class S3CRUD(S3Method):
         get_config = resource.get_config
 
         # Get table-specific parameters
-        sortby = get_config("sortby", [[1, "asc"]])
-        linkto = get_config("linkto", None)
+        #sortby = get_config("sortby", [[1, "asc"]])
+        #linkto = get_config("linkto", None)
         layout = get_config("list_layout", None)
 
         # List ID
@@ -1561,26 +1566,26 @@ class S3CRUD(S3Method):
             if numrows == 0:
                 # Empty table or just no match?
 
-                table = resource.table
-                if "deleted" in table:
-                    available_records = current.db(table.deleted != True)
-                else:
-                    available_records = current.db(table._id > 0)
-                if available_records.select(table._id,
-                                            limitby=(0, 1)).first():
-                    empty = self.crud_string(resource.tablename,
-                                             "msg_no_match")
-                else:
-                    empty = self.crud_string(resource.tablename,
-                                             "msg_list_empty")
+                #table = resource.table
+                #if "deleted" in table:
+                #    available_records = current.db(table.deleted != True)
+                #else:
+                #    available_records = current.db(table._id > 0)
+                #if available_records.select(table._id,
+                #                            limitby=(0, 1)).first():
+                #    empty = self.crud_string(resource.tablename,
+                #                             "msg_no_match")
+                #else:
+                #    empty = self.crud_string(resource.tablename,
+                #                             "msg_list_empty")
 
                 s3.no_formats = True
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
-                    empty = ""
-            else:
-                empty = None
+                    #empty = ""
+            #else:
+            #    empty = None
 
             # Allow customization of the datalist Ajax-URL
             # Note: the Ajax-URL must use the .dl representation and
@@ -1645,14 +1650,12 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
-        from s3.s3data import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
 
         resource = self.resource
         table = self.table
-        tablename = self.tablename
 
         representation = r.representation
 
@@ -1661,17 +1664,17 @@ class S3CRUD(S3Method):
         # Get table-specific parameters
         _config = self._config
         orderby = _config("orderby", None)
-        sortby = _config("sortby", [[1, "asc"]])
+        #sortby = _config("sortby", [[1, "asc"]])
         linkto = _config("linkto", None)
-        insertable = _config("insertable", True)
-        listadd = _config("listadd", True)
-        addbtn = _config("addbtn", False)
+        #insertable = _config("insertable", True)
+        #listadd = _config("listadd", True)
+        #addbtn = _config("addbtn", False)
         list_fields = _config("list_fields")
 
-        report_groupby = _config("report_groupby")
-        report_hide_comments = _config("report_hide_comments")
-        report_filename = _config("report_filename")
-        report_formname = _config("report_formname")
+        #report_groupby = _config("report_groupby")
+        #report_hide_comments = _config("report_hide_comments")
+        #report_filename = _config("report_filename")
+        #report_formname = _config("report_formname")
 
         list_id = "datatable"
 
@@ -1977,7 +1980,6 @@ class S3CRUD(S3Method):
         if r.representation != "json":
             r.error(501, current.ERROR.BAD_FORMAT)
 
-        output = Storage()
         resource = self.resource
 
         get_vars = r.get_vars

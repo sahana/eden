@@ -94,7 +94,15 @@ settings.L10n.thousands_separator = ","
 #settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
-#settings.gis.countries = ["PH"]
+settings.gis.countries = ["AM",
+                          "AZ",
+                          "GE",
+                          "KZ",
+                          "KG",
+                          "TJ",
+                          "TM",
+                          "UZ",
+                          ]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -148,33 +156,33 @@ settings.search.filter_manager = False
 # Menu
 current.response.menu = [
     {"name": T("Places"),
-     "c":"gis", 
-     "f":"location",
+     "c": "gis", 
+     "f": "location",
      "icon": "globe",
      "count": 312
      },
     {"name": T("Demographics"),
-     "c":"stats", 
-     "f":"demographic_data",
+     "c": "stats", 
+     "f": "demographic_data",
      "icon": "group",
      "count": 4656
      },
     {"name": T("Baseline Data"),
-     "c":"stats", 
-     "f":"demographic_data",
+     "c": "stats", 
+     "f": "demographic_data",
      "icon": "signal",
      "count": 0
      
      },
     {"name": T("Stakeholders"),
-     "c":"org", 
-     "f":"organisation",
+     "c": "org", 
+     "f": "organisation",
      "icon": "sitemap",
      "count": 0
      },
     {"name": T("Disasters"),
-     "c":"event", 
-     "f":"event",
+     "c": "event", 
+     "f": "event",
      "icon": "bolt",
      "count": 0
      },
@@ -187,28 +195,28 @@ for item in current.response.menu:
     
 current.response.countries = [
     {"name": T("Armenia"),
-     "code":"am"
+     "code": "am"
      },
     {"name": T("Azerbaijan"),
-     "code":"az"
+     "code": "az"
      },
     {"name": T("Georgia"),
-     "code":"ge"
+     "code": "ge"
      },
     {"name": T("Kazakhstan"),
-     "code":"kz"
+     "code": "kz"
      },
     {"name": T("Kyrgyzstan"),
-     "code":"kg"
+     "code": "kg"
      },
     {"name": T("Tajikistan"),
-     "code":"tj"
+     "code": "tj"
      },
     {"name": T("Turkmenistan"),
-     "code":"tm"
+     "code": "tm"
      },
     {"name": T("Uzbekistan"),
-     "code":"uz"
+     "code": "uz"
      }
     ]
 
@@ -226,13 +234,16 @@ def customise_gis_location_resource(r, tablename):
         Runs after controller customisation
         But runs before prep
     """
-    # Load normal Model
-    s3db = current.s3db
-    s3db.configure(tablename,
-                   list_fields = ["name","WKT"]
-                   )
+
+    current.s3db.configure(tablename,
+                           list_fields = ["name", "L0", "L1", "L2",
+                                          #"WKT"
+                                          ]
+                           )
 
 settings.customise_gis_location_resource = customise_gis_location_resource
+
+# =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

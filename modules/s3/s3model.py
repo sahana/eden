@@ -366,7 +366,7 @@ class S3Model(object):
 
         return S3Resource(tablename, *args, **kwargs)
 
-   # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @classmethod
     def configure(cls, tablename, **attr):
         """
@@ -1046,8 +1046,8 @@ class S3Model(object):
             return False
 
         # Get the record
-        id = record.get("id", None)
-        if not id:
+        record_id = record.get("id", None)
+        if not record_id:
             return False
 
         # Find all super-tables, super-keys and shared fields
@@ -1086,7 +1086,8 @@ class S3Model(object):
         if has_uuid:
             fields.append("uuid")
         fields = [ogetattr(table, fn) for fn in list(set(fields))]
-        _record = db(table.id == id).select(limitby=(0, 1), *fields).first()
+        _record = db(table.id == record_id).select(limitby=(0, 1),
+                                                   *fields).first()
         if not _record:
             return False
 
@@ -1131,7 +1132,7 @@ class S3Model(object):
 
         # Update the super_keys in the record
         if super_keys:
-            db(table.id == id).update(**super_keys)
+            db(table.id == record_id).update(**super_keys)
 
         record.update(super_keys)
         return True

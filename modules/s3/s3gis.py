@@ -652,7 +652,7 @@ class GIS(object):
                                 ok = True
                             else:
                                 ok = False
-                                output = "Returned value not within %s" % check.name
+                                output = "Returned value not within %s" % Lx["name"]
                         else:
                             # We'll just have to trust it!
                             ok = True
@@ -667,7 +667,6 @@ class GIS(object):
             else:
                 output = "No results found"
         except:
-            import sys
             error = sys.exc_info()[1]
             output = str(error)
 
@@ -1230,7 +1229,6 @@ class GIS(object):
         mtable = s3db.gis_marker
         ptable = s3db.gis_projection
         stable = s3db.gis_symbology
-        ltable = s3db.gis_layer_config
         fields = [ctable.id,
                   ctable.default_location_id,
                   ctable.region_location_id,
@@ -1564,8 +1562,7 @@ class GIS(object):
         if level:
             try:
                 return all_levels[level]
-            except Exception, exception:
-
+            except Exception, e:
                 return level
         else:
             return all_levels
@@ -2078,11 +2075,11 @@ class GIS(object):
             # Step through ancestors to first with lon, lat.
             parents = self.get_parents(feature.id, feature=feature)
             if parents:
-                lon = lat = None
                 for row in parents:
-                    if "lon" in row and "lat" in row and \
-                       (row.lon is not None) and (row.lat is not None):
-                        return dict(lon=row.lon, lat=row.lat)
+                    lon = row.get("lon", None)
+                    lat = row.get("lat", None)
+                    if (lon is not None) and (lat is not None):
+                        return dict(lon=lon, lat=lat)
 
         # Invalid feature_id
         return None
@@ -2226,7 +2223,6 @@ class GIS(object):
         markers = {}
         tooltips = {}
         attributes = {}
-        represents = {}
         _pkey = table[pkey]
         # Ensure there are no ID represents to confuse things
         _pkey.represent = None
@@ -2396,20 +2392,25 @@ class GIS(object):
                 _latlons = tracker.get_location(_fields=[gtable.lat,
                                                          gtable.lon])
                 index = 0
-                for id in ids:
+                for _id in ids:
                     _location = _latlons[index]
-                    latlons[id] = (_location.lat, _location.lon)
+                    latlons[_id] = (_location.lat, _location.lon)
                     index += 1
 
         if not latlons:
             if "location_id" in table.fields:
+                join = True
                 query = (table.id.belongs(resource._ids)) & \
                         (table.location_id == gtable.id)
             elif "site_id" in table.fields:
+                join = True
                 stable = s3db.org_site
                 query = (table.id.belongs(resource._ids)) & \
                         (table.site_id == stable.site_id) & \
                         (stable.location_id == gtable.id)
+            elif tablename == "gis_location":
+                join = False
+                query = (table.id.belongs(resource._ids))
             else:
                 # Can't display this resource on the Map
                 return None
@@ -2422,43 +2423,69 @@ class GIS(object):
                         # Do the Simplify & GeoJSON direct from the DB
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
-                        for row in rows:
-                            geojsons[row[tablename].id] = row.geojson
+                        if join:
+                            for row in rows:
+                                geojsons[row[tablename].id] = row.geojson
+                        else:
+                            for row in rows:
+                                geojsons[row.id] = row.geojson
                     else:
                         # Do the Simplify direct from the DB
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
-                        for row in rows:
-                            wkts[row[tablename].id] = row.wkt
+                        if join:
+                            for row in rows:
+                                wkts[row[tablename].id] = row.wkt
+                        else:
+                            for row in rows:
+                                wkts[row.id] = row.wkt
                 else:
                     rows = db(query).select(table.id,
                                             gtable.wkt)
                     simplify = GIS.simplify
                     if format == "geojson":
-                        for row in rows:
-                            # Simplify the polygon to reduce download size
-                            geojson = simplify(row["gis_location"].wkt,
-                                               tolerance=tolerance,
-                                               output="geojson")
-                            if geojson:
-                                geojsons[row[tablename].id] = geojson
+                        # Simplify the polygon to reduce download size
+                        if join:
+                            for row in rows:
+                                geojson = simplify(row["gis_location"].wkt,
+                                                   tolerance=tolerance,
+                                                   output="geojson")
+                                if geojson:
+                                    geojsons[row[tablename].id] = geojson
+                        else:
+                            for row in rows:
+                                geojson = simplify(row.wkt,
+                                                   tolerance=tolerance,
+                                                   output="geojson")
+                                if geojson:
+                                    geojsons[row.id] = geojson
                     else:
-                        for row in rows:
-                            # Simplify the polygon to reduce download size
-                            # & also to work around the recursion limit in libxslt
-                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = simplify(row["gis_location"].wkt)
-                            if wkt:
-                                wkts[row[tablename].id] = wkt
+                        # Simplify the polygon to reduce download size
+                        # & also to work around the recursion limit in libxslt
+                        # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                        if join:
+                            for row in rows:
+                                wkt = simplify(row["gis_location"].wkt)
+                                if wkt:
+                                    wkts[row[tablename].id] = wkt
+                        else:
+                            for row in rows:
+                                wkt = simplify(row.wkt)
+                                if wkt:
+                                    wkts[row.id] = wkt
 
             else:
                 # Points
                 rows = db(query).select(table.id,
                                         gtable.lat,
                                         gtable.lon)
-                for row in rows:
-                    _location = row["gis_location"]
-                    latlons[row[tablename].id] = (_location.lat, _location.lon)
+                if join:
+                    for row in rows:
+                        _location = row["gis_location"]
+                        latlons[row[tablename].id] = (_location.lat, _location.lon)
+                else:
+                    for row in rows:
+                        latlons[row.id] = (row.lat, row.lon)
 
         _latlons = {}
         if latlons:
@@ -2671,6 +2698,7 @@ class GIS(object):
             wkt = feature.wkt
         else:
             # WKT not included by default in feature, so retrieve this now
+            table = current.s3db.gis_location
             wkt = current.db(table.id == feature.id).select(table.wkt,
                                                             limitby=(0, 1)
                                                             ).first().wkt
@@ -2716,7 +2744,7 @@ class GIS(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def export_admin_areas(countries=[],
-                           levels=["L0", "L1", "L2", "L3"],
+                           levels=("L0", "L1", "L2", "L3"),
                            format="geojson",
                            simplify=0.01,
                            decimals=4,
@@ -3445,7 +3473,7 @@ class GIS(object):
         # Create the output Layer
         outputLayer = outputDS.CreateLayer(layerName)
         # Copy all Fields
-        papszFieldTypesToString = []
+        #papszFieldTypesToString = []
         inputFieldCount = inputFDefn.GetFieldCount()
         panMap = [-1 for i in range(inputFieldCount)]
         outputFDefn = outputLayer.GetLayerDefn()
@@ -3461,7 +3489,7 @@ class GIS(object):
             # The field may have been already created at layer creation
             iDstField = -1;
             if outputFDefn is not None:
-                 iDstField = outputFDefn.GetFieldIndex(oFieldDefn.GetNameRef())
+                iDstField = outputFDefn.GetFieldIndex(oFieldDefn.GetNameRef())
             if iDstField >= 0:
                 panMap[iField] = iDstField
             elif outputLayer.CreateField(oFieldDefn) == 0:
@@ -3472,7 +3500,7 @@ class GIS(object):
                 nDstFieldCount = nDstFieldCount + 1
         # Transfer features
         nFeaturesInTransaction = 0
-        iSrcZField = -1
+        #iSrcZField = -1
         inputLayer.ResetReading()
         if nGroupTransactions > 0:
             outputLayer.StartTransaction()
@@ -3594,7 +3622,7 @@ class GIS(object):
             name.encode("utf8")
 
             code = feat.GetField(sourceCodeField)
-            area = feat.GetField("Shape_Area")
+            #area = feat.GetField("Shape_Area")
 
             geom = feat.GetGeometryRef()
             if geom is not None:
@@ -3688,17 +3716,17 @@ class GIS(object):
             codeField = "ISO2"   # This field is used to uniquely identify the L0 for updates
             code2Field = "ISO"   # This field is used to uniquely identify the L0 for parenting the L1s
         elif level == "L1":
-            nameField = "NAME_1"
+            #nameField = "NAME_1"
             codeField = "ID_1"   # This field is used to uniquely identify the L1 for updates
             code2Field = "ISO"   # This field is used to uniquely identify the L0 for parenting the L1s
-            parent = "L0"
-            parentCode = "code2"
+            #parent = "L0"
+            #parentCode = "code2"
         elif level == "L2":
-            nameField = "NAME_2"
+            #nameField = "NAME_2"
             codeField = "ID_2"   # This field is used to uniquely identify the L2 for updates
             code2Field = "ID_1"  # This field is used to uniquely identify the L1 for parenting the L2s
-            parent = "L1"
-            parentCode = "code"
+            #parent = "L1"
+            #parentCode = "code"
         else:
             current.log.error("Level %s not supported!" % level)
             return
@@ -3800,8 +3828,8 @@ class GIS(object):
                         gis_feature_type = 6
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
-                    code2 = feat.GetField(code2Field)
-                    area = feat.GetField("Shape_Area")
+                    #code2 = feat.GetField(code2Field)
+                    #area = feat.GetField("Shape_Area")
                     try:
                         ## FIXME
                         db(query).update(gis_feature_type=gis_feature_type,
@@ -3855,9 +3883,9 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        cache = s3db.cache
+        #cache = s3db.cache
         request = current.request
-        settings = current.deployment_settings
+        #settings = current.deployment_settings
         table = s3db.gis_location
         ttable = s3db.gis_location_tag
 
@@ -3923,9 +3951,9 @@ class GIS(object):
         else:
             # 5 levels of hierarchy or 4?
             # @ToDo make more extensible still
-            gis_location_hierarchy = self.get_location_hierarchy()
+            #gis_location_hierarchy = self.get_location_hierarchy()
             try:
-                label = gis_location_hierarchy["L5"]
+                #label = gis_location_hierarchy["L5"]
                 level = "L5"
                 parent_level = "L4"
             except:
@@ -3961,24 +3989,24 @@ class GIS(object):
         for line in f:
             current_row += 1
             # Format of file: http://download.geonames.org/export/dump/readme.txt
-            geonameid,
-            name,
-            asciiname,
-            alternatenames,
-            lat,
-            lon,
-            feature_class,
-            feature_code,
-            country_code,
-            cc2,
-            admin1_code,
-            admin2_code,
-            admin3_code,
-            admin4_code,
-            population,
-            elevation,
-            gtopo30,
-            timezone,
+            geonameid, \
+            name, \
+            asciiname, \
+            alternatenames, \
+            lat, \
+            lon, \
+            feature_class, \
+            feature_code, \
+            country_code, \
+            cc2, \
+            admin1_code, \
+            admin2_code, \
+            admin3_code, \
+            admin4_code, \
+            population, \
+            elevation, \
+            gtopo30, \
+            timezone, \
             modification_date = line.split("\t")
 
             if feature_code == fc:
@@ -4027,7 +4055,7 @@ class GIS(object):
                                       lat_max=lat_max)
                 ttable.insert(location_id=new_id,
                               tag="geonames",
-                              value=geonames_id)
+                              value=geoname_id)
             else:
                 continue
 
@@ -6714,7 +6742,6 @@ def addFeatureQueries(feature_queries):
         if "active" in layer and not layer["active"]:
             _layer["visibility"] = False
 
-        markerLayer = ""
         if "marker" in layer:
             # per-Layer Marker
             marker = layer["marker"]
@@ -6835,6 +6862,9 @@ def addFeatureResources(feature_resources):
             elif "site_id" in table.fields:
                 maxdepth = 1
                 show_ids = "&show_ids=true"
+            elif tablename == "gis_location":
+                maxdepth = 0
+                show_ids = ""
             else:
                 # Not much we can do!
                 continue
@@ -7343,8 +7373,8 @@ class LayerEmpty(Layer):
         sublayers = self.sublayers
         if sublayers:
             sublayer = sublayers[0]
-            name = str(current.T(sublayer.name))
-            name_safe = re.sub("'", "", sublayer.name)
+            name = s3_unicode(current.T(sublayer.name))
+            name_safe = re.sub("'", "", name)
             ldict = dict(name = name_safe,
                          id = sublayer.layer_id)
             if sublayer._base:
@@ -7757,7 +7787,7 @@ class LayerKML(Layer):
 
             cachetable = LayerKML.cachetable
             cacheable = LayerKML.cacheable
-            cachepath = LayerKML.cachepath
+            #cachepath = LayerKML.cachepath
 
             name = self.name
             if cacheable:
@@ -8196,7 +8226,6 @@ class S3Map(S3Method):
 
         if r.representation in ("html", "iframe"):
 
-            s3db = current.s3db
             response = current.response
             resource = self.resource
             get_config = resource.get_config
@@ -8493,7 +8522,6 @@ class S3ExportPOI(S3Method):
         lx = self.lx
 
         elements = []
-        results = 0
         for tablename in tables:
 
             # Define the resource
@@ -8661,19 +8689,19 @@ class S3ImportPOI(S3Method):
 
             if form.accepts(request.vars, current.session):
 
-                vars = form.vars
-                if vars.file != "":
-                    File = vars.file.file
+                form_vars = form.vars
+                if form_vars.file != "":
+                    File = form_vars.file.file
                 else:
                     # Create .poly file
                     if r.record:
                         record = r.record
-                    elif not vars.location_id:
+                    elif not form_vars.location_id:
                         form.errors["location_id"] = T("Location is Required!")
                         return output
                     else:
                         gtable = s3db.gis_location
-                        record = current.db(gtable.id == vars.location_id).select(gtable.name,
+                        record = current.db(gtable.id == form_vars.location_id).select(gtable.name,
                                                                                   gtable.wkt,
                                                                                   limitby=(0, 1)
                                                                                   ).first()
@@ -8694,10 +8722,10 @@ class S3ImportPOI(S3Method):
                     filename = os.path.join(TEMP, "%s.osm" % name)
                     cmd = ["/home/osm/osmosis/bin/osmosis", # @ToDo: deployment_setting
                            "--read-pgsql",
-                           "host=%s" % vars.host,
-                           "database=%s" % vars.database,
-                           "user=%s" % vars.user,
-                           "password=%s" % vars.password,
+                           "host=%s" % form_vars.host,
+                           "database=%s" % form_vars.database,
+                           "user=%s" % form_vars.user,
+                           "password=%s" % form_vars.password,
                            "--dataset-dump",
                            "--bounding-polygon",
                            "file=%s" % os.path.join(TEMP, "%s.poly" % name),
@@ -8725,7 +8753,7 @@ class S3ImportPOI(S3Method):
 
                 stylesheet = os.path.join(request.folder, "static", "formats",
                                           "osm", "import.xsl")
-                ignore_errors = vars.get("ignore_errors", None)
+                ignore_errors = form_vars.get("ignore_errors", None)
                 xml = current.xml
                 tree = xml.parse(File)
                 define_resource = s3db.resource
@@ -8734,7 +8762,7 @@ class S3ImportPOI(S3Method):
 
                 import_res = []
                 for resource in current.deployment_settings.get_gis_poi_resources():
-                    if getattr(vars, "res_" + resource):
+                    if getattr(form_vars, "res_" + resource):
                         import_res.append(resource)
 
                 for tablename in import_res:
@@ -8751,7 +8779,6 @@ class S3ImportPOI(S3Method):
                                                       ignore_errors=ignore_errors)
                         import_count += resource.import_count
                     except:
-                        import sys
                         response.error += str(sys.exc_info()[1])
                 if import_count:
                     response.confirmation = "%s %s" % \
