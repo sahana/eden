@@ -1711,7 +1711,7 @@ class S3Msg(object):
 
             tags = entry.get("tags", None)
             if tags:
-                tags = [s3_unicode(t.term) for t in tags]
+                tags = [t.term.encode("utf-8") for t in tags]
 
             location = False
             lat = entry.get("geo_lat", None)
