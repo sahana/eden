@@ -863,7 +863,20 @@ def rss_channel():
         )
 
     #response.menu_options = admin_menu_options
-    s3db.configure(tablename, listadd=True, deletable=True)
+    s3db.configure(tablename,
+                   deletable = True,
+                   listadd = True,
+                   )
+
+    def status_represent(v):
+        try:
+            v = int(v)
+        except:
+            # Text
+            return v
+        return "There have been no new entries for %s requests" % v
+
+    s3db.msg_channel_status.status.represent = status_represent
 
     def postp(r, output):
         if r.interactive:

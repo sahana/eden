@@ -116,18 +116,20 @@ class S3Task(object):
         table.times_failed.readable = False
 
         field = table.start_time
-        field.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        field.represent = lambda dt: \
+            S3DateTime.datetime_represent(dt, utc=True)
         field.widget = S3DateTimeWidget(past=0)
         field.requires = IS_UTC_DATETIME(
-                    format=current.deployment_settings.get_L10n_datetime_format()
+                format=current.deployment_settings.get_L10n_datetime_format()
                 )
 
         field = table.stop_time
-        field.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        field.represent = lambda dt: \
+            S3DateTime.datetime_represent(dt, utc=True)
         field.widget = S3DateTimeWidget(past=0)
         field.requires = IS_EMPTY_OR(
                             IS_UTC_DATETIME(
-                    format=current.deployment_settings.get_L10n_datetime_format()
+                format=current.deployment_settings.get_L10n_datetime_format()
                 ))
 
         if not task:
@@ -187,19 +189,21 @@ class S3Task(object):
         table.status.readable = table.status.writable = False
         table.next_run_time.readable = table.next_run_time.writable = False
         table.times_run.readable = table.times_run.writable = False
-        table.assigned_worker_name.readable = table.assigned_worker_name.writable = False
+        table.assigned_worker_name.readable = \
+            table.assigned_worker_name.writable = False
 
         current.s3db.configure(tablename,
-                               list_fields=["id",
-                                            "enabled",
-                                            "start_time",
-                                            "repeats",
-                                            "period",
-                                            (T("Last run"), "last_run_time"),
-                                            (T("Last status"), "status"),
-                                            (T("Next run"), "next_run_time"),
-                                            "stop_time"
-                                            ])
+                               list_fields = ["id",
+                                              "enabled",
+                                              "start_time",
+                                              "repeats",
+                                              "period",
+                                              (T("Last run"), "last_run_time"),
+                                              (T("Last status"), "status"),
+                                              (T("Next run"), "next_run_time"),
+                                              "stop_time"
+                                              ],
+                               )
 
         response = current.response
         if response:

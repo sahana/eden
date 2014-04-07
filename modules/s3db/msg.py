@@ -127,6 +127,10 @@ class S3ChannelModel(S3Model):
                                      represent = S3Represent(lookup=tablename),
                                      ondelete = "SET NULL")
 
+        self.add_components(tablename,
+                            msg_channel_status = "channel_id",
+                            )
+
         # ---------------------------------------------------------------------
         # Channel Limit
         #  Used to limit the number of emails sent from the system
@@ -398,12 +402,13 @@ class S3MessageModel(S3Model):
         table.instance_type.writable = True
 
         configure(tablename,
-                  list_fields=["instance_type",
-                               "from_address",
-                               "to_address",
-                               "body",
-                               "inbound",
-                               ])
+                  list_fields = ["instance_type",
+                                 "from_address",
+                                 "to_address",
+                                 "body",
+                                 "inbound",
+                                 ],
+                  )
 
         # Reusable Field
         message_represent = S3Represent(lookup=tablename, fields=["body"])
@@ -531,7 +536,6 @@ class S3EmailModel(S3ChannelModel):
 
         T = current.T
 
-        add_components = self.add_components
         configure = self.configure
         define_table = self.define_table
         set_method = self.set_method
@@ -566,8 +570,8 @@ class S3EmailModel(S3ChannelModel):
                      *s3_meta_fields())
 
         configure(tablename,
-                  super_entity = "msg_channel",
                   onaccept = self.msg_channel_onaccept,
+                  super_entity = "msg_channel",
                   )
 
         set_method("msg", "email_channel",
@@ -627,15 +631,15 @@ class S3EmailModel(S3ChannelModel):
                   )
 
         # Components
-        add_components(tablename,
-                       # Used to link to custom tab deploy_response_select_mission:
-                       deploy_mission = {"name": "select",
-                                         "link": "deploy_response",
-                                         "joinby": "message_id",
-                                         "key": "mission_id",
-                                         "autodelete": False,
-                                         },
-                       )
+        self.add_components(tablename,
+                            # Used to link to custom tab deploy_response_select_mission:
+                            deploy_mission = {"name": "select",
+                                              "link": "deploy_response",
+                                              "joinby": "message_id",
+                                              "key": "mission_id",
+                                              "autodelete": False,
+                                              },
+                            )
 
         # ---------------------------------------------------------------------
         return dict()
@@ -1045,8 +1049,15 @@ class S3RSSModel(S3ChannelModel):
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       super_entity = "msg_channel",
+                       list_fields = ["name",
+                                      "description",
+                                      "enabled",
+                                      "url",
+                                      "date",
+                                      "channel_status.status",
+                                      ],
                        onaccept = self.msg_channel_onaccept,
+                       super_entity = "msg_channel",
                        )
 
         set_method("msg", "rss_channel",
