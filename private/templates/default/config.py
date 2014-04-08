@@ -438,6 +438,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.filter_certificates = True
 # Uncomment to allow HRs to have multiple Job Titles
 #settings.hrm.multiple_job_titles = True
+# Uncomment to have each root Org use a different Job Title Catalog
+#settings.hrm.org_dependent_job_titles = True
 # Uncomment to hide the Staff resource
 #settings.hrm.show_staff = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.

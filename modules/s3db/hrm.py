@@ -224,6 +224,8 @@ class S3HRModel(S3Model):
             not_filter_opts = (2, 4)
             code_label = T("Staff ID")
 
+        org_dependent_job_titles = settings.get_hrm_org_dependent_job_titles()
+
         tablename = "hrm_job_title"
         define_table(tablename,
                      Field("name", notnull=True,
@@ -231,9 +233,9 @@ class S3HRModel(S3Model):
                            label=T("Name")),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
-                     organisation_id(default = root_org,
-                                     readable = is_admin,
-                                     writable = is_admin,
+                     organisation_id(default = root_org if org_dependent_job_titles else None,
+                                     readable = is_admin if org_dependent_job_titles else False,
+                                     writable = is_admin if org_dependent_job_titles else False,
                                      ),
                      Field("type", "integer",
                            default = hrm_type_default,
@@ -279,10 +281,7 @@ class S3HRModel(S3Model):
                 msg_record_deleted = T("Job Title deleted"),
                 msg_list_empty = T("Currently no entries in the catalog"))
 
-        represent = S3Represent(lookup=tablename, translate=True)
-        job_title_id = S3ReusableField("job_title_id", "reference %s" % tablename,
-            sortby = "name",
-            label = label,
+        if  org_dependent_job_titles:
             requires = IS_NULL_OR(
                         IS_ONE_OF(db, "hrm_job_title.id",
                                   represent,
@@ -290,7 +289,20 @@ class S3HRModel(S3Model):
                                   filter_opts=filter_opts,
                                   not_filterby="type",
                                   not_filter_opts=not_filter_opts,
-                                  )),
+                                  ))
+        else:
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "hrm_job_title.id",
+                                  represent,
+                                  not_filterby="type",
+                                  not_filter_opts=not_filter_opts,
+                                  ))
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        job_title_id = S3ReusableField("job_title_id", "reference %s" % tablename,
+            sortby = "name",
+            label = label,
+            requires = requires,
             represent = represent,
             comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
                                       f="job_title",
@@ -302,6 +314,7 @@ class S3HRModel(S3Model):
 
         configure("hrm_job_title",
                   deduplicate = self.hrm_job_title_duplicate,
+                  onvalidation = self.hrm_job_title_onvalidation,
                   )
 
         # =========================================================================
@@ -840,8 +853,8 @@ class S3HRModel(S3Model):
 
         if item.tablename == "hrm_department":
             data = item.data
-            name = "name" in data and data.name
-            org = "organisation_id" in data and data.organisation_id
+            name = data.get("name", None)
+            org = data.get("organisation_id", None)
 
             table = item.table
             query = (table.name.lower() == name.lower())
@@ -865,19 +878,35 @@ class S3HRModel(S3Model):
 
         if item.tablename == "hrm_job_title":
             data = item.data
-            name = "name" in data and data.name
-            org = "organisation_id" in data and data.organisation_id
+            name = data.get("name", None)
+            if current.deployment_settings.get_hrm_org_dependent_job_titles():
+                org = data.get("organisation_id", None)
+            else:
+                org = None
+            role_type = data.get("type", None)
 
             table = item.table
             query = (table.name.lower() == name.lower())
             if org:
                 query  = query & (table.organisation_id == org)
+            if role_type:
+                query  = query & (table.type == role_type)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_job_title_onvalidation(form):
+        """
+            Ensure Job Titles are not Org-specific unless configured to be so
+        """
+
+        if not current.deployment_settings.get_hrm_org_dependent_job_titles():
+            form.vars["organisation_id"] = None
 
     # -------------------------------------------------------------------------
     @staticmethod

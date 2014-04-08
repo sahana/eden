@@ -1634,6 +1634,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("email_required", True)
 
+    def get_hrm_org_dependent_job_titles(self):
+        """
+            If set to True then the Job Titles Catalog is Organisation-dependent (i.e. each root org sees a different Catalog)
+        """
+        return self.hrm.get("org_dependent_job_titles", False)
+
     def get_hrm_org_required(self):
         """
             If set to True then Staff & Volunteers require an Organisation

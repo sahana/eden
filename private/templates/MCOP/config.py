@@ -308,7 +308,8 @@ def customise_org_organisation_resource(r, tablename):
                            )
 
         if r.method == "profile":
-            # Ensure the correct list_fields are set - shouldn't these be called automitcally?
+            # Ensure the correct list_fields are set
+            # @ToDo: Have profile method call these automatically
             customise_pr_person_resource(r, "pr_person")
             customise_project_project_resource(r, "project_project")
             # Customise tables used by widgets
