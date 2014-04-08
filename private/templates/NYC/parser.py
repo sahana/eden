@@ -211,7 +211,7 @@ class S3Parser(object):
                                                                  limitby=(0, 1),
                                                                  ).first().id
                     return pe_type, org_id
-                else
+                else:
                     return None, None
 
             pe_type, org_id = current.cache.ram("pe_channel_%s" % channel_id,
