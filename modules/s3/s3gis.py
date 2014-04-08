@@ -2234,7 +2234,7 @@ class GIS(object):
                     tips = {}
                     label_off = get_vars.get("label_off", None)
                     if popup_label and not label_off:
-                        _tooltip = "(%s)" % current.T(popup_label)
+                        _tooltip = " (%s)" % current.T(popup_label)
                     else:
                         _tooltip = ""
                 attr = {}
@@ -2319,7 +2319,7 @@ class GIS(object):
                                 represent = s3_unicode(represent)
                                 # Skip empty fields
                                 if first:
-                                    tooltip = "%s %s" % (represent, tooltip)
+                                    tooltip = "%s%s" % (represent, tooltip)
                                     first = False
                                 else:
                                     tooltip = "%s<br />%s" % (tooltip, represent)
@@ -6017,7 +6017,7 @@ class MAP(DIV):
                 "gis_cluster_multiple": T("There are multiple records at this location"),
                 "gis_loading": T("Loading"),
                 "gis_requires_login": T("Requires Login"),
-                "gis_too_many_features": T("There are too many features, please Zoom In"),
+                "gis_too_many_features": T("There are too many features, please Zoom In or Filter"),
                 "gis_zoomin": T("Zoom In"),
                 }
 

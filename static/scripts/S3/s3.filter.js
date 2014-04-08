@@ -1333,7 +1333,10 @@ S3.search = {};
     };
 
     var filterSubmit = function(filter_form) {
-        
+
+        // Hide any warnings (e.g. 'Too Many Features')
+        S3.hideAlerts('warning');
+
         var form_id = filter_form.attr('id'),
             url = filter_form.find('input.filter-submit-url[type="hidden"]').val(),
             queries = getCurrentFilters(filter_form);

@@ -117,11 +117,12 @@
                     <id>
                         <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
                     </id>
+                    <!-- Generic marker not used in GeoJSON
                     <xsl:if test="@marker!=''">
                         <marker>
                             <xsl:value-of select="@marker"/>
                         </marker>
-                    </xsl:if>
+                    </xsl:if>-->
                     <xsl:if test="@popup!=''">
                         <popup>
                             <xsl:value-of select="@popup"/>
@@ -133,8 +134,8 @@
                         </url>
                     </xsl:if>
                     
+                    <!-- Per-feature Marker not used for gis_location
                     <xsl:if test="@marker_url">
-                        <!-- Per-feature Marker -->
                         <marker_url>
                             <xsl:value-of select="@marker_url"/>
                         </marker_url>
@@ -144,7 +145,7 @@
                         <marker_width>
                             <xsl:value-of select="@marker_width"/>
                         </marker_width>
-                    </xsl:if>
+                    </xsl:if>-->
 
                     <xsl:if test="$attributes!=''">
                         <xsl:call-template name="Attributes">

@@ -119,6 +119,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             map.zoomToExtent(bounds);
         }
 
+        // Listen to Events
+        map.events.on({
+            'movestart': function(event) {
+                // Hide any warnings (e.g. 'Too Many Features')
+                S3.hideAlerts('warning');
+            }
+        });
+
         // Return the map object
         return map;
     };
@@ -1582,7 +1590,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // No Marker for Polygons
             var marker;
         } else {
-            // Marker for 
+            // Marker for Points
             var marker = options.marker_default;
         }
         // Styling
@@ -4946,11 +4954,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (feature.attributes.marker_width) {
                         // Use marker_width from feature
                         pix = feature.attributes.marker_width;
-                    } else {
-                        if (undefined != marker_width) {
+                    } else if (style && !style_array && undefined == style.externalGraphic && undefined == marker_width && feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                        // Use Default Marker
+                        pix =  options.marker_default.w;
+                    } else if (undefined != marker_width) {
                             // per-Layer Marker for Unclustered Point
                             pix = marker_width;
-                        }
                     }
                     return pix;
                 },
@@ -4963,11 +4972,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (feature.attributes.marker_height) {
                         // Use marker_height from feature (Query)
                         pix = feature.attributes.marker_height;
-                    } else {
-                        if (undefined != marker_height) {
-                            // per-Layer Marker for Unclustered Point
-                            pix = marker_height;
-                        }
+                    } else if (style && !style_array && undefined == style.externalGraphic && undefined == marker_height && feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                        // Use Default Marker
+                        pix =  options.marker_default.h;
+                    } else if (undefined != marker_height) {
+                        // per-Layer Marker for Unclustered Point
+                        pix = marker_height;
                     }
                     return pix;
                 },
@@ -4980,11 +4990,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (feature.attributes.marker_width) {
                         // Use marker_width from feature (e.g. FeatureQuery)
                         pix = -(feature.attributes.marker_width / 2);
-                    } else {
-                        if (undefined != marker_width) {
-                            // per-Layer Marker for Unclustered Point
-                            pix = -(marker_width / 2);
-                        }
+                    } else if (style && !style_array && undefined == style.externalGraphic && undefined == marker_width && feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                        // Use Default Marker
+                        pix =  -(options.marker_default.w / 2);
+                    } else if (undefined != marker_width) {
+                        // per-Layer Marker for Unclustered Point
+                        pix = -(marker_width / 2);
                     }
                     return pix;
                 },
@@ -4997,11 +5008,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (feature.attributes.marker_height) {
                         // Use marker_height from feature (e.g. FeatureQuery)
                         pix = -feature.attributes.marker_height;
-                    } else {
-                        if (undefined != marker_height) {
-                            // per-Layer Marker for Unclustered Point
-                            pix = -marker_height;
-                        }
+                    } else if (style && !style_array && undefined == style.externalGraphic && undefined == marker_height && feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                        // Use Default Marker
+                        pix =  -options.marker_default.h;
+                    } else if (undefined != marker_height) {
+                        // per-Layer Marker for Unclustered Point
+                        pix = -marker_height;
                     }
                     return pix;
                 },
@@ -5042,6 +5054,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             // Common Style for all features in layer
                             if (undefined != style.externalGraphic) {
                                 url = S3.Ap.concat('/static/' + style.externalGraphic);
+                            } else if (feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                                if (marker_url) {
+                                    // Use Layer Marker
+                                    return marker_url;
+                                } else {
+                                    // Use Default Marker
+                                    url = marker_url_path + options.marker_default.i;
+                                }
                             }
                         } else {
                             // Lookup from rule
@@ -5280,10 +5300,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var styleRules = function(layer) {
         var style = layer.style;
         var rules = [];
-        var prop, rule, symbolizer, value,
-            elseFilter, externalGraphic, graphicHeight,
-            graphicWidth, graphicXOffset, graphicYOffset,
-            fill, fillOpacity, size, strokeOpacity, strokeWidth;
+        var prop, rule, value, elseFilter, fill, fillOpacity, size,
+            externalGraphic, graphicHeight, graphicWidth,
+            graphicXOffset, graphicYOffset, strokeOpacity, strokeWidth;
         $.each(style, function(index, elem) {
             var options = {};
             if (undefined != elem.fallback) {
@@ -5379,7 +5398,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 graphicXOffset: graphicXOffset,
                 graphicYOffset: graphicYOffset,
                 pointRadius: size
-            }
+            };
 
             rule = new OpenLayers.Rule(options);
             rules.push(rule);

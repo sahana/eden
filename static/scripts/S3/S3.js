@@ -476,8 +476,12 @@ S3.showAlert = function(message, type) {
     });
 };
 
-S3.hideAlerts = function() {
-    $('#alert-space').empty();
+S3.hideAlerts = function(type) {
+    if (type) {
+        $('.alert-' + type).remove();
+    } else {
+        $('#alert-space').empty();
+    }
 };
 
 /**

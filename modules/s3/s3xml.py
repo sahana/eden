@@ -768,7 +768,9 @@ class S3XML(S3Codec):
 
         db = current.db
         gis = current.gis
+        auth = current.auth
         request = current.request
+        format = auth.permission.format
         settings = current.deployment_settings
 
         ATTRIBUTE = self.ATTRIBUTE
@@ -844,7 +846,7 @@ class S3XML(S3Codec):
                         # Locate the attributes
                         #row = row[tablename]
                 else:
-                   # _fields = [table[f] for f in fields]
+                    # _fields = [table[f] for f in fields]
                     row = db(query).select(table[WKTFIELD],
                                            #*_fields,
                                            limitby=(0, 1)).first()
@@ -857,6 +859,8 @@ class S3XML(S3Codec):
                             wkt = gis.simplify(wkt)
                             # Convert the WKT in XSLT
                             attr[ATTRIBUTE.wkt] = wkt
+
+            # End: Shapefile data
             return
 
         elif tablename == "gis_location":
@@ -879,31 +883,25 @@ class S3XML(S3Codec):
                     #            _attr = "[%s]=[%s]" % (a, attrs[a])
                     #    if _attr:
                     #        attr[ATTRIBUTE.attributes] = _attr
-                    if tablename in tooltips:
-                        # Retrieve the HTML for the onHover Tooltip
-                        tooltip = tooltips[tablename][record_id]
-                        if type(tooltip) is not unicode:
-                            try:
-                                # encode suitable for use as XML attribute
-                                tooltip = tooltip.decode("utf-8")
-                            except:
-                                pass
-                        else:
-                            attr[ATTRIBUTE.popup] = tooltip
-                    # Use the current controller for map popup URLs to get
-                    # the controller settings applied even for map popups
-                    url = URL(request.controller,
-                              request.function).split(".", 1)[0]
-                    #if format == "geojson":
-                    # Assume being used within the Sahana Mapping client
-                    # so use local URLs to keep filesize down
-                    url = "%s/%i.plain" % (url, record_id)
-                    #else:
-                    #    # Assume being used outside the Sahana Mapping client
-                    #    # so use public URLs
-                    #    url = "%s%s/%i" % (settings.get_base_public_url(),
-                    #                       url, record_id)
-                    attr[ATTRIBUTE.popup_url] = url
+                if tablename in tooltips:
+                    # Retrieve the HTML for the onHover Tooltip
+                    tooltip = tooltips[tablename][record_id]
+                    if type(tooltip) is not unicode:
+                        try:
+                            # encode suitable for use as XML attribute
+                            tooltip = tooltip.decode("utf-8")
+                        except:
+                            pass
+                    else:
+                        attr[ATTRIBUTE.popup] = tooltip
+                # Use the current controller for map popup URLs to get
+                # the controller settings applied even for map popups
+                url = URL(request.controller,
+                          request.function).split(".", 1)[0]
+                # Assume being used within the Sahana Mapping client
+                # so use local URLs to keep filesize down
+                url = "%s/%i.plain" % (url, record_id)
+                attr[ATTRIBUTE.popup_url] = url
 
             elif tablename in wkts:
                 # Nothing gets here currently
@@ -935,11 +933,26 @@ class S3XML(S3Codec):
                             wkt = gis.simplify(wkt)
                             # Convert the WKT in XSLT
                             attr[ATTRIBUTE.wkt] = wkt
+
+            if format == "kml":
+                # GIS marker
+                marker = current.gis.get_marker() # Default Marker
+                # Quicker to download Icons from Static
+                # also doesn't require authentication so KML files can work in
+                # Google Earth
+                marker_download_url = "%s/%s/static/img/markers" % \
+                    (current.deployment_settings.get_base_public_url(),
+                     current.request.application)
+                marker_url = "%s/%s" % (marker_download_url, marker.image)
+                attr[ATTRIBUTE.marker] = marker_url
+            elif format =="gpx":
+                symbol = "White Dot"
+                attr[ATTRIBUTE.sym] = symbol
+
+            # End: tablename == "gis_location"
             return
-            
+
         s3db = current.s3db
-        auth = current.auth
-        format = auth.permission.format
         LATFIELD = self.Lat
         LONFIELD = self.Lon
         pkey = table._id
@@ -1219,20 +1232,6 @@ class S3XML(S3Codec):
             attrib[DELETED] = "True"
             # export only MTIME with deleted records
             fields = [self.MTIME]
-
-        # GIS marker
-        if tablename == "gis_location" and current.gis:
-            marker = current.gis.get_marker() # Default Marker
-            # Quicker to download Icons from Static
-            # also doesn't require authentication so KML files can work in
-            # Google Earth
-            marker_download_url = "%s/%s/static/img/markers" % \
-                (current.deployment_settings.get_base_public_url(),
-                 current.request.application)
-            marker_url = "%s/%s" % (marker_download_url, marker.image)
-            attrib[ATTRIBUTE.marker] = marker_url
-            symbol = "White Dot"
-            attrib[ATTRIBUTE.sym] = symbol
 
         # Fields
         FIELDS_TO_ATTRIBUTES = self.FIELDS_TO_ATTRIBUTES
