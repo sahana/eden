@@ -81,10 +81,15 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        response = current.response
-
         tablename = self.tablename
         get_config = current.s3db.get_config
+
+        # Get the page widgets
+        widgets = get_config(tablename, "profile_widgets")
+        if not widgets:
+            # Profile page not configured:
+            # - redirect to the Read View
+            redirect(r.url(method="read"))
 
         # Page Title
         title = get_config(tablename, "profile_title")
@@ -105,100 +110,91 @@ class S3Profile(S3CRUD):
 
         output = dict(title=title, header=header)
 
-        cols = get_config(tablename, "profile_cols")
-        if not cols:
-            cols = 2
+        # Index the widgets by their position in the config
+        for index, widget in enumerate(widgets):
+            widget["index"] = index
 
-        # Get the page widgets
-        widgets = get_config(tablename, "profile_widgets")
-        if widgets:
+        if r.representation == "dl":
+            # Ajax-update of one datalist
+            index = r.get_vars.get("update", None)
+            if index:
+                try:
+                    index = int(index)
+                except ValueError:
+                    datalist = ""
+                else:
+                    # @ToDo: Check permissions to the Resource & do
+                    # something different if no permission
+                    datalist = self._datalist(r, widgets[index], **attr)
+            output["item"] = datalist
 
-            # Index the widgets by their position in the config
-            for index, widget in enumerate(widgets):
-                widget["index"] = index
-
-            if r.representation == "dl":
-                # Ajax-update of one datalist
-                get_vars = r.get_vars
-                index = r.get_vars.get("update", None)
-                if index:
-                    try:
-                        index = int(index)
-                    except ValueError:
-                        datalist = ""
-                    else:
-                        # @ToDo: Check permissions to the Resource & do
-                        # something different if no permission
-                        datalist = self._datalist(r, widgets[index], **attr)
-                output["item"] = datalist
-
-            elif r.representation == "aadata":
-                # Ajax-update of one datalist
-                get_vars = r.get_vars
-                index = r.get_vars.get("update", None)
-                if index:
-                    try:
-                        index = int(index)
-                    except ValueError:
-                        datalist = ""
-                    else:
-                        # @ToDo: Check permissions to the Resource & do
-                        # something different if no permission
-                        datatable = self._datatable(r, widgets[index], **attr)
-                return datatable
-
-            else:
-                # Default page-load
-                rows = []
-                append = rows.append
-                row = None
-                row_cols = 0
-                for widget in widgets:
-
-                    # Render the widget
-                    w_type = widget["type"]
-                    if w_type == "comments":
-                        w = self._comments(r, widget, **attr)
-                    elif w_type == "datalist":
-                        w = self._datalist(r, widget, **attr)
-                    elif w_type == "datatable":
-                        w = self._datatable(r, widget, **attr)
-                    elif w_type == "form":
-                        w = self._form(r, widget, **attr)
-                    elif w_type == "map":
-                        w = self._map(r, widget, **attr)
-                    elif w_type == "report":
-                        w = self._report(r, widget, **attr)
-                    else:
-                        if response.s3.debug:
-                            raise SyntaxError("Unsupported widget type %s" %
-                                              w_type)
-                        else:
-                            # ignore
-                            continue
-
-                    if row is None:
-                        # Start new row
-                        row = DIV(_class="row profile")
-                        row_cols = 0
-
-                    # Append widget to row
-                    row.append(w)
-                    colspan = widget.get("colspan", 1)
-                    row_cols += colspan
-                    if row_cols == cols:
-                        # Close this row
-                        append(row)
-                        row = None
-
-                if row:
-                    # We have an incomplete row of widgets
-                    append(row)
-                output["rows"] = rows
-                response.view = self._view(r, "profile.html")
+        elif r.representation == "aadata":
+            # Ajax-update of one datalist
+            index = r.get_vars.get("update", None)
+            if index:
+                try:
+                    index = int(index)
+                except ValueError:
+                    datalist = ""
+                else:
+                    # @ToDo: Check permissions to the Resource & do
+                    # something different if no permission
+                    datatable = self._datatable(r, widgets[index], **attr)
+            return datatable
 
         else:
-            output["rows"] = []
+            # Default page-load
+            response = current.response
+            rows = []
+            append = rows.append
+            row = None
+            cols = get_config(tablename, "profile_cols")
+            if not cols:
+                cols = 2
+            row_cols = 0
+            for widget in widgets:
+
+                # Render the widget
+                w_type = widget["type"]
+                if w_type == "comments":
+                    w = self._comments(r, widget, **attr)
+                elif w_type == "datalist":
+                    w = self._datalist(r, widget, **attr)
+                elif w_type == "datatable":
+                    w = self._datatable(r, widget, **attr)
+                elif w_type == "form":
+                    w = self._form(r, widget, **attr)
+                elif w_type == "map":
+                    w = self._map(r, widget, **attr)
+                elif w_type == "report":
+                    w = self._report(r, widget, **attr)
+                else:
+                    if response.s3.debug:
+                        raise SyntaxError("Unsupported widget type %s" %
+                                          w_type)
+                    else:
+                        # ignore
+                        continue
+
+                if row is None:
+                    # Start new row
+                    row = DIV(_class="row profile")
+                    row_cols = 0
+
+                # Append widget to row
+                row.append(w)
+                colspan = widget.get("colspan", 1)
+                row_cols += colspan
+                if row_cols == cols:
+                    # Close this row
+                    append(row)
+                    row = None
+
+            if row:
+                # We have an incomplete row of widgets
+                append(row)
+            output["rows"] = rows
+            response.view = self._view(r, "profile.html")
 
         return output
 

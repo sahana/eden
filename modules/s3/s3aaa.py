@@ -7999,7 +7999,7 @@ class S3EntityRoleManager(S3Method):
         # roles already assigned to a user or users
         self.assigned_roles = self.get_assigned_roles()
 
-        # the foreign object is the one selected in the role form
+        # The foreign object is the one selected in the role form
         # for a person this is the entity
         # for an entity (organisation or office) this is a user
         self.foreign_object = self.get_foreign_object()
