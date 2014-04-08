@@ -175,6 +175,13 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template match="task/permalink">
+        <data field="source_url">
+            <xsl:value-of select="text()"/>
+        </data>
+    </xsl:template>
+    
+    <!-- ****************************************************************** -->
     <!-- Hide everything else -->
     <xsl:template match="*"/>
 
