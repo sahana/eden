@@ -58,14 +58,15 @@
     
     <xsl:template match="resource[@name='project_task']">
         <StreamItem>
-            <xsl:call-template name="TimeStamps"/>
             <Id>0</Id>
-            <OriginationId><xsl:value-of select="@uuid"/></OriginationId>
-            <xsl:call-template name="SystemInfo"/>
-            <CultureInfo>en-US</CultureInfo>
+            <xsl:call-template name="TimeStamps"/>
             <ContentType>text/html</ContentType>
             <xsl:call-template name="Body"/>
             <xsl:apply-templates select="reference[@field='location_id'][1]"/>
+            <CultureInfo>en-US</CultureInfo>
+            <xsl:call-template name="SystemInfo"/>
+            <OriginationId><xsl:value-of select="@uuid"/></OriginationId>
+            <xsl:call-template name="TagList"/>
         </StreamItem>
     </xsl:template>
 
@@ -81,7 +82,10 @@
     <!-- BODY: @todo -->
     
     <xsl:template name="Body">
-        <Body>&lt;p&gt;&lt;b&gt;title of item&lt;/b&gt;&lt;/p&gt;&lt;p&gt;decription of item with a &lt;a href="themarinergroup.net"&gt;url&lt;/a&gt;</Body>
+        <xsl:variable name="title">
+            <xsl:value-of select="data[@field='name']/text()"/>
+        </xsl:variable>
+        <Body>&lt;p&gt;&lt;b&gt;<xsl:value-of select="$title"/>&lt;/b&gt;&lt;/p&gt;</Body>
     </xsl:template>
     
     <!-- ****************************************************************** -->
