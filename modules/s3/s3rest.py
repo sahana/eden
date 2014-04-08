@@ -716,12 +716,9 @@ class S3Request(object):
 
         elif method == "clear" and not self.component:
             s3_remove_last_record_id(self.tablename)
-            if "_next" in self.vars:
-                request_vars = dict(_next=self._next)
-            else:
-                request_vars = {}
-            self.next = URL(r=self, f=self.name, vars=request_vars)
+            self.next = URL(r=self, f=self.name)
             return lambda r, **attr: None
+            
         elif self.transformable():
             transform = True
 
