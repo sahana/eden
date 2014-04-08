@@ -122,10 +122,10 @@ def user():
     lappend((T("Roles"), "membership.group_id"))
 
     s3db.configure("auth_user",
-                   main = "first_name",
                    create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
                    create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                    list_fields = list_fields,
+                   main = "first_name",
                    )
 
     def disable_user(r, **args):
@@ -242,13 +242,14 @@ def user():
     def prep(r):
         if r.interactive:
             s3db.configure(r.tablename,
-                           deletable=False,
+                           addbtn = True,
+                           deletable = False,
                            # jquery.validate is clashing with dataTables so don't embed the create form in with the List
-                           listadd=False,
-                           addbtn=True,
+                           listadd = False,
                            sortby = [[2, "asc"], [1, "asc"]],
                            # Password confirmation
-                           create_onvalidation = user_create_onvalidation)
+                           create_onvalidation = user_create_onvalidation,
+                           )
         elif r.representation == "xls":
             lappend((T("Status"), "registration_key"))
 
@@ -386,9 +387,9 @@ def user():
     s3.import_prep = auth.s3_import_prep
 
     output = s3_rest_controller("auth", "user",
-                                rheader=rheader,
-                                csv_template=("auth", "user"),
-                                csv_stylesheet=("auth", "user.xsl")
+                                csv_stylesheet = ("auth", "user.xsl"),
+                                csv_template = ("auth", "user"),
+                                rheader = rheader,
                                 )
     return output
 

@@ -1345,7 +1345,7 @@ Thank you"""
         #utable.reset_password_key.label = messages.label_registration_key
 
         # Organisation
-        if current.auth.s3_has_role("ADMIN"):         
+        if self.s3_has_role("ADMIN"):         
             show_org = deployment_settings.get_auth_admin_sees_organisation()
         else:
             show_org = deployment_settings.get_auth_registration_requests_organisation()
