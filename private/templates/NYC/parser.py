@@ -32,14 +32,6 @@
 
 __all__ = ["S3Parser"]
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 from gluon import current
 
 from s3.s3parser import S3Parsing
@@ -59,7 +51,6 @@ class S3Parser(object):
 
         db = current.db
         s3db = current.s3db
-        cache = s3db.cache
         table = s3db.msg_rss
         record = db(table.message_id == message.message_id).select(table.channel_id,
                                                                    table.title,
@@ -77,6 +68,7 @@ class S3Parser(object):
         post_table = s3db.cms_post
 
         # Is this an Update or a Create?
+        body = record.body or record.title
         url = record.from_address
         if url:
             doc_table = s3db.doc_document
@@ -87,12 +79,16 @@ class S3Parser(object):
                 exists = db(post_table.doc_id == exists.doc_id).select(post_table.id,
                                                                        limitby=(0, 1)
                                                                        ).first()
+        else:
+            # Use Body
+            exists = db(post_table.body == body).select(post_table.id,
+                                                        limitby=(0, 1)
+                                                        ).first()
                 
         
         channel_id = record.channel_id
         tags = record.tags
 
-        body = record.body or record.title
         author = record.author
         if author:
             ptable = s3db.pr_person
@@ -149,32 +145,30 @@ class S3Parser(object):
                 _tags = db(ttable.name.belongs(lookup_tags)).select(ttable.id,
                                                                     ttable.name,
                                                                     ).as_dict(key="name")
-            if new_tags:
-                for t in new_tags:
-                    tag = _tags.get(t, None)
-                    if tag:
-                        tag_id = tag["id"]
-                    else:
-                        tag_id = ttable.insert(name = t)
-                    ltable.insert(post_id = post_id,
-                                  tag_id = tag_id,
-                                  mci = 1, # This is an imported record, not added natively
-                                  )
-            if delete_tags:
-                for t in delete_tags:
-                    tag = _tags.get(t, None)
-                    if tag:
-                        query = (ltable.post_id == post_id) & \
-                                (ltable.tag_id == tag["id"]) & \
-                                (ltable.mci == 1) & \
-                                (ltable.deleted == False)
-                        db(query).delete()
+            for t in new_tags:
+                tag = _tags.get(t, None)
+                if tag:
+                    tag_id = tag["id"]
+                else:
+                    tag_id = ttable.insert(name = t)
+                ltable.insert(post_id = post_id,
+                              tag_id = tag_id,
+                              mci = 1, # This is an imported record, not added natively
+                              )
+            for t in delete_tags:
+                tag = _tags.get(t, None)
+                if tag:
+                    query = (ltable.post_id == post_id) & \
+                            (ltable.tag_id == tag["id"]) & \
+                            (ltable.mci == 1) & \
+                            (ltable.deleted == False)
+                    db(query).delete()
 
         else:
             # Default to 'News' series
             table = db.cms_series
             series_id = db(table.name == "News").select(table.id,
-                                                        cache=cache,
+                                                        cache=s3db.cache,
                                                         limitby=(0, 1)
                                                         ).first().id
 
@@ -196,36 +190,43 @@ class S3Parser(object):
                                  )
 
             # Is this feed associated with an Org/Network?
-            ctable = s3db.msg_rss_channel
-            channel_url = db(ctable.channel_id == channel_id).select(ctable.url,
-                                                                     cache=cache,
-                                                                     limitby=(0, 1)
-                                                                     ).first().url
-            ctable = s3db.pr_contact
-            ptable = s3db.pr_pentity
-            query = (ctable.contact_method == "RSS") & \
-                    (ctable.value == channel_url) & \
-                    (ctable.pe_id == ptable.pe_id)
-            pe = db(query).select(ptable.pe_id,
-                                  ptable.instance_type,
-                                  cache=cache,
-                                  limitby=(0, 1)
-                                  ).first()
-            if pe:
-                pe_type = pe.instance_type
-                otable = s3db[pe_type]
-                org_id = db(otable.pe_id == pe.pe_id).select(otable.id,
-                                                             cache=cache,
-                                                             limitby=(0, 1),
-                                                             ).first().id
-                if pe_type == "org_organisation":
-                    s3db.cms_post_organisation.insert(post_id=post_id,
-                                                      organisation_id=org_id,
-                                                      )
-                elif pe_type == "org_group":
-                    s3db.cms_post_organisation_group.insert(post_id=post_id,
-                                                            group_id=org_id,
-                                                            )
+            def lookup_pe(channel_id):
+                ctable = s3db.msg_rss_channel
+                channel_url = db(ctable.channel_id == channel_id).select(ctable.url,
+                                                                         limitby=(0, 1)
+                                                                         ).first().url
+                ctable = s3db.pr_contact
+                ptable = s3db.pr_pentity
+                query = (ctable.contact_method == "RSS") & \
+                        (ctable.value == channel_url) & \
+                        (ctable.pe_id == ptable.pe_id)
+                pe = db(query).select(ptable.pe_id,
+                                      ptable.instance_type,
+                                      limitby=(0, 1)
+                                      ).first()
+                if pe:
+                    pe_type = pe.instance_type
+                    otable = s3db[pe_type]
+                    org_id = db(otable.pe_id == pe.pe_id).select(otable.id,
+                                                                 limitby=(0, 1),
+                                                                 ).first().id
+                    return pe_type, org_id
+                else
+                    return None, None
+
+            pe_type, org_id = current.cache.ram("pe_channel_%s" % channel_id,
+                                                lambda: lookup_pe(channel_id),
+                                                time_expire=120
+                                                )
+            if pe_type == "org_organisation":
+                s3db.cms_post_organisation.insert(post_id=post_id,
+                                                  organisation_id=org_id,
+                                                  )
+            elif pe_type == "org_group":
+                s3db.cms_post_organisation_group.insert(post_id=post_id,
+                                                        group_id=org_id,
+                                                        )
+            
 
             if tags:
                 ttable = db.cms_tag
