@@ -65,6 +65,7 @@ __all__ = ["S3OrganisationModel",
            "org_organisation_list_layout",
            "org_resource_list_layout",
            "org_sector_opts",
+           "org_update_root_organisation",
            ]
 
 try:
@@ -249,6 +250,10 @@ class S3OrganisationModel(S3Model):
         tablename = "org_organisation"
         define_table(tablename,
                      self.super_link("pe_id", "pr_pentity"),
+                     Field("root_organisation", "reference org_organisation",
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("name", notnull=True, unique=True,
                            length=128, # Mayon Compatibility
                            label=T("Name")),
@@ -594,23 +599,38 @@ class S3OrganisationModel(S3Model):
                                  "bmp",
                                  )
 
+        # Set default root_organisation ID
+        db = current.db
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            pass
+        else:
+            otable = db.org_organisation
+            query = (otable.id == record_id) & \
+                    (otable.root_organisation == None)
+            db(query).update(root_organisation = otable.id)
+
         # Process Injected Fields
         if not current.deployment_settings.get_org_summary():
             return
 
-        db = current.db
-        vars = current.request.post_vars
-        id = vars.id
+        post_vars = current.request.post_vars
+        record_id = post_vars.id
+        if not record_id:
+            # Not a POST request (e.g. import), hence no injected fields either
+            return
+            
         table = current.s3db.org_organisation_summary
-        query = (table.organisation_id == id)
+        query = (table.organisation_id == record_id)
         existing = db(query).select(table.id,
                                     limitby=(0, 1)).first()
-        if "national_staff" in vars:
-            national_staff = vars.national_staff
+        if "national_staff" in post_vars:
+            national_staff = post_vars.national_staff
         else:
             national_staff = None
-        if "international_staff" in vars:
-            international_staff = vars.international_staff
+        if "international_staff" in post_vars:
+            international_staff = post_vars.international_staff
         else:
             international_staff = None
 
@@ -623,7 +643,8 @@ class S3OrganisationModel(S3Model):
                          national_staff=national_staff,
                          international_staff=international_staff
                          )
-
+        return
+        
     # -------------------------------------------------------------------------
     @staticmethod
     def org_organisation_ondelete(row):
@@ -951,13 +972,15 @@ class S3OrganisationBranchModel(S3Model):
         ltable = db.org_organisation_branch
         btable = db.org_organisation.with_alias("org_branch_organisation")
 
-        ifields = [otable[fn] for fn in inherit]  + \
+        ifields = [otable[fn] for fn in inherit] + \
                   [btable[fn] for fn in inherit]
 
         left = [otable.on(ltable.organisation_id == otable.id),
                 btable.on(ltable.branch_id == btable.id)]
 
         record = db(ltable.id == id).select(
+                    otable.root_organisation,
+                    btable.root_organisation,
                     ltable.branch_id,
                     ltable.organisation_id,
                     ltable.deleted,
@@ -967,19 +990,20 @@ class S3OrganisationBranchModel(S3Model):
                     limitby=(0, 1)).first()
 
         if record:
-            try:
-                organisation = record["org_organisation"]
-                branch = record["org_branch_organisation"]
-                link = record["org_organisation_branch"]
+            organisation = record.org_organisation
+            branch = record.org_branch_organisation
+            link = record.org_organisation_branch
 
+            try:
                 branch_id = link.branch_id
                 organisation_id = link.organisation_id
+                
                 if branch_id and organisation_id and not link.deleted:
 
                     # Inherit fields from parent organisation
-                    update = dict([(field, organisation[field])
-                                for field in inherit
-                                if not branch[field] and organisation[field]])
+                    update = dict((field, organisation[field])
+                                  for field in inherit
+                                  if not branch[field] and organisation[field])
                     if update:
                         db(otable.id == branch_id).update(**update)
 
@@ -990,15 +1014,22 @@ class S3OrganisationBranchModel(S3Model):
                             (ltable.deleted != True)
 
                     deleted_fk = {"branch_id": branch_id,
-                                "organisation_id": organisation_id}
+                                  "organisation_id": organisation_id}
                     db(query).update(deleted=True,
-                                    branch_id=None,
-                                    organisation_id=None,
-                                    deleted_fk=json.dumps(deleted_fk))
+                                     branch_id=None,
+                                     organisation_id=None,
+                                     deleted_fk=json.dumps(deleted_fk))
 
                 org_update_affiliations("org_organisation_branch", link)
             except:
                 pass
+
+            # Update the root organisation
+            if link.deleted or \
+               branch.root_organisation is None or \
+               branch.root_organisation != organisation.root_organisation:
+                org_update_root_organisation(branch_id)
+
         return
 
     # -------------------------------------------------------------------------
@@ -5383,7 +5414,70 @@ def org_site_update_affiliations(record):
                                     role_type=OU)
     return
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+def org_update_root_organisation(organisation_id, root_org=None):
+    """
+        Update the root organisation of an org_organisation
+
+        @param organisation_id: the org_organisation record ID
+        @param root_org: the root organisation record ID (for
+                         internal use in update cascade only)
+
+        @return: the root organisation ID
+    """
+
+    # @todo: make immune against circular references!
+
+    db = current.db
+    
+    s3db = current.s3db
+    otable = s3db.org_organisation
+    ltable = s3db.org_organisation_branch
+
+    if root_org is None:
+
+        # Batch update (introspective)
+        if isinstance(organisation_id, (list, tuple, set)):
+            for organisation in organisation_id:
+                org_update_root_organisation(organisation)
+            return None
+
+        # Get the parent organisation
+        query = (ltable.branch_id == organisation_id) & \
+                (ltable.organisation_id == otable.id)
+        parent_org = db(query).select(otable.id,
+                                      otable.root_organisation,
+                                      limitby=(0, 1)).first()
+        if not parent_org:
+            # No parent organisation? => this is the root organisation
+            root_org = organisation_id
+        else:
+            # Use parent organisation's root_organisation
+            root_org = parent_org.root_organisation
+            if not root_org:
+                # Not present? => update it
+                root_org = org_update_root_organisation(parent_org.id)
+
+    if root_org is not None:
+
+        # Update the record(s)
+        if isinstance(organisation_id, (list, tuple, set)):
+            oquery = (otable.id.belongs(organisation_id))
+            bquery = (ltable.organisation_id.belongs(organisation_id))
+        else:
+            oquery = (otable.id == organisation_id)
+            bquery = (ltable.organisation_id == organisation_id)
+        db(oquery).update(root_organisation=root_org)
+
+        # Propagate to all branches (explicit batch update)
+        branches = db(bquery).select(ltable.branch_id)
+        if branches:
+            branch_ids = set(branch.branch_id for branch in branches)
+            org_update_root_organisation(branch_ids, root_org=root_org)
+
+    return root_org
+    
+# =============================================================================
 def org_customise_org_resource_fields(method):
     """
         Customize org_resource fields for Profile widgets and 'more' popups

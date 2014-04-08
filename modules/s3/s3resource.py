@@ -1308,6 +1308,8 @@ class S3Resource(object):
                     fn, tn = rfield.name, rfield.tablename
                     rtable = db[tn]
                     query = (rfield.belongs(deletable))
+                    if tn == self.tablename:
+                        query &= (rfield != rtable._id)
                     if DELETED in rtable:
                         query &= (rtable[DELETED] != True)
                     rrows = db(query).select(rfield)
@@ -1338,9 +1340,12 @@ class S3Resource(object):
                         # Check deletability again
                         restricted = False
                         for rfield in rfields:
-                            rtable = db[rfield.tablename]
-                            rfield = rtable[rfield.name]
+                            fn, tn = rfield.name, rfield.tablename
+                            rtable = db[tn]
+                            #rfield = rtable[fn]
                             query = (rfield == record_id)
+                            if tn == self.tablename:
+                                query &= (rfield != rtable._id)
                             if DELETED in rtable:
                                 query &= (rtable[DELETED] != True)
                             rrow = db(query).select(rfield,
@@ -1361,6 +1366,8 @@ class S3Resource(object):
                     fn, tn = rfield.name, rfield.tablename
                     rtable = db[tn]
                     query = (rfield == record_id)
+                    if tn == self.tablename:
+                        query &= (rfield != rtable._id)
                     if rfield.ondelete == "CASCADE":
                         rresource = define_resource(tn,
                                                     filter=query,
