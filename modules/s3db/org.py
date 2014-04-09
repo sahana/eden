@@ -250,12 +250,11 @@ class S3OrganisationModel(S3Model):
         tablename = "org_organisation"
         define_table(tablename,
                      self.super_link("pe_id", "pr_pentity"),
-                     FieldS3("root_organisation", "reference org_organisation",
-                             readable = False,
-                             writable = False,
-                             represent = S3Represent(lookup="org_organisation"),
-                             sortby = "name",
-                             ),
+                     Field("root_organisation", "reference org_organisation",
+                           readable = False,
+                           writable = False,
+                           represent = S3Represent(lookup="org_organisation"),
+                           ),
                      Field("name", notnull=True, unique=True,
                            length=128, # Mayon Compatibility
                            label=T("Name")),
