@@ -4260,7 +4260,14 @@ class S3Resource(object):
                     continue
                 ftype = str(field.type)
 
-                if ftype[:9] == "reference" and \
+                if hasattr(field.represent, "dt_orderby"):
+                    # Custom orderby logic in field.represent
+                    field.represent.dt_orderby(field,
+                                               direction(i),
+                                               orderby,
+                                               left_joins)
+
+                elif ftype[:9] == "reference" and \
                    hasattr(field, "sortby") and field.sortby:
                     # Foreign keys with sortby will be sorted by sortby
                     
