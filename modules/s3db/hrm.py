@@ -5426,13 +5426,6 @@ def hrm_human_resource_controller(extra_filter=None):
                                   )
                 )
 
-            #if deploy:
-                ## @todo: fix both label and filter widget to match "NS"
-                #organisation_list_field = (current.messages.ORGANISATION,
-                                           #"organisation_id$root_organisation")
-            #else:
-            organisation_list_field = "organisation_id"
-
             # Configure resource
             s3db.configure("hrm_human_resource",
                            filter_widgets = filter_widgets,
@@ -5440,7 +5433,7 @@ def hrm_human_resource_controller(extra_filter=None):
                            list_fields = ["id",
                                           "person_id",
                                           "job_title_id",
-                                          organisation_list_field,
+                                          "organisation_id",
                                           "department_id",
                                           "site_id",
                                           (T("Email"), "email.value"),

@@ -250,12 +250,11 @@ class S3OrganisationModel(S3Model):
         tablename = "org_organisation"
         define_table(tablename,
                      self.super_link("pe_id", "pr_pentity"),
-                     FieldS3("root_organisation", "reference org_organisation",
-                             readable = False,
-                             writable = False,
-                             represent = S3Represent(lookup="org_organisation"),
-                             sortby = "name",
-                             ),
+                     Field("root_organisation", "reference org_organisation",
+                           readable = False,
+                           writable = False,
+                           represent = S3Represent(lookup="org_organisation"),
+                           ),
                      Field("name", notnull=True, unique=True,
                            length=128, # Mayon Compatibility
                            label=T("Name")),
@@ -4035,6 +4034,29 @@ class org_OrganisationRepresent(S3Represent):
         if self.parent and parent:
             name = "%s > %s" % (parent, name)
         return s3_unicode(name)
+
+    # -------------------------------------------------------------------------
+    def dt_orderby(self, field, direction, orderby, left):
+        """
+            Custom orderby-logic for datatables
+        """
+
+        otable = current.s3db.org_organisation
+        left.add(otable.on(field == otable.id))
+        
+        if self.parent:
+            # If we use a hierarchical representation, order by root
+            # organisation name first because it appears before the
+            # branch name:
+            rotable = otable.with_alias("org_root_organisation")
+            left.add(rotable.on(otable.root_organisation == rotable.id))
+
+            orderby.extend(["org_root_organisation.name%s" % direction,
+                            "org_organisation.name%s" % direction])
+        else:
+            # Otherwise: order by organisation name
+            orderby.append("org_organisation.name%s" % direction)
+        return
 
 # =============================================================================
 class org_SiteRepresent(S3Represent):
