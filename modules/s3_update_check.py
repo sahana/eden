@@ -45,12 +45,12 @@ def update_check(settings):
     gr_path = os.path.join(app_path, "requirements.txt")
     tr_path = os.path.join(app_path, "private", "templates", template, "requirements.txt")
     or_path = os.path.join(app_path, "optional_requirements.txt")
-    # @ToDo
-    #tor_path = os.path.join(app_path, "private", "templates", template, "requirements.txt")
+    tor_path = os.path.join(app_path, "private", "templates", template, "optional_requirements.txt")
 
     global_dep = parse_requirements(gr_path)
     template_dep = parse_requirements(tr_path)
     optional_dep = parse_requirements(or_path)
+    template_optional_dep = parse_requirements(tor_path)
 
     # remove optional dependencies which are already accounted for in template dependencies
     unique = set(optional_dep.keys()).difference(set(template_dep.keys()))
@@ -58,7 +58,13 @@ def update_check(settings):
         if dependency not in unique:
             del optional_dep[dependency]
 
-    errors, warnings = s3_check_python_lib(global_dep, template_dep, optional_dep)
+    # override optional dependency messages from template
+    unique = set(optional_dep.keys()).difference(set(template_optional_dep.keys()))
+    for dependency in optional_dep.keys():
+        if dependency not in unique:
+            del optional_dep[dependency]
+
+    errors, warnings = s3_check_python_lib(global_dep, template_dep, template_optional_dep, optional_dep)
     # @ToDo: Move these to Template
     # for now this is done in s3db.climate_first_run()
     if settings.has_module("climate"):
@@ -250,7 +256,7 @@ def parse_requirements(filepath):
     return output
 
 # -------------------------------------------------------------------------
-def s3_check_python_lib(global_mandatory, template_mandatory, global_optional):
+def s3_check_python_lib(global_mandatory, template_mandatory, template_optional, global_optional):
     """
         checks for optional as well as mandatory python libraries
     """
@@ -281,6 +287,18 @@ def s3_check_python_lib(global_mandatory, template_mandatory, global_optional):
                 errors.append(err)
             else:
                 errors.append("Unresolved template dependency: %s required" % dependency)
+
+    for dependency, warn in template_optional.iteritems():
+        try:
+            if "from" in dependency:
+                exec dependency
+            else:
+                exec "import %s" % dependency
+        except ImportError:
+            if warn:
+                warnings.append(warn)
+            else:
+                warnings.append("Unresolved optional dependency: %s required" % dependency)
 
     for dependency, warn in global_optional.iteritems():
         try:
