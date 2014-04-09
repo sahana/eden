@@ -52,6 +52,9 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3ContentModel(S3Model):
     """
@@ -1255,7 +1258,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             data = {}
             for level in levels:
                 data[level[1:]] = raw["gis_location.%s" % level]
-            onclick = '''S3.filter_location(%s)''' % json.dumps(data, separators=(",", ":"))
+            onclick = '''S3.filter_location(%s)''' % json.dumps(data, separators=SEPARATORS)
             location = SPAN(A(location,
                               _href="#",
                               _onclick=onclick,

@@ -147,7 +147,8 @@ def s3_validate(table, field, value, record=None):
     """
         Validates a value for a field
 
-        @param fieldname: name of the field
+        @param table: Table
+        @param field: Field or name of the field
         @param value: value to validate
         @param record: the existing database record, if available
 

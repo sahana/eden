@@ -120,8 +120,8 @@ def person():
 
     # Custom Method for Contacts
     s3db.set_method(module, resourcename,
-                    method="contacts",
-                    action=s3db.pr_contacts)
+                    method = "contacts",
+                    action = s3db.pr_contacts)
 
     def prep(r):
         if r.representation == "json" and \
@@ -338,6 +338,17 @@ def person_search():
     """
 
     s3.prep = lambda r: r.method == "search_ac"
+    return s3_rest_controller(module, "person")
+
+# -----------------------------------------------------------------------------
+def check_duplicates():
+    """
+        Person REST controller
+        - limited to just check_duplicates for use in S3AddPersonWidget2
+        - allows differential access permissions
+    """
+
+    s3.prep = lambda r: r.method == "check_duplicates"
     return s3_rest_controller(module, "person")
 
 # -----------------------------------------------------------------------------

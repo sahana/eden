@@ -201,14 +201,14 @@ class S3PersonEntity(S3Model):
                                     "joinby": "pe_id",
                                     "filterby": "contact_method",
                                     "filterfor": ["EMAIL"],
-                                   },
+                                    },
                                    # Mobile phone numbers:
                                    {"name": "phone",
                                     "joinby": "pe_id",
                                     "filterby": "contact_method",
                                     "filterfor": ["SMS"],
-                                   },
-                                  ),
+                                    },
+                                   ),
                        pr_contact_emergency=pe_id,
                        pr_image=pe_id,
                        pr_note=pe_id,
@@ -216,17 +216,17 @@ class S3PersonEntity(S3Model):
                        pr_saved_search=pe_id,
                        pr_physical_description={"joinby": pe_id,
                                                 "multiple": False,
-                                               },
+                                                },
                        # DVI components
                        dvi_effects={"joinby": pe_id,
                                     "multiple": False,
-                                   },
+                                    },
                        dvi_checklist={"joinby": pe_id,
                                       "multiple": False,
-                                     },
+                                      },
                        dvi_identification={"joinby": pe_id,
                                            "multiple": False,
-                                          },
+                                           },
                        # Map Configs 'Saved Maps'
                        #   - Personalised configurations
                        #   - OU configurations (Organisation/Branch/Facility/Team)
@@ -241,8 +241,8 @@ class S3PersonEntity(S3Model):
 
         # Custom Method for S3AutocompleteWidget
         self.set_method("pr", "pentity",
-                        method="search_ac",
-                        action=self.pe_search_ac)
+                        method = "search_ac",
+                        action = self.pe_search_ac)
 
         # ---------------------------------------------------------------------
         # Person <-> User
@@ -915,12 +915,16 @@ class S3PersonModel(S3Model):
         # Custom Methods for S3PersonAutocompleteWidget and S3AddPersonWidget2
         set_method = self.set_method
         set_method("pr", "person",
-                   method="search_ac",
-                   action=self.pr_search_ac)
+                   method = "search_ac",
+                   action = self.pr_search_ac)
 
         set_method("pr", "person",
-                   method="lookup",
-                   action=self.pr_person_lookup)
+                   method = "lookup",
+                   action = self.pr_person_lookup)
+
+        set_method("pr", "person",
+                   method = "check_duplicates",
+                   action = self.pr_person_check_duplicates)
 
         # Components
         add_components(tablename,
@@ -929,7 +933,7 @@ class S3PersonModel(S3Model):
                        pr_education="person_id",
                        pr_person_details={"joinby": "person_id",
                                           "multiple": False,
-                                         },
+                                          },
                        # Saved Searches and Subscriptions
                        pr_save_search="person_id",
                        msg_subscription="person_id",
@@ -943,7 +947,7 @@ class S3PersonModel(S3Model):
                                   "key": "user_id",
                                   "fkey": "id",
                                   "pkey": "pe_id",
-                                 },
+                                  },
                        # HR Records
                        hrm_human_resource="person_id",
                        # Skills
@@ -955,16 +959,16 @@ class S3PersonModel(S3Model):
                        hrm_experience="person_id",
                        hrm_programme_hours={"name": "hours",
                                             "joinby": "person_id",
-                                           },
+                                            },
                        # Appraisals
                        hrm_appraisal="person_id",
                        # Awards
                        vol_volunteer_award={"name": "award",
                                             "joinby": "person_id",
-                                           },
+                                            },
                        # Assets
                        asset_asset="assigned_to_id",
-                      )
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1316,15 +1320,14 @@ class S3PersonModel(S3Model):
             items = []
             iappend = items.append
             for row in rows:
-                item = {"id"     : row["pr_person.id"],
-                        "first"  : row["pr_person.first_name"],
+                name = Storage(first_name=row["pr_person.first_name"],
+                               middle_name=row["pr_person.middle_name"],
+                               last_name=row["pr_person.last_name"],
+                               )
+                name = s3_fullname(name)
+                item = {"id"    : row["pr_person.id"],
+                        "name"  : name,
                         }
-                middle_name = row.get("pr_person.middle_name", None)
-                if middle_name:
-                    item["middle"] = middle_name
-                last_name = row.get("pr_person.last_name", None)
-                if last_name:
-                    item["last"] = last_name
                 if show_hr:
                     job_title = row.get("hrm_job_title.name", None)
                     if job_title:
@@ -1370,10 +1373,10 @@ class S3PersonModel(S3Model):
                   ]
         if tablename == "org_site":
             # Coming from site_contact_person()
-            fields += [ptable.first_name,
-                       ptable.middle_name,
-                       ptable.last_name,
-                       ]
+            fields.extend((ptable.first_name,
+                           ptable.middle_name,
+                           ptable.last_name,
+                           ))
 
         left = None
         if request_dob:
@@ -1385,18 +1388,15 @@ class S3PersonModel(S3Model):
             fields.append(dtable.occupation)
             left = dtable.on(dtable.person_id == ptable.id)
 
-        query = (ptable.id == id)
-        row = db(query).select(left=left,
-                               *fields).first()
+        row = db(ptable.id == id).select(left=left,
+                                         *fields).first()
         if left:
             occupation = row["pr_person_details.occupation"]
             row = row["pr_person"]
         else:
             occupation = None
         if tablename == "org_site":
-            first_name = row.first_name
-            middle_name = row.middle_name
-            last_name = row.last_name
+            name = s3_fullname(row)
         if request_dob:
             date_of_birth = row.date_of_birth
         else:
@@ -1442,26 +1442,226 @@ class S3PersonModel(S3Model):
         item = {}
         if tablename == "org_site":
             item["id"] = id
-            if first_name:
-                item["first_name"] = first_name
-            if middle_name:
-                item["middle_name"] = middle_name
-            if last_name:
-                item["last_name"] = last_name
+            item["name"] = name
         if email:
             item["email"] = email
         if mobile_phone:
-            item["mobile_phone"] = mobile_phone
+            item["mphone"] = mobile_phone
         if home_phone:
-            item["home_phone"] = home_phone
+            item["hphone"] = home_phone
         if gender:
-            item["gender"] = gender
+            item["sex"] = gender
         if date_of_birth:
             represent = ptable.date_of_birth.represent
-            item["date_of_birth"] = represent(date_of_birth)
+            item["dob"] = represent(date_of_birth)
         if occupation:
             item["occupation"] = occupation
         output = json.dumps(item, separators=SEPARATORS)
+
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_person_check_duplicates(r, **attr):
+        """
+            JSON lookup method for S3AddPersonWidget2
+        """
+
+        # Read Input
+        post_vars = current.request.post_vars
+        name = post_vars["name"]
+        dob = post_vars.get("dob", None)
+        if dob:
+            # Parse Date
+            dob, error = s3_validate(current.s3db.pr_person, "date_of_birth", dob)
+            if not error:
+                dob = dob.isoformat()
+            else:
+                dob = None
+        gender = post_vars.get("sex", None)
+        occupation = post_vars.get("occupation", None)
+        mobile_phone = post_vars.get("mphone", None)
+        home_phone = post_vars.get("hphone", None)
+        email = post_vars.get("email", None)
+
+        # https://github.com/derek73/python-nameparser
+        from nameparser import HumanName
+        name = HumanName(name.lower())
+
+        # @ToDo: Fuzzy Search
+        # We need to use an Index since we can't read all values in do client-side
+        # e.g. (Double) Metaphone or Levenshtein
+        # Options:
+        # * SOLR: http://wiki.apache.org/solr/AnalyzersTokenizersTokenFilters
+        #         http://stackoverflow.com/questions/2116832/how-to-use-wildchards-fuzzy-search-with-solr
+        #         http://stackoverflow.com/questions/9883151/solr-fuzzy-search-for-similar-words
+        # * Whoosh: https://pypi.python.org/pypi/Whoosh/
+        # * Postgres (1st is faster on large DBs):
+        #    * http://www.postgresql.org/docs/9.3/static/pgtrgm.html
+        #    * http://www.postgresql.org/docs/9.1/static/fuzzystrmatch.html
+        # * MySQL:
+        #    * http://forums.mysql.com/read.php?20,282935,282935#msg-282935
+
+        # Perform Search
+        query = (S3FieldSelector("first_name").lower().like(name.first + "%"))
+        if name.middle:
+            query &= (S3FieldSelector("middle_name").lower().like(name.middle + "%"))
+        if name.last:
+            query &= (S3FieldSelector("last_name").lower().like(name.last + "%"))
+
+        resource = r.resource
+        resource.add_filter(query)
+        
+        fields = ["id",
+                  "first_name",
+                  "middle_name",
+                  "last_name",
+                  "date_of_birth",
+                  "gender",
+                  "person_details.occupation",
+                  "image.image",
+                  ]
+
+        settings = current.deployment_settings
+        MAX_SEARCH_RESULTS = settings.get_search_max_results()
+        show_hr = settings.get_pr_search_shows_hr_details()
+        if show_hr:
+            fields.append("human_resource.job_title_id$name")
+            show_orgs = settings.get_hrm_show_organisation()
+            if show_orgs:
+                fields.append("human_resource.organisation_id$name")
+
+        rows = resource.select(fields=fields,
+                               start=0,
+                               limit=MAX_SEARCH_RESULTS)["rows"]
+
+        # If no results then search other fields
+        # @ToDo: Do these searches anyway & merge results together
+        if not len(rows):
+            if dob:
+                # Try DoB
+                # Remove the name filter (last one in)
+                resource.rfilter.filters.pop()
+                resource.rfilter.query = None
+                query = (S3FieldSelector("date_of_birth") == dob)
+                resource.add_filter(query)
+                rows = resource.select(fields=fields,
+                                       start=0,
+                                       limit=MAX_SEARCH_RESULTS)["rows"]
+            if not len(rows) and email:
+                # Try Email
+                # Remove the name filter (last one in)
+                resource.rfilter.filters.pop()
+                resource.rfilter.query = None
+                query = (S3FieldSelector("contact.value") == email) & (S3FieldSelector("contact.contact_method") == "EMAIL")
+                resource.add_filter(query)
+                rows = resource.select(fields=fields,
+                                       start=0,
+                                       limit=MAX_SEARCH_RESULTS)["rows"]
+            if not len(rows) and mobile_phone:
+                # Try Mobile Phone
+                # Remove the name filter (last one in)
+                resource.rfilter.filters.pop()
+                resource.rfilter.query = None
+                query = (S3FieldSelector("contact.value") == mobile_phone) & (S3FieldSelector("contact.contact_method") == "SMS")
+                resource.add_filter(query)
+                rows = resource.select(fields=fields,
+                                       start=0,
+                                       limit=MAX_SEARCH_RESULTS)["rows"]
+            if not len(rows) and home_phone:
+                # Try Home Phone
+                # Remove the name filter (last one in)
+                resource.rfilter.filters.pop()
+                resource.rfilter.query = None
+                query = (S3FieldSelector("contact.value") == home_phone) & (S3FieldSelector("contact.contact_method") == "HOME_PHONE")
+                resource.add_filter(query)
+                rows = resource.select(fields=fields,
+                                       start=0,
+                                       limit=MAX_SEARCH_RESULTS)["rows"]
+
+        # @ToDo: Separate lookup for Contacts
+        #query = (ctable.pe_id == person.pe_id) & \
+        #        (ctable.deleted == False) & \
+        #        (ctable.contact_method.belongs(contact_methods))
+        #contacts = db(query).select(ctable.contact_method,
+        #                            ctable.value,
+        #                            orderby=ctable.priority,
+        #                            )
+        #email = mobile_phone = ""
+        #if req_home_phone:
+        #    home_phone = ""
+        #    for contact in contacts:
+        #        if not email and contact.contact_method == "EMAIL":
+        #            email = contact.value
+        #        elif not mobile_phone and contact.contact_method == "SMS":
+        #            mobile_phone = contact.value
+        #        elif not home_phone and contact.contact_method == "HOME_PHONE":
+        #            home_phone = contact.value
+        #        if email and mobile_phone and home_phone:
+        #            break
+        #    values["home_phone"] = home_phone
+        #else:
+        #    for contact in contacts:
+        #        if not email and contact.contact_method == "EMAIL":
+        #            email = contact.value
+        #        elif not mobile_phone and contact.contact_method == "SMS":
+        #            mobile_phone = contact.value
+        #        if email and mobile_phone:
+        #            break
+        #values["email"] = email
+        #values["mobile_phone"] = mobile_phone
+
+        # @ToDo: Rank rows
+        # Correct DoB
+        # Correct Email
+        # Correct Phone
+        # Correct Gender
+        # Exact Name Match
+        # Levenshtein distance on Email
+        # Levenshtein distance on Phone
+        # Levenshtein distance on Occupation
+
+        items = []
+        iappend = items.append
+        for row in rows:
+            name = Storage(first_name=row["pr_person.first_name"],
+                           middle_name=row["pr_person.middle_name"],
+                           last_name=row["pr_person.last_name"],
+                           )
+            name = s3_fullname(name)
+            item = {"id"     : row["pr_person.id"],
+                    "name"  : name,
+                    }
+            date_of_birth = row.get("pr_person.date_of_birth", None)
+            if date_of_birth:
+                item["dob"] = date_of_birth
+            gender = row.get("pr_person.gender", None)
+            if gender in (2, 3):
+                # 1 = unknown
+                item["sex"] = gender
+            occupation = row.get("pr_person_details.occupation", None)
+            if occupation:
+                item["job"] = occupation
+            email = row.get("pr_contact.email", None)
+            if email:
+                item["email"] = email
+            phone = row.get("pr_contact.phone", None)
+            if phone:
+                item["mphone"] = phone
+            image = row.get("pr_image.image", None)
+            if image:
+                item["image"] = image
+            if show_hr:
+                job_title = row.get("hrm_job_title.name", None)
+                if job_title:
+                    item["job"] = job_title
+                if show_orgs:
+                     org = row.get("org_organisation.name", None)
+                     if org:
+                        item["org"] = org
+            iappend(item)
+        output = json.dumps(items, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"
         return output

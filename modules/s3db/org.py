@@ -2177,8 +2177,8 @@ class S3SiteModel(S3Model):
         # Custom Method for S3AddPersonWidget2
         # @ToDo: One for HRMs
         set_method("org", "site",
-                   method="site_contact_person",
-                   action=self.site_contact_person)
+                   method = "site_contact_person",
+                   action = self.site_contact_person)
 
         self.configure(tablename,
                        context = {"location": "location_id",
@@ -2204,7 +2204,7 @@ class S3SiteModel(S3Model):
                                           "joinby": "site_id",
                                           "key": "facility_type_id",
                                           "actuate": "hide",
-                                         },
+                                          },
                        # Format for filter_widgets & imports
                        org_site_facility_type="site_id",
 
@@ -2234,12 +2234,12 @@ class S3SiteModel(S3Model):
                                        {"name": "needs",
                                         "joinby": "site_id",
                                         "multiple": False,
-                                       },
+                                        },
                                        # without alias
                                        {"joinby": "site_id",
                                         "multiple": False,
-                                       },
-                                      ),
+                                        },
+                                       ),
                                       
                        # Requests
                        req_req="site_id",
@@ -2249,16 +2249,16 @@ class S3SiteModel(S3Model):
                        org_site_status={"name": "status",
                                         "joinby": "site_id",
                                         "multiple": False,
-                                       },
+                                        },
                        # Coalitions
                        org_group={"link": "org_site_org_group",
                                   "joinby": "site_id",
                                   "key": "group_id",
                                   "actuate": "hide",
-                                 },
+                                  },
                        # Format for InlineComponent/filter_widget
                        org_site_org_group="site_id",
-                      )
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict(org_site_id=site_id,

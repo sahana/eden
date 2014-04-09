@@ -2055,6 +2055,14 @@ class S3Config(Storage):
         """
         return self.pr.get("import_update_requires_email", True)
 
+    def get_pr_lookup_duplicates(self):
+        """
+            Whether the AddPersonWidget2 does a fuzzy search for duplicates
+
+            NB This setting has no effect with the old AddPersonWidget
+        """
+        return self.pr.get("lookup_duplicates", False)
+
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget[2] """
         return self.pr.get("request_dob", True)
@@ -2076,6 +2084,8 @@ class S3Config(Storage):
             Whether the AddPersonWidget allows selecting existing PRs
             - set to True if Persons can be found in multiple contexts
             - set to False if just a single context
+
+            NB This setting has no effect with the new AddPersonWidget2
         """
         return self.pr.get("select_existing", True)
 

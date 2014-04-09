@@ -135,6 +135,10 @@
   /* Used for 'Logout' */
   content: "\f011";
 }
+.icon-ok:before {
+  /* used for AddPersonWidget2 */
+  content: "\f00c";
+}
 .icon-paperclip:before {
   /* Used for Attachments */
   content: "\f0c6";

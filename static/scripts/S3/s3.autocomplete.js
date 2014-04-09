@@ -516,27 +516,14 @@
             // Represent the Person as an HR
             var name = represent_hr(item);
         } else {
-            if (S3.pr_reverse_names) {
-                var name = item.last + ', ' + item.first;
-                if (item.middle) {
-                    name += ' ' + item.middle;
-                }
-            } else {
-                var name = item.first;
-                if (item.middle) {
-                    name += ' ' + item.middle;
-                }
-                if (item.last) {
-                    name += ' ' + item.last;
-                }
-            }
+            var name = item.name;
         }
         return name;
     }
 
     /**
      * S3PersonAutocompleteWidget & hence S3AddPersonWidget
-     * - uses first/middle/last
+     * - used first/middle/last, but anything non-generic left?
      */
     S3.autocomplete.person = function(controller, fn, input, postprocess, delay, min_length) {
         var dummy = 'dummy_' + input;
@@ -823,20 +810,7 @@
             // No Match or too many results
             return item.label;
         }
-        if (S3.pr_reverse_names) {
-            var name = item.last + ', ' + item.first;
-            if (item.middle) {
-                name += ' ' + item.middle;
-            }
-        } else {
-            var name = item.first;
-            if (item.middle) {
-                name += ' ' + item.middle;
-            }
-            if (item.last) {
-                name += ' ' + item.last;
-            }
-        }
+        var name = item.name; // Person
         var org = item.org;
         var job = item.job;
         if (org || job) {
@@ -855,7 +829,7 @@
 
     /**
      * S3HumanResourceAutocompleteWidget
-     * - uses first/middle/last, organisation & job role
+     * - uses name, organisation & job role
      */
     S3.autocomplete.hrm = function(group, input, postprocess, delay, min_length) {
         var dummy = 'dummy_' + input;

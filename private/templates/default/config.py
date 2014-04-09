@@ -372,6 +372,8 @@ settings.L10n.decimal_separator = "."
 # Persons
 # Uncomment to allow person imports to match even without email addresses 
 #settings.pr.import_update_requires_email = False
+# Uncomment to a fuzzy search for duplicates in the new AddPersonWidget2
+#settings.pr.lookup_duplicates = True
 # Uncomment to hide fields in S3AddPersonWidget[2]
 #settings.pr.request_dob = False
 #settings.pr.request_gender = False
@@ -379,7 +381,7 @@ settings.L10n.decimal_separator = "."
 #settings.pr.request_home_phone = True
 # Uncomment to reverse the order of Names
 #settings.pr.reverse_names = True
-# Uncomment to prevent selecting existing users in S3AddPersonWidget
+# Uncomment to prevent selecting existing users in the old S3AddPersonWidget
 #settings.pr.select_existing = False
 # Uncomment to prevent showing HR details in S3PersonAutocompleteWidget results
 #settings.pr.search_shows_hr_details = False

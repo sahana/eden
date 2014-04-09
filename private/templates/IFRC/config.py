@@ -295,6 +295,10 @@ settings.hrm.cv_tab = True
 # Uncomment to consolidate tabs into Staff Record
 settings.hrm.record_tab = True
 
+# Uncomment to do a search for duplicates in the new AddPersonWidget2
+# - not yet ready
+#settings.pr.lookup_duplicates = True
+
 # RDRT
 settings.deploy.hr_label = "Member"
 # Enable the use of Organisation Regions

@@ -1015,15 +1015,14 @@ class S3HRModel(S3Model):
             items = []
             iappend = items.append
             for row in rows:
-                item = {"id"     : row["hrm_human_resource.id"],
-                        "first"  : row["pr_person.first_name"],
+                name = Storage(first_name=row["pr_person.first_name"],
+                               middle_name=row["pr_person.middle_name"],
+                               last_name=row["pr_person.last_name"],
+                               )
+                name = s3_fullname(name)
+                item = {"id"    : row["hrm_human_resource.id"],
+                        "name"  : name,
                         }
-                middle_name = row.get("pr_person.middle_name", None)
-                if middle_name:
-                    item["middle"] = middle_name
-                last_name = row.get("pr_person.last_name", None)
-                if last_name:
-                    item["last"] = last_name
                 if show_orgs:
                     item["org"] = row["org_organisation.name"]
                 job_title = row.get("hrm_job_title.name", None)
@@ -1131,26 +1130,20 @@ class S3HRModel(S3Model):
 
         # Minimal flattened structure
         item = {}
-        #if first_name:
-        #    item["first_name"] = first_name
-        #if middle_name:
-        #    item["middle_name"] = middle_name
-        #if last_name:
-        #    item["last_name"] = last_name
         if email:
             item["email"] = email
         if mobile_phone:
-            item["mobile_phone"] = mobile_phone
+            item["mphone"] = mobile_phone
         if home_phone:
-            item["home_phone"] = home_phone
+            item["hphone"] = home_phone
         if gender:
-            item["gender"] = gender
+            item["sex"] = gender
         if date_of_birth:
-            item["date_of_birth"] = date_of_birth
+            item["dob"] = date_of_birth
         if occupation:
             item["occupation"] = occupation
         if organisation_id:
-            item["organisation_id"] = organisation_id
+            item["org_id"] = organisation_id
         output = json.dumps(item, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"

@@ -640,6 +640,24 @@ class S3AddPersonWidget2(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
+        default = dict(_type = "text",
+                       value = (value != None and str(value)) or "")
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "hide"
+
+        request = current.request
+        if not value and request.env.request_method == "POST":
+            # Read the POST vars:
+            values = request.post_vars
+            # @ToDo: Format these for Display?
+            if values.get(str(field).split(".", 1)[1], None) and \
+               "full_name" not in values:
+                # We selected an existing user...this would fail as the non-existent gender would fail to validate
+                # and we can optimise by simply returning the simple widget
+                return INPUT(**attr)
+        else:
+            values = {}
+
         s3db = current.s3db
         field_type = field.type[10:]
         if field_type == "pr_person":
@@ -680,14 +698,6 @@ class S3AddPersonWidget2(FormWidget):
             # Unsupported
             raise
 
-        default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
-        attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = "hide"
-
-        fieldname = str(field).replace(".", "_")
-
-        request = current.request
         controller = self.controller or request.controller
         settings = current.deployment_settings
 
@@ -720,7 +730,6 @@ class S3AddPersonWidget2(FormWidget):
             emailRequired = False
             occupation = None
 
-        values = {}
         if value:
             db = current.db
             fields = [ptable.first_name,
@@ -797,14 +806,10 @@ class S3AddPersonWidget2(FormWidget):
             values["email"] = email
             values["mobile_phone"] = mobile_phone
 
-        elif request.env.request_method == "POST":
-            # Read the POST vars:
-            values = request.post_vars
-            # @ToDo: Format these for Display?
-
         # Output
         T = current.T
         rows = DIV()
+        fieldname = str(field).replace(".", "_")
 
         # Section Title
         id = "%s_title" % fieldname
@@ -857,38 +862,39 @@ class S3AddPersonWidget2(FormWidget):
                  "_data-f": fn,
                  }
         fields = []
+        fappend = fields.append
 
         if hrm:
-            fields.append(("organisation_id", organisation_id.label,
-                           OptionsWidget.widget(organisation_id, values.get("organisation_id", None),
-                                                _id = "%s_organisation_id" % fieldname),
-                           settings.get_hrm_org_required()))
+            fappend(("organisation_id", organisation_id.label,
+                     OptionsWidget.widget(organisation_id, values.get("organisation_id", None),
+                                          _id = "%s_organisation_id" % fieldname),
+                     settings.get_hrm_org_required()))
 
         # Name field
         # - can search for an existing person
         # - can create a new person
         # - multiple names get assigned to first, middle, last
-        fields.append(("full_name", T("Name"), INPUT(**fattr), True))
+        fappend(("full_name", T("Name"), INPUT(**fattr), True))
 
         if date_of_birth:
-            fields.append(("date_of_birth", date_of_birth.label,
-                           date_of_birth.widget(date_of_birth, values.get("date_of_birth", None),
-                                                _id = "%s_date_of_birth" % fieldname),
-                           False))
+            fappend(("date_of_birth", date_of_birth.label,
+                     date_of_birth.widget(date_of_birth, values.get("date_of_birth", None),
+                                          _id = "%s_date_of_birth" % fieldname),
+                     False))
         if gender:
-            fields.append(("gender", gender.label,
-                           OptionsWidget.widget(gender, values.get("gender", None),
-                                                _id = "%s_gender" % fieldname),
-                           False))
+            fappend(("gender", gender.label,
+                     OptionsWidget.widget(gender, values.get("gender", None),
+                                          _id = "%s_gender" % fieldname),
+                     False))
 
         if occupation:
-            fields.append(("occupation", occupation.label, INPUT(), False))
+            fappend(("occupation", occupation.label, INPUT(), False))
 
-        fields.append(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
-        fields.append(("email", T("Email"), INPUT(), emailRequired))
+        fappend(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
+        fappend(("email", T("Email"), INPUT(), emailRequired))
 
         if req_home_phone:
-            fields.append(("home_phone", T("Home Phone"), INPUT(), False))
+            fappend(("home_phone", T("Home Phone"), INPUT(), False))
 
         for f in fields:
             fname = f[0]
@@ -933,7 +939,7 @@ class S3AddPersonWidget2(FormWidget):
 
         # Divider
         if tuple_rows:
-            # Assume tr-based
+            # Assume TR-based
             row = formstyle("%s_box_bottom" % fieldname, "", "", "")
             row = row[0]
             row.add_class("box_bottom")
@@ -947,6 +953,7 @@ class S3AddPersonWidget2(FormWidget):
         rows.append(row)
 
         # JS
+        lookup_duplicates = settings.get_pr_lookup_duplicates()
         if s3.debug:
             script = "/%s/static/scripts/S3/s3.add_person.js" % request.application
         else:
@@ -954,8 +961,23 @@ class S3AddPersonWidget2(FormWidget):
         scripts = s3.scripts
         if script not in scripts:
             scripts.append(script)
-        s3.jquery_ready.append('''S3.addPersonWidget('%s')''' % fieldname)
-        s3.js_global.append('''i18n.none_of_the_above="%s"''' % T("None of the above"))
+            i18n = \
+'''i18n.none_of_the_above="%s"''' % T("None of the above")
+            if lookup_duplicates:
+                i18n = \
+'''%s
+i18n.Yes="%s"
+i18n.No="%s"
+i18n.dupes_found="%s"''' % (i18n,
+                            T("Yes"),
+                            T("No"),
+                            T("_NUM_ duplicates found"),
+                            )
+            s3.js_global.append(i18n)
+        if lookup_duplicates:
+            s3.jquery_ready.append('''S3.addPersonWidget('%s',1)''' % fieldname)
+        else:
+            s3.jquery_ready.append('''S3.addPersonWidget('%s')''' % fieldname)
 
         # Overall layout of components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden
@@ -2369,8 +2391,6 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
                  min_length = self.min_length,
                  )
         current.response.s3.jquery_ready.append(script)
-        if current.deployment_settings.get_pr_reverse_names():
-            current.response.s3.js_global.append('''S3.pr_reverse_names=true''')
 
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
@@ -5161,8 +5181,6 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         script = '''%s%s)''' % (script, options)
         current.response.s3.jquery_ready.append(script)
-        if current.deployment_settings.get_pr_reverse_names():
-            current.response.s3.js_global.append('''S3.pr_reverse_names=true''')
 
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",

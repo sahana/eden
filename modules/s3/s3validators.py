@@ -2284,6 +2284,10 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             except:
                 pass
 
+        if person_id:
+            # Nothing to do here - we can't change values within this widget
+            return (person_id, None)
+
         request = current.request
         if request.env.request_method == "POST":
             if "import" in request.args:
@@ -2329,9 +2333,11 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 #    middle_name = None
                 #return first_name, middle_name, last_name
 
-                # https://code.google.com/p/python-nameparser/
+                # https://github.com/derek73/python-nameparser
                 from nameparser import HumanName
                 name = HumanName(name)
+
+                # @ToDo?: name.nickname
 
                 return name.first, name.middle, name.last
 
@@ -2388,158 +2394,158 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 if error:
                     return (person_id, error)
 
-            if person_id:
-                # Filter out location_id (location selector form values
-                # being processed only after this widget has been validated)
-                _vars = Storage([(k, _vars[k])
-                                 for k in _vars if k != "location_id"])
+            #if person_id:
+            #    # Filter out location_id (location selector form values
+            #    # being processed only after this widget has been validated)
+            #    _vars = Storage([(k, _vars[k])
+            #                     for k in _vars if k != "location_id"])
 
-                # Separate the Name into components
-                first_name, middle_name, last_name = name_split(_vars["full_name"])
-                _vars["first_name"] = first_name
-                _vars["middle_name"] = middle_name
-                _vars["last_name"] = last_name
+            #    # Separate the Name into components
+            #    first_name, middle_name, last_name = name_split(_vars["full_name"])
+            #    _vars["first_name"] = first_name
+            #    _vars["middle_name"] = middle_name
+            #    _vars["last_name"] = last_name
 
-                # Validate and update the person record
-                query = (ptable.id == person_id)
-                data = Storage()
-                for f in ptable._filter_fields(_vars):
-                    value, error = s3_validate(ptable, f, _vars[f])
-                    if error:
-                        return (person_id, error)
-                    if value:
-                        if f == "date_of_birth":
-                            data[f] = value.isoformat()
-                        else:
-                            data[f] = value
-                if data:
-                    db(query).update(**data)
+            #    # Validate and update the person record
+            #    query = (ptable.id == person_id)
+            #    data = Storage()
+            #    for f in ptable._filter_fields(_vars):
+            #        value, error = s3_validate(ptable, f, _vars[f])
+            #        if error:
+            #            return (person_id, error)
+            #        if value:
+            #            if f == "date_of_birth":
+            #                data[f] = value.isoformat()
+            #            else:
+            #                data[f] = value
+            #    if data:
+            #        db(query).update(**data)
 
-                # Update the contact information & details
-                record = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1)).first()
-                if record:
-                    pe_id = record.pe_id
+            #    # Update the contact information & details
+            #    record = db(query).select(ptable.pe_id,
+            #                              limitby=(0, 1)).first()
+            #    if record:
+            #        pe_id = record.pe_id
 
-                    r = ctable(pe_id=pe_id, contact_method="EMAIL")
-                    email = _vars["email"]
-                    if email:
-                        query = (ctable.pe_id == pe_id) & \
-                                (ctable.contact_method == "EMAIL") &\
-                                (ctable.deleted != True)
-                        r = db(query).select(ctable.value,
-                                             limitby=(0, 1)).first()
-                        if r: # update
-                            if email != r.value:
-                                db(query).update(value=email)
-                        else: # insert
-                            ctable.insert(pe_id=pe_id,
-                                          contact_method="EMAIL",
-                                          value=email)
+            #        r = ctable(pe_id=pe_id, contact_method="EMAIL")
+            #        email = _vars["email"]
+            #        if email:
+            #            query = (ctable.pe_id == pe_id) & \
+            #                    (ctable.contact_method == "EMAIL") &\
+            #                    (ctable.deleted != True)
+            #            r = db(query).select(ctable.value,
+            #                                 limitby=(0, 1)).first()
+            #            if r: # update
+            #                if email != r.value:
+            #                    db(query).update(value=email)
+            #            else: # insert
+            #                ctable.insert(pe_id=pe_id,
+            #                              contact_method="EMAIL",
+            #                              value=email)
 
-                    if mobile:
-                        query = (ctable.pe_id == pe_id) & \
-                                (ctable.contact_method == "SMS") &\
-                                (ctable.deleted != True)
-                        r = db(query).select(ctable.value,
-                                             limitby=(0, 1)).first()
-                        if r: # update
-                            if mobile != r.value:
-                                db(query).update(value=mobile)
-                        else: # insert
-                            ctable.insert(pe_id=pe_id,
-                                          contact_method="SMS",
-                                          value=mobile)
+            #        if mobile:
+            #            query = (ctable.pe_id == pe_id) & \
+            #                    (ctable.contact_method == "SMS") &\
+            #                    (ctable.deleted != True)
+            #            r = db(query).select(ctable.value,
+            #                                 limitby=(0, 1)).first()
+            #            if r: # update
+            #                if mobile != r.value:
+            #                    db(query).update(value=mobile)
+            #            else: # insert
+            #                ctable.insert(pe_id=pe_id,
+            #                              contact_method="SMS",
+            #                              value=mobile)
 
-                    if home_phone:
-                        query = (ctable.pe_id == pe_id) & \
-                                (ctable.contact_method == "HOME_PHONE") &\
-                                (ctable.deleted != True)
-                        r = db(query).select(ctable.value,
-                                             limitby=(0, 1)).first()
-                        if r: # update
-                            if home_phone != r.value:
-                                db(query).update(value=home_phone)
-                        else: # insert
-                            ctable.insert(pe_id=pe_id,
-                                          contact_method="HOME_PHONE",
-                                          value=home_phone)
+            #        if home_phone:
+            #            query = (ctable.pe_id == pe_id) & \
+            #                    (ctable.contact_method == "HOME_PHONE") &\
+            #                    (ctable.deleted != True)
+            #            r = db(query).select(ctable.value,
+            #                                 limitby=(0, 1)).first()
+            #            if r: # update
+            #                if home_phone != r.value:
+            #                    db(query).update(value=home_phone)
+            #            else: # insert
+            #                ctable.insert(pe_id=pe_id,
+            #                              contact_method="HOME_PHONE",
+            #                              value=home_phone)
 
-                    occupation = _vars.get("occupation", None)
-                    if occupation:
-                        pdtable = s3db.pr_person_details
-                        query = (pdtable.person_id == person_id) & \
-                                (pdtable.deleted != True)
-                        r = db(query).select(pdtable.occupation,
-                                             limitby=(0, 1)).first()
-                        if r: # update
-                            if occupation != r.occupation:
-                                db(query).update(occupation=occupation)
-                        else: # insert
-                            pdtable.insert(person_id=person_id,
-                                           occupation=occupation)
+            #        occupation = _vars.get("occupation", None)
+            #        if occupation:
+            #            pdtable = s3db.pr_person_details
+            #            query = (pdtable.person_id == person_id) & \
+            #                    (pdtable.deleted != True)
+            #            r = db(query).select(pdtable.occupation,
+            #                                 limitby=(0, 1)).first()
+            #            if r: # update
+            #                if occupation != r.occupation:
+            #                    db(query).update(occupation=occupation)
+            #            else: # insert
+            #                pdtable.insert(person_id=person_id,
+            #                               occupation=occupation)
 
-            else:
-                # Create a new person record
+            #else:
+            # Create a new person record
 
-                # Filter out location_id (location selector form values
-                # being processed only after this widget has been validated)
-                _vars = Storage([(k, _vars[k])
-                                 for k in _vars if k != "location_id"])
+            # Filter out location_id (location selector form values
+            # being processed only after this widget has been validated)
+            _vars = Storage([(k, _vars[k])
+                             for k in _vars if k != "location_id"])
 
-                # Validate the email
-                email, error = email_validate(_vars.email, None)
+            # Validate the email
+            email, error = email_validate(_vars.email, None)
+            if error:
+                return (None, error)
+
+            # Separate the Name into components
+            first_name, middle_name, last_name = name_split(_vars["full_name"])
+            _vars["first_name"] = first_name
+            _vars["middle_name"] = middle_name
+            _vars["last_name"] = last_name
+
+            # Validate and add the person record
+            for f in ptable._filter_fields(_vars):
+                value, error = s3_validate(ptable, f, _vars[f])
                 if error:
                     return (None, error)
+                elif f == "date_of_birth" and \
+                    value:
+                    _vars[f] = value.isoformat()
+            person_id = ptable.insert(**ptable._filter_fields(_vars))
 
-                # Separate the Name into components
-                first_name, middle_name, last_name = name_split(_vars["full_name"])
-                _vars["first_name"] = first_name
-                _vars["middle_name"] = middle_name
-                _vars["last_name"] = last_name
+            # Need to update post_vars here,
+            # for some reason this doesn't happen through validation alone
+            request.post_vars.update(person_id=str(person_id))
 
-                # Validate and add the person record
-                for f in ptable._filter_fields(_vars):
-                    value, error = s3_validate(ptable, f, _vars[f])
-                    if error:
-                        return (None, error)
-                    elif f == "date_of_birth" and \
-                        value:
-                        _vars[f] = value.isoformat()
-                person_id = ptable.insert(**ptable._filter_fields(_vars))
+            if person_id:
+                # Update the super-entities
+                s3db.update_super(ptable, dict(id=person_id))
+                # Read the created pe_id
+                query = (ptable.id == person_id)
+                person = db(query).select(ptable.pe_id,
+                                          limitby=(0, 1)).first()
 
-                # Need to update post_vars here,
-                # for some reason this doesn't happen through validation alone
-                request.post_vars.update(person_id=str(person_id))
-
-                if person_id:
-                    # Update the super-entities
-                    s3db.update_super(ptable, dict(id=person_id))
-                    # Read the created pe_id
-                    query = (ptable.id == person_id)
-                    person = db(query).select(ptable.pe_id,
-                                              limitby=(0, 1)).first()
-
-                    # Add contact information as provided
-                    if _vars.email:
-                        ctable.insert(pe_id=person.pe_id,
-                                      contact_method="EMAIL",
-                                      value=_vars.email)
-                    if mobile:
-                        ctable.insert(pe_id=person.pe_id,
-                                      contact_method="SMS",
-                                      value=_vars.mobile_phone)
-                    if home_phone:
-                        ctable.insert(pe_id=person.pe_id,
-                                      contact_method="HOME_PHONE",
-                                      value=_vars.home_phone)
-                    if _vars.occupation:
-                        s3db.pr_person_details.insert(person_id = person_id,
-                                                      occupation = _vars.occupation)
-                else:
-                    # Something went wrong
-                    return (person_id, self.error_message or \
-                                       T("Could not add person record"))
+                # Add contact information as provided
+                if _vars.email:
+                    ctable.insert(pe_id=person.pe_id,
+                                  contact_method="EMAIL",
+                                  value=_vars.email)
+                if mobile:
+                    ctable.insert(pe_id=person.pe_id,
+                                  contact_method="SMS",
+                                  value=_vars.mobile_phone)
+                if home_phone:
+                    ctable.insert(pe_id=person.pe_id,
+                                  contact_method="HOME_PHONE",
+                                  value=_vars.home_phone)
+                if _vars.occupation:
+                    s3db.pr_person_details.insert(person_id = person_id,
+                                                  occupation = _vars.occupation)
+            else:
+                # Something went wrong
+                return (person_id, self.error_message or \
+                                   T("Could not add person record"))
 
         return (person_id, None)
 
