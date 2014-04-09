@@ -728,16 +728,17 @@ class S3LocationFilter(S3FilterWidget):
 
         fname = self._prefix(field_name) if resource else field_name
         
-        # @ToDo: Hide dropdowns other than first
         if opts.widget == "multiselect":
 
             T = current.T
 
             # Multiselect Dropdown with Checkboxes
             if "multiselect-filter-widget" not in _class:
-                attr["_class"] = "%s multiselect-filter-widget" % _class
+                _class = "%s multiselect-filter-widget" % _class
 
             # Add one widget per level
+            first = True
+            hide = True
             for level in levels:
                 # Dummy field
                 name = "%s-%s" % (base_name, level)
@@ -756,8 +757,16 @@ class S3LocationFilter(S3FilterWidget):
                                         selectedList = opts.get("selectedList", 3),
                                         noneSelectedText = T("Select %(location)s") % \
                                                              dict(location=levels[level]["label"]))
+                if first:
+                    attr["_class"] = _class
+                elif hide:
+                    # Hide dropdowns other than first
+                    _class = "%s hide" % _class
+                    attr["_class"] = _class
+                    hide = False
                 widget = w(dummy_field, _values, **attr)
                 w_append(widget)
+                first = False
 
         else:
             # Grouped Checkboxes

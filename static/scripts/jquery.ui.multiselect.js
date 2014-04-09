@@ -105,6 +105,11 @@
           menu.addClass('ui-multiselect-single');
         }
 
+        // S3: If the select is set to be hidden then also hide the MultiSelect
+        if (el.hasClass('hide')) {
+            button.hide();
+        }
+
         // bump unique ID
         multiselectID++;
     },
@@ -193,7 +198,7 @@
       // insert into the DOM
       checkboxContainer.html(html);
 
-      // cache some moar useful elements
+      // cache some more useful elements
       this.labels = menu.find('label');
       this.inputs = this.labels.children('input');
 
