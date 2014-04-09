@@ -4147,6 +4147,12 @@ class S3Resource(object):
                             ktable = db[tn].with_alias(alias)
                             ktable._id = ktable[ktable._id.name]
                             tn = alias
+                        elif tn == field.tablename:
+                            prefix, name = field.tablename.split("_", 1)
+                            alias = "%s_%s_%s" % (prefix, field.name, name)
+                            ktable = db[tn].with_alias(alias)
+                            ktable._id = ktable[ktable._id.name]
+                            tn = alias
                         else:
                             ktable = db[tn]
 
@@ -4263,6 +4269,12 @@ class S3Resource(object):
                     if parent is not None and \
                        parent.tablename == tn and field.name != fkey:
                         alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
+                        ktable = db[tn].with_alias(alias)
+                        ktable._id = ktable[ktable._id.name]
+                        tn = alias
+                    elif tn == field.tablename:
+                        prefix, name = field.tablename.split("_", 1)
+                        alias = "%s_%s_%s" % (prefix, field.name, name)
                         ktable = db[tn].with_alias(alias)
                         ktable._id = ktable[ktable._id.name]
                         tn = alias
