@@ -235,11 +235,30 @@ def customise_gis_location_resource(r, tablename):
         But runs before prep
     """
 
-    current.s3db.configure(tablename,
-                           list_fields = ["name", "L0", "L1", "L2",
-                                          #"WKT"
-                                          ]
-                           )
+    s3db = current.s3db
+    s3db.add_components(tablename,
+                        gis_location_name = {"name": "name_ru",
+                                             "joinby": "location_id",
+                                             "filterby": "language",
+                                             "filterfor": ["ru"],
+                                             },
+                        gis_location_tag = {"name": "pcode",
+                                            "joinby": "location_id",
+                                            "filterby": "tag",
+                                            "filterfor": ["PCode"],
+                                            },
+                        )
+
+    s3db.configure(tablename,
+                   list_fields = ["name",
+                                  #(T("Russian Name"), "name.name_l10n?location_name.language=ru"),
+                                  #("PCode", "tag.value?location_tag.tag=PCode"),
+                                  (T("Russian Name"), "name_ru.name_l10n"),
+                                  ("PCode", "pcode.value"),
+                                  "L0", "L1", "L2",
+                                  #"WKT"
+                                  ],
+                   )
 
 settings.customise_gis_location_resource = customise_gis_location_resource
 
