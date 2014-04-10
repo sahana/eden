@@ -131,7 +131,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         if data and count:
 
-            print >> sys.stderr, data
             response, message = self.send(method = "POST",
                                           path = "BulkStream",
                                           data = data)
