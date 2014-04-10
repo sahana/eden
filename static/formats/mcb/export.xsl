@@ -79,13 +79,34 @@
     </xsl:template>
     
     <!-- ****************************************************************** -->
-    <!-- BODY: @todo -->
+    <!-- BODY: Item contents -->
     
     <xsl:template name="Body">
         <xsl:variable name="title">
             <xsl:value-of select="data[@field='name']/text()"/>
         </xsl:variable>
-        <Body>&lt;p&gt;&lt;b&gt;<xsl:value-of select="$title"/>&lt;/b&gt;&lt;/p&gt;</Body>
+        <xsl:variable name="description">
+            <xsl:value-of select="data[@field='description']/text()"/>
+        </xsl:variable>
+        <xsl:variable name="source_url">
+            <xsl:choose>
+                <xsl:when test="data[@field='source_url']/text()!=''">
+                    <xsl:value-of select="data[@field='source_url']/text()"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="@url"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        <Body>
+            &lt;p&gt;&lt;b&gt;<xsl:value-of select="$title"/>&lt;/b&gt;&lt;/p&gt;
+            <xsl:if test="$description!=''">
+                &lt;p&gt;<xsl:value-of select="$description"/>&lt;/p&gt;
+            </xsl:if>
+            <xsl:if test="$source_url!=''">
+                &lt;p&gt;&lt;a href=&quot;<xsl:value-of select="$source_url"/>&quot;&gt;Link&lt;/a&gt;lt;/p&gt;
+            </xsl:if>
+        </Body>
     </xsl:template>
     
     <!-- ****************************************************************** -->
