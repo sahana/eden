@@ -1,5 +1,9 @@
 // Mixin resembling foundation's "tiny button" style,
 // for use with custom buttons:
+// @todo: import the foundation mixins rather than copying them here
+//        for easier integration of custom elements? (=> requires to
+//        generally switch foundation to SCSS - which would be good,
+//        though)
 @mixin tiny_button_style() {
     font-size: 0.6875rem;
     border: 0;
