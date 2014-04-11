@@ -1,0 +1,112 @@
+/* General forms */
+form {
+    font-size: 0.8em;
+    .form-row {
+        margin-top: 5px !important;
+        & > .columns > label {
+            font-weight: bold;
+        }
+    }
+    label.inline {
+        padding: 0;
+    }
+    .gis_loc_select_btn {
+        font-size: 0.8em;
+        i {
+            font-size: 1.0em;
+            margin-right: 4px;
+        }
+    }
+    .error {
+        display: block;
+        padding: 0.375rem 0.5625rem 0.5625rem;
+        margin-top: -1px;
+        margin-bottom: 1rem;
+        font-size: 0.75rem;
+        font-style: italic;
+        background: $form_error_bgcolor;
+        color: white;
+    }
+}
+
+/* General Widgets */
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+textarea,
+select {
+  height: 1.75rem;
+  padding: 0.25rem;
+  margin: 0;
+}
+
+/* Form and Item containers */
+.form-container,
+.item-container {
+    form {
+        background: $form_container_bgcolor;
+        border: 0; // override widgets.css
+        padding: 5px 10px;
+    }
+    width: auto;
+    overflow: inherit;
+}
+.form-container {
+    form {
+        select,
+        input.string:not(.date),
+        textarea {
+            margin: 0;
+            width: 100%;
+        }
+        .ui-multiselect {
+            max-width: 100%;
+        }
+    }
+}
+.item-container .controls {
+    background: $item_container_controls_bgcolor;
+    padding: 0.35em;
+    min-height: 1.7em;
+}
+
+/* Filter forms */
+.filter-form {
+    // MultiSelect/GroupedOpts widgets
+    table tr,
+    .ui-multiselect {
+        max-width: 60%;
+    }
+}
+
+/* Login/Registration box */
+#login_form,
+#register_form,
+#login_box {
+    clear: none !important;
+}
+
+/* Help Popup */
+.tooltip,
+.tooltipbody,
+.stickytip,
+.ajaxtip {
+    display: block;
+    padding: 0;
+}
+.inline-tooltip {
+    padding-top: 1.6em;
+}
+.filter-form .inline-tooltip {
+    padding-top: 0.2em;
+}

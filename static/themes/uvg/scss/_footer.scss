@@ -1,0 +1,19 @@
+/* Footer */
+#footer {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #EEEEEE;
+
+    // Debug buttons in footer - use action-button styles
+    button.btn {
+        @include tiny_button_style();
+        margin-left: 2px;
+        margin-right: 2px;
+        color: $action_btn_fgcolor_debug;
+        background: $action_btn_bgcolor_debug;
+    }
+    button.btn:hover {
+        color: $action_btn_fgcolor_debug_hover;
+        background: $action_btn_bgcolor_debug_hover;
+    }
+}

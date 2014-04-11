@@ -1,0 +1,50 @@
+/* Action buttons */
+.action-btn,
+.delete-btn-ajax,
+.delete-btn,
+.selected-action {
+    @include tiny_button_style();
+    &[disabled],
+    &[disabled]:hover {
+        color: $action_btn_fgcolor_disabled;
+        background-color: $action_btn_bgcolor_disabled;
+    }
+}
+
+/* Default action buttons */
+.action-btn,
+.selected-action {
+    background-color: $action_btn_bgcolor_default;
+    color: $action_btn_fgcolor_default !important;
+    &:hover {
+        background-color: $action_btn_bgcolor_default_hover;
+        color: $action_btn_fgcolor_default_hover !important;
+    }
+}
+
+/* Alert-style action buttons (e.g. delete) */
+.delete-btn-ajax,
+.delete-btn {
+    background-color: $action_btn_bgcolor_alert;
+    color: $action_btn_fgcolor_alert !important;
+    &:hover {
+        background-color: $action_btn_bgcolor_alert_hover !important;
+        color: $action_btn_fgcolor_alert_hover !important;
+    }
+}
+
+/* Action buttons in datatables */
+.dataTable {
+    // need to override datatables CSS as that has more specific selectors
+    .action-btn,
+    .selected-action {
+        color: $action_btn_fgcolor_default;
+    }
+    .delete-btn,
+    .delete-btn-ajax {
+        color: $action_btn_fgcolor_alert;
+    }
+    td.actions {
+        white-space: nowrap;
+    }
+}

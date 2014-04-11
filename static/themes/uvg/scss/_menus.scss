@@ -1,0 +1,78 @@
+/* Menu Logo */
+.S3menulogo {
+    background: $menu_logo left top no-repeat;
+    text-shadow: none;
+    padding: none;
+    margin-left: 5px;
+    margin-top: 10px;
+    width: 35px;
+    height: 28px;
+    display: inline-block;
+}
+
+/* Top bar */
+.top-bar {
+    background-color: $top_bar_bgcolor;
+}
+.top-bar-section {
+    li:not(.has-form) a:not(.button) {
+        background-color: $top_bar_bgcolor;
+    }
+    li:not(.has-form) a:not(.button):hover {
+        background-color: $top_bar_bgcolor_hover;
+    }
+    li.active:not(.has-form) a:not(.button) {
+        background-color: $top_bar_bgcolor_active;
+    }
+    li.active:not(.has-form) a:not(.button):hover {
+        background-color: $top_bar_bgcolor_active_hover;
+    }
+    // Special style for first item, use .menu-home class
+    li.menu-home a {
+        font-weight: bold !important;
+        font-size: 1.4em !important;
+        text-transform: capitalize !important;
+    }
+}
+
+/* Side Menu */
+.sidebar {
+    background: none repeat scroll 0 0 $side_nav_bgcolor;
+    margin-top: 10px;
+}
+.side-nav {
+    ul {
+        list-style-type: none;
+        list-style-position: inside;
+    }
+    li a:not(.button) {
+        color: $side_nav_fgcolor;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    li a:not(.button):hover,
+    li a:not(.button):focus {
+        color: $side_nav_fgcolor_hover;
+        background: $side_nav_bgcolor_hover;
+        padding-left: 10px;
+    }
+    li.active > a:first-child:not(.button) {
+        color: $side_nav_fgcolor_active;
+        background-color: $side_nav_bgcolor_active;
+    }
+    li.active > a:first-child:not(.button):hover {
+        color: $side_nav_fgcolor_hover;
+        background-color: $side_nav_bgcolor_hover;
+    }
+    li.divider {
+        border-top: 1px solid $side_nav_color_divider_item;
+        height: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .heading {
+        text-transform: uppercase;
+        border-top: 1px solid $side_nav_color_section_divider;
+        margin-top: 5px;
+    }
+}
