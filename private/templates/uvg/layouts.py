@@ -116,7 +116,7 @@ class S3MainMenuLayout(S3NavigationItem):
                                _class="left"),
                             _class="top-bar-section"),
                     _class = "top-bar",
-                    **{"data-topbar": " "}
+                    data = {"topbar": ""},
                 )
 
         else:

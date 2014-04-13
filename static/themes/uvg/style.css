@@ -1,4 +1,9 @@
 /* Auto-generated file, please modify the SCSS sources instead */
+/* Override widget.css */
+.top-bar.expanded {
+  width: auto;
+}
+
 /* Alerts */
 .alert.alert-error,
 .alert.alert-info,

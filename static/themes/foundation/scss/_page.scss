@@ -1,6 +1,10 @@
 //body {
 //    @include background_size(cover);
 //}
+/* Override widget.css */
+.top-bar.expanded {
+    width: auto;
+}
 
 /* Alerts */
 .alert.alert-error,
