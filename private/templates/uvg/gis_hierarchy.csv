@@ -15,6 +15,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,MY,"State","District","Mukim",,,
 ,NZ,"Region","Territorial Authority",,,,
 ,PH,"Region","Province","City / Municipality","Barangay",,
+,SE,"County","Municipality",,,,
 ,TD,"Region","Department","Sub-Prefecture","Canton",
 ,TL,"District","SubDistrict","Suco","Aldeia",,
 ,US,"State","County","City","Neighborhood",,False

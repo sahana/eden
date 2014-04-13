@@ -66,12 +66,14 @@ class S3MainMenuLayout(S3NavigationItem):
                 else:
                     # Menu item without Drop-Down
                     if toplevel:
+                        item_url = item.url()
+                        if item_url == URL(c="default", f="index"):
+                            classes.append("menu-home")
                         if item.selected:
                             classes.append("active")
-                        _href = item.url()
                         _class = " ".join(classes)
                         return LI(A(item.label,
-                                    _href=item.url(),
+                                    _href=item_url,
                                     _id=item.attr._id,
                                     ),
                                   _class=_class,
@@ -89,7 +91,6 @@ class S3MainMenuLayout(S3NavigationItem):
                         return LI(link)
             else:
                 # Main menu
-
                 right = []
                 left = []
                 for item in items:
@@ -106,7 +107,7 @@ class S3MainMenuLayout(S3NavigationItem):
                             ),
                           _class="name"
                           ),
-                       LI(A(SPAN(current.T("Menu"))),
+                       LI(A(),
                           _class="toggle-topbar menu-icon",
                           ),
                        _class="title-area"),
