@@ -55,7 +55,6 @@ select {
 .item-container {
     form {
         background: $form_container_bgcolor;
-        border: 0; // override widgets.css
         padding: 5px 10px;
     }
     width: auto;
