@@ -94,6 +94,11 @@ parser.add_argument("--html-name-date",
                     action='store_const',
                     const=True,
                     help = "Include just the date in the name of the HTML report.")
+parser.add_argument("-U",
+                    "--agent",
+                    type = str,
+                    default = "t",
+                    help = "Agent used to run the smoke tests: g -> Ghost\t t -> Twill (def)")
 
 suite_desc = """This will execute a standard testing schedule. The valid values
 are, smoke, quick, complete and full. If a method or class options is selected
@@ -101,7 +106,7 @@ the the suite will be ignored.
 
 The suite options can be described as follows:
 
-smoke: This will run the broken link test
+smoke: This will run the broken link test. Further, you can use -U to choose the agent.
 quick: This will run all the tests marked as essential
 complete: This will run all tests except those marked as long
 full: This will run all tests
@@ -226,10 +231,17 @@ elif args["suite"] == "smoke":
     try:
         from tests.smoke import *
         broken_links = BrokenLinkTest()
-        broken_links.setReportOnly( args["smoke_report"])
+        broken_links.setReportOnly(args["smoke_report"])
+        
+        if args["agent"] in ("g", "G"):
+            broken_links.setAgent("g")
+        else:
+            broken_links.setAgent("t")
+
         broken_links.setDepth(args["link_depth"])
         broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])
+        
         suite = unittest.TestSuite()
         suite.addTest(broken_links)
     except NameError as msg:
@@ -252,6 +264,12 @@ elif args["suite"] == "complete":
         from tests.smoke import *
         broken_links = BrokenLinkTest()
         broken_links.setReportOnly( args["smoke_report"])
+        
+        if args["agent"] in ("g", "G"):
+            broken_links.setAgent("g")
+        else:
+            broken_links.setAgent("t")
+
         broken_links.setDepth(args["link_depth"])
         broken_links.setThreshold(args["threshold"])
         broken_links.setUser(args["user_password"])

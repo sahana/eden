@@ -26,6 +26,7 @@
 """
 
 from time import time
+from types import MethodType
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -35,26 +36,11 @@ import socket
 
 from tests.web2unittest import Web2UnitTest
 from gluon import current
-try:
-    from twill import get_browser
-    from twill import set_output
-    from twill.browser import *
-except ImportError:
-    raise NameError("Twill not installed")
-try:
-    import mechanize
-    #from mechanize import BrowserStateError
-    #from mechanize import ControlNotFoundError
-except ImportError:
-    raise NameError("Mechanize not installed")
 
 class BrokenLinkTest(Web2UnitTest):
     """ Smoke Test, visit every link it can find and report on the outcome """
     def __init__(self):
         Web2UnitTest.__init__(self)
-        self.b = get_browser()
-        self.b_data = StringIO()
-        set_output(self.b_data)
         self.clearRecord()
         # This string must exist in the URL for it to be followed
         # Useful to avoid going to linked sites
@@ -90,6 +76,40 @@ class BrokenLinkTest(Web2UnitTest):
         # dictionary of ReportData objects indexed on the url
         self.results = {}
 
+    def setAgent(self, agentAcronym):
+       # Decide on the agent that will be used to power the smoke test
+        if agentAcronym == "g":
+            self.agent = "Ghost"
+            try:
+                from ghost import Ghost
+                self.ghost = Ghost(wait_timeout = 360)
+            except ImportError:
+                raise NameError("Ghost not installed")
+
+            from using_ghost import login, visit
+
+        else:
+            self.agent = "Twill"
+            try:
+                from twill import get_browser
+                from twill import set_output
+            except ImportError:
+                raise NameError("Twill not installed")
+
+            try:
+                import mechanize
+            except ImportError:
+                raise NameError("Mechanize not installed")
+
+            self.b = get_browser()
+            self.b_data = StringIO()
+            set_output(self.b_data)
+
+            from using_twill import login, visit
+
+        self.visit = MethodType(visit, self)
+        self.login = MethodType(login, self)
+
     def setReportOnly(self, action):
         self.reportOnly = action
 
@@ -103,35 +123,6 @@ class BrokenLinkTest(Web2UnitTest):
         value = float(value)
         self.threshold = value
 #        socket.setdefaulttimeout(value*2)
-
-    def login(self, credentials):
-        if credentials == "UNAUTHENTICATED":
-            url = "%s/default/user/logout" % self.homeURL
-            self.b.go(url)
-            return True
-        try:
-            (self.user, self.password) = credentials.split("/",1)
-        except:
-            msg = "Unable to split %s into a user name and password" % user
-            self.reporter(msg)
-            return False
-        url = "%s/default/user/login" % self.homeURL
-        self.b.go(url)
-        forms = self.b.get_all_forms()
-        for form in forms:
-            try:
-                if form["_formname"] == "login":
-                    self.b._browser.form = form
-                    form["email"] = self.user
-                    form["password"] = self.password
-                    self.b.submit("Login")
-                    # If login is successful then should be redirected to the homepage
-                    return self.b.get_url()[len(self.homeURL):] == "/default/index"
-            except:
-                # This should be a mechanize.ControlNotFoundError, but
-                # for some unknown reason that isn't caught on Windows or Mac
-                pass
-        return False
 
     def addResults2Current(self):
         '''
@@ -155,6 +146,8 @@ class BrokenLinkTest(Web2UnitTest):
             Failure or Success to be shown in the report is checked in addSuccess in TestResult
             class
         """
+        self.reporter("Running the smoke tests using %s" % self.agent)
+
         for user in self.credentials:
             self.clearRecord()
             if self.login(user):
@@ -192,98 +185,6 @@ class BrokenLinkTest(Web2UnitTest):
                 self.linkDepth.append(len(to_visit))
             finish = time()
             self.reporter("Finished took %.3f seconds" % (finish - start))
-
-    def visit(self, url_list, depth):
-        repr_list = [".pdf", ".xls", ".rss", ".kml"]
-        to_visit = []
-        record_data = self.config.verbose > 0
-        for visited_url in url_list:
-            index_url = visited_url[len(self.homeURL):]
-            if record_data:
-                if index_url in self.results.keys():
-                    print >> self.stdout, "Warning duplicated url: %s" % index_url
-                self.results[index_url] = ReportData()
-                current_results = self.results[index_url]
-                current_results.depth = depth
-            # Find out if the page can be visited
-            open_novisit = False
-            for repr in repr_list:
-                if repr in index_url:
-                    open_novisit = True
-                    break
-            try:
-                if open_novisit:
-                    action = "open_novisit"
-                else:
-                    action = "open"
-                visit_start = time()
-                self.b._journey(action, visited_url)
-                http_code = self.b.get_code()
-                duration = time() - visit_start
-                if record_data:
-                    current_results.duration = duration
-                if duration > self.threshold:
-                    if self.config.verbose >= 3:
-                        print >> self.stdout, "%s took %.3f seconds" % (visited_url, duration)
-            except Exception as e:
-                duration = time() - visit_start
-                import traceback
-                print traceback.format_exc()
-                if record_data:
-                    current_results.broken = True
-                    current_results.exception = True
-                    current_results.duration = duration
-                continue
-            http_code = self.b.get_code()
-            if http_code != 200:
-                if record_data:
-                    current_results.broken = True
-                    current_results.http_code = http_code
-            elif open_novisit:
-                continue
-            links = []
-            try:
-                if self.b._browser.viewing_html():
-                    links = self.b._browser.links()
-                else:
-                    continue
-            except Exception as e:
-                import traceback
-                print traceback.format_exc()
-                if record_data:
-                    current_results.broken = True
-                    current_results.exception = True
-                continue
-            for link in (links):
-                url = link.absolute_url
-                if url.find(self.url_ticket) != -1:
-                    # A ticket was raised so...
-                    # capture the details and add to brokenLinks
-                    if record_data:
-                        current_results.broken = True
-                        current_results.ticket = url
-                    break # no need to check any other links on this page
-                if url.find(self.homeURL) == -1:
-                    continue
-                ignore_link = False
-                for ignore in self.include_ignore:
-                    if url.find(ignore) != -1:
-                        ignore_link = True
-                        break
-                if ignore_link:
-                    continue
-                for strip in self.strip_url:
-                    location = url.find(strip)
-                    if location != -1:
-                        url = url[0:location]
-                short_url = url[len(self.homeURL):]
-                if url not in url_list and \
-                   short_url != "" and \
-                   short_url not in self.results.keys() and \
-                   url not in to_visit:
-                    self.urlParentList[short_url] = index_url
-                    to_visit.append(url)
-        return to_visit
 
     def report(self):
         self.reporter("%d URLs visited" % self.totalLinks)
@@ -623,60 +524,3 @@ class BrokenLinkTest(Web2UnitTest):
         image = "<img src=\"data:image/png;base64,%s\">" % base64Img
         self.reporter(image)
 
-class ReportData():
-    """
-    Class to hold the data collected from the smoke test ready for reporting
-    Instances of this class will be held in the dictionary results which will
-    be keyed on the url. This way, in an attempt to minimise the memory used,
-    the url doesn't need to be stored in this class.
-
-    The class will have the following properties
-    broken: boolean
-    exception: boolean
-    http_code: integer
-    ticket: URL of any ticket linked with this url
-    parent: the parent URL of this url
-    depth: how deep is this url
-    duration: how long did it take to get the url
-    """
-    def is_broken(self):
-        if hasattr(self, "broken"):
-            return self.broken
-        return False
-
-    def threw_exception(self):
-        if hasattr(self, "exception"):
-            return self.exception
-        return False
-
-    def return_http_code(self):
-        if hasattr(self, "http_code"):
-            return self.http_code
-        return "-"
-
-    def the_ticket(self, html):
-        """
-            Should only have a ticket if it is broken,
-            but won't always have a ticket to display.
-        """
-        if hasattr(self, "ticket"):
-            if html:
-                return "<a href=%s target=\"_blank\">Ticket</a>" % (self.ticket)
-            else:
-                return "Ticket: %s" % (self.ticket)
-        return "no ticket"
-
-    def get_parent(self):
-        if hasattr(self, "parent"):
-            return self.parent
-        return ""
-
-    def get_depth(self):
-        if hasattr(self, "depth"):
-            return self.depth
-        return 0
-
-    def get_duration(self):
-        if hasattr(self, "duration"):
-            return self.duration
-        return 0
