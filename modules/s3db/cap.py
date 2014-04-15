@@ -330,7 +330,7 @@ class S3CAPModel(S3Model):
                                               ),
                            represent = S3Represent(options = cap_incident_type_opts,
                                                    multiple = True),
-                           widget = S3MultiSelectWidget(filter="auto"),
+                           widget = S3MultiSelectWidget(),
                            ),
                      *s3_meta_fields())
 
@@ -483,7 +483,7 @@ class S3CAPModel(S3Model):
                            represent = S3Represent(options = cap_info_category_opts,
                                                    multiple = True,
                                                    ),
-                           widget = S3MultiSelectWidget(filter = "auto"),
+                           widget = S3MultiSelectWidget(),
                            required=True,
                            ), # 1 or more allowed
                      Field("event",
@@ -495,7 +495,7 @@ class S3CAPModel(S3Model):
                            represent = S3Represent(options = cap_info_responseType_opts,
                                                    multiple = True,
                                                    ),
-                            widget = S3MultiSelectWidget(filter = "auto"),
+                            widget = S3MultiSelectWidget(),
                             ), # 0 or more allowed
                      Field("priority",
                            requires=IS_IN_SET(cap_info_priority_opts),

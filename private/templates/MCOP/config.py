@@ -73,7 +73,7 @@ settings.base.system_name_short = T("Sahana")
 settings.base.theme = "MCOP"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
-#settings.ui.filter_formstyle = "bootstrap"
+settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
@@ -100,6 +100,8 @@ settings.L10n.default_country_code = 1
 settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
 settings.ui.label_postcode = "ZIP Code"
+
+settings.msg.require_international_phone_numbers = False
 # PDF to Letter
 settings.base.paper_size = T("Letter")
 
@@ -145,7 +147,8 @@ def customise_no_rheader_controller(**attr):
     return attr
 
 settings.customise_cms_post_controller = customise_no_rheader_controller
-settings.customise_org_office_controller = customise_no_rheader_controller
+settings.customise_project_task_controller = customise_no_rheader_controller
+settings.customise_org_facility_controller = customise_no_rheader_controller
 settings.customise_org_organisation_controller = customise_no_rheader_controller
 settings.customise_org_resource_controller = customise_no_rheader_controller
 
@@ -219,7 +222,7 @@ current.response.menu = [
      },
     {"name": T("Facilities"),
      "c":"org", 
-     "f":"office",
+     "f":"facility",
      "icon": "building"
      },
     ]
@@ -338,17 +341,17 @@ def customise_org_organisation_resource(r, tablename):
                               height = 383,
                               width = 568,
                               )
-            offices_widget = dict(label = "Facilities",
-                                  label_create = "Create Facility",
-                                  type = "datalist",
-                                  tablename = "org_office",
-                                  context = "organisation",
-                                  icon = "icon-building",
-                                  layer = "Offices",
-                                  # provided by Catalogue Layer
-                                  #marker = "office",
-                                  list_layout = render_offices,
-                                  )
+            facilities_widget = dict(label = "Facilities",
+                                     label_create = "Create Facility",
+                                     type = "datalist",
+                                     tablename = "org_facility",
+                                     context = "organisation",
+                                     icon = "icon-building",
+                                     layer = "Facilities",
+                                     # provided by Catalogue Layer
+                                     #marker = "office",
+                                     list_layout = render_offices,
+                                     )
             resources_widget = dict(label = "Resources",
                                     label_create = "Create Resource",
                                     type = "datalist",
@@ -422,7 +425,7 @@ def customise_org_organisation_resource(r, tablename):
                                                 ),
                            profile_widgets = [contacts_widget,
                                               #map_widget,
-                                              offices_widget,
+                                              facilities_widget,
                                               resources_widget,
                                               projects_widget,
                                               #activities_widget,
@@ -638,52 +641,6 @@ def customise_cms_post_resource(r, tablename):
 settings.customise_cms_post_resource = customise_cms_post_resource
 
 # -----------------------------------------------------------------------------
-def customise_project_task_controller(**attr):
-
-    s3 = current.response.s3
-
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-        s3db = current.s3db
-        if r.method == "profile":
-            # Set list_fields for renderer (project_task_list_layout)
-            s3db.configure("project_task",
-                           list_fields = ["name",
-                                          "description",
-                                          "location_id",
-                                          "date_due",
-                                          "pe_id",
-                                          "task_project.project_id",
-                                          #"organisation_id$logo",
-                                          "pe_id",
-                                          "modified_by",
-                                          ],
-                           )
-        else:
-            list_fields = ["id",
-                           "status",
-                           "priority",
-                           (T("Incident"), "task_project.project_id"),
-                           "name",
-                           (T("Location"), "location_id"),
-                           "date_due",
-                           ]
-            s3db.configure("project_task",
-                           list_fields = list_fields,
-                           )
-        return True
-    s3.prep = custom_prep
-
-    # Remove RHeader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_project_task_controller = customise_project_task_controller
-
-# -----------------------------------------------------------------------------
 def customise_project_task_resource(r, tablename):
     """
         Customise org_resource resource
@@ -698,6 +655,33 @@ def customise_project_task_resource(r, tablename):
 
     s3db = current.s3db
     table = s3db.project_task
+
+    if r.tablename == "project_project" and r.method == "profile":
+        # Set list_fields for renderer (project_task_list_layout)
+        s3db.configure("project_task",
+                       list_fields = ["name",
+                                      "description",
+                                      "location_id",
+                                      "date_due",
+                                      "pe_id",
+                                      "task_project.project_id",
+                                      #"organisation_id$logo",
+                                      "pe_id",
+                                      "modified_by",
+                                      ],
+                       )
+    else:
+        list_fields = ["id",
+                       "status",
+                       "priority",
+                       (T("Incident"), "task_project.project_id"),
+                       "name",
+                       (T("Location"), "location_id"),
+                       "date_due",
+                       ]
+        s3db.configure("project_task",
+                       list_fields = list_fields,
+                       )
 
     # Custom Form
     table.name.label = T("Name")
@@ -904,6 +888,7 @@ def customise_project_project_resource(r, tablename):
             #customise_hrm_human_resource_fields()
             #customise_org_office_fields()
             customise_project_task_resource(r, "project_task")
+            
             s3db.org_customise_org_resource_fields("profile")
             #customise_project_project_fields()
 
@@ -964,9 +949,10 @@ def customise_project_project_resource(r, tablename):
 settings.customise_project_project_resource = customise_project_project_resource
 
 # -----------------------------------------------------------------------------
-def customise_org_office_resource(r, tablename):
+def customise_org_facility_resource(r, tablename):
     """
         Customise org_resource resource
+        - CRUD Strings
         - List Fields
         - Form
         - Report Options
@@ -976,7 +962,19 @@ def customise_org_office_resource(r, tablename):
 
     s3 = current.response.s3
     s3db = current.s3db
-    table = s3db.org_office
+    table = s3db.org_facility
+
+    s3.crud_strings[tablename] = Storage(
+        label_create = T("Create Facility"),
+        title_display = T("Facility Details"),
+        title_list = T("Facilities"),
+        title_update = T("Edit Facility Details"),
+        label_list_button = T("List Facilities"),
+        label_delete_button = T("Delete Facility"),
+        msg_record_created = T("Facility added"),
+        msg_record_modified = T("Facility details updated"),
+        msg_record_deleted = T("Facility deleted"),
+        msg_list_empty = T("No Facilities currently registered"))
 
     location_id_field = table.location_id
     location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
@@ -1013,19 +1011,19 @@ def customise_org_office_resource(r, tablename):
                                               )
                              )
 
-    url_next = URL(c="org", f="office", args="summary")
+    url_next = URL(c="org", f="facility", args="summary")
 
-    s3db.configure("org_office",
+    s3db.configure("org_facility",
                    create_next = url_next,
                    crud_form = crud_form,
                    delete_next = url_next,
                    list_fields = list_fields,
                    report_options = report_options,
-                   list_layout = render_offices,
+                   list_layout = render_facilities,
                    update_next = url_next,
                    )
 
-settings.customise_org_office_resource = customise_org_office_resource
+settings.customise_org_facility_resource = customise_org_facility_resource
 
 # -----------------------------------------------------------------------------
 def customise_pr_person_controller(**attr):
@@ -1107,18 +1105,18 @@ def customise_pr_person_resource(r, tablename):
     htable.organisation_id.widget = None
     site_field = htable.site_id
     represent = S3Represent(lookup="org_site")
-    site_field.label = T("Office")
+    site_field.label = T("Facility")
     site_field.represent = represent
     site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                     represent,
                                     orderby = "org_site.name")
     
     from s3layouts import S3AddResourceLink
-    site_field.comment = S3AddResourceLink(c="org", f="office",
+    site_field.comment = S3AddResourceLink(c="org", f="facility",
                                            vars={"child": "site_id"},
-                                           label=T("Create Office"),
-                                           title=T("Office"),
-                                           tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
+                                           label=T("Create Facility"),
+                                           title=T("Facility"),
+                                           tooltip=T("If you don't see the Facility in the list, you can add a new one by clicking link 'Create Facility'."))
 
     # Best to have no labels when only 1 field in the row
     s3db.pr_contact.value.label = ""
@@ -1171,7 +1169,7 @@ def customise_pr_person_resource(r, tablename):
                    #"middle_name",
                    "last_name",
                    (T("Job Title"), "human_resource.job_title_id"),
-                   (T("Office"), "human_resource.site_id"),
+                   (T("Facility"), "human_resource.site_id"),
                    ]
     
     # Don't include Email/Phone for unauthenticated users
@@ -1317,7 +1315,7 @@ def render_contacts(list_id, item_id, resource, rfields, record):
     location_id = raw["org_site.location_id"]
     location_url = URL(c="gis", f="location",
                        args=[location_id, "profile"])
-    address = raw["gis_location.addr_street"] or T("no office assigned")
+    address = raw["gis_location.addr_street"] or T("no facility assigned")
     email = raw["pr_email_contact.value"] or T("no email address")
     if isinstance(email, list):
         email = email[0]
@@ -1426,9 +1424,9 @@ def render_contacts(list_id, item_id, resource, rfields, record):
 
     return item
 # -----------------------------------------------------------------------------
-def render_offices(list_id, item_id, resource, rfields, record):
+def render_facilities(list_id, item_id, resource, rfields, record):
     """
-        Custom dataList item renderer for Offices on the Profile pages
+        Custom dataList item renderer for Facilities on the Profile pages
 
         @param list_id: the HTML ID of the list
         @param item_id: the HTML ID of the item
@@ -1437,22 +1435,22 @@ def render_offices(list_id, item_id, resource, rfields, record):
         @param record: the record as dict
     """
 
-    record_id = record["org_office.id"]
+    record_id = record["org_facility.id"]
     item_class = "thumbnail"
 
     raw = record._row
-    name = record["org_office.name"]
-    author = record["org_office.modified_by"]
-    date = record["org_office.modified_on"]
-    organisation = record["org_office.organisation_id"]
-    organisation_id = raw["org_office.organisation_id"]
-    location = record["org_office.location_id"]
-    location_id = raw["org_office.location_id"]
+    name = record["org_facility.name"]
+    author = record["org_facility.modified_by"]
+    date = record["org_facility.modified_on"]
+    organisation = record["org_facility.organisation_id"]
+    organisation_id = raw["org_facility.organisation_id"]
+    location = record["org_facility.location_id"]
+    location_id = raw["org_facility.location_id"]
     location_url = URL(c="gis", f="location",
                        args=[location_id, "profile"])
     address = raw["gis_location.addr_street"]
-    phone = raw["org_office.phone1"]
-    office_type = record["org_office.office_type_id"]
+    phone = raw["org_facility.phone1"]
+    facility_type = record["org_facility.facility_type_id"]
     logo = raw["org_organisation.logo"]
 
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
@@ -1469,7 +1467,7 @@ def render_offices(list_id, item_id, resource, rfields, record):
 
     # Edit Bar
     permit = current.auth.s3_has_permission
-    table = current.db.org_office
+    table = current.db.org_facility
     if permit("update", table, record_id=record_id):
         vars = {"refresh": list_id,
                 "record": record_id,
@@ -1478,11 +1476,11 @@ def render_offices(list_id, item_id, resource, rfields, record):
         if f == "organisation" and organisation_id:
             vars["(organisation)"] = organisation_id
         edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="org", f="office",
+                     _href=URL(c="org", f="facility",
                                args=[record_id, "update.popup"],
                                vars=vars),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.org_office.title_update,
+                     _title=current.response.s3.crud_strings.org_facility.title_update,
                      )
     else:
         edit_btn = ""
@@ -1501,19 +1499,19 @@ def render_offices(list_id, item_id, resource, rfields, record):
     avatar = logo
     body = TAG[""](#P(I(_class="icon-flag"),
                    #  " ",
-                   #  SPAN(office_type),
+                   #  SPAN(facility_type),
                    #  " ",
                    #  _class="main_contact_ph",
                    #  ),
                    P(I(_class="icon-phone"),
                      " ",
-                     SPAN(phone),
+                     SPAN(phone or T("no phone number")),
                      " ",
                      ),
                    P(I(_class="icon-home"),
                      " ",
                      address,
-                     _class="main_office-add",
+                     _class="main_facility-add",
                      ))
 
     item = DIV(DIV(SPAN(name, _class="card-title"),

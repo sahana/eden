@@ -117,6 +117,70 @@ def formstyle_default_inline(form, fields, *args, **kwargs):
         return parent
 
 # =============================================================================
+def formstyle_bootstrap(form, fields, *args, **kwargs):
+    """
+        Formstyle for Bootstrap (2.3.2) theme: http://getbootstrap.com/2.3.2/
+    """
+
+    def render_row(id, label, controls, help, hidden=False):
+        # Based on web2py/gluon/sqhtml.py
+        # wrappers
+        _help = SPAN(help, _class="help-block")
+        # embed _help into _controls
+        _controls = DIV(controls, _help, _class="controls")
+        # submit unflag by default
+        _submit = False
+
+        if isinstance(controls, INPUT):
+            controls.add_class("span4")
+            if controls["_type"] == "submit":
+                # flag submit button
+                _submit = True
+                controls["_class"] = "btn btn-primary"
+            if controls["_type"] == "file":
+                controls["_class"] = "input-file"
+
+        # For password fields, which are wrapped in a CAT object.
+        if isinstance(controls, CAT) and isinstance(controls[0], INPUT):
+            controls[0].add_class("span4")
+
+        if isinstance(controls, SELECT):
+            controls.add_class("span4")
+
+        if isinstance(controls, TEXTAREA):
+            controls.add_class("span4")
+
+        if isinstance(label, LABEL):
+            label["_class"] = "control-label"
+
+        _class = "hide " if hidden else ""
+
+        if _submit:
+            # submit button has unwrapped label and controls, different class
+            return DIV(label, controls, _class="%sform-actions" % _class, _id=id) 
+            # unflag submit (possible side effect)
+            _submit = False
+        else:
+            # unwrapped label
+            return DIV(label, _controls, _class="%scontrol-group" % _class, _id=id)
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        if comment:
+            comment = DIV(_class = "tooltip",
+                          _title = "%s|%s" % (label, comment))
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        form.add_class("form-horizontal")
+        parent = FIELDSET()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# =============================================================================
 def formstyle_foundation(form, fields, *args, **kwargs):
     """
         Formstyle for foundation themes (Labels above Inputs)
@@ -124,8 +188,8 @@ def formstyle_foundation(form, fields, *args, **kwargs):
 
     def render_row(row_id, label, widget, comment, hidden=False):
         if isinstance(widget, INPUT):
-            if widget['_type'] == 'submit':
-                widget['_class'] = 'small primary button'
+            if widget["_type"] == "submit":
+                widget["_class"] = "small primary button"
 
         _class = "form-row row hide" if hidden else "form-row row"
         widget_col = DIV(label,
@@ -160,8 +224,8 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
     def render_row(row_id, label, widget, comment, hidden=False):
         
         if isinstance(widget, INPUT):
-            if widget['_type'] == 'submit':
-                widget['_class'] = 'small primary button'
+            if widget["_type"] == "submit":
+                widget["_class"] = "small primary button"
 
         if isinstance(label, LABEL):
             label.add_class("left inline")

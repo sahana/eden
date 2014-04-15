@@ -3154,7 +3154,7 @@ class IS_PHONE_NUMBER(Validator):
                 return (number, None)
 
         if not error_message:
-            error_message = T("Invalid phone number")
+            error_message = T("Enter a valid phone number")
 
         return (value, error_message)
 

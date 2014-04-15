@@ -245,8 +245,7 @@ a i.icon.icon-plus-sign.big-add:hover {
 div.form-container form.form-horizontal,
 form#datalist-filter-form,
 form#datatable-filter-form {
-    padding-top: 7px;
-    padding-left: 9px;
+    padding: 15px 5px 0 9px;
 }
 
 #list-filter {
@@ -301,7 +300,7 @@ form.form-horizontal.project_project {
 
 /* Override Bootstrap */
 .form-horizontal .control-group {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 .form-horizontal .control-label {
     font-weight: bold;
@@ -311,6 +310,12 @@ body.rtl .form-horizontal .control-label {
 }
 .form-container .tooltip {
     margin-top: 4px;
+}
+
+.form-horizontal div.controls .help-block {
+    display: inline-block;
+    margin-left: 10px;
+    margin-top: 0;
 }
 
 .form-container .help-block div {
@@ -638,6 +643,24 @@ label.ui-corner-all span {
     background: none;
     height: 0px;
     width: 0px;
+}
+
+.ui-multiselect-filter input {
+    width: 160px;
+    margin: 0;
+}
+
+.ui-widget-header.ui-corner-all.ui-multiselect-header.ui-helper-clearfix.ui-multiselect-hasfilter {
+    border: none;
+}
+
+.ui-multiselect-menu .ui-multiselect-checkboxes label {
+    margin-left: 0;
+    padding: 0 5px 6px 5px !important;
+}
+
+.ui-multiselect-checkboxes label.ui-state-hover {
+    border: 1px solid #aaaaaa;
 }
 
 /* Responsive styling */

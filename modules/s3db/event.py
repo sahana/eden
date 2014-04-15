@@ -139,7 +139,7 @@ class S3EventModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "event_event"
         define_table(tablename,
-                     Field("name", notnull=True, # Name could be a code
+                     Field("name",  # Name could be a code
                            length=64,    # Mayon compatiblity
                            label=T("Name")),
                      event_type_id(),
@@ -156,6 +156,10 @@ class S3EventModel(S3Model):
                                  comment = DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Zero Hour"),
                                                                  T("The time at which the Event started."))),
+                                 ),
+                     s3_datetime(name="end_date",
+                                 label = T("End Date"),
+                                 widget="date"
                                  ),
                      Field("closed", "boolean",
                            default = False,
@@ -335,12 +339,19 @@ class S3EventModel(S3Model):
 
         if item.tablename != "event_event":
             return
+        table = item.table
 
         data = item.data
-        name = data.get("name", None)
+        query = None
+        for field in ["name", "zero_hour", "event_type_id"]:
+            value = data.get(field, None)
+            if value:
+                q = (table[field] == value)
+                if query:
+                    query = query & q
+                else:
+                    query = q
 
-        table = item.table
-        query = (table.name == name)
         _duplicate = current.db(query).select(table.id,
                                               limitby=(0, 1)).first()
         if _duplicate:

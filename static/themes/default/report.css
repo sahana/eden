@@ -138,5 +138,6 @@
 .legendLabel,
 .tickLabel {
     font-size: 12px;
+    line-height: 12px;
     color: black;
 }

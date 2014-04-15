@@ -4095,8 +4095,6 @@ class S3ProjectTaskModel(S3Model):
                                 ),
                      s3_datetime("date_due",
                                  label = T("Date Due"),
-                                 past=0,
-                                 future=8760,  # Hours, so 1 year
                                  represent="date",
                                  readable = staff,
                                  writable = staff,
@@ -4140,7 +4138,7 @@ class S3ProjectTaskModel(S3Model):
         crud_strings[tablename] = Storage(
             label_create = ADD_TASK,
             title_display = T("Task Details"),
-            title_list = T("Tasks"),
+            title_list = T("All Tasks"),
             title_update = T("Edit Task"),
             title_upload = T("Import Tasks"),
             label_list_button = T("List Tasks"),
@@ -6296,8 +6294,6 @@ def project_task_controller():
             # Show Only Open Tasks
             crud_strings.title_list = T("All Open Tasks")
             s3.filter = (table.status.belongs(statuses))
-        else:
-            crud_strings.title_list = T("All Tasks")
 
         if r.component:
             if r.component_name == "req":

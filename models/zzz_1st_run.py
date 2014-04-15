@@ -161,14 +161,6 @@ if len(pop_list) > 0:
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
 
     # GIS
-    # L0 Countries
-    resource = s3db.resource("gis_location")
-    stylesheet = path_join(request_folder, "static", "formats", "s3csv", "gis", "location.xsl")
-    import_file = path_join(request_folder, "private", "templates", "locations", "countries.csv")
-    File = open(import_file, "r")
-    resource.import_xml(File, format="csv", stylesheet=stylesheet)
-    db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
-    db.commit()
     # Add extra index on search field
     # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
     tablename = "gis_location"
@@ -323,6 +315,9 @@ if len(pop_list) > 0:
     gis.update_location_tree()
     end = datetime.datetime.now()
     print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
+
+    # Countries can managed by the MapAdmin
+    db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
 
     if has_module("stats"):
         # Populate stats_demographic_aggregate (disabled during prepop)

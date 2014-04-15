@@ -55,6 +55,7 @@ from gluon.tools import callback
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
+from s3theme import formstyle_bootstrap
 from s3utils import s3_unicode, s3_validate, s3_represent_value
 from s3widgets import S3EmbedComponentWidget
 
@@ -2160,7 +2161,10 @@ class S3CRUD(S3Method):
             @keyword custom: custom CRUD button (just add classes)
         """
 
-        bootstrap = current.response.s3.crud.formstyle == "bootstrap"
+        formstyle = current.response.s3.crud.formstyle
+        bootstrap = formstyle == "bootstrap"
+        if not bootstrap and callable(formstyle):
+            bootstrap = current.response.s3.crud.formstyle == formstyle_bootstrap
 
         # Custom button?
         if "custom" in attr:

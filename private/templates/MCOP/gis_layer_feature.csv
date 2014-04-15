@@ -1,6 +1,6 @@
 Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
 Alerts,,cms,post,DRMP,,Danger Area,Alert,"body,date","age","~.series_id$name=Alert&~.expired=False",,"[{'prop':'age','cat':'1','label':'<2 days','externalGraphic':'img/markers/DRMP/Alert_Red.png'},{'prop':'age','cat':'2','label':'2-7 days','externalGraphic':'img/markers/DRMP/Alert_Yellow.png'},{'prop':'age','cat':'3','label':'>7 days','externalGraphic':'img/markers/DRMP/Alert_Green.png'}]",,"False",,,
-Facilities,"All Active Facilities",org,office,DRMP,office,Building,Facility,"name,organisation_id",,"~.obsolete=False",,,,"False",,,
+Facilities,"All Active Facilities",org,facility,DRMP,facility,Building,Facility,"name,organisation_id",,"~.obsolete=False",,,,"False",,,
 Incidents,,project,location,DRMP,incident,,Incident,"name,location_id",,,,,,"False",,,
 Tasks,,project,task,DRMP,training,,Task,"name,location_id",,,,,,"False",,,
 Resources,,org,resource,DRMP,resource,,Resource,"location_id,parameter_id,value,comments",,,,,,"False",,,

@@ -5,9 +5,6 @@ background: #66B2FF
 background: #99CCFF
 background: #CCE6FF
 */
-body {
-    padding: 60px 0 10px 0; /* REVIEW Test this with other templates as this should be sufficient to avoid the top nav menu + give side padding */
-}
 
 .navbar-inner {
     background: #026CB6;
@@ -27,10 +24,6 @@ body {
 }
 
 /* Homepage -  Could this be made generic?*/
-.title {
-    /* margin: 25px 0 0 50px; */
-    float: left
-}
 
 .btn-login, .btn-register {
     float: right;
@@ -51,30 +44,58 @@ body {
     /*text-shadow: 2px 2px 1px black;*/
 }
 
-.title h1, .title h2 {
-    background: url('../../img/semi_white_75.png');
-    display: table;
-}
 .title {
-    padding: 0 15px;
+    width: 100%;
 }
+
+.title h1, .title h2 {
+    width: 100%;
+    text-align: center;
+}
+
 
 .title h1 {
     font-size: 50px;
-    padding: 15px 0;
+    padding: 10px 0;
     margin: 0 0 15px 0;
 }
 
 .title h2 {
-    font-size: 25px;
+    font-size: 20px;
     line-height: 30px;
-    padding: 10px 0;
+    padding: 10px 0 0;
     margin: 0;
 }
 
-.intro {
+#ocharocca-carousel {
+    margin: -120px 0 20px;
+    padding-top: 110px;
+}
+
+#ocharocca-carousel .carousel-inner {
+    margin: 0 auto;
+    width: 720px;
+}
+
+#ocharocca-carousel img {
     float: left;
-    padding: 10px 15px;
+    height: 200px;
+}
+
+#ocharocca-carousel .carousel-caption {
+    float: left;
+    position: relative;
+    top: 0;
+    width: 300px;
+    margin: 0 30px 0 0;
+}
+
+#ocharocca-carousel .carousel-caption p {
+    color: black;
+    font: 300 18px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+    padding: 0 0 20px 0;
+    padding-bottom: 10px;
+    text-shadow: none;
 }
 
 h1, h2, h3 {
@@ -131,10 +152,10 @@ h3 {
     display: none;
 }
 /***********************************************/
-h2, #list-btn-add {
+/*h2, #list-btn-add {
     float: left
 }
-
+*/
 #list-btn-add {
     margin: 15px 0 0 15px;
 }
@@ -156,12 +177,24 @@ h2, #list-btn-add {
 .countries {
     height: 85px;
 }
+
+.link:hover {
+    text-decoration: none;
+}
+
+.link h3 {
+    background: #66B2FF;
+    padding: 0 10px;
+    text-align: center;
+    width: 100px;
+}
+
 .menus {
     margin: 0 1.25% 50px 1.25%;
-    padding: 50px 0;
-    height: 50px;
+    padding: 20px 0;
+    height: 140px;
     text-align: center;
-    background: #66B2FF
+    background: #66B2FF;
 }
 
 .country,
@@ -178,26 +211,24 @@ h2, #list-btn-add {
     height: 55px;
 }
 .menu {
-    width: 20%;
+    width: 25%;
 }
 
+
+.menu a{
+    text-decoration: none;
+}
+    
 .flag {
     height: 20px;
 }
 
-.country:hover,
-.menu:hover {
-    heigth: 50px;
-}
-
-.country:hover {
-    height: 70px;
-}
-
+/*
+.link  h3:hover,
 .country:hover,
 .menu h3:hover {
     background: #99CCFF;
-}
+} */
 
 .badge {
     line-height: 25px;
@@ -205,4 +236,15 @@ h2, #list-btn-add {
     padding-left: 10px;
     padding-right: 10px;
     width: auto;
+}
+
+/* Carousel */
+.carousel-control {
+    background-color: rgba(0, 0, 0, 0);
+    border: 0 none;
+    font-size: 120px;
+    height: 80px;
+    margin-top: 0;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    z-index: 10;
 }

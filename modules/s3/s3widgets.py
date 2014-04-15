@@ -114,6 +114,7 @@ from gluon.storage import Storage
 from s3export import S3Exporter
 from s3utils import *
 from s3validators import *
+from s3theme import formstyle_bootstrap
 
 ogetattr = object.__getattribute__
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
@@ -678,25 +679,24 @@ class S3AddPersonWidget2(FormWidget):
 
         # Test the formstyle
         formstyle = s3.crud.formstyle
-        if formstyle == "bootstrap":
-            bootstrap = True
-            tuple_rows = False
-        elif callable(formstyle):
-            bootstrap = False
+        bootstrap = formstyle == "bootstrap"
+        if not bootstrap and callable(formstyle):
+            bootstrap = current.response.s3.crud.formstyle == formstyle_bootstrap
+
+        # Formstyle with just a single row
+        tuple_rows = False
+        if not bootstrap:
             row = formstyle("test", "test", "test", "test")
             if isinstance(row, tuple):
                 tuple_rows = True
-            else:
+            #else:
                 # Formstyle with just a single row
-                tuple_rows = False
+                #tuple_rows = False
                 #if "form-row" in row["_class"]:
                 #    # Foundation formstyle
                 #    foundation = True
                 #else:
                 #    foundation = False
-        else:
-            # Unsupported
-            raise
 
         controller = self.controller or request.controller
         settings = current.deployment_settings
@@ -2919,14 +2919,12 @@ class S3LocationLatLonWidget(FormWidget):
             lon = None
 
         formstyle = current.response.s3.crud.formstyle
-        if formstyle == "bootstrap":
-            bootstrap = True
-        elif callable(formstyle):
-            bootstrap = False
-            comment = ""
-        else:
-            # Unsupported
-            raise
+        bootstrap = formstyle == "bootstrap"
+        if not bootstrap and callable(formstyle):
+            bootstrap = current.response.s3.crud.formstyle == formstyle_bootstrap
+
+        if not bootstrap:
+                comment = ""
 
         rows = TAG[""]()
         selector = str(field).replace(".", "_")
@@ -3976,24 +3974,22 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # Test the formstyle
         formstyle = s3.crud.formstyle
-        if formstyle == "bootstrap":
-            bootstrap = True
-        elif callable(formstyle):
-            bootstrap = False
+        bootstrap = formstyle == "bootstrap"
+        if not bootstrap and callable(formstyle):
+            bootstrap = current.response.s3.crud.formstyle == formstyle_bootstrap
+
+        # Formstyle with just a single row
+        tuple_rows = False
+        if not bootstrap:
             row = formstyle("test", "test", "test", "test")
             if isinstance(row, tuple):
                 tuple_rows = True
-            else:
-                # Formstyle with just a single row
-                tuple_rows = False
+            #else:
                 #if "form-row" in row["_class"]:
                 #    # Foundation formstyle
                 #    foundation = True
                 #else:
                 #    foundation = False
-        else:
-            # Unsupported
-            raise
 
         # Translate options using gis_location_name?
         translate = settings.get_L10n_translate_gis_location()
@@ -4713,8 +4709,9 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
     """
 
     def __init__(self,
-                 filter = True,
+                 filter = "auto",
                  header = True,
+                 multiple = True,
                  selectedList = 3,
                  noneSelectedText = "Select"
                  ):
@@ -4725,7 +4722,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                            can be:
                                 - True (always show filter field)
                                 - False (never show the filter field)
-                                - "auto" (show filter if more than 15 options)
+                                - "auto" (show filter if more than 10 options)
                                 - <number> (show filter if more than <number> options)
             @param header: show a header for the options list, can be:
                                 - True (show the default Select All/Deselect All header)
@@ -4739,6 +4736,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                      
         self.filter = filter
         self.header = header
+        self.multiple = multiple
         self.selectedList = selectedList
         self.noneSelectedText = noneSelectedText
 
@@ -4758,14 +4756,17 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                 attr["_class"] = "%s multiselect-widget" % _class
         else:
             attr["_class"] = "multiselect-widget"
+
         widget = TAG[""](MultipleOptionsWidget.widget(field, value, **attr),
                          requires = field.requires)
 
         # Filter and header for multiselect options list
-        filter_opt = self.filter
-        header_opt = self.header
+        filter_opt = self.filter 
+        # header useless if multiple == False
+        multiple_opt = self.multiple
+        header_opt = self.header and multiple_opt 
         if filter_opt == "auto" or isinstance(filter_opt, (int, long)):
-            max_options = 15 if filter_opt == "auto" else filter_opt
+            max_options = 10 if filter_opt == "auto" else filter_opt
             if len(widget[0]) > max_options:
                 filter_opt = True
             else:
@@ -4787,17 +4788,18 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         noneSelectedText = self.noneSelectedText
         if not isinstance(noneSelectedText, lazyT):
             noneSelectedText = T(noneSelectedText)
-        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
+        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s',multiple:%s, })''' % \
                  (selector,
                   T("All selected"),
                   T("# selected"),
                   header,
                   self.selectedList,
-                  noneSelectedText)
+                  noneSelectedText,
+                  "true" if multiple_opt else "false",)
 
         if filter_opt:
-            script = '''%s.multiselectfilter({label:'%s',placeholder:'%s'})''' % \
-                (script, "%s:" % T("Filter"), T("Enter keywords"))
+            script = '''%s.multiselectfilter({label:'',placeholder:'%s'})''' % \
+                (script, T("Search"))
         current.response.s3.jquery_ready.append(script)
 
         return widget
@@ -5339,6 +5341,17 @@ class S3SelectChosenWidget(OptionsWidget):
         - multi-selects have tag-style selection
         Uses http://harvesthq.github.io/chosen/
     """
+    def __init__(self,
+                 multiple=True):
+        """
+            Constructor
+            @param multiple: multiple options can be selected
+            
+            
+            @ToDo: Complete support for multiple select
+        """
+
+        self.multiple = multiple
 
     def __call__(self, field, value, **attributes):
         s3 = current.response.s3
@@ -5349,7 +5362,7 @@ class S3SelectChosenWidget(OptionsWidget):
         s3.scripts.append("/%s/static/scripts/%s" % (current.request.application,
                                                      script))
         # @ToDo: Can we not determine a # selector? (faster)
-        script = '''$('[name="%s"]').chosen()''' % field.name
+        script = '''$('[name="%s"]').chosen({disable_search_threshold:10})''' % field.name
         s3.jquery_ready.append(script)
         return OptionsWidget.widget(field, value, **attributes)
 

@@ -182,8 +182,7 @@ class S3CampDataModel(S3Model):
                                                                          f="shelter_service",
                                                                          label=ADD_SHELTER_SERVICE),
                                              ondelete = "RESTRICT",
-                                             widget = S3MultiSelectWidget(filter="auto",
-                                                                          header=False,
+                                             widget = S3MultiSelectWidget(header=False,
                                                                           ),
                                              )
 

@@ -2058,13 +2058,7 @@ class S3ContactModel(S3Model):
         if contact_method == "EMAIL":
             requires = IS_EMAIL(error_message = current.T("Enter a valid email"))
         elif contact_method == "SMS":
-            if current.deployment_settings \
-                      .get_msg_require_international_phone_numbers():
-                error_message = current.T("Enter phone number in international format like +46783754957")
-            else:
-                error_message = current.T("Enter a valid phone number")
-            requires = IS_PHONE_NUMBER(international = True,
-                                       error_message = error_message)
+            requires = IS_PHONE_NUMBER(international = True)
         elif contact_method in ("SMS", "HOME_PHONE", "WORK_PHONE"):
             requires = IS_MATCH(multi_phone_number_pattern,
                                 error_message = current.T("Enter a valid phone number"))
