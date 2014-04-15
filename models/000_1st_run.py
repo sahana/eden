@@ -42,7 +42,7 @@ if update_check_needed:
     try:
         import s3 as s3base
     except Exception, e:
-        errors.extend(e.message)
+        errors.append(str(e))
 
     import sys
 
