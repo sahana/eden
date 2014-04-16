@@ -473,6 +473,9 @@ class S3ReportForm(object):
             "filterForm": filter_form,
 
             "autoSubmit": settings.get_ui_report_auto_submit(),
+
+            "thousandSeparator": settings.get_L10n_thousands_separator(),
+            "thousandGrouping": settings.get_L10n_thousands_grouping(),
         }
 
         chart_opt = get_vars["chart"]

@@ -1282,9 +1282,21 @@ ul.x-tree-root-ct {
     float: left;
     min-width: 220px;
 }
+
+.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all:first-of-type,
+.form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all:first-of-type {
+    clear: none;
+}
+
 .ui-multiselect-menu {
     min-width: 220px;
 }
+
+/* Don't display the default widget, only the multiselect generated widget is displayed */
+select.multiselect-filter-widget {
+    display: none;
+}
+
 body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     clear: right;
     float: right;

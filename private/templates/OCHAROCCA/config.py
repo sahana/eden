@@ -11,6 +11,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
 T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
@@ -22,6 +24,9 @@ settings = current.deployment_settings
 
     Deployers should ideally not need to edit any other files outside of their template folder
 """
+
+# Levels for the LocationSelector
+levels = ("L1", "L2", "L3")
 
 # =============================================================================
 # System Settings
@@ -64,6 +69,7 @@ settings.base.system_name_short = T("Humanitarian Data Platform")
 settings.base.theme = "OCHAROCCA"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
+settings.ui.filter_formstyle = "bootstrap"
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
@@ -174,12 +180,12 @@ current.response.menu = [
      "count": 0
      
      },
-    {"name": T("Stakeholders"),
-     "c": "org", 
-     "f": "organisation",
-     "icon": "sitemap",
-     "count": 0
-     },
+#    {"name": T("Stakeholders"),
+#     "c": "org", 
+#     "f": "organisation",
+#     "icon": "sitemap",
+#     "count": 0
+#     },
     {"name": T("Disasters"),
      "c": "event", 
      "f": "event",
@@ -224,7 +230,7 @@ current.response.countries = [
 # Custom Controllers
 
 # =============================================================================
-def customise_gis_location_resource(r, tablename):
+def customise_gis_location_controller(**attr):
     """
         Customise org_organisation resource
         - List Fields
@@ -234,9 +240,12 @@ def customise_gis_location_resource(r, tablename):
         Runs after controller customisation
         But runs before prep
     """
+    
+    from s3.s3widgets import S3MultiSelectWidget
 
     s3db = current.s3db
-    s3db.add_components(tablename,
+
+    s3db.add_components("gis_location",
                         gis_location_name = {"name": "name_ru",
                                              "joinby": "location_id",
                                              "filterby": "language",
@@ -249,19 +258,152 @@ def customise_gis_location_resource(r, tablename):
                                             },
                         )
 
-    s3db.configure(tablename,
-                   list_fields = ["name",
-                                  #(T("Russian Name"), "name.name_l10n?location_name.language=ru"),
-                                  #("PCode", "tag.value?location_tag.tag=PCode"),
-                                  (T("Russian Name"), "name_ru.name_l10n"),
-                                  ("PCode", "pcode.value"),
-                                  "L0", "L1", "L2",
-                                  #"WKT"
-                                  ],
+    s3db.gis_location.parent.widget = S3MultiSelectWidget(multiple=False)
+    
+    s3db.gis_location_name.name_l10n.label = ""
+    s3db.gis_location_tag.value.label = ""
+
+    crud_form = S3SQLCustomForm(
+        "name",
+        #"name_ru.name_l10n",
+        S3SQLInlineComponent(
+            "name_ru",
+            label = T("Russian Name"),
+            multiple = False,
+            fields = ["name_l10n"],
+        ),
+        "level",
+        S3SQLInlineComponent(
+            "pcode",
+            label = T("PCode"),
+            multiple = False,
+            fields = ["value"],
+        ),
+        #"pcode.value",
+        "parent",
+    )
+
+    s3db.gis_location.inherited.label =  T("Mapped?")
+    s3db.gis_location.inherited.reprent =  lambda inherited: "No" if inherited else "Yes"
+
+    filter_widgets = s3db.get_config("gis_location", 
+                                     "filter_widgets")
+
+    # Remove L2 & L3 filters 
+    # (fragile dependent on filters defined in gis/location controller)
+    filter_widgets.pop()
+    filter_widgets.pop()
+
+
+
+    current.s3db.configure("gis_location",
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           list_fields = ["name",
+                                          #(T("Russian Name"), "name.name_l10n?location_name.language=ru"),
+                                          #("PCode", "tag.value?location_tag.tag=PCode"),
+                                          (T("Russian Name"), "name_ru.name_l10n"),
+                                          "level", ("PCode", "pcode.value"),
+                                          "L0", "L1", "L2",
+                                          "inherited",
+                                          ]
+                           )
+    return attr
+
+settings.customise_gis_location_controller = customise_gis_location_controller
+
+# -----------------------------------------------------------------------------
+def customise_event_event_resource(r, tablename):
+    """
+        Customise event_event resource
+        - List Fields
+        - CRUD Strings
+        - Form
+        - Filter
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    s3db = current.s3db
+    table = r.table
+
+    table.zero_hour.label = T("Start Date")
+
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2
+    location_field = s3db.event_event_location.location_id
+    location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+    location_field.widget = S3LocationSelectorWidget2(levels=levels)
+    location_field.label = ""
+
+    s3db.event_event_tag.value.label = ""
+    tag_fields = OrderedDict(killed = "Killed",
+                             total_affected = "Total Affected",
+                             est_damage = "Estimated Damage (US$ Million)",
+                             disaster_number = "Disaster Number")
+
+    tag_crud_form_fields = []
+    tag_list_fields = []
+    for tag, label  in tag_fields.items():
+        s3db.add_components("event_event",
+                            event_event_tag = {"name": tag,
+                                               "joinby": "event_id",
+                                               "filterby": "tag",
+                                               "filterfor": [label],
+                                                },
+                            )
+        tag_crud_form_fields.append(S3SQLInlineComponent(tag,
+                                                         label = T(label),
+                                                         multiple = False,
+                                                         fields = ["value"],
+                                                         )
+                                    )
+        tag_list_fields.append((T(label), "%s.value" % tag))
+      
+    crud_form = S3SQLCustomForm(
+        "name",
+        "event_type_id",
+        "zero_hour",
+        "end_date",
+        #"event_location.location_id",
+        S3SQLInlineComponent("event_location",
+                             label = T("Location"),
+                             multiple = False,
+                             fields = ["location_id"],
+                             ),
+        *tag_crud_form_fields
+    )
+
+    list_fields = ["name",
+                   "event_type_id",
+                   (T("Location"), "location.name"),
+                   "zero_hour",
+                   "end_date",
+                   #(T("Killed"), "killed.value"),
+                  ] + tag_list_fields
+
+    s3db.configure("event_event",
+                   crud_form = crud_form,
+                   list_fields = list_fields,
                    )
 
-settings.customise_gis_location_resource = customise_gis_location_resource
+    if r.interactive:
+        # Labels
+        table.comments.label = T("Description")
 
+        s3.crud_strings["event_event"] = Storage(
+            label_create = T("Record Disaster"),
+            title_display = T("Disaster Details"),
+            title_list = T("Disasters"),
+            title_update = T("Edit Disaster"),
+            label_list_button = T("List Disasters"),
+            label_delete_button = T("Delete Disaster"),
+            msg_record_created = T("Disaster added"),
+            msg_record_modified = T("Disaster updated"),
+            msg_record_deleted = T("Disaster deleted"),
+            msg_list_empty = T("No Disasters currently registered"))
+
+settings.customise_event_event_resource = customise_event_event_resource
 # =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them

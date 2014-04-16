@@ -51,6 +51,7 @@ class S3Config(Storage):
 
     # Used by modules/s3theme.py
     FORMSTYLE = {
+        "bootstrap": formstyle_bootstrap,
         "foundation": formstyle_foundation,
         "foundation_inline": formstyle_foundation_inline,
         "default": formstyle_default,
@@ -1047,7 +1048,7 @@ class S3Config(Storage):
     def get_L10n_thousands_grouping(self):
         return self.L10n.get("thousands_grouping", 3)
     def get_L10n_decimal_separator(self):
-        return self.L10n.get("decimal_separator", ",")
+        return self.L10n.get("decimal_separator", ".")
 
     def get_L10n_translate_cms_series(self):
         """

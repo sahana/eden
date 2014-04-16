@@ -219,7 +219,53 @@ def location():
     set_method("gis", "location",
                method="parents",
                action=s3_gis_location_parents)
-    
+
+    location_hierarchy = gis.get_location_hierarchy() #This line fails if called from model
+    from s3.s3filter import S3TextFilter, S3OptionsFilter#, S3LocationFilter
+    search_fields = ["name",
+                     "comments",
+                     "tag.value",
+                     ]
+    if settings.get_L10n_translate_gis_location():
+        search_fields.append("name.name_l10n")
+
+    filter_widgets = []
+    for level, level_label in location_hierarchy.items():
+        search_fields.append(level)
+        filter_widgets.append(S3OptionsFilter(level,
+                                              label=level_label,
+                                              #widget="multiselect",
+                                              cols=5,
+                                              hidden=True,
+                                              ))
+
+    filter_widgets = [
+        S3TextFilter(search_fields,
+                     label = T("Search"),
+                     comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
+                     #_class = "filter-search",
+                     ),
+        S3OptionsFilter("level",
+                        label=T("Level"),
+                        options=location_hierarchy,
+                        widget="multiselect",
+                        #hidden=True,
+                        ),
+        # @ToDo: Hierarchical filter working on id
+        #S3LocationFilter("id",
+        #                label=T("Location"),
+        #                levels=["L0", "L1", "L2", "L3"],
+        #                widget="multiselect",
+        #                #hidden=True,
+        #                ),
+        ] + filter_widgets
+
+    s3db.configure(tablename,
+                   filter_widgets=filter_widgets,
+                   # Don't include Bulky Location Selector in List Views
+                   listadd = False,
+                   )
+
     if "report" in request.args:
         # @ToDo: Migrate to Field.Method
         class S3LocationVirtualFields:
@@ -254,85 +300,13 @@ def location():
                                 ),
                         )
 
-    s3db.configure(tablename,
-                   # Don't include Bulky Location Selector in List Views
-                   listadd = False,
-                   )
-
     # Pre-processor
     # Allow prep to pass vars back to the controller
     vars = {}
     def prep(r, vars):
 
         if r.interactive and not r.component:
-            location_hierarchy = gis.get_location_hierarchy()
-            from s3.s3filter import S3TextFilter, S3OptionsFilter#, S3LocationFilter
-            search_fields = ["name",
-                             "comments",
-                             "L0",
-                             "L1",
-                             "L2",
-                             "L3",
-                             "L4",
-                             "L5",
-                             "tag.value",
-                             ]
-            if settings.get_L10n_translate_gis_location():
-                search_fields.append("name.name_l10n")
-            filter_widgets = [
-                S3TextFilter(search_fields,
-                             label = T("Search"),
-                             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-                             #_class = "filter-search",
-                             ),
-                S3OptionsFilter("level",
-                                label=T("Level"),
-                                options=location_hierarchy,
-                                widget="multiselect",
-                                #hidden=True,
-                                ),
-                # @ToDo: Hierarchical filter working on id
-                #S3LocationFilter("id",
-                #                label=T("Location"),
-                #                levels=["L0", "L1", "L2", "L3"],
-                #                widget="multiselect",
-                #                #hidden=True,
-                #                ),
-                S3OptionsFilter("L0",
-                                label=COUNTRY,
-                                #widget="multiselect",
-                                cols=5,
-                                hidden=True,
-                                ),
-                ]
-            L1 = location_hierarchy.get("L1", None)
-            if L1:
-                filter_widgets.append(S3OptionsFilter("L1",
-                                                      label=L1,
-                                                      #widget="multiselect",
-                                                      cols=5,
-                                                      hidden=True,
-                                                      ))
-            L2 = location_hierarchy.get("L2", None)
-            if L2:
-                filter_widgets.append(S3OptionsFilter("L2",
-                                                      label=L2,
-                                                      #widget="multiselect",
-                                                      cols=5,
-                                                      hidden=True,
-                                                      ))
-            L3 = location_hierarchy.get("L3", None)
-            if L3:
-                filter_widgets.append(S3OptionsFilter("L3",
-                                                      label=L3,
-                                                      #widget="multiselect",
-                                                      cols=5,
-                                                      hidden=True,
-                                                      ))
 
-            s3db.configure(tablename,
-                           filter_widgets=filter_widgets,
-                           )
 
             # Restrict access to Polygons to just MapAdmins
             if settings.get_security_map() and not s3_has_role(MAP_ADMIN):

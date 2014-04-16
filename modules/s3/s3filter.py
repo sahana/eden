@@ -48,15 +48,16 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-from gluon.sqlhtml import MultipleOptionsWidget
+from gluon.sqlhtml import OptionsWidget, MultipleOptionsWidget
 from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3rest import S3Method
 from s3resource import S3FieldSelector, S3ResourceField, S3URLQuery
+from s3theme import formstyle_bootstrap
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, S3SelectChosenWidget, S3HierarchySelectWidget
+from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, S3HierarchySelectWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -147,8 +148,8 @@ class S3FilterWidget(object):
             @keyword levels: list of location hierarchy levels
                              (L{S3LocationFilter})
             @keyword widget: widget to use (L{S3OptionsFilter}),
-                             "multiselect", "multiselect-bootstrap" or
-                             "groupedopts" (default)
+                             "select", "multiselect" (default), 
+                             "multiselect-bootstrap", or "groupedopts"
             @keyword cols: number of columns of checkboxes (L{S3OptionsFilter}
                            and L{S3LocationFilter} with "groupedopts" widget)
             @keyword filter: show filter for options (L{S3OptionsFilter},
@@ -752,7 +753,7 @@ class S3LocationFilter(S3FilterWidget):
                 attr["_name"] = name
                 # Find relevant values to pre-populate the widget
                 _values = values.get("%s$%s__%s" % (fname, level, operator))
-                w = S3MultiSelectWidget(filter = opts.get("filter", False),
+                w = S3MultiSelectWidget(filter = opts.get("filter", "auto"),
                                         header = opts.get("header", False),
                                         selectedList = opts.get("selectedList", 3),
                                         noneSelectedText = T("Select %(location)s") % \
@@ -1196,23 +1197,7 @@ class S3OptionsFilter(S3FilterWidget):
             if script not in scripts:
                 scripts.append(script)
             w = MultipleOptionsWidget.widget
-        elif widget_type == "multiselect":
-            widget_class = "multiselect-filter-widget"
-            w = S3MultiSelectWidget(
-                    filter = opts.get("filter", False),
-                    header = opts.get("header", False),
-                    selectedList = opts.get("selectedList", 3))
-        elif widget_type == "chosen":
-            widget_class = "chosen-filter-widget"
-            w = S3SelectChosenWidget()
-        # Radio is just GroupedOpts with multiple=False
-        #elif widget_type == "radio":
-        #    widget_class = "radio-filter-widget"
-        #    w = S3RadioOptionsWidget(options = options,
-        #                             cols = opts["cols"],
-        #                             help_field = opts["help_field"],
-        #                             )
-        else:
+        elif widget_type == "groupedopts":
             widget_class = "groupedopts-filter-widget"
             w = S3GroupedOptionsWidget(options = options,
                                        multiple = opts.get("multiple", True),
@@ -1220,6 +1205,15 @@ class S3OptionsFilter(S3FilterWidget):
                                        size = opts["size"] or 12,
                                        help_field = opts["help_field"],
                                        )
+        else:
+            # Default widget_type = "multiselect"
+            widget_class = "multiselect-filter-widget"
+            w = S3MultiSelectWidget(
+                    filter = opts.get("filter", "auto"),
+                    header = opts.get("header", False),
+                    selectedList = opts.get("selectedList", 3),
+                    multiple = opts.get("multiple", True),)
+
 
         # Add widget class and default class
         classes = set(attr.get("_class", "").split()) | \
@@ -1712,6 +1706,10 @@ class S3FilterForm(object):
                 form = FORM(TABLE(TBODY(rows)), **attr)
             else:
                 form = FORM(DIV(rows), **attr)
+                bootstrap = formstyle == "bootstrap"
+                if not bootstrap and callable(formstyle):
+                    if current.response.s3.crud.formstyle == formstyle_bootstrap:
+                        form.add_class("form-horizontal")
             form.add_class("filter-form")
             if ajax:
                 form.add_class("filter-ajax")

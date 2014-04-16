@@ -357,12 +357,14 @@ class S3StatsDemographicModel(S3Model):
                                           # Not translateable
                                           #represent = "%(name)s",
                                           widget = "multiselect",
+                                          multiple = False,
                                           ),
                           S3OptionsFilter("location_id$level",
                                           label = T("Level"),
                                           # Not translateable
                                           #represent = "%(name)s",
                                           widget = "multiselect",
+                                          multiple = False,
                                           ),
                           ]
 
@@ -372,7 +374,7 @@ class S3StatsDemographicModel(S3Model):
            current.response.s3.gis.config.region_location_id:
             levels.remove("L0")
 
-        filter_widgets.insert(0,
+        filter_widgets.append(
             S3LocationFilter("location_id",
                              levels = levels,
                              widget = "multiselect"
