@@ -11,8 +11,6 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-
 T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
@@ -241,10 +239,9 @@ def customise_gis_location_controller(**attr):
         But runs before prep
     """
     
-    from s3.s3widgets import S3MultiSelectWidget
-
     s3db = current.s3db
 
+    # Custom filtered components for custom list_fields
     s3db.add_components("gis_location",
                         gis_location_name = {"name": "name_ru",
                                              "joinby": "location_id",
@@ -258,56 +255,59 @@ def customise_gis_location_controller(**attr):
                                             },
                         )
 
+    from s3.s3widgets import S3MultiSelectWidget
+
     s3db.gis_location.parent.widget = S3MultiSelectWidget(multiple=False)
     
     s3db.gis_location_name.name_l10n.label = ""
     s3db.gis_location_tag.value.label = ""
 
-    crud_form = S3SQLCustomForm(
-        "name",
-        #"name_ru.name_l10n",
-        S3SQLInlineComponent(
-            "name_ru",
-            label = T("Russian Name"),
-            multiple = False,
-            fields = ["name_l10n"],
-        ),
-        "level",
-        S3SQLInlineComponent(
-            "pcode",
-            label = T("PCode"),
-            multiple = False,
-            fields = ["value"],
-        ),
-        #"pcode.value",
-        "parent",
-    )
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 
-    s3db.gis_location.inherited.label =  T("Mapped?")
-    s3db.gis_location.inherited.reprent =  lambda inherited: "No" if inherited else "Yes"
+    crud_form = S3SQLCustomForm("name",
+                                #"name_ru.name_l10n",
+                                S3SQLInlineComponent(
+                                    "name_ru",
+                                    label = T("Russian Name"),
+                                    multiple = False,
+                                    fields = ["name_l10n"],
+                                ),
+                                "level",
+                                S3SQLInlineComponent(
+                                    "pcode",
+                                    label = T("PCode"),
+                                    multiple = False,
+                                    fields = ["value"],
+                                ),
+                                #"pcode.value",
+                                "parent",
+                                )
+
+    field = s3db.gis_location.inherited
+    field.label =  T("Mapped?")
+    field.represent =  lambda inherited: T("No") if inherited else T("Yes")
 
     filter_widgets = s3db.get_config("gis_location", 
                                      "filter_widgets")
 
     # Remove L2 & L3 filters 
-    # (fragile dependent on filters defined in gis/location controller)
+    # NB Fragile: dependent on filters defined in gis/location controller
     filter_widgets.pop()
     filter_widgets.pop()
 
-
-
-    current.s3db.configure("gis_location",
-                           crud_form = crud_form,
-                           filter_widgets = filter_widgets,
-                           list_fields = ["name",
-                                          #(T("Russian Name"), "name.name_l10n?location_name.language=ru"),
-                                          #("PCode", "tag.value?location_tag.tag=PCode"),
-                                          (T("Russian Name"), "name_ru.name_l10n"),
-                                          "level", ("PCode", "pcode.value"),
-                                          "L0", "L1", "L2",
-                                          "inherited",
-                                          ]
-                           )
+    s3db.configure("gis_location",
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   list_fields = ["name",
+                                  # @ToDo: Investigate whether we can support this style & hence not need to define custom components
+                                  #(T("Russian Name"), "name.name_l10n?location_name.language=ru"),
+                                  #("PCode", "tag.value?location_tag.tag=PCode"),
+                                  (T("Russian Name"), "name_ru.name_l10n"),
+                                  "level", ("PCode", "pcode.value"),
+                                  "L0", "L1", "L2",
+                                  "inherited",
+                                  ]
+                   )
     return attr
 
 settings.customise_gis_location_controller = customise_gis_location_controller
@@ -327,6 +327,7 @@ def customise_event_event_resource(r, tablename):
     s3db = current.s3db
     table = r.table
 
+    table.name.label = T("Disaster Number")
     table.zero_hour.label = T("Start Date")
 
     from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -340,7 +341,10 @@ def customise_event_event_resource(r, tablename):
     tag_fields = OrderedDict(killed = "Killed",
                              total_affected = "Total Affected",
                              est_damage = "Estimated Damage (US$ Million)",
-                             disaster_number = "Disaster Number")
+                             #disaster_number = "Disaster Number",
+                             )
+
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 
     tag_crud_form_fields = []
     tag_list_fields = []
@@ -360,19 +364,18 @@ def customise_event_event_resource(r, tablename):
                                     )
         tag_list_fields.append((T(label), "%s.value" % tag))
       
-    crud_form = S3SQLCustomForm(
-        "name",
-        "event_type_id",
-        "zero_hour",
-        "end_date",
-        #"event_location.location_id",
-        S3SQLInlineComponent("event_location",
-                             label = T("Location"),
-                             multiple = False,
-                             fields = ["location_id"],
-                             ),
-        *tag_crud_form_fields
-    )
+    crud_form = S3SQLCustomForm("name",
+                                "event_type_id",
+                                "zero_hour",
+                                "end_date",
+                                #"event_location.location_id",
+                                S3SQLInlineComponent("event_location",
+                                                     label = T("Location"),
+                                                     multiple = False,
+                                                     fields = ["location_id"],
+                                                     ),
+                                *tag_crud_form_fields
+                                )
 
     list_fields = ["name",
                    "event_type_id",
@@ -380,7 +383,7 @@ def customise_event_event_resource(r, tablename):
                    "zero_hour",
                    "end_date",
                    #(T("Killed"), "killed.value"),
-                  ] + tag_list_fields
+                   ] + tag_list_fields
 
     s3db.configure("event_event",
                    crud_form = crud_form,
@@ -404,6 +407,7 @@ def customise_event_event_resource(r, tablename):
             msg_list_empty = T("No Disasters currently registered"))
 
 settings.customise_event_event_resource = customise_event_event_resource
+
 # =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them

@@ -171,7 +171,9 @@
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="zero_hour"><xsl:value-of select="col[@field='Zero Hour']"/></data>
             <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Description']"/></data>
+            <xsl:if test="col[@field='Description']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Description']"/></data>
+            </xsl:if>
             <xsl:choose>
                 <xsl:when test="$Exercise=''">
                     <!-- Use System Default -->

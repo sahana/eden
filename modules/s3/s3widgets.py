@@ -114,7 +114,6 @@ from gluon.storage import Storage
 from s3export import S3Exporter
 from s3utils import *
 from s3validators import *
-from s3theme import formstyle_bootstrap
 
 ogetattr = object.__getattribute__
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
@@ -627,7 +626,6 @@ class S3AddPersonWidget2(FormWidget):
         It relies on JS code in static/S3/s3.add_person.js
         and s3validators.IS_ADD_PERSON_WIDGET2
 
-        @ToDo: get working in a non-Bootstrap formstyle
         @ToDo: get working AC/validator for human_resource_id
                - perhaps re-implement as S3SQLFormElement
     """
@@ -677,26 +675,27 @@ class S3AddPersonWidget2(FormWidget):
 
         s3 = current.response.s3
 
+        #bootstrap = settings.ui.formstyle == "bootstrap"
+        #if bootstrap:
+        #    # We need to make the HTML markup compliant with this CSS framework
+        #    # @ToDo: This should now be possible by calling the formstyle as-normal
+        #    # No need to test this formstyle as we know it up-front
+        #    tuple_rows = False
+        #else:
         # Test the formstyle
         formstyle = s3.crud.formstyle
-        bootstrap = formstyle == "bootstrap"
-        if not bootstrap and callable(formstyle):
-            bootstrap = current.response.s3.crud.formstyle == formstyle_bootstrap
-
-        # Formstyle with just a single row
-        tuple_rows = False
-        if not bootstrap:
-            row = formstyle("test", "test", "test", "test")
-            if isinstance(row, tuple):
-                tuple_rows = True
+        row = formstyle("test", "test", "test", "test")
+        if isinstance(row, tuple):
+            # Formstyle with separate row for label (e.g. default Eden formstyle)
+            tuple_rows = True
+        else:
+            # Formstyle with just a single row
+            tuple_rows = False
+            #if "form-row" in row["_class"]:
+            #    # Foundation formstyle
+            #    foundation = True
             #else:
-                # Formstyle with just a single row
-                #tuple_rows = False
-                #if "form-row" in row["_class"]:
-                #    # Foundation formstyle
-                #    foundation = True
-                #else:
-                #    foundation = False
+            #    foundation = False
 
         controller = self.controller or request.controller
         settings = current.deployment_settings
@@ -827,34 +826,34 @@ class S3AddPersonWidget2(FormWidget):
                      _id="%s_edit_bar" % fieldname,
                      )
         comment = ""
-        if bootstrap:
-            # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-            # -> Elements moved via JS after page load
-            label.add_class("control-label")
-            _controls = DIV(widget, _class="controls")
-            row = DIV(label, _controls,
-                      _class="control-group hide box_top",
-                      _id="%s__row" % id,
-                      )
+        #if bootstrap:
+        #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+        #    # -> Elements moved via JS after page load
+        #    label.add_class("control-label")
+        #    _controls = DIV(widget, _class="controls")
+        #    row = DIV(label, _controls,
+        #              _class="control-group hide box_top",
+        #              _id="%s__row" % id,
+        #              )
+        #    rows.append(row)
+        #else:
+        if tuple_rows:
+            # We want label & widget in 1 row, so position abnormally
+            # We also want to put a margin on top of the box, which isn't possible with a TD
+            row = TR(TD(DIV(label,
+                            widget,
+                            _class="box_top_inner",
+                            ),
+                        _class="box_top_td",
+                        _colspan=2,
+                        ),
+                     _id="%s__row" % id,
+                     )
             rows.append(row)
         else:
-            if tuple_rows:
-                # We want label & widget in 1 row, so position abnormally
-                # We also want to put a margin on top of the box, which isn't possible with a TD
-                row = TR(TD(DIV(label,
-                                widget,
-                                _class="box_top_inner",
-                                ),
-                            _class="box_top_td",
-                            _colspan=2,
-                            ),
-                         _id="%s__row" % id,
-                         )
-                rows.append(row)
-            else:
-                row = formstyle("%s__row" % id, label, widget, comment)
-                row.add_class("box_top hide")
-                rows.append(row)
+            row = formstyle("%s__row" % id, label, widget, comment)
+            row.add_class("box_top hide")
+            rows.append(row)
 
         # Fields
         # (id, label, widget, required)
@@ -912,30 +911,30 @@ class S3AddPersonWidget2(FormWidget):
                 widget["_id"] = id
                 widget["_name"] = fname
                 widget["_value"] = values.get(fname, "")
-            if bootstrap:
-                # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-                # -> Elements moved via JS after page load
-                label.add_class("control-label")
-                if fname == "date_of_birth":
-                    widget = widget[0]
-                    widget.remove_class("string")
-                widget.add_class("input-xlarge")
-                _controls = DIV(widget, _class="controls")
-                row = DIV(label, _controls,
-                          _class="control-group hide box_middle",
-                          _id="%s__row" % id,
-                          )
-                rows.append(row)
+            #if bootstrap:
+            #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+            #    # -> Elements moved via JS after page load
+            #    label.add_class("control-label")
+            #    if fname == "date_of_birth":
+            #        widget = widget[0]
+            #        widget.remove_class("string")
+            #    widget.add_class("input-xlarge")
+            #    _controls = DIV(widget, _class="controls")
+            #    row = DIV(label, _controls,
+            #              _class="control-group hide box_middle",
+            #              _id="%s__row" % id,
+            #              )
+            #    rows.append(row)
+            #else:
+            row = formstyle("%s__row" % id, label, widget, comment)
+            if tuple_rows:
+                row[0].add_class("box_middle")
+                row[1].add_class("box_middle")
+                rows.append(row[0])
+                rows.append(row[1])
             else:
-                row = formstyle("%s__row" % id, label, widget, comment)
-                if tuple_rows:
-                    row[0].add_class("box_middle")
-                    row[1].add_class("box_middle")
-                    rows.append(row[0])
-                    rows.append(row[1])
-                else:
-                    row.add_class("box_middle hide")
-                    rows.append(row)
+                row.add_class("box_middle hide")
+                rows.append(row)
 
         # Divider
         if tuple_rows:
@@ -948,7 +947,9 @@ class S3AddPersonWidget2(FormWidget):
             row = DIV(_id="%s_box_bottom" % fieldname,
                       _class="box_bottom hide",
                       )
-            if bootstrap:
+            #if bootstrap:
+            if settings.ui.formstyle == "bootstrap":
+                # Need to add custom classes to core HTML markup
                 row.add_class("control-group")
         rows.append(row)
 
@@ -2918,35 +2919,21 @@ class S3LocationLatLonWidget(FormWidget):
             lat = None
             lon = None
 
-        formstyle = current.response.s3.crud.formstyle
-        bootstrap = formstyle == "bootstrap"
-        if not bootstrap and callable(formstyle):
-            bootstrap = current.response.s3.crud.formstyle == formstyle_bootstrap
-
-        if not bootstrap:
-                comment = ""
-
         rows = TAG[""]()
+
+        formstyle = current.response.s3.crud.formstyle
+
+        comment = ""
         selector = str(field).replace(".", "_")
         id = "%s_lat" % selector
         label = T("Latitude")
         widget = S3LatLonWidget("lat").widget(field, lat)
-        if bootstrap:
-            label = LABEL("%s:" % label, _class="control-label",
-                                         _for=id)
-            if not empty:
-                label = DIV(label,
-                            SPAN(" *", _class="req"))
-            #widget.add_class("input-xlarge")
-            _controls = DIV(widget, _class="controls")
-            row = DIV(label, _controls, _class="control-group",
-                                        _id="%s__row" % id)
-        else:
-            label = "%s:" % label
-            if not empty:
-                label = DIV(label,
-                            SPAN(" *", _class="req"))
-            row = formstyle(id, label, widget, comment)
+        label = "%s:" % label
+        if not empty:
+            label = DIV(label,
+                        SPAN(" *", _class="req"))
+        
+        row = formstyle(id, label, widget, comment)
         if isinstance(row, tuple):
             for r in row:
                 rows.append(r)
@@ -2956,22 +2943,11 @@ class S3LocationLatLonWidget(FormWidget):
         id = "%s_lon" % selector
         label = T("Longitude")
         widget = S3LatLonWidget("lon", switch=True).widget(field, lon)
-        if bootstrap:
-            label = LABEL("%s:" % label, _class="control-label",
-                                         _for=id)
-            if not empty:
-                label = DIV(label,
-                            SPAN(" *", _class="req"))
-            #widget.add_class("input-xlarge")
-            _controls = DIV(widget, _class="controls")
-            row = DIV(label, _controls, _class="control-group",
-                                        _id="%s__row" % id)
-        else:
-            label = "%s:" % label
-            if not empty:
-                label = DIV(label,
-                            SPAN(" *", _class="req"))
-            row = formstyle(id, label, widget, comment)
+        label = "%s:" % label
+        if not empty:
+            label = DIV(label,
+                        SPAN(" *", _class="req"))
+        row = formstyle(id, label, widget, comment)
         if isinstance(row, tuple):
             for r in row:
                 rows.append(r)
@@ -3972,24 +3948,27 @@ class S3LocationSelectorWidget2(FormWidget):
         lines = self.lines
         polygons = self.polygons or lines
 
+        #bootstrap = settings.ui.formstyle == "bootstrap"
+        #if bootstrap:
+        #    # We need to make the HTML markup compliant with this CSS framework
+        #    # @ToDo: This should now be possible by calling the formstyle as-normal
+        #    # No need to test this formstyle as we know it up-front
+        #    tuple_rows = False
+        #else:
         # Test the formstyle
         formstyle = s3.crud.formstyle
-        bootstrap = formstyle == "bootstrap"
-        if not bootstrap and callable(formstyle):
-            bootstrap = current.response.s3.crud.formstyle == formstyle_bootstrap
-
-        # Formstyle with just a single row
-        tuple_rows = False
-        if not bootstrap:
-            row = formstyle("test", "test", "test", "test")
-            if isinstance(row, tuple):
-                tuple_rows = True
+        row = formstyle("test", "test", "test", "test")
+        if isinstance(row, tuple):
+            # Formstyle with separate row for label (e.g. default Eden formstyle)
+            tuple_rows = True
+        else:
+            # Formstyle with just a single row
+            tuple_rows = False
+            #if "form-row" in row["_class"]:
+            #    # Foundation formstyle
+            #    foundation = True
             #else:
-                #if "form-row" in row["_class"]:
-                #    # Foundation formstyle
-                #    foundation = True
-                #else:
-                #    foundation = False
+            #    foundation = False
 
         # Translate options using gis_location_name?
         translate = settings.get_L10n_translate_gis_location()
@@ -4225,24 +4204,24 @@ class S3LocationSelectorWidget2(FormWidget):
             # @ToDo: Option to Flag this as required
             #widget.add_class("required")
             hidden = not address
-            if bootstrap:
-                # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-                # -> Elements moved via JS after page load
-                label.add_class("control-label")
-                widget.add_class("input-xlarge")
-                _controls = DIV(widget, _class="controls")
-                # Will unhide if dropdowns open accordingly
-                _class = "control-group hide"
-                address_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
-                address_label = ""
+            #if bootstrap:
+            #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+            #    # -> Elements moved via JS after page load
+            #    label.add_class("control-label")
+            #    widget.add_class("input-xlarge")
+            #    _controls = DIV(widget, _class="controls")
+            #    # Will unhide if dropdowns open accordingly
+            #    _class = "control-group hide"
+            #    address_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
+            #    address_label = ""
+            #else:
+            comment = ""
+            address_row = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
+            if tuple_rows:
+                address_label = address_row[0]
+                address_row = address_row[1]
             else:
-                comment = ""
-                address_row = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
-                if tuple_rows:
-                    address_label = address_row[0]
-                    address_row = address_row[1]
-                else:
-                    address_label = ""
+                address_label = ""
         else:
             address_row = ""
             address_label = ""
@@ -4257,24 +4236,24 @@ class S3LocationSelectorWidget2(FormWidget):
                            value=postcode,
                            )
             hidden = not postcode
-            if bootstrap:
-                # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-                # -> Elements moved via JS after page load
-                label.add_class("control-label")
-                widget.add_class("input-xlarge")
-                _controls = DIV(widget, _class="controls")
-                # Will unhide if dropdowns open accordingly
-                _class = "control-group hide"
-                postcode_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
-                postcode_label = ""
+            #if bootstrap:
+            #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+            #    # -> Elements moved via JS after page load
+            #    label.add_class("control-label")
+            #    widget.add_class("input-xlarge")
+            #    _controls = DIV(widget, _class="controls")
+            #    # Will unhide if dropdowns open accordingly
+            #    _class = "control-group hide"
+            #    postcode_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
+            #    postcode_label = ""
+            #else:
+            comment = ""
+            postcode_row = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
+            if tuple_rows:
+                postcode_label = postcode_row[0]
+                postcode_row = postcode_row[1]
             else:
-                comment = ""
-                postcode_row = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
-                if tuple_rows:
-                    postcode_label = postcode_row[0]
-                    postcode_row = postcode_row[1]
-                else:
-                    postcode_label = ""
+                postcode_label = ""
         else:
             postcode_row = ""
             postcode_label = ""
@@ -4347,24 +4326,24 @@ class S3LocationSelectorWidget2(FormWidget):
             throbber = DIV(_id="%s__throbber" % id,
                            _class="throbber hide"
                            )
-            if bootstrap:
-                # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-                # -> Elements moved via JS after page load
-                label.add_class("control-label")
-                widget.add_class("input-xlarge")
-                _controls = DIV(widget, throbber, _class="controls")
-                row = DIV(label, _controls, _class="control-group hide", _id="%s__row" % id)
-                Lx_rows.append(row)
+            #if bootstrap:
+            #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+            #    # -> Elements moved via JS after page load
+            #    label.add_class("control-label")
+            #    widget.add_class("input-xlarge")
+            #    _controls = DIV(widget, throbber, _class="controls")
+            #    row = DIV(label, _controls, _class="control-group hide", _id="%s__row" % id)
+            #    Lx_rows.append(row)
+            #else:
+            rows = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
+            if tuple_rows:
+                Lx_rows.append(rows[0])
+                Lx_rows.append(rows[1])
             else:
-                rows = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
-                if tuple_rows:
-                    Lx_rows.append(rows[0])
-                    Lx_rows.append(rows[1])
-                else:
-                    Lx_rows.append(rows)
-                # Subsequent levels are hidden by default
-                # (client-side JS will open when-needed)
-                hidden = hide_lx
+                Lx_rows.append(rows)
+            # Subsequent levels are hidden by default
+            # (client-side JS will open when-needed)
+            hidden = hide_lx
 
         # Build initial location_dict
         # Read all visible levels
@@ -4627,7 +4606,8 @@ class S3LocationSelectorWidget2(FormWidget):
                 label = T("Draw on Map")
             else:
                 label = T("Find on Map")
-            if bootstrap:
+            if settings.ui.formstyle == "bootstrap":
+                # Need to add custom classes to core HTML markup
                 map_icon = DIV(DIV(BUTTON(I(_class="icon-map"),
                                           label,
                                           _type="button", # defaults to 'submit' otherwise!
@@ -4762,9 +4742,11 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
         # Filter and header for multiselect options list
         filter_opt = self.filter 
-        # header useless if multiple == False
         multiple_opt = self.multiple
-        header_opt = self.header and multiple_opt 
+        header_opt = self.header
+        if not multiple_opt and header_opt is True:
+            # Select All / Unselect All doesn't make sense if multiple == False
+            header_opt = False
         if filter_opt == "auto" or isinstance(filter_opt, (int, long)):
             max_options = 10 if filter_opt == "auto" else filter_opt
             if len(widget[0]) > max_options:

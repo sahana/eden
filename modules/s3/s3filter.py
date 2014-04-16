@@ -54,7 +54,6 @@ from gluon.tools import callback
 
 from s3rest import S3Method
 from s3resource import S3FieldSelector, S3ResourceField, S3URLQuery
-from s3theme import formstyle_bootstrap
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, S3HierarchySelectWidget
@@ -1706,10 +1705,9 @@ class S3FilterForm(object):
                 form = FORM(TABLE(TBODY(rows)), **attr)
             else:
                 form = FORM(DIV(rows), **attr)
-                bootstrap = formstyle == "bootstrap"
-                if not bootstrap and callable(formstyle):
-                    if current.response.s3.crud.formstyle == formstyle_bootstrap:
-                        form.add_class("form-horizontal")
+                if settings.ui.formstyle == "bootstrap":
+                    # We need to amend the HTML markup to support this CSS framework
+                    form.add_class("form-horizontal")
             form.add_class("filter-form")
             if ajax:
                 form.add_class("filter-ajax")

@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3utils import S3CustomController
-
-import json
 
 THEME = "OCHAROCCA"
 

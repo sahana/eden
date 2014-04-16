@@ -4,8 +4,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import S3CustomController
 from s3.s3resource import S3FieldSelector
+from s3.s3utils import S3CustomController
 
 THEME = "MCOP"
 

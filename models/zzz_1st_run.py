@@ -316,7 +316,7 @@ if len(pop_list) > 0:
     end = datetime.datetime.now()
     print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
 
-    # Countries can managed by the MapAdmin
+    # Countries are only editable by MapAdmin
     db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
 
     if has_module("stats"):

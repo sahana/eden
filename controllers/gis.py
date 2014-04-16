@@ -220,7 +220,7 @@ def location():
                method="parents",
                action=s3_gis_location_parents)
 
-    location_hierarchy = gis.get_location_hierarchy() #This line fails if called from model
+    location_hierarchy = gis.get_location_hierarchy()
     from s3.s3filter import S3TextFilter, S3OptionsFilter#, S3LocationFilter
     search_fields = ["name",
                      "comments",

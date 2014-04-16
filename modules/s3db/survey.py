@@ -291,8 +291,8 @@ class S3SurveyTemplateModel(S3Model):
             msg_list_empty = T("No Template Sections"))
 
         configure(tablename,
-                  deduplicate=self.survey_section_duplicate,
-                  orderby = tablename+".posn",
+                  deduplicate = self.survey_section_duplicate,
+                  orderby = tablename + ".posn",
                   )
 
         section_id = S3ReusableField("section_id", "reference %s" % tablename,
@@ -456,7 +456,7 @@ class S3SurveyTemplateModel(S3Model):
         if job.tablename == "survey_template":
             table = job.table
             data = job.data
-            name = "name" in data and data.name
+            name = data.get("name")
             query =  table.name.lower().like('%%%s%%' % name.lower())
             return duplicator(job, query)
 
@@ -982,8 +982,8 @@ class S3SurveyQuestionModel(S3Model):
             )
 
         configure(tablename,
-                  onaccept = self.question_list_onaccept,
                   deduplicate = self.survey_question_list_duplicate,
+                  onaccept = self.question_list_onaccept,
                   )
 
         # Pass names back to global scope (s3.*)
@@ -1058,7 +1058,7 @@ class S3SurveyQuestionModel(S3Model):
         if job.tablename == "survey_question":
             table = job.table
             data = job.data
-            code = "code" in data and data.code
+            code = data.get("code")
             query = (table.code == code)
             return duplicator(job, query)
 
@@ -1073,8 +1073,8 @@ class S3SurveyQuestionModel(S3Model):
         if job.tablename == "survey_question_metadata":
             table = job.table
             data = job.data
-            question = "question_id" in data and data.question_id
-            descriptor  = "descriptor" in data and data.descriptor
+            question = data.get("question_id")
+            descriptor  = data.get("descriptor")
             query = (table.descriptor == descriptor) & \
                     (table.question_id == question)
             return duplicator(job, query)
@@ -1128,9 +1128,9 @@ class S3SurveyQuestionModel(S3Model):
         if job.tablename == "survey_question_list":
             table = job.table
             data = job.data
-            tid = "template_id" in data and data.template_id
-            qid = "question_id" in data and data.question_id
-            sid = "section_id" in data and data.section_id
+            tid = data.get("template_id")
+            qid = data.get("question_id")
+            sid = data.get("section_id")
             query = (table.template_id == tid) & \
                     (table.question_id == qid) & \
                     (table.section_id == sid)
@@ -1465,8 +1465,8 @@ class S3SurveyFormatterModel(S3Model):
         if job.tablename == "survey_formatter":
             table = job.table
             data = job.data
-            tid = "template_id" in data and data.template_id
-            sid = "section_id" in data and data.section_id
+            tid = data.get("template_id")
+            sid = data.get("section_id")
             query = (table.template_id == tid) & \
                     (table.section_id == sid)
             return duplicator(job, query)
@@ -1694,7 +1694,7 @@ class S3SurveySeriesModel(S3Model):
         if job.tablename == "survey_series":
             table = job.table
             data = job.data
-            name = "name" in data and data.name
+            name = data.get("name")
             query =  table.name.lower().like('%%%s%%' % name.lower())
             return duplicator(job, query)
 
@@ -2859,7 +2859,7 @@ class S3SurveyCompleteModel(S3Model):
         if job.tablename == "survey_complete":
             table = job.table
             data = job.data
-            answers = "answer_list" in data and data.answer_list
+            answers = data.get("answer_list")
             query = (table.answer_list == answers)
             try:
                 return duplicator(job, query)
@@ -2900,8 +2900,8 @@ class S3SurveyCompleteModel(S3Model):
         if job.tablename == "survey_answer":
             table = job.table
             data = job.data
-            qid = "question_id" in data and data.question_id
-            rid = "complete_id" in data and data.complete_id
+            qid = data.get("question_id")
+            rid = data.get("complete_id")
             query = (table.question_id == qid) & \
                     (table.complete_id == rid)
             return duplicator(job, query)

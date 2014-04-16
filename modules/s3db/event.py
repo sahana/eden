@@ -128,7 +128,7 @@ class S3EventModel(S3Model):
                                         #                                AUTOCOMPLETE_HELP))
                                         )
         configure(tablename,
-                  deduplicate=self.event_type_duplicate
+                  deduplicate = self.event_type_duplicate,
                   )
 
         # ---------------------------------------------------------------------
@@ -139,9 +139,10 @@ class S3EventModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "event_event"
         define_table(tablename,
-                     Field("name",  # Name could be a code
-                           length=64,    # Mayon compatiblity
-                           label=T("Name")),
+                     Field("name",      # Name could be a code
+                           length=64,   # Mayon compatiblity
+                           label=T("Name"),
+                           ),
                      event_type_id(),
                      Field("exercise", "boolean",
                            represent = lambda opt: "√" if opt else NONE,
@@ -157,14 +158,15 @@ class S3EventModel(S3Model):
                                                _title="%s|%s" % (T("Zero Hour"),
                                                                  T("The time at which the Event started."))),
                                  ),
-                     s3_datetime(name="end_date",
+                     s3_datetime("end_date",
                                  label = T("End Date"),
-                                 widget="date"
+                                 widget = "date",
                                  ),
                      Field("closed", "boolean",
                            default = False,
+                           label = T("Closed"),
                            represent = s3_yes_no_represent,
-                           label=T("Closed")),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -203,12 +205,11 @@ class S3EventModel(S3Model):
                                    )
 
         configure(tablename,
-                  orderby="event_event.zero_hour desc",
-                  list_orderby="event_event.zero_hour desc",
-                  update_onaccept=self.event_update_onaccept,
-                  deduplicate=self.event_duplicate,
                   context = {"location": "event_location.location_id",
                              },
+                  deduplicate = self.event_duplicate,
+                  list_orderby = "event_event.zero_hour desc",
+                  orderby = "event_event.zero_hour desc",
                   list_fields = ["id",
                                  "name",
                                  "event_type_id$name",
@@ -217,7 +218,8 @@ class S3EventModel(S3Model):
                                  "exercise",
                                  "closed",
                                  "comments",
-                                 ]
+                                 ],
+                  update_onaccept = self.event_update_onaccept,
                   )
 
         # Components
@@ -275,7 +277,8 @@ class S3EventModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate=self.event_event_tag_deduplicate)
+                  deduplicate = self.event_event_tag_deduplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -343,14 +346,23 @@ class S3EventModel(S3Model):
 
         data = item.data
         query = None
-        for field in ["name", "zero_hour", "event_type_id"]:
+        # Mandatory checks: Name &/or Start Date
+        for field in ("name", "zero_hour"):
             value = data.get(field, None)
             if value:
                 q = (table[field] == value)
                 if query:
-                    query = query & q
+                    query &= q
                 else:
                     query = q
+
+        if not query:
+            return
+
+        # Optional check: Include Type
+        event_type_id = data.get("event_type_id", None)
+        if event_type_id:
+            query &= (table.event_type_id == event_type_id)
 
         _duplicate = current.db(query).select(table.id,
                                               limitby=(0, 1)).first()
@@ -512,15 +524,16 @@ class S3IncidentModel(S3Model):
 
         self.configure(tablename,
                        create_next = create_next_url,
-                       create_onaccept=self.incident_create_onaccept,
-                       deduplicate=self.incident_duplicate,
+                       create_onaccept = self.incident_create_onaccept,
+                       deduplicate = self.incident_duplicate,
                        list_fields = ["id",
                                       "name",
                                       "incident_type_id",
                                       "exercise",
                                       "closed",
                                       "comments",
-                                      ])
+                                      ],
+                       )
 
         # Components
         add_components(tablename,
@@ -864,7 +877,7 @@ class S3IncidentTypeModel(S3Model):
                                            #                                current.messages.AUTOCOMPLETE_HELP))
                                            )
         self.configure(tablename,
-                       deduplicate=self.incident_type_duplicate
+                       deduplicate = self.incident_type_duplicate,
                        )
 
         # Pass names back to global scope (s3.*)
