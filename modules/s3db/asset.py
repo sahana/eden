@@ -539,7 +539,7 @@ S3OptionsFilter({
                                 instance_types = auth.org_site_types,
                                 updateable = True,
                                 not_filterby = "obsolete",
-                                not_filter_opts = [True],
+                                not_filter_opts = (True,),
                                 #default = user.site_id if is_logged_in() else None,
                                 readable = True,
                                 writable = True,
@@ -909,7 +909,7 @@ def asset_log_prep(r):
         table.site_id.requires = IS_ONE_OF(db, "org_site.site_id",
                                            table.site_id.represent,
                                            filterby = "organisation_id",
-                                           filter_opts = [current_log.organisation_id])
+                                           filter_opts = (current_log.organisation_id,))
 
     crud_strings = current.response.s3.crud_strings.asset_log
     if status == ASSET_LOG_SET_BASE:

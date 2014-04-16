@@ -689,7 +689,7 @@ class S3AddPersonWidget2(FormWidget):
             # Formstyle with separate row for label (e.g. default Eden formstyle)
             tuple_rows = True
         else:
-            # Formstyle with just a single row
+            # Formstyle with just a single row (e.g. Bootstrap or Foundation)
             tuple_rows = False
             #if "form-row" in row["_class"]:
             #    # Foundation formstyle
@@ -976,9 +976,12 @@ i18n.dupes_found="%s"''' % (i18n,
                             )
             s3.js_global.append(i18n)
         if lookup_duplicates:
-            s3.jquery_ready.append('''S3.addPersonWidget('%s',1)''' % fieldname)
+            script = '''S3.addPersonWidget('%s',1)''' % fieldname
         else:
-            s3.jquery_ready.append('''S3.addPersonWidget('%s')''' % fieldname)
+            script = '''S3.addPersonWidget('%s')''' % fieldname
+        jquery_ready = s3.jquery_ready
+        if script not in jquery_ready: # Prevents loading twice when form has errors
+            jquery_ready.append(script)
 
         # Overall layout of components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden
@@ -1227,6 +1230,7 @@ class S3DateWidget(FormWidget):
 
         request = current.request
         s3 = current.response.s3
+        jquery_ready = s3.jquery_ready
         language = current.session.s3.language
         if language in settings.date_formats:
             # Localise if we have configured a Date Format and we have a jQueryUI options file
@@ -1247,7 +1251,7 @@ class S3DateWidget(FormWidget):
                     # 1st Datepicker
                     s3.scripts.append(lscript)
                     script = '''$.datepicker.setDefaults($.datepicker.regional["%s"])''' % language
-                    s3.jquery_ready.append(script)
+                    jquery_ready.append(script)
 
         if self.format:
             # default: "yy-mm-dd"
@@ -1303,8 +1307,9 @@ class S3DateWidget(FormWidget):
                                 past = minDate,
                                 future = maxDate,
                                 )
-         
-        s3.jquery_ready.append(script)
+
+        if script not in jquery_ready: # Prevents loading twice when form has errors
+            jquery_ready.append(script)
 
         return TAG[""](widget, requires = field.requires)
 
@@ -1407,6 +1412,7 @@ class S3DateTimeWidget(FormWidget):
 
         request = current.request
         s3 = current.response.s3
+        jquery_ready = s3.jquery_ready
         language = current.session.s3.language
         if language in settings.date_formats:
             # Localise if we have configured a Date Format and we have a jQueryUI options file
@@ -1427,7 +1433,7 @@ class S3DateTimeWidget(FormWidget):
                     # 1st Datepicker
                     s3.scripts.append(lscript)
                     script = '''$.datepicker.setDefaults($.datepicker.regional["%s"])''' % language
-                    s3.jquery_ready.append(script)
+                    jquery_ready.append(script)
 
         # Option to hide the time slider
         hide_time = opts.get("hide_time", False)
@@ -1570,7 +1576,8 @@ if($('#%(selector)s_clear').length==0){
              onclear=onclear,
              )
 
-        s3.jquery_ready.append(script)
+        if script not in jquery_ready: # Prevents loading twice when form has errors
+            jquery_ready.append(script)
 
         return
 
@@ -2486,7 +2493,7 @@ i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
             append(INPUT(**attr))
             # Set up the canvas
             canvas = TAG["canvas"](_class="imagecrop-canvas",
-                                   _style="display:none;")
+                                   _style="display:none")
             append(canvas)
 
         else:
@@ -2496,7 +2503,7 @@ i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
                  T("Select an image to upload. You can crop this later by opening this record."))))
             # Set up the canvas
             canvas = TAG["canvas"](_class="imagecrop-canvas",
-                                   _style="display:none;")
+                                   _style="display:none")
             image_bounds = self.image_bounds
             if image_bounds:
                 canvas.attributes["_width"] = image_bounds[0]
@@ -3962,7 +3969,7 @@ class S3LocationSelectorWidget2(FormWidget):
             # Formstyle with separate row for label (e.g. default Eden formstyle)
             tuple_rows = True
         else:
-            # Formstyle with just a single row
+            # Formstyle with just a single row (e.g. Bootstrap or Foundation)
             tuple_rows = False
             #if "form-row" in row["_class"]:
             #    # Foundation formstyle
@@ -4770,19 +4777,22 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         noneSelectedText = self.noneSelectedText
         if not isinstance(noneSelectedText, lazyT):
             noneSelectedText = T(noneSelectedText)
-        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s',multiple:%s, })''' % \
+        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s',multiple:%s})''' % \
                  (selector,
                   T("All selected"),
                   T("# selected"),
                   header,
                   self.selectedList,
                   noneSelectedText,
-                  "true" if multiple_opt else "false",)
+                  "true" if multiple_opt else "false",
+                  )
 
         if filter_opt:
             script = '''%s.multiselectfilter({label:'',placeholder:'%s'})''' % \
                 (script, T("Search"))
-        current.response.s3.jquery_ready.append(script)
+        jquery_ready = current.response.s3.jquery_ready
+        if script not in jquery_ready: # Prevents loading twice when form has errors
+            jquery_ready.append(script)
 
         return widget
 

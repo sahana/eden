@@ -953,11 +953,12 @@ def customise_org_organisation_controller(**attr):
                                                              label=s3db.org_site_represent,
                                                              orderby="org_site.name",
                                                              filterby="organisation_id",
-                                                             filter_opts=[r.id],
+                                                             filter_opts=(r.id,),
                                                              instance_types=instance_types,
                                                              realms=realms,
                                                              not_filterby="obsolete",
-                                                             not_filter_opts=[True])
+                                                             not_filter_opts=(True,)
+                                                             )
 
                 # Custom Crud Form
                 form_fields = [
@@ -1014,11 +1015,12 @@ def customise_org_organisation_controller(**attr):
                     #                                             label=s3db.org_site_represent,
                     #                                             orderby="org_site.name",
                     #                                             filterby="organisation_id",
-                    #                                             filter_opts=[r.id],
+                    #                                             filter_opts=(r.id,),
                     #                                             instance_types=instance_types,
                     #                                             realms=realms,
                     #                                             not_filterby="obsolete",
-                    #                                             not_filter_opts=[True])
+                    #                                             not_filter_opts=(True,)
+                    #                                             )
 
                     form_fields.insert(6, S3SQLInlineComponent(
                         "human_resource",
@@ -1519,7 +1521,7 @@ def customise_stats_people_controller(**attr):
                     #                           S3Represent(lookup="gis_location"),
                     #                           sort = True,
                     #                           filterby = "level",
-                    #                           filter_opts = ["L3"]
+                    #                           filter_opts = ("L3",)
                     #                           )
                     # Don't add new Locations here
                     #field.comment = None

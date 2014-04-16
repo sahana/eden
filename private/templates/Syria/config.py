@@ -1592,7 +1592,7 @@ def customise_project_project_controller(**attr):
                                                     S3Represent(lookup="gis_location"),
                                                     sort = True,
                                                     filterby = "level",
-                                                    filter_opts = ["L1"]
+                                                    filter_opts = ("L1",)
                                                     )
                 # Don't add new Locations here
                 location_field.comment = None

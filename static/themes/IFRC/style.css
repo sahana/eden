@@ -327,6 +327,13 @@ div.form-container form fieldset input.errorfield {
     background-color: #dc032e;
 }
 
+/* Required Field indicator */
+.error,
+.req,
+.req_key {
+    color: #dc032e;
+}
+
 /*
 table.dataTable td.actions {
     max-width: 55px;

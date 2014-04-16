@@ -33,7 +33,7 @@
     min-height: 16px;
 }
 .pt-chart-contents {
-    background-color: #FFFDF6;
+    background-color: #fffdf6;
     padding: 8px;
     border: 1px solid #999;
     margin-top: 5px;
@@ -52,7 +52,7 @@
 .pt-hide-chart {
     font-size: 10px;
     cursor: pointer;
-    color: #003399;
+    color: #039;
     text-decoration: underline;
     margin-bottom: 3px;
     min-height: 16px;
@@ -63,7 +63,7 @@
     clear: left;
     font-size: 10px;
     cursor: pointer;
-    color: #003399;
+    color: #039;
     text-decoration: underline;
     margin-bottom: 3px;
 }
@@ -121,7 +121,7 @@
     color: black;
 }
 .chart-contents {
-    background-color: #FFFDF6;
+    background-color: #fffdf6;
     padding: 8px;
     border: 1px solid #999;
     margin-top: 5px;
@@ -130,7 +130,7 @@
 .pivot-table-toggle, .hide-chart {
     font-size: 10px;
     cursor: pointer;
-    color: #003399;
+    color: #039;
     text-decoration: underline;
     margin-bottom: 3px;
 }

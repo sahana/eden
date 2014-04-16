@@ -275,7 +275,7 @@ class S3ClimateModel(S3Model):
                             "climate_sample_table_spec.id",
                             sample_table_spec_represent,
                             filterby = "sample_type_code",
-                            filter_opts = ["O"],
+                            filter_opts = ("O",),
                             sort=True
                         ),
                         notnull = True,

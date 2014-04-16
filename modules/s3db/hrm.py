@@ -382,7 +382,7 @@ class S3HRModel(S3Model):
                                 orderby = "org_site.name",
                                 realms = realms,
                                 not_filterby = "obsolete",
-                                not_filter_opts = [True],
+                                not_filter_opts = (True,),
                                 readable = True,
                                 writable = True,
                                 represent = self.org_site_represent,
@@ -2042,7 +2042,7 @@ class S3HRSkillModel(S3Model):
                                      instance_types = auth.org_site_types,
                                      updateable = True,
                                      not_filterby = "obsolete",
-                                     not_filter_opts = [True],
+                                     not_filter_opts = (True,),
                                      default = auth.user.site_id if auth.is_logged_in() else None,
                                      readable = True,
                                      writable = True,
@@ -5802,7 +5802,7 @@ def hrm_person_controller(**attr):
                                   "org_site.%s" % s3db.super_key(db.org_site),
                                   s3db.org_site_represent,
                                   filterby="organisation_id",
-                                  filter_opts=[session.s3.hrm.org]))
+                                  filter_opts=(session.s3.hrm.org,)))
 
             resource = r.resource
             if mode is not None:

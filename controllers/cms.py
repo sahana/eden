@@ -483,7 +483,7 @@ def newsfeed():
                 #                               "cms_series.id",
                 #                               represent,
                 #                               not_filterby="name",
-                #                               not_filter_opts = ["Alert"], 
+                #                               not_filter_opts = ("Alert",),
                 #                               )
 
             refresh = get_vars.get("refresh", None)

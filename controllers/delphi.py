@@ -1167,7 +1167,7 @@ def comments():
                             IS_ONE_OF(db, "delphi_solution.id",
                                       s3.delphi_solution_represent,
                                       filterby="problem_id",
-                                      filter_opts=[problem_id]
+                                      filter_opts=(problem_id,)
                                       ))
 
     # Form to add a new Comment

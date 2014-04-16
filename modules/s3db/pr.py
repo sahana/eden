@@ -89,7 +89,7 @@ __all__ = ["S3PersonEntity",
            ]
 
 import os
-import re
+#import re
 from urllib import urlencode
 
 try:
@@ -1488,6 +1488,10 @@ class S3PersonModel(S3Model):
         # https://github.com/derek73/python-nameparser
         from nameparser import HumanName
         name = HumanName(name.lower())
+        first_name = name.first
+        middle_name = name.middle
+        last_name = name.last
+        #nick_name = name.nickname
 
         # @ToDo: Fuzzy Search
         # We need to use an Index since we can't read all values in do client-side
@@ -1504,11 +1508,18 @@ class S3PersonModel(S3Model):
         #    * http://forums.mysql.com/read.php?20,282935,282935#msg-282935
 
         # Perform Search
-        query = (S3FieldSelector("first_name").lower().like(name.first + "%"))
-        if name.middle:
-            query &= (S3FieldSelector("middle_name").lower().like(name.middle + "%"))
-        if name.last:
-            query &= (S3FieldSelector("last_name").lower().like(name.last + "%"))
+        # Names could be in the wrong order
+        query = (S3FieldSelector("first_name").lower().like(first_name + "%")) | \
+                (S3FieldSelector("middle_name").lower().like(first_name + "%")) | \
+                (S3FieldSelector("last_name").lower().like(first_name + "%"))
+        if middle_name:
+            query |= (S3FieldSelector("first_name").lower().like(middle_name + "%")) | \
+                     (S3FieldSelector("middle_name").lower().like(middle_name + "%")) | \
+                     (S3FieldSelector("last_name").lower().like(middle_name + "%"))
+        if last_name:
+            query |= (S3FieldSelector("first_name").lower().like(last_name + "%")) | \
+                     (S3FieldSelector("middle_name").lower().like(last_name + "%")) | \
+                     (S3FieldSelector("last_name").lower().like(last_name + "%"))
 
         resource = r.resource
         resource.add_filter(query)
@@ -1631,7 +1642,7 @@ class S3PersonModel(S3Model):
                            )
             name = s3_fullname(name)
             item = {"id"     : row["pr_person.id"],
-                    "name"  : name,
+                    "name"   : name, 
                     }
             date_of_birth = row.get("pr_person.date_of_birth", None)
             if date_of_birth:

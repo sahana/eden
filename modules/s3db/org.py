@@ -198,7 +198,7 @@ class S3OrganisationModel(S3Model):
                                                   represent,
                                                   # Currently limited to just 1 level of parent
                                                   filterby="parent",
-                                                  filter_opts=[None],
+                                                  filter_opts=(None,),
                                                   orderby="org_region.name"))
 
             # CRUD strings
@@ -222,7 +222,7 @@ class S3OrganisationModel(S3Model):
                                       sort=True,
                                       # Only show the Regions, not the Zones
                                       not_filterby="parent",
-                                      not_filter_opts=[None]
+                                      not_filter_opts=(None,)
                                       )),
                 represent=region_represent,
                 label=T("Region"),
@@ -1457,7 +1457,7 @@ class S3OrganisationResourceModel(S3Model):
                                             # realms = auth.permission.permitted_realms(tablename,
                                                                                     # method="create"),
                                             # not_filterby = "obsolete",
-                                            # not_filter_opts = [True],
+                                            # not_filter_opts = (True,),
                                             # readable = True,
                                             # writable = True,
                                             # represent = self.org_site_represent,
@@ -3003,7 +3003,7 @@ class S3FacilityModel(S3Model):
                                 instance_types = current.auth.org_site_types,
                                 orderby = "org_site.name",
                                 not_filterby = "obsolete",
-                                not_filter_opts = [True],
+                                not_filter_opts = (True,),
                                 readable = True,
                                 writable = True,
                                 represent = self.org_site_represent,

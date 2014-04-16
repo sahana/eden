@@ -2156,7 +2156,7 @@ def customise_cms_post_controller(**attr):
                                                "cms_series.id",
                                                represent,
                                                not_filterby="name",
-                                               not_filter_opts = ["Alert"], 
+                                               not_filter_opts = ("Alert",), 
                                                )
             
             refresh = get_vars.get("refresh", None)
@@ -2515,7 +2515,7 @@ def customise_event_event_controller(**attr):
                                                   represent,
                                                   sort = True,
                                                   filterby = "level",
-                                                  filter_opts = ["L1"]
+                                                  filter_opts = ("L1",)
                                                   )
                                         )
             # Don't add new Locations here
@@ -3343,7 +3343,7 @@ def customise_org_resource_controller(**attr):
                                                     S3Represent(lookup="gis_location"),
                                                     sort = True,
                                                     filterby = "level",
-                                                    filter_opts = ["L1"]
+                                                    filter_opts = ("L1",)
                                                     )
                 # Don't add new Locations here
                 location_field.comment = None
@@ -3849,7 +3849,7 @@ def customise_project_project_controller(**attr):
                                                 represent,
                                                 sort = True,
                                                 filterby = "level",
-                                                filter_opts = ["L1"]
+                                                filter_opts = ("L1",)
                                                 )
             # Don't add new Locations here
             location_field.comment = None

@@ -114,7 +114,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     margin-bottom: -600px;
 }
 .map_legend_panel {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     border: solid;
     border-radius: 5px 0 0 5px;
     padding: 1px;
@@ -129,7 +129,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     border: none;
 }
 .map_legend_tab {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     border: solid;
     border-width: 2px;
     margin-top: 5px;
@@ -181,7 +181,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 
 /* Save Panel */
 .map_save_panel {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     position: absolute;
     top: 0;
     right: 0;
@@ -200,7 +200,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     visibility: hidden;
 }
 .map_save_button {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     padding: 5px;
     border: solid;
     border-radius: 5px 5px 5px 5px;

@@ -216,7 +216,7 @@ class S3RequestModel(S3Model):
                                      default = site_default,
                                      empty = False,
                                      filterby = "obsolete",
-                                     filter_opts = [False],
+                                     filter_opts = (False,),
                                      instance_types = auth.org_site_types,
                                      label = T("Requested For Facility"),
                                      readable = True,
@@ -4018,12 +4018,12 @@ function(status){s3_debug(status)})''' % site_id
             # Restrict to Sites belonging to this Org
             # @ToDo: Handle Branches
             filterby = "organisation_id"
-            filter_opts = [organisation_id]
+            filter_opts = (organisation_id,)
             # No need to use Site Autocomplete in this case
             field.widget = None
         else:
             filterby = None
-            filter_opts = []
+            filter_opts = None
 
         field.label = T("Requested for Site")
         #site_represent = s3db.org_SiteRepresent(show_link=False,
@@ -4035,7 +4035,7 @@ function(status){s3_debug(status)})''' % site_id
                                    filterby = filterby,
                                    filter_opts = filter_opts,
                                    not_filterby = "obsolete",
-                                   not_filter_opts = [True],
+                                   not_filter_opts = (True,),
                                    orderby = "org_site.name",
                                    sort = True,
                                    )

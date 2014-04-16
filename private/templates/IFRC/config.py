@@ -57,14 +57,14 @@ def ifrc_realm_entity(table, row):
 
     # Do not apply realms for Master Data
     # @ToDo: Restore Realms and add a role/functionality support for Master Data  
-    if tablename in ["hrm_certificate",
+    if tablename in ("hrm_certificate",
                      "hrm_department",
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme",
                      "member_membership_type",
                      "vol_award",
-                     ]:
+                     ):
         return None
 
     db = current.db
@@ -95,10 +95,10 @@ def ifrc_realm_entity(table, row):
                             )
 
     # Default Foreign Keys (ordered by priority)
-    default_fks = ["catalog_id",
+    default_fks = ("catalog_id",
                    "project_id",
                    "project_location_id"
-                   ]
+                   )
 
     # Link Tables
     realm_entity_link_table = dict(
@@ -119,7 +119,9 @@ def ifrc_realm_entity(table, row):
     # Check if there is a FK to inherit the realm_entity
     realm_entity = 0
     fk = realm_entity_fks.get(tablename, None)
-    for default_fk in [fk] + default_fks:
+    fks = [fk]
+    fks.extend(default_fks)
+    for default_fk in fks:
         if default_fk in table.fields:
             fk = default_fk
             # Inherit realm_entity from parent record
@@ -154,7 +156,8 @@ def ifrc_realm_entity(table, row):
             use_user_organisation = True
 
     # Groups are owned by the user's organisation
-    elif tablename in ["pr_group"]:
+    #elif tablename in ("pr_group",):
+    elif tablename == "pr_group":
         use_user_organisation = True
 
     user = current.auth.user
@@ -169,7 +172,7 @@ settings.auth.realm_entity = ifrc_realm_entity
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["IFRC", "IFRC_Train"]
+settings.base.prepopulate = ("IFRC", "IFRC_Train")
 
 settings.base.system_name = T("Resource Management System")
 settings.base.system_name_short = T("RMS")
@@ -260,16 +263,16 @@ PMI = "Indonesian Red Cross Society (Pelang Merah Indonesia)"
 PRC = "Philippine Red Cross"
 VNRC = "Viet Nam Red Cross"
 settings.org.dependent_fields = \
-    {"pr_person.middle_name"                     : [CVTL, VNRC],
-     "pr_person_details.mother_name"             : [BRCS],
-     "pr_person_details.father_name"             : [ARCS, BRCS],
-     "pr_person_details.affiliations"            : [PRC],
-     "pr_person_details.company"                 : [PRC],
-     "vol_details.availability"                  : [VNRC],
-     "vol_details.card"                          : [ARCS],
-     "vol_volunteer_cluster.vol_cluster_type_id"     : [PRC],
-     "vol_volunteer_cluster.vol_cluster_id"          : [PRC],
-     "vol_volunteer_cluster.vol_cluster_position_id" : [PRC],
+    {"pr_person.middle_name"                     : (CVTL, VNRC),
+     "pr_person_details.mother_name"             : (BRCS, ),
+     "pr_person_details.father_name"             : (ARCS, BRCS),
+     "pr_person_details.affiliations"            : (PRC, ),
+     "pr_person_details.company"                 : (PRC, ),
+     "vol_details.availability"                  : (VNRC, ),
+     "vol_details.card"                          : (ARCS, ),
+     "vol_volunteer_cluster.vol_cluster_type_id"     : (PRC, ),
+     "vol_volunteer_cluster.vol_cluster_id"          : (PRC, ),
+     "vol_volunteer_cluster.vol_cluster_position_id" : (PRC, ),
      }
 
 # -----------------------------------------------------------------------------
@@ -297,7 +300,7 @@ settings.hrm.record_tab = True
 
 # Uncomment to do a search for duplicates in the new AddPersonWidget2
 # - not yet ready
-#settings.pr.lookup_duplicates = True
+settings.pr.lookup_duplicates = True
 
 # RDRT
 settings.deploy.hr_label = "Member"
@@ -312,7 +315,7 @@ settings.hrm.staff_experience = False
 settings.hrm.use_skills = False
 
 # -----------------------------------------------------------------------------
-def ns_only(f, required=True, branches=True, updateable=True):
+def ns_only(f, required = True, branches = True, updateable=True):
     """
         Function to configure an organisation_id field to be restricted to just NS/Branch
     """
@@ -339,7 +342,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
     Admin = s3_has_role("ADMIN")
     if branches:
         not_filterby = None
-        not_filter_opts = []
+        not_filter_opts = None
         if Admin:
             parent = True
         else:
@@ -372,7 +375,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
     requires = IS_ONE_OF(db, "org_organisation.id",
                          represent,
                          filterby = "organisation_type_id",
-                         filter_opts = [type_id],
+                         filter_opts = (type_id,),
                          not_filterby = not_filterby,
                          not_filter_opts=not_filter_opts,
                          updateable = updateable,
@@ -385,8 +388,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
     # Dropdown not Autocomplete
     f.widget = None
     # Comment
-    if Admin or \
-       s3_has_role("ORG_ADMIN"):
+    if Admin or s3_has_role("ORG_ADMIN"):
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
         from s3.s3navigation import S3ScriptItem
@@ -411,9 +413,9 @@ def ns_only(f, required=True, branches=True, updateable=True):
 # -----------------------------------------------------------------------------
 def user_org_default_filter(selector, tablename=None):
     """
-        Default filter for organisation_id, use the user's
-        organisation if logged in and associated with an
-        organisation.
+        Default filter for organisation_id:
+        * Use the user's organisation if logged in and associated with an
+          organisation.
     """
 
     auth = current.auth
@@ -429,8 +431,8 @@ def customise_asset_asset_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.asset_asset.organisation_id,
-            required=True,
-            branches=True,
+            required = True,
+            branches = True,
             )
 
     return attr
@@ -446,9 +448,9 @@ def customise_auth_user_controller(**attr):
     #if "arg" in attr and attr["arg"] == "register":
     # Organisation needs to be an NS/Branch
     ns_only(current.db.auth_user.organisation_id,
-            required=True,
-            branches=True,
-            updateable=False, # Need to see all Orgs in Registration screens
+            required = True,
+            branches = True,
+            updateable = False, # Need to see all Orgs in Registration screens
             )
 
     return attr
@@ -456,22 +458,18 @@ def customise_auth_user_controller(**attr):
 settings.customise_auth_user_controller = customise_auth_user_controller
 
 # -----------------------------------------------------------------------------
-def customise_deploy_alert_controller(**attr):
+def customise_deploy_alert_resource(r, tablename):
 
     current.s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
 
-    return attr
-
-settings.customise_deploy_alert_controller = customise_deploy_alert_controller
+settings.customise_deploy_alert_resource = customise_deploy_alert_resource
 
 # -----------------------------------------------------------------------------
-def customise_deploy_application_controller(**attr):
+def customise_deploy_application_resource(r, tablename):
 
-    current.s3db.deploy_application.human_resource_id.label = T("Member")
+    r.table.human_resource_id.label = T("Member")
 
-    return attr
-
-settings.customise_deploy_application_controller = customise_deploy_application_controller
+settings.customise_deploy_application_resource = customise_deploy_application_resource
 
 # -----------------------------------------------------------------------------
 def _customise_assignment_fields(**attr):
@@ -620,20 +618,20 @@ def customise_deploy_mission_controller(**attr):
                    "location_id",
                    "event_type_id",
                    "status",
-                  ]
-    report_options = Storage(
-        rows=report_axis,
-        cols=report_axis,
-        fact=report_fact,
-        defaults=Storage(rows="location_id",
-                         cols="event_type_id",
-                         fact="sum(hrquantity)",
-                         totals=True
-                        )
-        )
+                   ]
+    report_options = Storage(rows = report_axis,
+                             cols = report_axis,
+                             fact = report_fact,
+                             defaults = Storage(rows = "location_id",
+                                                cols = "event_type_id",
+                                                fact = "sum(hrquantity)",
+                                                totals = True,
+                                                ),
+                             )
 
     s3db.configure("deploy_mission",
-                   report_options=report_options)
+                   report_options = report_options,
+                   )
 
     # CRUD Strings
     s3.crud_strings["deploy_assignment"] = Storage(
@@ -715,8 +713,8 @@ def customise_hrm_certificate_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.hrm_certificate.organisation_id,
-            required=False,
-            branches=False,
+            required = False,
+            branches = False,
             )
 
     return attr
@@ -728,8 +726,8 @@ def customise_hrm_course_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.hrm_course.organisation_id,
-            required=False,
-            branches=False,
+            required = False,
+            branches = False,
             )
 
     return attr
@@ -764,8 +762,8 @@ def customise_hrm_department_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.hrm_department.organisation_id,
-            required=False,
-            branches=False,
+            required = False,
+            branches = False,
             )
 
     return attr
@@ -803,8 +801,8 @@ def customise_hrm_human_resource_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(s3db.hrm_human_resource.organisation_id,
-            required=True,
-            branches=True,
+            required = True,
+            branches = True,
             )
 
     s3 = current.response.s3
@@ -867,8 +865,8 @@ def customise_hrm_job_title_controller(**attr):
     else:
         # Organisation needs to be an NS/Branch
         ns_only(table.organisation_id,
-                required=False,
-                branches=False,
+                required = False,
+                branches = False,
                 )
     
     # Custom prep
@@ -916,8 +914,8 @@ def customise_hrm_programme_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(s3db.hrm_programme.organisation_id,
-            required=False,
-            branches=False,
+            required = False,
+            branches = False,
             )
 
     # Special cases for different NS
@@ -952,7 +950,7 @@ def customise_hrm_programme_hours_controller(**attr):
         settings.hrm.vol_active = vol_active
     elif root_org == VNRC:
         settings.pr.reverse_names = True
-        field = s3db.hrm_programme_hours.job_title_id
+        field = current.s3db.hrm_programme_hours.job_title_id
         field.readable = field.writable = False
         # Remove link to download Template
         attr["csv_template"] = "hide"
@@ -1027,8 +1025,8 @@ def customise_member_membership_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.member_membership.organisation_id,
-            required=True,
-            branches=True,
+            required = True,
+            branches = True,
             )
 
     return attr
@@ -1040,8 +1038,8 @@ def customise_member_membership_type_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.member_membership_type.organisation_id,
-            required=False,
-            branches=False,
+            required = False,
+            branches = False,
             )
 
     return attr
@@ -1053,8 +1051,8 @@ def customise_org_office_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.org_office.organisation_id,
-            required=True,
-            branches=True,
+            required = True,
+            branches = True,
             )
 
     return attr
@@ -1125,7 +1123,9 @@ def customise_org_organisation_controller(**attr):
                     else:
                         r.table.region_id.readable = r.table.region_id.writable = False
 
-                s3db.configure("org_organisation", list_fields=list_fields)
+                s3db.configure("org_organisation",
+                               list_fields = list_fields,
+                               )
 
                 if r.interactive:
                     r.table.country.label = T("Country")
@@ -1175,8 +1175,8 @@ def customise_pr_group_controller(**attr):
     # Organisation needs to be an NS/Branch
     table = s3db.org_organisation_team.organisation_id
     ns_only(table,
-            required=False,
-            branches=True,
+            required = False,
+            branches = True,
             )
 
     s3 = current.response.s3
@@ -1327,8 +1327,8 @@ def customise_pr_person_controller(**attr):
             atable.organisation_id.readable = atable.organisation_id.writable = False
             # Organisation needs to be an NS
             #ns_only(atable.organisation_id,
-            #        required=True,
-            #        branches=False,
+            #        required = True,
+            #        branches = False,
             #        )
             field = atable.supervisor_id
             field.readable = field.writable = False
@@ -1452,8 +1452,8 @@ def customise_survey_series_controller(**attr):
 
     # Organisation needs to be an NS/Branch
     ns_only(current.s3db.survey_series.organisation_id,
-            required=False,
-            branches=True,
+            required = False,
+            branches = True,
             )
 
     return attr
@@ -1519,8 +1519,8 @@ def customise_project_project_controller(**attr):
     # Organisation needs to be an NS (not a branch)
     f = table.organisation_id
     ns_only(f,
-            required=True,
-            branches=False,
+            required = True,
+            branches = False,
             )
     f.label = T("Host National Society")
 
@@ -1638,7 +1638,8 @@ S3OptionsFilter({
     )
 
     s3db.configure(tablename,
-                   crud_form = crud_form)
+                   crud_form = crud_form,
+                   )
 
     return attr
 

@@ -72,7 +72,7 @@ def item():
                                    s3db.supply_item_category_represent,
                                    sort=True,
                                    filterby = "can_be_asset",
-                                   filter_opts = [True]
+                                   filter_opts = (True,)
                                    )
                     
         field.comment = S3AddResourceLink(f="item_category",

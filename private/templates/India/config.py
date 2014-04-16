@@ -2449,7 +2449,7 @@ def customise_event_event_controller(**attr):
                                                   represent,
                                                   sort = True,
                                                   filterby = "level",
-                                                  filter_opts = ["L1"]
+                                                  filter_opts = ("L1",)
                                                   )
                                         )
             # Don't add new Locations here
@@ -3280,7 +3280,7 @@ def customise_org_resource_controller(**attr):
                                                     S3Represent(lookup="gis_location"),
                                                     sort = True,
                                                     filterby = "level",
-                                                    filter_opts = ["L2"]
+                                                    filter_opts = ("L2",)
                                                     )
                 # Don't add new Locations here
                 location_field.comment = None
@@ -3778,7 +3778,7 @@ def customise_project_project_controller(**attr):
                                                     S3Represent(lookup="gis_location"),
                                                     sort = True,
                                                     filterby = "level",
-                                                    filter_opts = ["L1"]
+                                                    filter_opts = ("L1",)
                                                     )
                 # Don't add new Locations here
                 location_field.comment = None

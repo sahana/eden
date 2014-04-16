@@ -19,13 +19,13 @@
         var real_input = $(selector);
         var real_row = $(selector + '__row');
 
+        var title_row = $(selector + '_title__row');
         var error_row = real_input.next('.error_wrapper');
 
         var div_style = real_row.hasClass('control-group') // Bootstrap
                         || real_row.hasClass('form-row'); // Foundation
         if (div_style) {
             // Move the user-visible rows underneath the real (hidden) one
-            var title_row = $(selector + '_title__row');
             var org_row = $(selector + '_organisation_id__row');
             var name_row = $(selector + '_full_name__row');
             var date_of_birth_row = $(selector + '_date_of_birth__row');
@@ -45,8 +45,8 @@
                     .after(date_of_birth_row)
                     .after(name_row)
                     .after(org_row)
-                    .after(title_row)
-                    .after(error_row);
+                    .after(error_row)
+                    .after(title_row);
 
             title_row.removeClass('hide').show();
             org_row.removeClass('hide').show();
@@ -59,10 +59,11 @@
             email_row.removeClass('hide').show();
             box_bottom.removeClass('hide').show();
         } else {
-            // Hide the main row & move out the Error
+            // Hide the main row & move out the Error underneath the top of the widget
             $(selector + '__row1').hide();
             real_row.hide()
-                    .after(error_row);
+                    .after(error_row)
+                    .after(title_row);
         }
 
         var value = real_input.val();
@@ -96,7 +97,7 @@
 
         if (lookup_duplicates) {
             // Add place to store results
-            var results = '<div id="' + fieldname + '_duplicates"></div>';
+            var results = '<div id="' + fieldname + '_duplicates" class="req"></div>';
             if (div_style) {
                 // Bootstrap / Foundation
                 $(selector + '_box_bottom').before(results);
@@ -104,8 +105,9 @@
                 // Default formstyle
                 $(selector + '_box_bottom1').before(results);
             }
-            $(selector + '_duplicates').data('results', [])
-                                       .click(function() {
+            var dupes_count = $(selector + '_duplicates');
+            dupes_count.data('results', [])
+                       .click(function() {
                 // Open up the full list of results
                 display_duplicates(fieldname);
             });
@@ -147,12 +149,15 @@
             // The form is being submitted
 
             // Do we have any duplicates found which we should force the user to review?
-            if (lookup_duplicates && $(selector + '_duplicates').data('results').length) {
-                $(selector + '_duplicates').data('submit', true);
-                // Open up the list of results
-                display_duplicates(fieldname);
-                // Prevent form submission
-                return false;
+            if (lookup_duplicates) {
+                if (dupes_count.data('results').length) {
+                    // Mark that we're coming from a form submission
+                    dupes_count.data('submit', true);
+                    // Open up the list of results
+                    display_duplicates(fieldname);
+                    // Prevent form submission
+                    return false;
+                }
             }
 
             // Do the normal form-submission tasks
@@ -599,6 +604,12 @@
     var display_duplicates = function(fieldname) {
 
         var selector = '#' + fieldname;
+
+        if ($(selector + '_results').length) {
+            // Already showing
+            return;
+        }
+
         var dupes_count = $(selector + '_duplicates');
         var items = dupes_count.data('results');
         var card,
@@ -609,7 +620,7 @@
         for (var i=0; i < len_items; i++) {
             item = items[i];
             name = item.name;
-            card = '<div class="card" data-id=' + item.id + ' data-name="' + name + '">';
+            card = '<div class="dl-item" data-id=' + item.id + ' data-name="' + name + '">';
             card += '<a class="fleft"><img width=50 height=50 src="';
             if (item.image) {
                 S3.Ap.concat('/default/download/' + item.image)
@@ -619,46 +630,54 @@
             }
             card += '" class="media-object"></a><div>';
             if (item.org) {
-                card += item.org;
+                card += '<div class="card_1_line">' + item.org + '</div>';
             }
-            card += name;
+            card += '<div class="card_1_line">' + name + '</div>';
             if (item.dob) {
-                card += item.dob;
+                card += '<div class="card_1_line">' + item.dob + '</div>';
             }
             if (item.email) {
-                card += item.email;
+                card += '<div class="card_1_line">' + item.email + '</div>';
             }
             if (item.phone) {
-                card += item.phone;
+                card += '<div class="card_1_line">' + item.phone + '</div>';
             }
-            card += '<div class="fright"><i class="icon icon-ok"> </i>' + i18n.Yes + '</div></div></div>';
+            // Buttons default to type=submit if not set explicitly
+            card += '<button type="button" class="fright"><i class="icon icon-ok"> </i> ' + i18n.Yes + '</button></div></div>';
             options += card;
         }
-        options += '<div class="fright"><i class="icon icon-remove"> </i>' + i18n.No + '</div></div>';
+        // Buttons default to type=submit if not set explicitly
+        options += '<div class="dl-item"><button type="button" class="fright"><i class="icon icon-remove"> </i> ' + i18n.No + '</button></div></div>';
         dupes_count.after(options);
-        $(selector + '_results .card').click(function() {
-            // Select this person
+
+        // Scroll to this section
+        $('html,body').animate({scrollTop: dupes_count.offset().top}, 250);
+
+        // Add Event Handler to handle clicks
+        $(selector + '_results .dl-item').click(function() {
             $this = $(this);
             name = $this.attr('data-name');
-            $(selector + '_full_name').val(name);
-            var person_id = $this.attr('data-id');
-            // Remove results
-            clear_duplicates(fieldname);
-            if (dupes_count.data('submit')) {
-                // Set to this value
-                $(selector).val(person_id);
-                // Complete form submission
-                dupes_count.closest('form').submit();
+            if (name) {
+                // Yes: Select this person
+                $(selector + '_full_name').val(name);
+                var person_id = $this.attr('data-id');
+                // Remove results
+                clear_duplicates(fieldname);
+                if (dupes_count.data('submit')) {
+                    // Set to this value
+                    $(selector).val(person_id);
+                    // Complete form submission
+                    dupes_count.closest('form').submit();
+                } else {
+                    select_person(fieldname, person_id);
+                }
             } else {
-                select_person(fieldname, person_id);
-            }
-        });
-        $(selector + '_results .icon-remove').click(function() {
-            // Remove results
-            clear_duplicates(fieldname);
-            if (dupes_count.data('submit')) {
-                // Complete form submission
-                dupes_count.closest('form').submit();
+                // No: Remove results
+                clear_duplicates(fieldname);
+                if (dupes_count.data('submit')) {
+                    // Complete form submission
+                    dupes_count.closest('form').submit();
+                }
             }
         });
     };

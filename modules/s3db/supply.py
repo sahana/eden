@@ -663,7 +663,7 @@ S3OptionsFilter({
                                          # @ToDo: Enforce "Required" for imports
                                          # @ToDo: Populate based on item_id in controller instead of IS_ONE_OF_EMPTY_SELECT
                                          # filterby = "item_id",
-                                         # filter_opts = [....],
+                                         # filter_opts = (....),
                                          ),
                     represent = item_pack_represent,
                     label = T("Pack"),
@@ -2265,7 +2265,7 @@ def supply_item_controller():
                                                    s3db.supply_item_pack_represent,
                                                    sort=True,
                                                    filterby = "item_id",
-                                                   filter_opts = [r.record.id],
+                                                   filter_opts = (r.record.id,),
                                                    )
                 s3db.inv_inv_item.item_pack_id.requires = inv_item_pack_requires
             elif r.component_name == "req_item":
