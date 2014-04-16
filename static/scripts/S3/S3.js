@@ -736,9 +736,28 @@ var S3OptionsFilter = function(settings) {
         var targetWidget = settings.targetWidget || targetSelector;
         var widget = $('[name = "' + targetWidget + '"]');
         widget.hide();
+
+        // Do we have a groupedopts or multiselect widget?
+        var is_groupedopts = false, is_multiselect = false;
+        if (widget.hasClass('groupedopts-widget')) {
+            is_groupedopts = true;
+            widget.groupedopts('hide');
+        } else
+        if (widget.hasClass('multiselect-widget')) {
+            is_multiselect = true;
+        }
+
+        // Store selected values before Ajax-refresh
+        var widget_value = null;
+        if (widget.prop('tagName').toLowerCase() == 'select') {
+            widget_value = widget.val();
+        }
+
+        // Show throbber while loading
         if ($('#' + lookupResource + '_throbber').length === 0 ) {
             widget.after('<div id="' + lookupResource + '_throbber" class="throbber"/>');
         }
+
 
         if (!settings.getWidgetHTML) {
             // URL returns the widget options as JSON
@@ -855,8 +874,30 @@ var S3OptionsFilter = function(settings) {
                         // Replace the target field with the HTML returned
                         widget.html(data)
                               .change()
-                              .prop('disabled', false)
-                              .show();
+                              .prop('disabled', false);
+
+                        if (is_groupedopts || is_multiselect) {
+                            // groupedopts or multiselect => refresh widget
+                            if (widget_value) {
+                                // Restore selected values if the options are still
+                                // available
+                                var new_value = [];
+                                for (var i=0, len=widget_value.length, val; i<len; i++) {
+                                    val = widget_value[i];
+                                    if (widget.find('option[value=' + val + ']').length) {
+                                        new_value.push(val);
+                                    }
+                                }
+                                widget.val(new_value).change();
+                            }
+                            if (is_groupedopts) {
+                                widget.groupedopts('refresh');
+                            } else {
+                                widget.multiselect('refresh');
+                            }
+                        } else {
+                            widget.show();
+                        }
                     } else {
                         // Disable the target field
                         widget.prop('disabled', true);
@@ -868,7 +909,7 @@ var S3OptionsFilter = function(settings) {
                         S3ClearNavigateAwayConfirm();
                         first = false;
                     }
-                    // Restore event handlers
+                    // Restore event handlers (@todo: deprecate)
                     if (S3.inline_checkbox_events) {
                         S3.inline_checkbox_events();
                     }

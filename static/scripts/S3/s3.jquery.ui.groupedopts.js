@@ -17,7 +17,8 @@
 
         // default options
         options: {
-            columns: 3
+            columns: 3,
+            emptyText: "No options available"
         },
 
         _create: function() {
@@ -55,6 +56,13 @@
             this.selected = el.val();
 
             var groups = el.find('optgroup');
+            if (!el.find('option').length) {
+                this.grouped = true;
+                this.menu = $('<div class="s3-groupedopts-widget">' +
+                              '<span class="no-options-available">' +
+                              this.options.emptyText +
+                              '</span></div>');
+            } else
             if (groups.length) {
                 this.grouped = true;
                 this.menu = $('<div class="s3-groupedopts-widget"/>');
@@ -69,6 +77,16 @@
             }
             el.after(this.menu);
             this._bindEvents();
+        },
+
+        hide: function() {
+            // Hide the menu
+            this.menu.hide();
+        },
+
+        show: function() {
+            // Hide the menu
+            this.menu.show();
         },
 
         _renderGroup: function(optgroup) {

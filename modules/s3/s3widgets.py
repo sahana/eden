@@ -1913,18 +1913,11 @@ class S3GroupedOptionsWidget(FormWidget):
             attr["_name"] = fieldname
 
         options = self._options(field, value)
-        if "empty" in options:
-            widget = DIV(SPAN(options["empty"],
-                              _class="no-options-available"),
-                         INPUT(_type="hidden",
-                               _name=fieldname,
-                               _value=None),
-                         **attr)
-        else:
+        if self.multiple:
+            attr["_multiple"] = "multiple"
+        widget = SELECT(**attr)
+        if "empty" not in options:
             groups = options["groups"]
-            if self.multiple:
-                attr["_multiple"] = "multiple"
-            widget = SELECT(**attr)
             append = widget.append
             render_group = self._render_group
             for group in groups:
@@ -1932,8 +1925,15 @@ class S3GroupedOptionsWidget(FormWidget):
                 for option in options:
                     append(option)
 
-            script = '''$('#%s').groupedopts({columns:%s})''' % (_id, self.cols)
-            current.response.s3.jquery_ready.append(script)
+        widget.add_class("groupedopts-widget")
+
+        empty_text = current.T("No options available")
+
+        script = '''$('#%s').groupedopts({columns:%s,emptyText:"%s"})''' % \
+                 (_id, self.cols, empty_text)
+        jquery_ready = current.response.s3.jquery_ready
+        if script not in jquery_ready:
+            jquery_ready.append(script)
 
         return widget
 

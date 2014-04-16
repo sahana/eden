@@ -2678,6 +2678,316 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return TR(widget, _id=id)
 
 # =============================================================================
+class S3SQLInlineLink(S3SQLInlineComponent):
+    """
+        Subform to edit link table entries for the master record
+    """
+
+    prefix = "link"
+
+    # -------------------------------------------------------------------------
+    def extract(self, resource, record_id):
+        """
+            Get all existing links for record_id.
+
+            @param resource: the resource the record belongs to
+            @param record_id: the record ID
+            
+            @return: list of component record IDs this record is
+                     linked to via the link table
+        """
+
+        self.resource = resource
+        component, link = self.get_link()
+
+        values = []
+        if record_id:
+            rkey = component.rkey
+            rows = link.select([rkey], as_rows=True)
+            if rows:
+                rkey = str(link.table[rkey])
+                values = [row[rkey] for row in rows]
+        return values
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget renderer, currently supports groupedopts (default) and
+            multiselect widgets (hierarchy planned).
+
+            @param field: the input field
+            @param value: the value to populate the widget
+            @param attributes: attributes for the widget
+            
+            @return: the widget
+
+            @todo: support multiple=False
+        """
+
+        resource = self.resource
+        component, link = self.get_link()
+
+        # Get the selectable entries for the widget and construct
+        # a validator from it
+        opts = self.get_options()
+        requires = IS_IN_SET(opts,
+                             multiple=True,
+                             zero=None)
+
+        # Use the validator in a field dummy
+        dummy_field = Storage(name = field.name,
+                              type = link.table[component.rkey].type,
+                              requires = requires)
+
+        # Helper to extract widget options
+        options = self.options
+        widget_opts = lambda keys: dict((k, v)
+                                        for k, v in options.items()
+                                        if k in keys)
+
+        # Instantiate the widget
+        widget = options.get("widget")
+        if widget == "multiselect":
+            from s3widgets import S3MultiSelectWidget
+            w_opts = widget_opts(("filter",
+                                  "header",
+                                  "selectedList",
+                                  "noneSelectedText"))
+            w = S3MultiSelectWidget(**w_opts)
+        else:
+            from s3widgets import S3GroupedOptionsWidget
+            w_opts = widget_opts(("cols",
+                                  "size",
+                                  "help_field"))
+            w = S3GroupedOptionsWidget(**w_opts)
+
+        # Render the widget
+        attr = dict(attributes)
+        attr["_id"] = field.name
+        widget = w(dummy_field, value, **attr)
+
+        # Append the attached script to jquery_ready
+        script = options.get("script")
+        if script:
+            current.response.s3.jquery_ready.append(script)
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    def accept(self, form, master_id=None, format=None):
+        """
+            Post-processes this subform element against the POST data,
+            and create/update/delete any related records.
+
+            @param form: the master form
+            @param master_id: the ID of the master record in the form
+            @param format: the data format extension (for audit)
+
+            @todo: implement audit
+        """
+
+        # Name of the real input field
+        fname = self._formname(separator="_")
+        resource = self.resource
+
+        success = True
+
+        if fname in form.vars:
+
+            # Retrieve the data
+            values = form.vars[fname]
+            if values is None:
+                values = []
+            elif not isinstance(values, (list, tuple, set)):
+                values = [values]
+            values = set(str(v) for v in values)
+
+            # Get the link table
+            component, link = self.get_link()
+
+            # Select current ids
+            linktable = link.table
+            rkey = linktable[component.rkey]
+            rows = link.select([component.rkey], as_rows=True)
+            if rows:
+                current_ids = set(str(row[rkey]) for row in rows)
+                delete = current_ids - values
+                insert = values - current_ids
+            else:
+                delete = None
+                insert = values
+
+            # Delete links which are no longer used
+            # @todo: apply filterby to only delete within the subset?
+            if delete:
+                query = S3FieldSelector(component.rkey).belongs(delete)
+                lresource = current.s3db.resource(link.tablename, filter = query)
+                lresource.delete()
+
+            # New records to insert?
+            insert.discard("")
+            if insert:
+                pkey = component.pkey
+                if pkey == resource._id.name:
+                    master = {pkey: master_id}
+                else:
+                    # Different pkey (e.g. super-key) => read the master record
+                    query = (resource._id == master_id)
+                    master = current.db(query).select(resource.table[pkey],
+                                                      limitby=(0, 1)).first()
+                if master:
+                    # Insert new links
+                    for record_id in insert:
+                        record = {component.fkey: record_id}
+                        link.update_link(master, record)
+                else:
+                    # Master not present? (should never get here)
+                    success = False
+        else:
+            # No data
+            success = False
+
+        return success
+
+    # -------------------------------------------------------------------------
+    def represent(self, value):
+        """
+            Read-only representation of this subform.
+
+            @param value: the value as returned from extract()
+            @return: the read-only representation
+        """
+
+        component, link = self.get_link()
+
+        # Use the represent of rkey if it supports bulk, otherwise
+        # instantiate an S3Represent from scratch:
+        rkey = link.table[component.rkey]
+        represent = rkey.represent
+        if not hasattr(represent, "bulk"):
+            # Pick the first field from the list that is available:
+            lookup_field = None
+            for fname in ("name", "tag"):
+                if fname in component.fields:
+                    lookup_field = fname
+                    break
+            represent = S3Represent(lookup = component.tablename,
+                                    field = lookup_field)
+
+        # Represent all values
+        if isinstance(value, (list, tuple, set)):
+            result = represent.bulk(list(value))
+            if None not in value:
+                result.pop(None, None)
+        else:
+            result = represent.bulk([value])
+
+        # Sort them
+        labels = result.values()
+        labels.sort()
+
+        # Render as TAG to support HTML output
+        return TAG[""](list(chain.from_iterable([[l, ", "]
+                                                 for l in labels]))[:-1])
+
+    # -------------------------------------------------------------------------
+    def get_options(self):
+        """
+            Get the options for the widget
+
+            @return: dict {value: representation} of options
+        """
+
+        resource = self.resource
+        component, link = self.get_link()
+
+        rkey = link.table[component.rkey]
+
+        # Lookup rkey options from rkey validator
+        opts = []
+        requires = rkey.requires
+        if not isinstance(requires, (list, tuple)):
+            requires = [requires]
+        if requires:
+            validator = requires[0]
+            if isinstance(validator, IS_EMPTY_OR):
+                validator = validator.other
+            try:
+                opts = validator.options()
+            except:
+                pass
+
+        # Filter these options?
+        widget_opts = self.options
+        filterby = widget_opts.get("filterby")
+        filteropts = widget_opts.get("options")
+        filterexpr = widget_opts.get("match")
+
+        if filterby and \
+           (filteropts is not None or filterexpr and resource._rows):
+
+            # filterby is a field selector for the component
+            # that shall match certain conditions
+            filter_selector = S3FieldSelector(filterby)
+
+            if filteropts is not None:
+                # filterby-field shall match one of the given filteropts
+                if isinstance(filteropts, (list, tuple, set)):
+                    filter_query = (filter_selector.belongs(list(filteropts)))
+                else:
+                    filter_query = (filter_selector == filteropts)
+
+            elif filterexpr:
+                # filterby-field shall match one of the values for the
+                # filterexpr-field of the master record
+                rfield = resource.resolve_selector(filterexpr)
+                colname = rfield.colname
+
+                rows = resource.select([filterexpr], as_rows=True)
+                values = set(row[colname] for row in rows)
+                values.discard(None)
+
+                if values:
+                    filter_query = (filter_selector.belongs(values)) | \
+                                   (filter_selector == None)
+
+            # Select the filtered component rows
+            filter_resource = current.s3db.resource(component.tablename,
+                                                    filter = filter_query)
+            rows = filter_resource.select(["id"], as_rows=True)
+
+            filtered_opts = []
+            values = set(str(row[component.table._id]) for row in rows)
+            for opt in opts:
+                if str(opt[0]) in values:
+                    filtered_opts.append(opt)
+            opts = filtered_opts
+
+        return dict(opts)
+
+    # -------------------------------------------------------------------------
+    def get_link(self):
+        """
+            Find the target component and its linktable
+
+            @return: tuple of S3Resource instances (component, link)
+        """
+
+        resource = self.resource
+
+        selector = self.selector
+        if selector in resource.components:
+            component = resource.components[selector]
+        else:
+            raise SyntaxError("Undefined component: %s" % selector)
+        if not component.link:
+            # @todo: better error message
+            raise SyntaxError("No linktable for %s" % selector)
+        link = component.link
+
+        return (component, link)
+
+# =============================================================================
 class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
     """
         Form element for an inline-component-form
