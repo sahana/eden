@@ -738,12 +738,12 @@ var S3OptionsFilter = function(settings) {
         widget.hide();
 
         // Do we have a groupedopts or multiselect widget?
-        var is_groupedopts = false, is_multiselect = false;
+        var is_groupedopts = false,
+            is_multiselect = false;
         if (widget.hasClass('groupedopts-widget')) {
             is_groupedopts = true;
             widget.groupedopts('hide');
-        } else
-        if (widget.hasClass('multiselect-widget')) {
+        } else if (widget.hasClass('multiselect-widget')) {
             is_multiselect = true;
         }
 

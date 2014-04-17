@@ -1503,7 +1503,7 @@ class S3PersonModel(S3Model):
         # * Whoosh: https://pypi.python.org/pypi/Whoosh/
         # * Postgres (1st is faster on large DBs):
         #    * http://www.postgresql.org/docs/9.3/static/pgtrgm.html
-        #    * http://www.postgresql.org/docs/9.1/static/fuzzystrmatch.html
+        #    * http://www.postgresql.org/docs/9.3/static/fuzzystrmatch.html
         # * MySQL:
         #    * http://forums.mysql.com/read.php?20,282935,282935#msg-282935
 

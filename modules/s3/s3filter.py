@@ -958,6 +958,7 @@ class S3LocationFilter(S3FilterWidget):
                             _row.id = location_id
                     if "id" in _row:
                         path = current.gis.update_location_tree(_row)
+                        path = path.split("/")
                 if path:
                     ids |= set(path)
             # Build lookup table for name_l10n

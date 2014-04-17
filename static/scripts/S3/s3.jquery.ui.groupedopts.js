@@ -18,7 +18,7 @@
         // default options
         options: {
             columns: 3,
-            emptyText: "No options available"
+            emptyText: 'No options available'
         },
 
         _create: function() {

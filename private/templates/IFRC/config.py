@@ -299,7 +299,6 @@ settings.hrm.cv_tab = True
 settings.hrm.record_tab = True
 
 # Uncomment to do a search for duplicates in the new AddPersonWidget2
-# - not yet ready
 settings.pr.lookup_duplicates = True
 
 # RDRT
