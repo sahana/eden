@@ -2727,38 +2727,47 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         resource = self.resource
         component, link = self.get_link()
 
-        # Get the selectable entries for the widget and construct
-        # a validator from it
-        opts = self.get_options()
-        requires = IS_IN_SET(opts,
-                             multiple=True,
-                             zero=None)
-
-        # Use the validator in a field dummy
+        # Field dummy
         dummy_field = Storage(name = field.name,
-                              type = link.table[component.rkey].type,
-                              requires = requires)
+                              type = link.table[component.rkey].type)
+
+        # Widget type
+        options = self.options
+        widget = options.get("widget")
+        if widget != "hierarchy":
+            # Get the selectable entries for the widget and construct
+            # a validator from it
+            opts = self.get_options()
+            dummy_field.requires = IS_IN_SET(opts,
+                                             multiple=True,
+                                             zero=None)
 
         # Helper to extract widget options
-        options = self.options
         widget_opts = lambda keys: dict((k, v)
                                         for k, v in options.items()
                                         if k in keys)
 
         # Instantiate the widget
-        widget = options.get("widget")
         if widget == "multiselect":
             from s3widgets import S3MultiSelectWidget
             w_opts = widget_opts(("filter",
                                   "header",
                                   "selectedList",
-                                  "noneSelectedText"))
+                                  "noneSelectedText",
+                                  ))
             w = S3MultiSelectWidget(**w_opts)
+        elif widget == "hierarchy":
+            from s3widgets import S3HierarchySelectWidget
+            w_opts = widget_opts(("represent",
+                                  ))
+            w_opts["lookup"] = component.tablename
+            w = S3HierarchySelectWidget(**w_opts)
         else:
             from s3widgets import S3GroupedOptionsWidget
             w_opts = widget_opts(("cols",
                                   "size",
-                                  "help_field"))
+                                  "help_field",
+                                  ))
             w = S3GroupedOptionsWidget(**w_opts)
 
         # Render the widget
