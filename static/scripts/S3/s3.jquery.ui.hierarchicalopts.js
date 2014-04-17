@@ -21,13 +21,14 @@
         // Default options
         options: {
             selected: null,
-            hint: 'Select'
+            noneSelectedText: 'Select',
+            selectedText: 'selected'
         },
 
         _create: function() {
             // Create the widget
             var el = $(this.element),
-                hint = this.options.hint;
+                hint = this.options.noneSelectedText;
 
             this.id = hierarchicaloptsID;
             hierarchicaloptsID += 1;
@@ -40,7 +41,8 @@
             this.input = el.find('.s3-hierarchy-input').first();
 
             // The button
-            this.button = $('<button type="button" class="s3-hierarchy-button ui-multiselect ui-widget ui-state-default ui-corner-all"><span class="ui-icon ui-icon-triangle-1-s"></span><span>' + hint + '</span></button>');
+            this.button = $('<button type="button" class="s3-hierarchy-button ui-multiselect ui-widget ui-state-default ui-corner-all"><span class="ui-icon ui-icon-triangle-1-s"></span></button>');
+            this.buttonText = $('<span>' + hint + '</span>').appendTo(this.button);
 
             // The tree
             this.tree = el.find('.s3-hierarchy-tree').first().hide().before(this.button);
@@ -73,6 +75,7 @@
                 for (var i=0, len=s.length; i<len; i++) {
                     selected.push(treeID + '-' + s[i]);
                 }
+                this._updateButtonText(selected);
             }
 
             $.jstree._themes = S3.Ap.concat('/static/styles/jstree/');
@@ -119,14 +122,15 @@
                 old_selected = [];
             }
 
-            var nodes = this.tree.jstree('get_checked', null, true)
+            var tree = this.tree;
+            var nodes = tree.jstree('get_checked', null, true);
                 
             $(nodes).each(function() {
                 var id = $(this).attr('id');
-                if (id) {
-                    id = parseInt(id.split('-').pop());
-                    if (id) {
-                        new_selected.push(id);
+                if (id && tree.jstree('is_leaf', this)) {
+                    var record_id = parseInt(id.split('-').pop());
+                    if (record_id) {
+                        new_selected.push(record_id);
                     }
                 }
             });
@@ -142,10 +146,26 @@
             }
 
             this.input.val(JSON.stringify(new_selected));
+            this._updateButtonText(new_selected);
             if (changed) {
                 $(this.element).trigger('select.s3hierarchy');
             }
             return true;
+        },
+
+        _updateButtonText: function(selected) {
+            // Update the button text with the number of selected items
+
+            var buttonText = this.buttonText,
+                options = this.options;
+                
+            var numSelected = selected ? selected.length : 0;
+            if (numSelected) {
+                text = options.selectedText.replace('#', numSelected);
+            } else {
+                text = options.noneSelectedText;
+            }
+            buttonText.text(text);
         },
 
         set: function(values) {
