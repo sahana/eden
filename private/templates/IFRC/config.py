@@ -772,8 +772,7 @@ settings.customise_hrm_department_controller = customise_hrm_department_controll
 # -----------------------------------------------------------------------------
 def customise_hrm_human_resource_controller(**attr):
 
-    s3db = current.s3db
-
+    # Default Filter
     from s3 import s3_set_default_filter
     s3_set_default_filter("~.organisation_id",
                           user_org_default_filter,
@@ -797,6 +796,8 @@ def customise_hrm_human_resource_controller(**attr):
             settings.pr.reverse_names = True
             # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
             settings.org.regions = False
+
+    s3db = current.s3db
 
     # Organisation needs to be an NS/Branch
     ns_only(s3db.hrm_human_resource.organisation_id,
@@ -940,6 +941,12 @@ settings.customise_hrm_programme_controller = customise_hrm_programme_controller
 # -----------------------------------------------------------------------------
 def customise_hrm_programme_hours_controller(**attr):
 
+    # Default Filter
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.person_id$human_resource.organisation_id",
+                          user_org_default_filter,
+                          tablename = "hrm_programme_hours")
+
     # Special cases for different NS
     root_org = current.auth.root_org_name()
     if root_org == ARCS:
@@ -960,6 +967,12 @@ settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hour
 
 # -----------------------------------------------------------------------------
 def customise_hrm_training_controller(**attr):
+
+    # Default Filter
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.person_id$human_resource.organisation_id",
+                          user_org_default_filter,
+                          tablename = "hrm_training")
 
     # Special cases for different NS
     root_org = current.auth.root_org_name()
