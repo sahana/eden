@@ -70,6 +70,14 @@
         </StreamItem>
     </xsl:template>
 
+    <xsl:template match="resource[@name='project_task' and @deleted='True']">
+        <StreamItem>
+            <Id>0</Id>
+            <OriginationId><xsl:value-of select="@uuid"/></OriginationId>
+            <Action>delete</Action>
+        </StreamItem>
+    </xsl:template>
+    
     <!-- ****************************************************************** -->
     <!-- TimeStamps -->
 
