@@ -166,17 +166,18 @@ class S3EventModel(S3Model):
         tablename = "event_event"
         define_table(tablename,
                      Field("name",      # Name could be a code
-                           length=64,   # Mayon compatibility
-                           label=T("Name"),
+                           length = 64,   # Mayon compatibility
+                           label = T("Name"),
                            ),
                      event_type_id(),
                      Field("exercise", "boolean",
+                           label = T("Exercise?"),
                            represent = lambda opt: "√" if opt else NONE,
                            #comment = DIV(_class="tooltip",
                            #              _title="%s|%s" % (T("Exercise"),
                                                            # Should!
                            #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
-                           label=T("Exercise?")),
+                           ),
                      s3_datetime(name="start_date",
                                  default = "now",
                                  label = T("Start Date"),
@@ -261,7 +262,7 @@ class S3EventModel(S3Model):
                                                "joinby": "event_id",
                                                },
                             req_req = "event_id",
-                            stats_impact = {"link": "event_impact",
+                            stats_impact = {"link": "event_event_impact",
                                             "joinby": "event_id",
                                             "key": "impact_id",
                                             #"actuate": "hide",

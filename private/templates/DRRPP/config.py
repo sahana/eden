@@ -211,13 +211,13 @@ def customise_project_project_controller(**attr):
                                       {"name": "file",
                                        "joinby": "doc_id",
                                        "filterby": "url",
-                                       "filterfor": ["", None],
+                                       "filterfor": ("", None),
                                       },
                                       # Links
                                       {"name": "url",
                                        "joinby": "doc_id",
                                        "filterby": "file",
-                                       "filterfor": ["", None],
+                                       "filterfor": ("", None),
                                       },
                                      ),
                        )

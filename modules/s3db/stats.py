@@ -1270,7 +1270,7 @@ class S3StatsImpactModel(S3Model):
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
                            required = True,
                            ),
-                     self.gis_location_id(),
+                     #self.gis_location_id(),
                      s3_comments(),
                      *s3_meta_fields())
 

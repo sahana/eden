@@ -2913,7 +2913,7 @@ def customise_org_organisation_controller(**attr):
                                     org_office={"name": "nat_office",
                                                 "joinby": "organisation_id",
                                                 "filterby": "office_type_id",
-                                                "filterfor": [national],
+                                                "filterfor": (national,),
                                                },
                                    )
                 list_fields.append("nat_office.location_id$addr_street")

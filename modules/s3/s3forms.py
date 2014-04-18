@@ -2212,26 +2212,29 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             return
                     else:
                         master = Storage({pkey: master_id})
-                        
-                    # Add master record ID if linked directly
+
                     if not actuate_link or not link:
+                        # Add master record ID as linked directly
                         values[component.fkey] = master[pkey]
                     else:
                         # Check whether the component is a link table and we're linking to that via something like pr_person from hrm_human_resource
                         fkey = component.fkey
-                        if fkey in component.fields and fkey not in values:
+                        if fkey != "id" and fkey in component.fields and fkey not in values:
                             values[fkey] = master[pkey]
-                        
+
                     # Apply defaults
                     for f, v in defaults.iteritems():
                         if f not in item:
                             values[f] = v
-                            
+
                     # Create the new record
-                    record_id = component.table.insert(**values)
-                    
+                    # use _table in case we are using an alias
+                    record_id = component._table.insert(**values)
+
                     # Post-process create
                     if record_id:
+                        # Ensure we're using the real table, not an alias
+                        table = db[tablename]
                         # Audit
                         audit("create", prefix, name,
                               record=record_id, representation=format)

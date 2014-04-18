@@ -253,12 +253,12 @@ def customise_gis_location_controller(**attr):
                         gis_location_name = {"name": "name_ru",
                                              "joinby": "location_id",
                                              "filterby": "language",
-                                             "filterfor": ["ru"],
+                                             "filterfor": ("ru",),
                                              },
                         gis_location_tag = {"name": "pcode",
                                             "joinby": "location_id",
                                             "filterby": "tag",
-                                            "filterfor": ["PCode"],
+                                            "filterfor": ("PCode",),
                                             },
                         )
 
@@ -383,30 +383,35 @@ def customise_event_event_resource(r, tablename):
                                                                   )
     parameters = rows.as_dict(key="name")
 
+    impact_components = []
     impact_crud_form_fields = []
     impact_list_fields = []
-    add_components = s3db.add_components
+    impact_report_fields = []
     for tag, label  in impact_fields.items():
         parameter = parameters[label]["id"]
-        add_components("event_event",
-                       stats_impact = {"name": tag,
-                                       "link": "event_impact",
-                                       "joinby": "event_id",
-                                       "key": "impact_id",
-                                       "filterby": "parameter_id",
-                                       "filterfor": (parameter,),
-                                       },
-                       )
-        # These aren't yet working
+        impact_components.append({"name": tag,
+                                  "link": "event_event_impact",
+                                  "joinby": "event_id",
+                                  "key": "impact_id",
+                                  "filterby": "parameter_id",
+                                  "filterfor": (parameter,),
+                                  })
+        label = T(label)
         impact_crud_form_fields.append(S3SQLInlineComponent(tag,
-                                                            label = T(label),
+                                                            label = label,
+                                                            link = False,
                                                             multiple = False,
                                                             fields = ["value"],
-                                                            #filterby = dict(field = "parameter_id",
-                                                            #                options = parameter
-                                                            #                )
+                                                            filterby = dict(field = "parameter_id",
+                                                                            options = parameter
+                                                                            )
                                                             ))
-        impact_list_fields.append((T(label), "%s.value" % tag))
+        impact_list_fields.append((label, "%s.value" % tag))
+        impact_report_fields.append((T("Total %(param)s") % dict(param=label), "sum(%s.value)" % tag))
+
+    s3db.add_components("event_event",
+                        stats_impact = impact_components,
+                        )
 
     # Hide label in CRUD form
     db.stats_impact.value.label = ""
@@ -461,22 +466,20 @@ def customise_event_event_resource(r, tablename):
     # @ToDo: start_date -> Report on Year only.. @flavour ;)
     rappend("start_date")
 
-    report_options = Storage(rows=report_fields,
-                             cols=report_fields,
-                             fact=[(T("Number of Disasters"), "count(id)"),
-                                   (T("Total Killed"), "sum(value)"),
-                                   (T("Total Affected"), "sum(value)"),
-                                   (T("Number of Disasters"), "sum(value)"),
-                                   ],# +\
-                                   # @ToDo: Fix to produce sum instead of only count of string field
-                                   #[(label, "sum(%s)" % value) for label, value in tag_list_fields],
-                             defaults=Storage(rows="event_type_id",
-                                              cols="event_location.location_id$L0",
-                                              fact="count(id)",
-                                              totals=True,
-                                              chart = "breakdown:rows",
-                                              table = "collapse",
-                                              ),
+    report_facts = [(T("Number of Disasters"), "count(id)")]
+    report_facts.extend(impact_report_fields)
+
+    report_options = Storage(rows = report_fields,
+                             cols = report_fields,
+                             fact = report_facts,
+                             defaults = Storage(
+                                rows = "event_type_id",
+                                cols = "event_location.location_id$L0",
+                                fact = "count(id)",
+                                totals = True,
+                                chart = "breakdown:rows",
+                                table = "collapse",
+                                ),
                              )
 
     s3db.configure("event_event",
