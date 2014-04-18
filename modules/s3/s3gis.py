@@ -2397,7 +2397,7 @@ class GIS(object):
 
         if not latlons:
             join = True
-            custom = False
+            #custom = False
             if "location_id" in table.fields:
                 query = (table.id.belongs(resource._ids)) & \
                         (table.location_id == gtable.id)
@@ -2417,38 +2417,25 @@ class GIS(object):
                     # Can't display this resource on the Map
                     return None
                 # @ToDo: Proper system rather than this hack_which_works_for_current_usecase
-                #rfields, joins, left, distinct = resource.resolve_selectors([location_context])
+                # Resolve selector (which automatically attaches any required component)
+                rfield = resource.resolve_selector(location_context)
                 if "." in location_context:
                     # Component
                     alias, cfield = location_context.split(".", 1)
-                    # Try to attach the component
-                    if alias not in resource.components and \
-                       alias not in resource.links:
-                        _alias = alias
-                        hook = s3db.get_component(tablename, alias)
-                        if not hook:
-                            _alias = s3db.get_alias(tablename, alias)
-                            if _alias:
-                                hook = s3db.get_component(tablename, _alias)
-                        if hook:
-                            resource._attach(_alias, hook)
-
-                    fkey = None
-                    for c in resource.components:
-                        component = resource.components[c]
-                        if component.alias == alias:
-                            fkey = component.fkey
-                            break
-                    if not fkey:
+                    try:
+                        component = resource.components[alias]
+                    except:
+                        # Invalid alias
                         # Can't display this resource on the Map
                         return None
-                    ctable = s3db[component.tablename]
+                    ctablename = component.tablename
+                    ctable = s3db[ctablename]
                     query = (table.id.belongs(resource._ids)) & \
-                            (ctable[fkey] == table.id) & \
+                            rfield.join[ctablename] & \
                             (ctable[cfield] == gtable.id)
-                    custom = True
+                    #custom = True
                     # Clear components again
-                    #resource.components = Storage()
+                    resource.components = Storage()
                 # @ToDo:
                 #elif "$" in location_context:
                 else:
@@ -2526,9 +2513,11 @@ class GIS(object):
         if latlons:
             _latlons[tablename] = latlons
         _wkts = {}
-        _wkts[tablename] = wkts
+        if wkts:
+            _wkts[tablename] = wkts
         _geojsons = {}
-        _geojsons[tablename] = geojsons
+        if geojsons:
+            _geojsons[tablename] = geojsons
 
         #if DEBUG:
         #    end = datetime.datetime.now()

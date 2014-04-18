@@ -39,8 +39,9 @@
     <s3:fields tables="gis_theme_data" select="location_id,value"/>
     <!-- Need to be able to filter &/or style records -->
     <s3:fields tables="deploy_application" select="human_resource_id"/>
+    <!--
     <s3:fields tables="event_event" select="event_type_id"/>
-    <s3:fields tables="event_event_location" select="event_id"/>
+    <s3:fields tables="event_event_location" select="event_id"/>-->
     <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
     <s3:fields tables="project_activity_activity_type" select="activity_id"/>
     <s3:fields tables="project_activity_group" select="activity_id"/>
@@ -194,7 +195,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='gis_cache']">
-        <!-- GeoRSS or KML -->
+        <!-- GeoRSS or KML origin -->
         <type>Feature</type>
         <geometry>
             <type>
@@ -214,7 +215,7 @@
             <description>
                 <xsl:value-of select="data[@field='description']"/>
             </description>
-            <!-- Used by GeoRSS -->
+            <!-- Used by GeoRSS origin -->
             <link>
                 <xsl:value-of select="data[@field='link']"/>
             </link>
@@ -224,7 +225,7 @@
             <image>
                 <xsl:value-of select="data[@field='image']"/>
             </image>
-            <!-- Used by KML -->
+            <!-- Used by KML origin -->
             <marker>
                 <xsl:value-of select="data[@field='marker']"/>
             </marker>
@@ -349,34 +350,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
         <!-- Feature Layer -->
-        <xsl:choose>
-            <xsl:when test="./reference[@field='location_id']">
-                <xsl:call-template name="Feature">
-                    <xsl:with-param name="uuid">
-                        <xsl:value-of select="./@uuid"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:when>
-            <xsl:when test="./reference[@field='site_id']">
-                <xsl:variable name="uuid" select="./@uuid"/>
-                <!-- Find the Associated Site -->
-                <xsl:variable name="site" select="./reference[@field='site_id']/@uuid"/>
-                <xsl:for-each select="//resource[@uuid=$site]">
-                    <xsl:call-template name="Feature">
-                        <xsl:with-param name="uuid">
-                            <xsl:value-of select="$uuid"/>
-                        </xsl:with-param>
-                    </xsl:call-template>
-                </xsl:for-each>
-            </xsl:when>
-        </xsl:choose>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Feature">
-        <xsl:param name="uuid"/>
         <xsl:variable name="geometry" select="./geometry/@value"/>
-        <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
         <xsl:choose>
             <xsl:when test="$geometry!='null'">
                 <!-- Use pre-prepared GeoJSON -->
@@ -389,38 +363,38 @@
                 <properties>
                     <xsl:call-template name="Properties">
                         <xsl:with-param name="uuid">
-                            <xsl:value-of select="$uuid"/>
+                            <xsl:value-of select="./@uuid"/>
                         </xsl:with-param>
                     </xsl:call-template>
                 </properties>
             </xsl:when>
-            <xsl:when test="$wkt!='null'">
+            <xsl:when test="./@wkt!='null'">
                 <xsl:call-template name="WKT">
                     <xsl:with-param name="wkt">
-                        <xsl:value-of select="$wkt"/>
+                        <xsl:value-of select="./@wkt"/>
                     </xsl:with-param>
                     <xsl:with-param name="uuid">
-                        <xsl:value-of select="$uuid"/>
+                        <xsl:value-of select="./@uuid"/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
-            <xsl:when test="./reference[@field='location_id']/@lon!='null'">
+            <xsl:when test="./@lon!='null'">
                 <type>Feature</type>
                 <geometry>
                     <type>
                         <xsl:text>Point</xsl:text>
                     </type>
                     <coordinates>
-                        <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                        <xsl:value-of select="./@lon"/>
                     </coordinates>
                     <coordinates>
-                        <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                        <xsl:value-of select="./@lat"/>
                     </coordinates>
                 </geometry>
                 <properties>
                     <xsl:call-template name="Properties">
                         <xsl:with-param name="uuid">
-                            <xsl:value-of select="$uuid"/>
+                            <xsl:value-of select="./@uuid"/>
                         </xsl:with-param>
                     </xsl:call-template>
                 </properties>
@@ -432,50 +406,38 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Properties">
         <xsl:param name="uuid"/>
-        <xsl:variable name="attributes" select="./reference[@field='location_id']/@attributes"/>
+        <xsl:variable name="attributes" select="./@attributes"/>
 
         <id>
             <!-- We want the Resource's UUID here, not the associated Location's or Site's -->
             <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
         </id>
-        <!--<xsl:choose>
-            <xsl:when test="data[@field='name']!=''">
-                <name>
-                    <xsl:value-of select="data[@field='name']"/>
-                </name>
-            </xsl:when>
-            <xsl:when test="reference[@field='location_id']/text()!=''">
-                <name>
-                    <xsl:value-of select="reference[@field='location_id']/text()"/>
-                </name>
-            </xsl:when>
-        </xsl:choose>-->
-        <xsl:if test="reference[@field='location_id']/@marker!=''">
+        <xsl:if test="@marker!=''">
             <marker>
-                <xsl:value-of select="reference[@field='location_id']/@marker"/>
+                <xsl:value-of select="@marker"/>
             </marker>
         </xsl:if>
-        <xsl:if test="reference[@field='location_id']/@popup!=''">
+        <xsl:if test="@popup!=''">
             <popup>
-                <xsl:value-of select="reference[@field='location_id']/@popup"/>
+                <xsl:value-of select="@popup"/>
             </popup>
         </xsl:if>
-        <xsl:if test="reference[@field='location_id']/@popup_url!=''">
+        <xsl:if test="@popup_url!=''">
             <url>
-                <xsl:value-of select="reference[@field='location_id']/@popup_url"/>
+                <xsl:value-of select="@popup_url"/>
             </url>
         </xsl:if>
         
-        <xsl:if test="reference[@field='location_id']/@marker_url">
+        <xsl:if test="@marker_url">
             <!-- Per-feature Marker -->
             <marker_url>
-                <xsl:value-of select="reference[@field='location_id']/@marker_url"/>
+                <xsl:value-of select="@marker_url"/>
             </marker_url>
             <marker_height>
-                <xsl:value-of select="reference[@field='location_id']/@marker_height"/>
+                <xsl:value-of select="@marker_height"/>
             </marker_height>
             <marker_width>
-                <xsl:value-of select="reference[@field='location_id']/@marker_width"/>
+                <xsl:value-of select="@marker_width"/>
             </marker_width>
         </xsl:if>
 

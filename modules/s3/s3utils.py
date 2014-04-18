@@ -898,7 +898,8 @@ def s3_include_ext():
     if s3.ext_included:
         # Ext already included
         return
-    appname = current.request.application
+    request = current.request
+    appname = request.application
 
     xtheme = current.deployment_settings.get_base_xtheme()
     if xtheme:
@@ -931,13 +932,16 @@ def s3_include_ext():
         else:
             main_css = \
     "<link href='/%s/static/scripts/ext/resources/css/ext-gray.min.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % appname
-    locale = "%s/src/locale/ext-lang-%s.js" % (PATH, s3.language)
 
     scripts = s3.scripts
     scripts_append = scripts.append
     scripts_append(adapter)
     scripts_append(main_js)
-    scripts_append(locale)
+
+    langfile = "ext-lang-%s.js" % s3.language
+    if os.path.exists(os.path.join(request.folder, "static", "scripts", "ext", "src", "locale", langfile)):
+        locale = "%s/src/locale/%s" % (PATH, langfile)
+        scripts_append(locale)
 
     if xtheme:
         s3.jquery_ready.append('''$('link:first').after("%s").after("%s")''' % (xtheme, main_css))

@@ -74,28 +74,18 @@ class index(S3CustomController):
                     data["total"]["%s_%s" % (tablename, level)] += count
 
             # Disasters
-            if current.deployment_settings.get_database_type() == "postgres":
-                query = base_query & \
-                        (ltable.id == eltable.location_id) & \
-                        (eltable.event_id == etable.id)
-                rows = db(query).select(etable.id,
-                                        distinct=True)
-                count = len(rows)
+            count_field = etable._id.count()
+            loc_field = eltable.location_id
+            query = base_query & \
+                    (ltable.id == loc_field) & \
+                    (eltable.event_id == etable.id)
+            row = db(query).select(count_field,
+                                   orderby=None,
+                                   limitby=(0, 1)).first()
+            if row:
+                count = row[count_field]
                 data[code]["event_event"] = count
                 data["total"]["event_event"] += count
-            else:
-                count_field = etable._id.count()
-                loc_field = eltable.location_id
-                query = base_query & \
-                        (ltable.id == loc_field) & \
-                        (eltable.event_id == etable.id)
-                row = db(query).select(count_field,
-                                       #groupby=loc_field, # Needed for Postgres, but gives incorrect values
-                                       limitby=(0, 1)).first()
-                if row:
-                    count = row[count_field]
-                    data[code]["event_event"] = count
-                    data["total"]["event_event"] += count
 
         current.response.data = json.dumps(data, separators=SEPARATORS)
 

@@ -751,9 +751,7 @@ class S3XML(S3Codec):
                    resource,
                    record,
                    element,
-                   rmap,
-                   locations=None,
-                   master=True,
+                   location_data={},
                    ):
         """
             GIS-encodes location references
@@ -761,47 +759,38 @@ class S3XML(S3Codec):
             @param resource: the referencing resource
             @param record: the particular record
             @param element: the XML element
-            @param rmap: list of references to encode
-            @param locations: dictionary of location data from gis.get_location_data()
-            @param master: True if this is the master resource
+            @param location_data: dictionary of location data from gis.get_location_data()
         """
+
+        format = current.auth.permission.format
+        if format not in ("geojson", "georss", "gpx", "kml"):
+            return
 
         db = current.db
         gis = current.gis
-        auth = current.auth
         request = current.request
-        format = auth.permission.format
         settings = current.deployment_settings
 
         ATTRIBUTE = self.ATTRIBUTE
         WKTFIELD = self.WKT
 
         # Retrieve data prepared earlier in gis.get_location_data()
-        if locations:
-            latlons = locations.get("latlons", [])
-            geojsons = locations.get("geojsons", [])
-            wkts = locations.get("wkts", [])
-            #popup_url = locations.get("popup_url", [])
-            markers = locations.get("markers", [])
-            tooltips = locations.get("tooltips", [])
-            attributes = locations.get("attributes", [])
-        else:
-            latlons = []
-            geojsons = []
-            wkts = []
-            #popup_url = []
-            markers = []
-            tooltips = []
-            attributes = []
+        latlons = location_data.get("latlons", [])
+        geojsons = location_data.get("geojsons", [])
+        wkts = location_data.get("wkts", [])
+        #popup_url = location_data.get("popup_url", [])
+        markers = location_data.get("markers", [])
+        tooltips = location_data.get("tooltips", [])
+        attributes = location_data.get("attributes", [])
 
+        attr = element.attrib
+        record_id = record.id
         table = resource.table
         tablename = resource.tablename
 
         if len(tablename) > 19 and \
            tablename.startswith("gis_layer_shapefile"):
             # Shapefile data
-            attr = element.attrib
-            record_id = record.id
             if tablename in geojsons:
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
@@ -864,8 +853,6 @@ class S3XML(S3Codec):
             return
 
         elif tablename == "gis_location":
-            attr = element.attrib
-            record_id = record.id
             if tablename in geojsons:
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
@@ -942,7 +929,7 @@ class S3XML(S3Codec):
                 # Google Earth
                 marker_download_url = "%s/%s/static/img/markers" % \
                     (current.deployment_settings.get_base_public_url(),
-                     current.request.application)
+                     request.application)
                 marker_url = "%s/%s" % (marker_download_url, marker.image)
                 attr[ATTRIBUTE.marker] = marker_url
             elif format =="gpx":
@@ -952,214 +939,119 @@ class S3XML(S3Codec):
             # End: tablename == "gis_location"
             return
 
-        s3db = current.s3db
-        LATFIELD = self.Lat
-        LONFIELD = self.Lon
-        pkey = table._id
+        # Normal Resources
+        if format == "geojson":
+            if tablename in geojsons:
+                # These have been looked-up in bulk
+                geojson = geojsons[tablename].get(record_id, None)
+                if geojson:
+                    geometry = etree.SubElement(element, "geometry")
+                    geometry.set("value", geojson)
 
-        for r in rmap:
-            if r.element is None:
-                continue
-            if len(r.id) == 1:
-                r_id = r.id[0]
-            else:
-                continue # Multi-reference
-
-            attr = r.element.attrib
-            LatLon = None
-            polygon = False
-            # Use the value calculated earlier if we can
-            record_id = record[pkey]
-            if not master:
-                if tablename in auth.org_site_types:
-                    # Lookup the right pre-prepared data for mapping by site_id
-                    root = element.getparent()
-                    if root and root.tag == self.TAG.root:
-                        #print self.tostring(root)
-                        first = root[0]
-                        _tablename = first.get(ATTRIBUTE.name, None)
-                        if _tablename:
-                            site_uid = element.get(self.UID, None)
-                            def find_element(el):
-                                """
-                                    Function for Inner Loop to break out of 2 loops when match found
-                                    http://stackoverflow.com/questions/189645/how-to-break-out-of-multiple-loops-in-python
-                                """
-                                for _el in el:
-                                    if _el.get(self.UID, None) == site_uid:
-                                        # Better match than before, but still not good as we can have multiple resources at the same Site
-                                        master_id = el.get(ATTRIBUTE.id, None)
-                                        if master_id:
-                                            return int(master_id)
-                            for el in root:
-                                _id = find_element(el)
-                                if _id:
-                                    record_id = _id
-                                    tablename = _tablename
-                                    master = True
-                                    break
-            if tablename in latlons:
+            elif tablename in latlons:
+                # These have been looked-up in bulk
                 LatLon = latlons[tablename].get(record_id, None)
                 if LatLon:
                     lat = LatLon[0]
                     lon = LatLon[1]
-            elif tablename in geojsons:
-                polygon = True
-                geojson = geojsons[tablename].get(record_id, None)
-                if geojson:
-                    # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
-                    geometry = etree.SubElement(element, "geometry")
-                    geometry.set("value", geojson)
-            elif tablename in wkts:
-                # Nothing gets here currently
-                # tbc: KML Polygons (or we should also do these outside XSLT)
-                polygon = True
-                wkt = wkts[tablename][record_id]
-                # Convert the WKT in XSLT
-                attr[ATTRIBUTE.wkt] = wkt
-            elif "polygons" in request.get_vars:
-                # Calculate the Polygons 1/feature since we didn't do it earlier
-                # - no current case for this
-                ktable = s3db.table(r.table)
-                if ktable is None:
-                    continue
-                if WKTFIELD in ktable.fields:
-                    query = (ktable._id == r_id)
-                    if settings.get_gis_spatialdb():
-                        if format == "geojson":
-                            # Do the Simplify & GeoJSON direct from the DB
-                            row = db(query).select(ktable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
-                                                   limitby=(0, 1)).first()
-                            if row:
-                                # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
-                                geometry = etree.SubElement(element, "geometry")
-                                geometry.set("value", row.geojson)
-                                polygon = True
-                        else:
-                            # Do the Simplify direct from the DB
-                            row = db(query).select(ktable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                                   limitby=(0, 1)).first()
-                            if row:
-                                # Convert the WKT in XSLT
-                                attr[ATTRIBUTE.wkt] = row.wkt
-                                polygon = True
+                    attr[ATTRIBUTE.lat] = "%.4f" % lat
+                    attr[ATTRIBUTE.lon] = "%.4f" % lon
+            else:
+                # Error
+                raise
+
+            if tablename in attributes:
+                # Add Attributes
+                _attr = ""
+                attrs = attributes[tablename][record_id]
+                for a in attrs:
+                    if _attr:
+                        _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
                     else:
-                        row = db(query).select(ktable[WKTFIELD],
-                                               limitby=(0, 1)).first()
-                        if row:
-                            wkt = row[WKTFIELD]
-                            if wkt:
-                                polygon = True
-                                if format == "geojson":
-                                    # Simplify the polygon to reduce download size
-                                    geojson = gis.simplify(wkt, output="geojson")
-                                    # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
-                                    geometry = etree.SubElement(element, "geometry")
-                                    geometry.set("value", geojson)
-                                else:
-                                    # Simplify the polygon to reduce download size
-                                    # & also to work around the recursion limit in libxslt
-                                    # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                                    wkt = gis.simplify(wkt)
-                                    # Convert the WKT in XSLT
-                                    attr[ATTRIBUTE.wkt] = wkt
+                        _attr = "[%s]=[%s]" % (a, attrs[a])
+                if _attr:
+                    attr[ATTRIBUTE.attributes] = _attr
 
-            if not LatLon and not polygon:
-                # Normal Location lookup
-                # e.g. Feature Queries
-                ktable = s3db.table(r.table)
-                if ktable is None:
-                    continue
-                fields = ktable.fields
-                if (LATFIELD not in fields or \
-                    LONFIELD not in fields):
-                    continue
-                LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
-                                                      ktable[LONFIELD],
-                                                      limitby=(0, 1)).first()
-                if LatLon:
-                    lat = LatLon[LATFIELD]
-                    lon = LatLon[LONFIELD]
+            if tablename in markers:
+                _markers = markers[tablename]
+                if _markers.get("image", None):
+                    # Single Marker here
+                    m = _markers
+                else:
+                    # We have a separate Marker per-Feature
+                    m = _markers[record_id]
+                if m:
+                    # Assume being used within the Sahana Mapping client
+                    # so use local URLs to keep filesize down
+                    download_url = "/%s/static/img/markers" % \
+                        request.application
+                    attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
+                                                            m["image"])
+                    attr[ATTRIBUTE.marker_height] = str(m["height"])
+                    attr[ATTRIBUTE.marker_width] = str(m["width"])
+            if tablename in tooltips:
+                # Retrieve the HTML for the onHover Tooltip
+                tooltip = tooltips[tablename][record_id]
+                if type(tooltip) is not unicode:
+                    try:
+                        # encode suitable for use as XML attribute
+                        tooltip = tooltip.decode("utf-8")
+                    except:
+                        pass
+                else:
+                    attr[ATTRIBUTE.popup] = tooltip
 
+            # Use the current controller for map popup URLs to get
+            # the controller settings applied even for map popups
+            url = URL(request.controller,
+                      request.function).split(".", 1)[0]
+            # Assume being used within the Sahana Mapping client
+            # so use local URLs to keep filesize down
+            url = "%s/%i.plain" % (url, record_id)
+            attr[ATTRIBUTE.popup_url] = url
+            # End: format == "geojson"
+            return
+
+        elif tablename in latlons:
+            # These have been looked-up in bulk
+            LatLon = latlons[tablename].get(record_id, None)
             if LatLon:
-                if lat is None or lon is None:
-                    # Cannot display on Map
-                    continue
+                lat = LatLon[0]
+                lon = LatLon[1]
                 attr[ATTRIBUTE.lat] = "%.4f" % lat
                 attr[ATTRIBUTE.lon] = "%.4f" % lon
 
-                if tablename in markers:
-                    _markers = markers[tablename]
-                    if _markers.get("image", None):
-                        # Single Marker here
-                        m = _markers
-                    else:
-                        # We have a separate Marker per-Feature
-                        m = _markers[record_id]
-                    if m:
-                        if format == "gpx":
-                            attr[ATTRIBUTE.sym] = m.get("gps_marker",
-                                                        gis.DEFAULT_SYMBOL)
-                        else:
-                            if format == "geojson":
-                                # Assume being used within the Sahana Mapping client
-                                # so use local URLs to keep filesize down
-                                download_url = "/%s/static/img/markers" % \
-                                    request.application
-                                attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
-                                                                        m["image"])
-                                attr[ATTRIBUTE.marker_height] = str(m["height"])
-                                attr[ATTRIBUTE.marker_width] = str(m["width"])
-                            else:
-                                # Assume being used outside the Sahana Mapping client
-                                # so use public URLs
-                                download_url = "%s/%s/static/img/markers" % \
-                                    (settings.get_base_public_url(), request.application)
-                                attr[ATTRIBUTE.marker] = "%s/%s" % (download_url,
-                                                                    m["image"])
+        elif tablename in wkts:
+            # Nothing gets here currently
+            # tbc: KML Polygons (or we should also do these outside XSLT)
+            wkt = wkts[tablename][record_id]
+            # Convert the WKT in XSLT
+            attr[ATTRIBUTE.wkt] = wkt
 
-            if LatLon or polygon:
-                # Build the URL for the onClick Popup contents => only for
-                # the master resource of the export
-                if master:
-                    # Use the current controller for map popup URLs to get
-                    # the controller settings applied even for map popups
-                    url = URL(request.controller,
-                              request.function).split(".", 1)[0]
-                    if format == "geojson":
-                        # Assume being used within the Sahana Mapping client
-                        # so use local URLs to keep filesize down
-                        url = "%s/%i.plain" % (url, record_id)
-                    else:
-                        # Assume being used outside the Sahana Mapping client
-                        # so use public URLs
-                        url = "%s%s/%i" % (settings.get_base_public_url(),
-                                           url, record_id)
-                    attr[ATTRIBUTE.popup_url] = url
+        else:
+            # Lookup record by record :/
+            # Nothing should get here
+            return
 
-                if tablename in tooltips:
-                    # Feature Layer / Resource
-                    # Retrieve the HTML for the onHover Tooltip
-                    tooltip = tooltips[tablename][record_id]
-                    if type(tooltip) is not unicode:
-                        try:
-                            # encode suitable for use as XML attribute
-                            tooltip = tooltip.decode("utf-8")
-                        except:
-                            pass
-                    else:
-                        attr[ATTRIBUTE.popup] = tooltip
-
-                if tablename in attributes:
-                    _attr = ""
-                    attrs = attributes[tablename].get(record_id, [])
-                    for a in attrs:
-                        if _attr:
-                            _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
-                        else:
-                            _attr = "[%s]=[%s]" % (a, attrs[a])
-                    if _attr:
-                        attr[ATTRIBUTE.attributes] = _attr
+        if tablename in markers:
+            _markers = markers[tablename]
+            if _markers.get("image", None):
+                # Single Marker here
+                m = _markers
+            else:
+                # We have a separate Marker per-Feature
+                m = _markers[record_id]
+            if m:
+                if format == "gpx":
+                    attr[ATTRIBUTE.sym] = m.get("gps_marker",
+                                                gis.DEFAULT_SYMBOL)
+                else:
+                    # Assume being used outside the Sahana Mapping client
+                    # so use public URLs
+                    download_url = "%s/%s/static/img/markers" % \
+                        (settings.get_base_public_url(), request.application)
+                    attr[ATTRIBUTE.marker] = "%s/%s" % (download_url,
+                                                        m["image"])
 
     # -------------------------------------------------------------------------
     def resource(self,
