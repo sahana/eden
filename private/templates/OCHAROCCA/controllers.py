@@ -25,23 +25,25 @@ class index(S3CustomController):
         # Calculate summary data (this should be moved - perhpas done unsync)
         s3db = current.s3db
         db = current.db
-
+        
         levels = ("L0", "L1","L2")
         data = {}
         data["total"] = {"location": 0}
-        data["total"]["event"] = 0
+        data["total"]["event_event"] = 0
         for level in levels:
-            data["total"]["demographic_data_%s" % level] = 0
-    
+            data["total"]["stats_demographic_data_%s" % level] = 0
+            data["total"]["vulnerability_data_%s" % level] = 0
+        
+        ltable = s3db.gis_location
+        level_field = ltable.level
+        
+        # @ToDo: FIX!
         for country in current.response.countries:
             code = country["code"]
             name = country["name"]
-    
+        
             data[code] = {}
-    
-            ltable = s3db.gis_location
-            dtable = s3db.stats_demographic_data
-    
+        
             # Places
             query = ltable.L0 == name 
             count = db(query).count()
@@ -49,19 +51,28 @@ class index(S3CustomController):
             data["total"]["location"] += count
             
             # Demographic Data 
-            level_field = ltable.level
-            count_field = ltable._id.count()
-            rows = db(query & (level_field.belongs(levels))
-                      ).select(level_field, count_field, groupby=level_field)
-            for row in rows:
-                level = row[level_field]
-                count = row[count_field]
-                data[code]["demographic_data_%s" % level] = count
-                data["total"]["demographic_data_%s" % level] += count
-            # Disasters
-            count = db(query).count()
-            data[code]["event"] = db(query).count()
-            data["total"]["event"] += count
+            for tablename in ["stats_demographic_data", "vulnerability_data"]:
+                table = s3db[tablename]
+                
+                count_field = table._id.count()
+                rows = db(query &
+                          (level_field.belongs(levels)) &
+                          ltable.id == table.location_id
+                          ).select(level_field, count_field, groupby=level_field)
+                for row in rows:
+                    level = row[level_field]
+                    count = row[count_field]
+                    data[code]["%s_%s" % (tablename, level)] = count
+                    data["total"]["%s_%s" % (tablename, level)] += count
+        
+                # Disasters
+                rows = db(query &
+                          (level_field.belongs(levels)) &
+                          ltable.id == table.location_id
+                          ).select(level_field, count_field, groupby=level_field)
+                count = db(query).count()
+                data[code]["event_event"] = db(query).count()
+                data["total"]["event_event"] += count
 
         current.response.data = json.dumps(data)
 

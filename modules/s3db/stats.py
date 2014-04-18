@@ -352,6 +352,21 @@ class S3StatsDemographicModel(S3Model):
             msg_record_deleted = T("Demographic Data deleted"),
             msg_list_empty = T("No demographic data currently defined"))
 
+
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(current.deployment_settings.get_gis_countries()) == 1 or \
+           current.response.s3.gis.config.region_location_id:
+            levels.remove("L0")
+
+        location_fields = ["location_id$%s" % level for level in levels]
+
+        list_fields = ["parameter_id"] +\
+                      location_fields +\
+                      ["value", 
+                       "date", 
+                       "source_id"]
+
         filter_widgets = [S3OptionsFilter("parameter_id",
                                           label = T("Type"),
                                           # Not translateable
@@ -366,25 +381,14 @@ class S3StatsDemographicModel(S3Model):
                                           widget = "multiselect",
                                           multiple = False,
                                           ),
-                          ]
-
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(current.deployment_settings.get_gis_countries()) == 1 or \
-           current.response.s3.gis.config.region_location_id:
-            levels.remove("L0")
-
-        filter_widgets.append(
-            S3LocationFilter("location_id",
+                          S3LocationFilter("location_id",
                              levels = levels,
                              widget = "multiselect"
-                             ))
+                             )
+                          ]
 
-        fieldnames = ["location_id"]
-        fieldnames.extend(["location_id$%s" % level for level in levels])
-        
         report_options = Storage(
-            rows=fieldnames,
+            rows=location_fields,
             cols=["parameter_id"],
             fact=[(T("Value"), "sum(value)"),
                   ],
@@ -400,6 +404,7 @@ class S3StatsDemographicModel(S3Model):
         configure(tablename,
                   deduplicate = self.stats_demographic_data_duplicate,
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   report_options = report_options,
                   requires_approval = True,
                   super_entity = "stats_data",

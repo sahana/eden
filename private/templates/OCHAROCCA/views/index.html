@@ -103,25 +103,22 @@
   <div class='menu'>
    <a href='/{{=appname}}/stats/demographic_data/summary'>
      <h3>Demographic Data</h3>
-     <p><span class='badge demographic_data_L0 throbber'></span> Country</p>
-     <p><span class='badge demographic_data_L1 throbber'></span> Admin 1</p>
-     <p><span class='badge demographic_data_L2 throbber'></span> Admin 2</p>
+     <p><span class='badge stats_demographic_data_L0 throbber'></span> Country</p>
+     <p><span class='badge stats_demographic_data_L1 throbber'></span> Admin 1</p>
+     <p><span class='badge stats_demographic_data_L2 throbber'></span> Admin 2</p>
    </a>
   </div>
   <div class='menu'>
-   <a href='/{{=appname}}/stats/demographic_data/summary'>
-     <h3>Baseline Data</h3>
-       <!-- 
-     <span class='badge demographic_data_L0 throbber'></span>
-     <span class='badge demographic_data_L1 throbber'></span>
-     <span class='badge demographic_data_L2 throbber'></span>
-     -->
+   <a href='/{{=appname}}/vulnerability/data/summary'>
+     <h3>Vulnerability Data</h3>
+     <p><span class='badge vulnerability_data_L0 throbber'></span> Country</p>
+     <p><span class='badge vulnerability_data_L1 throbber'></span> Admin 1</p>
+     <p><span class='badge vulnerability_data_L2 throbber'></span> Admin 2</p>
    </a>
   </div>
-   
   <div class='menu'>
    <a href='/{{=appname}}/event/event/summary'>
-     <h3><span class='badge throbber'></span>Disasters</h3>
+     <h3><span class='badge event_event throbber'></span>Disasters</h3>
    </a>
   </div>
 
@@ -176,10 +173,13 @@ $(document).ready(function(){
 
     function _updateStats(code) {
         resources = ['location',
-                     'demographic_data_L0',
-                     'demographic_data_L1',
-                     'demographic_data_L2',
-                     'event'
+                     'stats_demographic_data_L0',
+                     'stats_demographic_data_L1',
+                     'stats_demographic_data_L2',
+                     'vulnerability_data_L0',
+                     'vulnerability_data_L1',
+                     'vulnerability_data_L2',
+                     'event_event',
                      ]
         for (var i=0; i< 5; i++) {
             resource = resources[i]
