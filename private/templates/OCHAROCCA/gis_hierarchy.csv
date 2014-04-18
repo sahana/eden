@@ -1,3 +1,10 @@
 UUID,Country,L1,L2,L3,L4,L5,Edit L1
-SITE_DEFAULT,,"Oblast / State City","District (Rayon) / Oblast City","Town / Village Group","Village",,False
+SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Village / Suburb",,
+,AM,Province,Community,Settlement,,
+,AZ,Economic Region,"District (Rayon)",,,,
+,GE,"Region / Republic",District,,,,
+,KA,Province,District,,,,
 ,KG,"Oblast / State City","District (Rayon) / Oblast City","Town / Village Group","Village",,
+,TJ,Province,District,Jamoat,Village,,
+,TM,Province,District,,,,
+,UZ,Province,District,,,,

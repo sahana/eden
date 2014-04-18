@@ -7,10 +7,11 @@
 
          CSV fields:
          Name....................event_event.name
-         Type....................event_event.event_type_id
+         Type....................event_event.event_type_id or event_event_type.parent
+         SubType.................event_event.event_type_id
          Description.............event_event.comments
          Exercise................event_event.exercise
-         Zero Hour...............event_event.zero_hour
+         Start Date..............event_event.start_date
          End Date................event_event.end_date
          Closed..................event_event.closed
          Country.................optional.....event_event_location.Country
@@ -19,6 +20,7 @@
          L3......................optional.....event_event_location.L3
          L4......................optional.....event_event_location.L4 (not commonly-used)
          L5......................optional.....event_event_location.L5 (not commonly-used)
+         Impact:XX...............Impact Type,Value (Impact Type = XX in column name, value = cell in row)
          KV:XX...................Key,Value (Key = XX in column name, value = cell in row)
 
         @ToDo: Allow linking an Event to more than a single Location
@@ -77,7 +79,8 @@
                          col[@field='L4'], '/',
                          col[@field='L5'])"/>
 
-    <xsl:key name="type" match="row" use="col[@field='Type']"/>
+    <xsl:key name="type" match="row" use="concat(col[@field='Type'], '/',
+                                                 col[@field='SubType'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -139,8 +142,21 @@
 
             <!-- Types -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
-                                                                       col[@field='Type'])[1])]">
-                <xsl:call-template name="Type"/>
+                                                                   concat(col[@field='Type'], '/',
+                                                                          col[@field='SubType']))[1])]">
+                <xsl:call-template name="Type">
+                    <xsl:with-param name="Type">
+                         <xsl:value-of select="col[@field='Type']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubType">
+                         <xsl:value-of select="col[@field='SubType']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+             <!-- Impact Types -->
+            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Impact')]">
+                <xsl:call-template name="ImpactType"/>
             </xsl:for-each>
 
             <!-- Events -->
@@ -165,12 +181,24 @@
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
+        <xsl:variable name="EventName">
+            <xsl:value-of select="col[@field='Name']"/>
+        </xsl:variable>
+        <xsl:variable name="Type">
+            <xsl:value-of select="col[@field='Type']"/>
+        </xsl:variable>
+        <xsl:variable name="SubType">
+            <xsl:value-of select="col[@field='SubType']"/>
+        </xsl:variable>
+        
 
         <!-- Event -->
         <resource name="event_event">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="zero_hour"><xsl:value-of select="col[@field='Zero Hour']"/></data>
-            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+            <data field="name"><xsl:value-of select="$EventName"/></data>
+            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            <xsl:if test="col[@field='End Date']!=''">
+                <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Description']!=''">
                 <data field="comments"><xsl:value-of select="col[@field='Description']"/></data>
             </xsl:if>
@@ -236,7 +264,16 @@
             <!-- Link to Event Type -->
             <reference field="event_type_id" resource="event_event_type">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Type']"/>
+                    <xsl:choose>
+                        <xsl:when test="$SubType!=''">
+                            <!-- Hierarchical Type -->
+                            <xsl:value-of select="concat($Type, '/', $SubType)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <!-- Simple Type -->
+                            <xsl:value-of select="$Type"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:attribute>
             </reference>
 
@@ -248,10 +285,19 @@
                     <xsl:call-template name="LocationReference"/>
                 </resource>
             </xsl:if>
-            
+
             <!-- Arbitrary Tags -->
             <xsl:for-each select="col[starts-with(@field, 'KV')]">
                 <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
+
+            <!-- Impacts -->
+            <xsl:for-each select="col[starts-with(@field, 'Impact')]">
+                <xsl:call-template name="Impact">
+                    <xsl:with-param name="Event">
+                        <xsl:value-of select="$EventName"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
         </resource>
@@ -260,14 +306,83 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Type">
-        <xsl:variable name="type" select="col[@field='Type']/text()"/>
+        <xsl:param name="Type"/>
+        <xsl:param name="SubType"/>
 
-        <resource name="event_event_type">
+        <xsl:choose>
+            <xsl:when test="$SubType!=''">
+                <!-- Hierarchical Type -->
+                <resource name="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Type"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$Type"/></data>
+                </resource>
+                <resource name="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($Type, '/', $SubType)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$SubType"/></data>
+                    <reference field="parent" resource="event_event_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Type"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Simple Type -->
+                <resource name="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Type"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$Type"/></data>
+                </resource>
+            </xsl:otherwise>
+        </xsl:choose>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Impact">
+        <xsl:param name="Event"/>
+
+        <xsl:variable name="ImpactType" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="stats_impact">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('IMP:', $Event, '/', $ImpactType)"/>
+                </xsl:attribute>
+                <reference field="parameter_id" resource="stats_impact_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('IMPT:', $ImpactType)"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+            <resource name="event_impact">
+                <reference field="impact_id" resource="stats_impact">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('IMP:', $Event, '/', $ImpactType)"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="ImpactType">
+        <xsl:variable name="ImpactType" select="normalize-space(substring-after(@field, ':'))"/>
+
+        <resource name="stats_impact_type">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$type"/>
+                <xsl:value-of select="concat('IMPT:', $ImpactType)"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="$type"/></data>
-       </resource>
+            <data field="name"><xsl:value-of select="$ImpactType"/></data>
+        </resource>
 
     </xsl:template>
 

@@ -1669,7 +1669,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Beneficiary Type"),
-                                instance_types = ["project_beneficiary_type"],
+                                instance_types = ("project_beneficiary_type",),
                                 represent = S3Represent(lookup="stats_parameter",
                                                         translate=True,
                                                         ),
@@ -1687,9 +1687,9 @@ class S3ProjectBeneficiaryModel(S3Model):
                                           writable = False),
                      Field("value", "integer",
                            label = T("Number"),
-                           requires = IS_INT_IN_RANGE(0, 99999999),
                            represent = lambda v: \
-                                       IS_INT_AMOUNT.represent(v)
+                            IS_INT_AMOUNT.represent(v),
+                           requires = IS_INT_IN_RANGE(0, 99999999),
                            ),
                      s3_date("date",
                              #empty = False,
@@ -2242,7 +2242,7 @@ class S3ProjectCampaignModel(S3Model):
                       # - can't override field name, ondelete or requires
         #             super_link("parameter_id", "stats_parameter",
         #                        label = T("Keyword"),
-        #                        instance_types = ["project_campaign_keyword"],
+        #                        instance_types = ("project_campaign_keyword",),
         #                        represent = S3Represent(lookup="stats_parameter"),
         #                        readable = True,
         #                        writable = True,
@@ -2285,7 +2285,7 @@ class S3ProjectCampaignModel(S3Model):
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Keyword"),
-                                instance_types = ["project_campaign_keyword"],
+                                instance_types = ("project_campaign_keyword",),
                                 represent = S3Represent(lookup="stats_parameter"),
                                 readable = True,
                                 writable = True,

@@ -369,6 +369,11 @@ settings.L10n.decimal_separator = "."
 #settings.cms.person = "person_id"
 
 # -----------------------------------------------------------------------------
+# Events
+# Make Event Types Hierarchical
+#settings.event.types_hierarchical = True
+
+# -----------------------------------------------------------------------------
 # Persons
 # Uncomment to allow person imports to match even without email addresses 
 #settings.pr.import_update_requires_email = False
@@ -392,11 +397,17 @@ settings.L10n.decimal_separator = "."
 #settings.org.autocomplete = True
 # Enable the use of Organisation Branches
 #settings.org.branches = True
+# Make Facility Types Hierarchical
+#settings.org.facility_types_hierarchical = True
 # Enable the use of Organisation Groups & what their name is
 #settings.org.groups = "Coalition"
 #settings.org.groups = "Network"
 # Enable the use of Organisation Regions
 #settings.org.regions = True
+# Make Organisation Regions Hierarchical
+#settings.org.regions_hierarchical = True
+# Make Services Hierarchical
+#settings.org.services_hierarchical = True
 # Set the length of the auto-generated org/site code the default is 10
 #settings.org.site_code_len = 3
 # Set the label for Sites

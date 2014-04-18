@@ -300,7 +300,7 @@ def _updates():
         resource = s3db.resource("event_event")
         list_fields = ["name",
                        "event_type_id$name",
-                       "zero_hour",
+                       "start_date",
                        "closed",
                        ]
         orderby = resource.get_config("list_orderby",
@@ -373,7 +373,7 @@ def render_events(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     name = record["event_event.name"]
-    date = record["event_event.zero_hour"]
+    date = record["event_event.start_date"]
     closed = raw["event_event.closed"]
     event_type = record["event_event_type.name"]
 

@@ -31,6 +31,7 @@ from __future__ import division
 
 __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
+           "S3StatsImpactModel",
            "S3StatsPeopleModel",
            "S3StatsTrainedPeopleModel",
            "stats_demographic_data_controller",
@@ -74,6 +75,7 @@ class S3StatsModel(S3Model):
                            project_beneficiary_type = T("Project Beneficiary Type"),
                            project_campaign_keyword = T("Project Campaign Keyword"),
                            stats_demographic = T("Demographic"),
+                           stats_impact_type = T("Impact Type"),
                            stats_people_type = T("Types of People"),
                            stats_trained_type = T("Types of Trained People"),
                            supply_distribution_item = T("Distribution Item"),
@@ -102,6 +104,7 @@ class S3StatsModel(S3Model):
                            project_beneficiary = T("Project Beneficiary"),
                            project_campaign_response_summary = T("Project Campaign Response Summary"),
                            stats_demographic_data = T("Demographic Data"),
+                           stats_impact = T("Impact"),
                            stats_people = T("People"),
                            stats_trained = T("Trained People"),
                            supply_distribution = T("Distribution"),
@@ -266,7 +269,7 @@ class S3StatsDemographicModel(S3Model):
                            requires = IS_NULL_OR(
                                         IS_ONE_OF(db, "stats_parameter.parameter_id",
                                                   stats_parameter_represent,
-                                                  instance_types = ["stats_demographic"],
+                                                  instance_types = ("stats_demographic",),
                                                   sort=True)),
                            represent=stats_parameter_represent,
                            label=T("Total")),
@@ -303,7 +306,7 @@ class S3StatsDemographicModel(S3Model):
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
-                                instance_types = ["stats_demographic"],
+                                instance_types = ("stats_demographic",),
                                 label = T("Demographic"),
                                 represent = stats_parameter_represent,
                                 readable = True,
@@ -323,7 +326,7 @@ class S3StatsDemographicModel(S3Model):
                      Field("value", "double",
                            label = T("Value"),
                            represent = lambda v: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2),
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
                            required = True,
                            ),
                      s3_date(required = True),
@@ -339,9 +342,8 @@ class S3StatsDemographicModel(S3Model):
                      )
 
         # CRUD Strings
-        ADD_DEMOGRAPHIC = T("Add Demographic Data")
         crud_strings[tablename] = Storage(
-            label_create = ADD_DEMOGRAPHIC,
+            label_create = T("Add Demographic Data"),
             title_display = T("Demographic Data Details"),
             title_list = T("Demographic Data"),
             title_update = T("Edit Demographic Data"),
@@ -352,7 +354,6 @@ class S3StatsDemographicModel(S3Model):
             msg_record_deleted = T("Demographic Data deleted"),
             msg_list_empty = T("No demographic data currently defined"))
 
-
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
         if len(current.deployment_settings.get_gis_countries()) == 1 or \
@@ -361,45 +362,42 @@ class S3StatsDemographicModel(S3Model):
 
         location_fields = ["location_id$%s" % level for level in levels]
 
-        list_fields = ["parameter_id"] +\
-                      location_fields +\
-                      ["value", 
-                       "date", 
-                       "source_id"]
+        list_fields = ["parameter_id"]
+        list_fields.extend(location_fields)
+        list_fields.extend((("value", 
+                             "date", 
+                             "source_id",
+                             )))
 
         filter_widgets = [S3OptionsFilter("parameter_id",
                                           label = T("Type"),
                                           # Not translateable
                                           #represent = "%(name)s",
-                                          widget = "multiselect",
                                           multiple = False,
                                           ),
                           S3OptionsFilter("location_id$level",
                                           label = T("Level"),
                                           # Not translateable
                                           #represent = "%(name)s",
-                                          widget = "multiselect",
                                           multiple = False,
                                           ),
                           S3LocationFilter("location_id",
-                             levels = levels,
-                             widget = "multiselect"
-                             )
+                                           levels = levels,
+                                           ),
                           ]
 
-        report_options = Storage(
-            rows=location_fields,
-            cols=["parameter_id"],
-            fact=[(T("Value"), "sum(value)"),
-                  ],
-            defaults=Storage(rows="location_id",
-                             cols="parameter_id",
-                             fact="sum(value)",
-                             totals=True,
-                             chart = "breakdown:rows",
-                             table = "collapse",
-                             )
-            )
+        report_options = Storage(rows=location_fields,
+                                 cols=["parameter_id"],
+                                 fact=[(T("Value"), "sum(value)"),
+                                       ],
+                                 defaults=Storage(rows="location_id",
+                                                  cols="parameter_id",
+                                                  fact="sum(value)",
+                                                  totals=True,
+                                                  chart = "breakdown:rows",
+                                                  table = "collapse",
+                                                  )
+                                 )
 
         configure(tablename,
                   deduplicate = self.stats_demographic_data_duplicate,
@@ -433,7 +431,7 @@ class S3StatsDemographicModel(S3Model):
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Demographic"),
-                                instance_types = ["stats_demographic"],
+                                instance_types = ("stats_demographic",),
                                 represent = S3Represent(lookup="stats_parameter"),
                                 readable = True,
                                 writable = True,
@@ -1184,6 +1182,161 @@ def stats_demographic_data_controller():
     return output
 
 # =============================================================================
+class S3StatsImpactModel(S3Model):
+    """
+        Used to record Impacts of Events &/or Incidents
+        - might link to Assessments module in future
+    """
+
+    names = ["stats_impact",
+             "stats_impact_type",
+             "stats_impact_id",
+             ]
+
+    def model(self):
+
+        T = current.T
+
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Impact Types
+        #
+        tablename = "stats_impact_type"
+        define_table(tablename,
+                     # Instance
+                     super_link("doc_id", "doc_entity"),
+                     super_link("parameter_id", "stats_parameter"),
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        ADD_IMPACT_TYPE = T("Add Impact Type")
+        crud_strings[tablename] = Storage(
+            label_create=ADD_IMPACT_TYPE,
+            title_display=T("Impact Type Details"),
+            title_list=T("Impact Types"),
+            title_update=T("Edit Impact Type"),
+            #title_upload=T("Import Impact Types"),
+            label_list_button=T("Impact Types"),
+            label_delete_button=T("Delete Impact Type"),
+            msg_record_created=T("Impact Type added"),
+            msg_record_modified=T("Impact Type updated"),
+            msg_record_deleted=T("Impact Type deleted"),
+            msg_list_empty=T("No Impact Types defined"))
+
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = ("doc_entity", "stats_parameter"),
+                  deduplicate = self.stats_impact_type_duplicate,
+                  )
+
+        represent = S3Represent(lookup=tablename)
+
+        # ---------------------------------------------------------------------
+        # Impact
+        #
+        tablename = "stats_impact"
+        define_table(tablename,
+                     # Instance
+                     super_link("data_id", "stats_data"),
+                     # Instance (link to Photos/Reports)
+                     super_link("doc_id", "doc_entity"),
+                     Field("name", #notnull=True,
+                           label = T("Name"),
+                           ),
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     super_link("parameter_id", "stats_parameter",
+                                label = T("Impact Type"),
+                                instance_types = ("stats_impact_type",),
+                                represent = S3Represent(lookup="stats_parameter"),
+                                readable = True,
+                                writable = True,
+                                empty = False,
+                                comment = S3AddResourceLink(c="stats",
+                                                            f="impact_type",
+                                                            vars = dict(child = "parameter_id"),
+                                                            title=ADD_IMPACT_TYPE),
+                                ),
+                     Field("value", "double",
+                           label = T("Value"),
+                           represent = lambda v: \
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           required = True,
+                           ),
+                     self.gis_location_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create=T("Add Impact"),
+            title_display=T("Impact Details"),
+            title_list=T("Impacts"),
+            title_update=T("Edit Impact"),
+            title_upload=T("Import Impacts"),
+            label_list_button=T("Impacts"),
+            label_delete_button=T("Delete Impact"),
+            msg_record_created=T("Impact added"),
+            msg_record_modified=T("Impact updated"),
+            msg_record_deleted=T("Impact deleted"),
+            msg_list_empty=T("No Impacts defined"))
+
+        filter_widgets = [S3OptionsFilter("parameter_id",
+                                          label = T("Type"),
+                                          # Doesn't support Translation
+                                          #represent = "%(name)s",
+                                          ),
+                          ]
+
+        # Reusable Field
+        impact_id = S3ReusableField("impact_id", "reference %s" % tablename,
+                                     label = T("Impact"),
+                                     requires = IS_NULL_OR(
+                                        IS_ONE_OF_EMPTY(db, "stats_impact.id")),
+                                     represent = S3Represent(lookup=tablename),
+                                     ondelete = "CASCADE")
+
+        configure(tablename,
+                  filter_widgets = filter_widgets,
+                  super_entity = ("doc_entity", "stats_data"),
+                  )
+
+        # Pass names back to global scope (s3.*)
+        return dict(stats_impact_id = impact_id,
+                    )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_impact_type_duplicate(item):
+        """
+            Deduplication of Impact Type
+        """
+
+        if item.tablename != "stats_impact_type":
+            return
+
+        data = item.data
+        name = data.get("name", None)
+
+        if not name:
+            return
+
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        _duplicate = current.db(query).select(table.id,
+                                              limitby=(0, 1)).first()
+        if _duplicate:
+            item.id = _duplicate.id
+            item.data.id = _duplicate.id
+            item.method = item.METHOD.UPDATE
+
+# =============================================================================
 class S3StatsPeopleModel(S3Model):
     """
         Used to record people in the CRMT (Community Resilience Mapping Tool) template
@@ -1198,7 +1351,6 @@ class S3StatsPeopleModel(S3Model):
 
         T = current.T
 
-        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1213,14 +1365,14 @@ class S3StatsPeopleModel(S3Model):
                      super_link("doc_id", "doc_entity"),
                      super_link("parameter_id", "stats_parameter"),
                      Field("name",
-                           label=T("Name"),
+                           label = T("Name"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_PEOPLE_TYPE = T("Add New Type of People")
+        ADD_PEOPLE_TYPE = T("Add Type of People")
         crud_strings[tablename] = Storage(
-            label_create=T("Add Type of People"),
+            label_create=ADD_PEOPLE_TYPE,
             title_display=T("Type of People Details"),
             title_list=T("Type of Peoples"),
             title_update=T("Edit Type of People"),
@@ -1234,8 +1386,8 @@ class S3StatsPeopleModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = ("doc_entity", "stats_parameter"),
                   deduplicate = self.stats_people_type_duplicate,
+                  super_entity = ("doc_entity", "stats_parameter"),
                   )
 
         represent = S3Represent(lookup=tablename)
@@ -1250,12 +1402,13 @@ class S3StatsPeopleModel(S3Model):
                      # Instance (link to Photos)
                      super_link("doc_id", "doc_entity"),
                      Field("name", #notnull=True,
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Type of People"),
-                                instance_types = ["stats_people_type"],
+                                instance_types = ("stats_people_type",),
                                 represent = S3Represent(lookup="stats_parameter"),
                                 readable = True,
                                 writable = True,
@@ -1266,8 +1419,9 @@ class S3StatsPeopleModel(S3Model):
                                                             title=ADD_PEOPLE_TYPE),
                                 ),
                      Field("value", "integer",
-                           requires=IS_INT_IN_RANGE(0, 999999),
-                           label=T("Number of People"),
+                           label = T("Number of People"),
+                           represent = IS_INT_AMOUNT.represent,
+                           requires = IS_INT_IN_RANGE(0, 999999),
                            ),
                      self.gis_location_id(label=T("Address")),
                      self.pr_person_id(label=T("Contact Person"),
@@ -1277,7 +1431,6 @@ class S3StatsPeopleModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_PEOPLE = T("Add New People")
         crud_strings[tablename] = Storage(
             label_create=T("Add People"),
             title_display=T("People Details"),
@@ -1292,33 +1445,32 @@ class S3StatsPeopleModel(S3Model):
             msg_list_empty=T("No People defined"))
 
         filter_widgets = [S3OptionsFilter("people_group.group_id",
-                                          label=T("Coalition"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
+                                          label = T("Coalition"),
+                                          represent = "%(name)s",
                                           ),
                           S3OptionsFilter("parameter_id",
-                                          label=T("Type"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
+                                          label = T("Type"),
+                                          # Doesn't support Translation
+                                          #represent = "%(name)s",
                                           ),
                           ]
 
         configure(tablename,
-                  super_entity = ("doc_entity", "stats_data"),
                   filter_widgets = filter_widgets,
+                  super_entity = ("doc_entity", "stats_data"),
                   )
 
         # Components
-        add_components(tablename,
-                       # Coalitions
-                       org_group={"link": "stats_people_group",
-                                  "joinby": "people_id",
-                                  "key": "group_id",
-                                  "actuate": "hide",
-                                 },
-                       # Format for InlineComponent/filter_widget
-                       stats_people_group="people_id",
-                      )
+        self.add_components(tablename,
+                            # Coalitions
+                            org_group = {"link": "stats_people_group",
+                                         "joinby": "people_id",
+                                         "key": "group_id",
+                                         "actuate": "hide",
+                                         },
+                            # Format for InlineComponent/filter_widget
+                            stats_people_group = "people_id",
+                            )
 
         represent = S3Represent(lookup=tablename)
 
@@ -1380,7 +1532,6 @@ class S3StatsTrainedPeopleModel(S3Model):
 
         T = current.T
 
-        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1394,14 +1545,14 @@ class S3StatsTrainedPeopleModel(S3Model):
                      # Instance
                      super_link("parameter_id", "stats_parameter"),
                      Field("name",
-                           label=T("Name"),
+                           label = T("Name"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_TRAINED_PEOPLE_TYPE = T("Add New Type of Trained People")
+        ADD_TRAINED_PEOPLE_TYPE = T("Add Type of Trained People")
         crud_strings[tablename] = Storage(
-            label_create=T("Add Type of Trained People"),
+            label_create=ADD_TRAINED_PEOPLE_TYPE,
             title_display=T("Type of Trained People  Details"),
             title_list=T("Types of Trained People"),
             title_update=T("Edit Type of Trained People"),
@@ -1415,8 +1566,8 @@ class S3StatsTrainedPeopleModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = "stats_parameter",
                   deduplicate = self.stats_trained_type_duplicate,
+                  super_entity = "stats_parameter",
                   )
 
         represent = S3Represent(lookup=tablename)
@@ -1431,12 +1582,13 @@ class S3StatsTrainedPeopleModel(S3Model):
                      # Instance (link to Photos)
                      super_link("doc_id", "doc_entity"),
                      Field("name", notnull=True,
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Type of Trained People"),
-                                instance_types = ["stats_trained_type"],
+                                instance_types = ("stats_trained_type",),
                                 represent = S3Represent(lookup="stats_parameter"),
                                 readable = True,
                                 writable = True,
@@ -1447,10 +1599,11 @@ class S3StatsTrainedPeopleModel(S3Model):
                                                             title=ADD_TRAINED_PEOPLE_TYPE),
                                 ),
                      Field("value", "integer",
+                           label = T("Number of Trained People"),
+                           represent = IS_INT_AMOUNT.represent,
                            requires=IS_NULL_OR(
                                       IS_INT_IN_RANGE(0, 999999)
                                     ),
-                           label=T("Number of Trained People"),
                            ),
                      self.org_organisation_id(),
                      self.gis_location_id(label=T("Address")),
@@ -1462,9 +1615,8 @@ class S3StatsTrainedPeopleModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_TRAINED_PEOPLE = T("Add Trained People")
         crud_strings[tablename] = Storage(
-            label_create=ADD_TRAINED_PEOPLE,
+            label_create=T("Add Trained People"),
             title_display=T("Trained People Details"),
             title_list=T("Trained People"),
             title_update=T("Edit Trained People"),
@@ -1477,33 +1629,32 @@ class S3StatsTrainedPeopleModel(S3Model):
             msg_list_empty=T("No Trained People defined"))
 
         filter_widgets = [S3OptionsFilter("stats_trained_group.group_id",
-                                          label=T("Coalition"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
+                                          label = T("Coalition"),
+                                          represent = "%(name)s",
                                           ),
                           S3OptionsFilter("parameter_id",
-                                          label=T("Type"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
+                                          label = T("Type"),
+                                          # Doesn't support Translation
+                                          #represent = "%(name)s",
                                           ),
                           ]
 
         configure(tablename,
-                  super_entity = ("doc_entity", "stats_data"),
                   filter_widgets = filter_widgets,
+                  super_entity = ("doc_entity", "stats_data"),
                   )
 
         # Components
-        add_components(tablename,
-                       # Coalitions
-                       org_group={"link": "stats_trained_group",
-                                  "joinby": "trained_id",
-                                  "key": "group_id",
-                                  "actuate": "hide",
-                                 },
-                       # Format for InlineComponent/filter_widget
-                       stats_trained_group="trained_id",
-                      )
+        self.add_components(tablename,
+                            # Coalitions
+                            org_group = {"link": "stats_trained_group",
+                                         "joinby": "trained_id",
+                                         "key": "group_id",
+                                         "actuate": "hide",
+                                         },
+                            # Format for InlineComponent/filter_widget
+                            stats_trained_group = "trained_id",
+                            )
 
         represent = S3Represent(lookup=tablename)
 

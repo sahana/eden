@@ -1232,7 +1232,7 @@ class S3SupplyDistributionModel(S3Model):
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
                                 label = T("Item"),
-                                instance_types = ["supply_distribution_item"],
+                                instance_types = ("supply_distribution_item",),
                                 represent = S3Represent(lookup="stats_parameter"),
                                 readable = True,
                                 writable = True,

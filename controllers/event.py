@@ -48,9 +48,10 @@ def event():
 
             elif r.method == "update":
                 # Can't change details after event activation
-                r.table.exercise.writable = False
-                r.table.exercise.comment = None
-                r.table.zero_hour.writable = False
+                table = r.table
+                table.exercise.writable = False
+                table.exercise.comment = None
+                table.start_date.writable = False
 
         return True
     s3.prep = prep
@@ -108,10 +109,11 @@ def incident():
 
             elif r.method == "update":
                 # Can't change details after event activation
-                r.table.scenario_id.writable = False
-                r.table.exercise.writable = False
-                r.table.exercise.comment = None
-                r.table.zero_hour.writable = False
+                table = r.table
+                table.scenario_id.writable = False
+                table.exercise.writable = False
+                table.exercise.comment = None
+                table.zero_hour.writable = False
 
         return True
     s3.prep = prep
@@ -168,13 +170,14 @@ def event_rheader(r):
                     closed = TH(T("CLOSED"))
                 else:
                     closed = TH()
+                table = r.table
                 rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % T("Name")),
+                                    TR(TH("%s: " % table.name.label),
                                        event.name),
-                                       TH("%s: " % T("Comments")),
-                                       event.comments,
-                                    TR(TH("%s: " % T("Zero Hour")),
-                                       event.zero_hour),
+                                    TR(TH("%s: " % table.comments.label),
+                                       event.comments),
+                                    TR(TH("%s: " % table.start_date.label),
+                                       table.start_date.represent(event.start_date)),
                                     TR(closed),
                                     ), rheader_tabs)
 
@@ -201,13 +204,14 @@ def event_rheader(r):
                     closed = TH(T("CLOSED"))
                 else:
                     closed = TH()
+                table = r.table
                 rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % T("Name")),
+                                    TR(TH("%s: " % table.name.label),
                                        record.name),
-                                       TH("%s: " % T("Comments")),
-                                       record.comments,
-                                    TR(TH("%s: " % T("Zero Hour")),
-                                       record.zero_hour),
+                                    TR(TH("%s: " % table.comments.label),
+                                       record.comments),
+                                    TR(TH("%s: " % table.zero_hour.label),
+                                       table.zero_hour.represent(record.zero_hour)),
                                     TR(closed),
                                     ), rheader_tabs)
 

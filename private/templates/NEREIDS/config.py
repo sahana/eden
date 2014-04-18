@@ -367,7 +367,7 @@ def render_events(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     name = record["event_event.name"]
-    date = record["event_event.zero_hour"]
+    date = record["event_event.start_date"]
     closed = raw["event_event.closed"]
     event_type = record["event_event_type.name"]
     event_url = URL(c="event", f="event",
@@ -2026,7 +2026,7 @@ def customise_event_event_controller(**attr):
             table = s3db.event_event
 
             table.exercise.label = T("Is this an Exercise?")
-            table.zero_hour.label = T("Start Time")
+            table.start_date.label = T("Start Time")
 
             if r.method =="datalist":
                 # Disaster selection page
@@ -2193,7 +2193,7 @@ def customise_event_event_controller(**attr):
                     "name",
                     "event_type_id",
                     "exercise",
-                    "zero_hour",
+                    "start_date",
                     "closed",
                     S3SQLInlineComponent(
                         "event_location",

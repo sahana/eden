@@ -166,40 +166,50 @@ class S3OrganisationModel(S3Model):
         # Components
         add_components(tablename,
                        # Tags
-                       org_organisation_type_tag={"name": "tag",
-                                                  "joinby": "organisation_type_id",
-                                                 },
-                      )
+                       org_organisation_type_tag = {"name": "tag",
+                                                    "joinby": "organisation_type_id",
+                                                    },
+                       )
 
         if settings.get_org_regions():
+
+            hierarchical_regions = current.deployment_settings.get_org_region_hierarchical()
+
             # ---------------------------------------------------------------------
             # Organisation Regions
             #
             tablename = "org_region"
             define_table(tablename,
                          Field("name", length=128,
-                               label=T("Name"),
+                               label = T("Name"),
                                ),
                          Field("parent", "reference org_region", # This form of hierarchy may not work on all Databases
                                # Label hard-coded for IFRC currently
-                               label=T("Zone"),
+                               label = T("Zone"),
                                ondelete = "RESTRICT",
+                               readable = hierarchical_regions,
+                               writable = hierarchical_regions,
                                ),
                          # Can add Path, Level, L0, L1 if-useful for performance, widgets, etc
                          s3_comments(),
                          *s3_meta_fields())
 
             region_represent = S3Represent(lookup=tablename, translate=True)
-            # Can't be defined in-line as otherwise get a circular reference
-            table = db[tablename]
-            table.parent.represent = region_represent
-            table.parent.requires = IS_NULL_OR(
-                                        IS_ONE_OF(db, "org_region.id",
-                                                  represent,
-                                                  # Currently limited to just 1 level of parent
-                                                  filterby="parent",
-                                                  filter_opts=(None,),
-                                                  orderby="org_region.name"))
+
+            if hierarchical_regions:
+                hierarchy = "parent"
+                # Can't be defined in-line as otherwise get a circular reference
+                table = db[tablename]
+                table.parent.represent = region_represent
+                table.parent.requires = IS_NULL_OR(
+                                            IS_ONE_OF(db, "org_region.id",
+                                                      region_represent,
+                                                      # Currently limited to just 1 level of parent
+                                                      filterby="parent",
+                                                      filter_opts=(None,),
+                                                      orderby="org_region.name"))
+            else:
+                hierarchy = None
 
             # CRUD strings
             crud_strings[tablename] = Storage(
@@ -234,8 +244,8 @@ class S3OrganisationModel(S3Model):
                 ondelete="SET NULL")
 
             configure(tablename,
-                      deduplicate=self.org_region_duplicate,
-                      hierarchy="parent",
+                      deduplicate = self.org_region_duplicate,
+                      hierarchy = hierarchy,
                       )
         else:
             region_represent = None
@@ -375,9 +385,9 @@ class S3OrganisationModel(S3Model):
                        "comments",
                        ]
         if settings.get_org_branches():
-            text_fields += ["parent.name",
-                            "parent.acronym",
-                            ]
+            text_fields.extend(("parent.name",
+                                "parent.acronym",
+                                ))
             text_comment = T("You can search by name, acronym, comments or parent name or acronym.")
         else:
             text_comment = T("You can search by name, acronym or comments")
@@ -393,7 +403,6 @@ class S3OrganisationModel(S3Model):
                             # @ToDo: Introspect need for header based on # records
                             #header = True,
                             label = T("Type"),
-                            widget = "multiselect",
                             ),
             # NB Order is important here - gets popped in asset & inv controllers & IFRC template
             S3OptionsFilter("sector_organisation.sector_id",
@@ -401,13 +410,11 @@ class S3OrganisationModel(S3Model):
                             #header = True,
                             #label = T("Sector"),
                             options = org_sector_opts,
-                            widget = "multiselect",
                             ),
             S3OptionsFilter("country",
                             # @ToDo: Introspect need for header based on # records
                             #header = True,
                             #label = T("Home Country"),
-                            widget = "multiselect",
                             ),
             ]
 
@@ -438,124 +445,124 @@ class S3OrganisationModel(S3Model):
         # Components
         add_components(tablename,
                        # Documents
-                       doc_document="organisation_id",
-                       doc_image="organisation_id",
+                       doc_document = "organisation_id",
+                       doc_image = "organisation_id",
                        # Groups
-                       org_group={"link": "org_group_membership",
-                                  "joinby": "organisation_id",
-                                  "key": "group_id",
-                                  "actuate": "hide",
-                                 },
-                       # Format for InlineComponent/filter_widget
-                       org_group_membership="organisation_id",
-                       # Sites
-                       org_site="organisation_id",
-                       # Facilities
-                       org_facility="organisation_id",
-                       # Offices
-                       org_office="organisation_id",
-                       # Warehouses
-                       inv_warehouse="organisation_id",
-                       # Staff/Volunteers
-                       hrm_human_resource="organisation_id",
-                       # Members
-                       member_membership="organisation_id",
-                       # Locations served
-                       gis_location={"link": "org_organisation_location",
-                                     "joinby": "organisation_id",
-                                     "key": "location_id",
-                                     "actuate": "hide",
-                                    },
-                       # Format for filter_widget
-                       org_organisation_location="organisation_id",
-                       # Catalogs
-                       supply_catalog="organisation_id",
-                       # Resources
-                       org_resource="organisation_id",
-                       # Sectors
-                       org_sector={"link": "org_sector_organisation",
-                                   "joinby": "organisation_id",
-                                   "key": "sector_id",
-                                   "actuate": "hide",
-                                  },
-                       # Format for filter_widget
-                       org_sector_organisation="organisation_id",
-                       # Services
-                       org_service={"link": "org_service_organisation",
+                       org_group = {"link": "org_group_membership",
                                     "joinby": "organisation_id",
-                                    "key": "service_id",
+                                    "key": "group_id",
                                     "actuate": "hide",
-                                   },
+                                    },
+                       # Format for InlineComponent/filter_widget
+                       org_group_membership = "organisation_id",
+                       # Sites
+                       org_site = "organisation_id",
+                       # Facilities
+                       org_facility = "organisation_id",
+                       # Offices
+                       org_office = "organisation_id",
+                       # Warehouses
+                       inv_warehouse = "organisation_id",
+                       # Staff/Volunteers
+                       hrm_human_resource = "organisation_id",
+                       # Members
+                       member_membership = "organisation_id",
+                       # Locations served
+                       gis_location = {"link": "org_organisation_location",
+                                       "joinby": "organisation_id",
+                                       "key": "location_id",
+                                       "actuate": "hide",
+                                       },
                        # Format for filter_widget
-                       org_service_organisation="organisation_id",
+                       org_organisation_location = "organisation_id",
+                       # Catalogs
+                       supply_catalog = "organisation_id",
+                       # Resources
+                       org_resource = "organisation_id",
+                       # Sectors
+                       org_sector = {"link": "org_sector_organisation",
+                                     "joinby": "organisation_id",
+                                     "key": "sector_id",
+                                     "actuate": "hide",
+                                     },
+                       # Format for filter_widget
+                       org_sector_organisation = "organisation_id",
+                       # Services
+                       org_service = {"link": "org_service_organisation",
+                                      "joinby": "organisation_id",
+                                      "key": "service_id",
+                                      "actuate": "hide",
+                                      },
+                       # Format for filter_widget
+                       org_service_organisation = "organisation_id",
                        # Assets
-                       asset_asset="organisation_id",
+                       asset_asset = "organisation_id",
                        # Needs
-                       req_organisation_needs={"name": "needs",
-                                               "joinby": "organisation_id",
-                                               "multiple": False,
-                                              },
+                       req_organisation_needs = {"name": "needs",
+                                                 "joinby": "organisation_id",
+                                                 "multiple": False,
+                                                 },
                        # Requests
-                       #req_req="donated_by_id",
+                       #req_req = "donated_by_id",
                        
                        # Enable this to allow migration of users between instances
-                       #auth_user="organisation_id",
+                       #auth_user = "organisation_id",
 
                        # Related Organisations
-                       org_organisation=(# Branches
-                                         {"name": "branch",
-                                          "link": "org_organisation_branch",
-                                          "joinby": "organisation_id",
-                                          "key": "branch_id",
-                                          "actuate": "embed",
-                                          "autocomplete": "name",
-                                          "autodelete": True,
-                                         },
-                                         # Parent (for imports)
-                                         {"name": "parent",
-                                          "link": "org_organisation_branch",
-                                          "joinby": "branch_id",
-                                          "key": "organisation_id",
-                                          "actuate": "embed",
-                                          "autocomplete": "name",
-                                          "autodelete": False,
-                                         },
-                                        ),
-                      )
+                       org_organisation = (# Branches
+                                           {"name": "branch",
+                                            "link": "org_organisation_branch",
+                                            "joinby": "organisation_id",
+                                            "key": "branch_id",
+                                            "actuate": "embed",
+                                            "autocomplete": "name",
+                                            "autodelete": True,
+                                            },
+                                           # Parent (for imports)
+                                           {"name": "parent",
+                                            "link": "org_organisation_branch",
+                                            "joinby": "branch_id",
+                                            "key": "organisation_id",
+                                            "actuate": "embed",
+                                            "autocomplete": "name",
+                                            "autodelete": False,
+                                            },
+                                           ),
+                       )
 
         # Projects
         if settings.get_project_multiple_organisations():
             # Use link table
             add_components(tablename,
-                           project_project={"link": "project_organisation",
-                                            "joinby": "organisation_id",
-                                            "key": "project_id",
-                                            # Embed widget doesn't currently
-                                            # support 2 fields of same name (8 hours)
-                                            #"actuate": "embed",
-                                            "actuate": "hide",
-                                            "autocomplete": "name",
-                                            "autodelete": False,
-                                           },
+                           project_project = {"link": "project_organisation",
+                                              "joinby": "organisation_id",
+                                              "key": "project_id",
+                                              # Embed widget doesn't currently
+                                              # support 2 fields of same name (8 hours)
+                                              #"actuate": "embed",
+                                              "actuate": "hide",
+                                              "autocomplete": "name",
+                                              "autodelete": False,
+                                              },
                             # Format for filter_widget
-                            project_organisation={"name": "project_organisation",
-                                                  "joinby": "organisation_id",
-                                                 },
-                           )
+                            project_organisation = {"name": "project_organisation",
+                                                    "joinby": "organisation_id",
+                                                    },
+                            )
 
         else:
             # Direct link
             add_components(tablename,
-                           project_project="organisation_id",
-                          )
+                           project_project = "organisation_id",
+                           )
 
         # Organisation Summary data
         if settings.get_org_summary():
             add_components(tablename,
-                           org_organisation_summary={"name": "summary",
-                                                     "joinby": "organisation_id",
-                                                    },
-                          )
+                           org_organisation_summary = {"name": "summary",
+                                                       "joinby": "organisation_id",
+                                                       },
+                           )
 
         # ---------------------------------------------------------------------
         # Organisation <-> User
@@ -1467,7 +1474,7 @@ class S3OrganisationResourceModel(S3Model):
                           # - can't override field name, ondelete or requires
                           super_link("parameter_id", "stats_parameter",
                                      label = T("Resource Type"),
-                                     instance_types = ["org_resource_type"],
+                                     instance_types = ("org_resource_type",),
                                      represent = S3Represent(lookup="stats_parameter",
                                                              translate=True),
                                      readable = True,
@@ -1854,8 +1861,11 @@ class S3OrganisationServiceModel(S3Model):
         T = current.T
         db = current.db
 
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+
+        hierarchical_service_types = current.deployment_settings.get_org_services_hierarchical()
 
         # ---------------------------------------------------------------------
         # Service
@@ -1863,10 +1873,33 @@ class S3OrganisationServiceModel(S3Model):
         tablename = "org_service"
         define_table(tablename,
                      Field("name", length=128, notnull=True, unique=True,
-                           label=T("Name"),
+                           label = T("Name"),
+                           ),
+                     Field("parent", "reference org_service", # This form of hierarchy may not work on all Databases
+                           label = T("SubType of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_service_types,
+                           writable = hierarchical_service_types,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename, translate=True)
+
+        if hierarchical_service_types:
+            hierarchy = "parent"
+            # Can't be defined in-line as otherwise get a circular reference
+            table = db[tablename]
+            table.parent.represent = represent
+            table.parent.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "org_service.id",
+                                                  represent,
+                                                  # Currently limited to just 1 level of parent
+                                                  filterby="parent",
+                                                  filter_opts=(None,),
+                                                  orderby="org_service.name"))
+        else:
+            hierarchy = None
 
         # CRUD Strings
         ADD_SERVICE = T("Create Service")
@@ -1884,7 +1917,6 @@ class S3OrganisationServiceModel(S3Model):
             msg_list_empty = T("No Services currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, translate=True)
         service_id = S3ReusableField("service_id", "reference %s" % tablename,
                                     sortby = "name",
                                     label = T("Services"),
@@ -1901,6 +1933,10 @@ class S3OrganisationServiceModel(S3Model):
         #table = db[tablename]
         #table.id.represent = represent
         #table.id.label = T("Service")
+
+        configure(tablename,
+                  hierarchy = hierarchy,
+                  )
 
         # ---------------------------------------------------------------------
         # Organizations <> Services Link Table
@@ -1925,9 +1961,9 @@ class S3OrganisationServiceModel(S3Model):
             msg_record_deleted = T("Service removed from Organization"),
             msg_list_empty = T("No Services found for this Organization"))
 
-        self.configure(tablename,
-                       deduplicate=self.org_service_organisation_deduplicate,
-                       )
+        configure(tablename,
+                  deduplicate = self.org_service_organisation_deduplicate,
+                  )
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -2651,6 +2687,8 @@ class S3FacilityModel(S3Model):
         else:
             org_widget = None
 
+        hierarchical_facility_types = settings.get_org_facility_types_hierarchical()
+
         # ---------------------------------------------------------------------
         # Facility Types (generic)
         #
@@ -2659,9 +2697,32 @@ class S3FacilityModel(S3Model):
                      Field("name",
                            label = T("Name"),
                            ),
+                     Field("parent", "reference org_facility_type", # This form of hierarchy may not work on all Databases
+                           label = T("SubType of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_facility_types,
+                           writable = hierarchical_facility_types,
+                           ),
                      s3_comments(),
                      *s3_meta_fields()
                      )
+
+        type_represent = S3Represent(lookup=tablename, translate=True)
+
+        if hierarchical_facility_types:
+            hierarchy = "parent"
+            # Can't be defined in-line as otherwise get a circular reference
+            table = db[tablename]
+            table.parent.represent = type_represent
+            table.parent.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "org_facility_type.id",
+                                                  type_represent,
+                                                  # Currently limited to just 1 level of parent
+                                                  filterby="parent",
+                                                  filter_opts=(None,),
+                                                  orderby="org_facility_type.name"))
+        else:
+            hierarchy = None
 
         # CRUD strings
         # @ToDo: Flexible Labelling: 'Facility, 'Place', 'Site'
@@ -2679,16 +2740,15 @@ class S3FacilityModel(S3Model):
             msg_record_deleted=T("Facility Type deleted"),
             msg_list_empty=T("No Facility Types currently registered"))
 
-        represent = S3Represent(lookup=tablename, translate=True)
         facility_type_id = S3ReusableField("facility_type_id",
             "reference %s" % tablename,
             sortby = "name",
             # Only used by org_site_facility_type
             requires = IS_ONE_OF(db, "org_facility_type.id",
-                                 represent,
+                                 type_represent,
                                  sort = True,
                                  ),
-            represent = represent,
+            represent = type_represent,
             label = T("Facility Type"),
             comment = S3AddResourceLink(c = "org",
                                         f = "facility_type",
@@ -2700,6 +2760,7 @@ class S3FacilityModel(S3Model):
 
         configure(tablename,
                   deduplicate = self.org_facility_type_duplicate,
+                  hierarchy = hierarchy,
                   )
 
         # ---------------------------------------------------------------------

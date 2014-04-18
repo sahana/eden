@@ -122,7 +122,7 @@ def homepage():
         # Latest 5 Disasters
         resource = s3db.resource("event_event")
         list_fields = ["name",
-                       "zero_hour",
+                       "start_date",
                        "closed",
                        ]
         orderby = resource.get_config("list_orderby",
@@ -385,7 +385,7 @@ def render_homepage_events(list_id, item_id, resource, rfields, record):
     raw = record._row
     record_id = raw["event_event.id"]
     name = record["event_event.name"]
-    date = record["event_event.zero_hour"]
+    date = record["event_event.start_date"]
     closed = raw["event_event.closed"]
 
     if closed:

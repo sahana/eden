@@ -192,8 +192,10 @@ settings.inv.item_status = {
 #
 # Enable the use of Organisation Groups
 settings.org.groups = "Network"
-settings.org.site_label = "Facility"
+# Make Services Hierarchical
+settings.org.services_hierarchical = True
 # Set the label for Sites
+settings.org.site_label = "Facility"
 #settings.org.site_label = "Location"
 # Uncomment to show the date when a Site (Facilities-only for now) was last contacted
 settings.org.site_last_contacted = True

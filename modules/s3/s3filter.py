@@ -148,7 +148,7 @@ class S3FilterWidget(object):
                              (L{S3LocationFilter})
             @keyword widget: widget to use (L{S3OptionsFilter}),
                              "select", "multiselect" (default), 
-                             "multiselect-bootstrap", or "groupedopts"
+                             or "groupedopts"
             @keyword cols: number of columns of checkboxes (L{S3OptionsFilter}
                            and L{S3LocationFilter} with "groupedopts" widget)
             @keyword filter: show filter for options (L{S3OptionsFilter},
@@ -728,8 +728,35 @@ class S3LocationFilter(S3FilterWidget):
 
         fname = self._prefix(field_name) if resource else field_name
         
-        if opts.widget == "multiselect":
+        if opts.widget == "groupedopts":
+            # Grouped Checkboxes
+            # @ToDo: somehow working, but ugly, not usable (deprecated?)
+            if "groupedopts-filter-widget" not in _class:
+                attr["_class"] = "%s groupedopts-filter-widget" % _class
+            attr["cols"] = opts.get("cols", 3)
 
+            # Add one widget per level
+            for level in levels:
+                options = levels[level]["options"]
+                groupedopts = S3GroupedOptionsWidget(cols = opts["cols"],
+                                                     size = opts["size"] or 12,
+                                                     )
+                # Dummy field
+                name = "%s-%s" % (base_name, level)
+                dummy_field = Storage(name=name,
+                                      type=ftype,
+                                      requires=IS_IN_SET(options,
+                                                         multiple=True))
+                # Unique ID/name
+                attr["_id"] = "%s-%s" % (base_id, level)
+                attr["_name"] = name
+                
+                # Find relevant values to pre-populate
+                _values = values.get("%s$%s__%s" % (fname, level, operator))
+                w_append(groupedopts(dummy_field, _values, **attr))
+
+        else:
+            # Multiselect is default
             T = current.T
 
             # Multiselect Dropdown with Checkboxes
@@ -767,33 +794,6 @@ class S3LocationFilter(S3FilterWidget):
                 widget = w(dummy_field, _values, **attr)
                 w_append(widget)
                 first = False
-
-        else:
-            # Grouped Checkboxes
-            # @ToDo: somehow working, but ugly, not usable (deprecated?)
-            if "groupedopts-filter-widget" not in _class:
-                attr["_class"] = "%s groupedopts-filter-widget" % _class
-            attr["cols"] = opts.get("cols", 3)
-
-            # Add one widget per level
-            for level in levels:
-                options = levels[level]["options"]
-                groupedopts = S3GroupedOptionsWidget(cols = opts["cols"],
-                                                     size = opts["size"] or 12,
-                                                     )
-                # Dummy field
-                name = "%s-%s" % (base_name, level)
-                dummy_field = Storage(name=name,
-                                      type=ftype,
-                                      requires=IS_IN_SET(options,
-                                                         multiple=True))
-                # Unique ID/name
-                attr["_id"] = "%s-%s" % (base_id, level)
-                attr["_name"] = name
-                
-                # Find relevant values to pre-populate
-                _values = values.get("%s$%s__%s" % (fname, level, operator))
-                w_append(groupedopts(dummy_field, _values, **attr))
 
         # Restore id and name for the data_element
         attr["_id"] = base_id
@@ -1189,15 +1189,16 @@ class S3OptionsFilter(S3FilterWidget):
 
         # Initialize widget
         widget_type = opts["widget"]
-        if widget_type == "multiselect-bootstrap":
-            widget_class = "multiselect-filter-bootstrap"
-            script = "/%s/static/scripts/bootstrap-multiselect.js" % \
-                        current.request.application
-            scripts = current.response.s3.scripts
-            if script not in scripts:
-                scripts.append(script)
-            w = MultipleOptionsWidget.widget
-        elif widget_type == "groupedopts":
+        #if widget_type == "multiselect-bootstrap":
+        #    widget_class = "multiselect-filter-bootstrap"
+        #    script = "/%s/static/scripts/bootstrap-multiselect.js" % \
+        #                current.request.application
+        #    scripts = current.response.s3.scripts
+        #    if script not in scripts:
+        #        scripts.append(script)
+        #    w = MultipleOptionsWidget.widget
+        #elif widget_type == "groupedopts":
+        if widget_type == "groupedopts":
             widget_class = "groupedopts-filter-widget"
             w = S3GroupedOptionsWidget(options = options,
                                        multiple = opts.get("multiple", True),

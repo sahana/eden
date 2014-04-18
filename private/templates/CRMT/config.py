@@ -311,6 +311,8 @@ settings.hrm.teams = False
 # -----------------------------------------------------------------------------
 # Organisation Registry
 #
+# Make Facility Types Hierarchical
+settings.org.facility_types_hierarchical = True
 # Enable the use of Organisation Groups
 settings.org.groups = "Coalition"
 # Set the label for Sites

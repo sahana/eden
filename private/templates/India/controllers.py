@@ -267,10 +267,10 @@ def _newsfeed():
         # layout = render_events
         # list_id = "event_datalist"
         # limit = 5
-        # orderby = "zero_hour desc"
+        # orderby = "start_date desc"
         # list_fields = ["name",
                        # "event_type_id$name",
-                       # "zero_hour",
+                       # "start_date",
                        # "closed",
                        # ]
         # output["disasters"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
@@ -352,7 +352,7 @@ def render_events(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     name = record["event_event.name"]
-    date = record["event_event.zero_hour"]
+    date = record["event_event.start_date"]
     closed = raw["event_event.closed"]
     event_type = record["event_event_type.name"]
 

@@ -2033,12 +2033,15 @@ class S3HRSkillModel(S3Model):
         # =========================================================================
         # Training Events
         #
+
+        #site_label = settings.get_org_site_label()
+        site_label = T("Venue")
+
         tablename = "hrm_training_event"
         define_table(tablename,
                      course_id(empty=False),
                      self.super_link("site_id", "org_site",
-                                     #label=settings.get_org_site_label(),
-                                     label = T("Venue"),
+                                     label = site_label,
                                      instance_types = auth.org_site_types,
                                      updateable = True,
                                      not_filterby = "obsolete",
@@ -2103,19 +2106,17 @@ class S3HRSkillModel(S3Model):
                          comment = T("You can search by course name, venue name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
                          ),
             S3LocationFilter("site_id$location_id",
-                             levels=levels,
-                             widget="multiselect",
-                             hidden=True,
+                             levels = levels,
+                             hidden = True,
                              ),
             S3OptionsFilter("site_id",
-                            label=T("Site"),
-                            widget="multiselect",
-                            hidden=True,
+                            label = site_label,
+                            hidden = True,
                             ),
             S3DateFilter("start_date",
-                         label=T("Date"),
-                         hide_time=True,
-                         hidden=True,
+                         label = T("Date"),
+                         hide_time = True,
+                         hidden = True,
                          )
             ]
 
@@ -2215,21 +2216,17 @@ class S3HRSkillModel(S3Model):
             S3OptionsFilter("person_id$human_resource.organisation_id",
                             # Doesn't support translations
                             #represent="%(name)s",
-                            widget="multiselect",
                             ),
             S3LocationFilter("person_id$location_id",
                              levels=levels,
-                             widget="multiselect",
                              ),
             S3OptionsFilter("course_id",
                             # Doesn't support translations
                             #represent="%(name)s",
-                            widget="multiselect",
                             ),
             S3OptionsFilter("training_event_id$site_id",
                             label=T("Training Facility"),
                             represent = self.org_site_represent,
-                            widget="multiselect",
                             ),
             S3DateFilter("date",
                          hide_time=True,
@@ -3501,34 +3498,21 @@ class S3HRProgrammeModel(S3Model):
             msg_list_empty = T("Currently no hours recorded for this volunteer"))
 
         filter_widgets = [
-            #S3LocationFilter("location_id",
-            #                 levels=["L1", "L2"],
-            #                 label=T("Location"),
-            #                 represent="%(name)s",
-            #                 widget="multiselect",
-            #                 ),
             S3OptionsFilter("person_id$human_resource.organisation_id",
                             # Doesn't support translations
                             #represent="%(name)s",
-                            widget="multiselect",
                             ),
             S3OptionsFilter("programme_id",
-                            label=T("Program"),
-                            #options = self.project_task_activity_opts,
-                            represent="%(name)s",
-                            #widget="multiselect",
-                            cols=3,
+                            # Doesn't support translation
+                            #represent = "%(name)s",
                             ),
             S3OptionsFilter("job_title_id",
-                            label=T("Volunteer Role"),
-                            #options = self.project_task_activity_opts,
-                            represent="%(name)s",
-                            #widget="multiselect",
-                            cols=3,
+                            #label = T("Volunteer Role"),
+                            # Doesn't support translation
+                            #represent = "%(name)s",
                             ),
             S3DateFilter("date",
-                         label=T("Date"),
-                         hide_time=True,
+                         hide_time = True,
                          ),
             ]
 
@@ -4896,23 +4880,23 @@ def hrm_competency_controller():
                             ),
                 S3OptionsFilter("skill_id",
                                 label=T("Skills"),
-                                cols = 2,
+                                #cols = 2,
                                 options = lambda: get_opts("hrm_skill"),
                                ),
                 S3OptionsFilter("competency_id",
                                 label=T("Competency"),
-                                cols = 2,
+                                #cols = 2,
                                 options = lambda: get_opts("hrm_competency_rating"),
                                ),
-            ]
+                ]
             s3db.configure("hrm_competency",
+                           filter_widgets = filter_widgets,
                            list_fields = ["person_id",
                                           "skill_id",
                                           "competency_id",
                                           "comments",
-                                         ],
-                           filter_widgets = filter_widgets,
-                          )
+                                          ],
+                           )
         elif r.method in ("create", "create.popup", "update", "update.popup"):
             # Coming from Profile page?
             person_id = current.request.get_vars.get("~.person_id", None)
@@ -5090,8 +5074,7 @@ def hrm_group_controller():
                          #_class="filter-search",
                          ),
             S3OptionsFilter("organisation_team.organisation_id",
-                            label=T("Organization"),
-                            widget="multiselect",
+                            label = T("Organization"),
                             #hidden=True,
                             ),
             ]
@@ -6960,6 +6943,7 @@ def hrm_human_resource_filters(resource_type=None,
             S3OptionsFilter("type",
                             label = T("Type"),
                             options = hrm_type_opts,
+                            widget = "groupedopts",
                             hidden = True,
                             )
         )
@@ -6978,7 +6962,6 @@ def hrm_human_resource_filters(resource_type=None,
         S3OptionsFilter("organisation_id",
                         filter = True,
                         header = "",
-                        widget = "multiselect",
                         #hidden = True,
                         )
     )
@@ -6987,7 +6970,6 @@ def hrm_human_resource_filters(resource_type=None,
     append_filter(
         S3LocationFilter("location_id",
                          label = T("Location"),
-                         widget = "multiselect",
                          hidden = True,
                          )
     )
@@ -7005,6 +6987,7 @@ def hrm_human_resource_filters(resource_type=None,
                                            False: T("No"),
                                            #None: T("Unknown"),
                                            },
+                                widget = "groupedopts",
                                 hidden = True,
                                 #none = True,
                                 )
@@ -7014,8 +6997,8 @@ def hrm_human_resource_filters(resource_type=None,
             # Programme filter
             append_filter(
                 S3OptionsFilter("person_id$hours.programme_id",
-                                label=T("Program"),
-                                cols = 2,
+                                label = T("Program"),
+                                #cols = 2,
                                 options = hrm_programme_opts,
                                 hidden = True,
                                 )
@@ -7025,7 +7008,6 @@ def hrm_human_resource_filters(resource_type=None,
         # Site filter (staff only)
         filter_widgets.append(
             S3OptionsFilter("site_id",
-                            widget = "multiselect",
                             hidden = True,
                             )
         )
@@ -7039,7 +7021,6 @@ def hrm_human_resource_filters(resource_type=None,
                             # @ToDo: deployment_setting for label (this is RDRT-specific)
                             #label = T("Credential"),
                             label = T("Sector"),
-                            widget = "multiselect",
                             hidden = True,
                             )
         )
@@ -7066,9 +7047,8 @@ def hrm_human_resource_filters(resource_type=None,
     append_filter(
         S3OptionsFilter("training.course_id",
                         label = T("Training"),
-                        widget = "multiselect",
                         hidden = True,
-                       ),
+                        ),
     )
 
     # Group (team) membership filter
@@ -7081,9 +7061,8 @@ def hrm_human_resource_filters(resource_type=None,
         append_filter(
             S3OptionsFilter("group_membership.group_id",
                             label = T(teams),
-                            widget="multiselect",
-                            hidden=True,
-                           )
+                            hidden = True,
+                            )
             )
 
     return filter_widgets

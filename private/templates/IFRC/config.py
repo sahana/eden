@@ -18,6 +18,7 @@ settings = current.deployment_settings
 """
     Template settings for IFRC
 """
+
 # =============================================================================
 # System Settings
 # -----------------------------------------------------------------------------
@@ -305,6 +306,8 @@ settings.pr.lookup_duplicates = True
 settings.deploy.hr_label = "Member"
 # Enable the use of Organisation Regions
 settings.org.regions = True
+# Make Organisation Regions Hierarchical
+settings.org.regions_hierarchical = True
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 settings.hrm.skill_types = True
 # RDRT overrides these within controller:
@@ -1704,6 +1707,14 @@ settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 # Should Requests ask whether Transportation is required?
 settings.req.ask_transport = True
+
+# -----------------------------------------------------------------------------
+def customise_vulnerability_data_resource(r, tablename):
+
+    # Date is required: We don't store modelled data
+    r.table.date.requires = r.table.date.requires.other
+
+settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
 
 # =============================================================================
 # Template Modules

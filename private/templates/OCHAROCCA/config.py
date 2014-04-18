@@ -17,14 +17,10 @@ settings = current.deployment_settings
 
 """
     UN OCHA Regional Office of Caucasus and Central Asia (ROCCA) Humanitarian Data Platform Template settings
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
 """
 
 # Levels for the LocationSelector
-gis_levels = ("L1", "L2", "L3")
+gis_levels = ("L0", "L1", "L2", "L3")
 
 # =============================================================================
 # System Settings
@@ -76,16 +72,15 @@ settings.ui.filter_formstyle = "bootstrap"
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
     # Only needed to import the l10n names
-    ("hy", "Armenian"),
-    ("az", "Azerbaijani"),
-    ("ka", "Georgian"),
-    ("kk", "Kazakh"),
-    ("ky", "Kyrgyz"),
-    ("ru", "Russian"),
-    ("tg",  "Tajik"),
-    ("tk",  "Turkmen"),
-    ("uz", "Uzbek"),
-    
+    #("hy", "Armenian"),
+    #("az", "Azerbaijani"),
+    #("ka", "Georgian"),
+    #("kk", "Kazakh"),
+    #("ky", "Kyrgyz"),
+    #("ru", "Russian"),
+    #("tg",  "Tajik"),
+    #("tk",  "Turkmen"),
+    #("uz", "Uzbek"),
 ])
 # Default Language
 settings.L10n.default_language = "en"
@@ -131,6 +126,11 @@ settings.gis.toolbar = False
 settings.gis.lookup_code = "PCode"
 
 # -----------------------------------------------------------------------------
+# Events
+# Make Event Types Hierarchical
+settings.event.types_hierarchical = True
+
+# -----------------------------------------------------------------------------
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
@@ -141,15 +141,6 @@ settings.gis.lookup_code = "PCode"
 #settings.ui.export_formats = ["xls"]
 
 settings.ui.update_label = "Edit"
-
-# -----------------------------------------------------------------------------
-# Disable rheaders
-def customise_no_rheader_controller(**attr):
-    # Remove rheader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_event_event_controller = customise_no_rheader_controller
 
 # -----------------------------------------------------------------------------
 # Summary Pages
@@ -329,36 +320,28 @@ def customise_gis_location_controller(**attr):
 settings.customise_gis_location_controller = customise_gis_location_controller
 
 # -----------------------------------------------------------------------------
-def customise_vulnerability_data_resource(r, tablename):
-    """
-        Customise event_event resource
-        - List Fields
-        - CRUD Strings
-        - Form
-        - Filter
-        - Report 
-        Runs after controller customisation
-        But runs before prep
-        
-    """
+def customise_event_event_controller(**attr):
 
-    s3db = current.s3db
-    table = r.table
+    s3 = current.response.s3
 
-    table.date.required = False
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+        r.table.start_date.writable = True
+        return True
+    s3.prep = custom_prep
 
-    # Should these be attached to the stats_data super entity and inheritied?
-    s3db.stats_demographic_data
-    s3db.configure("vulnerability_data",
-                   filter_widgets = s3db.get_config("stats_demographic_data", 
-                                                    "filter_widgets"),
-                   list_fields = s3db.get_config("stats_demographic_data", 
-                                                    "list_fields"),
-                   report_options = s3db.get_config("stats_demographic_data", 
-                                                    "report_options"),
-                   )
+    # Remove rheader
+    attr["rheader"] = None
+    return attr
 
-settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
+settings.customise_event_event_controller = customise_event_event_controller
+
 # -----------------------------------------------------------------------------
 def customise_event_event_resource(r, tablename):
     """
@@ -374,125 +357,119 @@ def customise_event_event_resource(r, tablename):
         @ToDo: Move some of this into the model as defaults
     """
 
-    from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter
+    from s3.s3filter import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3OptionsFilter
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-    from s3.s3utils import S3DateTime
-    from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3DateWidget, S3LocationSelectorWidget2
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2
 
+    db = current.db
     s3db = current.s3db
     table = r.table
-    zero_hour_field = table.zero_hour
-
-    # Custom PreP
-    s3 = current.response.s3
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-        zero_hour_field.writable = True
-        return True
-    s3.prep = custom_prep
-
     table.name.label = T("Disaster Number")
-    zero_hour_field.widget = S3DateWidget()
-    zero_hour_field.label = T("Start Date")
-    zero_hour_field.represent = S3DateTime.date_represent
-    zero_hour_field.comment = ""
-    table.end_date.represent = S3DateTime.date_represent
 
     location_field = s3db.event_event_location.location_id
     location_field.requires = IS_LOCATION_SELECTOR2(levels=gis_levels)
     location_field.widget = S3LocationSelectorWidget2(levels=gis_levels)
     location_field.label = ""
 
-    s3db.event_event_tag.value.represent = IS_INT_AMOUNT.represent
-    s3db.event_event_tag.value.label = ""
-    tag_fields = OrderedDict(killed = "Killed",
-                             total_affected = "Total Affected",
-                             est_damage = "Estimated Damage (US$ Million)",
-                             )
-
-    tag_crud_form_fields = []
-    tag_list_fields = []
-    for tag, label  in tag_fields.items():
-        s3db.add_components("event_event",
-                            event_event_tag = {"name": tag,
-                                               "joinby": "event_id",
-                                               "filterby": "tag",
-                                               "filterfor": [label],
-                                                },
-                            )
-        tag_crud_form_fields.append(S3SQLInlineComponent(tag,
-                                                         label = T(label),
-                                                         multiple = False,
-                                                         fields = ["value"],
-                                                         )
-                                    )
-        tag_list_fields.append((T(label), "%s.value" % tag))
-      
-    crud_form = S3SQLCustomForm("name",
-                                "event_type_id",
-                                "zero_hour",
-                                "end_date",
-                                #"event_location.location_id",
-                                S3SQLInlineComponent("event_location",
-                                                     label = T("Location"),
-                                                     multiple = False,
-                                                     fields = ["location_id"],
-                                                     ),
-                                *tag_crud_form_fields
+    impact_fields = OrderedDict(killed = "Killed",
+                                total_affected = "Total Affected",
+                                est_damage = "Estimated Damage (US$ Million)",
                                 )
 
-    location_fields = ["event_location.location_id$%s" % level for level in ["L0"] + list(gis_levels)]
+    ptable = s3db.stats_impact_type
+    rows = db(ptable.name.belongs(impact_fields.values())).select(ptable.id,
+                                                                  ptable.name,
+                                                                  )
+    parameters = rows.as_dict(key="name")
 
-    list_fields = ["name",
-                   "event_type_id"] + \
-                  location_fields + \
-                  ["zero_hour",
-                   "end_date"] + \
-                  tag_list_fields
+    impact_crud_form_fields = []
+    impact_list_fields = []
+    add_components = s3db.add_components
+    for tag, label  in impact_fields.items():
+        add_components("event_event",
+                       stats_impact = {"name": tag,
+                                       "link": "event_impact",
+                                       "joinby": "event_id",
+                                       "key": "impact_id",
+                                       "filterby": "parameter_id",
+                                       "filterfor": (parameters[label]["id"],),
+                                       },
+                       )
+        # These aren't yet working
+        impact_crud_form_fields.append(S3SQLInlineComponent(tag,
+                                                            label = T(label),
+                                                            multiple = False,
+                                                            fields = ["value"],
+                                                            ))
+        impact_list_fields.append((T(label), "%s.value" % tag))
 
-    filter_widgets = [S3OptionsFilter("event_type_id",
-                                      label = T("Type"),
-                                      # Not translateable
-                                      #represent = "%(name)s",
-                                      widget = "multiselect",
-                                      multiple = False,
-                                      ),
+    # Hide label in CRUD form
+    db.stats_impact.value.label = ""
+    crud_form = S3SQLCustomForm("name",
+                                "event_type_id",
+                                "start_date",
+                                "end_date",
+                                # @ToDo: Inline location_id field
+                                #S3SQLInlineComponent("event_location",
+                                #                     label = T("Location"),
+                                #                     multiple = False,
+                                #                     fields = ["location_id"],
+                                #                     ),
+                                *impact_crud_form_fields
+                                )
+
+    filter_widgets = [S3HierarchyFilter("event_type_id",
+                                        label = T("Type"),
+                                        # Not translateable
+                                        #represent = "%(name)s",
+                                        multiple = False,
+                                        ),
                       S3LocationFilter("event_location.location_id",
-                             levels = gis_levels,
-                             widget = "multiselect"
-                             ),
+                                       levels = gis_levels,
+                                       ),
                       S3DateFilter("date",
-                                    label=None,
-                                    hide_time=True,
-                                    input_labels = {"ge": "From", "le": "To"}
-                                    ),
+                                   label = None,
+                                   hide_time = True,
+                                   input_labels = {"ge": "From", "le": "To"}
+                                   ),
                       ]
 
-    # @ToDo: zero_hour -> Report on Year only.. @flavour ;)
-    report_fields = ["event_type_id"] + \
-                    location_fields + \
-                    ["zero_hour"]
+    list_fields = ["name",
+                   "event_type_id",
+                   ]
+    lappend = list_fields.append
 
-    report_options = Storage(
-        rows=report_fields,
-        cols=report_fields,
-        fact=[(T("Number of Disasters"), "count(id)")],# +\
-             # @ToDo: Fix to produce sum instead of only count of string field
-             #[(label, "sum(%s)" % value) for label, value in tag_list_fields],
-        defaults=Storage(rows="event_type_id",
-                         cols="event_location.location_id$L0",
-                         fact="count(id)",
-                         totals=True,
-                         chart = "breakdown:rows",
-                         table = "collapse",
-                         )
-        )
+    report_fields = ["event_type_id",
+                     ]
+    rappend = report_fields.append
+    
+    for level in gis_levels:
+        location_level = "event_location.location_id$%s" % level
+        lappend(location_level)
+        rappend(location_level)
+
+    list_fields.extend(("start_date",
+                        "end_date",
+                        ))
+    list_fields.extend(impact_list_fields)
+
+    # @ToDo: start_date -> Report on Year only.. @flavour ;)
+    rappend("start_date")
+
+    report_options = Storage(rows=report_fields,
+                             cols=report_fields,
+                             fact=[(T("Number of Disasters"), "count(id)")],# +\
+                                   # @ToDo: Fix to produce sum instead of only count of string field
+                                   #[(label, "sum(%s)" % value) for label, value in tag_list_fields],
+                             defaults=Storage(rows="event_type_id",
+                                              cols="event_location.location_id$L0",
+                                              fact="count(id)",
+                                              totals=True,
+                                              chart = "breakdown:rows",
+                                              table = "collapse",
+                                              ),
+                             )
 
     s3db.configure("event_event",
                    crud_form = crud_form,

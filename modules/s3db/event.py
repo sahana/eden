@@ -37,6 +37,7 @@ __all__ = ["S3EventModel",
            "S3EventAssetModel",
            "S3EventCMSModel",
            "S3EventHRModel",
+           "S3EventImpactModel",
            "S3EventIReportModel",
            "S3EventMapModel",
            #"S3EventRequestModel",
@@ -76,7 +77,6 @@ class S3EventModel(S3Model):
         T = current.T
         db = current.db
 
-        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -85,16 +85,41 @@ class S3EventModel(S3Model):
         NONE = messages["NONE"]
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
+        hierarchical_event_types = current.deployment_settings.get_event_types_hierarchical()
+
         # ---------------------------------------------------------------------
         # Event Types / Disaster Types
         #
         tablename = "event_event_type"
         define_table(tablename,
-                     Field("name", notnull=True,
-                           length=64,
-                           label=T("Name")),
+                     Field("name", notnull=True, length=64,
+                           label = T("Name"),
+                           ),
+                     Field("parent", "reference event_event_type", # This form of hierarchy may not work on all Databases
+                           label = T("SubType of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_event_types,
+                           writable = hierarchical_event_types,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        type_represent = S3Represent(lookup=tablename, translate=True)
+
+        if hierarchical_event_types:
+            hierarchy = "parent"
+            # Can't be defined in-line as otherwise get a circular reference
+            table = db[tablename]
+            table.parent.represent = type_represent
+            table.parent.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "event_event_type.id",
+                                                  type_represent,
+                                                  # Currently limited to just 1 level of parent
+                                                  filterby="parent",
+                                                  filter_opts=(None,),
+                                                  orderby="event_event_type.name"))
+        else:
+            hierarchy = None
 
         crud_strings[tablename] = Storage(
             label_create = T("Create Event Type"),
@@ -103,22 +128,21 @@ class S3EventModel(S3Model):
             title_update = T("Edit Event Type"),
             title_upload = T("Import Event Types"),
             label_list_button = T("List Event Types"),
-            label_delete_button = T("Remove Event Type from this event"),
+            label_delete_button = T("Delete Event Type"),
             msg_record_created = T("Event Type added"),
             msg_record_modified = T("Event Type updated"),
             msg_record_deleted = T("Event Type removed"),
             msg_list_empty = T("No Event Types currently registered")
             )
 
-        represent = S3Represent(lookup=tablename)
         event_type_id = S3ReusableField("event_type_id", "reference %s" % tablename,
                                         sortby="name",
                                         requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "event_event_type.id",
-                                                              represent,
+                                                              type_represent,
                                                               orderby="event_event_type.name",
                                                               sort=True)),
-                                        represent = represent,
+                                        represent = type_represent,
                                         label = T("Event Type"),
                                         ondelete = "RESTRICT",
                                         # Uncomment these to use an Autocomplete & not a Dropdown
@@ -127,8 +151,10 @@ class S3EventModel(S3Model):
                                         #              _title="%s|%s" % (T("Event Type"),
                                         #                                AUTOCOMPLETE_HELP))
                                         )
+
         configure(tablename,
                   deduplicate = self.event_type_duplicate,
+                  hierarchy = hierarchy,
                   )
 
         # ---------------------------------------------------------------------
@@ -140,7 +166,7 @@ class S3EventModel(S3Model):
         tablename = "event_event"
         define_table(tablename,
                      Field("name",      # Name could be a code
-                           length=64,   # Mayon compatiblity
+                           length=64,   # Mayon compatibility
                            label=T("Name"),
                            ),
                      event_type_id(),
@@ -151,15 +177,15 @@ class S3EventModel(S3Model):
                                                            # Should!
                            #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
                            label=T("Exercise?")),
-                     s3_datetime(name="zero_hour",
-                                 label = T("Zero Hour"),
+                     s3_datetime(name="start_date",
                                  default = "now",
-                                 comment = DIV(_class="tooltip",
-                                               _title="%s|%s" % (T("Zero Hour"),
-                                                                 T("The time at which the Event started."))),
+                                 label = T("Start Date"),
+                                 represent = "date",
+                                 widget = "date",
                                  ),
                      s3_datetime("end_date",
                                  label = T("End Date"),
+                                 represent = "date",
                                  widget = "date",
                                  ),
                      Field("closed", "boolean",
@@ -208,34 +234,40 @@ class S3EventModel(S3Model):
                   context = {"location": "event_location.location_id",
                              },
                   deduplicate = self.event_duplicate,
-                  list_orderby = "event_event.zero_hour desc",
-                  orderby = "event_event.zero_hour desc",
                   list_fields = ["id",
                                  "name",
                                  "event_type_id$name",
                                  (T("Location"), "location.name"),
-                                 "zero_hour",
+                                 "start_date",
                                  "exercise",
                                  "closed",
                                  "comments",
                                  ],
+                  list_orderby = "event_event.start_date desc",
+                  orderby = "event_event.start_date desc",
                   update_onaccept = self.event_update_onaccept,
                   )
 
         # Components
-        add_components(tablename,
-                       event_incident="event_id",
-                       gis_location={"link": "event_event_location",
-                                     "joinby": "event_id",
-                                     "key": "location_id",
-                                     "actuate": "hide",
-                                    },
-                        event_event_location="event_id",
-                        req_req="event_id",
-                        event_event_tag={"name": "tag",
-                                         "joinby": "event_id",
-                                        },
-                       )
+        self.add_components(tablename,
+                            event_incident = "event_id",
+                            gis_location = {"link": "event_event_location",
+                                            "joinby": "event_id",
+                                            "key": "location_id",
+                                            "actuate": "hide",
+                                            },
+                            event_event_location = "event_id",
+                            event_event_tag = {"name": "tag",
+                                               "joinby": "event_id",
+                                               },
+                            req_req = "event_id",
+                            stats_impact = {"link": "event_impact",
+                                            "joinby": "event_id",
+                                            "key": "impact_id",
+                                            "actuate": "hide",
+                                            },
+                            event_impact = "event_id",
+                            )
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)
@@ -347,7 +379,7 @@ class S3EventModel(S3Model):
         data = item.data
         query = None
         # Mandatory checks: Name &/or Start Date
-        for field in ("name", "zero_hour"):
+        for field in ("name", "start_date"):
             value = data.get(field, None)
             if value:
                 q = (table[field] == value)
@@ -1086,6 +1118,39 @@ class S3EventHRModel(S3Model):
             msg_record_modified = T("Human Resource Assignment updated"),
             msg_record_deleted = T("Human Resource unassigned"),
             msg_list_empty = T("No Human Resources currently assigned to this incident"))
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
+class S3EventImpactModel(S3Model):
+    """
+        Link Events &/or Incidents with Impacts
+
+        @ToDo: Incident linkage either via the one table or via a separate table.
+    """
+
+    names = ["event_impact",
+             #"event_incident_impact",
+             ]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("stats"):
+            current.log.warning("Event Impact Model needs Stats module enabling")
+            return dict()
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # Impact
+
+        tablename = "event_impact"
+        self.define_table(tablename,
+                          self.event_event_id(),
+                          #self.event_incident_id(),
+                          self.stats_impact_id(),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict()

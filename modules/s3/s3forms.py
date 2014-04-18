@@ -2748,14 +2748,13 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                         if k in keys)
 
         # Instantiate the widget
-        if widget == "multiselect":
-            from s3widgets import S3MultiSelectWidget
-            w_opts = widget_opts(("filter",
-                                  "header",
-                                  "selectedList",
-                                  "noneSelectedText",
+        if widget == "groupedopts":
+            from s3widgets import S3GroupedOptionsWidget
+            w_opts = widget_opts(("cols",
+                                  "size",
+                                  "help_field",
                                   ))
-            w = S3MultiSelectWidget(**w_opts)
+            w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":
             from s3widgets import S3HierarchySelectWidget
             w_opts = widget_opts(("represent",
@@ -2763,12 +2762,14 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             w_opts["lookup"] = component.tablename
             w = S3HierarchySelectWidget(**w_opts)
         else:
-            from s3widgets import S3GroupedOptionsWidget
-            w_opts = widget_opts(("cols",
-                                  "size",
-                                  "help_field",
+            # Default to multiselect
+            from s3widgets import S3MultiSelectWidget
+            w_opts = widget_opts(("filter",
+                                  "header",
+                                  "selectedList",
+                                  "noneSelectedText",
                                   ))
-            w = S3GroupedOptionsWidget(**w_opts)
+            w = S3MultiSelectWidget(**w_opts)
 
         # Render the widget
         attr = dict(attributes)

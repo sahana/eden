@@ -91,6 +91,7 @@ class S3Config(Storage):
         self.cms = Storage()
         self.database = Storage()
         self.deploy = Storage()
+        self.event = Storage()
         self.fin = Storage()
         # @ToDo: Move to self.ui
         self.frontpage = Storage()
@@ -1607,6 +1608,15 @@ class S3Config(Storage):
         return self.cms.get("show_titles", False)
 
     # -------------------------------------------------------------------------
+    # Events
+    #
+    def get_event_types_hierarchical(self):
+        """
+            Whether Event Types are Hierarchical or not
+        """
+        return self.event.get("types_hierarchical", False)
+
+    # -------------------------------------------------------------------------
     # Deployments
     #
     def get_deploy_hr_label(self):
@@ -1946,6 +1956,12 @@ class S3Config(Storage):
         """
         return self.org.get("branches", False)
 
+    def get_org_facility_types_hierarchical(self):
+        """
+            Whether Facility Types are Hierarchical or not
+        """
+        return self.org.get("facility_types_hierarchical", False)
+
     def get_org_groups(self):
         """
             Whether to support Organisation Groups or not
@@ -1960,6 +1976,18 @@ class S3Config(Storage):
             Whether to support Organisation Regions or not
         """
         return self.org.get("regions", False)
+
+    def get_org_regions_hierarchical(self):
+        """
+            Whether Organisation Regions are Hierarchical or not
+        """
+        return self.org.get("regions_hierarchical", False)
+
+    def get_org_services_hierarchical(self):
+        """
+            Whether Organisation Servics are Hierarchical or not
+        """
+        return self.org.get("services_hierarchical", False)
 
     def get_org_site_code_len(self):
         """
