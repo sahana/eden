@@ -2461,9 +2461,6 @@ class S3Resource(object):
             queries = S3URLQuery.parse(self, filters[tablename])
             [self.add_filter(q) for a in queries for q in queries[a]]
 
-        # Total number of results
-        results = self.count()
-
         # Initialize export metadata
         self.muntil = None
         self.results = 0
@@ -2486,6 +2483,9 @@ class S3Resource(object):
                   orderby=orderby,
                   virtual=False,
                   cacheable=True)
+
+        # Total number of results
+        results = self.count()
 
         format = current.auth.permission.format
         if format == "geojson":
@@ -2520,10 +2520,10 @@ class S3Resource(object):
         #    _start = datetime.datetime.now()
 
         root = etree.Element(xml.TAG.root)
-        
+
         export_map = Storage()
         reference_map = []
-        
+
         prefix = self.prefix
         name = self.name
         if base_url:
@@ -4104,7 +4104,7 @@ class S3Resource(object):
             skip = None
 
         # Resolve the list fields
-        rfields, j, l, d = self.resolve_selectors(fields)
+        rfields = self.resolve_selectors(fields)[0]
 
         # FILTER --------------------------------------------------------------
 

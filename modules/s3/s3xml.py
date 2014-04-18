@@ -960,14 +960,6 @@ class S3XML(S3Codec):
         for r in rmap:
             if r.element is None:
                 continue
-            ktable = s3db.table(r.table)
-            if ktable is None:
-                continue
-            fields = ktable.fields
-            if (LATFIELD not in fields or \
-                LONFIELD not in fields) and\
-               WKTFIELD not in fields:
-                continue
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
@@ -978,34 +970,34 @@ class S3XML(S3Codec):
             polygon = False
             # Use the value calculated earlier if we can
             record_id = record[pkey]
-            if not master and \
-               tablename in auth.org_site_types:
-                # Lookup the right pre-prepared data for mapping by site_id
-                root = element.getparent()
-                if root and root.tag == self.TAG.root:
-                    #print self.tostring(root)
-                    first = root[0]
-                    _tablename = first.get(ATTRIBUTE.name, None)
-                    if _tablename:
-                        site_uid = element.get(self.UID, None)
-                        def find_element(el):
-                            """
-                                Function for Inner Loop to break out of 2 loops when match found
-                                http://stackoverflow.com/questions/189645/how-to-break-out-of-multiple-loops-in-python
-                            """
-                            for _el in el:
-                                if _el.get(self.UID, None) == site_uid:
-                                    # Better match than before, but still not good as we can have multiple resources at the same Site
-                                    master_id = el.get(ATTRIBUTE.id, None)
-                                    if master_id:
-                                        return int(master_id)
-                        for el in root:
-                            _id = find_element(el)
-                            if _id:
-                                record_id = _id
-                                tablename = _tablename
-                                master = True
-                                break
+            if not master:
+                if tablename in auth.org_site_types:
+                    # Lookup the right pre-prepared data for mapping by site_id
+                    root = element.getparent()
+                    if root and root.tag == self.TAG.root:
+                        #print self.tostring(root)
+                        first = root[0]
+                        _tablename = first.get(ATTRIBUTE.name, None)
+                        if _tablename:
+                            site_uid = element.get(self.UID, None)
+                            def find_element(el):
+                                """
+                                    Function for Inner Loop to break out of 2 loops when match found
+                                    http://stackoverflow.com/questions/189645/how-to-break-out-of-multiple-loops-in-python
+                                """
+                                for _el in el:
+                                    if _el.get(self.UID, None) == site_uid:
+                                        # Better match than before, but still not good as we can have multiple resources at the same Site
+                                        master_id = el.get(ATTRIBUTE.id, None)
+                                        if master_id:
+                                            return int(master_id)
+                            for el in root:
+                                _id = find_element(el)
+                                if _id:
+                                    record_id = _id
+                                    tablename = _tablename
+                                    master = True
+                                    break
             if tablename in latlons:
                 LatLon = latlons[tablename].get(record_id, None)
                 if LatLon:
@@ -1028,7 +1020,10 @@ class S3XML(S3Codec):
             elif "polygons" in request.get_vars:
                 # Calculate the Polygons 1/feature since we didn't do it earlier
                 # - no current case for this
-                if WKTFIELD in fields:
+                ktable = s3db.table(r.table)
+                if ktable is None:
+                    continue
+                if WKTFIELD in ktable.fields:
                     query = (ktable._id == r_id)
                     if settings.get_gis_spatialdb():
                         if format == "geojson":
@@ -1072,6 +1067,13 @@ class S3XML(S3Codec):
             if not LatLon and not polygon:
                 # Normal Location lookup
                 # e.g. Feature Queries
+                ktable = s3db.table(r.table)
+                if ktable is None:
+                    continue
+                fields = ktable.fields
+                if (LATFIELD not in fields or \
+                    LONFIELD not in fields):
+                    continue
                 LatLon = db(ktable.id == r_id).select(ktable[LATFIELD],
                                                       ktable[LONFIELD],
                                                       limitby=(0, 1)).first()

@@ -128,11 +128,10 @@
 <script type='text/javascript'>//<![CDATA[
 $(document).ready(function(){
 
-    var data = {{=XML(current.response.data)}}
+    var data = {{=XML(current.response.data)}};
     var stickyCountry = false;
-    _updateStats('total');
 
-    function _handlerClickCountry() {
+    var _handlerClickCountry = function() {
         var country = $(this).attr('class');
         var stickyCountryPrev = stickyCountry;
         //Country Is Selected
@@ -145,53 +144,56 @@ $(document).ready(function(){
         if (country != stickyCountryPrev) {
             //Select this country
             stickyCountry = country;
-            $( '.menus' ).css('background-color','#99CCFF');
-            $(this).css('background-color','#99CCFF');
-            $(this).css('height','70px');
+            $( '.menus' ).css('background-color', '#99CCFF');
+            $(this).css('background-color', '#99CCFF');
+            $(this).css('height', '70px');
             _updateStats(stickyCountry.substring(8));
         }
     }
 
-    function _handlerInCountry() {
+    var _handlerInCountry = function() {
         if (!stickyCountry) {
-          $( '.menus' ).css('background-color','#99CCFF');
-          $(this).css('background-color','#99CCFF');
-          $(this).css('height','70px');
-          // Get data for country 
-          _updateStats($(this).attr('class').substring(8));
+            $( '.menus' ).css('background-color', '#99CCFF');
+            $(this).css('background-color', '#99CCFF');
+            $(this).css('height', '70px');
+            // Get data for country 
+            _updateStats($(this).attr('class').substring(8));
         }
     }
 
-    function _handlerOutCountry() {
+    var _handlerOutCountry = function() {
         if (!stickyCountry) {
-            $( '.menus, .country' ).css('background-color','#66B2FF');
-            $( '.country' ).css('height','55px');
+            $( '.menus, .country' ).css('background-color', '#66B2FF');
+            $( '.country' ).css('height', '55px');
             // Get global data
             _updateStats('total');
         }
     }
 
-    function _updateStats(code) {
-        resources = ['location',
-                     'stats_demographic_data_L0',
-                     'stats_demographic_data_L1',
-                     'stats_demographic_data_L2',
-                     'vulnerability_data_L0',
-                     'vulnerability_data_L1',
-                     'vulnerability_data_L2',
-                     'event_event',
-                     ]
-        for (var i=0; i< 5; i++) {
-            resource = resources[i]
-            var value = data[code][resource]
+    var _updateStats = function(code) {
+        var resources = ['location',
+                         'stats_demographic_data_L0',
+                         'stats_demographic_data_L1',
+                         'stats_demographic_data_L2',
+                         'vulnerability_data_L0',
+                         'vulnerability_data_L1',
+                         'vulnerability_data_L2',
+                         'event_event'
+                         ];
+        var resource,
+            value;
+        for (var i=0; i < 8; i++) {
+            resource = resources[i];
+            value = data[code][resource];
             if (value == undefined) {
                 value = 0;
             }
             $('.badge.' + resource).html(value);
-            $('.badge.' + resource ).removeClass('throbber');
+            $('.badge.' + resource).removeClass('throbber');
         }
     }
 
+    _updateStats('total');
     $( '.country' ).click(_handlerClickCountry);
     $( '.country' ).hover( _handlerInCountry, _handlerOutCountry);
 })

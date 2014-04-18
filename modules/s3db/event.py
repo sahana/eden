@@ -114,9 +114,9 @@ class S3EventModel(S3Model):
             table.parent.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, "event_event_type.id",
                                                   type_represent,
-                                                  # Currently limited to just 1 level of parent
-                                                  filterby="parent",
-                                                  filter_opts=(None,),
+                                                  # If limiting to just 1 level of parent
+                                                  #filterby="parent",
+                                                  #filter_opts=(None,),
                                                   orderby="event_event_type.name"))
         else:
             hierarchy = None

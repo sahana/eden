@@ -204,7 +204,8 @@ class S3OrganisationModel(S3Model):
                 table.parent.requires = IS_NULL_OR(
                                             IS_ONE_OF(db, "org_region.id",
                                                       region_represent,
-                                                      # Currently limited to just 1 level of parent
+                                                      # Limited to just 1 level of parent
+                                                      # IFRC requirement
                                                       filterby="parent",
                                                       filter_opts=(None,),
                                                       orderby="org_region.name"))
@@ -1894,9 +1895,9 @@ class S3OrganisationServiceModel(S3Model):
             table.parent.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, "org_service.id",
                                                   represent,
-                                                  # Currently limited to just 1 level of parent
-                                                  filterby="parent",
-                                                  filter_opts=(None,),
+                                                  # If limiting to just 1 level of parent
+                                                  #filterby="parent",
+                                                  #filter_opts=(None,),
                                                   orderby="org_service.name"))
         else:
             hierarchy = None
@@ -2717,9 +2718,9 @@ class S3FacilityModel(S3Model):
             table.parent.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, "org_facility_type.id",
                                                   type_represent,
-                                                  # Currently limited to just 1 level of parent
-                                                  filterby="parent",
-                                                  filter_opts=(None,),
+                                                  # If limiting to just 1 level of parent
+                                                  #filterby="parent",
+                                                  #filter_opts=(None,),
                                                   orderby="org_facility_type.name"))
         else:
             hierarchy = None

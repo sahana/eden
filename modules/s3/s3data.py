@@ -2630,7 +2630,7 @@ class S3PivotTable(object):
         self.dfields = dfields
 
         # rfields (resource-fields): dfields resolved into a ResourceFields map
-        rfields, joins, left, distinct = resource.resolve_selectors(dfields)
+        rfields = resource.resolve_selectors(dfields)[0]
         rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
         self.rfields = rfields
 

@@ -3151,9 +3151,9 @@ class S3PDFDataSource:
 
         # Retrieve the resource contents
         table = resource.table
-        lfields, joins, left, distinct = resource.resolve_selectors(list_fields)
-        fields = [f for f in lfields if f.show]
-        headers = [f.label for f in lfields if f.show]
+        rfields = resource.resolve_selectors(list_fields)[0]
+        fields = [f for f in rfields if f.show]
+        headers = [f.label for f in rfields if f.show]
         if orderby != None:
             orderby = fields[0].field
         self.records = resource.select(list_fields,

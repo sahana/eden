@@ -2261,8 +2261,8 @@ class S3RequestSummaryModel(S3Model):
             msg_record_deleted=T("Site Needs deleted"))
 
         configure(tablename,
-                  context = {"location": "site_id$organisation_id",
-                             "organisation": "organisation_id",
+                  context = {"location": "site_id$location_id",
+                             "organisation": "site_id$organisation_id",
                              "site": "site_id",
                              },
                   )

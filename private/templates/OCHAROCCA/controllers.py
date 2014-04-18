@@ -74,12 +74,13 @@ class index(S3CustomController):
                     data["total"]["%s_%s" % (tablename, level)] += count
 
             # Disasters
+            count_field = etable._id.count()
             query = base_query & \
                     (ltable.id == eltable.location_id) & \
                     (eltable.event_id == etable.id)
-            rows = db(query).select(etable.id,
-                                    distinct = True)
-            count = len(rows)
+            row = db(query).select(count_field,
+                                   limitby=(0, 1)).first()
+            count = row[count_field]
             data[code]["event_event"] = count
             data["total"]["event_event"] += count
 

@@ -2163,23 +2163,21 @@ class GIS(object):
         layer_id = get_vars.get("layer", None)
         if layer_id:
             # Feature Layer
-            query = (ftable.id == layer_id)
-            layer = db(query).select(ftable.trackable,
-                                     ftable.polygons,
-                                     ftable.popup_label,
-                                     ftable.popup_fields,
-                                     ftable.attr_fields,
-                                     limitby=(0, 1)).first()
+            # e.g. Search results loaded as a Feature Resource layer
+            layer = db(ftable.id == layer_id).select(ftable.trackable,
+                                                     ftable.polygons,
+                                                     ftable.popup_label,
+                                                     ftable.popup_fields,
+                                                     ftable.attr_fields,
+                                                     limitby=(0, 1)).first()
 
         else:
             # e.g. KML, geoRSS or GPX export
-            # e.g. Search results loaded as a Feature Resource layer
-            # e.g. Volunteer Layer in Vulnerability module
+             # e.g. Volunteer Layer in Vulnerability module
             controller = request.controller
             function = request.function
             query = (ftable.controller == controller) & \
                     (ftable.function == function)
-
             layers = db(query).select(ftable.style_default,
                                       ftable.trackable,
                                       ftable.polygons,
@@ -2335,9 +2333,9 @@ class GIS(object):
                 #    duration = end - start
                 #    duration = "{:.2f}".format(duration.total_seconds())
                 #    if layer_id:
-                #        query = (ftable.id == layer_id)
-                #        layer_name = db(query).select(ftable.name,
-                #                                      limitby=(0, 1)).first().name
+                #        layer_name = db(ftable.id == layer_id).select(ftable.name,
+                #                                                      limitby=(0, 1)
+                #                                                      ).first().name
                 #    else:
                 #        layer_name = "Unknown"
                 #    _debug("Attributes/Tooltip lookup of layer %s completed in %s seconds" % \
@@ -2398,12 +2396,12 @@ class GIS(object):
                     index += 1
 
         if not latlons:
+            join = True
+            custom = False
             if "location_id" in table.fields:
-                join = True
                 query = (table.id.belongs(resource._ids)) & \
                         (table.location_id == gtable.id)
             elif "site_id" in table.fields:
-                join = True
                 stable = s3db.org_site
                 query = (table.id.belongs(resource._ids)) & \
                         (table.site_id == stable.site_id) & \
@@ -2412,8 +2410,50 @@ class GIS(object):
                 join = False
                 query = (table.id.belongs(resource._ids))
             else:
-                # Can't display this resource on the Map
-                return None
+                # Look at the Context
+                context = s3db.get_config(tablename, "context")
+                location_context = context.get("location")
+                if not location_context:
+                    # Can't display this resource on the Map
+                    return None
+                # @ToDo: Proper system rather than this hack_which_works_for_current_usecase
+                #rfields, joins, left, distinct = resource.resolve_selectors([location_context])
+                if "." in location_context:
+                    # Component
+                    alias, cfield = location_context.split(".", 1)
+                    # Try to attach the component
+                    if alias not in resource.components and \
+                       alias not in resource.links:
+                        _alias = alias
+                        hook = s3db.get_component(tablename, alias)
+                        if not hook:
+                            _alias = s3db.get_alias(tablename, alias)
+                            if _alias:
+                                hook = s3db.get_component(tablename, _alias)
+                        if hook:
+                            resource._attach(_alias, hook)
+
+                    fkey = None
+                    for c in resource.components:
+                        component = resource.components[c]
+                        if component.alias == alias:
+                            fkey = component.fkey
+                            break
+                    if not fkey:
+                        # Can't display this resource on the Map
+                        return None
+                    ctable = s3db[component.tablename]
+                    query = (table.id.belongs(resource._ids)) & \
+                            (ctable[fkey] == table.id) & \
+                            (ctable[cfield] == gtable.id)
+                    custom = True
+                    # Clear components again
+                    #resource.components = Storage()
+                # @ToDo:
+                #elif "$" in location_context:
+                else:
+                    # Can't display this resource on the Map
+                    return None
 
             if polygons:
                 settings = current.deployment_settings
@@ -2471,6 +2511,9 @@ class GIS(object):
                 rows = db(query).select(table.id,
                                         gtable.lat,
                                         gtable.lon)
+                #if custom:
+                #    # Add geoJSONs
+                #elif join:
                 if join:
                     for row in rows:
                         _location = row["gis_location"]

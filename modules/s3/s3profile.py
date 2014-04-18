@@ -219,7 +219,7 @@ class S3Profile(S3CRUD):
 
         elif type(context) is tuple:
             context, field = context
-            query = S3FieldSelector(context) == r.record[field]
+            query = (S3FieldSelector(context) == r.record[field])
 
         elif context == "location":
             # Show records linked to this Location & all it's Child Locations
@@ -229,16 +229,16 @@ class S3Profile(S3CRUD):
             #filter = (S3FieldSelector(s).like(m)) | (S3FieldSelector(s) == id)
             m = ("%(id)s,%(id)s/*,*/%(id)s/*,*/%(id)s" % dict(id=record_id)).split(",")
             m = [f.replace("*", "%") for f in m]
-            query = S3FieldSelector(s).like(m)
+            query = (S3FieldSelector(s).like(m))
         # @ToDo:
         #elif context == "organisation":
         #    # Show records linked to this Organisation and all it's Branches
         #    s = "(%s)" % context
-        #    query = S3FieldSelector(s) == id
+        #    query = (S3FieldSelector(s) == id)
         else:
             # Normal: show just records linked directly to this master resource
             s = "(%s)" % context
-            query = S3FieldSelector(s) == record_id
+            query = (S3FieldSelector(s) == record_id)
 
         # Define target resource
         resource = s3db.resource(tablename, filter=query)

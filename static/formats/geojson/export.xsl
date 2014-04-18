@@ -38,8 +38,10 @@
     <s3:fields tables="gis_layer_shapefile*" select="layer_id"/>
     <s3:fields tables="gis_theme_data" select="location_id,value"/>
     <!-- Need to be able to filter &/or style records -->
-    <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
     <s3:fields tables="deploy_application" select="human_resource_id"/>
+    <s3:fields tables="event_event" select="event_type_id"/>
+    <s3:fields tables="event_event_location" select="event_id"/>
+    <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
     <s3:fields tables="project_activity_activity_type" select="activity_id"/>
     <s3:fields tables="project_activity_group" select="activity_id"/>
     <s3:fields tables="project_activity_organisation" select="activity_id"/>

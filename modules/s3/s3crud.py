@@ -1165,8 +1165,8 @@ class S3CRUD(S3Method):
                 start = None
 
             fields = resource.list_fields(id_column=True)
-            rfields, j, l, d = resource.resolve_selectors(fields,
-                                                          extra_fields=False)
+            rfields = resource.resolve_selectors(fields,
+                                                 extra_fields=False)[0]
             fields = [rfield.fname for rfield in rfields
                                    if rfield.tname == tablename]
             orderby = get_config("orderby", None)
