@@ -24,7 +24,7 @@ settings = current.deployment_settings
 """
 
 # Levels for the LocationSelector
-levels = ("L1", "L2", "L3")
+gis_levels = ("L1", "L2", "L3")
 
 # =============================================================================
 # System Settings
@@ -76,8 +76,16 @@ settings.ui.filter_formstyle = "bootstrap"
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
     # Only needed to import the l10n names
+    ("hy", "Armenian"),
+    ("az", "Azerbaijani"),
+    ("ka", "Georgian"),
+    ("kk", "Kazakh"),
     ("ky", "Kyrgyz"),
     ("ru", "Russian"),
+    ("tg",  "Tajik"),
+    ("tk",  "Turkmen"),
+    ("uz", "Uzbek"),
+    
 ])
 # Default Language
 settings.L10n.default_language = "en"
@@ -135,6 +143,15 @@ settings.gis.lookup_code = "PCode"
 settings.ui.update_label = "Edit"
 
 # -----------------------------------------------------------------------------
+# Disable rheaders
+def customise_no_rheader_controller(**attr):
+    # Remove rheader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_event_event_controller = customise_no_rheader_controller
+
+# -----------------------------------------------------------------------------
 # Summary Pages
 settings.ui.summary = [#{"common": True,
                        # "name": "cms",
@@ -171,12 +188,11 @@ current.response.menu = [
      "icon": "group",
      "count": 4656
      },
-    {"name": T("Baseline Data"),
-     "c": "stats", 
-     "f": "demographic_data",
+    {"name": T("Vulnerability"),
+     "c": "vulnerability", 
+     "f": "data",
      "icon": "signal",
      "count": 0
-     
      },
 #    {"name": T("Stakeholders"),
 #     "c": "org", 
@@ -313,6 +329,37 @@ def customise_gis_location_controller(**attr):
 settings.customise_gis_location_controller = customise_gis_location_controller
 
 # -----------------------------------------------------------------------------
+def customise_vulnerability_data_resource(r, tablename):
+    """
+        Customise event_event resource
+        - List Fields
+        - CRUD Strings
+        - Form
+        - Filter
+        - Report 
+        Runs after controller customisation
+        But runs before prep
+        
+    """
+
+    s3db = current.s3db
+    table = r.table
+
+    table.date.required = False
+
+    # Should these be attached to the stats_data super entity and inheritied?
+    s3db.stats_demographic_data
+    s3db.configure("vulnerability_data",
+                   filter_widgets = s3db.get_config("stats_demographic_data", 
+                                                    "filter_widgets"),
+                   list_fields = s3db.get_config("stats_demographic_data", 
+                                                    "list_fields"),
+                   report_options = s3db.get_config("stats_demographic_data", 
+                                                    "report_options"),
+                   )
+
+settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
+# -----------------------------------------------------------------------------
 def customise_event_event_resource(r, tablename):
     """
         Customise event_event resource
@@ -320,31 +367,54 @@ def customise_event_event_resource(r, tablename):
         - CRUD Strings
         - Form
         - Filter
+        - Report 
         Runs after controller customisation
         But runs before prep
+        
+        @ToDo: Move some of this into the model as defaults
     """
+
+    from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3.s3utils import S3DateTime
+    from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3DateWidget, S3LocationSelectorWidget2
 
     s3db = current.s3db
     table = r.table
+    zero_hour_field = table.zero_hour
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+        zero_hour_field.writable = True
+        return True
+    s3.prep = custom_prep
 
     table.name.label = T("Disaster Number")
-    table.zero_hour.label = T("Start Date")
+    zero_hour_field.widget = S3DateWidget()
+    zero_hour_field.label = T("Start Date")
+    zero_hour_field.represent = S3DateTime.date_represent
+    zero_hour_field.comment = ""
+    table.end_date.represent = S3DateTime.date_represent
 
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
     location_field = s3db.event_event_location.location_id
-    location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    location_field.widget = S3LocationSelectorWidget2(levels=levels)
+    location_field.requires = IS_LOCATION_SELECTOR2(levels=gis_levels)
+    location_field.widget = S3LocationSelectorWidget2(levels=gis_levels)
     location_field.label = ""
 
+    s3db.event_event_tag.value.represent = IS_INT_AMOUNT.represent
     s3db.event_event_tag.value.label = ""
     tag_fields = OrderedDict(killed = "Killed",
                              total_affected = "Total Affected",
                              est_damage = "Estimated Damage (US$ Million)",
-                             #disaster_number = "Disaster Number",
                              )
-
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 
     tag_crud_form_fields = []
     tag_list_fields = []
@@ -377,17 +447,58 @@ def customise_event_event_resource(r, tablename):
                                 *tag_crud_form_fields
                                 )
 
+    location_fields = ["event_location.location_id$%s" % level for level in ["L0"] + list(gis_levels)]
+
     list_fields = ["name",
-                   "event_type_id",
-                   (T("Location"), "location.name"),
-                   "zero_hour",
-                   "end_date",
-                   #(T("Killed"), "killed.value"),
-                   ] + tag_list_fields
+                   "event_type_id"] + \
+                  location_fields + \
+                  ["zero_hour",
+                   "end_date"] + \
+                  tag_list_fields
+
+    filter_widgets = [S3OptionsFilter("event_type_id",
+                                      label = T("Type"),
+                                      # Not translateable
+                                      #represent = "%(name)s",
+                                      widget = "multiselect",
+                                      multiple = False,
+                                      ),
+                      S3LocationFilter("event_location.location_id",
+                             levels = gis_levels,
+                             widget = "multiselect"
+                             ),
+                      S3DateFilter("date",
+                                    label=None,
+                                    hide_time=True,
+                                    input_labels = {"ge": "From", "le": "To"}
+                                    ),
+                      ]
+
+    # @ToDo: zero_hour -> Report on Year only.. @flavour ;)
+    report_fields = ["event_type_id"] + \
+                    location_fields + \
+                    ["zero_hour"]
+
+    report_options = Storage(
+        rows=report_fields,
+        cols=report_fields,
+        fact=[(T("Number of Disasters"), "count(id)")],# +\
+             # @ToDo: Fix to produce sum instead of only count of string field
+             #[(label, "sum(%s)" % value) for label, value in tag_list_fields],
+        defaults=Storage(rows="event_type_id",
+                         cols="event_location.location_id$L0",
+                         fact="count(id)",
+                         totals=True,
+                         chart = "breakdown:rows",
+                         table = "collapse",
+                         )
+        )
 
     s3db.configure("event_event",
                    crud_form = crud_form,
+                   filter_widgets = filter_widgets,
                    list_fields = list_fields,
+                   report_options = report_options,
                    )
 
     if r.interactive:
@@ -495,6 +606,11 @@ settings.modules = OrderedDict([
     )),
     ("stats", Storage(
         name_nice = "Statistics",
+        restricted = True,
+        module_type = None
+    )),
+    ("vulnerability", Storage(
+        name_nice = "Vulnerability",
         restricted = True,
         module_type = None
     )),
