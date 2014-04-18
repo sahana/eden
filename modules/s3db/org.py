@@ -173,7 +173,7 @@ class S3OrganisationModel(S3Model):
 
         if settings.get_org_regions():
 
-            hierarchical_regions = current.deployment_settings.get_org_region_hierarchical()
+            hierarchical_regions = current.deployment_settings.get_org_regions_hierarchical()
 
             # ---------------------------------------------------------------------
             # Organisation Regions

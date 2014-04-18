@@ -143,6 +143,7 @@ for(var i=0,len=layers.length;i<len;i++){
                                                              org_group_id: T("My Community"),
                                                              },
                                                   multiple = False,
+                                                  widget = "groupedopts",
                                                   ),
                                   ]
 

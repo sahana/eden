@@ -264,9 +264,9 @@ class S3EventModel(S3Model):
                             stats_impact = {"link": "event_impact",
                                             "joinby": "event_id",
                                             "key": "impact_id",
-                                            "actuate": "hide",
+                                            #"actuate": "hide",
                                             },
-                            event_impact = "event_id",
+                            event_event_impact = "event_id",
                             )
 
         # ---------------------------------------------------------------------
@@ -1126,11 +1126,9 @@ class S3EventHRModel(S3Model):
 class S3EventImpactModel(S3Model):
     """
         Link Events &/or Incidents with Impacts
-
-        @ToDo: Incident linkage either via the one table or via a separate table.
     """
 
-    names = ["event_impact",
+    names = ["event_event_impact",
              #"event_incident_impact",
              ]
 
@@ -1143,14 +1141,22 @@ class S3EventImpactModel(S3Model):
         #T = current.T
 
         # ---------------------------------------------------------------------
-        # Impact
+        # Event Impact
 
-        tablename = "event_impact"
+        tablename = "event_event_impact"
         self.define_table(tablename,
                           self.event_event_id(),
-                          #self.event_incident_id(),
                           self.stats_impact_id(),
                           *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Incident Impact
+
+        #tablename = "event_incident_impact"
+        #self.define_table(tablename,
+        #                  self.event_incident_id(),
+        #                  self.stats_impact_id(),
+        #                  *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict()

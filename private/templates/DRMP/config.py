@@ -3883,30 +3883,24 @@ def customise_project_project_controller(**attr):
                              ),
                 S3OptionsFilter("organisation_id",
                                 label = T("Lead Organization"),
-                                #cols = 3,
-                                widget="multiselect",
                                 ),
                 S3OptionsFilter("location.location_id$L1",
-                                #location_level="L1",
-                                widget="multiselect",
                                 ),
                 S3OptionsFilter("partner.organisation_id",
                                 label = T("Partners"),
-                                widget="multiselect",
                                 ),
                 S3OptionsFilter("donor.organisation_id",
                                 label = T("Donors"),
-                                widget="multiselect",
                                 )
                 ]
 
             s3db.configure("project_project",
                            create_next = url_next,
-                           delete_next = url_next,
-                           update_next = url_next,
                            crud_form = crud_form,
-                           list_fields = list_fields,
+                           delete_next = url_next,
                            filter_widgets = filter_widgets,
+                           list_fields = list_fields,
+                           update_next = url_next,
                            )
 
             # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)

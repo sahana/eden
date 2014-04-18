@@ -387,13 +387,14 @@ def customise_event_event_resource(r, tablename):
     impact_list_fields = []
     add_components = s3db.add_components
     for tag, label  in impact_fields.items():
+        parameter = parameters[label]["id"]
         add_components("event_event",
                        stats_impact = {"name": tag,
                                        "link": "event_impact",
                                        "joinby": "event_id",
                                        "key": "impact_id",
                                        "filterby": "parameter_id",
-                                       "filterfor": (parameters[label]["id"],),
+                                       "filterfor": (parameter,),
                                        },
                        )
         # These aren't yet working
@@ -401,6 +402,9 @@ def customise_event_event_resource(r, tablename):
                                                             label = T(label),
                                                             multiple = False,
                                                             fields = ["value"],
+                                                            #filterby = dict(field = "parameter_id",
+                                                            #                options = parameter
+                                                            #                )
                                                             ))
         impact_list_fields.append((T(label), "%s.value" % tag))
 
@@ -459,7 +463,11 @@ def customise_event_event_resource(r, tablename):
 
     report_options = Storage(rows=report_fields,
                              cols=report_fields,
-                             fact=[(T("Number of Disasters"), "count(id)")],# +\
+                             fact=[(T("Number of Disasters"), "count(id)"),
+                                   (T("Total Killed"), "sum(value)"),
+                                   (T("Total Affected"), "sum(value)"),
+                                   (T("Number of Disasters"), "sum(value)"),
+                                   ],# +\
                                    # @ToDo: Fix to produce sum instead of only count of string field
                                    #[(label, "sum(%s)" % value) for label, value in tag_list_fields],
                              defaults=Storage(rows="event_type_id",

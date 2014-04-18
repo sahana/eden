@@ -522,11 +522,11 @@ def customise_pr_person_controller(**attr):
 
             s3db.configure(tablename,
                            create_next = url_next,
-                           delete_next = url_next,
-                           update_next = url_next,
                            crud_form = crud_form,
+                           delete_next = url_next,
                            # Don't include a Create form in 'More' popups
                            #listadd = False if r.method=="datalist" else True,
+                           update_next = url_next,
                            )
 
         return True
@@ -629,19 +629,17 @@ def customise_project_activity_controller(**attr):
             if method in ("summary", "report"):
                 from s3.s3filter import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  represent = "%(name)s",
+                                                  header = True,
                                                   ),
                                   S3OptionsFilter("activity_activity_type.activity_type_id",
                                                   # Doesn't allow Translation
                                                   #represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  header = True,
                                                   ),
                                   S3DateFilter("date",
-                                               label=None,
-                                               hide_time=True,
+                                               label = None,
+                                               hide_time = True,
                                                input_labels = {"ge": "From", "le": "To"}
                                                )
                                   ]
@@ -669,10 +667,10 @@ def customise_project_activity_controller(**attr):
 
                 s3db.configure(tablename,
                                # Hide Open & Delete dataTable action buttons
-                               editable = False,
                                deletable = False,
-                               filter_widgets = filter_widgets,
+                               editable = False,
                                filter_formstyle = filter_formstyle,
+                               filter_widgets = filter_widgets,
                                report_options = report_options,
                                )
 
@@ -857,21 +855,16 @@ def customise_org_organisation_controller(**attr):
                                                 label = T("Search"),
                                                ),
                                   S3OptionsFilter("group_membership.group_id",
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  represent = "%(name)s",
+                                                  header = True,
                                                   ),
                                   S3OptionsFilter("sector_organisation.sector_id",
-                                                  label=T("Sector"),
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  label = T("Sector"),
+                                                  header = True,
                                                   ),
                                   S3OptionsFilter("service_organisation.service_id",
-                                                  label=T("Service"),
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  label = T("Service"),
+                                                  header = True,
                                                   ),
                                   ]
 
@@ -1236,18 +1229,14 @@ def customise_org_facility_controller(**attr):
                                   S3OptionsFilter("site_org_group.group_id",
                                                   header = True,
                                                   represent = "%(name)s",
-                                                  widget = "multiselect",
                                                   ),
                                   S3OptionsFilter("site_facility_type.facility_type_id",
                                                   header = True,
                                                   label = T("Type of Place"),
-                                                  represent = "%(name)s",
-                                                  widget = "multiselect",
                                                   ),
                                   S3OptionsFilter("organisation_id",
                                                   header = True,
                                                   represent = "%(name)s",
-                                                  widget = "multiselect",
                                                   ),
                                   ]
 
@@ -1449,15 +1438,12 @@ def customise_stats_people_controller(**attr):
                                                 label = T("Search"),
                                                ),
                                   S3OptionsFilter("people_group.group_id",
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  represent = "%(name)s",
+                                                  header = True,
                                                   ),
                                   S3OptionsFilter("parameter_id",
-                                                  label=T("Type of People"),
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  label = T("Type of People"),
+                                                  header = True,
                                                   ),
                                   ]
 
@@ -1628,15 +1614,12 @@ def customise_vulnerability_evac_route_controller(**attr):
                                                 label = T("Search"),
                                                ),
                                   S3OptionsFilter("evac_route_group.group_id",
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  represent = "%(name)s",
+                                                  header = True,
                                                   ),
                                   #S3OptionsFilter("hazard_id",
-                                  #                label=T("Hazard Type"),
-                                  #                represent="%(name)s",
-                                  #                widget="multiselect",
-                                  #                header=True,
+                                  #                label = T("Hazard Type"),
+                                  #                header = True,
                                   #                ),
                                   ]
 
@@ -1798,15 +1781,12 @@ def customise_vulnerability_risk_controller(**attr):
                                                 label = T("Search"),
                                                ),
                                   S3OptionsFilter("risk_group.group_id",
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
+                                                  represent = "%(name)s",
+                                                  header = True,
                                                   ),
                                   #S3OptionsFilter("hazard_id",
-                                  #                label=T("Hazard Type"),
-                                  #                represent="%(name)s",
-                                  #                widget="multiselect",
-                                  #                header=True,
+                                  #                label = T("Hazard Type"),
+                                  #                header = True,
                                   #                ),
                                   ]
 
@@ -1946,6 +1926,7 @@ def customise_gis_config_controller(**attr):
                                                auth.user.pe_id: T("My Maps"),
                                                },
                                     multiple = False,
+                                    widget = "groupedopts",
                                     )
                     ]
                 s3db.configure("gis_config",
@@ -2109,8 +2090,6 @@ def customise_s3_audit_controller(**attr):
 
     tablename = "s3_audit"
     current.s3db.configure(tablename,
-                           list_layout = render_log,
-                           orderby = "s3_audit.timestmp desc",
                            insertable = False,
                            list_fields = ["id",
                                           "method",
@@ -2118,6 +2097,8 @@ def customise_s3_audit_controller(**attr):
                                           "tablename",
                                           "record_id",
                                           ],
+                           list_layout = render_log,
+                           orderby = "s3_audit.timestmp desc",
                            )
 
     return attr

@@ -362,7 +362,7 @@
                 </reference>
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>
-            <resource name="event_impact">
+            <resource name="event_event_impact">
                 <reference field="impact_id" resource="stats_impact">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('IMP:', $Event, '/', $ImpactType)"/>

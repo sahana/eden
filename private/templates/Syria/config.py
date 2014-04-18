@@ -1342,31 +1342,25 @@ def customise_project_activity_controller(**attr):
             S3LocationFilter("location_id",
                              #levels = levels,
                              levels = ("L0", "L1"),
-                             widget = "multiselect"
                              ),
             S3OptionsFilter("sector_activity.sector_id",
                             # Doesn't support translation
                             #represent = "%(name)s",
-                            widget = "multiselect",
                             ),
             #S3OptionsFilter("distribution.parameter_id",
             #                # Doesn't support translation
             #                #represent = "%(name)s",
-            #                widget = "multiselect",
             #                ),
             #S3OptionsFilter("theme_activity.theme_id",
             #                # Doesn't support translation
             #                #represent = "%(name)s",
-            #                widget = "multiselect",
             #                ),
             #S3OptionsFilter("beneficiary.parameter_id",
             #                # Doesn't support translation
             #                #represent = "%(name)s",
-            #                widget = "multiselect",
             #                ),
             S3OptionsFilter("activity_organisation.organisation_id",
                             label = T("National Society"),
-                            widget = "multiselect",
                             ),
             # @ToDo: Widget to handle Start & End in 1!
             #S3DateFilter("date",
@@ -1378,9 +1372,8 @@ def customise_project_activity_controller(**attr):
             #             hide_time=True,
             #             ),
             S3OptionsFilter("year",
-                            label=T("Year"),
+                            label = T("Year"),
                             options = s3db.project_activity_year_options,
-                            widget="multiselect",
                             ),
             ]
 
@@ -1627,17 +1620,16 @@ def customise_project_project_controller(**attr):
                              ),
                 S3OptionsFilter("organisation_id",
                                 label = T("Lead Organization"),
-                                widget="multiselect"
                                 ),
                 S3LocationFilter("location.location_id",
-                                 levels=("L0", "L1", "L2", "L3"),
-                                 widget="multiselect"),
+                                 levels = ("L0", "L1", "L2", "L3"),
+                                 ),
                 S3OptionsFilter("partner.organisation_id",
                                 label = T("Partners"),
-                                widget="multiselect"),
+                                ),
                 S3OptionsFilter("donor.organisation_id",
                                 label = T("Donors"),
-                                widget="multiselect")
+                                )
                 ]
 
             s3db.configure("project_project",

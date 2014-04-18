@@ -1794,15 +1794,13 @@ def customise_org_facility_controller(**attr):
                 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [
                     S3LocationFilter("location_id",
-                                     levels=levels,
-                                     widget="multiselect",
-                                     hidden=True,
+                                     levels = levels,
+                                     hidden = True,
                                     ),
-                    S3OptionsFilter(name="facility_search_type",
-                                    label=T("Type"),
-                                    field="site_facility_type.facility_type_id",
-                                    widget="multiselect",
-                                    hidden=True,
+                    S3OptionsFilter(name = "facility_search_type",
+                                    label = T("Type"),
+                                    field = "site_facility_type.facility_type_id",
+                                    hidden = True,
                                     ),
                     ]
                     
@@ -1821,16 +1819,16 @@ def customise_org_facility_controller(**attr):
                 #    filter_widgets.insert(0, S3OptionsFilter("needs.goods",
                 #                                             label = T("Drop-off Goods"),
                 #                                             options = yesno,
-                #                                             multiple=False,
-                #                                             widget="groupedopts",
-                #                                             hidden=True,
+                #                                             multiple = False,
+                #                                             widget = "groupedopts",
+                #                                             hidden = True,
                 #                                             ))
                 #    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
                 #                                             label = T("Volunteer Time"),
                 #                                             options = yesno,
-                #                                             multiple=False,
-                #                                             widget="groupedopts",
-                #                                             hidden=True,
+                #                                             multiple = False,
+                #                                             widget = "groupedopts",
+                #                                             hidden = True,
                 #                                             ))
 
                 filter_widgets.insert(0, S3TextFilter(["name",
@@ -2265,13 +2263,15 @@ def customise_org_organisation_controller(**attr):
                     needs_fields = ["needs.money_details", "needs.vol_details"]
                     filter_widgets.insert(0, S3OptionsFilter("needs.money",
                                                              options = yesno,
-                                                             multiple=False,
-                                                             hidden=True,
+                                                             multiple = False,
+                                                             widget = "groupedopts",
+                                                             hidden = True,
                                                              ))
                     #filter_widgets.insert(1, S3OptionsFilter("needs.vol",
                     #                                         options = yesno,
-                    #                                         multiple=False,
-                    #                                         hidden=True,
+                    #                                         multiple = False,
+                    #                                         widget = "groupedopts",
+                    #                                         hidden = True,
                     #                                         ))
 
                 filter_widgets.insert(0, S3TextFilter(["name",

@@ -897,9 +897,9 @@ class S3ProjectActivityModel(S3Model):
                                           label = T("Status"),
                                           # Doesn't support translation
                                           #represent="%(name)s",
+                                          widget="groupedopts",
                                           # @ToDo: Introspect cols
                                           cols = 3,
-                                          #widget="multiselect",
                                           ),
                           ]
 
@@ -930,14 +930,12 @@ class S3ProjectActivityModel(S3Model):
                                 label = T("Type"),
                                 # Doesn't support translation
                                 #represent="%(name)s",
-                                widget="multiselect",
                                 ))
         if use_projects:
             list_fields.insert(0, "project_id")
             rappend((T("Project"), "project_id"))
             filter_widgets.insert(1,
                 S3OptionsFilter("project_id",
-                                widget="multiselect",
                                 ))
         if settings.get_project_sectors():
             rappend("sector_activity.sector_id")
@@ -946,7 +944,6 @@ class S3ProjectActivityModel(S3Model):
                 S3OptionsFilter("sector_activity.sector_id",
                                 # Doesn't support translation
                                 #represent="%(name)s",
-                                widget="multiselect",
                                 ))
         if settings.get_project_themes():
             rappend("theme_activity.theme_id")
@@ -954,7 +951,6 @@ class S3ProjectActivityModel(S3Model):
                 S3OptionsFilter("theme_activity.theme_id",
                                 # Doesn't support translation
                                 #represent="%(name)s",
-                                widget="multiselect",
                                 ))
         # @ToDo: deployment_setting
         if settings.has_module("stats"):
@@ -967,14 +963,12 @@ class S3ProjectActivityModel(S3Model):
                     S3OptionsFilter("beneficiary.parameter_id",
                                     # Doesn't support translation
                                     #represent="%(name)s",
-                                    widget="multiselect",
                                     ))
         # @ToDo: deployment_setting
         filter_widgets.append(
             S3OptionsFilter("year",
                             label=T("Year"),
                             options = project_activity_year_options,
-                            widget="multiselect",
                             ),
             )
             
@@ -1000,8 +994,7 @@ class S3ProjectActivityModel(S3Model):
 
             filter_widgets.insert(0,
                 S3LocationFilter("location_id",
-                                 levels=levels,
-                                 widget="multiselect"
+                                 levels = levels,
                                  ))
 
             posn = 2
@@ -1785,29 +1778,25 @@ class S3ProjectBeneficiaryModel(S3Model):
             #              "project_id$organisation.name",
             #              "project_id$organisation.acronym",
             #              ],
-            #             label=T("Search"),
-            #             _class="filter-search",
+            #             label = T("Search"),
+            #             _class = "filter-search",
             #             ),
             #S3OptionsFilter("project_id",
-            #                widget="multiselect",
-            #                hidden=True,
+            #                hidden = True,
             #                ),
             S3OptionsFilter("parameter_id",
-                            label=T("Beneficiary Type"),
-                            widget="multiselect",
-                            #hidden=True,
+                            label = T("Beneficiary Type"),
+                            #hidden = True,
                             ),
             # @ToDo: OptionsFilter working with Lazy VF
             #S3OptionsFilter("year",
-            #                label=T("Year"),
+            #                label = T("Year"),
             #                options = year_options,
-            #                widget="multiselect",
-            #                hidden=True,
+            #                hidden = True,
             #                ),
             S3LocationFilter("location_id",
-                             levels=levels,
-                             widget="multiselect",
-                             #hidden=True,
+                             levels = levels,
+                             #hidden = True,
                              ),
             ]
 
@@ -1828,9 +1817,8 @@ class S3ProjectBeneficiaryModel(S3Model):
             filter_widgets.insert(0,
                 S3OptionsFilter("project_id$sector_project.sector_id",
                                 # Doesn't allow translation
-                                #represent="%(name)s",
-                                widget="multiselect",
-                                #hidden=True,
+                                #represent = "%(name)s",
+                                #hidden = True,
                                 ))
 
         if settings.get_project_hazards():
@@ -1841,9 +1829,8 @@ class S3ProjectBeneficiaryModel(S3Model):
             filter_widgets.append(
                 S3OptionsFilter("project_id$theme_project.theme_id",
                                 # Doesn't allow translation
-                                #represent="%(name)s",
-                                widget="multiselect",
-                                #hidden=True,
+                                #represent = "%(name)s",
+                                #hidden = True,
                                 ))
 
         for level in levels:
@@ -2612,6 +2599,7 @@ class S3ProjectLocationModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
 
         settings = current.deployment_settings
         community = settings.get_project_community()
@@ -2623,8 +2611,15 @@ class S3ProjectLocationModel(S3Model):
 
         add_components = self.add_components
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
+
+         # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
+            levels.remove("L0")
 
         # ---------------------------------------------------------------------
         # Project Location ('Community')
@@ -2696,39 +2691,92 @@ class S3ProjectLocationModel(S3Model):
                     msg_list_empty = T("No Locations Found")
             )
 
-        # Filter widgets
-        filter_widgets = project_location_filters()
+        # Fields to search by Text
+        text_fields = []
+        tappend = text_fields.append
 
         # List fields
         list_fields = ["location_id",
-                       (COUNTRY, "location_id$L0"),
-                       "location_id$L1",
-                       "location_id$L2",
-                       "location_id$L3",
-                       "location_id$L4",
-                       "project_id",
                        ]
-        if settings.get_project_theme_percentages():
-            list_fields.append((T("Themes"), "project_id$theme_project.theme_id"))
-        else:
-            list_fields.append((T("Activity Types"), "activity_type.activity_type_id"))
-        list_fields.append("comments")
+        lappend = list_fields.append
 
         # Report options
-        report_fields = [(COUNTRY, "location_id$L0"),
-                         "location_id$L1",
-                         "location_id$L2",
-                         "location_id$L3",
-                         "location_id$L4",
-                         (messages.ORGANISATION, "project_id$organisation_id"),
-                         (T("Project"), "project_id"),
-                         (T("Activity Types"), "activity_type.activity_type_id"),
-                         ]
+        report_fields = []
+        rappend = report_fields.append
+
+        for level in levels:
+            loc_field = "location_id$%s" % level
+            lappend(loc_field)
+            rappend(loc_field)
+            tappend(loc_field)
+
+        lappend("project_id")
+        if settings.get_project_theme_percentages():
+            lappend((T("Themes"), "project_id$theme_project.theme_id"))
+        else:
+            lappend((T("Activity Types"), "activity_type.activity_type_id"))
+        lappend("comments")
+
+        # Filter widgets
+        if community:
+            filter_widgets = [
+                S3TextFilter(text_fields,
+                             label = T("Name"),
+                             comment = T("Search for a Project Community by name."),
+                             )
+                ]
+        else:
+            text_fields.extend(("project_id$name",
+                                "project_id$code",
+                                "project_id$description",
+                                ))
+            filter_widgets = [
+                S3TextFilter(text_fields,
+                             label = T("Text"),
+                             comment = T("Search for a Project by name, code, location, or description."),
+                             )
+                ]
+
+        if settings.get_project_sectors():
+            filter_widgets.append(S3OptionsFilter("project_id$sector.name",
+                                                  label = T("Sector"),
+                                                  hidden = True,
+                                                  ))
+            
+        filter_widgets.extend((
+            # This is only suitable for deployments with a few projects
+            #S3OptionsFilter("project_id",
+            #                label = T("Project"),
+            #                hidden = True,
+            #                ),
+            S3OptionsFilter("project_id$theme_project.theme_id",
+                            label = T("Theme"),
+                            options = project_theme_options,
+                            #cols = 1,
+                            hidden = True,
+                            ),
+            S3LocationFilter("location_id",
+                             levels = levels,
+                             hidden = True,
+                             ),
+            ))
+
+        if "L0" in levels:
+            default_report_row = "location.location_id$L0"
+        elif "L1" in levels:
+            default_report_row = "location.location_id$L1"
+        else:
+            default_report_row = "location.location_id$L2"
+
+        report_fields.extend(((messages.ORGANISATION, "project_id$organisation_id"),
+                              (T("Project"), "project_id"),
+                              (T("Activity Types"), "activity_type.activity_type_id"),
+                              ))
 
         report_options = Storage(rows=report_fields,
                                  cols=report_fields,
                                  fact=report_fields,
-                                 defaults=Storage(rows="location.location_id$L1",
+                                 defaults=Storage(rows=default_report_row,
                                                   cols="location.project_id",
                                                   fact="activity_type.activity_type_id",
                                                   aggregate="list",
@@ -2738,15 +2786,15 @@ class S3ProjectLocationModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity="doc_entity",
-                  filter_widgets = filter_widgets,
-                  list_fields = list_fields,
                   create_next = URL(c="project", f="location",
                                     args=["[id]", "beneficiary"]),
                   deduplicate = self.project_location_deduplicate,
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   onaccept = self.project_location_onaccept,
                   report_options = report_options,
-                 )
+                  super_entity = "doc_entity",
+                  )
 
         # Components
         add_components(tablename,
@@ -2755,7 +2803,7 @@ class S3ProjectLocationModel(S3Model):
                                               "joinby": "project_location_id",
                                               "key": "activity_type_id",
                                               "actuate": "hide",
-                                             },
+                                              },
                        # Beneficiaries
                        project_beneficiary="project_location_id",
                        # Contacts
@@ -2765,7 +2813,7 @@ class S3ProjectLocationModel(S3Model):
                                   "key": "person_id",
                                   "actuate": "hide",
                                   "autodelete": False,
-                                 },
+                                  },
                        # Distributions
                        supply_distribution="project_location_id",
                        # Themes
@@ -2773,7 +2821,7 @@ class S3ProjectLocationModel(S3Model):
                                       "joinby": "project_location_id",
                                       "key": "theme_id",
                                       "actuate": "hide",
-                                     },
+                                      },
                       )
 
         # Reusable Field
@@ -2829,54 +2877,54 @@ class S3ProjectLocationModel(S3Model):
                          comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
                         ),
             S3LocationFilter("project_location_id$location_id",
-                             levels = ["L1", "L2"],
-                             widget = "multiselect",
+                             levels = levels,
                              hidden = True,
-                            ),
-        ]
+                             ),
+            ]
 
         # Resource configuration
         configure(tablename,
                   filter_widgets = filter_widgets,
-                  list_fields=["person_id",
-                               (T("Email"), "email.value"),
-                               (T("Mobile Phone"), "phone.value"),
-                               "project_location_id",
-                               (T("Project"), "project_location_id$project_id"),
-                               ])
+                  list_fields = ["person_id",
+                                 (T("Email"), "email.value"),
+                                 (T("Mobile Phone"), "phone.value"),
+                                 "project_location_id",
+                                 (T("Project"), "project_location_id$project_id"),
+                                 ],
+                  )
 
         # Components
         add_components(tablename,
                        # Contact Information
-                       pr_contact=(# Email
-                                   {"name": "email",
-                                    "link": "pr_person",
-                                    "joinby": "id",
-                                    "key": "pe_id",
-                                    "fkey": "pe_id",
-                                    "pkey": "person_id",
-                                    "filterby": "contact_method",
-                                    "filterfor": ["EMAIL"],
-                                   },
-                                   # Mobile Phone
-                                   {"name": "phone",
-                                    "link": "pr_person",
-                                    "joinby": "id",
-                                    "key": "pe_id",
-                                    "fkey": "pe_id",
-                                    "pkey": "person_id",
-                                    "filterby": "contact_method",
-                                    "filterfor": ["SMS"],
-                                   },
-                                  ),
-                      )
+                       pr_contact = (# Email
+                                     {"name": "email",
+                                      "link": "pr_person",
+                                      "joinby": "id",
+                                      "key": "pe_id",
+                                      "fkey": "pe_id",
+                                      "pkey": "person_id",
+                                      "filterby": "contact_method",
+                                      "filterfor": ["EMAIL"],
+                                      },
+                                     # Mobile Phone
+                                     {"name": "phone",
+                                      "link": "pr_person",
+                                      "joinby": "id",
+                                      "key": "pe_id",
+                                      "fkey": "pe_id",
+                                      "pkey": "person_id",
+                                      "filterby": "contact_method",
+                                      "filterfor": ["SMS"],
+                                      },
+                                     ),
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(project_location_id = project_location_id,
                     project_location_represent = project_location_represent,
-                   )
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -4152,65 +4200,59 @@ class S3ProjectTaskModel(S3Model):
             S3TextFilter(["name",
                           "description",
                           ],
-                         label=T("Description"),
-                         _class="filter-search",
+                         label = T("Description"),
+                         _class = "filter-search",
                          ),
             S3OptionsFilter("priority",
-                            label=T("Priority"),
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            options=project_task_priority_opts,
-                            cols=4,
+                            label = T("Priority"),
+                            options = project_task_priority_opts,
+                            widget = "groupedopts",
+                            cols = 4,
                             ),
             S3OptionsFilter("task_project.project_id",
-                            label=T("Project"),
+                            label = T("Project"),
                             options = self.project_task_project_opts,
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            cols=3,
+                            widget = "groupedopts",
+                            cols = 3,
                             ),
             S3OptionsFilter("task_activity.activity_id",
-                            label=T("Activity"),
+                            label = T("Activity"),
                             options = self.project_task_activity_opts,
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            cols=3,
+                            widget = "groupedopts",
+                            cols = 3,
                             ),
             S3OptionsFilter("pe_id",
-                            label=T("Assigned To"),
+                            label = T("Assigned To"),
                             # @ToDo: Implement support for this in S3OptionsFilter
                             #null = T("Unassigned"),
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            cols=4,
+                            cols = 4,
                             ),
             S3OptionsFilter("created_by",
-                            label=T("Created By"),
-                            #widget="multiselect",
-                            cols=3,
-                            hidden=True,
+                            label = T("Created By"),
+                            widget = "groupedopts",
+                            cols = 3,
+                            hidden = True,
                             ),
             S3RangeFilter("created_on",
-                          label=T("Date Created"),
-                          hide_time=True,
-                          hidden=True,
+                          label = T("Date Created"),
+                          hide_time = True,
+                          hidden = True,
                           ),
             S3RangeFilter("date_due",
-                          label=T("Date Due"),
-                          hide_time=True,
-                          hidden=True,
+                          label = T("Date Due"),
+                          hide_time = True,
+                          hidden = True,
                           ),
             S3RangeFilter("modified_on",
-                          label=T("Date Modified"),
-                          hide_time=True,
-                          hidden=True,
+                          label = T("Date Modified"),
+                          hide_time = True,
+                          hidden = True,
                           ),
             S3OptionsFilter("status",
-                            label=T("Status"),
-                            options=project_task_status_opts,
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            cols=4,
+                            label = T("Status"),
+                            options = project_task_status_opts,
+                            widget = "groupedopts",
+                            cols = 4,
                             ),
             ]
 
@@ -4235,6 +4277,7 @@ class S3ProjectTaskModel(S3Model):
             filter_widgets.insert(4, S3OptionsFilter("task_milestone.milestone_id",
                                                      label = T("Milestone"),
                                                      options = self.project_task_milestone_opts,
+                                                     widget = "groupedopts",
                                                      cols = 3
                                                      ))
 
@@ -4508,30 +4551,21 @@ class S3ProjectTaskModel(S3Model):
 
         filter_widgets = [
             S3OptionsFilter("person_id",
-                            label=T("Person"),
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            cols=3,
+                            label = T("Person"),
                             ),
             S3OptionsFilter("task_id$task_project.project_id",
-                            label=T("Project"),
+                            label = T("Project"),
                             options = self.project_task_project_opts,
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            cols=3,
                             ),
             S3OptionsFilter("task_id$task_activity.activity_id",
-                            label=T("Activity"),
+                            label = T("Activity"),
                             options = self.project_task_activity_opts,
-                            #represent="%(name)s",
-                            #widget="multiselect",
-                            cols=3,
-                            hidden=True,
+                            hidden = True,
                             ),
             S3DateFilter("date",
-                         label=T("Date"),
-                         hide_time=True,
-                         hidden=True,
+                         label = T("Date"),
+                         hide_time = True,
+                         hidden = True,
                          ),
             ]
 
@@ -4540,7 +4574,6 @@ class S3ProjectTaskModel(S3Model):
             list_fields.insert(3, (T("Milestone"), "task_id$task_milestone.milestone_id"))
             filter_widgets.insert(3, S3OptionsFilter("task_id$task_milestone.milestone_id",
                                                      label = T("Milestone"),
-                                                     cols = 3,
                                                      hidden = True,
                                                      ))
 
@@ -4561,7 +4594,6 @@ class S3ProjectTaskModel(S3Model):
             filter_widgets.insert(1, S3OptionsFilter("task_id$task_project.project_id$sector_project.sector_id",
                                                      label = T("Sector"),
                                                      options = get_sector_opts,
-                                                     cols = 3,
                                                      ))
 
         # Custom Methods
@@ -6498,22 +6530,22 @@ def project_project_filters(org_label):
                      ],
                      label = T("Description"),
                      comment = T("Search for a Project by name, code, or description."),
-                    ),
+                     ),
         S3OptionsFilter("status_id",
                         label = T("Status"),
+                        widget = "groupedopts",
                         cols = 4,
-                       ),
+                        ),
         S3OptionsFilter("organisation_id",
                         label = org_label,
-                        cols = 3,
                         hidden = True,
-                       ),
+                        ),
         S3LocationFilter("location.location_id",
-                         levels=["L0", "L1", "L2"],
-                         widget="multiselect",
+                         # Default should introspect
+                         #levels = ("L0", "L1", "L2"),
                          hidden = True,
-                        )
-    ]
+                         )
+        ]
 
     append_filter = filter_widgets.append
     
@@ -6526,9 +6558,8 @@ def project_project_filters(org_label):
             S3OptionsFilter("sector.id",
                             label = sector,
                             options = current.s3db.org_sector_opts,
-                            cols = 4,
                             hidden = True,
-                           )
+                            )
         )
         
     mode_drr = settings.get_project_mode_drr()
@@ -6538,9 +6569,10 @@ def project_project_filters(org_label):
                             label = T("Hazard"),
                             options = project_hazard_options,
                             help_field = project_hazard_help_fields,
+                            widget = "groupedopts",
                             cols = 4,
                             hidden = True,
-                           )
+                            )
         )
         
     if settings.get_project_mode_3w():
@@ -6549,9 +6581,10 @@ def project_project_filters(org_label):
                             label = T("Theme"),
                             options = project_theme_options,
                             help_field = project_theme_help_fields,
+                            widget = "groupedopts",
                             cols = 4,
                             hidden = True,
-                           )
+                            )
         )
     
     if mode_drr:
@@ -6563,99 +6596,28 @@ def project_project_filters(org_label):
                             label = T("HFA"),
                             options = options,
                             help_field = hfa_opts,
+                            widget = "groupedopts",
                             cols = 5,
                             hidden = True,
-                           )
+                            )
         )
 
     if settings.get_project_multiple_organisations():
         append_filter(
             S3OptionsFilter("partner.organisation_id",
                             label = T("Partners"),
-                            cols = 3,
                             hidden = True,
-                           )
+                            )
         )
         append_filter(
             S3OptionsFilter("donor.organisation_id",
                             label = T("Donors"),
-                            cols = 3,
                             hidden = True,
-                           )
+                            )
         )
                 
     return filter_widgets
     
-# =============================================================================
-def project_location_filters():
-    """ Filter widgets for project_location """
-
-    T = current.T
-    settings = current.deployment_settings
-
-    # Search Method
-    if settings.get_project_community():
-        filter_widgets = [
-            S3TextFilter(["location_id$L0",
-                          "location_id$L1",
-                          "location_id$L2",
-                          "location_id$L3",
-                          "location_id$L4",
-                          #"location_id$L5",
-                         ],
-                         label = T("Name"),
-                         comment = T("Search for a Project Community by name."),
-            )
-        ]
-    else:
-        filter_widgets = [
-            S3TextFilter(["location_id$L0",
-                          "location_id$L1",
-                          "location_id$L2",
-                          "location_id$L3",
-                          "location_id$L4",
-                          #"location_id$L5",
-                          "project_id$name",
-                          "project_id$code",
-                          "project_id$description",
-                         ],
-                         label = T("Text"),
-                         comment = T("Search for a Project by name, code, location, or description."),
-            )
-        ]
-    append_filter = filter_widgets.append
-
-    if settings.get_project_sectors():
-        append_filter(
-            S3OptionsFilter("project_id$sector.name",
-                            label = T("Sector"),
-                            cols = 3,
-                            hidden = True,
-                           )
-        )
-        
-    filter_widgets.extend([
-        # This is only suitable for deployments with a few projects
-        #S3OptionsFilter("project_id",
-        #                label = T("Project"),
-        #                cols = 3,
-        #                hidden=True,
-        #               ),
-        S3OptionsFilter("project_id$theme_project.theme_id",
-                        label = T("Theme"),
-                        options = project_theme_options,
-                        cols = 1,
-                        hidden = True,
-                       ),
-        S3LocationFilter("location_id",
-                         levels = ["L0", "L1", "L2", "L3"],
-                         widget = "multiselect",
-                         hidden = True,
-                        ),
-    ])
-
-    return filter_widgets
-
 # =============================================================================
 def project_project_list_layout(list_id, item_id, resource, rfields, record, icon = "tasks"):
     """
