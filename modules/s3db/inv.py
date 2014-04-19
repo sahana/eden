@@ -2903,10 +2903,10 @@ S3OptionsFilter({
                 req_quantity = req_item.quantity_fulfil
                 req_pack_quantity = db(siptable.id == req_item.item_pack_id).select(siptable.quantity,
                                                                                     limitby=(0, 1)
-                                                                                    ).quantity
+                                                                                    ).first().quantity
                 track_pack_quantity = db(siptable.id == record.item_pack_id).select(siptable.quantity,
                                                                                     limitby=(0, 1)
-                                                                                    ).quantity
+                                                                                    ).first().quantity
                 quantity_fulfil = supply_item_add(req_quantity,
                                                   req_pack_quantity,
                                                   record.recv_quantity,
