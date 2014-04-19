@@ -142,8 +142,8 @@ for(var i=0,len=layers.length;i<len;i++){
                                                   options = {"*": T("All"),
                                                              org_group_id: T("My Community"),
                                                              },
+                                                  cols = 2,
                                                   multiple = False,
-                                                  widget = "groupedopts",
                                                   ),
                                   ]
 

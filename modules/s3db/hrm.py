@@ -761,15 +761,16 @@ class S3HRModel(S3Model):
                   realm_components = ["presence"],
                   report_fields = report_fields_extra,
                   report_options = Storage(
-                    rows=report_fields,
-                    cols=report_fields,
-                    fact=report_fields,
-                    methods=["count", "list"],
-                    defaults=Storage(rows="human_resource.organisation_id",
-                                     cols="human_resource.person_id$training.course_id",
-                                     fact="human_resource.person_id",
-                                     aggregate="count")
-                  ),
+                    rows = report_fields,
+                    cols = report_fields,
+                    fact = report_fields,
+                    methods = ["count", "list"],
+                    defaults = Storage(
+                        rows = "human_resource.organisation_id",
+                        cols = "human_resource.person_id$training.course_id",
+                        fact = "human_resource.person_id",
+                        aggregate = "count")
+                    ),
                   # Default summary
                   summary = [{"name": "addform",
                               "common": True,
@@ -2053,16 +2054,20 @@ class S3HRSkillModel(S3Model):
                                      represent = self.org_site_represent,
                                      ),
                      s3_datetime("start_date",
-                                 label=T("Start Date")),
+                                 label = T("Start Date"),
+                                 ),
                      s3_datetime("end_date",
-                                 label=T("End Date")),
+                                 label = T("End Date"),
+                                 ),
                      Field("hours", "integer",
-                         requires=IS_INT_IN_RANGE(1, 1000),
-                         label=T("Hours")),
+                           label = T("Hours"),
+                           requires = IS_INT_IN_RANGE(1, 1000),
+                           ),
                      # human_resource_id?
                      Field("instructor",
-                         label=T("Instructor"),
-                         represent = s3_string_represent),
+                           label = T("Instructor"),
+                           represent = s3_string_represent,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2218,14 +2223,14 @@ class S3HRSkillModel(S3Model):
                             #represent="%(name)s",
                             ),
             S3LocationFilter("person_id$location_id",
-                             levels=levels,
+                             levels = levels,
                              ),
             S3OptionsFilter("course_id",
                             # Doesn't support translations
                             #represent="%(name)s",
                             ),
             S3OptionsFilter("training_event_id$site_id",
-                            label=T("Training Facility"),
+                            label = T("Training Facility"),
                             represent = self.org_site_represent,
                             ),
             S3DateFilter("date",
@@ -2240,21 +2245,23 @@ class S3HRSkillModel(S3Model):
                          (T("Facility"), "training_event_id$site_id"),
                          (T("Month"), "month"),
                          (T("Year"), "year"),
-                         "person_id$location_id$L1",
-                         "person_id$location_id$L2",
                          ]
+        rappend = report_fields.append
 
-        report_options = Storage(
-            rows=report_fields,
-            cols=report_fields,
-            fact=report_fields,
-            methods=["count", "list"],
-            defaults=Storage(rows="training.course_id",
-                             cols="training.month",
-                             fact="count(training.person_id)",
-                             totals=True
-                             )
-            )
+        for level in levels:
+            rappend("person_id$location_id$%s" % level)
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = report_fields,
+                                 methods = ["count", "list"],
+                                 defaults = Storage(
+                                    rows = "training.course_id",
+                                    cols = "training.month",
+                                    fact = "count(training.person_id)",
+                                    totals = True,
+                                    )
+                                )
 
         # Resource Configuration
         configure(tablename,
@@ -2348,7 +2355,7 @@ class S3HRSkillModel(S3Model):
 
         # Components
         add_components(tablename,
-                       hrm_certificate_skill="certificate_id",
+                       hrm_certificate_skill = "certificate_id",
                        )
 
         # =====================================================================
@@ -2830,39 +2837,40 @@ class S3HRSkillModel(S3Model):
                 return
             # Optional Data
             site_id = data.get("site_id", None)
+
+            # No longer required since Imports don't add seconds:
             # Need to provide a range of dates as otherwise second differences prevent matches
             # - assume that if we have multiple training courses of the same
             #   type at the same site then they start at least a minute apart
             #
             # @ToDo: refactor into a reusable function
-            year = start_date.year
-            month = start_date.month
-            day = start_date.day
-            hour = start_date.hour
-            minute = start_date.minute
-            start_start_date = datetime.datetime(year, month, day, hour, minute)
-            if minute < 58:
-                minute = minute + 1
-            elif hour < 23:
-                hour = hour + 1
-                minute = 0
-            elif (day == 28 and month == 2) or \
-                 (day == 30 and month in [4, 6, 9, 11]) or \
-                 (day == 31 and month in [1, 3, 5, 7, 8, 10, 12]):
-                month = month + 1
-                day = 1
-                hour = 0
-                minute = 0
-            else:
-                day = day + 1
-                hour = 0
-                minute = 0
-            start_end_date = datetime.datetime(year, month, day, hour, minute)
+            #year = start_date.year
+            #month = start_date.month
+            #day = start_date.day
+            #hour = start_date.hour
+            #minute = start_date.minute
+            #start_start_date = datetime.datetime(year, month, day, hour, minute)
+            #if minute < 58:
+            #    minute = minute + 1
+            #elif hour < 23:
+            #    hour = hour + 1
+            #    minute = 0
+            #elif (day == 28 and month == 2) or \
+            #     (day == 30 and month in [4, 6, 9, 11]) or \
+            #     (day == 31 and month in [1, 3, 5, 7, 8, 10, 12]):
+            #    month = month + 1
+            #    day = 1
+            #    hour = 0
+            #    minute = 0
+            #else:
+            #    day = day + 1
+            #    hour = 0
+            #    minute = 0
+            #start_end_date = datetime.datetime(year, month, day, hour, minute)
 
             table = job.table
             query = (table.course_id == course_id) & \
-                    (table.start_date >= start_start_date) & \
-                    (table.start_date < start_end_date)
+                    (table.start_date == start_date)
             if site_id:
                 query = query & (table.site_id == site_id)
             _duplicate = current.db(query).select(table.id,
@@ -3294,7 +3302,7 @@ class S3HRExperienceModel(S3Model):
                                   label = T("Start Date"),
                                   ),
                           s3_date("end_date",
-                                  label=T("End Date"),
+                                  label = T("End Date"),
                                   ),
                           Field("hours", "double",
                                 label = T("Hours"),
@@ -3525,16 +3533,15 @@ class S3HRProgrammeModel(S3Model):
                          "person_id$gender",
                          ]
 
-        report_options = Storage(
-            rows=report_fields,
-            cols=report_fields,
-            fact=report_fields,
-            defaults=Storage(rows="programme_id",
-                             cols="month",
-                             fact="sum(hours)",
-                             totals=True
-                             )
-            )
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = report_fields,
+                                 defaults = Storage(rows = "programme_id",
+                                                    cols = "month",
+                                                    fact = "sum(hours)",
+                                                    totals = True,
+                                                    )
+                                 )
 
         configure(tablename,
                   context = {"person": "person_id",
@@ -4848,24 +4855,8 @@ def hrm_competency_controller():
         redirect(URL(f="index"))
 
     T = current.T
-    auth = current.auth
-    db = current.db
     s3db = current.s3db
     s3 = current.response.s3
-
-    def get_opts(tablename):
-        """
-            Lazy options getter
-
-            @param tablename: the name of the lookup table
-        """
-        table = s3db.table(tablename)
-        if auth.s3_has_permission("read", table):
-            rows = db(table.deleted == False).select(table.id, table.name)
-            opts = dict((row.id, row.name) for row in rows)
-        else:
-            opts = {}
-        return opts
 
     def prep(r):
         if not r.id:
@@ -4877,17 +4868,17 @@ def hrm_competency_controller():
                              ],
                              label = T("Name"),
                              comment = T("You can search by job title or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-                            ),
+                             ),
                 S3OptionsFilter("skill_id",
-                                label=T("Skills"),
-                                #cols = 2,
-                                options = lambda: get_opts("hrm_skill"),
-                               ),
+                                label = T("Skills"),
+                                options = lambda: \
+                                    get_s3_filter_opts("hrm_skill", translate=True),
+                                ),
                 S3OptionsFilter("competency_id",
-                                label=T("Competency"),
-                                #cols = 2,
-                                options = lambda: get_opts("hrm_competency_rating"),
-                               ),
+                                label = T("Competency"),
+                                options = lambda: \
+                                    get_s3_filter_opts("hrm_competency_rating", translate=True),
+                                ),
                 ]
             s3db.configure("hrm_competency",
                            filter_widgets = filter_widgets,
@@ -5392,16 +5383,17 @@ def hrm_human_resource_controller(extra_filter=None):
                              "job_title_id",
                              (T("Training"), "training.course_id"),
                              ]
+            rappend = report_fields.append
 
             if vol:
                 vol_active = settings.get_hrm_vol_active()
                 if vol_active:
                     list_fields.append((T("Active"), "details.active"))
-                    report_fields.append((T("Active"), "details.active"))
+                    rappend((T("Active"), "details.active"))
                 vol_experience = settings.get_hrm_vol_experience()
                 if vol_experience in ("programme", "both"):
                     list_fields.append((T("Program"), "person_id$hours.programme_id"))
-                    report_fields.append((T("Program"), "person_id$hours.programme_id"))
+                    rappend((T("Program"), "person_id$hours.programme_id"))
             else:
                 list_fields.extend(("department_id",
                                     "site_id"))
@@ -5411,32 +5403,37 @@ def hrm_human_resource_controller(extra_filter=None):
             list_fields.extend(((T("Email"), "email.value"),
                                 (settings.get_ui_label_mobile_phone(), "phone.value")))
 
+            # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
             levels = hierarchy.keys()
+            if len(settings.get_gis_countries()) == 1 or \
+               s3.gis.config.region_location_id:
+                levels.remove("L0")
+
             for level in levels:
-                report_fields.append("location_id$%s" % level)
+                rappend("location_id$%s" % level)
             if deploy:
-                report_fields.append((T("Credential"), "credential.job_title_id"))
+                rappend((T("Credential"), "credential.job_title_id"))
             teams = settings.get_hrm_teams()
             if teams:
                 if teams == "Teams":
                     teams = "Team"
                 elif teams == "Groups":
                     teams = "Group"
-                report_fields.append((teams, "group_membership.group_id"))
-            regions = settings.get_org_regions()
-            if regions:
-               report_fields.append("organisation_id$region_id")
-            report_options = Storage(
-                rows = report_fields,
-                cols = report_fields,
-                fact = report_fields,
-                defaults = Storage(rows = "organisation_id",
-                                   cols = "training.course_id",
-                                   fact = "count(person_id)",
-                                   totals = True,
-                                   )
-                )
+                rappend((teams, "group_membership.group_id"))
+            if settings.get_org_regions():
+               rappend("organisation_id$region_id")
+
+            report_options = Storage(rows = report_fields,
+                                     cols = report_fields,
+                                     fact = report_fields,
+                                     defaults = Storage(
+                                        rows = "organisation_id",
+                                        cols = "training.course_id",
+                                        fact = "count(person_id)",
+                                        totals = True,
+                                        )
+                                     )
 
             # Configure resource
             s3db.configure("hrm_human_resource",
@@ -6891,22 +6888,6 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def hrm_programme_opts():
-    """ Provide the options for the HRM programme search filter """
-    
-    ptable = current.s3db.hrm_programme
-    root_org = current.auth.root_org()
-    if root_org:
-        query = (ptable.deleted == False) & \
-                ((ptable.organisation_id == root_org) | \
-                (ptable.organisation_id == None))
-    else:
-        query = (ptable.deleted == False) & \
-                (ptable.organisation_id == None)
-    rows = current.db(query).select(ptable.id, ptable.name)
-    return dict((row.id, row.name) for row in rows)
-
-# =============================================================================
 def hrm_human_resource_filters(resource_type=None,
                                module=None,
                                hrm_type_opts=None):
@@ -6943,7 +6924,7 @@ def hrm_human_resource_filters(resource_type=None,
             S3OptionsFilter("type",
                             label = T("Type"),
                             options = hrm_type_opts,
-                            widget = "groupedopts",
+                            cols = 2,
                             hidden = True,
                             )
         )
@@ -6981,13 +6962,12 @@ def hrm_human_resource_filters(resource_type=None,
             # Active filter
             append_filter(
                 S3OptionsFilter("details.active",
-                                label=T("Active?"),
+                                label = T("Active?"),
                                 cols = 2, #3,
                                 options = {True: T("Yes"),
                                            False: T("No"),
                                            #None: T("Unknown"),
                                            },
-                                widget = "groupedopts",
                                 hidden = True,
                                 #none = True,
                                 )
@@ -6998,8 +6978,8 @@ def hrm_human_resource_filters(resource_type=None,
             append_filter(
                 S3OptionsFilter("person_id$hours.programme_id",
                                 label = T("Program"),
-                                #cols = 2,
-                                options = hrm_programme_opts,
+                                options = lambda: \
+                                    get_s3_filter_opts("hrm_programme", org_filter=True),
                                 hidden = True,
                                 )
             )

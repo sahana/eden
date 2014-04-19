@@ -208,7 +208,7 @@ class S3IRSModel(S3Model):
             "other.buildingCollapsed": T("Building Collapsed"),
             "other.peopleTrapped": T("People Trapped"),
             "other.powerFailure": T("Power Failure"),
-        }
+            }
 
         # This Table defines which Categories are visible to end-users
         tablename = "irs_icategory"
@@ -290,6 +290,7 @@ class S3IRSModel(S3Model):
                                  ),
                      self.gis_location_id(),
                      # Very basic Impact Assessment
+                     # @ToDo: Use Stats_Impact component instead
                      Field("affected", "integer",
                            label=T("Number of People Affected"),
                            represent = lambda val: val or T("unknown"),
@@ -340,6 +341,7 @@ class S3IRSModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
         # CRUD strings
         ADD_INC_REPORT = T("Create Incident Report")
         crud_strings[tablename] = Storage(
@@ -373,21 +375,16 @@ class S3IRSModel(S3Model):
                         _class="filter-search",
                          ),
             S3LocationFilter("location_id",
-                             #label=T("Location"),
-                             levels=levels,
-                             widget="multiselect",
-                             cols=3,
-                             #hidden=True,
+                             levels = levels,
+                             #hidden = True,
                              ),
             S3OptionsFilter("category",
-                            #label=T("Category"),
-                            widget="multiselect",
-                            #hidden=True,
+                            #hidden = True,
                             ),
             S3DateFilter("datetime",
-                         label=T("Date"),
-                         hide_time=True,
-                         #hidden=True,
+                         label = T("Date"),
+                         hide_time = True,
+                         #hidden = True,
                          ),
             ]
 
@@ -412,7 +409,7 @@ class S3IRSModel(S3Model):
                                  "injured",
                                  "verified",
                                  "message",
-                                ],
+                                 ],
                  report_options = Storage(rows = report_fields,
                                           cols = report_fields,
                                           fact = [(T("Number of Incidents"), "count(id)"),

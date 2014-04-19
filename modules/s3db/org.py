@@ -64,7 +64,6 @@ __all__ = ["S3OrganisationModel",
            "org_customise_org_resource_fields",
            "org_organisation_list_layout",
            "org_resource_list_layout",
-           "org_sector_opts",
            "org_update_root_organisation",
            ]
 
@@ -401,20 +400,17 @@ class S3OrganisationModel(S3Model):
                          ),
             # NB Order is important here - gets popped in asset & inv controllers & IFRC template
             S3OptionsFilter("organisation_type_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
                             label = T("Type"),
                             ),
             # NB Order is important here - gets popped in asset & inv controllers & IFRC template
             S3OptionsFilter("sector_organisation.sector_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
-                            #label = T("Sector"),
-                            options = org_sector_opts,
+                            options = lambda: \
+                                get_s3_filter_opts("org_sector",
+                                                   location_filter=True,
+                                                   none=True,
+                                                   translate=True),
                             ),
             S3OptionsFilter("country",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
                             #label = T("Home Country"),
                             ),
             ]
@@ -5796,28 +5792,5 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
-
-# =============================================================================
-def org_sector_opts():
-    """
-        Provide the options for Sector search filters
-    """
-
-    table = current.s3db.org_sector
-    location = current.session.s3.location_filter
-    if location:
-        query = (table.deleted == False) & \
-                (table.location_id == location)
-    else:
-        query = (table.deleted == False)
-
-    opts = current.db(query).select(table.id,
-                                    table.name,
-                                    orderby=table.name)
-    od = OrderedDict()
-    for opt in opts:
-        od[opt.id] = current.T(opt.name)
-    od[None] = current.messages["NONE"]
-    return od
 
 # END =========================================================================

@@ -1925,8 +1925,8 @@ def customise_gis_config_controller(**attr):
                                                coalition_pe_ids: T("My Coalition's Maps"),
                                                auth.user.pe_id: T("My Maps"),
                                                },
+                                    cols = 3,
                                     multiple = False,
-                                    widget = "groupedopts",
                                     )
                     ]
                 s3db.configure("gis_config",

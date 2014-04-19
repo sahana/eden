@@ -48,18 +48,70 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-from gluon.sqlhtml import OptionsWidget, MultipleOptionsWidget
+from gluon.sqlhtml import MultipleOptionsWidget
 from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3rest import S3Method
-from s3resource import S3FieldSelector, S3ResourceField, S3URLQuery
+from s3resource import S3ResourceField, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, S3HierarchySelectWidget
+from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchySelectWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
+
+# =============================================================================
+def get_s3_filter_opts(tablename,
+                       fieldname = "name",
+                       location_filter = False,
+                       org_filter = False,
+                       none = False,
+                       translate = False,
+                       ):
+    """
+        Lazy options getter
+        - this is useful when the expected number of options is significantly smaller than the number of records to iterate through
+        - note this doesn't check if options are actually in-use
+
+        @param tablename: the name of the lookup table
+        @param fieldname: the name of the field to represent options with
+        @param location_filter: whether to filter the values by location
+        @param org_filter: whether to filter the values by root_org
+        @param none: whether to include an option for None
+        @param translate: whether to translate the values
+    """
+
+    auth = current.auth
+    table = current.s3db.table(tablename)
+    if auth.s3_has_permission("read", table):
+        query = auth.s3_accessible_query("read", table)
+        if location_filter:
+            location = current.session.s3.location_filter
+            if location:
+                query &= (table.location_id == location)
+        if org_filter:
+            root_org = auth.root_org()
+            if root_org:
+                query &= ((table.organisation_id == root_org) | \
+                          (table.organisation_id == None))
+            #else:
+            #    query &= (table.organisation_id == None)
+        field = table[fieldname]
+        rows = current.db(query).select(table.id,
+                                        field,
+                                        orderby = field
+                                        )
+        if translate:
+            T = current.T
+            opts = OrderedDict((row.id, T(row[fieldname])) for row in rows)
+        else:
+            opts = OrderedDict((row.id, row[fieldname]) for row in rows)
+        if none:
+            opts[None] = current.messages["NONE"]
+    else:
+        opts = {}
+    return opts
 
 # =============================================================================
 class S3FilterWidget(object):
@@ -477,12 +529,11 @@ class S3RangeFilter(S3FilterWidget):
         id = self.attr["_id"]
 
         for o, v in zip(operators, variables):
-
-             elements.append(
-                 INPUT(_type="hidden",
-                       _id="%s-%s-data" % (id, o),
-                       _class="filter-widget-data %s-data" % self._class,
-                       _value=v))
+            elements.append(
+                INPUT(_type="hidden",
+                      _id="%s-%s-data" % (id, o),
+                      _class="filter-widget-data %s-data" % self._class,
+                      _value=v))
 
         return elements
 
@@ -727,18 +778,21 @@ class S3LocationFilter(S3FilterWidget):
         field_name = self.field
 
         fname = self._prefix(field_name) if resource else field_name
-        
-        if opts.widget == "groupedopts":
+
+        #widget_type = opts["widget"]
+        # Use groupedopts widget if we specify cols, otherwise assume multiselect
+        cols = opts.get("cols", None)
+        if cols:
             # Grouped Checkboxes
             # @ToDo: somehow working, but ugly, not usable (deprecated?)
             if "groupedopts-filter-widget" not in _class:
                 attr["_class"] = "%s groupedopts-filter-widget" % _class
-            attr["cols"] = opts.get("cols", 3)
+            attr["cols"] = cols
 
             # Add one widget per level
             for level in levels:
                 options = levels[level]["options"]
-                groupedopts = S3GroupedOptionsWidget(cols = opts["cols"],
+                groupedopts = S3GroupedOptionsWidget(cols = cols,
                                                      size = opts["size"] or 12,
                                                      )
                 # Dummy field
@@ -847,7 +901,7 @@ class S3LocationFilter(S3FilterWidget):
 
         NOOPT = T("No options available")
 
-        attr = self.attr
+        #attr = self.attr
         opts = self.opts
         translate = self.translate
 
@@ -1188,21 +1242,14 @@ class S3OptionsFilter(S3FilterWidget):
             any_all = ""
 
         # Initialize widget
-        widget_type = opts["widget"]
-        #if widget_type == "multiselect-bootstrap":
-        #    widget_class = "multiselect-filter-bootstrap"
-        #    script = "/%s/static/scripts/bootstrap-multiselect.js" % \
-        #                current.request.application
-        #    scripts = current.response.s3.scripts
-        #    if script not in scripts:
-        #        scripts.append(script)
-        #    w = MultipleOptionsWidget.widget
-        #elif widget_type == "groupedopts":
-        if widget_type == "groupedopts":
+        #widget_type = opts["widget"]
+        # Use groupedopts widget if we specify cols, otherwise assume multiselect
+        cols = opts.get("cols", None)
+        if cols:
             widget_class = "groupedopts-filter-widget"
             w = S3GroupedOptionsWidget(options = options,
                                        multiple = opts.get("multiple", True),
-                                       cols = opts["cols"],
+                                       cols = cols,
                                        size = opts["size"] or 12,
                                        help_field = opts["help_field"],
                                        )
@@ -1244,24 +1291,28 @@ class S3OptionsFilter(S3FilterWidget):
         if noopt:
             options = {attr["_id"]: str(noopt)}
         else:
-            widget_type = opts["widget"]
-            if widget_type in ("multiselect-bootstrap", "multiselect"):
-                # Produce a simple list of tuples
-                options = {attr["_id"]: [(k, s3_unicode(v))
-                                         for k, v in options]}
-            else:
+            #widget_type = opts["widget"]
+            # Use groupedopts widget if we specify cols, otherwise assume multiselect
+            cols = opts.get("cols", None)
+            if cols:
                 # Use the widget method to group and sort the options
                 widget = S3GroupedOptionsWidget(
                                 options = options,
                                 multiple = True,
-                                cols = opts["cols"],
+                                cols = cols,
                                 size = opts["size"] or 12,
                                 help_field = opts["help_field"]
                                 )
                 options = {attr["_id"]:
                            widget._options({"type": ftype}, [])}
+            else:
+                # Multiselect
+                # Produce a simple list of tuples
+                options = {attr["_id"]: [(k, s3_unicode(v))
+                                         for k, v in options]}
+
         return options
-        
+
     # -------------------------------------------------------------------------
     def _options(self, resource):
         """
@@ -1275,7 +1326,7 @@ class S3OptionsFilter(S3FilterWidget):
         NOOPT = T("No options available")
         EMPTY = T("None")
 
-        attr = self.attr
+        #attr = self.attr
         opts = self.opts
 
         # Resolve the field selector
@@ -2532,10 +2583,10 @@ class S3FilterString(object):
                 if not callable(renderer):
                     renderer = lambda v: s3_unicode(v)
                 if hasattr(renderer, "linkto"):
-                    linkto = renderer.linkto
+                    #linkto = renderer.linkto
                     renderer.linkto = None
-                else:
-                    linkto = None
+                #else:
+                #    #linkto = None
 
                 is_list = type(values) is list
 
@@ -2682,6 +2733,7 @@ class S3FilterString(object):
                                     values=render_values(vtemplate, values))
         else:
             # Fallback to simple representation
+            # FIXME: resource not defined here!
             return query.represent(resource)
 
 # END =========================================================================

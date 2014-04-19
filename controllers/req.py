@@ -1574,8 +1574,8 @@ def fema():
     filter_widgets = [
         s3base.S3OptionsFilter("req_id$site_id",
                                label = T("Facility"),
-                               cols = 3,
-                              ),
+                               #cols = 3,
+                               ),
     ]
     s3db.configure("req_req_item", filter_widgets = filter_widgets)
 

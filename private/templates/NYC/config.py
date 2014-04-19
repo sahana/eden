@@ -1293,7 +1293,6 @@ def customise_project_project_controller(**attr):
                                 label = T("Status"),
                                 # Not translateable
                                 #represent = "%(name)s",
-                                widget = "groupedopts",
                                 cols = 3,
                                 ),
                 #S3OptionsFilter("theme_project.theme_id",

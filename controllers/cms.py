@@ -335,13 +335,6 @@ def newsfeed():
 
     s3.crud_strings["cms_post"].title_list = title_list
 
-    # Which levels of Hierarchy are we using?
-    hierarchy = gis.get_location_hierarchy()
-    levels = hierarchy.keys()
-    if len(settings.get_gis_countries()) == 1 or \
-       s3.gis.config.region_location_id:
-        levels.remove("L0")
-
     contact_field = settings.get_cms_person()
     org_field = settings.get_cms_organisation()
     org_group_field = settings.get_cms_organisation_group()
@@ -350,51 +343,46 @@ def newsfeed():
 
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
     filter_widgets = [S3TextFilter(["body"],
-                                   label=T("Search"),
-                                   _class="filter-search",
-                                   #_placeholder=T("Search").upper(),
+                                   label = T("Search"),
+                                   _class = "filter-search",
+                                   #_placeholder = T("Search").upper(),
                                    ),
                       S3LocationFilter("location_id",
-                                       label=T("Filter by Location"),
-                                       levels=levels,
-                                       widget="multiselect",
-                                       hidden=hidden,
+                                       label = T("Filter by Location"),
+                                       hidden = hidden,
                                        ),
                       ]
     fappend = filter_widgets.append
     finsert = filter_widgets.insert
     if org_field:
         fappend(S3OptionsFilter(org_field,
-                                label=T("Filter by Organization"),
+                                label = T("Filter by Organization"),
                                 # Can't use this for created_by as integer, use field.represent instead
                                 #represent="%(name)s",
-                                widget="multiselect",
-                                hidden=hidden,
+                                hidden = hidden,
                                 ))
 
     if org_group_field:
         group_label = settings.get_org_groups()
         if group_label:
             fappend(S3OptionsFilter(org_group_field,
-                                    label=T("Filter by %(type)s") % dict(type=T(group_label)),
+                                    label = T("Filter by %(type)s") % dict(type=T(group_label)),
                                     # Can't use this for created_by as integer, use field.represent instead
                                     #represent="%(name)s",
-                                    widget="multiselect",
-                                    hidden=hidden,
+                                    hidden = hidden,
                                     ))
 
     fappend(S3DateFilter("date",
-                         label=T("Filter by Date"),
-                         hide_time=True,
-                         hidden=hidden,
+                         label = T("Filter by Date"),
+                         hide_time = True,
+                         hidden = hidden,
                          ))
 
     if settings.get_cms_show_tags():
         finsert(1, S3OptionsFilter("tag_post.tag_id",
-                                   label=T("Filter by Tag"),
-                                   represent="%(name)s",
-                                   widget="multiselect",
-                                   hidden=hidden,
+                                   label = T("Filter by Tag"),
+                                   represent = "%(name)s",
+                                   hidden = hidden,
                                    ))
 
     if settings.get_cms_bookmarks() and auth.user:
@@ -404,19 +392,19 @@ def newsfeed():
                                    options = {"*": T("All"),
                                               auth.user.id: T("My Bookmarks"),
                                               },
-                                   hidden = hidden,
+                                   cols = 2,
                                    multiple = False,
+                                   hidden = hidden,
                                    ))
 
     len_series = db(stable.deleted == False).count()
     if len_series > 3:
         # Multiselect widget
         finsert(1, S3OptionsFilter("series_id",
-                                   label=T("Filter by Type"),
+                                   label = T("Filter by Type"),
                                    # We want translations
                                    #represent="%(name)s",
-                                   widget="multiselect",
-                                   hidden=hidden,
+                                   hidden = hidden,
                                    ))
                       
     elif len_series > 1:
@@ -425,8 +413,8 @@ def newsfeed():
                                    label=T("Filter by Type"),
                                    # We want translations
                                    #represent="%(name)s",
-                                   cols=2,
-                                   hidden=hidden,
+                                   cols = 2,
+                                   hidden = hidden,
                                    ))
     else:
         # No Widget

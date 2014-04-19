@@ -56,6 +56,15 @@ def event():
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive:
+            if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('event_event_start_date','event_event_end_date')''')
+        return output
+    s3.postp = postp
+
     output = s3_rest_controller(rheader=event_rheader)
     return output
 

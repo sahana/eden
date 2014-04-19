@@ -76,16 +76,18 @@ class S3EventModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
 
         configure = self.configure
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         define_table = self.define_table
+        settings = current.deployment_settings
 
         messages = current.messages
         NONE = messages["NONE"]
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
-        hierarchical_event_types = current.deployment_settings.get_event_types_hierarchical()
+        hierarchical_event_types = settings.get_event_types_hierarchical()
 
         # ---------------------------------------------------------------------
         # Event Types / Disaster Types
@@ -189,6 +191,7 @@ class S3EventModel(S3Model):
                                  represent = "date",
                                  widget = "date",
                                  ),
+                     Field.Method("year", self.event_event_year),
                      Field("closed", "boolean",
                            default = False,
                            label = T("Closed"),
@@ -231,10 +234,69 @@ class S3EventModel(S3Model):
                                    #                                AUTOCOMPLETE_HELP))
                                    )
 
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1 or \
+           s3.gis.config.region_location_id:
+            levels.remove("L0")
+
+        if hierarchical_event_types:
+            filter_widgets = [S3HierarchyFilter("event_type_id",
+                                                label = T("Type"),
+                                                multiple = False,
+                                                options = lambda: \
+                                                    get_s3_filter_opts("event_event_type",
+                                                                       translate=True)
+                                                ),
+                              ]
+        else:
+            filter_widgets = [S3OptionsFilter("event_type_id",
+                                              label = T("Type"),
+                                              multiple = False,
+                                              options = lambda: \
+                                                get_s3_filter_opts("event_event_type",
+                                                                   translate=True)
+                                              ),
+                              ]
+
+        filter_widgets.extend((S3LocationFilter("event_location.location_id",
+                                                levels = levels,
+                                                ),
+                               S3DateFilter("date",
+                                            label = None,
+                                            hide_time = True,
+                                            input_labels = {"ge": "From", "le": "To"}
+                                            ),
+                               ))
+
+        report_fields = ["event_type_id",
+                         ]
+        rappend = report_fields.append
+        for level in levels:
+            rappend("event_location.location_id$%s" % level)
+        rappend((T("Year"), "year"))
+
+        report_options = Storage(
+            rows = report_fields,
+            cols = report_fields,
+            fact = [(T("Number of Disasters"), "count(id)")],
+            defaults = Storage(
+                rows = "event_type_id",
+                cols = "event_location.location_id$%s" % levels[0], # Highest-level of hierarchy
+                fact = "count(id)",
+                totals = True,
+                chart = "breakdown:rows",
+                table = "collapse",
+                ),
+            )
+
         configure(tablename,
                   context = {"location": "event_location.location_id",
                              },
                   deduplicate = self.event_duplicate,
+                  extra_fields = ["start_date"],
+                  filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "name",
                                  "event_type_id$name",
@@ -246,6 +308,7 @@ class S3EventModel(S3Model):
                                  ],
                   list_orderby = "event_event.start_date desc",
                   orderby = "event_event.start_date desc",
+                  report_options = report_options,
                   update_onaccept = self.event_update_onaccept,
                   )
 
@@ -335,6 +398,27 @@ class S3EventModel(S3Model):
                                                 readable=False,
                                                 writable=False),
                 )
+
+    # =============================================================================
+    @staticmethod
+    def event_event_year(row):
+        """
+            Virtual field for event_event - returns the year of this entry
+            used for report.
+
+            Requires "start_date" to be in the additional report_fields
+
+            @param row: the Row
+        """
+
+        try:
+            thisdate = row["event_event.start_date"]
+        except AttributeError:
+            return current.messages["NONE"]
+        if not thisdate:
+            return current.messages["NONE"]
+
+        return thisdate.year
 
     # -------------------------------------------------------------------------
     @staticmethod

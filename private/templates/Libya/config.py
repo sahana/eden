@@ -1820,14 +1820,14 @@ def customise_org_facility_controller(**attr):
                 #                                             label = T("Drop-off Goods"),
                 #                                             options = yesno,
                 #                                             multiple = False,
-                #                                             widget = "groupedopts",
+                #                                             cols = 2,
                 #                                             hidden = True,
                 #                                             ))
                 #    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
                 #                                             label = T("Volunteer Time"),
                 #                                             options = yesno,
                 #                                             multiple = False,
-                #                                             widget = "groupedopts",
+                #                                             cols = 2,
                 #                                             hidden = True,
                 #                                             ))
 
@@ -2264,13 +2264,13 @@ def customise_org_organisation_controller(**attr):
                     filter_widgets.insert(0, S3OptionsFilter("needs.money",
                                                              options = yesno,
                                                              multiple = False,
-                                                             widget = "groupedopts",
+                                                             cols = 2,
                                                              hidden = True,
                                                              ))
                     #filter_widgets.insert(1, S3OptionsFilter("needs.vol",
                     #                                         options = yesno,
                     #                                         multiple = False,
-                    #                                         widget = "groupedopts",
+                    #                                         cols = 2,
                     #                                         hidden = True,
                     #                                         ))
 

@@ -3846,6 +3846,7 @@ S3OptionsFilter({
             user_id = 0
         if self.has_permission(method, table, 0, user_id):
             return table.id > 0
+
         # Filter Records to show only those to which the user has access
         current.session.warning = current.T("Only showing accessible records!")
         membership = self.settings.table_membership

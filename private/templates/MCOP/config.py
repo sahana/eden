@@ -856,7 +856,6 @@ def customise_project_project_resource(r, tablename):
                                            ),
                           #S3OptionsFilter("status_id",
                           #                label = T("Status"),
-                          #                widget = "groupedopts",
                           #                # @ToDo: Introspect cols
                           #                cols = 3,
                           #                ),

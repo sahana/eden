@@ -357,7 +357,6 @@ def customise_event_event_resource(r, tablename):
         @ToDo: Move some of this into the model as defaults
     """
 
-    from s3.s3filter import S3DateFilter, S3HierarchyFilter, S3LocationFilter, S3OptionsFilter
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
     from s3.s3validators import IS_LOCATION_SELECTOR2
     from s3.s3widgets import S3LocationSelectorWidget2
@@ -428,65 +427,29 @@ def customise_event_event_resource(r, tablename):
                                 *impact_crud_form_fields
                                 )
 
-    filter_widgets = [S3HierarchyFilter("event_type_id",
-                                        label = T("Type"),
-                                        # Not translateable
-                                        #represent = "%(name)s",
-                                        multiple = False,
-                                        ),
-                      S3LocationFilter("event_location.location_id",
-                                       levels = gis_levels,
-                                       ),
-                      S3DateFilter("date",
-                                   label = None,
-                                   hide_time = True,
-                                   input_labels = {"ge": "From", "le": "To"}
-                                   ),
-                      ]
-
     list_fields = ["name",
                    "event_type_id",
                    ]
     lappend = list_fields.append
 
-    report_fields = ["event_type_id",
-                     ]
-    rappend = report_fields.append
-    
     for level in gis_levels:
         location_level = "event_location.location_id$%s" % level
         lappend(location_level)
-        rappend(location_level)
 
     list_fields.extend(("start_date",
                         "end_date",
                         ))
     list_fields.extend(impact_list_fields)
 
-    # @ToDo: start_date -> Report on Year only.. @flavour ;)
-    rappend("start_date")
-
     report_facts = [(T("Number of Disasters"), "count(id)")]
     report_facts.extend(impact_report_fields)
 
-    report_options = Storage(rows = report_fields,
-                             cols = report_fields,
-                             fact = report_facts,
-                             defaults = Storage(
-                                rows = "event_type_id",
-                                cols = "event_location.location_id$L0",
-                                fact = "count(id)",
-                                totals = True,
-                                chart = "breakdown:rows",
-                                table = "collapse",
-                                ),
-                             )
+    report_options = s3db.get_config("event_event", "report_options")
+    report_options.fact = report_facts
 
     s3db.configure("event_event",
                    crud_form = crud_form,
-                   filter_widgets = filter_widgets,
                    list_fields = list_fields,
-                   report_options = report_options,
                    )
 
     if r.interactive:

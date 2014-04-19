@@ -1873,16 +1873,16 @@ def customise_org_facility_controller(**attr):
                 #    needs_fields = ["needs.goods_details", "needs.vol_details"]
                 #    filter_widgets.insert(0, S3OptionsFilter("needs.goods",
                 #                                             label = T("Drop-off Goods"),
+                #                                             cols = 2,
                 #                                             options = yesno,
                 #                                             multiple = False,
-                #                                             widget = "groupedopts",
                 #                                             hidden = True,
                 #                                             ))
                 #    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
                 #                                             label = T("Volunteer Time"),
+                #                                             cols = 2,
                 #                                             options = yesno,
                 #                                             multiple = False,
-                #                                             widget = "groupedopts",
                 #                                             hidden = True,
                 #                                             ))
 
@@ -2394,13 +2394,13 @@ def customise_org_organisation_controller(**attr):
                     filter_widgets.insert(0, S3OptionsFilter("needs.money",
                                                              options = yesno,
                                                              multiple = False,
-                                                             widget = "groupedopts",
+                                                             cols = 2,
                                                              hidden = True,
                                                              ))
                     #filter_widgets.insert(1, S3OptionsFilter("needs.vol",
                     #                                         options = yesno,
                     #                                         multiple = False,
-                    #                                         widget = "groupedopts",
+                    #                                         cols = 2,
                     #                                         hidden = True,
                     #                                         ))
 

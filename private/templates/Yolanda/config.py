@@ -1877,14 +1877,14 @@ def customise_org_facility_controller(**attr):
                 #                                             label = T("Drop-off Goods"),
                 #                                             options = yesno,
                 #                                             multiple = False,
-                #                                             widget = "groupedopts",
+                #                                             cols = 2,
                 #                                             hidden = True,
                 #                                             ))
                 #    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
                 #                                             label = T("Volunteer Time"),
                 #                                             options = yesno,
                 #                                             multiple = False,
-                #                                             widget = "groupedopts",
+                #                                             cols = 2,
                 #                                             hidden = True,
                 #                                             ))
 
@@ -3242,7 +3242,6 @@ def customise_project_activity_controller(**attr):
                                           # Doesn't support translation
                                           #represent="%(name)s",
                                           # @ToDo: Introspect cols
-                                          widget = "groupedopts",
                                           cols = 3,
                                           ),
                           S3OptionsFilter("activity_activity_type.activity_type_id",
@@ -3308,7 +3307,6 @@ def customise_project_task_controller(**attr):
             S3OptionsFilter("priority",
                             label = T("Priority"),
                             #options = project_task_priority_opts,
-                            widget = "groupedopts",
                             cols = 4,
                             ),
             S3OptionsFilter("pe_id",
@@ -3316,9 +3314,7 @@ def customise_project_task_controller(**attr):
                             # @ToDo: Implement support for this in S3OptionsFilter
                             #null = T("Unassigned"),
                             #represent="%(name)s",
-                            #widget="multiselect",
-                            widget = "groupedopts",
-                            cols = 4,
+                            #cols = 4,
                             ),
             S3RangeFilter("created_on",
                           label = T("Date Created"),
@@ -3328,8 +3324,6 @@ def customise_project_task_controller(**attr):
             S3OptionsFilter("status",
                             label = T("Status"),
                             #options = project_task_status_opts,
-                            #widget = "multiselect",
-                            widget = "groupedopts",
                             cols = 4,
                             ),
             ]

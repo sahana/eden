@@ -53,9 +53,7 @@ __all__ = ["S3ProjectModel",
            "project_rheader",
            "project_task_form_inject",
            "project_task_controller",
-           "project_theme_options",
            "project_theme_help_fields",
-           "project_hazard_options",
            "project_hazard_help_fields",
            "project_hfa_opts",
            "project_jnap_opts",
@@ -897,7 +895,6 @@ class S3ProjectActivityModel(S3Model):
                                           label = T("Status"),
                                           # Doesn't support translation
                                           #represent="%(name)s",
-                                          widget="groupedopts",
                                           # @ToDo: Introspect cols
                                           cols = 3,
                                           ),
@@ -2751,8 +2748,9 @@ class S3ProjectLocationModel(S3Model):
             #                ),
             S3OptionsFilter("project_id$theme_project.theme_id",
                             label = T("Theme"),
-                            options = project_theme_options,
-                            #cols = 1,
+                            options = lambda: \
+                                get_s3_filter_opts("project_theme",
+                                                   translate=True),
                             hidden = True,
                             ),
             S3LocationFilter("location_id",
@@ -2760,13 +2758,6 @@ class S3ProjectLocationModel(S3Model):
                              hidden = True,
                              ),
             ))
-
-        if "L0" in levels:
-            default_report_row = "location.location_id$L0"
-        elif "L1" in levels:
-            default_report_row = "location.location_id$L1"
-        else:
-            default_report_row = "location.location_id$L2"
 
         report_fields.extend(((messages.ORGANISATION, "project_id$organisation_id"),
                               (T("Project"), "project_id"),
@@ -2776,7 +2767,7 @@ class S3ProjectLocationModel(S3Model):
         report_options = Storage(rows=report_fields,
                                  cols=report_fields,
                                  fact=report_fields,
-                                 defaults=Storage(rows=default_report_row,
+                                 defaults=Storage(rows="location.location_id$%s" % levels[0], # Highest-level of Hierarchy
                                                   cols="location.project_id",
                                                   fact="activity_type.activity_type_id",
                                                   aggregate="list",
@@ -4206,31 +4197,27 @@ class S3ProjectTaskModel(S3Model):
             S3OptionsFilter("priority",
                             label = T("Priority"),
                             options = project_task_priority_opts,
-                            widget = "groupedopts",
                             cols = 4,
                             ),
             S3OptionsFilter("task_project.project_id",
                             label = T("Project"),
                             options = self.project_task_project_opts,
-                            widget = "groupedopts",
-                            cols = 3,
+                            #cols = 3,
                             ),
             S3OptionsFilter("task_activity.activity_id",
                             label = T("Activity"),
                             options = self.project_task_activity_opts,
-                            widget = "groupedopts",
-                            cols = 3,
+                            #cols = 3,
                             ),
             S3OptionsFilter("pe_id",
                             label = T("Assigned To"),
                             # @ToDo: Implement support for this in S3OptionsFilter
                             #null = T("Unassigned"),
-                            cols = 4,
+                            #cols = 4,
                             ),
             S3OptionsFilter("created_by",
                             label = T("Created By"),
-                            widget = "groupedopts",
-                            cols = 3,
+                            #cols = 3,
                             hidden = True,
                             ),
             S3RangeFilter("created_on",
@@ -4251,7 +4238,6 @@ class S3ProjectTaskModel(S3Model):
             S3OptionsFilter("status",
                             label = T("Status"),
                             options = project_task_status_opts,
-                            widget = "groupedopts",
                             cols = 4,
                             ),
             ]
@@ -4277,8 +4263,7 @@ class S3ProjectTaskModel(S3Model):
             filter_widgets.insert(4, S3OptionsFilter("task_milestone.milestone_id",
                                                      label = T("Milestone"),
                                                      options = self.project_task_milestone_opts,
-                                                     widget = "groupedopts",
-                                                     cols = 3
+                                                     #cols = 3
                                                      ))
 
         report_options = Storage(rows = list_fields,
@@ -6370,21 +6355,6 @@ def project_task_controller():
                                    )
 
 # =============================================================================
-def project_theme_options():
-    """ Provide the options for the Theme filter """
-
-    table = current.s3db.project_theme
-    rows = current.db(table.deleted == False).select(table.id,
-                                                     table.name,
-                                                     orderby=table.name)
-    T = current.T
-    translated = lambda string: T(string) if string else ""
-    options = OrderedDict()
-    for row in rows:
-        options[row.id] = translated(row.name)
-    return options
-
-# =============================================================================
 def project_theme_help_fields(options):
     """
         Provide the tooltips for the Theme filter
@@ -6403,22 +6373,6 @@ def project_theme_help_fields(options):
     for row in rows:
         tooltips[row.id] = translated(row.comments)
     return tooltips
-
-# =============================================================================
-def project_hazard_options():
-    """ Provide the options for the Hazard filter """
-
-    table = current.s3db.project_hazard
-    rows = current.db(table.deleted == False).select(table.id,
-                                                     table.name,
-                                                     orderby=table.name)
-
-    T = current.T
-    translated = lambda string: T(string) if string else ""
-    options = OrderedDict()
-    for row in rows:
-        options[row.id] = translated(row.name)
-    return options
 
 # =============================================================================
 def project_hazard_help_fields(options):
@@ -6533,7 +6487,6 @@ def project_project_filters(org_label):
                      ),
         S3OptionsFilter("status_id",
                         label = T("Status"),
-                        widget = "groupedopts",
                         cols = 4,
                         ),
         S3OptionsFilter("organisation_id",
@@ -6557,7 +6510,11 @@ def project_project_filters(org_label):
         append_filter(
             S3OptionsFilter("sector.id",
                             label = sector,
-                            options = current.s3db.org_sector_opts,
+                            options = lambda: \
+                                get_s3_filter_opts("org_sector",
+                                                   location_filter=True,
+                                                   none=True,
+                                                   translate=True),
                             hidden = True,
                             )
         )
@@ -6567,9 +6524,10 @@ def project_project_filters(org_label):
         append_filter(
             S3OptionsFilter("hazard.id",
                             label = T("Hazard"),
-                            options = project_hazard_options,
+                            options = lambda: \
+                                get_s3_filter_opts("project_hazard",
+                                                   translate=True),
                             help_field = project_hazard_help_fields,
-                            widget = "groupedopts",
                             cols = 4,
                             hidden = True,
                             )
@@ -6579,9 +6537,10 @@ def project_project_filters(org_label):
         append_filter(
             S3OptionsFilter("theme.id",
                             label = T("Theme"),
-                            options = project_theme_options,
+                            options = lambda: \
+                                get_s3_filter_opts("project_theme",
+                                                   translate=True),
                             help_field = project_theme_help_fields,
-                            widget = "groupedopts",
                             cols = 4,
                             hidden = True,
                             )
@@ -6596,7 +6555,6 @@ def project_project_filters(org_label):
                             label = T("HFA"),
                             options = options,
                             help_field = hfa_opts,
-                            widget = "groupedopts",
                             cols = 5,
                             hidden = True,
                             )

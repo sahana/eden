@@ -229,15 +229,14 @@ def location():
     if settings.get_L10n_translate_gis_location():
         search_fields.append("name.name_l10n")
 
-    filter_widgets = []
+    filter_level_widgets = []
     for level, level_label in location_hierarchy.items():
         search_fields.append(level)
-        filter_widgets.append(S3OptionsFilter(level,
-                                              label=level_label,
-                                              #widget="multiselect",
-                                              cols=5,
-                                              hidden=True,
-                                              ))
+        filter_level_widgets.append(S3OptionsFilter(level,
+                                                    label = level_label,
+                                                    #cols = 5,
+                                                    hidden = True,
+                                                    ))
 
     filter_widgets = [
         S3TextFilter(search_fields,
@@ -246,22 +245,21 @@ def location():
                      #_class = "filter-search",
                      ),
         S3OptionsFilter("level",
-                        label=T("Level"),
-                        options=location_hierarchy,
-                        widget="multiselect",
-                        #hidden=True,
+                        label = T("Level"),
+                        options = location_hierarchy,
+                        #hidden = True,
                         ),
         # @ToDo: Hierarchical filter working on id
         #S3LocationFilter("id",
-        #                label=T("Location"),
-        #                levels=["L0", "L1", "L2", "L3"],
-        #                widget="multiselect",
-        #                #hidden=True,
+        #                label = T("Location"),
+        #                levels = ("L0", "L1", "L2", "L3",),
+        #                #hidden = True,
         #                ),
-        ] + filter_widgets
+        ]
+    filter_widgets.extend(filter_level_widgets)
 
     s3db.configure(tablename,
-                   filter_widgets=filter_widgets,
+                   filter_widgets = filter_widgets,
                    # Don't include Bulky Location Selector in List Views
                    listadd = False,
                    )
@@ -286,17 +284,15 @@ def location():
         table.virtualfields.append(S3LocationVirtualFields())
 
         s3db.configure(tablename,
-                       report_options=Storage(
-                                search=gis_location_adv_search,
-                                rows=["name"],
-                                cols=[],
-                                fact=[("population", "sum", T("Total Population"))],
-                                defaults=Storage(
-                                                rows="name",
-                                                cols=None,
-                                                fact="sum:population",
-                                                totals=True
-                                                )
+                       report_options = Storage(
+                                rows = ["name"],
+                                cols = [],
+                                fact = [("population", "sum", T("Total Population"))],
+                                defaults = Storage(rows="name",
+                                                   cols=None,
+                                                   fact="sum:population",
+                                                   totals=True
+                                                   )
                                 ),
                         )
 
@@ -889,6 +885,7 @@ def config():
                                             options = {"*": T("All"),
                                                        auth.user.pe_id: T("My Maps"),
                                                        },
+                                            cols = 2,
                                             multiple = False,
                                             )
                             ]

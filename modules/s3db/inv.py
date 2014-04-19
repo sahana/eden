@@ -600,18 +600,18 @@ S3OptionsFilter({
             rows = ["item_id", "item_id$item_category_id"]
             cols = ["site_id", "owner_org_id", "supply_org_id"]
             fact = ["quantity"]
-        report_options = Storage(
-            rows=rows,
-            cols=cols,
-            fact=fact,
-            methods=["sum"],
-            defaults=Storage(rows="item_id",
-                             cols="site_id",
-                             fact="sum(quantity)",
-                            ),
-            groupby=self.inv_inv_item.site_id,
-            hide_comments=True,
-        )
+
+        report_options = Storage(rows = rows,
+                                 cols = cols,
+                                 fact = fact,
+                                 methods = ["sum"],
+                                 defaults = Storage(rows = "item_id",
+                                                    cols = "site_id",
+                                                    fact = "sum(quantity)",
+                                                    ),
+                                 groupby = self.inv_inv_item.site_id,
+                                 hide_comments = True,
+                                 )
 
         # List fields
         if track_pack_values:
@@ -657,34 +657,6 @@ S3OptionsFilter({
                                        "item_pack_id",
                                        ],
                        filter_widgets = filter_widgets,
-                       # @todo: where is this config used?
-                       #filter_widgets = [
-                       #   S3TextFilter(["item_id$name",
-                       #                 "item_pack_id$name",
-                       #                ],
-                       #                label=T("Item name"),
-                       #                comment=T("Search for items with this text in the name."),
-                       #               ),
-                       #   S3RangeFilter("quantity",
-                       #                 label=T("Quantity range"),
-                       #                 comment=T("Include only items where quantity is in this range."),
-                       #                 ge=10,
-                       #                ),
-                       #   S3DateFilter("purchase_date",
-                       #                label=T("Purchase date"),
-                       #                comment=T("Include only items purchased within the specified dates."),
-                       #               ),
-                       #   S3DateFilter("other_date",
-                       #                label=T("Expiry date"),
-                       #                comment=T("Include only items that expire within the specified dates."),
-                       #               ),
-                       #   S3OptionsFilter("owner_org_id",
-                       #                   label=T("Owning organization"),
-                       #                   comment=T("Search for items by owning organization."),
-                       #                   represent="%(name)s",
-                       #                   cols=2,
-                       #                  )
-                       #],
                        list_fields = list_fields,
                        onvalidation = self.inv_inv_item_onvalidate,
                        report_options = report_options,
