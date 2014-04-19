@@ -97,16 +97,16 @@ def get_s3_filter_opts(tablename,
                           (table.organisation_id == None))
             #else:
             #    query &= (table.organisation_id == None)
-        field = table[fieldname]
         rows = current.db(query).select(table.id,
-                                        field,
-                                        orderby = field
+                                        table[fieldname],
+                                        # Options are sorted later
+                                        #orderby = table[fieldname]
                                         )
         if translate:
             T = current.T
-            opts = OrderedDict((row.id, T(row[fieldname])) for row in rows)
+            opts = dict((row.id, T(row[fieldname])) for row in rows)
         else:
-            opts = OrderedDict((row.id, row[fieldname]) for row in rows)
+            opts = dict((row.id, row[fieldname]) for row in rows)
         if none:
             opts[None] = current.messages["NONE"]
     else:

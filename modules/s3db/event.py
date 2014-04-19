@@ -245,9 +245,6 @@ class S3EventModel(S3Model):
             filter_widgets = [S3HierarchyFilter("event_type_id",
                                                 label = T("Type"),
                                                 multiple = False,
-                                                options = lambda: \
-                                                    get_s3_filter_opts("event_event_type",
-                                                                       translate=True)
                                                 ),
                               ]
         else:
@@ -256,7 +253,7 @@ class S3EventModel(S3Model):
                                               multiple = False,
                                               options = lambda: \
                                                 get_s3_filter_opts("event_event_type",
-                                                                   translate=True)
+                                                                   translate = True)
                                               ),
                               ]
 
