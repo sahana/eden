@@ -84,6 +84,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
+
         <s3xml>
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=
@@ -128,11 +129,19 @@
 
         <!-- Create the variables -->
         <xsl:variable name="FacilityName" select="substring(col[@field='Name']/text(),1,64)"/>
-        <xsl:variable name="Type" select="col[@field='Type']/text()"/>
         <xsl:variable name="OrgName">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$Organisation"/>
             </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="Type">
+            <xsl:value-of select="col[@field='Type']"/>
+        </xsl:variable>
+        <xsl:variable name="SubType">
+            <xsl:value-of select="col[@field='SubType']"/>
+        </xsl:variable>
+        <xsl:variable name="SubSubType">
+            <xsl:value-of select="col[@field='SubSubType']"/>
         </xsl:variable>
 
         <resource name="org_facility">
