@@ -1177,16 +1177,40 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         for (i = 0; i < features_len; i++) {
             data.push(features[i].attributes[prop]);
         }
+
+        // Sort the data
         data.sort(function(a, b) {
             return a - b;
         });
-        var classSize = Math.round(features_len / 5);
+
+        // How many unique values do we have?
+        var seen = {};
+        $.each(data, function(){
+            seen[this] = 1;
+        });
+
+        // How many classes should we use?
+        // Color schemes from ColorBrewer2.org
+        // YlOrRd sequential schemes from ColorBrewer which are colorblind-safe, print-friendly and photocopy-safe
+        var classes = Object.keys(seen).length;
+        if (classes >= 5) {
+            classes = 5;
+            var colors = ['ffffb2', 'fecc5c', 'fd8d3c', 'f03b20', 'bd0026'];
+        } else if (classes == 4) {
+            var colors = ['ffffb2', 'fecc5c', 'fd8d3c', 'e31a1c'];
+        } else {
+            classes = 3;
+            var colors = ['ffeda0', 'feb24c', 'f03b20'];
+        }
+
+        // What is the size of each class?
+        var classSize = Math.round(features_len / classes);
         var step = classSize;
 
         // Set first value
         var breaks = [data[0]];
-        for (i = 1; i < 5; i++) {
-            breaks[i] = data[step];
+        for (i = 1; i < classes; i++) {
+            breaks[i] = data[step] || data[features_len - 1];
             step += classSize;
         }
         // Set last value
@@ -1196,16 +1220,18 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             high,
             _style,
             style = [];
-        // 5-class sequential scheme from ColorBrewer which is colorblind-safe, print-friendly and photocopy-safe
-        var colors = ['ffffb2', 'fecc5c', 'fd8d3c', 'f03b20', 'bd0026'];
-        for (i=0; i < 5; i++) {
+        for (i=0; i < classes; i++) {
             low = breaks[i];
             high = breaks[i + 1];
             _style = $.extend({}, defaults); // Make a copy
             _style['fill'] = colors[i];
             _style['low'] = low;
             _style['high'] = high;
-            _style['label'] = low + ' - ' + high;
+            if (low == high) {
+                _style['label'] = low;
+            } else {
+                _style['label'] = low + ' - ' + high;
+            }
             style.push(_style);
         }
 

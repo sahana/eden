@@ -559,18 +559,20 @@ Thank you"""
         response.title = T("Login")
 
         # Do we use our own login form, or from a central source?
-        formstyle = settings.formstyle
         if settings.login_form == self:
-            form = SQLFORM(
-                utable,
-                fields=[username, passfield],
-                hidden=dict(_next=request.vars._next),
-                showid=settings.showid,
-                submit_button=T("Login"),
-                delete_label=messages.delete_label,
-                formstyle=formstyle,
-                separator=settings.label_separator
-                )
+            # Needs work
+            #formstyle = deployment_settings.get_ui_formstyle()
+            #formstyle = settings.formstyle
+            formstyle = "table3cols"
+            form = SQLFORM(utable,
+                           fields=[username, passfield],
+                           hidden=dict(_next=request.vars._next),
+                           showid=settings.showid,
+                           submit_button=T("Login"),
+                           delete_label=messages.delete_label,
+                           formstyle=formstyle,
+                           separator=settings.label_separator
+                           )
             if settings.remember_me_form:
                 # Add a new input checkbox "remember me for longer"
                 addrow(form, XML("&nbsp;"),
@@ -595,10 +597,10 @@ Thank you"""
                 response.s3.jquery_ready.append('''S3.getClientLocation($('#auth_user_clientlocation'))''')
 
             captcha = settings.login_captcha or \
-                (settings.login_captcha!=False and settings.captcha)
+                (settings.login_captcha != False and settings.captcha)
             if captcha:
                 addrow(form, captcha.label, captcha, captcha.comment,
-                       formstyle,'captcha__row')
+                       formstyle, "captcha__row")
 
             accepted_form = False
             if form.accepts(request.post_vars, session,
@@ -1713,24 +1715,9 @@ S3OptionsFilter({
                            _type="checkbox",
                            )
             #formstyle = current.deployment_settings.get_ui_formstyle()
-            #if formstyle == "bootstrap":
-            #    row = DIV(LABEL(label,
-            #                    _id="tos__label",
-            #                    _for="tos",
-            #                    _class="control-label",
-            #                    ),
-            #              DIV(widget,
-            #                  _class="controls",
-            #                  ),
-            #              # Somewhere to store Error Messages
-            #              SPAN(_class="help-block"),
-            #              _id=id,
-            #              _class="control-group hide",
-            #              )
-            #else:
-            #    # Assume callable
+            # Assume callable
+            #row = formstyle(id, label, widget, comment)
             comment = ""
-            #    #row = formstyle(id, label, widget, comment)
             # Auth uses default formstyle currently
             row = TR(TD(LABEL(label,
                               _id="tos__label",
@@ -6864,26 +6851,7 @@ class S3RoleManager(S3Method):
             widget2 = TEXTAREA(value=role_desc,
                                _name="role_desc",
                                _rows="4")
-            if formstyle == "bootstrap":
-                _class = "control-group"
-                label1 = LABEL("%s:" % label1, _class="control-label",
-                                               _for=id)
-                label2 = LABEL("%s:" % label2, _class="control-label",
-                                               _for=id)
-                widget1.add_class("input-xlarge")
-                widget2.add_class("input-xlarge")
-                _controls1 = DIV(widget1, _class="controls")
-                _controls2 = DIV(widget2, _class="controls")
-                row1 = DIV(label1,
-                           _controls1,
-                           _class=_class,
-                           _id="%s__row" % id1)
-                row2 = DIV(label2,
-                           _controls2,
-                           _class=_class,
-                           _id="%s__row" % id2)
-                form_rows = row1 + row2
-            elif callable(formstyle):
+            if callable(formstyle):
                 form_rows = formstyle(id1, label1, widget1, "") + \
                             formstyle(id2, label2, widget2, "")
             else:

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 try:
     # Python 2.7
@@ -353,8 +354,6 @@ def customise_event_event_resource(r, tablename):
         - Report 
         Runs after controller customisation
         But runs before prep
-        
-        @ToDo: Move some of this into the model as defaults
     """
 
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
@@ -469,6 +468,26 @@ def customise_event_event_resource(r, tablename):
             msg_list_empty = T("No Disasters currently registered"))
 
 settings.customise_event_event_resource = customise_event_event_resource
+
+# -----------------------------------------------------------------------------
+def customise_vulnerability_data_resource(r, tablename):
+    """
+        Customise event_event resource
+        - List Fields
+        - CRUD Strings
+        - Form
+        - Filter
+        - Report 
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    # Higher precision wanted for the Multidimensional Poverty Index
+    from s3.s3validators import IS_FLOAT_AMOUNT
+    r.table.value.represent =  lambda v: \
+        IS_FLOAT_AMOUNT.represent(v, precision=3)
+
+settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
 
 # =============================================================================
 # Modules

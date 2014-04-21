@@ -119,7 +119,7 @@ def formstyle_default_inline(form, fields, *args, **kwargs):
 # =============================================================================
 def formstyle_bootstrap(form, fields, *args, **kwargs):
     """
-        Formstyle for Bootstrap (2.3.2) theme: http://getbootstrap.com/2.3.2/
+        Formstyle for Bootstrap 2.x themes: http://getbootstrap.com/2.3.2/
     """
 
     def render_row(id, label, controls, help, hidden=False):
@@ -183,7 +183,7 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
 # =============================================================================
 def formstyle_foundation(form, fields, *args, **kwargs):
     """
-        Formstyle for foundation themes (Labels above Inputs)
+        Formstyle for Foundation themes: http://foundation.zurb.com
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):

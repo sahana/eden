@@ -8,7 +8,9 @@
 
          CSV fields:
          Name....................org_facility.name
-         Type....................org_facility.type comma-sep list
+         Type....................org_facility.facility_type_id comma-sep list
+         SubType.................org_facility.facility_type_id or org_facility_type.parent
+         SubSubType..............org_facility.facility_type_id
          Organisation............org_organisation.name
          Organisation Group......org_site_org_group.group_id  
          Building................gis_location.name
@@ -73,7 +75,12 @@
     <xsl:key name="organisation" match="row" use="col[contains(
                     document('../labels.xml')/labels/column[@name='Organisation']/match/text(),
                     concat('|', @field, '|'))]"/>
+
     <xsl:key name="organisation_group" match="row" use="col[@field='Organisation Group']"/>
+
+    <xsl:key name="type" match="row" use="concat(col[@field='Type'], '/',
+                                                 col[@field='SubType'], '/',
+                                                 col[@field='SubSubType'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -92,6 +99,24 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
                                                                        col[@field='Organisation Group'])[1])]">
                 <xsl:call-template name="OrganisationGroup"/>
+            </xsl:for-each>
+
+            <!-- Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
+                                                                   concat(col[@field='Type'], '/',
+                                                                          col[@field='SubType'], '/',
+                                                                          col[@field='SubSubType']))[1])]">
+                <xsl:call-template name="FacilityType">
+                    <xsl:with-param name="Type">
+                         <xsl:value-of select="col[@field='Type']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubType">
+                         <xsl:value-of select="col[@field='SubType']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubSubType">
+                         <xsl:value-of select="col[@field='SubSubType']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
             <xsl:apply-templates select="table/row"/>
@@ -126,13 +151,36 @@
                 </reference>
             </xsl:if>
 
-            <!-- Facility Types -->
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list">
-                    <xsl:value-of select="$Type"/>
-                </xsl:with-param>
-                <xsl:with-param name="arg">facility_type_ref</xsl:with-param>
-            </xsl:call-template>
+            <!-- Link to Facility Type(s) -->
+            <xsl:choose>
+                <xsl:when test="contains($Type, ',')">
+                    <!-- Comma-separated list -->
+                    <xsl:call-template name="splitList">
+                        <xsl:with-param name="list"><xsl:value-of select="$Type"/></xsl:with-param>
+                        <xsl:with-param name="arg">facility_type_ref</xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <reference field="facility_type_id" resource="org_facility_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:choose>
+                                <xsl:when test="$SubSubType!=''">
+                                    <!-- Hierarchical Type with 3 levels -->
+                                    <xsl:value-of select="concat($FacilityTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                                </xsl:when>
+                                <xsl:when test="$SubType!=''">
+                                    <!-- Hierarchical Type with 2 levels -->
+                                    <xsl:value-of select="concat($FacilityTypePrefix, $Type, '/', $SubType)"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <!-- Simple Type -->
+                                    <xsl:value-of select="concat($FacilityTypePrefix, $Type)"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:otherwise>
+            </xsl:choose>
 
             <!-- Organisation Group -->
             <xsl:if test="col[@field='Organisation Group']!=''">
@@ -169,11 +217,6 @@
         </resource>
 
         <xsl:call-template name="Locations"/>
-
-        <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="$Type"/></xsl:with-param>
-            <xsl:with-param name="arg">facility_type_res</xsl:with-param>
-        </xsl:call-template>
 
     </xsl:template>
 
@@ -226,17 +269,54 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="FacilityType">
+        <xsl:param name="Type"/>
+        <xsl:param name="SubType"/>
+        <xsl:param name="SubSubType"/>
 
-        <xsl:variable name="Type" select="col[@field='Type']"/>
+        <xsl:choose>
+            <xsl:when test="contains($Type, ',')">
+                <!-- Comma-separated list -->
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list"><xsl:value-of select="$Type"/></xsl:with-param>
+                    <xsl:with-param name="arg">facility_type_res</xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <resource name="org_facility_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($FacilityTypePrefix, $Type)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$Type"/></data>
+                </resource>
+                <xsl:if test="$SubType!=''">
+                    <resource name="org_facility_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($FacilityTypePrefix, $Type, '/', $SubType)"/>
+                        </xsl:attribute>
+                        <data field="name"><xsl:value-of select="$SubType"/></data>
+                        <reference field="parent" resource="org_facility_type">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($FacilityTypePrefix, $Type)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </xsl:if>
+                <xsl:if test="$SubSubType!=''">
+                    <resource name="org_facility_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($FacilityTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                        </xsl:attribute>
+                        <data field="name"><xsl:value-of select="$SubSubType"/></data>
+                        <reference field="parent" resource="org_facility_type">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($FacilityTypePrefix, $Type, '/', $SubType)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </xsl:if>
+            </xsl:otherwise>
+        </xsl:choose>
 
-        <xsl:if test="$Type!=''">
-            <resource name="org_facility_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('FacilityType:', $Type)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$Type"/></data>
-            </resource>
-        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

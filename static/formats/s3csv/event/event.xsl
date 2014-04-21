@@ -8,7 +8,8 @@
          CSV fields:
          Name....................event_event.name
          Type....................event_event.event_type_id or event_event_type.parent
-         SubType.................event_event.event_type_id
+         SubType.................event_event.event_type_id or event_event_type.parent
+         SubSubType..............event_event.event_type_id
          Description.............event_event.comments
          Exercise................event_event.exercise
          Start Date..............event_event.start_date
@@ -30,6 +31,8 @@
 
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
+
+    <xsl:variable name="EventTypePrefix" select="'EventType:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
@@ -80,7 +83,8 @@
                          col[@field='L5'])"/>
 
     <xsl:key name="type" match="row" use="concat(col[@field='Type'], '/',
-                                                 col[@field='SubType'])"/>
+                                                 col[@field='SubType'], '/',
+                                                 col[@field='SubSubType'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -140,21 +144,25 @@
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
 
-            <!-- Types -->
+            <!-- Event Types -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
                                                                    concat(col[@field='Type'], '/',
-                                                                          col[@field='SubType']))[1])]">
-                <xsl:call-template name="Type">
+                                                                          col[@field='SubType'], '/',
+                                                                          col[@field='SubSubType']))[1])]">
+                <xsl:call-template name="EventType">
                     <xsl:with-param name="Type">
                          <xsl:value-of select="col[@field='Type']"/>
                     </xsl:with-param>
                     <xsl:with-param name="SubType">
                          <xsl:value-of select="col[@field='SubType']"/>
                     </xsl:with-param>
+                    <xsl:with-param name="SubSubType">
+                         <xsl:value-of select="col[@field='SubSubType']"/>
+                    </xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
-             <!-- Impact Types -->
+            <!-- Impact Types -->
             <xsl:for-each select="//row[1]/col[starts-with(@field, 'Impact')]">
                 <xsl:call-template name="ImpactType"/>
             </xsl:for-each>
@@ -189,6 +197,9 @@
         </xsl:variable>
         <xsl:variable name="SubType">
             <xsl:value-of select="col[@field='SubType']"/>
+        </xsl:variable>
+        <xsl:variable name="SubSubType">
+            <xsl:value-of select="col[@field='SubSubType']"/>
         </xsl:variable>
         
 
@@ -265,13 +276,17 @@
             <reference field="event_type_id" resource="event_event_type">
                 <xsl:attribute name="tuid">
                     <xsl:choose>
+                        <xsl:when test="$SubSubType!=''">
+                            <!-- Hierarchical Type with 3 levels -->
+                            <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                        </xsl:when>
                         <xsl:when test="$SubType!=''">
-                            <!-- Hierarchical Type -->
-                            <xsl:value-of select="concat($Type, '/', $SubType)"/>
+                            <!-- Hierarchical Type with 2 levels -->
+                            <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType)"/>
                         </xsl:when>
                         <xsl:otherwise>
                             <!-- Simple Type -->
-                            <xsl:value-of select="$Type"/>
+                            <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:attribute>
@@ -305,41 +320,43 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Type">
+    <xsl:template name="EventType">
         <xsl:param name="Type"/>
         <xsl:param name="SubType"/>
+        <xsl:param name="SubSubType"/>
 
-        <xsl:choose>
-            <xsl:when test="$SubType!=''">
-                <!-- Hierarchical Type -->
-                <resource name="event_event_type">
+        <resource name="event_event_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Type"/></data>
+        </resource>
+        <xsl:if test="$SubType!=''">
+            <resource name="event_event_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$SubType"/></data>
+                <reference field="parent" resource="event_event_type">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="$Type"/>
+                        <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
                     </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$Type"/></data>
-                </resource>
-                <resource name="event_event_type">
+                </reference>
+            </resource>
+        </xsl:if>
+        <xsl:if test="$SubSubType!=''">
+            <resource name="event_event_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$SubSubType"/></data>
+                <reference field="parent" resource="event_event_type">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($Type, '/', $SubType)"/>
+                        <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType)"/>
                     </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$SubType"/></data>
-                    <reference field="parent" resource="event_event_type">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$Type"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
-            </xsl:when>
-            <xsl:otherwise>
-                <!-- Simple Type -->
-                <resource name="event_event_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$Type"/>
-                    </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$Type"/></data>
-                </resource>
-            </xsl:otherwise>
-        </xsl:choose>
+                </reference>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

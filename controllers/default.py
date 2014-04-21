@@ -513,8 +513,6 @@ def user():
     if customize:
         customize(arg=arg)
 
-    # Needs more work to integrate our form extensions
-    #auth_settings.formstyle = s3_formstyle
     if arg == "login":
         title = response.title = T("Login")
         # @ToDo: move this code to /modules/s3/s3aaa.py:def login()?
@@ -556,7 +554,7 @@ def user():
     if form:
         if s3.crud.submit_style:
             form[0][-1][1][0]["_class"] = s3.crud.submit_style
-        elif s3_formstyle == "bootstrap":
+        elif settings.ui.formstyle == "bootstrap":
             form[0][-1][1][0]["_class"] = "btn btn-primary"
 
     # Use Custom Ext views
