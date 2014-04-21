@@ -744,6 +744,27 @@ class S3XML(S3Codec):
 
             else:
                 attr[VALUE] = r.value
+
+            # Add Lat/Lon to location references
+            if r.table == "gis_location":
+                ktable = current.s3db.table(r.table)
+                if ktable is not None and not r.multiple:
+                    # Ignore multi-references
+                    r_id = r.id[0]
+                    LAT = self.Lat
+                    LON = self.Lon
+                    # @ToDo: Bulk Lookup
+                    LatLon = current.db(ktable.id == r_id).select(ktable[LAT],
+                                                                  ktable[LON],
+                                                                  limitby=(0, 1)
+                                                                  ).first()
+                    if LatLon:
+                        lat = LatLon[LAT]
+                        lon = LatLon[LON]
+                        if lat is not None and lon is not None:
+                            attr[ATTRIBUTE.lat] = "%.4f" % lat
+                            attr[ATTRIBUTE.lon] = "%.4f" % lon
+
             r.element = reference
 
     # -------------------------------------------------------------------------
@@ -751,10 +772,11 @@ class S3XML(S3Codec):
                    resource,
                    record,
                    element,
-                   location_data={},
+                   location_data = {},
                    ):
         """
-            GIS-encodes location references
+            GIS-encodes the master resource so that it can be transformed into
+            a mappable format.
 
             @param resource: the referencing resource
             @param record: the particular record
