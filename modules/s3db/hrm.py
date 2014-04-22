@@ -6931,12 +6931,20 @@ def hrm_human_resource_filters(resource_type=None,
 
     # Region filter (only if using regions in template)
     if settings.get_org_regions():
-        append_filter(
-            S3HierarchyFilter("organisation_id$region_id",
-                              label = T("Region"),
-                              hidden = True,
-                              )
-        )
+        if settings.get_org_regions_hierarchical():
+            append_filter(
+                S3HierarchyFilter("organisation_id$region_id",
+                                  label = T("Region"),
+                                  hidden = True,
+                                  )
+            )
+        else:
+            append_filter(
+                S3OptionsFilter("organisation_id$region_id",
+                                label = T("Region"),
+                                hidden = True,
+                                )
+            )
 
     # Organisation filter (always)
     append_filter(
