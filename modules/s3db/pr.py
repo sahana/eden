@@ -181,56 +181,59 @@ class S3PersonEntity(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  list_fields = ["instance_type", "type", "pe_label"],
-                  editable=False,
-                  deletable=False,
-                  listadd=False,
-                  onaccept=self.pr_pentity_onaccept,
-                  referenced_by=[(auth_settings.table_membership_name, "for_pe")]
+                  deletable = False,
+                  editable = False,
+                  listadd = False,
+                  list_fields = ["instance_type",
+                                 "type",
+                                 "pe_label",
+                                 ],
+                  onaccept = self.pr_pentity_onaccept,
+                  referenced_by = [(auth_settings.table_membership_name, "for_pe")],
                   )
 
         # Components
         pe_id = "pe_id"
         add_components(tablename,
                        # PR components
-                       pr_address=pe_id,
-                       pr_contact=(# All contact information:
-                                   pe_id,
-                                   # Email addresses:
-                                   {"name": "email",
-                                    "joinby": "pe_id",
-                                    "filterby": "contact_method",
-                                    "filterfor": ["EMAIL"],
-                                    },
-                                   # Mobile phone numbers:
-                                   {"name": "phone",
-                                    "joinby": "pe_id",
-                                    "filterby": "contact_method",
-                                    "filterfor": ["SMS"],
-                                    },
-                                   ),
-                       pr_contact_emergency=pe_id,
-                       pr_image=pe_id,
-                       pr_note=pe_id,
-                       pr_role=pe_id,
-                       pr_saved_search=pe_id,
-                       pr_physical_description={"joinby": pe_id,
-                                                "multiple": False,
-                                                },
+                       pr_address = pe_id,
+                       pr_contact = (# All contact information:
+                                     pe_id,
+                                     # Email addresses:
+                                     {"name": "email",
+                                      "joinby": "pe_id",
+                                      "filterby": "contact_method",
+                                      "filterfor": ["EMAIL"],
+                                      },
+                                     # Mobile phone numbers:
+                                     {"name": "phone",
+                                      "joinby": "pe_id",
+                                      "filterby": "contact_method",
+                                      "filterfor": ["SMS"],
+                                      },
+                                     ),
+                       pr_contact_emergency = pe_id,
+                       pr_image = pe_id,
+                       pr_note = pe_id,
+                       pr_role = pe_id,
+                       pr_saved_search = pe_id,
+                       pr_physical_description = {"joinby": pe_id,
+                                                  "multiple": False,
+                                                  },
                        # DVI components
-                       dvi_effects={"joinby": pe_id,
-                                    "multiple": False,
-                                    },
-                       dvi_checklist={"joinby": pe_id,
+                       dvi_effects = {"joinby": pe_id,
                                       "multiple": False,
                                       },
-                       dvi_identification={"joinby": pe_id,
-                                           "multiple": False,
-                                           },
+                       dvi_checklist = {"joinby": pe_id,
+                                        "multiple": False,
+                                        },
+                       dvi_identification = {"joinby": pe_id,
+                                             "multiple": False,
+                                             },
                        # Map Configs 'Saved Maps'
                        #   - Personalised configurations
                        #   - OU configurations (Organisation/Branch/Facility/Team)
-                       gis_config=pe_id,
+                       gis_config = pe_id,
                        )
                       
         # Reusable fields

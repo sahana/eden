@@ -1198,9 +1198,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             var colors = ['ffffb2', 'fecc5c', 'fd8d3c', 'f03b20', 'bd0026'];
         } else if (classes == 4) {
             var colors = ['ffffb2', 'fecc5c', 'fd8d3c', 'e31a1c'];
-        } else {
-            classes = 3;
+        } else if (classes == 3) {
             var colors = ['ffeda0', 'feb24c', 'f03b20'];
+        } else if (classes == 2) {
+            var colors = ['ffeda0', 'f03b20'];
+        } else if (classes == 1) {
+            var colors = ['feb24c'];
         }
 
         // What is the size of each class?

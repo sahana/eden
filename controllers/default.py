@@ -34,20 +34,30 @@ def download():
 def register_validation(form):
     """ Validate the fields in registration form """
 
-    vars = form.vars
+    form_vars = form.vars
+
     # Mobile Phone
-    if "mobile" in vars and vars.mobile:
+    mobile = form_vars.get("mobile")
+    if mobile:
         import re
         regex = re.compile(single_phone_number_pattern)
-        if not regex.match(vars.mobile):
+        if not regex.match(mobile):
             form.errors.mobile = T("Invalid phone number")
     elif settings.get_auth_registration_mobile_phone_mandatory():
         form.errors.mobile = T("Phone number is required")
 
+    # Home Phone
+    home = form_vars.get("home")
+    if home:
+        import re
+        regex = re.compile(single_phone_number_pattern)
+        if not regex.match(home):
+            form.errors.home = T("Invalid phone number")
+
     org = settings.get_auth_registration_organisation_id_default()
     if org:
         # Add to default organisation
-        vars.organisation_id = org
+        form_vars.organisation_id = org
 
     return
 
@@ -509,9 +519,9 @@ def user():
     login_form = register_form = None
 
     # Check for template-specific customisations
-    customize = settings.ui.get("customize_auth_user", None)
-    if customize:
-        customize(arg=arg)
+    customise = settings.customise_auth_user_controller
+    if customise:
+        customise(arg=arg)
 
     if arg == "login":
         title = response.title = T("Login")
@@ -520,14 +530,15 @@ def user():
         form = auth()
         #form = auth.login()
         login_form = form
+
     elif arg == "register":
         title = response.title = T("Register")
         # @ToDo: move this code to /modules/s3/s3aaa.py:def register()?
         if not self_registration:
             session.error = T("Registration not permitted")
             redirect(URL(f="index"))
-
         form = register_form = auth.s3_registration_form()
+
     elif arg == "change_password":
         title = response.title = T("Change Password")
         form = auth()
@@ -537,15 +548,19 @@ def user():
         else:
             s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
         s3.jquery_ready.append("$('.password:eq(1)').pstrength()")
+
     elif arg == "retrieve_password":
         title = response.title = T("Retrieve Password")
         form = auth()
+
     elif arg == "profile":
         title = response.title = T("User Profile")
         form = auth.profile()
+
     elif arg == "options.s3json":
         # Used when adding organisations from registration form
         return s3_rest_controller(prefix="auth", resourcename="user")
+
     else:
         # logout or verify_email
         title = ""

@@ -3162,12 +3162,11 @@ def customise_project_activity_controller(**attr):
         if r.method in (None, "create", "update"):
             # Custom Widgets/Validators
             from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
+            from s3.s3widgets import S3LocationSelectorWidget2
             field = table.location_id
             field.label = "" # Gets replaced by widget
             field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             field.widget = S3LocationSelectorWidget2(levels=levels)
-            #s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
 
             # Hide Labels when just 1 column in inline form
             #s3db.doc_document.file.label = ""

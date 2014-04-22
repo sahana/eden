@@ -2718,8 +2718,16 @@ class S3FacilityModel(S3Model):
                                                   #filterby="parent",
                                                   #filter_opts=(None,),
                                                   orderby="org_facility_type.name"))
+            list_fields = [(T("Type"), "parent"),
+                           #(T("SubType"), "name"),
+                           "name",
+                           "comments",
+                           ]
         else:
             hierarchy = None
+            list_fields = ["name",
+                           "comments",
+                           ]
 
         # CRUD strings
         # @ToDo: Flexible Labelling: 'Facility, 'Place', 'Site'
@@ -2758,6 +2766,7 @@ class S3FacilityModel(S3Model):
         configure(tablename,
                   deduplicate = self.org_facility_type_duplicate,
                   hierarchy = hierarchy,
+                  list_fields = list_fields,
                   )
 
         # ---------------------------------------------------------------------

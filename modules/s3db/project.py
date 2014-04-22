@@ -1247,6 +1247,7 @@ class S3ProjectActivityTypeModel(S3Model):
         tablename = "project_activity_type"
         define_table(tablename,
                      Field("name", length=128,
+                           label = T("Name"),
                            notnull=True, unique=True),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1281,29 +1282,31 @@ class S3ProjectActivityTypeModel(S3Model):
                                                                        tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Create Activity Type'.")),
                                            ondelete = "SET NULL")
 
-        # Component (for Custom Form)
-        self.add_components(tablename,
-                            project_activity_type_sector="activity_type_id",
+        if current.deployment_settings.get_project_sectors():
+            # Component (for Custom Form)
+            self.add_components(tablename,
+                                project_activity_type_sector = "activity_type_id",
+                                )
+
+            crud_form = S3SQLCustomForm(
+                            "name",
+                            # Sectors
+                            S3SQLInlineComponent(
+                                "activity_type_sector",
+                                label=T("Sectors to which this Activity Type can apply"),
+                                fields=["sector_id"],
+                            ),
+                            "comments",
+                        )
+
+            self.configure(tablename,
+                           crud_form = crud_form,
+                           list_fields = ["id",
+                                          "name",
+                                          (T("Sectors"), "activity_type_sector.sector_id"),
+                                          "comments",
+                                          ],
                            )
-
-        crud_form = S3SQLCustomForm(
-                        "name",
-                        # Sectors
-                        S3SQLInlineComponent(
-                            "activity_type_sector",
-                            label=T("Sectors to which this Activity Type can apply"),
-                            fields=["sector_id"],
-                        ),
-                    )
-
-        self.configure(tablename,
-                       crud_form = crud_form,
-                       list_fields = ["id",
-                                      "name",
-                                      (T("Sectors"), "activity_type_sector.sector_id"),
-                                      "comments",
-                                      ],
-                       )
 
         # ---------------------------------------------------------------------
         # Activity Type - Sector Link Table

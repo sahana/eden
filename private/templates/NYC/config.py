@@ -332,7 +332,7 @@ def customise_org_facility_controller(**attr):
 
             if not r.component and r.method in (None, "create", "update"):
                 from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
+                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
                 field = table.location_id
                 if r.method in ("create", "update"):
                     field.label = "" # Gets replaced by widget
@@ -344,10 +344,7 @@ def customise_org_facility_controller(**attr):
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
-                # element.style is being set to width: 0 for some reason, so not working
-                #table.organisation_id.widget = S3SelectChosenWidget()
-                # Don't assume that user is from same org/site as Contacts they create
-                table.site_id.default = None
+                table.organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
             if r.get_vars.get("format", None) == "popup":
                 # Coming from req/create form
@@ -570,7 +567,7 @@ def customise_org_organisation_controller(**attr):
             elif r.component_name == "facility":
                 if r.method in (None, "create", "update"):
                     from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2#, S3SelectChosenWidget
+                    from s3.s3widgets import S3LocationSelectorWidget2
                     table = s3db.org_facility
                     field = table.location_id
                     if r.method in ("create", "update"):
@@ -583,10 +580,9 @@ def customise_org_organisation_controller(**attr):
                                                              show_address=True,
                                                              show_postcode=True,
                                                              )
-                    # element.style is being set to width: 0 for some reason, so not working
-                    #table.organisation_id.widget = S3SelectChosenWidget()
-                    # Don't assume that user is from same org/site as Contacts they create
-                    table.site_id.default = None
+            elif r.component_name == "human_resource":
+                # Don't assume that user is from same org/site as Contacts they create
+                r.component.table.site_id.default = None
 
         return result
     s3.prep = custom_prep
@@ -1087,8 +1083,11 @@ def customise_hrm_human_resource_controller(**attr):
                                filter_widgets = filter_widgets,
                                )
 
+                field = r.table.site_id
+                # Don't assume that user is from same org/site as Contacts they create
+                field.default = None
                 # Use a hierarchical dropdown instead of AC
-                s3db.hrm_human_resource.site_id.widget = None
+                field.widget = None
                 script = \
 '''S3OptionsFilter({
  'triggerName':'organisation_id',

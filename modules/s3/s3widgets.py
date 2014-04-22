@@ -63,7 +63,6 @@ __all__ = ["S3ACLWidget",
            "S3PersonAutocompleteWidget",
            "S3PentityAutocompleteWidget",
            "S3PriorityListWidget",
-           "S3SelectChosenWidget",
            "S3SiteAutocompleteWidget",
            "S3SliderWidget",
            "S3TimeIntervalWidget",
@@ -4700,7 +4699,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                  header = True,
                  multiple = True,
                  selectedList = 3,
-                 noneSelectedText = "Select"
+                 noneSelectedText = "Select",
                  ):
         """
             Constructor
@@ -5330,39 +5329,6 @@ $('#%s').removeClass('list').addClass('prioritylist').prioritylist()''' % \
         return TAG[""](INPUT(**attr),
                        requires = field.requires
                        )
-
-# =============================================================================
-class S3SelectChosenWidget(OptionsWidget):
-    """
-        Enhances Select dropdowns:
-        - single selects have an Autocomplete search box 
-        - multi-selects have tag-style selection
-        Uses http://harvesthq.github.io/chosen/
-    """
-    def __init__(self,
-                 multiple=True):
-        """
-            Constructor
-            @param multiple: multiple options can be selected
-            
-            
-            @ToDo: Complete support for multiple select
-        """
-
-        self.multiple = multiple
-
-    def __call__(self, field, value, **attributes):
-        s3 = current.response.s3
-        if s3.debug:
-            script = "chosen.jquery.js"
-        else:
-            script = "chosen.jquery.min.js"
-        s3.scripts.append("/%s/static/scripts/%s" % (current.request.application,
-                                                     script))
-        # @ToDo: Can we not determine a # selector? (faster)
-        script = '''$('[name="%s"]').chosen({disable_search_threshold:10})''' % field.name
-        s3.jquery_ready.append(script)
-        return OptionsWidget.widget(field, value, **attributes)
 
 # =============================================================================
 class S3SiteAutocompleteWidget(FormWidget):
