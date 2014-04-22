@@ -406,7 +406,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Properties">
         <xsl:param name="uuid"/>
-        <xsl:variable name="attributes" select="./@attributes"/>
+        <xsl:variable name="attributes" select="./map[1]/@attributes"/>
 
         <id>
             <!-- We want the Resource's UUID here, not the associated Location's or Site's -->
