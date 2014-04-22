@@ -788,6 +788,9 @@ class S3XML(S3Codec):
         if format not in ("geojson", "georss", "gpx", "kml"):
             return
 
+        if location_data is None:
+            location_data = {}
+
         db = current.db
         gis = current.gis
         request = current.request
@@ -805,7 +808,13 @@ class S3XML(S3Codec):
         tooltips = location_data.get("tooltips", [])
         attributes = location_data.get("attributes", [])
 
-        attr = element.attrib
+        map_data = element.find("map")
+        if map_data:
+            map_data = map_data[0]
+        else:
+            map_data = etree.SubElement(element, "map")
+
+        attr = map_data.attrib
         record_id = record.id
         table = resource.table
         tablename = resource.tablename
@@ -817,7 +826,7 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
-                    geometry = etree.SubElement(element, "geometry")
+                    geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
                     if tablename in attributes:
                         # Add Attributes
@@ -879,7 +888,7 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
-                    geometry = etree.SubElement(element, "geometry")
+                    geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
                     #if tablename in attributes:
                     #    # Add Attributes
@@ -967,7 +976,7 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
-                    geometry = etree.SubElement(element, "geometry")
+                    geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
 
             elif tablename in latlons:
@@ -976,8 +985,9 @@ class S3XML(S3Codec):
                 if LatLon:
                     lat = LatLon[0]
                     lon = LatLon[1]
-                    attr[ATTRIBUTE.lat] = "%.4f" % lat
-                    attr[ATTRIBUTE.lon] = "%.4f" % lon
+                    if lat is not None and lon is not None:
+                        attr[ATTRIBUTE.lat] = "%.4f" % lat
+                        attr[ATTRIBUTE.lon] = "%.4f" % lon
             else:
                 # Error
                 raise
@@ -1040,8 +1050,9 @@ class S3XML(S3Codec):
             if LatLon:
                 lat = LatLon[0]
                 lon = LatLon[1]
-                attr[ATTRIBUTE.lat] = "%.4f" % lat
-                attr[ATTRIBUTE.lon] = "%.4f" % lon
+                if lat is not None and lon is not None:
+                    attr[ATTRIBUTE.lat] = "%.4f" % lat
+                    attr[ATTRIBUTE.lon] = "%.4f" % lon
 
         elif tablename in wkts:
             # Nothing gets here currently

@@ -76,7 +76,7 @@
                     <xsl:attribute name="lon"><xsl:value-of select="data[@field='lon']"/></xsl:attribute>
                     <name><xsl:value-of select="data[@field='name']"/></name>
                     <desc><xsl:value-of select="@url"/></desc>
-                    <sym><xsl:value-of select="@sym"/></sym>
+                    <sym><xsl:value-of select="map[1]/@sym"/></sym>
                 </wpt>
             </xsl:otherwise>
         </xsl:choose>
@@ -86,8 +86,8 @@
     <xsl:template match="resource[@name='hms_hospital']">
         <xsl:if test="reference[@field='location_id']">
             <wpt>
-                <xsl:attribute name="lat"><xsl:value-of select="@lat"/></xsl:attribute>
-                <xsl:attribute name="lon"><xsl:value-of select="@lon"/></xsl:attribute>
+                <xsl:attribute name="lat"><xsl:value-of select="map[1]/@lat"/></xsl:attribute>
+                <xsl:attribute name="lon"><xsl:value-of select="map[1]/@lon"/></xsl:attribute>
                 <name><xsl:value-of select="data[@field='name']"/></name>
                 <desc>
                     <xsl:if test="reference[@field='organisation_id']/text()">
@@ -96,17 +96,17 @@
                     </xsl:if>
                     <xsl:value-of select="data[@field='facility_type']"/>
                 </desc>
-                <sym><xsl:value-of select="@sym"/></sym>
+                <sym><xsl:value-of select="map[1]/@sym"/></sym>
             </wpt>
         </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
-        <xsl:if test="@lat!=''">
+        <xsl:if test="map[1]/@lat!=''">
             <wpt>
-                <xsl:attribute name="lat"><xsl:value-of select="@lat"/></xsl:attribute>
-                <xsl:attribute name="lon"><xsl:value-of select="@lon"/></xsl:attribute>
+                <xsl:attribute name="lat"><xsl:value-of select="map[1]/@lat"/></xsl:attribute>
+                <xsl:attribute name="lon"><xsl:value-of select="map[1]/@lon"/></xsl:attribute>
                 <name><xsl:value-of select="data[@field='name']"/></name>
                 <desc>
                     <xsl:if test="reference[@field='organisation_id']/text()">
@@ -115,7 +115,7 @@
                     </xsl:if>
                     <xsl:value-of select="data[@field='type']"/>
                 </desc>
-                <sym><xsl:value-of select="@sym"/></sym>
+                <sym><xsl:value-of select="map[1]/@sym"/></sym>
             </wpt>
         </xsl:if>
     </xsl:template>

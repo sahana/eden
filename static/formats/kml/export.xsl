@@ -104,7 +104,7 @@
     <xsl:template match="resource[@name='hms_hospital']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
             <Style id="hospital">
                     <IconStyle>
                         <Icon>
@@ -157,9 +157,9 @@
                     </description>
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -185,7 +185,7 @@
     <xsl:template match="resource[@name='hrm_human_resource']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
                 <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
@@ -221,9 +221,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -252,7 +252,7 @@
     <xsl:template match="resource[@name='org_office']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
                 <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
@@ -286,9 +286,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -301,7 +301,7 @@
     <xsl:template match="resource[@name='gis_poi']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
                 <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
@@ -327,9 +327,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -342,7 +342,7 @@
     <xsl:template match="resource[@name='inv_warehouse']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
                 <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
@@ -376,9 +376,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -394,7 +394,7 @@
         <xsl:param name="item_url"/>
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
                 <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
@@ -447,9 +447,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -462,7 +462,7 @@
     <xsl:template match="resource">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
                 <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
@@ -476,9 +476,9 @@
                     <description><xsl:value-of select="@url"/></description>
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
