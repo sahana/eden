@@ -183,7 +183,7 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
 # =============================================================================
 def formstyle_foundation(form, fields, *args, **kwargs):
     """
-        Formstyle for Foundation themes: http://foundation.zurb.com
+        Formstyle for Foundation 5 themes: http://foundation.zurb.com
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
@@ -218,7 +218,7 @@ def formstyle_foundation(form, fields, *args, **kwargs):
 # =============================================================================
 def formstyle_foundation_inline(form, fields, *args, **kwargs):
     """
-        Formstyle for foundation themes (In-Line Labels)
+        Formstyle for Foundation 5 themes (In-Line Labels)
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):

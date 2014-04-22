@@ -45,7 +45,7 @@ __all__ = ["S3ACLWidget",
            "S3GroupedOptionsWidget",
            #"S3RadioOptionsWidget",
            "S3HiddenWidget",
-           "S3HierarchySelectWidget",
+           "S3HierarchyWidget",
            "S3HumanResourceAutocompleteWidget",
            "S3ImageCropWidget",
            "S3InvBinWidget",
@@ -4797,7 +4797,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         return widget
 
 # =============================================================================
-class S3HierarchySelectWidget(FormWidget):
+class S3HierarchyWidget(FormWidget):
     """ Selector Widget for Hierarchies """
 
     def __init__(self,

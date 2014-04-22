@@ -2759,11 +2759,11 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   ))
             w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":
-            from s3widgets import S3HierarchySelectWidget
+            from s3widgets import S3HierarchyWidget
             w_opts = widget_opts(("represent",
                                   ))
             w_opts["lookup"] = component.tablename
-            w = S3HierarchySelectWidget(**w_opts)
+            w = S3HierarchyWidget(**w_opts)
         else:
             # Default to multiselect
             from s3widgets import S3MultiSelectWidget

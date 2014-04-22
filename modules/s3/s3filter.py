@@ -56,7 +56,7 @@ from s3rest import S3Method
 from s3resource import S3ResourceField, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchySelectWidget
+from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -1610,8 +1610,8 @@ class S3HierarchyFilter(S3FilterWidget):
 
         # Instantiate the widget
         opts = self.opts
-        w = S3HierarchySelectWidget(lookup = opts.get("lookup"),
-                                    represent = opts.get("represent"))
+        w = S3HierarchyWidget(lookup = opts.get("lookup"),
+                              represent = opts.get("represent"))
 
         # Render the widget
         widget = w(rfield.field, selected, **self._attr(resource))
