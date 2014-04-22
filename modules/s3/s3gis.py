@@ -2411,8 +2411,11 @@ class GIS(object):
                 query = (table.id.belongs(resource._ids))
             else:
                 # Look at the Context
-                context = s3db.get_config(tablename, "context")
-                location_context = context.get("location")
+                context = resource.get_config("context")
+                if context:
+                    location_context = context.get("location")
+                else:
+                    location_context = None
                 if not location_context:
                     # Can't display this resource on the Map
                     return None

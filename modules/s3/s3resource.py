@@ -2154,13 +2154,16 @@ class S3Resource(object):
             if not rows:
                 return []
             pkey, fkey = c.pkey, c.fkey
-            master_id = master[pkey]
-            if c.link:
-                lkey, rkey = c.lkey, c.rkey
-                lids = [r[rkey] for r in c.link if master_id == r[lkey]]
-                rows = [record for record in rows if record[fkey] in lids]
+            if pkey in master:
+                master_id = master[pkey]
+                if c.link:
+                    lkey, rkey = c.lkey, c.rkey
+                    lids = [r[rkey] for r in c.link if master_id == r[lkey]]
+                    rows = [record for record in rows if record[fkey] in lids]
+                else:
+                    rows = [record for record in rows if master_id == record[fkey]]
             else:
-                rows = [record for record in rows if master_id == record[fkey]]
+                rows = []
             return rows
 
     # -------------------------------------------------------------------------
@@ -2782,7 +2785,7 @@ class S3Resource(object):
                         include, exclude = xmlformat.get_fields(c.tablename)
                     else:
                         include, exclude = None, None
-                        
+
                     # Load the records
                     c.load(fields=include,
                            skip=exclude,

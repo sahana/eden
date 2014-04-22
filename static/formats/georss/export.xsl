@@ -75,15 +75,15 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
-        <xsl:if test="@lat!=''">
+        <xsl:if test="map[1]/@lat!=''">
             <entry>
                 <title><xsl:value-of select="data[@field='name']"/></title>
                 <link href="{@url}"/>
                 <id><xsl:value-of select="@uuid"/></id>
                 <georss:point>
-                    <xsl:value-of select="@lat"/>
+                    <xsl:value-of select="map[1]/@lat"/>
                     <xsl:text> </xsl:text>
-                    <xsl:value-of select="@lon"/>
+                    <xsl:value-of select="map[1]/@lon"/>
                 </georss:point>
             </entry>
         </xsl:if>

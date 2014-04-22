@@ -98,8 +98,8 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='gis_location']">
         <xsl:variable name="uuid" select="./@uuid"/>
-        <xsl:variable name="geometry" select="./geometry/@value"/>
-        <xsl:variable name="attributes" select="@attributes"/>
+        <xsl:variable name="geometry" select="./map[1]/geometry/@value"/>
+        <xsl:variable name="attributes" select="map[1]/@attributes"/>
         <xsl:choose>
             <xsl:when test="//reference[@resource='gis_location' and @uuid=$uuid]">
                 <xsl:for-each select="//reference[@resource='gis_location' and @uuid=$uuid]">
@@ -126,14 +126,14 @@
                             <xsl:value-of select="@marker"/>
                         </marker>
                     </xsl:if>-->
-                    <xsl:if test="@popup!=''">
+                    <xsl:if test="map[1]/@popup!=''">
                         <popup>
-                            <xsl:value-of select="@popup"/>
+                            <xsl:value-of select="map[1]/@popup"/>
                         </popup>
                     </xsl:if>
-                    <xsl:if test="@popup_url!=''">
+                    <xsl:if test="map[1]/@popup_url!=''">
                         <url>
-                            <xsl:value-of select="@popup_url"/>
+                            <xsl:value-of select="map[1]/@popup_url"/>
                         </url>
                     </xsl:if>
                     
@@ -180,13 +180,13 @@
                         <xsl:value-of select="data[@field='name']"/>
                     </name>
                     <marker>
-                        <xsl:value-of select="@marker"/>
+                        <xsl:value-of select="map[1]/@marker"/>
                     </marker>
                     <popup>
-                        <xsl:value-of select="@popup"/>
+                        <xsl:value-of select="map[1]/@popup"/>
                     </popup>
                     <url>
-                        <xsl:value-of select="@popup_url"/>
+                        <xsl:value-of select="map[1]/@popup_url"/>
                     </url>
                 </properties>
             </xsl:otherwise>
@@ -293,8 +293,8 @@
         <type>FeatureCollection</type>
         <xsl:for-each select="./resource">
             <features>
-                <xsl:variable name="geometry" select="geometry/@value"/>
-                <xsl:variable name="attributes" select="@attributes"/>
+                <xsl:variable name="geometry" select="map[1]/geometry/@value"/>
+                <xsl:variable name="attributes" select="map[1]/@attributes"/>
 
                 <type>Feature</type>
                 <geometry>
@@ -320,7 +320,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='gis_theme_data']">
         <!-- Theme Layer -->
-        <xsl:variable name="geometry" select="./geometry/@value"/>
+        <xsl:variable name="geometry" select="./map[1]/geometry/@value"/>
         <xsl:variable name="name" select="reference[@field='location_id']/text()"/>
         <xsl:variable name="value" select="data[@field='value']"/>
 
@@ -350,7 +350,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
         <!-- Feature Layer -->
-        <xsl:variable name="geometry" select="./geometry/@value"/>
+        <xsl:variable name="geometry" select="./map[1]/geometry/@value"/>
         <xsl:choose>
             <xsl:when test="$geometry!='null'">
                 <!-- Use pre-prepared GeoJSON -->
@@ -368,27 +368,27 @@
                     </xsl:call-template>
                 </properties>
             </xsl:when>
-            <xsl:when test="./@wkt!='null'">
+            <xsl:when test="./map[1]/@wkt!='null'">
                 <xsl:call-template name="WKT">
                     <xsl:with-param name="wkt">
-                        <xsl:value-of select="./@wkt"/>
+                        <xsl:value-of select="./map[1]/@wkt"/>
                     </xsl:with-param>
                     <xsl:with-param name="uuid">
                         <xsl:value-of select="./@uuid"/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
-            <xsl:when test="./@lon!='null'">
+            <xsl:when test="./map[1]/@lon!='null'">
                 <type>Feature</type>
                 <geometry>
                     <type>
                         <xsl:text>Point</xsl:text>
                     </type>
                     <coordinates>
-                        <xsl:value-of select="./@lon"/>
+                        <xsl:value-of select="./map[1]/@lon"/>
                     </coordinates>
                     <coordinates>
-                        <xsl:value-of select="./@lat"/>
+                        <xsl:value-of select="./map[1]/@lat"/>
                     </coordinates>
                 </geometry>
                 <properties>
@@ -406,38 +406,38 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Properties">
         <xsl:param name="uuid"/>
-        <xsl:variable name="attributes" select="./@attributes"/>
+        <xsl:variable name="attributes" select="./map[1]/@attributes"/>
 
         <id>
             <!-- We want the Resource's UUID here, not the associated Location's or Site's -->
             <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
         </id>
-        <xsl:if test="@marker!=''">
+        <xsl:if test="map[1]/@marker!=''">
             <marker>
-                <xsl:value-of select="@marker"/>
+                <xsl:value-of select="map[1]/@marker"/>
             </marker>
         </xsl:if>
-        <xsl:if test="@popup!=''">
+        <xsl:if test="map[1]/@popup!=''">
             <popup>
-                <xsl:value-of select="@popup"/>
+                <xsl:value-of select="map[1]/@popup"/>
             </popup>
         </xsl:if>
-        <xsl:if test="@popup_url!=''">
+        <xsl:if test="map[1]/@popup_url!=''">
             <url>
-                <xsl:value-of select="@popup_url"/>
+                <xsl:value-of select="map[1]/@popup_url"/>
             </url>
         </xsl:if>
         
-        <xsl:if test="@marker_url">
+        <xsl:if test="map[1]/@marker_url">
             <!-- Per-feature Marker -->
             <marker_url>
-                <xsl:value-of select="@marker_url"/>
+                <xsl:value-of select="map[1]/@marker_url"/>
             </marker_url>
             <marker_height>
-                <xsl:value-of select="@marker_height"/>
+                <xsl:value-of select="map[1]/@marker_height"/>
             </marker_height>
             <marker_width>
-                <xsl:value-of select="@marker_width"/>
+                <xsl:value-of select="map[1]/@marker_width"/>
             </marker_width>
         </xsl:if>
 
