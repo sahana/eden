@@ -739,11 +739,12 @@ class S3Hierarchy(object):
         if label is None:
             label = s3_unicode(node_id)
 
+        subnodes = node["s"]
         item = LI(A(label, _href="#", _class="s3-hierarchy-node"),
-                  _id="%s-%s" % (widget_id, node_id))
+                  _id = "%s-%s" % (widget_id, node_id),
+                  _rel = "parent" if subnodes else "leaf")
 
         html = self._html
-        subnodes = node["s"]
         if subnodes:
             sublist = UL([html(n, widget_id, represent=represent)
                          for n in subnodes])
