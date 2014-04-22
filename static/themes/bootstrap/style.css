@@ -111,7 +111,12 @@ div.dl {
 .dl-2-cols {
     margin-left: 0;
 }
-.dl-col-0 {
+.dl-2-cols.dl-col-0,
+.dl-3-cols.dl-col-0,
+.dl-3-cols.dl-col-1,
+.dl-4-cols.dl-col-0,
+.dl-4-cols.dl-col-1,
+.dl-4-cols.dl-col-2 {
     margin-right: 8px;
 }
 

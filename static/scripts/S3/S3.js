@@ -79,7 +79,9 @@ S3.Utf8 = {
 S3.addTooltips = function() {
     // Popovers (Bootstrap themes only)
     if (typeof($.fn.popover) != 'undefined') {
-        $('.s3-popover').popover({
+        // Applies to elements created after $(document).ready
+        $('body').popover({
+            selector: '.s3-popover',
             trigger: 'hover',
             placement: 'left'
         });

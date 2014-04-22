@@ -70,12 +70,17 @@
    <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/S3menu_logo.png" style="width:29px;margin:0 0 -20px 0" alt=""/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-      <li role='menuitem'><a href='/{{=appname}}/cms/post/datalist' tabindex='-1' class='menu-item'> <i class='icon-alert'></i> {{=T("Alerts")}}</a></li>
-      <li role='menuitem'><a href='/{{=appname}}/project/project/summary' tabindex='-1' class='menu-item'> <i class='icon-incident'></i> {{=T("Incidents")}}</a></li>
-      <li role='menuitem'><a href='/{{=appname}}/project/task/summary' tabindex='-1' class='menu-item'> <i class='icon-tasks'></i> {{=T("Tasks")}}</a></li>
-      <li role='menuitem'><a href='/{{=appname}}/org/resource/summary' tabindex='-1' class='menu-item'> <i class='icon-wrench'></i> {{=T("Resources")}}</a></li>
       <li role='menuitem'><a href='/{{=appname}}/gis/index' tabindex='-1' class='menu-item'> <i class='icon-map'></i> {{=T("Map")}}</a></li>
-      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-group'></i>  {{=T("Contacts")}}<b class='caret'></b></a>
+      <li role='menuitem'><a href='/{{=appname}}/event/incident/summary' tabindex='-1' class='menu-item'> <i class='icon-incident'></i> {{=T("Incidents")}}</a></li>
+      <li role='menuitem'><a href='/{{=appname}}/event/alert/datalist' tabindex='-1' class='menu-item'> <i class='icon-alert'></i> {{=T("Alerts")}}</a></li>
+      <li role='menuitem'><a href='/{{=appname}}/project/task/summary' tabindex='-1' class='menu-item'> <i class='icon-tasks'></i> {{=T("Tasks")}}</a></li>
+      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-wrench'></i> {{=T("Resources")}}<b class='caret'></b></a>
+        <ul class='dropdown-menu'>
+        <li role='menuitem'><a href='/{{=appname}}/org/resource/summary' tabindex='-1' class='menu-item'> <i class='icon-check-empty'></i> {{=T("Resource Inventory")}}</a></li>
+        <li role='menuitem'><a href='/{{=appname}}/event/resource/summary' tabindex='-1' class='menu-item'> <i class='icon-signout'></i> {{=T("Resources Responding")}}</a></li>
+        </ul>
+      </li>
+      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-group'></i> {{=T("Contacts")}}<b class='caret'></b></a>
         <ul class='dropdown-menu'>
         <li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'> <i class='icon-user'></i> {{=T("Directory")}}</a></li>
         <li role='menuitem'><a href='/{{=appname}}/org/organisation/datalist' tabindex='-1' class='menu-item'> <i class='icon-sitemap'></i> {{=T("Stakeholders")}}</a></li>

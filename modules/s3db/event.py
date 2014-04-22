@@ -259,6 +259,7 @@ class S3EventModel(S3Model):
 
         filter_widgets.extend((S3LocationFilter("event_location.location_id",
                                                 levels = levels,
+                                                label = T("Location"),
                                                 ),
                                S3DateFilter("date",
                                             label = None,
@@ -571,6 +572,7 @@ class S3IncidentModel(S3Model):
                           self.event_event_id(),
                           self.event_incident_type_id(),
                           self.scenario_scenario_id(),
+                          self.gis_location_id(),
                           Field("name", notnull=True, # Name could be a code
                                 length=64,
                                 label=T("Name")),
@@ -592,6 +594,7 @@ class S3IncidentModel(S3Model):
                                 default = False,
                                 represent = s3_yes_no_represent,
                                 label=T("Closed")),
+                          self.org_organisation_id(label="Lead Organisation"),
                           s3_comments(),
                           *s3_meta_fields())
 

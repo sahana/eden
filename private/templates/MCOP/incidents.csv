@@ -1,4 +1,4 @@
-Project,Description,Organisation,Start Date
-Container stack collapsed,While loading ship an accident occurred,Port of Seattle,2014-04-01
-Train derailment,Train driver was going too fast,Tacoma Fire Department,2014-04-02
-Collision between tanker and whale,Greenpeace are accusing port management of cruelty to animals,Port of Everett,2014-04-03
+Name,Description,Organisation,Zero Hour,Country,L1,L2,L3,L4,Lat,Lon
+Container stack collapsed,While loading ship an accident occurred,Port of Seattle,1/04/14,US,Washington,King,Seattle,,,
+Train derailment,Train driver was going too fast,Tacoma Fire Department,2/04/14,Train driver was going too fast,US,Washington,Pierce,Tacoma,,
+Collision between tanker and whale,Greenpeace are accusing port management of cruelty to animals,Port of Everett,3/04/14,Greenpeace are accusing port management of cruelty to animals,US,Washington,Snohomish,Everett,,
