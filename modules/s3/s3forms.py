@@ -45,6 +45,7 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
+from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
@@ -3480,6 +3481,8 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             @param attributes: keyword attributes for this widget
 
             @ToDo: Add ability to add new options to the list
+            @ToDo: Wrap S3MultiSelectWidget (or at least bring options up to date)
+            @ToDo: support Multiple=False
         """
 
         if value is None:

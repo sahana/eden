@@ -951,9 +951,10 @@ a#register-btn.action-lnk {
     margin-bottom: 10px;
 }
 
+/*
 #auth_user_organisation_id__label {
     width: 100px;
-}
+}*/
 
 #auth_user_organisation_id {
     margin-left: 10px;

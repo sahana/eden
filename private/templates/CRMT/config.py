@@ -262,7 +262,9 @@ settings.gis.layer_properties = False
 # Uncomment to hide the Base Layers folder in the LayerTree
 settings.gis.layer_tree_base = False
 # Uncomment to hide the Overlays folder in the LayerTree
-settings.gis.layer_tree_overlays = False
+#settings.gis.layer_tree_overlays = False
+# Uncomment to change the label of the Overlays folder in the LayerTree
+settings.gis.label_overlays = "Places"
 # Uncomment to not expand the folders in the LayerTree by default
 settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons
@@ -873,6 +875,7 @@ def customise_org_organisation_controller(**attr):
                            (T("Coalition Member"), "group_membership.group_id"),
                            (T("Sectors"), "sector_organisation.sector_id"),
                            (T("Services"), "service_organisation.service_id"),
+                           "website",
                            "comments",
                            ]
 
@@ -1001,6 +1004,7 @@ def customise_org_organisation_controller(**attr):
                 # Doesn't currently work Inline
                 #from s3.s3widgets import S3MultiSelectWidget
                 #s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
+                s3db.pr_contact.value.label = ""
                 form_fields = [
                     "name",
                     "logo",
@@ -1026,6 +1030,17 @@ def customise_org_organisation_controller(**attr):
                                   "value",
                                   "comments",
                                   ],
+                    ),
+                    "website",
+                    S3SQLInlineComponent(
+                        "contact",
+                        name = "twitter",
+                        label = T("Twitter"),
+                        multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "contact_method",
+                                        options = "TWITTER"
+                                        )
                     ),
                     "comments",
                 ]
@@ -1395,9 +1410,11 @@ def customise_org_facility_controller(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             table.organisation_id.comment = ""
             s3.crud_strings[tablename].title_display = T("Place Details")
-            s3db.configure(tablename,
-                           popup_url="",
-                           )
+            # Disable Open on Places.
+            # - Not sure why this was done & have now been requested to undo it.
+            #s3db.configure(tablename,
+            #               popup_url = "",
+            #               )
 
         return True
     s3.prep = custom_prep

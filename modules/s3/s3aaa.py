@@ -282,40 +282,40 @@ Thank you"""
         uname = settings.table_user_name
         if not utable:
             utable_fields = [
-                    Field("first_name", length=128, notnull=True,
-                          default="",
-                          requires = \
-                          IS_NOT_EMPTY(error_message=messages.is_empty),
-                          ),
-                    Field("last_name", length=128,
-                          default=""),
-                    Field("email", length=255, unique=True,
-                          default=""),
-                    Field("language", length=16,
-                          default = deployment_settings.get_L10n_default_language()),
-                    Field("utc_offset", length=16,
-                          readable=False, writable=False),
-                    Field("organisation_id", "integer",
-                          readable=False, writable=False),
-                    Field("org_group_id", "integer",
-                          readable=False, writable=False),
-                    Field("site_id", "integer",
-                          readable=False, writable=False),
-                    Field("link_user_to", "list:string",
-                          readable=False, writable=False),
-                    Field("registration_key", length=512,
-                          default="",
-                          readable=False, writable=False),
-                    Field("reset_password_key", length=512,
-                          default="",
-                          readable=False, writable=False),
-                    Field("deleted", "boolean",
-                          default=False,
-                          readable=False, writable=False),
-                    Field("timestmp", "datetime",
-                          default="",
-                          readable=False, writable=False),
-                    s3_comments(readable=False, writable=False)
+                Field("first_name", length=128, notnull=True,
+                      default="",
+                      requires = \
+                      IS_NOT_EMPTY(error_message=messages.is_empty),
+                      ),
+                Field("last_name", length=128,
+                      default=""),
+                Field("email", length=255, unique=True,
+                      default=""),
+                Field("language", length=16,
+                      default = deployment_settings.get_L10n_default_language()),
+                Field("utc_offset", length=16,
+                      readable=False, writable=False),
+                Field("organisation_id", "integer",
+                      readable=False, writable=False),
+                Field("org_group_id", "integer",
+                      readable=False, writable=False),
+                Field("site_id", "integer",
+                      readable=False, writable=False),
+                Field("link_user_to", "list:string",
+                      readable=False, writable=False),
+                Field("registration_key", length=512,
+                      default="",
+                      readable=False, writable=False),
+                Field("reset_password_key", length=512,
+                      default="",
+                      readable=False, writable=False),
+                Field("deleted", "boolean",
+                      default=False,
+                      readable=False, writable=False),
+                Field("timestmp", "datetime",
+                      default="",
+                      readable=False, writable=False),
+                s3_comments(readable=False, writable=False)
                 ]
             utable_fields += list(s3_uid())
             utable_fields += list(s3_timestamp())
@@ -2220,7 +2220,17 @@ S3OptionsFilter({
                                   contact_method = "EMAIL",
                                   value = user.email)
 
-                #@ToDo: Also update home/mobile phone? profile image? Groups?
+                # Add the user's mobile_phone to the person record if missing
+                query = (ctable.pe_id == pe_id) & \
+                        (ctable.contact_method == "SMS") & \
+                        (ctable.value == user.mobile)
+                item = db(query).select(limitby=(0, 1)).first()
+                if item is None:
+                    ctable.insert(pe_id = pe_id,
+                                  contact_method = "SMS",
+                                  value = user.mobile)
+
+                #@ToDo: Also update home phone? profile image? Groups?
 
                 person_ids.append(person.id)
 

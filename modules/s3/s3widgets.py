@@ -688,7 +688,7 @@ class S3AddPersonWidget2(FormWidget):
             # Formstyle with separate row for label (e.g. default Eden formstyle)
             tuple_rows = True
         else:
-            # Formstyle with just a single row (e.g. Bootstrap or Foundation)
+            # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
             tuple_rows = False
             #if "form-row" in row["_class"]:
             #    # Foundation formstyle
@@ -3968,7 +3968,7 @@ class S3LocationSelectorWidget2(FormWidget):
             # Formstyle with separate row for label (e.g. default Eden formstyle)
             tuple_rows = True
         else:
-            # Formstyle with just a single row (e.g. Bootstrap or Foundation)
+            # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
             tuple_rows = False
             #if "form-row" in row["_class"]:
             #    # Foundation formstyle

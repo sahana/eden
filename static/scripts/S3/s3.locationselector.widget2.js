@@ -1015,7 +1015,10 @@
         });
 
         // Show the Map
-        $(selector + '_map_wrapper').removeClass('hide').show();
+        var map_wrapper = $(selector + '_map_wrapper')
+        map_wrapper.removeClass('hide').show();
+        // Scroll to this section
+        $('html,body').animate({scrollTop: map_wrapper.offset().top}, 250);
 
         // Check if Maps JS is Loaded
         $.when(jsLoaded()).then(

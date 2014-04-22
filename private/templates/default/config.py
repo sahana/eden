@@ -251,6 +251,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.layer_tree_base = False
 # Uncomment to hide the Overlays folder in the LayerTree
 #settings.gis.layer_tree_overlays = False
+# Uncomment to change the label of the Overlays folder in the LayerTree
+#settings.gis.label_overlays = "Overlays"
 # Uncomment to not expand the folders in the LayerTree by default
 #settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons

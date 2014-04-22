@@ -791,9 +791,6 @@ class S3XML(S3Codec):
         if format not in ("geojson", "georss", "gpx", "kml"):
             return
 
-        if location_data is None:
-            location_data = {}
-
         db = current.db
         gis = current.gis
         request = current.request
