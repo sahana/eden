@@ -302,7 +302,7 @@ class S3LocationModel(S3Model):
                                      sortby = "name",
                                      label = messages.COUNTRY,
                                      requires = country_requires,
-                                     widget = S3SelectChosenWidget(),
+                                     widget = S3MultiSelectWidget(multiple=False),
                                      represent = represent,
                                      ondelete = "RESTRICT")
 

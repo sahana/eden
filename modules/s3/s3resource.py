@@ -2505,18 +2505,19 @@ class S3Resource(object):
             # Lookups per layer not per record
             if tablename == "gis_layer_shapefile":
                 # GIS Shapefile Layer
-                location_data = current.gis.get_shapefile_geojson(self)
+                location_data = current.gis.get_shapefile_geojson(self) or {}
             elif tablename == "gis_theme_data":
                 # GIS Theme Layer
-                location_data = current.gis.get_theme_geojson(self)
+                location_data = current.gis.get_theme_geojson(self) or {}
             else:
                 # e.g. GIS Feature Layer
                 # e.g. Search results
-                location_data = current.gis.get_location_data(self)
+                location_data = current.gis.get_location_data(self) or {}
         elif format in ("georss", "kml", "gpx"):
-            location_data = current.gis.get_location_data(self)
+            location_data = current.gis.get_location_data(self) or {}
         else:
-            location_data = None
+            # @ToDo: Bulk lookup of LatLons for S3XML LatLon-encode
+            location_data = {}
 
         # Build the tree
         #if DEBUG:
@@ -2942,6 +2943,7 @@ class S3Resource(object):
 
         if master:
             # GIS-encode the element
+            # @ToDo: Do this 1/tree not 1/record
             xml.gis_encode(self, record, element, location_data=location_data)
 
         # Restore normal user_id representations

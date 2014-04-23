@@ -782,14 +782,14 @@ class S3XML(S3Codec):
             @param record: the particular record
             @param element: the XML element
             @param location_data: dictionary of location data from gis.get_location_data()
+
+            @ToDo: Move the GIS-specific attributes to a separate nested <gis/> element
+            @ToDo: Support multiple locations per master resource (e.g. event_event.location)
         """
 
         format = current.auth.permission.format
         if format not in ("geojson", "georss", "gpx", "kml"):
             return
-
-        if location_data is None:
-            location_data = {}
 
         db = current.db
         gis = current.gis

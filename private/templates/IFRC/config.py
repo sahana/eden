@@ -596,11 +596,11 @@ def customise_deploy_mission_controller(**attr):
 
     # Restrict Location to just Countries
     from s3.s3fields import S3Represent
-    from s3.s3widgets import S3SelectChosenWidget
+    from s3.s3widgets import S3MultiSelectWidget
     field = table.location_id
     field.label = current.messages.COUNTRY
     field.requires = s3db.gis_country_requires
-    field.widget = S3SelectChosenWidget()
+    field.widget = S3MultiSelectWidget(multiple=False)
     field.represent = S3Represent(lookup="gis_location", translate=True)
 
     rtable = s3db.deploy_response

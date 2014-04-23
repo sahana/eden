@@ -63,6 +63,8 @@ settings.base.guided_tour = True
 #settings.auth.opt_in_team_list = ["Updates"]
 # Uncomment this to set the opt in default to True
 #settings.auth.opt_in_default = True
+# Uncomment this to request the Home Phone when a user registers
+#settings.auth.registration_requests_home_phone = True
 # Uncomment this to request the Mobile Phone when a user registers
 #settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Mobile Phone selection during registration be mandatory
@@ -81,8 +83,10 @@ settings.base.guided_tour = True
 #settings.auth.registration_organisation_group_required = True
 # Uncomment this to request the Site when a user registers
 #settings.auth.registration_requests_site = True
-# Uncomment this to allow Admin to see Organisations in user Admin even if the Registration doesn't request this
+# Uncomment this to allow Admin to see Organisations in User Admin even if the Registration doesn't request this
 #settings.auth.admin_sees_organisation = True
+# Uncomment to use S3MultiSelectWidget on the Auth Registration page
+#settings.auth.registration_ui_select = True
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
@@ -247,6 +251,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.layer_tree_base = False
 # Uncomment to hide the Overlays folder in the LayerTree
 #settings.gis.layer_tree_overlays = False
+# Uncomment to change the label of the Overlays folder in the LayerTree
+#settings.gis.label_overlays = "Overlays"
 # Uncomment to not expand the folders in the LayerTree by default
 #settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons

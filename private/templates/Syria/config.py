@@ -1265,11 +1265,12 @@ def customise_project_activity_controller(**attr):
             editable = True
             # Custom Widgets/Validators
             from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2, S3SelectChosenWidget
+            from s3.s3widgets import S3LocationSelectorWidget2#, S3MultiSelectWidget
             location_field.label = "" # Gets replaced by widget
             location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             location_field.widget = S3LocationSelectorWidget2(levels=levels)
-            s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
+            # Doesn't work Inline yet
+            #s3db.project_activity_organisation.organisation_id.widget = S3MultiSelectWidget(multiple=False)
         else:
             editable = False
 

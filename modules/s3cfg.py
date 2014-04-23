@@ -305,6 +305,9 @@ class S3Config(Storage):
     def get_auth_opt_in_default(self):
         return self.auth.get("opt_in_default", False)
 
+    def get_auth_registration_requests_home_phone(self):
+        return self.auth.get("registration_requests_home_phone", False)
+
     def get_auth_registration_requests_mobile_phone(self):
         return self.auth.get("registration_requests_mobile_phone", False)
 
@@ -402,6 +405,12 @@ class S3Config(Storage):
         """
         return self.auth.get("registration_roles", [])
 
+    def get_auth_registration_ui_select(self):
+        """
+            Whether Auth Registration should use the S3MultiSelectWidget
+        """
+        return self.auth.get("registration_ui_select", False)
+
     def get_auth_terms_of_service(self):
         """
             Force users to accept Terms of Servcie before Registering an account
@@ -470,7 +479,7 @@ class S3Config(Storage):
     def get_auth_set_presence_on_login(self):
         return self.auth.get("set_presence_on_login", False)
     def get_auth_ignore_levels_for_presence(self):
-        return self.auth.get("ignore_levels_for_presence", ["L0"])
+        return self.auth.get("ignore_levels_for_presence", ("L0",))
     def get_auth_create_unknown_locations(self):
         return self.auth.get("create_unknown_locations", False)
 

@@ -282,40 +282,40 @@ Thank you"""
         uname = settings.table_user_name
         if not utable:
             utable_fields = [
-                    Field("first_name", length=128, notnull=True,
-                          default="",
-                          requires = \
-                          IS_NOT_EMPTY(error_message=messages.is_empty),
-                          ),
-                    Field("last_name", length=128,
-                          default=""),
-                    Field("email", length=255, unique=True,
-                          default=""),
-                    Field("language", length=16,
-                          default = deployment_settings.get_L10n_default_language()),
-                    Field("utc_offset", length=16,
-                          readable=False, writable=False),
-                    Field("organisation_id", "integer",
-                          readable=False, writable=False),
-                    Field("org_group_id", "integer",
-                          readable=False, writable=False),
-                    Field("site_id", "integer",
-                          readable=False, writable=False),
-                    Field("link_user_to", "list:string",
-                          readable=False, writable=False),
-                    Field("registration_key", length=512,
-                          default="",
-                          readable=False, writable=False),
-                    Field("reset_password_key", length=512,
-                          default="",
-                          readable=False, writable=False),
-                    Field("deleted", "boolean",
-                          default=False,
-                          readable=False, writable=False),
-                    Field("timestmp", "datetime",
-                          default="",
-                          readable=False, writable=False),
-                    s3_comments(readable=False, writable=False)
+                Field("first_name", length=128, notnull=True,
+                      default="",
+                      requires = \
+                      IS_NOT_EMPTY(error_message=messages.is_empty),
+                      ),
+                Field("last_name", length=128,
+                      default=""),
+                Field("email", length=255, unique=True,
+                      default=""),
+                Field("language", length=16,
+                      default = deployment_settings.get_L10n_default_language()),
+                Field("utc_offset", length=16,
+                      readable=False, writable=False),
+                Field("organisation_id", "integer",
+                      readable=False, writable=False),
+                Field("org_group_id", "integer",
+                      readable=False, writable=False),
+                Field("site_id", "integer",
+                      readable=False, writable=False),
+                Field("link_user_to", "list:string",
+                      readable=False, writable=False),
+                Field("registration_key", length=512,
+                      default="",
+                      readable=False, writable=False),
+                Field("reset_password_key", length=512,
+                      default="",
+                      readable=False, writable=False),
+                Field("deleted", "boolean",
+                      default=False,
+                      readable=False, writable=False),
+                Field("timestmp", "datetime",
+                      default="",
+                      readable=False, writable=False),
+                s3_comments(readable=False, writable=False)
                 ]
             utable_fields += list(s3_uid())
             utable_fields += list(s3_timestamp())
@@ -348,6 +348,7 @@ Thank you"""
         # the user once they are approved
         define_table("auth_user_temp",
                      Field("user_id", utable),
+                     Field("home"),
                      Field("mobile"),
                      Field("image", "upload"),
                      *(s3_uid()+s3_timestamp()))
@@ -589,7 +590,7 @@ Thank you"""
                        formstyle,
                        "auth_user_remember__row")
 
-            if deployment_settings.set_presence_on_login:
+            if deployment_settings.get_auth_set_presence_on_login():
                 addrow(form, XML(""), INPUT(_id="auth_user_clientlocation",
                                             _name="auth_user_clientlocation",
                                             _style="display:none"),
@@ -760,7 +761,7 @@ Thank you"""
 
         # Set user's position
         # @ToDo: Per-User settings
-        if deployment_settings.set_presence_on_login and \
+        if deployment_settings.get_auth_set_presence_on_login() and \
            vars.has_key("auth_user_clientlocation") and \
            vars.get("auth_user_clientlocation"):
             position = vars.get("auth_user_clientlocation").split("|", 3)
@@ -773,7 +774,7 @@ Thank you"""
             # @ToDo: Filter to just Sites & Home Addresses?
             locations = gis.get_features_in_radius(userlat, userlon, accuracy)
 
-            ignore_levels_for_presence = deployment_settings.ignore_levels_for_presence
+            ignore_levels_for_presence = deployment_settings.get_auth_ignore_levels_for_presence()
             greatCircleDistance = gis.greatCircleDistance
             for location in locations:
                 if location.level not in ignore_levels_for_presence: 
@@ -789,7 +790,7 @@ Thank you"""
                         closestpoint = location
 
             s3tracker = S3Tracker()
-            if closestpoint == 0 and deployment_settings.create_unknown_locations: 
+            if closestpoint == 0 and deployment_settings.get_auth_create_unknown_locations(): 
                 # There wasn't any near-by location, so create one
                 newpoint = {"lat": userlat,
                             "lon": userlon,
@@ -906,6 +907,22 @@ Thank you"""
                               TD(comment,
                                  _class="w2p_fc"),
                            _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+
+        # S3: Insert Home phone field into form
+        if deployment_settings.get_auth_registration_requests_home_phone():
+            for i, row in enumerate(form[0].components):
+                item = row.element("input", _name="email")
+                if item:
+                    field_id = "%s_home" % utable._tablename
+                    form[0].insert(i + 1,
+                                   TR(TD(LABEL("%s:" % T("Home Phone"),
+                                               _for="home",
+                                               _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                         _class="w2p_fl"),
+                                      TD(INPUT(_name="home", _id=field_id),
+                                         _class="w2p_fw"),
+                                      TD(_class="w2p_fc"),
+                                   _id=field_id + SQLFORM.ID_ROW_SUFFIX))
 
         # S3: Insert Mobile phone field into form
         if deployment_settings.get_auth_registration_requests_mobile_phone():
@@ -1212,19 +1229,19 @@ Thank you"""
                         team_id = team_rec.id
                     gm_table.insert(group_id = team_id,
                                     person_id = person_id)
-        form = SQLFORM(
-            utable,
-            self.user.id,
-            fields = self.settings.profile_fields,
-            labels = labels,
-            hidden = dict(_next=next),
-            showid = self.settings.showid,
-            submit_button = self.messages.profile_save_button,
-            delete_label = self.messages.delete_label,
-            upload = self.settings.download_url,
-            formstyle = self.settings.formstyle,
-            separator = ""
-            )
+        form = SQLFORM(utable,
+                       self.user.id,
+                       fields = self.settings.profile_fields,
+                       labels = labels,
+                       hidden = dict(_next=next),
+                       showid = self.settings.showid,
+                       submit_button = self.messages.profile_save_button,
+                       delete_label = self.messages.delete_label,
+                       upload = self.settings.download_url,
+                       formstyle = "table3cols",
+                       #formstyle = self.settings.formstyle,
+                       separator = ""
+                       )
         if settings.get_auth_openid():
             from gluon.contrib.login_methods.openid_auth import OpenIDAuth
             openid_login_form = OpenIDAuth(self)
@@ -1292,6 +1309,12 @@ Thank you"""
         settings = self.settings
         deployment_settings = current.deployment_settings
 
+        if deployment_settings.get_auth_registration_ui_select():
+            from s3widgets import S3MultiSelectWidget
+            multiselect = True
+        else:
+            multiselect = False
+
         utable = self.settings.table_user
 
         utable.password.label = T("Password") #messages.label_password
@@ -1330,6 +1353,8 @@ Thank you"""
             languages.get(opt, cmessages.UNKNOWN_OPT)
         # Default the profile language to the one currently active
         language.default = T.accepted_language
+        if multiselect:
+            language.widget = S3MultiSelectWidget(multiple=False)
 
         utc_offset = utable.utc_offset
         utc_offset.label = messages.label_utc_offset
@@ -1387,6 +1412,8 @@ Thank you"""
             #organisation_id.comment = DIV(_class="tooltip",
             #                              _title="%s|%s" % (T("Organization"),
             #                                                cmessages.AUTOCOMPLETE_HELP))
+            if multiselect:
+                organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
         # Organisation Group
         if deployment_settings.get_auth_registration_requests_organisation_group():
@@ -1412,6 +1439,8 @@ Thank you"""
             #                                         f="group",
             #                                         label=s3db.crud_strings["org_group"].label_create,
             #                                         title=s3db.crud_strings["org_group"].title_list,)
+            if multiselect:
+                org_group_id.widget = S3MultiSelectWidget(multiple=False)
 
         # Site
         if deployment_settings.get_auth_registration_requests_site():
@@ -1781,6 +1810,11 @@ S3OptionsFilter({
 
         record  = dict(user_id = user_id)
 
+        # Add the home_phone to pr_contact
+        home = form_vars.home
+        if home:
+            record["home"] = home
+
         # Add the mobile to pr_contact
         mobile = form_vars.mobile
         if mobile:
@@ -1877,7 +1911,7 @@ S3OptionsFilter({
             aappend = approvers.append
             languages = []
             for each_approver in approver:
-                language = approver["language"]
+                language = each_approver["language"]
                 if language not in languages:
                     languages.append(language)
                 aappend(each_approver)
@@ -2065,7 +2099,7 @@ S3OptionsFilter({
 
         return
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def s3_user_profile_onaccept(form):
         """ Update the UI locale from user profile """
@@ -2140,6 +2174,7 @@ S3OptionsFilter({
                                 ptable.id,
                                 ptable.first_name,
                                 ptable.last_name,
+                                ttable.home,
                                 ttable.mobile,
                                 ttable.image,
                                 left=left, distinct=True)
@@ -2185,7 +2220,17 @@ S3OptionsFilter({
                                   contact_method = "EMAIL",
                                   value = user.email)
 
-                #@ToDo: Also update mobile phone? profile image? Groups?
+                # Add the user's mobile_phone to the person record if missing
+                query = (ctable.pe_id == pe_id) & \
+                        (ctable.contact_method == "SMS") & \
+                        (ctable.value == user.mobile)
+                item = db(query).select(limitby=(0, 1)).first()
+                if item is None:
+                    ctable.insert(pe_id = pe_id,
+                                  contact_method = "SMS",
+                                  value = user.mobile)
+
+                #@ToDo: Also update home phone? profile image? Groups?
 
                 person_ids.append(person.id)
 
@@ -2309,6 +2354,16 @@ S3OptionsFilter({
                                       contact_method = "SMS",
                                       priority = 2,
                                       value = mobile,
+                                      **owner)
+
+                    # Add the home phone number from the temporary
+                    # user data into pr_contact
+                    home = tuser.home
+                    if home:
+                        ctable.insert(pe_id = pe_id,
+                                      contact_method = "HOME_PHONE",
+                                      priority = 3,
+                                      value = home,
                                       **owner)
 
                     # Insert the profile picture from the temporary

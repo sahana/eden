@@ -96,7 +96,8 @@ def user():
 
     auth.configure_user_fields(pe_ids)
 
-    s3db.add_components("auth_user", auth_membership="user_id")
+    s3db.add_components("auth_user",
+                        auth_membership = "user_id")
 
     list_fields = ["first_name",
                    "last_name",
@@ -126,6 +127,7 @@ def user():
                    create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                    list_fields = list_fields,
                    main = "first_name",
+                   #update_onaccept = lambda form: auth.s3_link_user(form.vars),
                    )
 
     def disable_user(r, **args):
@@ -243,12 +245,12 @@ def user():
         if r.interactive:
             s3db.configure(r.tablename,
                            addbtn = True,
+                           # Password confirmation
+                           create_onvalidation = user_create_onvalidation,
                            deletable = False,
                            # jquery.validate is clashing with dataTables so don't embed the create form in with the List
                            listadd = False,
                            sortby = [[2, "asc"], [1, "asc"]],
-                           # Password confirmation
-                           create_onvalidation = user_create_onvalidation,
                            )
         elif r.representation == "xls":
             lappend((T("Status"), "registration_key"))
@@ -328,55 +330,40 @@ def user():
                                                                   _href=create_url)
                 return output
             form.attributes["_id"] = "regform"
-            if s3_formstyle == "bootstrap":
-                div = DIV(LABEL("%s:" % T("Verify password"),
-                                _id="auth_user_password_two__label",
-                                _for="password_two",
-                                _class="control-label",
-                                ),
-                          DIV(INPUT(_name="password_two",
-                                    _id="password_two",
-                                    _type="password",
-                                    _disabled="disabled",
-                                    _class="password input-xlarge",
-                                    ),
-                              _class="controls",
-                              ),
-                          # Somewhere to store Error Messages
-                          SPAN(_class="help-block"),
-                          _id="auth_user_password_two__row",
-                          _class="control-group hide",
-                          )
-                form[0].insert(4, div)
-                # @ToDo:
-                #if settings.get_auth_registration_requests_mobile_phone():
+            # Assume formstyle callable
+            id = "auth_user_password_two__row"
+            label = "%s:" % T("Verify password")
+            widget = INPUT(_name="password_two",
+                           _id="password_two",
+                           _type="password",
+                           _disabled="disabled",
+                           )
+            comment = ""
+            row = s3_formstyle(id, label, widget, comment, hidden=True)
+            if isinstance(row, tuple):
+                # Formstyle with separate row for label (e.g. default Eden formstyle)
+                tuple_rows = True
+                form[0].insert(8, row)
             else:
-                # Assume callable
-                id = "auth_user_password_two__row"
-                label = "%s:" % T("Verify password")
-                widget = INPUT(_name="password_two",
-                               _id="password_two",
-                               _type="password",
-                               _disabled="disabled",
-                               )
-                comment = ""
-                row = s3_formstyle(id, label, widget, comment, hidden=True)
-                if s3.theme == "DRRPP":
-                    form[0].insert(4, row)
-                else:
-                    form[0].insert(8, row)
-                if settings.get_auth_registration_requests_mobile_phone():
-                    id = "auth_user_mobile__row"
-                    label = "%s:" % settings.get_ui_label_mobile_phone()
-                    widget = INPUT(_name="mobile",
-                                   _id="mobile",
-                                   _class="string",
-                                   )
-                    comment = ""
-                    row = s3_formstyle(id, label, widget, comment)
-                    # @ToDo:
-                    #if s3.theme == "DRRPP":
-                    form[0].insert(-8, row)
+                # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+                tuple_rows = False
+                form[0].insert(4, row)
+            # @ToDo: Ensure this reads existing values & creates/updates when saved
+            #if settings.get_auth_registration_requests_mobile_phone():
+            #    id = "auth_user_mobile__row"
+            #    label = LABEL("%s:" % settings.get_ui_label_mobile_phone(),
+            #                  _for="mobile",
+            #                  )
+            #    widget = INPUT(_name="mobile",
+            #                   _id="auth_user_mobile",
+            #                   _class="string",
+            #                   )
+            #    comment = ""
+            #    row = s3_formstyle(id, label, widget, comment)
+            #    if tuple_rows:
+            #        form[0].insert(-8, row)
+            #    else:
+            #        form[0].insert(-4, row)
 
             # Add client-side validation
             auth.s3_register_validation()

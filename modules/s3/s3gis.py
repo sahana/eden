@@ -2172,8 +2172,8 @@ class GIS(object):
                                                      limitby=(0, 1)).first()
 
         else:
-            # e.g. KML, geoRSS or GPX export
-             # e.g. Volunteer Layer in Vulnerability module
+            # e.g. KML, GeoRSS or GPX export
+            # e.g. Volunteer Layer in Vulnerability module
             controller = request.controller
             function = request.function
             query = (ftable.controller == controller) & \
@@ -2292,7 +2292,7 @@ class GIS(object):
                                         # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
                                         #        (although we *do* want the represent in the tooltips!)
                                         pass
-                                if ftype == "double":
+                                elif ftype == "double":
                                     # Attributes should be numbers not Strings
                                     try:
                                         float_represent = float(represent.replace(",", ""))
