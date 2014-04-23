@@ -64,9 +64,6 @@ settings.auth.registration_requests_mobile_phone = True
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
 settings.auth.registration_link_user_to_default = "staff"
 
-# Uncomment to use S3MultiSelectWidget on the Auth Registration page
-settings.auth.registration_ui_select = True
-
 # Approval emails get sent to all admins
 settings.mail.approver = "ADMIN"
 
@@ -121,6 +118,8 @@ settings.ui.formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 settings.ui.update_label = "Update" 
 settings.ui.export_formats = ["xls", "xml"]
+# Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
+settings.ui.multiselect_widget = True
 
 # Set Map to fill the container
 settings.gis.map_width = 1170
