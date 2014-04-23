@@ -6364,6 +6364,11 @@ class MAP(DIV):
             else:
                 options["draw_polygon"] = "inactive"
 
+        # Clear Layers
+        if settings.get_gis_clear_layers():
+            # Presence of label turns feature on in s3.gis.js
+            i18n["gis_clearlayers"] = T("Clear all Layers")
+
         # Layer Properties
         if settings.get_gis_layer_properties():
             # Presence of label turns feature on in s3.gis.js

@@ -259,6 +259,8 @@ settings.gis.toolbar = False
 #settings.gis.nav_controls = False
 # Uncomment to use CMS to provide Metadata on Map Layers
 settings.gis.layer_metadata = True
+# Uncomment to show Clear Layers tool
+settings.gis.clear_layers = True
 # Uncomment to hide Layer Properties tool
 settings.gis.layer_properties = False
 # Uncomment to hide the Base Layers folder in the LayerTree
