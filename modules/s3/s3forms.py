@@ -2724,8 +2724,6 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             @param attributes: attributes for the widget
             
             @return: the widget
-
-            @todo: support multiple=False
         """
 
         resource = self.resource
@@ -2752,16 +2750,19 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                         if k in keys)
 
         # Instantiate the widget
-        if widget == "groupedopts":
+        if widget == "groupedopts" or not widget and "cols" in options:
             from s3widgets import S3GroupedOptionsWidget
             w_opts = widget_opts(("cols",
                                   "size",
                                   "help_field",
+                                  "multiple",
                                   ))
             w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":
             from s3widgets import S3HierarchyWidget
             w_opts = widget_opts(("represent",
+                                  "multiple",
+                                  "leafonly",
                                   ))
             w_opts["lookup"] = component.tablename
             w = S3HierarchyWidget(**w_opts)
@@ -2772,6 +2773,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   "header",
                                   "selectedList",
                                   "noneSelectedText",
+                                  "multiple",
                                   ))
             w = S3MultiSelectWidget(**w_opts)
 

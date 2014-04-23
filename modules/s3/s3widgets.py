@@ -4811,7 +4811,10 @@ class S3HierarchyWidget(FormWidget):
 
     def __init__(self,
                  lookup=None,
-                 represent=None):
+                 represent=None,
+                 multiple=True,
+                 leafonly=True,
+                 ):
         """
             Constructor
 
@@ -4819,10 +4822,16 @@ class S3HierarchyWidget(FormWidget):
                            configured)
             @param represent: alternative representation method (falls back
                               to the field's represent-method)
+            @param multiple: allow selection of multiple options
+            @param leafonly: True = only leaf nodes can be selected
+                             False = any nodes to be selected independently
         """
 
         self.lookup = lookup
         self.represent = represent
+
+        self.multiple = multiple
+        self.leafonly = leafonly
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -4903,18 +4912,32 @@ class S3HierarchyWidget(FormWidget):
 
         T = current.T
 
-        script = \
-'''$('#%(widget_id)s').hierarchicalopts({
- appname:'%(appname)s',
- selected:%(selected)s,
- selectedText:'%(selectedText)s',
- noneSelectedText:'%(noneSelectedText)s'})''' % \
-    {"appname": current.request.application,
-     "widget_id": widget_id,
-     "selected": json.dumps(selected, separators=SEPARATORS) if selected else "null",
-     "selectedText": T("# selected"),
-     "noneSelectedText": T("Select"),
-     }
+        widget_opts = {"selected": selected,
+                       "selectedText": str(T("# selected")),
+                       "noneSelectedText": str(T("Select")),
+                       "multiple": self.multiple,
+                       "leafonly": self.leafonly,
+                       }
+
+        script = '''$('#%(widget_id)s').hierarchicalopts(%(widget_opts)s)''' % \
+                 {"widget_id": widget_id,
+                  "widget_opts": json.dumps(widget_opts, separators=SEPARATORS),
+                  }
+
+        #script = \
+#'''$('#%(widget_id)s').hierarchicalopts({
+ #selected:%(selected)s,
+ #selectedText:'%(selectedText)s',
+ #noneSelectedText:'%(noneSelectedText)s',
+ #multiple:%(multiple)s,
+ #leafonly:%(leafonly)s})''' % \
+    #{"widget_id": widget_id,
+     #"selected": json.dumps(selected, separators=SEPARATORS) if selected else "null",
+     #"selectedText": T("# selected"),
+     #"noneSelectedText": T("Select"),
+     #"multiple": "true" if self.multiple else "false",
+     #"leafonly": "true" if self.leafonly else "false",
+     #}
         s3.jquery_ready.append(script)
 
         return widget
