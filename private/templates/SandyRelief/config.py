@@ -91,9 +91,6 @@ settings.auth.registration_link_user_to = {"staff":T("Staff"),
 
 settings.security.policy = 5 # Controller, Function & Table ACLs
 
-# Resource which need approval
-#settings.auth.record_approval_required_for = ["org_facility"]
-
 settings.ui.update_label = "Edit"
 settings.ui.label_attachments = "Media"
 

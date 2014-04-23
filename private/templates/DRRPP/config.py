@@ -48,10 +48,10 @@ For enquiries contact %s""" % settings.get_mail_approver()
 
 # Record Approval
 settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ["org_organisation",
+settings.auth.record_approval_required_for = ("org_organisation",
                                               "project_project",
-                                              "project_framework"
-                                              ]
+                                              "project_framework",
+                                              )
 
 # =============================================================================
 # L10n Deployment Settings
@@ -636,7 +636,7 @@ def customise_project_project_controller(**attr):
                                   7: "drrpp_jnap",
                                   8: "organisation_id",
                                  },
-                  )
+                   )
     
     return attr
 
@@ -667,9 +667,9 @@ def customise_project_framework_controller(**attr):
             # Don't show Update/Delete button on List View
             if r.method is None:
                 s3db.configure("project_framework",
-                               insertable = False,
-                               editable = False,
                                deletable = False
+                               editable = False,
+                               insertable = False,
                                )
         return output
     s3.prep = custom_prep
@@ -689,10 +689,10 @@ def customise_project_location_controller(**attr):
 
     # Custom Components
     s3db.add_components("project_project",
-                        project_drrpp={"joinby": "project_id",
-                                       "multiple": False,
-                                      },
-                       )
+                        project_drrpp = {"joinby": "project_id",
+                                         "multiple": False,
+                                         },
+                        )
 
     # Custom CRUD Strings
     s3.crud_strings.project_location.title_map = T("Project Map")
@@ -778,11 +778,12 @@ def customise_project_location_controller(**attr):
                         hidden = True,
                         ),
         ]
+
     s3db.configure("project_location",
-                   filter_widgets=filter_widgets,
+                   filter_widgets = filter_widgets,
                    # Add CSS to default class better than patching
-                   #map_submit=(T("Search"), "search-button"),
-                   map_advanced=(T("Advanced Search"), T("Simple Search")),
+                   #map_submit = (T("Search"), "search-button"),
+                   map_advanced = (T("Advanced Search"), T("Simple Search")),
                    )
     
     return attr
@@ -803,8 +804,6 @@ def customise_pr_person_controller(**attr):
 
     # Custom CRUD Strings
     current.response.s3.crud_strings.pr_person.title_display = T("My Page")
-
-    attr["rheader"] = H3(T("Saved Searches"))
 
     # Customise saved search
     table = s3db.pr_saved_search
@@ -835,10 +834,12 @@ def customise_pr_person_controller(**attr):
     table.url.represent = url_represent
 
     s3db.configure("pr_saved_search",
-                   list_fields=["name",
-                                "url",
-                                ]
+                   list_fields = ["name",
+                                  "url",
+                                  ]
                    )
+
+    attr["rheader"] = H3(T("Saved Searches"))
 
     return attr
 

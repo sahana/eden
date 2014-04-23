@@ -56,7 +56,7 @@ settings.auth.show_utc_offset = False
 settings.auth.show_link = False
 
 settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ["org_organisation"]
+settings.auth.record_approval_required_for = ("org_organisation",)
 
 # -----------------------------------------------------------------------------
 # Security Policy
@@ -3238,12 +3238,12 @@ def customise_org_organisation_controller(**attr):
                 if national:
                     national = national.id
                     s3db.add_components("org_organisation",
-                                        org_office={"name": "nat_office",
-                                                    "joinby": "organisation_id",
-                                                    "filterby": "office_type_id",
-                                                    "filterfor": (national,),
-                                                   },
-                                       )
+                                        org_office = {"name": "nat_office",
+                                                      "joinby": "organisation_id",
+                                                      "filterby": "office_type_id",
+                                                      "filterfor": (national,),
+                                                      },
+                                        )
                     list_fields.append("nat_office.location_id$addr_street")
 
             # Represent used in rendering

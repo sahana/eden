@@ -47,9 +47,6 @@ settings.auth.show_utc_offset = False
 
 settings.auth.show_link = False
 
-settings.auth.record_approval = False
-settings.auth.record_approval_required_for = ["org_organisation"]
-
 # -----------------------------------------------------------------------------
 # Security Policy
 settings.security.policy = 6 # Realms

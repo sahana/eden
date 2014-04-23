@@ -95,7 +95,7 @@ settings.base.guided_tour = True
 # Uncomment this to enable record approval
 #settings.auth.record_approval = True
 # Uncomment this and specify a list of tablenames for which record approval is required
-#settings.auth.record_approval_required_for = ["project_project"]
+#settings.auth.record_approval_required_for = ("org_organisation",)
 # Uncomment this to request an image when users register
 #settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details
@@ -112,7 +112,7 @@ settings.base.guided_tour = True
 # Uncomment this to enable presence records on login based on HTML5 geolocations
 #settings.auth.set_presence_on_login = True
 # Uncomment this and specify a list of location levels to be ignored by presence records
-#settings.auth.ignore_levels_for_presence = ["L0", "L1", "L2", "L3"]
+#settings.auth.ignore_levels_for_presence = ("L0", "L1", "L2", "L3")
 # Uncomment this to enable the creation of new locations if a user logs in from an unknown location. Warning: This may lead to many useless location entries
 #settings.auth.create_unknown_locations = True
 

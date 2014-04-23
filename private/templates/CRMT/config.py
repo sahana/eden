@@ -67,10 +67,13 @@ settings.auth.registration_link_user_to_default = "staff"
 # Uncomment to use S3MultiSelectWidget on the Auth Registration page
 settings.auth.registration_ui_select = True
 
-settings.auth.record_approval = False
-
 # Approval emails get sent to all admins
 settings.mail.approver = "ADMIN"
+
+# Record Approval
+settings.auth.record_approval = True
+# If an anonymous user creates a new org when registering then the org will be unapproved until the user is approved
+settings.auth.record_approval_required_for = ("org_organisation",)
 
 # -----------------------------------------------------------------------------
 # Security Policy
@@ -945,6 +948,17 @@ def customise_org_organisation_controller(**attr):
                                report_options = report_options,
                                # No Map for Organisations
                                summary = [s for s in settings.ui.summary if s["name"] != "map"],
+                               )
+
+            elif not current.auth.is_logged_in():
+                # Anonymous user creating Org: Keep Simple
+                from s3.s3forms import S3SQLCustomForm
+                crud_form = S3SQLCustomForm("name",
+                                            "website",
+                                            "comments",
+                                            )
+                s3db.configure(tablename,
+                               crud_form = crud_form,
                                )
 
             else:

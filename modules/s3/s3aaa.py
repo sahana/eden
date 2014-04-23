@@ -2044,7 +2044,8 @@ S3OptionsFilter({
         db(utable.id == user_id).update(registration_key = "")
 
         # Approve User's Organisation
-        if user.organisation_id and "org_organisation" in deployment_settings.get_auth_record_approval_required_for():
+        if user.organisation_id and \
+           "org_organisation" in deployment_settings.get_auth_record_approval_required_for():
             s3db.resource("org_organisation", user.organisation_id, unapproved=True).approve()
 
         # Send Welcome mail
@@ -2217,7 +2218,8 @@ S3OptionsFilter({
                 query = (ctable.pe_id == pe_id) & \
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.value == user.email)
-                item = db(query).select(limitby=(0, 1)).first()
+                item = db(query).select(ctable.id,
+                                        limitby=(0, 1)).first()
                 if item is None:
                     ctable.insert(pe_id = pe_id,
                                   contact_method = "EMAIL",
@@ -2228,7 +2230,8 @@ S3OptionsFilter({
                     query = (ctable.pe_id == pe_id) & \
                             (ctable.contact_method == "SMS") & \
                             (ctable.value == tuser.mobile)
-                    item = db(query).select(limitby=(0, 1)).first()
+                    item = db(query).select(ctable.id,
+                                            limitby=(0, 1)).first()
                     if item is None:
                         ctable.insert(pe_id = pe_id,
                                       contact_method = "SMS",
