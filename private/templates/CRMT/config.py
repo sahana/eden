@@ -649,6 +649,7 @@ def customise_project_activity_controller(**attr):
                            "activity_activity_type.activity_type_id",
                            "activity_group.group_id",
                            "location_id",
+                           "location_id$addr_postcode",
                            "person_id",
                            (T("Number of People"), "beneficiary.value"),
                            "comments",
@@ -1259,6 +1260,7 @@ def customise_org_facility_controller(**attr):
                            "organisation_id",
                            "site_org_group.group_id",
                            "location_id",
+                           "location_id$addr_postcode",
                            "contact",
                            "phone1",
                            "email",
@@ -1480,6 +1482,7 @@ def customise_stats_people_controller(**attr):
                            "value",
                            "people_group.group_id",
                            "location_id",
+                           "location_id$addr_postcode",
                            "person_id",
                            "comments",
                            ]
@@ -1824,6 +1827,7 @@ def customise_vulnerability_risk_controller(**attr):
                            #(T("Hazard Type"), "hazard_id"),
                            "risk_group.group_id",
                            "location_id",
+                           "location_id$addr_postcode",
                            "comments",
                            ]
 
