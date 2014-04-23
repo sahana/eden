@@ -405,12 +405,6 @@ class S3Config(Storage):
         """
         return self.auth.get("registration_roles", [])
 
-    def get_auth_registration_ui_select(self):
-        """
-            Whether Auth Registration should use the S3MultiSelectWidget
-        """
-        return self.auth.get("registration_ui_select", False)
-
     def get_auth_terms_of_service(self):
         """
             Force users to accept Terms of Servcie before Registering an account
@@ -1228,7 +1222,17 @@ class S3Config(Storage):
         """
         return self.ui.get("update_label", "Open")
 
+    def get_ui_multiselect_widget(self):
+        """
+            Whether all dropdowns should use the S3MultiSelectWidget
+            - currently respected by Auth Registration & S3LocationSelectorWidget2
+        """
+        return self.ui.get("multiselect_widget", False)
+
     def get_ui_navigate_away_confirm(self):
+        """
+            Whether to enable a warning when users navigate away from a page with unsaved changes
+        """
         return self.ui.get("navigate_away_confirm", True)
 
     def get_ui_search_submit_button(self):

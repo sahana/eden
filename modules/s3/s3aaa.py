@@ -1309,11 +1309,11 @@ Thank you"""
         settings = self.settings
         deployment_settings = current.deployment_settings
 
-        if deployment_settings.get_auth_registration_ui_select():
+        if deployment_settings.get_ui_multiselect_widget():
             from s3widgets import S3MultiSelectWidget
-            multiselect = True
+            multiselect_widget = True
         else:
-            multiselect = False
+            multiselect_widget = False
 
         utable = self.settings.table_user
 
@@ -1353,7 +1353,7 @@ Thank you"""
             languages.get(opt, cmessages.UNKNOWN_OPT)
         # Default the profile language to the one currently active
         language.default = T.accepted_language
-        if multiselect:
+        if multiselect_widget:
             language.widget = S3MultiSelectWidget(multiple=False)
 
         utc_offset = utable.utc_offset
@@ -1412,7 +1412,7 @@ Thank you"""
             #organisation_id.comment = DIV(_class="tooltip",
             #                              _title="%s|%s" % (T("Organization"),
             #                                                cmessages.AUTOCOMPLETE_HELP))
-            if multiselect:
+            if multiselect_widget:
                 organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
         # Organisation Group
@@ -1439,7 +1439,7 @@ Thank you"""
             #                                         f="group",
             #                                         label=s3db.crud_strings["org_group"].label_create,
             #                                         title=s3db.crud_strings["org_group"].title_list,)
-            if multiselect:
+            if multiselect_widget:
                 org_group_id.widget = S3MultiSelectWidget(multiple=False)
 
         # Site
@@ -1512,6 +1512,9 @@ S3OptionsFilter({
                                                   )
                 link_user_to.represent = lambda ids: \
                     ids and ", ".join([str(link_user_to_opts[id]) for id in ids]) or cmessages["NONE"]
+                #if multiselect_widget:
+                #    link_user_to.widget = S3MultiSelectWidget()
+                #else:
                 link_user_to.widget = SQLFORM.widgets.checkboxes.widget
                 link_user_to.comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (link_user_to.label,

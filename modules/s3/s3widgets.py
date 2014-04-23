@@ -3835,15 +3835,15 @@ class S3LocationSelectorWidget2(FormWidget):
     """
 
     def __init__(self,
-                 levels = None,         # Which levels of the hierarchy to expose?
-                 hide_lx = True,        # Whether to hide lower Lx fields until higher level selected
-                 reverse_lx = False,    # Whether to show Lx fields in the order usually used by Street Addresses
-                 show_address = False,  # Whether to show a field for Street Address
-                 show_postcode = False, # Whether to show a field for Postcode
-                 show_map = True,       # Whether to show a Map to select specific points
-                 lines = False,         # Whether the Map uses a Line draw tool instead of Point
-                 polygons = False,      # Whether the Map uses a Polygon draw tool instead of Point
-                 catalog_layers=False,  # Whether the Map should display Catalogue Layers or just the default base layer
+                 levels = None,          # Which levels of the hierarchy to expose?
+                 hide_lx = True,         # Whether to hide lower Lx fields until higher level selected
+                 reverse_lx = False,     # Whether to show Lx fields in the order usually used by Street Addresses
+                 show_address = False,   # Whether to show a field for Street Address
+                 show_postcode = False,  # Whether to show a field for Postcode
+                 show_map = True,        # Whether to show a Map to select specific points
+                 lines = False,          # Whether the Map uses a Line draw tool instead of Point
+                 polygons = False,       # Whether the Map uses a Polygon draw tool instead of Point
+                 catalog_layers = False, # Whether the Map should display Catalogue Layers or just the default base layer
                  ):
 
         self.levels = levels
@@ -4310,16 +4310,21 @@ class S3LocationSelectorWidget2(FormWidget):
                     labels[level] = v
 
         # Lx Dropdowns
+        ui_multiselect_widget = settings.get_ui_multiselect_widget()
         Lx_rows = DIV()
         # 1st level is always hidden until populated
         hidden = True
         comment = ""
         for level in levels:
             id = "%s_%s" % (fieldname, level)
+            lattr = {"_id" : id}
+            if ui_multiselect_widget:
+                lattr["_multiple"] = "multiple"
             label = labels.get(level, level)
-            widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
+            noneSelectedText = T("Select %(location)s") % dict(location = label)
+            widget = SELECT(OPTION(noneSelectedText,
                                    _value=""),
-                            _id=id)
+                            **lattr)
             if required:
                 widget.add_class("required")
                 # @ToDo: DRY this setting with s3_mark_required
@@ -4537,6 +4542,11 @@ class S3LocationSelectorWidget2(FormWidget):
             global_append(script)
             script = '''i18n.select="%s"''' % T("Select")
             global_append(script)
+            if ui_multiselect_widget:
+                script = '''i18n.allSelectedText="%s"''' % T("All selected")
+                global_append(script)
+                script = '''i18n.selectedText="%s"''' % T("# selected")
+                global_append(script)
 
         # If we need to show the map since we have an existing lat/lon/wkt
         # then we need to launch the client-side JS as a callback to the MapJS loader

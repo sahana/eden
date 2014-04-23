@@ -85,8 +85,6 @@ settings.base.guided_tour = True
 #settings.auth.registration_requests_site = True
 # Uncomment this to allow Admin to see Organisations in User Admin even if the Registration doesn't request this
 #settings.auth.admin_sees_organisation = True
-# Uncomment to use S3MultiSelectWidget on the Auth Registration page
-#settings.auth.registration_ui_select = True
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
@@ -347,6 +345,8 @@ settings.L10n.decimal_separator = "."
 #settings.ui.interim_save = True
 # Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)
 #settings.ui.use_button_glyphicons = True
+# Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
+#settings.ui.multiselect_widget = True
 
 # -----------------------------------------------------------------------------
 # CMS
