@@ -2191,6 +2191,9 @@ S3OptionsFilter({
             # The user record
             user = row.auth_user
 
+            # The temporary user record
+            tuser = row.auth_user_temp
+
             # The person record
             person = row.pr_person
 
@@ -2221,14 +2224,15 @@ S3OptionsFilter({
                                   value = user.email)
 
                 # Add the user's mobile_phone to the person record if missing
-                query = (ctable.pe_id == pe_id) & \
-                        (ctable.contact_method == "SMS") & \
-                        (ctable.value == user.mobile)
-                item = db(query).select(limitby=(0, 1)).first()
-                if item is None:
-                    ctable.insert(pe_id = pe_id,
-                                  contact_method = "SMS",
-                                  value = user.mobile)
+                if tuser.mobile:
+                    query = (ctable.pe_id == pe_id) & \
+                            (ctable.contact_method == "SMS") & \
+                            (ctable.value == tuser.mobile)
+                    item = db(query).select(limitby=(0, 1)).first()
+                    if item is None:
+                        ctable.insert(pe_id = pe_id,
+                                      contact_method = "SMS",
+                                      value = tuser.mobile)
 
                 #@ToDo: Also update home phone? profile image? Groups?
 
