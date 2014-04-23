@@ -507,14 +507,16 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         if not response:
             return None, message
 
-        details = ("title",
-                   "description",
-                   "status",
-                   "importance",
-                   "permalink",
-                   "createdDate",
-                   "updatedDate",
-                   )
+        details = {"title": "title",
+                   "description": "description",
+                   "status": "status",
+                   "importance": "importance",
+                   "permalink": "permalink",
+                   "createdDate": "createdDate",
+                   "updatedDate": "updatedDate",
+                   "dates": {"due": "dueDate",
+                             }
+                   }
 
         tasks = {}
         data = response.get("data")
@@ -536,13 +538,34 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     for parent_id in parent_ids:
                         parent = SubElement(task, "parentId")
                         parent.text = str(parent_id)
-                for key in details:
-                    data = task_data.get(key)
-                    if data is not None:
-                        detail = SubElement(task, key)
-                        detail.text = s3_unicode(data)
+                self.add_details(task, task_data, details)
 
         return tasks, None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def add_details(cls, task, data, keys):
+        """
+            Recursively convert the nested task details dicts into SubElements
+
+            @param task: the task Element
+            @param data: the nested dict
+            @param keys: the mapping of dict keys to SubElement names
+        """
+        
+        if not isinstance(data, dict):
+            return
+        SubElement = etree.SubElement
+        for key, name in keys.items():
+            wrapper = data.get(key)
+            if wrapper is None:
+                continue
+            if isinstance(name, dict):
+                cls.add_details(task, wrapper, name)
+            else:
+                detail = SubElement(task, name)
+                detail.text = s3_unicode(wrapper)
+        return
 
     # -------------------------------------------------------------------------
     def update_refresh_token(self):

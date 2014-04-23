@@ -137,6 +137,11 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template match="task/dueDate">
+        <data field="date_due"><xsl:value-of select="text()"/></data>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template match="task/parentId">
         <resource name="project_task_project">
             <reference field="project_id" resource="project_project">
