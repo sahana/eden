@@ -4753,12 +4753,12 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         else:
             attr["_class"] = "multiselect-widget"
 
-        widget = TAG[""](MultipleOptionsWidget.widget(field, value, **attr),
-                         requires = field.requires)
+        multiple_opt = self.multiple
+        w = MultipleOptionsWidget if multiple_opt else OptionsWidget
+        widget = TAG[""](w.widget(field, value, **attr), requires = field.requires)
 
         # Filter and header for multiselect options list
         filter_opt = self.filter 
-        multiple_opt = self.multiple
         header_opt = self.header
         if not multiple_opt and header_opt is True:
             # Select All / Unselect All doesn't make sense if multiple == False

@@ -607,15 +607,21 @@ class S3Represent(object):
         lookup = {}
 
         # Check whether values are already in theset
-        for v in values:
+        table = self.table
+        for _v in values:
+            v = _v
+            if v is not None and table and isinstance(v, basestring):
+                try:
+                    v = int(_v)
+                except ValueError:
+                    pass
             if v is None:
-                items[v] = self.none
+                items[_v] = self.none
             elif v in theset:
-                items[v] = theset[v]
+                items[_v] = theset[v]
             else:
                 lookup[v] = True
-                
-        table = self.table
+
         if table is None or not lookup:
             return items
 
@@ -656,7 +662,7 @@ class S3Represent(object):
                 if k not in theset:
                     theset[k] = represent_row(row)
                 if pop(k, None):
-                    items[k] = theset[k]
+                    items[str(k)] = items[k] = theset[k]
 
         # Retrieve additional rows as needed
         if lookup:
@@ -678,15 +684,16 @@ class S3Represent(object):
                 represent_path = self._represent_path
                 for k, row in rows.items():
                     lookup.pop(k, None)
+                    items[str(k)] = \
                     items[k] = represent_path(k, row, rows=rows, hierarchy=h)
             else:
                 for k, row in rows.items():
                     lookup.pop(k, None)
-                    items[k] = theset[k] = represent_row(row)
+                    items[str(k)] = items[k] = theset[k] = represent_row(row)
                     
         if lookup:
             for k in lookup:
-                items[k] = self.default
+                items[str(k)] = items[k] = self.default
 
         return items
 
