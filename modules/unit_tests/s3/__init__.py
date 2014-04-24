@@ -4,6 +4,7 @@ from unit_tests.s3.s3crud import *
 from unit_tests.s3.s3datatable import *
 from unit_tests.s3.s3fields import *
 from unit_tests.s3.s3filter import *
+from unit_tests.s3.s3hierarchy import *
 from unit_tests.s3.s3import import *
 from unit_tests.s3.s3model import *
 from unit_tests.s3.s3msg import *

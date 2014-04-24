@@ -49,7 +49,13 @@ class S3Hierarchy(object):
     """ Class representing an object hierarchy """
 
     # -------------------------------------------------------------------------
-    def __init__(self, tablename=None, hierarchy=None, represent=None):
+    def __init__(self,
+                 tablename=None,
+                 hierarchy=None,
+                 represent=None,
+                 filter=None,
+                 leafonly=True,
+                 ):
         """
             Constructor
 
@@ -57,6 +63,9 @@ class S3Hierarchy(object):
             @param hierarchy: the hierarchy setting for the table
                               (replaces the current setting)
             @param represent: a representation method for the node IDs
+            @param filter: additional filter query for the table to
+                           select the relevant subset
+            @param leafonly: filter strictly for leaf nodes
         """
 
         self.tablename = tablename
@@ -64,23 +73,20 @@ class S3Hierarchy(object):
             current.s3db.configure(tablename, hierarchy=hierarchy)
         self.represent = represent
 
-        self.__roots = None
-        self.__nodes = None
+        self.filter = filter
+        self.leafonly = leafonly
+
+        self.__theset = None
         self.__flags = None
+
+        self.__nodes = None
+        self.__roots = None
         
     # -------------------------------------------------------------------------
     @property
-    def roots(self):
-        """ Set of root node IDs """
-
-        nodes = self.nodes
-        return self.__roots
-
-    # -------------------------------------------------------------------------
-    @property
-    def nodes(self):
+    def theset(self):
         """
-            The nodes dict like:
+            The raw nodes dict like:
 
                 {<node_id>: {"p": <parent_id>,
                              "c": <category>,
@@ -88,11 +94,11 @@ class S3Hierarchy(object):
                 }}
         """
 
-        if self.__nodes is None:
+        if self.__theset is None:
             self.__connect()
         if self.__status("dirty"):
             self.read()
-        return self.__nodes
+        return self.__theset
 
     # -------------------------------------------------------------------------
     @property
@@ -100,7 +106,7 @@ class S3Hierarchy(object):
         """ Dict of status flags """
 
         if self.__flags is None:
-            nodes = self.nodes
+            theset = self.theset
         return self.__flags
 
     # -------------------------------------------------------------------------
@@ -117,6 +123,24 @@ class S3Hierarchy(object):
         return None
 
     # -------------------------------------------------------------------------
+    @property
+    def nodes(self):
+        """ The nodes in the subset """
+
+        theset = self.theset
+        if self.__nodes is None:
+            self.__subset()
+        return self.__nodes
+
+    # -------------------------------------------------------------------------
+    @property
+    def roots(self):
+        """ The IDs of the root nodes in the subset """
+
+        nodes = self.nodes
+        return self.__roots
+        
+    # -------------------------------------------------------------------------
     def __connect(self):
         """ Connect this instance to the hierarchy """
 
@@ -125,21 +149,17 @@ class S3Hierarchy(object):
             hierarchies = current.model.hierarchies
             if tablename in hierarchies:
                 hierarchy = hierarchies[tablename]
-                self.__roots = hierarchy["roots"]
-                self.__nodes = hierarchy["nodes"]
+                self.__theset = hierarchy["nodes"]
                 self.__flags = hierarchy["flags"]
             else:
-                self.__roots = set()
-                self.__nodes = dict()
+                self.__theset = dict()
                 self.__flags = dict()
                 self.load()
-                hierarchy = {"roots": self.__roots,
-                             "nodes": self.__nodes,
+                hierarchy = {"nodes": self.__theset,
                              "flags": self.__flags}
                 hierarchies[tablename] = hierarchy
         else:
-            self.__roots = set()
-            self.__nodes = dict()
+            self.__theset = dict()
             self.__flags = dict()
         return
 
@@ -182,23 +202,20 @@ class S3Hierarchy(object):
         htable = current.s3db.s3_hierarchy
         query = (htable.tablename == tablename)
         row = current.db(query).select(htable.dirty,
-                                        htable.hierarchy,
-                                        limitby=(0, 1)).first()
+                                       htable.hierarchy,
+                                       limitby=(0, 1)).first()
         if row and not row.dirty:
             data = row.hierarchy
-            nodes = self.__nodes
-            nodes.clear()
+            theset = self.__theset
+            theset.clear()
             for node_id, item in data["nodes"].items():
-                nodes[long(node_id)] = {"p": item["p"],
-                                        "c": item["c"],
-                                        "s": set(item["s"]) \
-                                             if item["s"] else set()}
-            roots = self.__roots
-            roots.clear()
-            roots.update(set(data["roots"]))
+                theset[long(node_id)] = {"p": item["p"],
+                                         "c": item["c"],
+                                         "s": set(item["s"]) \
+                                              if item["s"] else set()}
             self.__status(dirty=False,
-                                 dbupdate=None,
-                                 dbstatus=True)
+                          dbupdate=None,
+                          dbstatus=True)
             return
         else:
             self.__status(dirty=True,
@@ -214,13 +231,13 @@ class S3Hierarchy(object):
             return
         tablename = self.tablename
 
-        nodes = self.nodes
+        theset = self.theset
         if not self.__status("dbupdate"):
             return
             
-        # Serialize the nodes
+        # Serialize the theset
         nodes_dict = dict()
-        for node_id, node in nodes.items():
+        for node_id, node in theset.items():
             nodes_dict[node_id] = {"p": node["p"],
                                    "c": node["c"],
                                    "s": list(node["s"]) \
@@ -229,9 +246,7 @@ class S3Hierarchy(object):
         # Generate record
         data = {"tablename": tablename,
                 "dirty": False,
-                "hierarchy": {"roots": list(self.__roots),
-                              "nodes": nodes_dict
-                             }
+                "hierarchy": {"nodes": nodes_dict}
                 }
 
         # Get current entry
@@ -275,8 +290,7 @@ class S3Hierarchy(object):
             flags = hierarchy["flags"]
         else:
             flags = {}
-            hierarchies[tablename] = {"roots": set(),
-                                      "nodes": dict(),
+            hierarchies[tablename] = {"nodes": dict(),
                                       "flags": flags}
         flags["dirty"] = True
 
@@ -340,8 +354,7 @@ class S3Hierarchy(object):
             query = (table.id > 0)
         rows = current.db(query).select(*fields)
 
-        self.__nodes.clear()
-        self.__roots.clear()
+        self.__theset.clear()
         
         add = self.add
         for row in rows:
@@ -355,6 +368,11 @@ class S3Hierarchy(object):
 
         # Update status: memory is clean, db needs update
         self.__status(dirty=False, dbupdate=True)
+
+        # Remove subset
+        self.__roots = None
+        self.__nodes = None
+        
         return
 
     # -------------------------------------------------------------------------
@@ -367,11 +385,10 @@ class S3Hierarchy(object):
             @param category: the category
         """
 
-        nodes = self.__nodes
-        roots = self.__roots
+        theset = self.__theset
 
-        if node_id in nodes:
-            node = nodes[node_id]
+        if node_id in theset:
+            node = theset[node_id]
             if category is not None:
                 node["c"] = category
         elif node_id:
@@ -380,19 +397,68 @@ class S3Hierarchy(object):
             raise SyntaxError
 
         if parent_id:
-            if parent_id not in nodes:
+            if parent_id not in theset:
                 parent = self.add(parent_id, None, None)
             else:
-                parent = nodes[parent_id]
+                parent = theset[parent_id]
             parent["s"].add(node_id)
-            roots.discard(node_id)
-        else:
-            roots.add(node_id)
         node["p"] = parent_id
 
-        nodes[node_id] = node
+        theset[node_id] = node
         return node
 
+    # -------------------------------------------------------------------------
+    def __subset(self):
+        """ Generate the subset of accessible nodes which match the filter """
+
+        theset = self.theset
+        
+        roots = set()
+        subset = {}
+
+        resource = current.s3db.resource(self.tablename,
+                                         filter = self.filter)
+
+        pkey = resource._id.name
+        rows = resource.select([pkey], as_rows = True)
+
+        if rows:
+            key = str(resource._id)
+            if self.leafonly:
+                # Select matching leaf nodes
+                ids = set()
+                for row in rows:
+                    node_id = row[key]
+                    if node_id in theset and not theset[node_id]["s"]:
+                        ids.add(node_id)
+            else:
+                # Select all matching nodes
+                ids = set(row[key] for row in rows)
+
+            # Resolve the paths
+            while ids:
+                node_id = ids.pop()
+                if node_id in subset:
+                    continue
+                node = theset.get(node_id)
+                if not node:
+                    continue
+                parent_id = node["p"]
+                if parent_id and parent_id not in subset:
+                    ids.add(parent_id)
+                elif not parent_id:
+                    roots.add(node_id)
+                subset[node_id] = dict(node)
+
+            # Update the descendants
+            for node in subset.values():
+                node["s"] = set(node_id for node_id in node["s"]
+                                        if node_id in subset)
+
+        self.__roots = roots
+        self.__nodes = subset
+        return
+        
     # -------------------------------------------------------------------------
     def category(self, node_id):
         """
@@ -634,15 +700,15 @@ class S3Hierarchy(object):
                              if present)
         """
 
-        nodes = self.nodes
+        theset = self.theset
         LABEL = "l"
 
         if node_ids is None:
-            node_ids = nodes.keys()
+            node_ids = self.nodes.keys()
 
         pending = set()
         for node_id in node_ids:
-            node = nodes.get(node_id)
+            node = theset.get(node_id)
             if not node:
                 continue
             if LABEL not in node:
@@ -661,15 +727,15 @@ class S3Hierarchy(object):
         if hasattr(renderer, "bulk"):
             labels = renderer.bulk(list(pending), list_type = False)
             for node_id, label in labels.items():
-                if node_id in nodes:
-                    nodes[node_id][LABEL] = label
+                if node_id in theset:
+                    theset[node_id][LABEL] = label
         else:
             for node_id in pending:
                 try:
                     label = renderer(node_id)
                 except:
                     label = s3_unicode(node_id)
-                nodes[node_id][LABEL] = label
+                theset[node_id][LABEL] = label
         return
 
     # -------------------------------------------------------------------------
@@ -683,8 +749,8 @@ class S3Hierarchy(object):
 
         LABEL = "l"
 
-        nodes = self.nodes
-        node = nodes.get(node_id)
+        theset = self.theset
+        node = theset.get(node_id)
         if node:
             if LABEL in node:
                 return node[LABEL]
