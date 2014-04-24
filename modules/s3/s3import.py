@@ -3053,7 +3053,7 @@ class S3ImportJob():
                                             fields=rfields,
                                             tree=tree,
                                             directory=directory)
-                                            
+
                 for reference in item.references:
                     entry = reference.entry
                     if entry and entry.element is not None:

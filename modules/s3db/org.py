@@ -2971,10 +2971,11 @@ class S3FacilityModel(S3Model):
         # Custom Form
         crud_form = S3SQLCustomForm("name",
                                     "code",
-                                    S3SQLInlineComponentCheckbox(
+                                    S3SQLInlineLink( #ComponentCheckbox(
                                         "facility_type",
                                         label = T("Facility Type"),
                                         field = "facility_type_id",
+                                        widget = "hierarchy",
                                         cols = 3,
                                     ),
                                     "organisation_id",
