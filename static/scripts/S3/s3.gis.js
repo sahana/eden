@@ -1026,7 +1026,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             children: nodesArr
         });
 
-        if (i18n.gis_properties || i18n.gis_uploadlayer) {
+        if (i18n.gis_properties || i18n.gis_clearlayers || i18n.gis_uploadlayer) {
             var tbar = new Ext.Toolbar();
         } else {
             var tbar = null;
@@ -1070,6 +1070,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Layer Properties
         if (i18n.gis_properties) {
             addLayerPropertiesButton(map, layerTree);
+        }
+        // Clear Layers
+        if (i18n.gis_clearlayers) {
+            addClearLayersButton(map, layerTree);
         }
 
         return layerTree;
@@ -4890,6 +4894,25 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         var toolbar = layerTree.getTopToolbar();
         toolbar.add(layerPropertiesButton);
+    };
+
+    // Clear Layers control
+    var addClearLayersButton = function(map, layerTree) {
+        var clearLayersButton = new Ext.Toolbar.Button({
+            iconCls: 'icon-clearlayers',
+            tooltip: i18n.gis_clearlayers,
+            handler: function() {
+                layers = map.layers;
+                for (i=0, len=layers.length; i < len; i++) {
+                    layer = layers[i];
+                    if (!layer.isBaseLayer) {
+                        layer.setVisibility(false);
+                    }
+                }
+            }
+        });
+        var toolbar = layerTree.getTopToolbar();
+        toolbar.add(clearLayersButton);
     };
 
     /**

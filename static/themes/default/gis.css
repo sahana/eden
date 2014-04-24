@@ -436,6 +436,9 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 .gxp-icon-layerproperties {
     background-image: url(../../img/silk/wrench.png) !important;
 }
+.icon-clearlayers {
+    background-image: url(../../img/silk/eye.png);
+}
 .mappnlcntr .movefeature {
     background-image: url(../../img/gis/arrow_refresh.png) !important;
     height: 20px !important;
@@ -487,7 +490,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
   width: 20px !important;
 }
 */
- 
+
 /* Print Preview
 .x-btn .icon-print { 
     background-image: url(../../img/silk/printer.png);

@@ -731,6 +731,12 @@ class S3Config(Storage):
         """
         return self.gis.get("select_stroke", None)
 
+    def get_gis_clear_layers(self):
+        """
+            Display Clear Layers Tool above Map's Layer Tree
+        """
+        return self.gis.get("clear_layers", False)
+
     def get_gis_countries(self):
         """
             Which country codes should be accessible to the location selector?
