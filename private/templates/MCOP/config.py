@@ -153,10 +153,11 @@ settings.ui.summary = [#{"common": True,
                        # "name": "cms",
                        # "widgets": [{"method": "cms"}]
                        # },
-                       {"common": True,
-                        "name": "add",
-                        "widgets": [{"method": "create"}],
-                        },
+                       # Embedded Location Selector Widgets are conflicting with Summary Map
+                       #{"common": True,
+                       # "name": "add",
+                       # "widgets": [{"method": "create"}],
+                       # },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]

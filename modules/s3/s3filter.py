@@ -2067,7 +2067,7 @@ class S3FilterForm(object):
         filter_widgets = resource.get_config("filter_widgets")
         for filter_widget in filter_widgets:
             # Do not apply defaults of hidden widgets because they are
-            # not visible for the user:
+            # not visible to the user:
             if filter_widget.opts.hidden:
                 continue
 
