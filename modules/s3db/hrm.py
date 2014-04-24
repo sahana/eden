@@ -2072,8 +2072,9 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
+        ADD_TRAINING_EVENT = T("Create Training Event")
         crud_strings[tablename] = Storage(
-            label_create = T("Create Training Event"),
+            label_create = ADD_TRAINING_EVENT,
             title_display = T("Training Event Details"),
             title_list = T("Training Events"),
             title_update = T("Edit Training Event"),
@@ -2086,14 +2087,23 @@ class S3HRSkillModel(S3Model):
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no training events registered"))
 
-        if is_admin:
-            label_create = crud_strings[tablename].label_create
-            course_help = S3AddResourceLink(f="training_event",
-                                            label=label_create)
-        else:
-            course_help = DIV(_class="tooltip",
-                              _title="%s|%s" % (T("Training Event"),
-                                                AUTOCOMPLETE_HELP))
+        represent = hrm_TrainingEventRepresent()
+        training_event_id = S3ReusableField("training_event_id", "reference %s" % tablename,
+                                            sortby = "course_id",
+                                            label = T("Training Event"),
+                                            requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db, "hrm_training_event.id",
+                                                                  represent,
+                                                                  #filterby="organisation_id",
+                                                                  #filter_opts=filter_opts,
+                                                                  )),
+                                            represent = represent,
+                                            comment = S3AddResourceLink(f="training_event",
+                                                                        label=ADD_TRAINING_EVENT),
+                                            ondelete = "RESTRICT",
+                                            # Comment this to use a Dropdown & not an Autocomplete
+                                            #widget = S3AutocompleteWidget("hrm", "training_event")
+                                            )
 
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
@@ -2164,9 +2174,9 @@ class S3HRSkillModel(S3Model):
                                ondelete = "CASCADE",
                                ),
                      # Just used when created from participation in an Event
-                     Field("training_event_id", db.hrm_training_event,
-                           readable = False,
-                           writable = False),
+                     training_event_id(readable = False,
+                                       writable = False,
+                                       ),
                      course_id(empty=False),
                      s3_datetime(),
                      s3_datetime("end_date",
@@ -5937,13 +5947,6 @@ def hrm_training_controller():
             #    if training_event_id:
             #        f.default = training_event_id
             #    else:
-            #        f.label = T("Training Event")
-            #        f.requires = IS_NULL_OR(
-            #                        IS_ONE_OF(current.db, "hrm_training_event.id",
-            #                                  hrm_TrainingEventRepresent(),
-            #                                  sort=True
-            #                                  )
-            #                        )
             #        f.writable = True
 
         return True
