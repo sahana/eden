@@ -171,19 +171,16 @@ current.response.menu = [
      "c": "gis", 
      "f": "location",
      "icon": "globe",
-     "count": 312
      },
     {"name": T("Demographics"),
      "c": "stats", 
      "f": "demographic_data",
      "icon": "group",
-     "count": 4656
      },
-    {"name": T("Vulnerability"),
+    {"name": T("Baseline"),
      "c": "vulnerability", 
      "f": "data",
      "icon": "signal",
-     "count": 0
      },
 #    {"name": T("Stakeholders"),
 #     "c": "org", 
@@ -195,7 +192,11 @@ current.response.menu = [
      "c": "event", 
      "f": "event",
      "icon": "bolt",
-     "count": 0
+     },
+    {"name": T("Facilities"),
+     "c": "org", 
+     "f": "facility",
+     "icon": "home",
      },
     ]
 for item in current.response.menu:
@@ -367,7 +368,7 @@ def customise_event_event_resource(r, tablename):
     location_field = s3db.event_event_location.location_id
     location_field.requires = IS_LOCATION_SELECTOR2(levels=gis_levels)
     location_field.widget = S3LocationSelectorWidget2(levels=gis_levels)
-    location_field.label = ""
+    location_field.label = "" #For inline form
 
     impact_fields = OrderedDict(killed = "Killed",
                                 total_affected = "Total Affected",
@@ -422,6 +423,7 @@ def customise_event_event_resource(r, tablename):
                                 #                     multiple = False,
                                 #                     fields = ["location_id"],
                                 #                     ),
+                                "comments",
                                 *impact_crud_form_fields
                                 )
 
@@ -481,13 +483,152 @@ def customise_vulnerability_data_resource(r, tablename):
         But runs before prep
     """
 
+    s3db = current.s3db
+    db = current.db
+    table = r.table
+
     # Higher precision wanted for the Multidimensional Poverty Index
     from s3.s3validators import IS_FLOAT_AMOUNT
-    r.table.value.represent =  lambda v: \
+    table.value.represent =  lambda v: \
         IS_FLOAT_AMOUNT.represent(v, precision=3)
+
+    def represent_indicator(id):
+        # @ToDo: Implement with S3Represent
+        itable = db.vulnerability_indicator
+        row = db(itable.parameter_id == id
+                 ).select(itable.name,
+                          itable.description,
+                          limitby=(0, 1)).first()
+        if row:
+            represent = SPAN(row.name,
+                             _class = "s3-popover")
+            represent["_data-content"] = row.description
+            return represent
+        else:
+            return ""
+
+    r.table.parameter_id.represent = represent_indicator
+
+    def represent_year(date):
+        if date:
+            return date.strftime("%Y")
+        else:
+            return ""
+
+    r.table.date.label = T("Year")
+    r.table.date.represent = represent_year
+    r.table.end_date.label = T("Until")
+    r.table.end_date.represent = represent_year
+
+    list_fields = s3db.get_config(r.tablename,"list_fields")
+    list_fields.insert(list_fields.index("date") + 1,"end_date")
+
+    if r.interactive:
+        s3.crud_strings["vulnerability_data"] = Storage(
+            label_create = T("Create Baseline Data"),
+            title_display = T("Baselines Data"),
+            title_list = T("Baseline Data"),
+            title_update = T("Edit Baseline Data"),
+            label_list_button = T("List Baseline Data"),
+            label_delete_button = T("Delete Baseline Data"),
+            msg_record_created = T("Baseline Data added"),
+            msg_record_modified = T("Baseline Data updated"),
+            msg_record_deleted = T("Baseline Data deleted"),
+            msg_list_empty = T("No Baseline Data"))
 
 settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
 
+# -----------------------------------------------------------------------------
+def customise_org_facility_resource(r, tablename):
+    """
+        Customise event_event resource
+        - List Fields
+        - Form
+        - Filter
+        - Report 
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    s3db = current.s3db
+
+    list_fields = ["name",
+                   (T("Type"),"facility_type.name"),
+                   #"organisation_id",
+                   "location_id",
+                   "contact",
+                   "phone1",
+                   "email",
+                   "comments",
+                   ]
+
+    from s3.s3filter import S3OptionsFilter, S3TextFilter
+    filter_widgets = [S3TextFilter(["name",
+                                    "site_facility_type.facility_type_id",
+                                    #"organisation_id",
+                                    "location_id",
+                                    "contact",
+                                    "phone1",
+                                    "email",
+                                    "comments"
+                                    ],
+                                    label = T("Search"),
+                                   ),
+                      S3OptionsFilter("site_facility_type.facility_type_id",
+                                        header = True,
+                                        label = T("Type of Place"),
+                                        ),
+                      #S3OptionsFilter("organisation_id",
+                      #                header = True,
+                      #                represent = "%(name)s",
+                      #                ),
+                      ]
+
+    report_fields = [#"name",
+                     "site_facility_type.facility_type_id",
+                     "site_org_group.group_id",
+                     "location_id$L3",
+                     "organisation_id",
+                     ]
+
+    report_options = Storage(
+        rows=report_fields,
+        cols=[],
+        fact=[(T("Number of Facilities"), "count(name)")],
+        defaults=Storage(rows="site_facility_type.facility_type_id",
+                         #cols="site_org_group.group_id",
+                         fact="count(name)",
+                         totals=True,
+                         chart = "barchart:rows",
+                         table = "collapse",
+                         )
+        )
+
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+    # Custom Crud Form
+    crud_form = S3SQLCustomForm(
+        "name",
+        S3SQLInlineComponentMultiSelectWidget(
+            "facility_type",
+            #label = T("Type of Place"),
+            field = "facility_type_id",
+        ),
+        #"organisation_id",
+        "location_id",
+        "contact",
+        "phone1",
+        "email",
+        "comments",
+    )
+
+    s3db.configure(tablename,
+                   crud_form=crud_form,
+                   filter_widgets=filter_widgets,
+                   list_fields=list_fields,
+                   report_options=report_options,
+                   )
+
+settings.customise_org_facility_resource = customise_org_facility_resource
 # =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them

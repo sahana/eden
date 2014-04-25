@@ -3,17 +3,12 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Incident Report - CSV Import Stylesheet
+         Incident - CSV Import Stylesheet
 
          CSV fields:
-         Name.................................event_incident_report.name
-         Type.................................event_incident_report.incident_type_id
-         Date.................................event_incident_report.datetime
-         Reported By First Name...............person_id.first_name
-         Reported By Last Name................person_id.first_name
-         Reported By Phone....................person_id -> pr_contact.value
-         Reported By Email....................person_id -> pr_contact.value
-         Organisation Group...................event_incident_report_group.group_id  
+         Name.................................event_incident.name
+         Type.................................event_incident.incident_type_id
+         Zero Hour............................event_incident.zero_hour
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode
          Country.................optional.....gis_location.L0 Name or ISO2
@@ -22,7 +17,8 @@
          L3......................optional.....gis_location.L3
          Lat..................................gis_location.lat
          Lon..................................gis_location.lon
-         Comments.............................event_incident_report.comments
+         Lead Organisation....................event_incident.organisation_id
+         Comments.............................event_incident.comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -43,7 +39,7 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="type" match="row" use="col[@field='Type']"/>
-    <xsl:key name="organisation_group" match="row" use="col[@field='Organisation Group']"/>
+    <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -54,13 +50,14 @@
                 <xsl:call-template name="Type"/>
             </xsl:for-each>
 
-            <!-- Organisation Group -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
-                                                                       col[@field='Organisation Group'])[1])]">
-                <xsl:call-template name="OrganisationGroup"/>
+            <!-- Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('orgs',
+                                                        col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 
-            <!-- Incident Report -->
+            <!-- Incident -->
             <xsl:apply-templates select="table/row"/>
 
         </s3xml>
@@ -69,8 +66,8 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <!-- Incident Report -->
-        <resource name="event_incident_report">
+        <!-- Incident -->
+        <resource name="event_incident">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="datetime"><xsl:value-of select="col[@field='Date']"/></data>
             
@@ -82,44 +79,6 @@
                 </reference>
             </xsl:if>
 
-            <!-- Person -->
-            <xsl:if test="col[@field='Reported By First Name']">
-                <reference field="person_id" resource="pr_person">
-                    <resource name="pr_person">
-                        <data field="first_name"><xsl:value-of select="col[@field='Reported By First Name']"/></data>
-                        <data field="last_name"><xsl:value-of select="col[@field='Reported By Last Name']"/></data>
-                        <xsl:if test="col[@field='Reported By Email']!=''">
-                            <resource name="pr_contact">
-                                <data field="contact_method" value="EMAIL"/>
-                                <data field="value">
-                                    <xsl:value-of select="col[@field='Reported By Email']/text()"/>
-                                </data>
-                            </resource>
-                        </xsl:if>
-                
-                        <xsl:if test="col[@field='Reported By Phone']!=''">
-                            <resource name="pr_contact">
-                                <data field="contact_method" value="HOME_PHONE"/>
-                                <data field="value">
-                                    <xsl:value-of select="col[@field='Reported By Phone']/text()"/>
-                                </data>
-                            </resource>
-                        </xsl:if>
-                    </resource>
-                </reference>
-            </xsl:if>
-
-            <!-- Organisation Group -->
-            <xsl:if test="col[@field='Organisation Group']!=''">
-                <resource name="event_incident_report_group">
-                    <reference field="group_id" resource="org_group">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('OrganisationGroup:', col[@field='Organisation Group'])"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
-            </xsl:if>
-
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
@@ -128,6 +87,12 @@
                                                               col[@field='Lon'],
                                                               col[@field='L3']
                                                               )"/>
+                </xsl:attribute>
+            </reference>
+
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Lead Organisaton']"/>
                 </xsl:attribute>
             </reference>
 
@@ -162,18 +127,16 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="OrganisationGroup">
+    <xsl:template name="Organisation">
+        <xsl:variable name="OrgName" select="col[@field='Lead Organisation']/text()"/>
 
-        <xsl:variable name="OrganisationGroup" select="col[@field='Organisation Group']"/>
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$OrgName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
+        </resource>
 
-        <xsl:if test="$OrganisationGroup!=''">
-            <resource name="org_group">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('OrganisationGroup:', $OrganisationGroup)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$OrganisationGroup"/></data>
-            </resource>
-        </xsl:if>
     </xsl:template>
 
    <!-- ****************************************************************** -->

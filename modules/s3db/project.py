@@ -4369,6 +4369,13 @@ class S3ProjectTaskModel(S3Model):
                                          "autocomplete": "name",
                                          "autodelete": False,
                                         },
+                       #event_incident={"link": "event_task",
+                       #                "joinby": "task_id",
+                       #                "key": "incident_id",
+                       #                "actuate": "embed",
+                       #                "autocomplete": "name",
+                       #                "autodelete": False,
+                       #               },
                        # Activities - for S3SQLForm field in sub-Table 
                        project_task_activity={"link": "project_task_activity",
                                               "joinby": "task_id",
@@ -6038,12 +6045,6 @@ def project_task_form_inject(r, output, project=True):
         @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
     """
 
-    settings = current.deployment_settings
-    s3_formstyle = settings.get_ui_formstyle()
-    if s3_formstyle == "bootstrap":
-        # Bail: this doesn't work for bootstrap theme
-        return output
-
     sep = ": "
 
     T = current.T
@@ -6341,8 +6342,9 @@ def project_task_controller():
                 update_url = URL(args=["[id]"], vars=vars)
                 S3CRUD.action_buttons(r, update_url=update_url)
                 if r.method != "report" and "form" in output:
-                    # Insert fields to control Project, Activity & Milestone
-                    output = project_task_form_inject(r, output)
+                    if not s3db.get_config("project_task","crud_form"):
+                        # Insert fields to control Project, Activity & Milestone
+                        output = project_task_form_inject(r, output)
         return output
     s3.postp = postp
 

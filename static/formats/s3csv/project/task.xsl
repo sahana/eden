@@ -11,6 +11,7 @@
          Project..............string..........Project Name
          Activity.............string..........Activity
          Activity Type........string..........Activity Type
+         Incident.............string..........Incident
          Short Description ...string..........Task short description
          Detailed Description.string..........Task detailed description
          Date.................string..........Task created_on
@@ -44,6 +45,7 @@
     <xsl:key name="projects" match="row" use="col[@field='Project']"/>
     <xsl:key name="activity types" match="row" use="col[@field='Activity Type']"/>
     <xsl:key name="activities" match="row" use="col[@field='Activity']"/>
+    <xsl:key name="incidents" match="row" use="col[@field='Incident']"/>
     <xsl:key name="assignees" match="row" use="col[@field='Assigned']"/>
     <xsl:key name="milestones" match="row" use="col[@field='Milestone']"/>
 
@@ -74,6 +76,12 @@
                 <xsl:call-template name="Activity"/>
             </xsl:for-each>
 
+            <!-- Incidents -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('incidents',
+                                                                   col[@field='Incident'])[1])]">
+                <xsl:call-template name="Incident"/>
+            </xsl:for-each>
+
             <!-- Assignees -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('assignees',
                                                                    col[@field='Assigned'])[1])]">
@@ -95,6 +103,7 @@
     <xsl:template match="row">
         <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
         <xsl:variable name="ActivityName" select="col[@field='Activity']/text()"/>
+        <xsl:variable name="IncidentName" select="col[@field='Incident']/text()"/>
         <xsl:variable name="Task" select="col[@field='Short Description']/text()"/>
         <xsl:variable name="Date" select="col[@field='Date']/text()"/>
         <xsl:variable name="Author" select="col[@field='Author']/text()"/>
@@ -229,13 +238,15 @@
             </xsl:if>
 
             <!-- Link to Project -->
-            <resource name="project_task_project">
-                <reference field="project_id" resource="project_project">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$ProjectName"/>
-                    </xsl:attribute>
-                </reference>
-            </resource>
+            <xsl:if test="$ProjectName!=''">
+                <resource name="project_task_project">
+                    <reference field="project_id" resource="project_project">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$ProjectName"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
 
             <!-- Link to Activity -->
             <xsl:if test="$ActivityName!=''">
@@ -243,6 +254,17 @@
                     <reference field="activity_id" resource="project_activity">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="$ActivityName"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
+            <!-- Link to Incident -->
+            <xsl:if test="$IncidentName!=''">
+                <resource name="event_task">
+                    <reference field="incident_id" resource="event_incident">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$IncidentName"/>
                         </xsl:attribute>
                     </reference>
                 </resource>
@@ -372,6 +394,19 @@
 
             </resource>
         </xsl:if>
+
+        </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Incident">
+        <xsl:variable name="IncidentName" select="col[@field='Incident']/text()"/>
+
+        <resource name="event_incident">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$IncidentName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$IncidentName"/></data>
+        </resource>
 
         </xsl:template>
 
