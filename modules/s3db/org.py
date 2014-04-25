@@ -1402,14 +1402,13 @@ class S3OrganisationResourceModel(S3Model):
 
     def model(self):
 
+        #settings = current.deployment_settings
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Organisation Resource Model needs Stats module enabling")
             return dict()
 
         T = current.T
-        db = current.db
-        auth = current.auth
-        settings = current.deployment_settings
+        #auth = current.auth
         crud_strings = current.response.s3.crud_strings
         super_link = self.super_link
         configure = self.configure
@@ -1482,12 +1481,12 @@ class S3OrganisationResourceModel(S3Model):
                                                                  vars = dict(child = "parameter_id"),
                                                                  title=ADD_RESOURCE_TYPE),
                                      ),
-                         Field("value", "integer",
-                               requires=IS_INT_IN_RANGE(0, 999999),
-                               label=T("Quantity"),
-                               ),
-                         s3_comments(),
-                         *s3_meta_fields())
+                          Field("value", "integer",
+                                label = T("Quantity"),
+                                requires = IS_INT_IN_RANGE(0, 999999),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -2156,23 +2155,26 @@ class S3SiteModel(S3Model):
                           # @ToDo: Make Sites Trackable (Mobile Hospitals & Warehouses)
                           #super_link("track_id", "sit_trackable"),
                           Field("code",
-                                length=10, # Mayon compatibility
-                                writable=False,
-                                label=T("Code")),
+                                label = T("Code"),
+                                length = 10, # Mayon compatibility
+                                writable = False,
+                                ),
                           Field("name", notnull=True,
-                                length=64, # Mayon compatibility
+                                length = 64, # Mayon compatibility
                                 #unique=True,
-                                label=T("Name")),
+                                label = T("Name"),
+                                ),
                           self.gis_location_id(),
                           self.org_organisation_id(),
                           Field("obsolete", "boolean",
-                                label=T("Obsolete"),
-                                represent=lambda opt: \
+                                default = False,
+                                label = T("Obsolete"),
+                                represent = lambda opt: \
                                           (opt and [T("Obsolete")] or
                                           [messages["NONE"]])[0],
-                                default=False,
-                                readable=False,
-                                writable=False),
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("comments", "text"),
                           *s3_ownerstamp())
 

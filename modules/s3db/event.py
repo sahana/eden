@@ -30,6 +30,7 @@
 __all__ = ["S3EventModel",
            "S3IncidentModel",
            "S3IncidentReportModel",
+           "S3IncidentResourceModel",
            "S3IncidentGroupModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
@@ -915,6 +916,132 @@ class S3IncidentReportModel(S3Model):
                                     },
                        # Format for InlineComponent/filter_widget
                        event_incident_report_group = "incident_report_id",
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
+class S3IncidentResourceModel(S3Model):
+    """
+        Resources Assigned to Incidents
+        - depends on Stats module
+
+        Whilst there is a Quantity option, this is envisaged to usually be 1
+        - these are typically named, trackable resources
+
+        @ToDo: Optional link to org_resource to e.g. mark resources as assigned
+    """
+
+    names = ["event_resource"]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("stats"):
+            current.log.warning("Event Resource Model needs Stats module enabling")
+            return dict()
+
+        T = current.T
+        super_link = self.super_link
+
+        status_opts = {1: T("Available"),
+                       2: T("On Scene"),
+                       3: T("Responding"),
+                       }
+
+        # ---------------------------------------------------------------------
+        # Resources
+        #
+        tablename = "event_resource"
+        self.define_table(tablename,
+                          # Instance
+                          super_link("data_id", "stats_data"),
+                          super_link("track_id", "sit_trackable"),
+                          #self.event_event_id(ondelete="CASCADE"),
+                          self.event_incident_id(ondelete="CASCADE"),
+                          # This is a component, so needs to be a super_link
+                          # - can't override field name, ondelete or requires
+                          super_link("parameter_id", "stats_parameter",
+                                     label = T("Resource Type"),
+                                     instance_types = ("org_resource_type",),
+                                     represent = S3Represent(lookup="stats_parameter",
+                                                             translate=True),
+                                     readable = True,
+                                     writable = True,
+                                     empty = False,
+                                     comment = S3AddResourceLink(c="org",
+                                                                 f="resource_type",
+                                                                 vars = dict(child = "parameter_id"),
+                                                                 title=T("Add New Resource Type")),
+                                     ),
+                          Field("status", "integer",
+                                label = T("Status"),
+                                represent = lambda opt: \
+                                    status_opts.get(opt) or current.messages.UNKNOWN_OPT,
+                                requires = IS_IN_SET(status_opts),
+                                ),
+                          Field("name",
+                                label = T("Name"),
+                                ),
+                          Field("value", "integer",
+                                default = 1,
+                                label = T("Quantity"),
+                                requires = IS_INT_IN_RANGE(0, 999),
+                                ),
+                          self.org_organisation_id(),
+                          self.pr_person_id(label = T("Contact")),
+                          # Base Location: Enable field only in Create form
+                          self.gis_location_id(readable = False,
+                                               writable = False,
+                                               ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create=T("Add Resource"),
+            title_display=T("Resource Details"),
+            title_list=T("Resources"),
+            title_update=T("Edit Resource"),
+            title_map=T("Map of Resources"),
+            title_upload=T("Import Resources"),
+            label_list_button=T("List Resources"),
+            label_delete_button=T("Delete Resource"),
+            msg_record_created=T("Resource added"),
+            msg_record_modified=T("Resource updated"),
+            msg_record_deleted=T("Resource deleted"),
+            msg_list_empty=T("No Resources assigned to Incident"))
+
+        # Report options
+        report_fields = ["incident_id",
+                         "organisation_id",
+                         "parameter_id",
+                         ]
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = [(T("Total Number of Resources"), "sum(value)"),
+                                         (T("Number of Resources"), "count(value)"),
+                                         ],
+                                 defaults=Storage(rows = "incident_id",
+                                                  cols = "parameter_id",
+                                                  fact = "sum(value)",
+                                                  totals = True,
+                                                  chart = "barchart:rows",
+                                                  #table = "collapse",
+                                                  )
+                                 )
+
+        self.configure(tablename,
+                       context = {#"event": "event_id",
+                                  "incident": "incident_id",
+                                  "location": "location_id",
+                                  "organisation": "organisation_id",
+                                  },
+                       # @ToDo:
+                       #list_layout = event_resource_list_layout,
+                       report_options = report_options,
+                       super_entity = ("stats_data", "sit_trackable"),
                        )
 
         # Pass names back to global scope (s3.*)
