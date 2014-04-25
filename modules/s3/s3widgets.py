@@ -4943,16 +4943,19 @@ class S3HierarchyWidget(FormWidget):
 
             @param value: the value received from the client, JSON string
 
-            @return: a list
+            @return: a list (if multiple=True) or the value
         """
+
+        default = [] if self.multiple else None
 
         if value is None:
             return None, None
         try:
             value = json.loads(value)
         except ValueError:
-            return [], None
-
+            return default, None
+        if not self.multiple and value and isinstance(value, list):
+            value = value[0]
         return value, None
 
 # =============================================================================

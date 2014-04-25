@@ -120,8 +120,21 @@ class S3EventModel(S3Model):
                                                   #filterby="parent",
                                                   #filter_opts=(None,),
                                                   orderby="event_event_type.name"))
+            event_type_widget = S3HierarchyWidget(lookup = "event_event_type",
+                                                  represent = type_represent,
+                                                  multiple = False,
+                                                  leafonly = True,
+                                                  )
+            event_type_comment = None
         else:
             hierarchy = None
+            event_type_widget = None
+            event_type_comment = None
+            # Uncomment these to use an Autocomplete & not a Dropdown
+            #event_type_widget = S3AutocompleteWidget()
+            #event_typecomment = DIV(_class="tooltip",
+            #                        _title="%s|%s" % (T("Event Type"),
+            #                                          AUTOCOMPLETE_HELP))
 
         crud_strings[tablename] = Storage(
             label_create = T("Create Event Type"),
@@ -147,11 +160,8 @@ class S3EventModel(S3Model):
                                         represent = type_represent,
                                         label = T("Event Type"),
                                         ondelete = "RESTRICT",
-                                        # Uncomment these to use an Autocomplete & not a Dropdown
-                                        #widget = S3AutocompleteWidget()
-                                        #comment = DIV(_class="tooltip",
-                                        #              _title="%s|%s" % (T("Event Type"),
-                                        #                                AUTOCOMPLETE_HELP))
+                                        widget = event_type_widget,
+                                        comment = event_type_comment,
                                         )
 
         configure(tablename,
@@ -244,7 +254,7 @@ class S3EventModel(S3Model):
         if hierarchical_event_types:
             filter_widgets = [S3HierarchyFilter("event_type_id",
                                                 label = T("Type"),
-                                                multiple = False,
+                                                #multiple = False,
                                                 ),
                               ]
         else:

@@ -1487,6 +1487,12 @@ body.rtl label.ui-corner-all span {
     right: 10px;
 }
 
+/* Hierarchy Widget */
+.s3-hierarchy-tree.jstree {
+    border: 1px solid #ccc;
+    padding: 2px 3px 4px 3px;
+}
+
 /* Saved Filters Page - Inline Editor for Filter Titles */
 form.jeditable-input input {
     max-width: 400px !important;

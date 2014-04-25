@@ -1611,7 +1611,10 @@ class S3HierarchyFilter(S3FilterWidget):
         # Instantiate the widget
         opts = self.opts
         w = S3HierarchyWidget(lookup = opts.get("lookup"),
-                              represent = opts.get("represent"))
+                              represent = opts.get("represent"),
+                              multiple = opts.get("multiple", True),
+                              leafonly = opts.get("leafonly", True),
+                              )
 
         # Render the widget
         widget = w(rfield.field, selected, **self._attr(resource))

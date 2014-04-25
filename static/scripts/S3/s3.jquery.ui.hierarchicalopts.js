@@ -138,10 +138,7 @@
         _updateSelectedNodes: function(data) {
             // Get all selected nodes and store the result in the hidden input
 
-            var old_selected = this.input.val(),
-                new_selected = [],
-                last_selected;
-
+            var old_selected = this.input.val();
             if (old_selected) {
                 old_selected = JSON.parse(old_selected);
             } else {
@@ -149,20 +146,24 @@
             }
 
             var tree = this.tree,
-                opts = this.options;
+                new_selected = [],
+                selected_ids = [],
+                multiple = this.options.multiple,
+                leafonly = this.options.leafonly;
+
             var nodes = tree.jstree('get_checked', null, true);
                 
             $(nodes).each(function() {
-                var id = $(this).attr('id'),
-                    leafonly = opts.leafonly;
+                var id = $(this).attr('id');
                 if (id && (!leafonly || tree.jstree('is_leaf', this))) {
                     var record_id = parseInt(id.split('-').pop());
                     if (record_id) {
                         new_selected.push(record_id);
-                        last_selected = id;
+                        selected_ids.push(id);
                     }
                 }
             });
+            
             var changed = false,
                 diff = $(new_selected).not(old_selected).get();
             if (diff.length) {
@@ -175,30 +176,36 @@
             }
 
             this.input.val(JSON.stringify(new_selected));
-            this._updateButtonText(new_selected, last_selected);
+            this._updateButtonText(selected_ids);
             if (changed) {
                 $(this.element).trigger('select.s3hierarchy');
             }
             return true;
         },
 
-        _updateButtonText: function(selected, last_selected) {
+        _updateButtonText: function(selected_ids) {
             // Update the button text with the number of selected items
 
             var text = null,
                 options = this.options;
 
-            if (!options.multiple && last_selected) {
-                text = $('#' + last_selected).text().replace(/^\s+|\s+$/g, '');
-            }
-            if (!text) {
-                var numSelected = selected ? selected.length : 0;
-                if (numSelected) {
+            var limit = 1; // @todo: make configurable?
+
+            numSelected = selected_ids ? selected_ids.length : 0;
+            if (numSelected) {
+                if (numSelected > limit) {
                     text = options.selectedText.replace('#', numSelected);
                 } else {
-                    text = options.noneSelectedText;
+                    var items = [];
+                    for (var i=0; i < numSelected; i++) {
+                        items.push($('#' + selected_ids[i] + " > a").text().replace(/^\s+|\s+$/g, ''));
+                    }
+                    text = items.length ? items.join(' ') : options.noneSelectedText;
                 }
+            } else {
+                text = options.noneSelectedText;
             }
+            
             this.buttonText.text(text);
         },
 
@@ -245,9 +252,9 @@
             
             $(this.tree).css({
                 position: 'absolute',
-                top: pos.top + button.outerHeight() + 3,
+                top: pos.top + button.outerHeight() + 2,
                 left: pos.left,
-                minWidth: button.outerWidth(),
+                minWidth: button.outerWidth() - 8,
                 'z-index': 999999
             }).show();
             this._isOpen = true;
