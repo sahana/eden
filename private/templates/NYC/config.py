@@ -1202,8 +1202,6 @@ def customise_project_project_controller(**attr):
             script = '''$('#project_project_code').attr('maxlength','100')'''
             s3.jquery_ready.append(script)
 
-            s3db.project_location.location_id.label = ""
-
             crud_form = S3SQLCustomForm(
                 "organisation_id",
                 "name",

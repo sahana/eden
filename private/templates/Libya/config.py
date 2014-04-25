@@ -2394,8 +2394,7 @@ def customise_pr_person_controller(**attr):
 
         if r.method == "validate":
             # Can't validate image without the file
-            image_field = s3db.pr_image.image
-            image_field.requires = None
+            s3db.pr_image.image.requires = None
 
         if r.interactive or r.representation == "aadata":
             if controller == "vol":
@@ -2413,7 +2412,6 @@ def customise_pr_person_controller(**attr):
                     msg_record_deleted = T("Volunteer deleted"),
                     msg_list_empty = T("No Volunteers currently registered"))
                 field = s3db.pr_person_details.place_of_birth
-                field.label = ""
                 field.readable = field.writable = True
                 from gluon.sqlhtml import StringWidget
                 s3db.hrm_competency.comments.widget = StringWidget().widget
@@ -2452,12 +2450,8 @@ def customise_pr_person_controller(**attr):
                                                    title=T("Site"),
                                                    tooltip=T("If you don't see the Site in the list, you can add a new one by clicking link 'Add New Site'."))
 
-            # Best to have no labels when only 1 field in the row
-            s3db.pr_contact.value.label = ""
-            image_field = s3db.pr_image.image
-            image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
-            image_field.widget = None
+            s3db.pr_image.image.widget = None
 
             hr_fields = ["organisation_id",
                          "job_title_id",
@@ -2484,7 +2478,7 @@ def customise_pr_person_controller(**attr):
                         name = "person_details",
                         label = T("Place of Birth"),
                         multiple = False,
-                        fields = ["place_of_birth"],
+                        fields = [("", "place_of_birth")],
                     ),
                     S3SQLInlineComponent(
                         "competency",
@@ -2506,7 +2500,7 @@ def customise_pr_person_controller(**attr):
                     #    name = "image",
                     #    label = T("Photo"),
                     #    multiple = False,
-                    #    fields = ["image"],
+                    #    fields = [("", "image")],
                     #    filterby = dict(field = "profile",
                     #                    options=[True]
                     #                    )

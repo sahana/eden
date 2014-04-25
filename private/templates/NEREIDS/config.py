@@ -408,7 +408,7 @@ def render_events(list_id, item_id, resource, rfields, record):
     tally_reports = 0
     db = current.db
     s3db = current.s3db
-    ltable = s3db.event_event_post
+    ltable = s3db.event_post
     table = db.cms_post
     stable = db.cms_series
     types = ["Alert", "Incident", "Assessment", "Activity", "Report"]
@@ -1584,10 +1584,6 @@ def customise_cms_post_fields():
 
     s3db = current.s3db
 
-    # Hide Labels when just 1 column in inline form
-    s3db.doc_document.file.label = ""
-    s3db.event_event_post.event_id.label = ""
-
     table = s3db.cms_post
     field = table.location_id
     field.label = ""
@@ -1875,7 +1871,7 @@ def customise_cms_post_controller(**attr):
                     ),
                 )
                 def create_onaccept(form):
-                    table = current.s3db.event_event_post
+                    table = current.s3db.event_post
                     table.insert(event_id=event_id, post_id=form.vars.id)
 
                 s3db.configure("cms_post",
@@ -1892,14 +1888,14 @@ def customise_cms_post_controller(**attr):
                         #label = T("Disaster(s)"),
                         label = T("Disaster"),
                         multiple = False,
-                        fields = ["event_id"],
+                        fields = [("", "event_id")],
                         orderby = "event_id$name",
                     ),
                     S3SQLInlineComponent(
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),

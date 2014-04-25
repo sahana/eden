@@ -4,9 +4,10 @@
     xmlns:org="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Org Resource - CSV Import Stylesheet
+         Event Resource - CSV Import Stylesheet
 
          CSV fields:
+         Incident................org_organisation
          Organisation............org_organisation
          Branch..................org_organisation[_branch]
          Country.................gis_location.L0 Name or ISO2
@@ -15,7 +16,9 @@
          L3......................gis_location.L3
          L4......................gis_location.L4
          Resource Type...........org_resource_type.name
-         Quantity................value
+         Name....................name
+         Quantity................value (Optional: defaults to 1)
+         Status..................status
          Comments................comments
 
     *********************************************************************** -->
@@ -25,19 +28,28 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- Indexes for faster processing -->
+    <xsl:key name="incident" match="row" use="col[@field='Incident']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="resource_type" match="row" use="col[@field='Resource Type']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+            <!-- Incidents -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('incident',
+                                                                       col[@field='Incident'])[1])]">
+                <xsl:call-template name="Incident" />
+            </xsl:for-each>
+
             <!-- Resource Types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('resource_type', col[@field='Resource Type'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('resource_type',
+                                                                       col[@field='Resource Type'])[1])]">
                 <xsl:call-template name="ResourceType" />
             </xsl:for-each>
 
             <!-- Top-level Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation',
+                                                                       col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName">
                         <xsl:value-of select="col[@field='Organisation']/text()"/>
@@ -47,8 +59,9 @@
             </xsl:for-each>
 
             <!-- Branch Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branch', concat(col[@field='Organisation'], '/',
-                                                                                        col[@field='Branch']))[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branch',
+                                                                       concat(col[@field='Organisation'], '/',
+                                                                              col[@field='Branch']))[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName"></xsl:with-param>
                     <xsl:with-param name="BranchName">
@@ -67,10 +80,21 @@
     <xsl:template match="row">
 
         <!-- Create the variables -->
+        <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
+        <xsl:variable name="Name" select="col[@field='Name']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
+        <xsl:variable name="Quantity" select="col[@field='Quantity']/text()"/>
+        <xsl:variable name="Status" select="col[@field='Status']/text()"/>
 
-        <resource name="org_resource">
+        <resource name="event_resource">
+            <!-- Link to Incident -->
+            <reference field="incident_id" resource="event_incident">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Incident"/>
+                </xsl:attribute>
+            </reference>
+
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
@@ -97,12 +121,54 @@
             </xsl:if>
 
             <!-- Resource data -->
-            <data field="value"><xsl:value-of select="col[@field='Quantity']"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <data field="status">
+                <xsl:choose>
+                    <xsl:when test="$Status='Available'">
+                        <xsl:text>1</xsl:text>
+                    </xsl:when>
+                    <xsl:when test="$Status='On Scene'">
+                        <xsl:text>2</xsl:text>
+                    </xsl:when>
+                    <xsl:when test="$Status='Responding'">
+                        <xsl:text>3</xsl:text>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <!-- Assume an Integer -->
+                        <xsl:value-of select="$Status"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </data>
+            <data field="value">
+                <xsl:choose>
+                    <xsl:when test="$Quantity!=''">
+                        <xsl:value-of select="$Quantity"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:text>1</xsl:text>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
 
         <!-- Locations -->
         <xsl:call-template name="Locations"/>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Incident">
+        <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
+
+        <xsl:if test="$Incident!=''">
+            <resource name="event_incident">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Incident"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Incident"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

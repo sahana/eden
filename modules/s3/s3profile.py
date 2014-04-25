@@ -212,8 +212,6 @@ class S3Profile(S3CRUD):
         if not record_id:
             return None
 
-        s3db = current.s3db
-
         if not context:
             query = None
 
@@ -241,11 +239,12 @@ class S3Profile(S3CRUD):
             query = (S3FieldSelector(s) == record_id)
 
         # Define target resource
-        resource = s3db.resource(tablename, filter=query)
+        resource = current.s3db.resource(tablename, filter=query)
         return resource, query
         
     # -------------------------------------------------------------------------
-    def _comments(self, r, widget, **attr):
+    @staticmethod
+    def _comments(r, widget, **attr):
         """
             Generate a Comments widget
 
@@ -263,14 +262,7 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
-        colspan = widget.get("colspan", 2)
-        if colspan == 1:
-            _class = "span6"
-        elif colspan == 2:
-            _class = "span12"
-        else:
-            # Unsupported
-            raise
+        _class = self._lookup_class(r, widget)
 
         # Render the widget
         output = DIV(H4(icon,
@@ -292,7 +284,6 @@ class S3Profile(S3CRUD):
         """
 
         T = current.T
-        s3db = current.s3db
         
         context = widget.get("context", None)
         tablename = widget.get("tablename", None)
@@ -385,8 +376,6 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
-        s3 = current.response.s3
-
         if pagesize and numrows > pagesize:
             # Button to display the rest of the records in a Modal
             more = numrows - pagesize
@@ -423,14 +412,7 @@ class S3Profile(S3CRUD):
                                           context,
                                           numrows)
 
-        colspan = widget.get("colspan", 1)
-        if colspan == 1:
-            _class = "span6"
-        elif colspan == 2:
-            _class = "span12"
-        else:
-            # Unsupported
-            raise
+        _class = self._lookup_class(r, widget)
 
         # Render the widget
         output = DIV(create_popup,
@@ -457,8 +439,6 @@ class S3Profile(S3CRUD):
         """
 
         # Parse context
-        s3db = current.s3db
-        
         context = widget.get("context", None)
         tablename = widget.get("tablename", None)
         resource, context = self._resolve_context(r, tablename, context)
@@ -599,14 +579,7 @@ class S3Profile(S3CRUD):
             if icon:
                 icon = TAG[""](I(_class=icon), " ")
 
-            colspan = widget.get("colspan", 1)
-            if colspan == 1:
-                _class = "span6"
-            elif colspan == 2:
-                _class = "span12"
-            else:
-                # Unsupported
-                raise
+            _class = self._lookup_class(r, widget)
 
             # Render the widget
             output = DIV(create_popup,
@@ -686,8 +659,6 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        s3db = current.s3db
-
         label = widget.get("label", "")
         if label:
             label = current.T(label)
@@ -715,7 +686,7 @@ class S3Profile(S3CRUD):
             from s3forms import S3SQLDefaultForm
             sqlform = S3SQLDefaultForm()
 
-        get_config = s3db.get_config
+        get_config = current.s3db.get_config
         if record_id:
             # Update form
             onvalidation = get_config(tablename, "create_onvalidation") or \
@@ -738,14 +709,7 @@ class S3Profile(S3CRUD):
                        onaccept = onaccept,
                        )
 
-        colspan = widget.get("colspan", 2)
-        if colspan == 1:
-            _class = "span6"
-        elif colspan == 2:
-            _class = "span12"
-        else:
-            # Unsupported
-            raise
+        _class = self._lookup_class(r, widget)
 
         # Render the widget
         output = DIV(H4(icon,
@@ -906,14 +870,7 @@ class S3Profile(S3CRUD):
             script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % current.request.application
         s3.scripts.append(script)
 
-        colspan = widget.get("colspan", 1)
-        if colspan == 1:
-            _class = "span6"
-        elif colspan == 2:
-            _class = "span12"
-        else:
-            # Unsupported
-            raise
+        _class = self._lookup_class(r, widget)
 
         # Render the widget
         output = DIV(fullscreen,
@@ -937,15 +894,9 @@ class S3Profile(S3CRUD):
         """
 
         # Parse context
-        s3db = current.s3db
-
         context = widget.get("context", None)
         tablename = widget.get("tablename", None)
         resource, context = self._resolve_context(r, tablename, context)
-
-        # Define target resource
-        table = resource.table
-        get_config = resource.get_config
 
         # Widget filter option
         widget_filter = widget.get("filter", None)
@@ -972,14 +923,7 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
-        colspan = widget.get("colspan", 1)
-        if colspan == 1:
-            _class = "span6"
-        elif colspan == 2:
-            _class = "span12"
-        else:
-            # Unsupported
-            raise
+        _class = self._lookup_class(r, widget)
 
         # Render the widget
         output = DIV(H4(icon, label,
@@ -991,7 +935,21 @@ class S3Profile(S3CRUD):
         return output
 
     # -------------------------------------------------------------------------
-    def _create_popup(self, r, widget, list_id, resource, context, numrows):
+    @staticmethod
+    def _lookup_class(r, widget):
+        """
+            Provide the Bootstrap span class for the Widgets
+        """
+
+        page_cols = current.s3db.get_config(r.tablename, "profile_cols")
+        widget_cols = widget.get("colspan", 1)
+        span = int(12 / page_cols) * widget_cols
+
+        return "span%s" % span
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _create_popup(r, widget, list_id, resource, context, numrows):
         """
             Render an action link for a create-popup (used in data lists
             and data tables).
@@ -1010,7 +968,6 @@ class S3Profile(S3CRUD):
         table = resource.table
         if insert and current.auth.s3_has_permission("create", table):
 
-            s3 = current.response.s3
             tablename = resource.tablename
             
             #if tablename = "org_organisation":
@@ -1019,24 +976,24 @@ class S3Profile(S3CRUD):
             # URL-serialize the widget filter
             widget_filter = widget.get("filter")
             if widget_filter:
-                vars = widget_filter.serialize_url(resource)
+                url_vars = widget_filter.serialize_url(resource)
             else:
-                vars = Storage()
+                url_vars = Storage()
 
             # URL-serialize the context filter
             if context:
                 filters = context.serialize_url(resource)
                 for f in filters:
-                    vars[f] = filters[f]
+                    url_vars[f] = filters[f]
 
             # URL-serialize the widget default
             default = widget.get("default")
             if default:
                 k, v = default.split("=", 1)
-                vars[k] = v
+                url_vars[k] = v
 
             # URL-serialize the list ID (refresh-target of the popup)
-            vars.refresh = list_id
+            url_vars.refresh = list_id
 
             # CRUD string
             label_create = widget.get("label_create", None)
@@ -1055,13 +1012,13 @@ class S3Profile(S3CRUD):
                 args = [r.id, component, "create.popup"]
             else:
                 args = ["create.popup"]
-            add_url = URL(c=c, f=f, args=args, vars=vars)
+            add_url = URL(c=c, f=f, args=args, vars=url_vars)
 
             if callable(insert):
                 # Custom widget
                 create = insert(r, list_id, label_create, add_url)
                 
-            elif s3.crud.formstyle == "bootstrap":
+            elif current.deployment_settings.ui.formstyle == "bootstrap":
                 # Bootstrap-style action icon
                 create = A(I(_class="icon icon-plus-sign small-add"),
                            _href=add_url,
@@ -1095,7 +1052,7 @@ class S3Profile(S3CRUD):
 '''$('#%(list_id)s').on('listUpdate',function(){
 $('#%(createid)s').css({display:$(this).datalist('getTotalItems')?'none':'block'})
 })''' % dict(list_id=list_id, createid=createid)
-                    s3.jquery_ready.append(script)
+                    current.response.s3.jquery_ready.append(script)
 
         return create
 

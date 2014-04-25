@@ -30,11 +30,11 @@
 __all__ = ["S3EventModel",
            "S3IncidentModel",
            "S3IncidentReportModel",
-           "S3IncidentResourceModel",
            "S3IncidentGroupModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
            "S3EventActivityModel",
+           #"S3EventAlertModel",
            "S3EventAssetModel",
            "S3EventCMSModel",
            "S3EventHRModel",
@@ -42,6 +42,7 @@ __all__ = ["S3EventModel",
            "S3EventIReportModel",
            "S3EventMapModel",
            #"S3EventRequestModel",
+           "S3EventResourceModel",
            "S3EventSiteModel",
            "S3EventTaskModel",
            ]
@@ -152,15 +153,15 @@ class S3EventModel(S3Model):
             )
 
         event_type_id = S3ReusableField("event_type_id", "reference %s" % tablename,
-                                        sortby="name",
+                                        label = T("Event Type"),
+                                        ondelete = "RESTRICT",
+                                        represent = type_represent,
                                         requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "event_event_type.id",
                                                               type_represent,
                                                               orderby="event_event_type.name",
                                                               sort=True)),
-                                        represent = type_represent,
-                                        label = T("Event Type"),
-                                        ondelete = "RESTRICT",
+                                        sortby = "name",
                                         widget = event_type_widget,
                                         comment = event_type_comment,
                                         )
@@ -330,6 +331,7 @@ class S3EventModel(S3Model):
                                             "actuate": "hide",
                                             },
                             event_event_location = "event_id",
+                            event_post = "event_id",
                             event_event_tag = {"name": "tag",
                                                "joinby": "event_id",
                                                },
@@ -349,15 +351,15 @@ class S3EventModel(S3Model):
         define_table(tablename,
                      event_id(),
                      self.gis_location_id(
-                     widget = S3LocationAutocompleteWidget(),
-                     requires = IS_LOCATION(),
-                     represent = self.gis_LocationRepresent(sep=", "),
-                     comment = S3AddResourceLink(c="gis",
-                                                 f="location",
-                                                 label = T("Create Location"),
-                                                 title=T("Location"),
-                                                 tooltip=AUTOCOMPLETE_HELP),
-                     ),
+                        widget = S3LocationAutocompleteWidget(),
+                        requires = IS_LOCATION(),
+                        represent = self.gis_LocationRepresent(sep=", "),
+                        comment = S3AddResourceLink(c="gis",
+                                                    f="location",
+                                                    label = T("Create Location"),
+                                                    title=T("Location"),
+                                                    tooltip=AUTOCOMPLETE_HELP),
+                        ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -453,7 +455,7 @@ class S3EventModel(S3Model):
 
             # Expire all related Posts
             db = current.db
-            ltable = current.s3db.event_event_post
+            ltable = current.s3db.event_post
             table = db.cms_post
             rows = db(ltable.event_id == event).select(ltable.post_id)
             for row in rows:
@@ -585,27 +587,30 @@ class S3IncidentModel(S3Model):
                           self.scenario_scenario_id(),
                           Field("name", notnull=True, # Name could be a code
                                 length=64,
-                                label=T("Name")),
+                                label = T("Name"),
+                                ),
                           Field("exercise", "boolean",
                                 represent = lambda opt: "√" if opt else None,
                                 #comment = DIV(_class="tooltip",
                                 #              _title="%s|%s" % (T("Exercise"),
                                                                  # Should!
                                 #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
-                                label=T("Exercise?")),
+                                label=T("Exercise?"),
+                                ),
                           s3_datetime(name="zero_hour",
-                                      label = T("Zero Hour"),
                                       default = "now",
+                                      label = T("Zero Hour"),
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Zero Hour"),
                                                                       T("The time at which the Incident started."))),
                                       ),
                           Field("closed", "boolean",
                                 default = False,
+                                label = T("Closed"),
                                 represent = s3_yes_no_represent,
-                                label=T("Closed")),
+                                ),
                           # Enable this field in templates if-required
-                          self.org_organisation_id(label="Lead Organisation", # Lead Responder
+                          self.org_organisation_id(label="Lead Organization", # Lead Responder
                                                    readable = False,
                                                    writable = False,
                                                    ),
@@ -670,15 +675,13 @@ class S3IncidentModel(S3Model):
 
         # Components
         add_components(tablename,
-                       project_task = {"link": "event_task",
-                                       "joinby": "incident_id",
-                                       "key": "task_id",
-                                       # @ToDo: Widget to handle embedded LocationSelector
-                                       #"actuate": "embed",
-                                       "actuate": "link",
-                                       "autocomplete": "name",
-                                       "autodelete": False,
-                                       },
+                       asset_asset = {"link": "event_asset",
+                                      "joinby": "incident_id",
+                                      "key": "asset_id",
+                                      "actuate": "embed",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                      },
                        event_human_resource = "incident_id",
                        hrm_human_resource = {"link": "event_human_resource",
                                              "joinby": "incident_id",
@@ -689,14 +692,18 @@ class S3IncidentModel(S3Model):
                                              "autocomplete": "name",
                                              "autodelete": False,
                                              },
-                       asset_asset = {"link": "event_asset",
-                                      "joinby": "incident_id",
-                                      "key": "asset_id",
-                                      "actuate": "embed",
-                                      "autocomplete": "name",
-                                      "autodelete": False,
-                                      },
+                       event_post = "event_id",
                        event_site = "incident_id",
+                       event_task = "incident_id",
+                       project_task = {"link": "event_task",
+                                       "joinby": "incident_id",
+                                       "key": "task_id",
+                                       # @ToDo: Widget to handle embedded LocationSelector
+                                       #"actuate": "embed",
+                                       "actuate": "link",
+                                       "autocomplete": "name",
+                                       "autodelete": False,
+                                       },
                        gis_config = {"link": "event_config",
                                      "joinby": "incident_id",
                                      "multiple": False,
@@ -837,7 +844,8 @@ class S3IncidentModel(S3Model):
         table = item.table
         query = (table.name == name)
         if event_id:
-            query = query & (table.event_id == event_id)
+            query = query & ((table.event_id == event_id) | \
+                             (table.event_id == None))
 
         _duplicate = current.db(query).select(table.id,
                                               limitby=(0, 1)).first()
@@ -922,9 +930,9 @@ class S3IncidentReportModel(S3Model):
         return dict()
 
 # =============================================================================
-class S3IncidentResourceModel(S3Model):
+class S3EventResourceModel(S3Model):
     """
-        Resources Assigned to Incidents
+        Resources Assigned to Events/Incidents
         - depends on Stats module
 
         Whilst there is a Quantity option, this is envisaged to usually be 1
@@ -1012,6 +1020,18 @@ class S3IncidentResourceModel(S3Model):
             msg_record_deleted=T("Resource deleted"),
             msg_list_empty=T("No Resources assigned to Incident"))
 
+        # Filter Widgets
+        filter_widgets = [S3TextFilter(["organisation_id$name",
+                                        "location_id",
+                                        "parameter_id$name",
+                                        "comments",
+                                        ],
+                                       label = T("Search")),
+                          S3OptionsFilter("parameter_id",
+                                          label = T("Type"),
+                                          ),
+                          ]
+
         # Report options
         report_fields = ["incident_id",
                          "organisation_id",
@@ -1038,6 +1058,7 @@ class S3IncidentResourceModel(S3Model):
                                   "location": "location_id",
                                   "organisation": "organisation_id",
                                   },
+                       filter_widgets = filter_widgets,
                        # @ToDo:
                        #list_layout = event_resource_list_layout,
                        report_options = report_options,
@@ -1230,7 +1251,49 @@ class S3EventActivityModel(S3Model):
         tablename = "event_activity"
         self.define_table(tablename,
                           self.event_event_id(empty=False),
+                          #self.event_incident_id(empty=False),
                           self.project_activity_id(empty=False),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
+class S3EventAlertModel(S3Model):
+    """
+        Alerts for Events/Incidents
+        - not yet in-use.
+
+        @ToDo: Optional links to CAP broker & Messaging
+               Push: like deploy_alert? via deploy_alert?
+               Pull: Subscription/Notification
+    """
+
+    names = ["event_alert"]
+
+    def model(self):
+
+        tablename = "event_alert"
+        self.define_table(tablename,
+                          # PE representing its Recipients
+                          #self.super_link("pe_id", "pr_pentity"),
+                          #self.event_event_id(),
+                          self.event_incident_id(),
+                          Field("name",
+                                comment = T("This isn't visible to the recipients"),
+                                label = T("Name"),
+                                ),
+                          Field("subject", length=78,    # RFC 2822
+                                comment = T("The subject of the alert (optional)"),
+                                label = T("Subject"),
+                                ),
+                          Field("body", "text",
+                                label = T("Message"),
+                                requires = IS_NOT_EMPTY(),
+                                represent = lambda v: v or current.messages.NONE,
+                                ),
+                          # Link to the Message once sent
+                          #message_id(readable=False),
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
@@ -1276,24 +1339,22 @@ class S3EventAssetModel(S3Model):
 # =============================================================================
 class S3EventCMSModel(S3Model):
     """
-        Link CMS Posts to Events
+        Link CMS Posts to Events &/or Incidents
     """
 
-    names = ["event_event_post"]
+    names = ["event_post"]
 
     def model(self):
 
         T = current.T
 
         # ---------------------------------------------------------------------
-        # Posts
-        #   Link table for cms_post <> event_event
-        # @ToDo: Search Widget
-
-        tablename = "event_event_post"
+        # Link table between Posts & Events/Incidents
+        tablename = "event_post"
         self.define_table(tablename,
                           self.event_event_id(),
-                          self.cms_post_id(),
+                          self.event_incident_id(),
+                          self.cms_post_id(empty=False),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1516,12 +1577,12 @@ class S3EventTaskModel(S3Model):
         # Tasks are to be assigned to resources managed by this EOC
         # - we manage in detail
         # @ToDo: Task Templates
-        # @ToDo: Search Widget
 
         tablename = "event_task"
         self.define_table(tablename,
-                          self.event_incident_id(),
-                          self.project_task_id(),
+                          #self.event_event_id(),
+                          self.event_incident_id(empty=False),
+                          self.project_task_id(empty=False),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(

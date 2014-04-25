@@ -173,61 +173,6 @@ settings.ui.summary = [#{"common": True,
                        ]
 
 settings.search.filter_manager = False
-# =============================================================================
-# Menu
-current.response.menu = [
-    {"name": T("Events"),
-     "c":"event", 
-     "f":"event",
-     "icon": "incident"
-     },
-    {"name": T("Tasks"),
-     "c":"project", 
-     "f":"task",
-     "icon": "check"
-     },
-    {"name": T("Resources"),
-     "c":"org", 
-     "f":"resource",
-     "icon": "wrench"
-     },
-    {"name": T("News"),
-     "c":"cms", 
-     "f":"post",
-     "icon": "news"
-     },
-    {"name": T("Map"),
-     "c":"gis", 
-     "f":"index",
-     "icon": "map"
-     },
-#    {"name": T("Projects"),
-#     "c":"project", 
-#     "f":"activity",
-#     "icon": "tasks"
-#     },
-    {"name": T("Contact Directory"),
-     "c":"pr", 
-     "f":"person",
-     "icon": "group"
-     },
-    {"name": T("Stakeholders"),
-     "c":"org", 
-     "f":"organisation",
-     "icon": "sitemap"
-     },
-    {"name": T("Facilities"),
-     "c":"org", 
-     "f":"facility",
-     "icon": "building"
-     },
-    ]
-
-for item in current.response.menu:
-    item["url"] = URL(item["c"], 
-                      item["f"], 
-                      args = ["summary" if item["f"] not in ["organisation","post"]
-                                        else "datalist"])
 
 # =============================================================================
 # Customise Resources
@@ -275,8 +220,8 @@ def customise_cms_post_resource(r, tablename):
     s3.dl_pagelength = 12
     s3.dl_rowsize = 2
 
-    from s3.s3resource import S3FieldSelector
-    s3.filter = S3FieldSelector("series_id$name").belongs(["Alert"])
+    #from s3.s3resource import S3FieldSelector
+    #s3.filter = S3FieldSelector("series_id$name").belongs(["Alert"])
 
     s3.crud_strings["cms_post"] = Storage(
         label_create = T("Create Alert"),
@@ -305,27 +250,46 @@ def customise_cms_post_resource(r, tablename):
 
     table.body.label = T("Description")
     table.body.widget = None
+
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-    crud_form = S3SQLCustomForm("date",
-                                #"series_id",
-                                "body",
-                                "location_id",
-                                S3SQLInlineComponent(
-                                    "event_post",
-                                    label = T("Event"),
-                                    multiple = False,
-                                    fields = [("", "event_id")],
-                                    orderby = "event_id$name",
-                                    ),
-                                S3SQLInlineComponent(
-                                    "document",
-                                    name = "file",
-                                    label = T("Files"),
-                                    fields = [("", "file"),
-                                              #"comments",
-                                              ],
-                                    ),
-                                )
+    crud_fields = ["date",
+                   #"series_id",
+                   "body",
+                   "location_id",
+                   S3SQLInlineComponent(
+                       "document",
+                       name = "file",
+                       label = T("Files"),
+                       fields = [("", "file"),
+                                 #"comments",
+                                 ],
+                       ),
+                   ]
+
+    incident_id = r.get_vars.get("~.(incident)", None)
+    if incident_id:
+        # Coming from Profile page
+        # Add link onaccept
+        def create_onaccept(form):
+            current.s3db.event_post.insert(incident_id=incident_id,
+                                           post_id=form.vars.id)
+
+        s3db.configure("cms_post",
+                       create_onaccept = create_onaccept, 
+                       )
+    else:
+        # Insert into Form
+        crud_fields.insert(3, S3SQLInlineComponent("incident_post",
+                                                   label = T("Incident"),
+                                                   fields = [("", "incident_id")],
+                                                   multiple = False,
+                                                   ))
+
+    crud_form = S3SQLCustomForm(*crud_fields)
+
+    from s3.s3filter import S3OptionsFilter
+    filter_widgets = s3db.get_config("cms_post", "filter_widgets")
+    filter_widgets.insert(1, S3OptionsFilter("incident_post.incident_id"))
 
     # Return to List view after create/update/delete
     # We now do all this in Popups
@@ -344,6 +308,282 @@ def customise_cms_post_resource(r, tablename):
         table.age = Field.Method("age", cms_post_age)
 
 settings.customise_cms_post_resource = customise_cms_post_resource
+
+# -----------------------------------------------------------------------------
+def customise_event_incident_controller(**attr):
+
+    s3 = current.response.s3
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="event", f="incident",
+                                    args=["[id]", "profile"])),
+                       dict(label=str(T("Edit")),
+                            _class="action-btn",
+                            url=URL(c="event", f="incident",
+                                    args=["[id]", "update"]))
+                       ]
+            s3.actions = actions
+
+        return output
+    s3.postp = custom_postp
+
+    # Remove RHeader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_event_incident_controller = customise_event_incident_controller
+
+# -----------------------------------------------------------------------------
+def customise_event_incident_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - Customize Fi
+        - List Fields
+        - Form
+        - Filter Widgets
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    table = r.table
+    s3db = current.s3db
+    crud_strings = current.response.s3.crud_strings
+
+    # Enable 'Lead Organisation' field
+    table.organisation_id.readable = table.organisation_id.writable = True
+
+    if r.interactive:
+        table.zero_hour.label = T("Date")
+        table.comments.label = T("Description")
+
+        crud_strings["event_incident"].label_delete_button = T("Delete Incident")
+
+    list_fields = ["zero_hour",
+                   "name",
+                   "location_id",
+                   "comments",
+                   "organisation_id",
+                   ]
+    
+    # Custom Form
+    #location_id_field = table.location_id
+    #from s3.s3validators import IS_LOCATION_SELECTOR2
+    #from s3.s3widgets import S3LocationSelectorWidget2
+    #location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+    #location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
+    #                                                     show_address=True,
+    #                                                     show_map=True)
+    ## Don't add new Locations here
+    #location_id_field.comment = None
+
+    #from gluon.validators import IS_EMPTY_OR
+    #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
+    from s3.s3forms import S3SQLCustomForm
+    crud_form = S3SQLCustomForm("zero_hour",
+                                "name",
+                                "location_id",
+                                "comments",
+                                "organisation_id",
+                                )
+
+    from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+    filter_widgets = [S3TextFilter(["name",
+                                    "comments"
+                                    ],
+                                   #label = T("Description"),
+                                   label = T("Search"),
+                                   _class = "filter-search",
+                                   ),
+                      S3LocationFilter("location_id",
+                                       #label = T("Location"),
+                                       levels = levels,
+                                       ),
+                      #S3OptionsFilter("status_id",
+                      #                label = T("Status"),
+                      #                # @ToDo: Introspect cols
+                      #                cols = 3,
+                      #                ),
+                      S3OptionsFilter("organisation_id",
+                                      represent = "%(name)s",
+                                      ),
+                      #S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
+                      #                ),
+                      ]
+
+    url_next = URL(c="event", f="incident", args="summary")
+
+    s3db.configure("event_incident",
+                   create_next = url_next,
+                   crud_form = crud_form,
+                   delete_next = url_next,
+                   filter_widgets = filter_widgets,
+                   list_fields = list_fields,
+                   update_next = url_next,
+                   )
+
+    if r.method == "profile":
+        # Customise tables used by widgets
+        customise_project_task_resource(r, "project_task")
+
+        # Set list_fields for renderer (project_task_list_layout)
+        s3db.configure("project_task",
+                       list_fields = ["name",
+                                      "description",
+                                      "location_id",
+                                      "date_due",
+                                      "pe_id",
+                                      "task_project.project_id",
+                                      #"organisation_id$logo",
+                                      "pe_id",
+                                      "modified_by",
+                                      ],
+                       )
+
+        from s3.s3resource import S3FieldSelector
+        map_widget = dict(label = "Map",
+                          type = "map",
+                          context = "incident",
+                          icon = "icon-map",
+                          # Tall/thin fits Puget Sound best
+                          height = 600,
+                          width = 200,
+                          colspan = 1,
+                          )
+        alerts_widget = dict(label = "Alerts",
+                             label_create = "Create Alert",
+                             type = "datalist",
+                             tablename = "cms_post",
+                             context = "incident",
+                             #filter = S3FieldSelector("event_post.incident_id") == r.id,
+                             icon = "icon-alert",
+                             colspan = 1,
+                             list_layout = s3db.cms_post_list_layout,
+                             )
+        resources_widget = dict(label = "Resources",
+                                label_create = "Add Resource",
+                                type = "datalist",
+                                tablename = "event_resource",
+                                context = "incident",
+                                #filter = S3FieldSelector("task_incident.incident_id") == r.id,
+                                icon = "icon-resource",
+                                colspan = 1,
+                                #list_layout = s3db.event_resource_list_layout,
+                                )
+        tasks_widget = dict(label = "Tasks",
+                            label_create = "Create Task",
+                            type = "datalist",
+                            tablename = "project_task",
+                            context = "incident",
+                            #filter = S3FieldSelector("task_incident.incident_id") == r.id,
+                            icon = "icon-task",
+                            colspan = 1,
+                            list_layout = s3db.project_task_list_layout,
+                            )
+        record = r.record
+        title = "%s : %s" % (crud_strings["event_incident"].title_list, record.name)
+        s3db.configure("event_incident",
+                       profile_title = title,
+                       profile_header = DIV(H2(title),
+                                            _class="profile_header",
+                                            ),
+                       profile_widgets = [alerts_widget,
+                                          resources_widget,
+                                          tasks_widget,
+                                          map_widget,
+                                          ],
+                       profile_cols = 4
+                       )
+
+settings.customise_event_incident_resource = customise_event_incident_resource
+
+# -----------------------------------------------------------------------------
+def customise_org_facility_resource(r, tablename):
+    """
+        Customise org_resource resource
+        - CRUD Strings
+        - List Fields
+        - Form
+        - Report Options
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    table = s3db.org_facility
+
+    s3.crud_strings[tablename] = Storage(
+        label_create = T("Create Facility"),
+        title_display = T("Facility Details"),
+        title_list = T("Facilities"),
+        title_update = T("Edit Facility Details"),
+        label_list_button = T("List Facilities"),
+        label_delete_button = T("Delete Facility"),
+        msg_record_created = T("Facility added"),
+        msg_record_modified = T("Facility details updated"),
+        msg_record_deleted = T("Facility deleted"),
+        msg_list_empty = T("No Facilities currently registered"))
+
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2
+    location_id_field = table.location_id
+    location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+    location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                         show_address=True,
+                                                         show_map=True)
+    # Don't add new Locations here
+    location_id_field.comment = None
+
+    list_fields = ["name",
+                   "organisation_id",
+                   #(T("Type"), "facility_type.name"),
+                   "location_id",
+                   "phone1",
+                   "comments",
+                   ]
+
+    from s3.s3forms import S3SQLCustomForm
+    crud_form = S3SQLCustomForm(*list_fields)
+
+    # Report options
+    report_fields = ["organisation_id",
+                     ]
+
+    report_options = Storage(rows = report_fields,
+                             cols = report_fields,
+                             fact = ["count(id)"
+                                     ],
+                             defaults=Storage(rows = "organisation_id",
+                                              cols = "",
+                                              fact = "count(id)",
+                                              totals = True,
+                                              chart = "barchart:rows",
+                                              #table = "collapse",
+                                              )
+                             )
+
+    url_next = URL(c="org", f="facility", args="summary")
+
+    s3db.configure("org_facility",
+                   create_next = url_next,
+                   crud_form = crud_form,
+                   delete_next = url_next,
+                   list_fields = list_fields,
+                   report_options = report_options,
+                   list_layout = render_facilities,
+                   update_next = url_next,
+                   )
+
+settings.customise_org_facility_resource = customise_org_facility_resource
 
 # -----------------------------------------------------------------------------
 def customise_org_organisation_resource(r, tablename):
@@ -486,8 +726,8 @@ def customise_org_organisation_resource(r, tablename):
             #                         filter = S3FieldSelector("series_id$name") == "Activity",
             #                         icon = "icon-activity",
             #                         layer = "Activities",
-                                     # provided by Catalogue Layer
-                                     #marker = "activity",
+            #                         # provided by Catalogue Layer
+            #                         #marker = "activity",
             #                         list_layout = render_profile_posts,
             #                         )
             #reports_widget = dict(label = "Reports",
@@ -510,8 +750,8 @@ def customise_org_organisation_resource(r, tablename):
             #                          filter = S3FieldSelector("series_id$name") == "Assessment",
             #                          icon = "icon-assessment",
             #                          layer = "Assessments",
-                                      # provided by Catalogue Layer
-                                      #marker = "assessment",
+            #                          # provided by Catalogue Layer
+            #                          #marker = "assessment",
             #                          list_layout = render_profile_posts,
             #                          )
             record = r.record
@@ -602,22 +842,6 @@ def customise_org_resource_resource(r, tablename):
         #table.site_id.readable = table.site_id.readable = False
         #location_field.label = T("District")
 
-        from s3.s3filter import S3TextFilter, S3OptionsFilter
-        filter_widgets = [S3TextFilter(["organisation_id$name",
-                                        "location_id",
-                                        "parameter_id$name",
-                                        "comments",
-                                        ],
-                                      label = T("Search")),
-                          S3OptionsFilter("parameter_id",
-                                          label = T("Type"),
-                                          ),
-                          ]
-
-        s3db.configure("org_resource",
-                       filter_widgets = filter_widgets
-                       )
-
         # Return to Sumamry view after create/update/delete (unless done via Modal)
         url_next = URL(c="org", f="resource", args="summary")
 
@@ -679,20 +903,35 @@ def customise_project_task_resource(r, tablename):
     table.description.label = T("Description")
     #table.location_id.readable = table.location_id.writable = True
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-    crud_form = S3SQLCustomForm("status",
-                                "priority",
-                                "name",
-                                "description",
-                                #"task_activity.activity_id",
-                                S3SQLInlineComponent("incident",
-                                                     label = T("Incident"),
-                                                     fields = [("", "incident_id")],
-                                                     multiple = False,
-                                                     ),
-                                "pe_id",
-                                "date_due",
-                                "location_id",
-                                )
+    crud_fields = ["status",
+                   "priority",
+                   "name",
+                   "description",
+                   "pe_id",
+                   "date_due",
+                   "location_id",
+                   ]
+
+    incident_id = r.get_vars.get("~.(incident)", None)
+    if incident_id:
+        # Coming from Profile page
+        # Add link onaccept
+        def create_onaccept(form):
+            current.s3db.event_task.insert(incident_id=incident_id,
+                                           task_id=form.vars.id)
+
+        s3db.configure("project_task",
+                       create_onaccept = create_onaccept, 
+                       )
+    else:
+        # Insert into Form
+        crud_fields.insert(4, S3SQLInlineComponent("incident",
+                                                   label = T("Incident"),
+                                                   fields = [("", "incident_id")],
+                                                   multiple = False,
+                                                   ))
+
+    crud_form = S3SQLCustomForm(*crud_fields)
 
     # Filter Widgets
     from s3.s3filter import S3OptionsFilter
@@ -730,271 +969,6 @@ def customise_project_task_resource(r, tablename):
                    )
 
 settings.customise_project_task_resource = customise_project_task_resource
-
-# -----------------------------------------------------------------------------
-def customise_event_incident_controller(**attr):
-
-    s3 = current.response.s3
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        if r.interactive and isinstance(output, dict):
-            actions = [dict(label=str(T("Open")),
-                            _class="action-btn",
-                            url=URL(c="event", f="incident",
-                                    args=["[id]", "profile"])),
-                       dict(label=str(T("Edit")),
-                            _class="action-btn",
-                            url=URL(c="event", f="incident",
-                                    args=["[id]", "update"]))
-                       ]
-            s3.actions = actions
-
-        return output
-    s3.postp = custom_postp
-
-    # Remove RHeader
-    attr["rheader"] = None
-    return attr
-
-settings.customise_event_incident_controller = customise_event_incident_controller
-
-# -----------------------------------------------------------------------------
-def customise_event_incident_resource(r, tablename):
-    """
-        Customise org_resource resource
-        - Customize Fi
-        - List Fields
-        - Form
-        - Filter Widgets
-        Runs after controller customisation
-        But runs before prep
-    """
-
-    table = r.table
-    s3db = current.s3db
-    crud_strings = current.response.s3.crud_strings
-
-    # Enable 'Lead Organisation' field
-    table.organisation_id.readable = table.organisation_id.writable = True
-
-    if r.interactive:
-        table.zero_hour.label = T("Date")
-        table.comments.label = T("Description")
-
-        crud_strings["event_incident"].label_delete_button = T("Delete Incident")
-
-    list_fields = ["zero_hour",
-                   "name",
-                   "location_id",
-                   "comments",
-                   "organisation_id",
-                   ]
-    
-    # Custom Form
-    #location_id_field = table.location_id
-    #from s3.s3validators import IS_LOCATION_SELECTOR2
-    #from s3.s3widgets import S3LocationSelectorWidget2
-    #location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    #location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-    #                                                     show_address=True,
-    #                                                     show_map=True)
-    ## Don't add new Locations here
-    #location_id_field.comment = None
-
-    #from gluon.validators import IS_EMPTY_OR
-    #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
-    from s3.s3forms import S3SQLCustomForm
-    crud_form = S3SQLCustomForm("zero_hour",
-                                "name",
-                                "location_id",
-                                "comments",
-                                "organisation_id",
-                                )
-
-    from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
-    filter_widgets = [S3TextFilter(["name",
-                                    "comments"
-                                    ],
-                                   label=T("Description"),
-                                   _class="filter-search",
-                                   ),
-                      S3LocationFilter("location_id",
-                                       #label = T("Location"),
-                                       levels = levels,
-                                       ),
-                      #S3OptionsFilter("status_id",
-                      #                label = T("Status"),
-                      #                # @ToDo: Introspect cols
-                      #                cols = 3,
-                      #                ),
-                      S3OptionsFilter("organisation_id",
-                                      represent = "%(name)s",
-                                      ),
-                      #S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
-                      #                ),
-                      ]
-
-    url_next = URL(c="event", f="incident", args="summary")
-
-    s3db.configure("event_incident",
-                   create_next = url_next,
-                   crud_form = crud_form,
-                   delete_next = url_next,
-                   filter_widgets = filter_widgets,
-                   list_fields = list_fields,
-                   update_next = url_next,
-                   )
-
-    if r.method == "profile":
-        # Customise tables used by widgets
-        #customise_cms_post_fields()
-        #customise_hrm_human_resource_fields()
-        #customise_org_office_fields()
-        customise_project_task_resource(r, "project_task")
-        
-        s3db.org_customise_org_resource_fields("profile")
-        #customise_event_incident_fields()
-
-        # Set list_fields for renderer (project_task_list_layout)
-        s3db.configure("project_task",
-                       list_fields = ["name",
-                                      "description",
-                                      "location_id",
-                                      "date_due",
-                                      "pe_id",
-                                      "task_project.project_id",
-                                      #"organisation_id$logo",
-                                      "pe_id",
-                                      "modified_by",
-                                      ],
-                       )
-
-        from s3.s3resource import S3FieldSelector
-        tasks_widget = dict(label = "Tasks",
-                            label_create = "Create Task",
-                            type = "datalist",
-                            tablename = "project_task",
-                            # @ToDo - do this with context? Not clear how with link table
-                            # But this WORKS! So don't change without testing!
-                            #context = "project",
-                            filter = S3FieldSelector("task_project.project_id") == r.id,
-                            icon = "icon-task",
-                            show_on_map = False, # No Marker yet & only show at L1-level anyway
-                            colspan = 2,
-                            list_layout = s3db.project_task_list_layout,
-                            )
-        record = r.record
-        title = "%s : %s" % (crud_strings["event_incident"].title_list, record.name)
-        s3db.configure("event_incident",
-                       profile_title = title,
-                       profile_header = DIV(H2(title),
-                                            _class="profile_header",
-                                            ),
-                       profile_widgets = [tasks_widget,
-                                          ],
-                       #profile_cols = 3
-                       )
-
-        # Set list_fields for renderer (project_project_list_layout)
-        # @ ToDo: move this to somewhere in trunk where it is called when projects are used in a profile page
-        #s3db.configure("event_incident",
-        #               list_fields = ["name",
-        #                              "description",
-        #                              "location.location_id",
-        #                              "start_date",
-        #                              "organisation_id",
-        #                              "organisation_id$logo",
-        #                              "modified_by",
-        #                              ]
-        #               )
-
-settings.customise_event_incident_resource = customise_event_incident_resource
-
-# -----------------------------------------------------------------------------
-def customise_org_facility_resource(r, tablename):
-    """
-        Customise org_resource resource
-        - CRUD Strings
-        - List Fields
-        - Form
-        - Report Options
-        Runs after controller customisation
-        But runs before prep
-    """
-
-    s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.org_facility
-
-    s3.crud_strings[tablename] = Storage(
-        label_create = T("Create Facility"),
-        title_display = T("Facility Details"),
-        title_list = T("Facilities"),
-        title_update = T("Edit Facility Details"),
-        label_list_button = T("List Facilities"),
-        label_delete_button = T("Delete Facility"),
-        msg_record_created = T("Facility added"),
-        msg_record_modified = T("Facility details updated"),
-        msg_record_deleted = T("Facility deleted"),
-        msg_list_empty = T("No Facilities currently registered"))
-
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
-    location_id_field = table.location_id
-    location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         show_address=True,
-                                                         show_map=True)
-    # Don't add new Locations here
-    location_id_field.comment = None
-
-    list_fields = ["name",
-                   "organisation_id",
-                   #(T("Type"), "facility_type.name"),
-                   "location_id",
-                   "phone1",
-                   "comments",
-                   ]
-
-    from s3.s3forms import S3SQLCustomForm
-    crud_form = S3SQLCustomForm(*list_fields)
-
-    # Report options
-    report_fields = ["organisation_id",
-                     ]
-
-    report_options = Storage(rows = report_fields,
-                             cols = report_fields,
-                             fact = ["count(id)"
-                                     ],
-                             defaults=Storage(rows = "organisation_id",
-                                              cols = "",
-                                              fact = "count(id)",
-                                              totals = True,
-                                              chart = "barchart:rows",
-                                              #table = "collapse",
-                                              )
-                             )
-
-    url_next = URL(c="org", f="facility", args="summary")
-
-    s3db.configure("org_facility",
-                   create_next = url_next,
-                   crud_form = crud_form,
-                   delete_next = url_next,
-                   list_fields = list_fields,
-                   report_options = report_options,
-                   list_layout = render_facilities,
-                   update_next = url_next,
-                   )
-
-settings.customise_org_facility_resource = customise_org_facility_resource
 
 # -----------------------------------------------------------------------------
 def customise_pr_person_controller(**attr):

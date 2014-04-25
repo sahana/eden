@@ -112,6 +112,7 @@
         <xsl:variable name="TimeEstimated" select="col[@field='Time Estimated']/text()"/>
         <xsl:variable name="Assignee" select="col[@field='Assigned']/text()"/>
         <xsl:variable name="Priority" select="col[@field='Priority']/text()"/>
+        <xsl:variable name="Status" select="col[@field='Status']/text()"/>
 
         <resource name="project_task">
             <xsl:attribute name="created_on">
@@ -159,43 +160,43 @@
                 </xsl:otherwise>
             </xsl:choose>
             <xsl:choose>
-                <xsl:when test="col[@field='Status']='Draft'">
+                <xsl:when test="$Status='Draft'">
                     <data field="status">1</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='New'">
+                <xsl:when test="$Status='New'">
                     <data field="status">2</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Assigned'">
+                <xsl:when test="$Status='Assigned'">
                     <data field="status">3</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Feedback'">
+                <xsl:when test="$Status='Feedback'">
                     <data field="status">4</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Blocked'">
+                <xsl:when test="$Status='Blocked'">
                     <data field="status">5</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='On Hold'">
+                <xsl:when test="$Status='On Hold'">
                     <data field="status">6</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Cancelled'">
+                <xsl:when test="$Status='Cancelled'">
                     <data field="status">7</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Duplicate'">
+                <xsl:when test="$Status='Duplicate'">
                     <data field="status">8</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Ready'">
+                <xsl:when test="$Status='Ready'">
                     <data field="status">9</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Verified'">
+                <xsl:when test="$Status='Verified'">
                     <data field="status">10</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Reopened'">
+                <xsl:when test="$Status='Reopened'">
                     <data field="status">11</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Completed'">
+                <xsl:when test="$Status='Completed'">
                     <data field="status">12</data>
                 </xsl:when>
-                <xsl:when test="col[@field='Status']='Closed'">
+                <xsl:when test="$Status='Closed'">
                     <!-- Completed -->
                     <data field="status">12</data>
                 </xsl:when>

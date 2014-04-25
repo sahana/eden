@@ -466,7 +466,7 @@ def render_events(list_id, item_id, resource, rfields, record):
     tally_reports = 0
     db = current.db
     s3db = current.s3db
-    ltable = s3db.event_event_post
+    ltable = s3db.event_post
     table = db.cms_post
     stable = db.cms_series
     types = ["Incident", "Assessment", "Report"]
@@ -1274,7 +1274,7 @@ def render_profile_posts(list_id, item_id, resource, rfields, record):
     series = record["cms_post.series_id"]
     date = record["cms_post.date"]
     body = record["cms_post.body"]
-    event_id = raw["event_event_post.event_id"]
+    event_id = raw["event_post.event_id"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id, "profile"])
@@ -1831,10 +1831,6 @@ def customise_cms_post_fields():
 
     s3db = current.s3db
 
-    # Hide Labels when just 1 column in inline form
-    s3db.doc_document.file.label = ""
-    s3db.event_event_post.event_id.label = ""
-
     table = s3db.cms_post
     field = table.location_id
     field.label = ""
@@ -2155,7 +2151,7 @@ def customise_cms_post_controller(**attr):
                     # ),
                 # )
                 # def create_onaccept(form):
-                    # table = current.s3db.event_event_post
+                    # table = current.s3db.event_post
                     # table.insert(event_id=event_id, post_id=form.vars.id)
 
                 # s3db.configure("cms_post",
@@ -2436,8 +2432,6 @@ def customise_event_event_controller(**attr):
 
             # Include a Location inline
             location_field = s3db.event_event_location.location_id
-            # Don't label a single field InlineComponent
-            location_field.label = ""
             represent = S3Represent(lookup="gis_location")
             location_field.represent = represent
             # L1s only
@@ -2465,7 +2459,7 @@ def customise_event_event_controller(**attr):
                         "event_location",
                         label = T("District"),
                         multiple = False,
-                        fields = ["location_id"],
+                        fields = [("", "location_id")],
                     ),
                     "comments",
                 )
@@ -3441,12 +3435,8 @@ def customise_pr_person_controller(**attr):
                                                    title=T("Office"),
                                                    tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
 
-            # Best to have no labels when only 1 field in the row
-            s3db.pr_contact.value.label = ""
-            image_field = s3db.pr_image.image
-            image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
-            image_field.widget = None
+            s3db.pr_image.image.widget = None
 
             hr_fields = ["organisation_id",
                          "job_title_id",
@@ -3478,7 +3468,7 @@ def customise_pr_person_controller(**attr):
                         name = "image",
                         label = T("Photo"),
                         multiple = False,
-                        fields = ["image"],
+                        fields = [("", "image")],
                         filterby = dict(field = "profile",
                                         options=[True]
                                         )
@@ -3504,7 +3494,7 @@ def customise_pr_person_controller(**attr):
                                             name = "phone",
                                             label = MOBILE,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "SMS")),
                                             )
@@ -3514,7 +3504,7 @@ def customise_pr_person_controller(**attr):
                                             name = "email",
                                             label = EMAIL,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "EMAIL")),
                                             )
@@ -3702,8 +3692,6 @@ def customise_project_project_controller(**attr):
             # Better in column label & otherwise this construction loses thousands separators
             #table.budget.represent = lambda value: "%d USD" % value
 
-            s3db.doc_document.file.label = ""
-
             crud_form_fields = [
                     "name",
                     S3SQLInlineComponentCheckbox(
@@ -3716,7 +3704,7 @@ def customise_project_project_controller(**attr):
                     S3SQLInlineComponent(
                         "location",
                         label = T("Districts"),
-                        fields = ["location_id"],
+                        fields = [("", "location_id")],
                         orderby = "location_id$name",
                         render_list = True
                     ),
@@ -3729,8 +3717,7 @@ def customise_project_project_controller(**attr):
                         "organisation",
                         name = "partner",
                         label = T("Partner Organizations"),
-                        fields = ["organisation_id",
-                                  ],
+                        fields = [("", "organisation_id")],
                         filterby = dict(field = "role",
                                         options = "2"
                                         )
@@ -3752,7 +3739,7 @@ def customise_project_project_controller(**attr):
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments"
                                   ],
                     ),
@@ -3810,17 +3797,16 @@ def customise_project_project_controller(**attr):
                              ),
                 S3OptionsFilter("organisation_id",
                                 label = T("Lead Organization"),
-                                widget="multiselect"
                                 ),
                 S3LocationFilter("location.location_id",
                                  levels=["L0", "L1", "L2", "L3"],
-                                 widget="multiselect"),
+                                 ),
                 S3OptionsFilter("partner.organisation_id",
                                 label = T("Partners"),
-                                widget="multiselect"),
+                                ),
                 S3OptionsFilter("donor.organisation_id",
                                 label = T("Donors"),
-                                widget="multiselect")
+                                )
                 ]
 
             s3db.configure("project_project",

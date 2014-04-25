@@ -176,7 +176,8 @@ class S3ProjectModel(S3Model):
                            writable = use_codes,
                            ),
                      Field("description", "text",
-                           label = T("Description")),
+                           label = T("Description"),
+                           ),
                      self.project_status_id(),
                      # NB There is additional client-side validation for start/end date in the Controller
                      s3_date("start_date",
@@ -1623,10 +1624,13 @@ class S3ProjectBeneficiaryModel(S3Model):
         define_table(tablename,
                      super_link("parameter_id", "stats_parameter"),
                      Field("name", length=128, unique=True,
+                           label = T("Name"),
                            requires = IS_NOT_IN_DB(db,
-                                                   "project_beneficiary_type.name")),
+                                                   "project_beneficiary_type.name"),
+                           ),
                      s3_comments("description",
-                                 label = T("Description")),
+                                 label = T("Description"),
+                                 ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -2086,11 +2090,13 @@ class S3ProjectCampaignModel(S3Model):
         define_table(tablename,
                      #self.project_project_id(),
                      Field("name", length=128, #unique=True,
+                           label = T("Name"),
                            #requires = IS_NOT_IN_DB(db,
                            #                        "project_campaign.name")
                            ),
                      s3_comments("description",
-                                 label = T("Description")),
+                                 label = T("Description"),
+                                 ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -2195,10 +2201,13 @@ class S3ProjectCampaignModel(S3Model):
         define_table(tablename,
                      super_link("parameter_id", "stats_parameter"),
                      Field("name", length=128, unique=True,
+                           label = T("Name"),
                            requires = IS_NOT_IN_DB(db,
-                                                   "project_campaign_keyword.name")),
+                                                   "project_campaign_keyword.name"),
+                           ),
                      s3_comments("description",
-                                 label = T("Description")),
+                                 label = T("Description"),
+                                 ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -2347,18 +2356,16 @@ class S3ProjectFrameworkModel(S3Model):
         tablename = "project_framework"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
-                     Field("name",
-                           length=255,
-                           unique=True,
+                     Field("name", length=255, unique=True,
                            label = T("Name"),
                            ),
                       s3_comments("description",
                                   label = T("Description"),
-                                  comment=None,
+                                  comment = None,
                                   ),
                       Field("time_frame",
-                            represent = lambda v: v or messages.NONE,
                             label = T("Time Frame"),
+                            represent = lambda v: v or messages.NONE,
                             ),
                       *s3_meta_fields())
 
@@ -4006,7 +4013,8 @@ class S3ProjectTaskModel(S3Model):
                      project_id(),
                      Field("name",
                            label = T("Short Description"),
-                           requires=IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY()
+                           ),
                      s3_date(),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4209,7 +4217,7 @@ class S3ProjectTaskModel(S3Model):
         filter_widgets = [S3TextFilter(["name",
                                         "description",
                                         ],
-                                       label = T("Description"),
+                                       label = T("Search"),
                                        _class = "filter-search",
                                        ),
                           S3OptionsFilter("priority",
@@ -4353,6 +4361,12 @@ class S3ProjectTaskModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  context = {#"event": "event.event_id",
+                             "incident": "incident.incident_id",
+                             "location": "location_id",
+                             # Assignee instead?
+                             "organisation": "created_by$organisation_id",
+                             },
                   copyable = True,
                   #create_next = URL(f="task", args=["[id]"]),
                   create_onaccept = self.project_task_create_onaccept,

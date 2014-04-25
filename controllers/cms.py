@@ -140,7 +140,8 @@ def post():
                     url = URL(c="default", f="index", vars={"page": page})
                     s3db.configure(tablename,
                                    create_next = url,
-                                   update_next = url)
+                                   update_next = url,
+                                   )
 
                 _module = get_vars.get("module", None)
                 if _module:
@@ -171,7 +172,8 @@ def post():
 
                     s3db.configure(tablename,
                                    create_next = url,
-                                   update_next = url)
+                                   update_next = url,
+                                   )
 
                 layer_id = get_vars.get("layer_id", None)
                 if layer_id:
@@ -338,6 +340,7 @@ def newsfeed():
     contact_field = settings.get_cms_person()
     org_field = settings.get_cms_organisation()
     org_group_field = settings.get_cms_organisation_group()
+    show_events = settings.get_cms_show_events()
 
     hidden = not settings.get_cms_filter_open()
 
@@ -354,11 +357,18 @@ def newsfeed():
                       ]
     fappend = filter_widgets.append
     finsert = filter_widgets.insert
+
+    if show_events:
+        fappend(S3OptionsFilter("event_post",
+                                label = T("Filter by Disaster"),
+                                hidden = hidden,
+                                ))
+
     if org_field:
         fappend(S3OptionsFilter(org_field,
                                 label = T("Filter by Organization"),
                                 # Can't use this for created_by as integer, use field.represent instead
-                                #represent="%(name)s",
+                                #represent = "%(name)s",
                                 hidden = hidden,
                                 ))
 
@@ -368,7 +378,7 @@ def newsfeed():
             fappend(S3OptionsFilter(org_group_field,
                                     label = T("Filter by %(type)s") % dict(type=T(group_label)),
                                     # Can't use this for created_by as integer, use field.represent instead
-                                    #represent="%(name)s",
+                                    #represent = "%(name)s",
                                     hidden = hidden,
                                     ))
 
@@ -403,16 +413,16 @@ def newsfeed():
         finsert(1, S3OptionsFilter("series_id",
                                    label = T("Filter by Type"),
                                    # We want translations
-                                   #represent="%(name)s",
+                                   #represent = "%(name)s",
                                    hidden = hidden,
                                    ))
                       
     elif len_series > 1:
         # Checkboxes
         finsert(1, S3OptionsFilter("series_id",
-                                   label=T("Filter by Type"),
+                                   label = T("Filter by Type"),
                                    # We want translations
-                                   #represent="%(name)s",
+                                   #represent = "%(name)s",
                                    cols = 2,
                                    hidden = hidden,
                                    ))
@@ -511,7 +521,7 @@ def newsfeed():
             event_id = get_vars.get("~.(event)", None)
             if event_id:
                 def create_onaccept(form):
-                    table = current.s3db.event_event_post
+                    table = current.s3db.event_post
                     table.insert(event_id=event_id,
                                  post_id=form.vars.id)
 
@@ -528,25 +538,26 @@ def newsfeed():
             crud_fields.extend(("body",
                                 "location_id",
                                 ))
-            if not event_id and settings.get_cms_show_events():
+            if not event_id and show_events:
                 cappend(S3SQLInlineComponent("event_post",
+                                             # @ToDo: deployment_setting (use same one used to activate?)
                                              #label = T("Disaster(s)"),
                                              label = T("Disaster"),
                                              multiple = False,
-                                             fields = ["event_id"],
+                                             fields = [("", "event_id")],
                                              orderby = "event_id$name",
                                              ))
             if org_field == "post_organisation.organisation_id":
                 cappend(S3SQLInlineComponent("post_organisation",
                                              label = T("Organization"),
-                                             fields = ["organisation_id"],
+                                             fields = [("", "organisation_id")],
                                              # @ToDo: deployment_setting
                                              multiple = False,
                                              ))
             if org_group_field == "post_organisation_group.group_id":
                 cappend(S3SQLInlineComponent("post_organisation_group",
                                              label = T(group_label),
-                                             fields = ["group_id"],
+                                             fields = [("", "group_id")],
                                              # @ToDo: deployment_setting
                                              multiple = False,
                                              ))
@@ -556,7 +567,7 @@ def newsfeed():
             cappend(S3SQLInlineComponent("document",
                                          name = "file",
                                          label = T("Files"),
-                                         fields = ["file",
+                                         fields = [("", "file"),
                                                    #"comments",
                                                    ],
                                          ))
@@ -564,7 +575,7 @@ def newsfeed():
                 cappend(S3SQLInlineComponent("document",
                                              name = "url",
                                              label = T("Links"),
-                                             fields = ["url",
+                                             fields = [("", "url"),
                                                        #"comments",
                                                        ],
                                              ))

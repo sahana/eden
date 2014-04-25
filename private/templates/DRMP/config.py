@@ -430,7 +430,7 @@ def render_events(list_id, item_id, resource, rfields, record):
     tally_reports = 0
     db = current.db
     s3db = current.s3db
-    ltable = s3db.event_event_post
+    ltable = s3db.event_post
     table = db.cms_post
     stable = db.cms_series
     types = ["Alert", "Incident", "Assessment", "Activity", "Report"]
@@ -1249,7 +1249,7 @@ def render_profile_posts(list_id, item_id, resource, rfields, record):
     series = record["cms_post.series_id"]
     date = record["cms_post.date"]
     body = record["cms_post.body"]
-    event_id = raw["event_event_post.event_id"]
+    event_id = raw["event_post.event_id"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id, "profile"])
@@ -1807,10 +1807,6 @@ def customise_cms_post_fields():
 
     s3db = current.s3db
 
-    # Hide Labels when just 1 column in inline form
-    s3db.doc_document.file.label = ""
-    s3db.event_event_post.event_id.label = ""
-
     from s3.s3validators import IS_LOCATION_SELECTOR2
     from s3.s3widgets import S3LocationSelectorWidget2
     table = s3db.cms_post
@@ -2204,15 +2200,14 @@ def customise_cms_post_controller(**attr):
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),
                 )
                 def create_onaccept(form):
-                    table = current.s3db.event_event_post
-                    table.insert(event_id=event_id,
-                                 post_id=form.vars.id)
+                    current.s3db.event_post.insert(event_id=event_id,
+                                                   post_id=form.vars.id)
 
                 s3db.configure("cms_post",
                                create_onaccept = create_onaccept, 
@@ -2228,14 +2223,14 @@ def customise_cms_post_controller(**attr):
                         #label = T("Disaster(s)"),
                         label = T("Disaster"),
                         multiple = False,
-                        fields = ["event_id"],
+                        fields = [("", "event_id")],
                         orderby = "event_id$name",
                     ),
                     S3SQLInlineComponent(
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),

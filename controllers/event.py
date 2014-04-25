@@ -160,6 +160,25 @@ def resource():
         RESTful CRUD controller
     """
 
+    def prep(r):
+        if r.interactive:
+            if r.method in ("create", "update"):
+                get_vars = r.get_vars
+                table = r.table
+                # Context from a Profile page?"
+                #location_id = get_vars.get("(location)", None)
+                #if location_id:
+                #    field = table.location_id
+                #    field.default = location_id
+                #    field.readable = field.writable = False
+                incident_id = get_vars.get("~.(incident)", None)
+                if incident_id:
+                    field = table.incident_id
+                    field.default = incident_id
+                    field.readable = field.writable = False
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

@@ -1420,7 +1420,8 @@ class S3OrganisationResourceModel(S3Model):
         self.define_table(tablename,
                           super_link("parameter_id", "stats_parameter"),
                           Field("name",
-                                label=T("Resource Type")),
+                                label=T("Resource Type"),
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -1503,6 +1504,18 @@ class S3OrganisationResourceModel(S3Model):
             msg_record_deleted=T("Resource deleted"),
             msg_list_empty=T("No Resources in Inventory"))
 
+        # Filter Widgets
+        filter_widgets = [S3TextFilter(["organisation_id$name",
+                                        "location_id",
+                                        "parameter_id$name",
+                                        "comments",
+                                        ],
+                                       label = T("Search")),
+                          S3OptionsFilter("parameter_id",
+                                          label = T("Type"),
+                                          ),
+                          ]
+
         # Report options
         report_fields = ["organisation_id",
                          "parameter_id",
@@ -1526,6 +1539,7 @@ class S3OrganisationResourceModel(S3Model):
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
                              },
+                  filter_widgets = filter_widgets,
                   list_layout = org_resource_list_layout,
                   report_options = report_options,
                   super_entity = "stats_data",

@@ -28,6 +28,7 @@
          Date...................optional.....Post date (datetime)
          Attachment.............optional.....doc_document (URL to remote server to download)
          Events.................optional.....Comma-separated list of Events to tag the Post to
+         Incident...............optional.....Incident to link the Post to
          Roles..................optional.....Post Roles (not yet implemented)
 
     *********************************************************************** -->
@@ -95,11 +96,14 @@
                          col[@field='L5'], '/',
                          col[@field='Location Name'])"/>
 
-    <xsl:key name="orgs" match="row"
-             use="col[@field='Organisation']"/>
-
     <xsl:key name="contacts" match="row"
              use="col[@field='Contact']"/>
+
+    <xsl:key name="incidents" match="row"
+             use="col[@field='Incident']"/>
+
+    <xsl:key name="orgs" match="row"
+             use="col[@field='Organisation']"/>
 
     <xsl:key name="series" match="row" use="col[@field='Series']"/>
 
@@ -201,6 +205,12 @@
                 <xsl:call-template name="Series"/>
             </xsl:for-each>
 
+            <!-- Incidents -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('incidents',
+                                                                   col[@field='Incident'])[1])]">
+                <xsl:call-template name="Incident"/>
+            </xsl:for-each>
+
             <!-- Posts -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
@@ -226,6 +236,7 @@
         <xsl:variable name="Module" select="col[@field='Module']/text()"/>
         <xsl:variable name="Resource" select="col[@field='Resource']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
 
         <resource name="cms_post">
             <xsl:if test="$Author!=''">
@@ -333,6 +344,17 @@
                 <xsl:with-param name="arg">event</xsl:with-param>
             </xsl:call-template>
 
+            <!-- Incidents -->
+            <xsl:if test="$Incident!=''">
+                <resource name="event_post" alias="incident_post">
+                    <reference field="incident_id" resource="event_incident">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Incident"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
 
     </xsl:template>
@@ -347,6 +369,21 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Series"/></data>
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Incident">
+        <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
+
+        <xsl:if test="$Incident!=''">
+            <resource name="event_incident">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Incident"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Incident"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
@@ -399,7 +436,7 @@
         <xsl:choose>
             <!-- Event list -->
             <xsl:when test="$arg='event'">
-                <resource name="event_event_post">
+                <resource name="event_post">
                     <reference field="event_id" resource="event_event">
                         <resource name="event_event">
                             <data field="name"><xsl:value-of select="$item"/></data>

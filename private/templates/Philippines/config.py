@@ -2560,12 +2560,8 @@ def customise_pr_person_controller(**attr):
                                                    title=T("Site"),
                                                    tooltip=T("If you don't see the Site in the list, you can add a new one by clicking link 'Add New Site'."))
 
-            # Best to have no labels when only 1 field in the row
-            s3db.pr_contact.value.label = ""
-            image_field = s3db.pr_image.image
-            image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
-            image_field.widget = None
+            s3db.pr_image.image.widget = None
 
             hr_fields = ["organisation_id",
                          "job_title_id",
@@ -2597,9 +2593,9 @@ def customise_pr_person_controller(**attr):
                         name = "image",
                         label = T("Photo"),
                         multiple = False,
-                        fields = ["image"],
+                        fields = [("", "image")],
                         filterby = dict(field = "profile",
-                                        options=[True]
+                                        options = [True]
                                         )
                     ),
                 ]
@@ -2624,7 +2620,7 @@ def customise_pr_person_controller(**attr):
                                             name = "phone",
                                             label = MOBILE,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "SMS")),
                                             )
@@ -2634,7 +2630,7 @@ def customise_pr_person_controller(**attr):
                                             name = "email",
                                             label = EMAIL,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "EMAIL")),
                                             )
@@ -2649,13 +2645,13 @@ def customise_pr_person_controller(**attr):
 
             s3db.configure(tablename,
                            create_next = url_next,
-                           delete_next = url_next,
-                           update_next = url_next,
                            crud_form = crud_form,
+                           delete_next = url_next,
                            list_fields = list_fields,
                            # Don't include a Create form in 'More' popups
                            listadd = False if r.method=="datalist" else True,
                            list_layout = render_contacts,
+                           update_next = url_next,
                            )
 
             # Move fields to their desired Locations

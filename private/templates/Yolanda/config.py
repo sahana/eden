@@ -2661,12 +2661,8 @@ def customise_pr_person_controller(**attr):
                                                    title=T("Site"),
                                                    tooltip=T("If you don't see the Site in the list, you can add a new one by clicking link 'Add New Site'."))
 
-            # Best to have no labels when only 1 field in the row
-            s3db.pr_contact.value.label = ""
-            image_field = s3db.pr_image.image
-            image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
-            image_field.widget = None
+            s3db.pr_image.image.widget = None
 
             hr_fields = ["organisation_id",
                          "job_title_id",
@@ -2698,7 +2694,7 @@ def customise_pr_person_controller(**attr):
                         name = "image",
                         label = T("Photo"),
                         multiple = False,
-                        fields = ["image"],
+                        fields = [("", "image")],
                         filterby = dict(field = "profile",
                                         options=[True]
                                         )
@@ -2725,7 +2721,7 @@ def customise_pr_person_controller(**attr):
                                             name = "phone",
                                             label = MOBILE,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "SMS")),
                                             )
@@ -2735,7 +2731,7 @@ def customise_pr_person_controller(**attr):
                                             name = "email",
                                             label = EMAIL,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "EMAIL")),
                                             )
@@ -3165,10 +3161,6 @@ def customise_project_activity_controller(**attr):
             field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             field.widget = S3LocationSelectorWidget2(levels=levels)
 
-            # Hide Labels when just 1 column in inline form
-            #s3db.doc_document.file.label = ""
-            s3db.project_activity_activity_type.activity_type_id.label = ""
-            s3db.project_activity_organisation.organisation_id.label = ""
             s3db.project_activity.comments.label = T("Materials/Service Provided")
             #s3db.project_beneficiary.value.label = "Number"
 
@@ -3177,19 +3169,19 @@ def customise_project_activity_controller(**attr):
             S3SQLInlineComponent(
                 "sector_activity",
                 label = T("Sector"),
-                fields = ["sector_id"],
+                fields = [("", "sector_id")],
                 multiple = False,
             ),
             S3SQLInlineComponent(
                 "activity_activity_type",
                 label = T("Activity Type"),
-                fields = ["activity_type_id"],
+                fields = [("", "activity_type_id")],
                 multiple = False,
             ),
             S3SQLInlineComponent(
                 "activity_organisation",
                 label = T("Organization"),
-                fields = ["organisation_id"],
+                fields = [("", "organisation_id")],
                 multiple = False,
             ),
             "location_id",
@@ -3214,7 +3206,7 @@ def customise_project_activity_controller(**attr):
             #    "document",
             #    name = "file",
             #    label = T("Files"),
-            #    fields = ["file",
+            #    fields = [("", "file"),
             #              #"comments",
             #              ],
             #),
@@ -3236,25 +3228,24 @@ def customise_project_activity_controller(**attr):
                           S3OptionsFilter("status_id",
                                           label = T("Status"),
                                           # Doesn't support translation
-                                          #represent="%(name)s",
+                                          #represent = "%(name)s",
                                           # @ToDo: Introspect cols
                                           cols = 3,
                                           ),
                           S3OptionsFilter("activity_activity_type.activity_type_id",
                                           # Doesn't support translation
-                                          #represent="%(name)s",
+                                          #represent = "%(name)s",
                                           ),
                           S3OptionsFilter("sector_activity.sector_id",
                                           # Doesn't support translation
-                                          #represent="%(name)s",
+                                          #represent = "%(name)s",
                                           ),
                           S3OptionsFilter("activity_organisation.organisation_id",
-                                          # Doesn't support translation
-                                          #represent="%(name)s",
+                                          represent = "%(name)s",
                                           ),
                           S3OptionsFilter("activity_organisation.organisation_id$organisation_type_id",
                                           # Doesn't support translation
-                                          #represent="%(name)s",
+                                          #represent = "%(name)s",
                                           ),
                           ]
 
@@ -3309,8 +3300,6 @@ def customise_project_task_controller(**attr):
                             label=T("Assigned To"),
                             # @ToDo: Implement support for this in S3OptionsFilter
                             #null = T("Unassigned"),
-                            #represent="%(name)s",
-                            #cols = 4,
                             ),
             S3RangeFilter("created_on",
                           label = T("Date Created"),
