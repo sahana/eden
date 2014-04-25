@@ -467,14 +467,10 @@ def customise_pr_person_controller(**attr):
                                                        title=T("Place"),
                                                        tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
 
-            # Hide Labels when just 1 column in inline form
-            s3db.pr_contact.value.label = ""
-
             s3db.pr_image.profile.default = True
-            image_field = s3db.pr_image.image
-            image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
             from gluon.validators import IS_IMAGE
+            image_field = s3db.pr_image.image
             image_field.requires = IS_IMAGE()
             image_field.widget = None
 
@@ -506,9 +502,6 @@ def customise_pr_person_controller(**attr):
                         label = "",
                         multiple = False,
                         fields = hr_fields,
-                        filterby = dict(field = "contact_method",
-                                        options = "SMS"
-                                        )
                     ),
                     S3SQLInlineComponent(
                         "user",
@@ -526,7 +519,7 @@ def customise_pr_person_controller(**attr):
                         name = "image",
                         label = T("Photo"),
                         multiple = False,
-                        fields = ["image"],
+                        fields = [("", "image")],
                         filterby = dict(field = "profile",
                                         options=[True]
                                         ),
@@ -535,7 +528,7 @@ def customise_pr_person_controller(**attr):
                         name = "email",
                         label = T("Email"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "EMAIL"),
                         ),
@@ -543,7 +536,7 @@ def customise_pr_person_controller(**attr):
                         name = "phone",
                         label = settings.get_ui_label_mobile_phone(),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "SMS"),
                         ),
@@ -551,7 +544,7 @@ def customise_pr_person_controller(**attr):
                         name = "home",
                         label = T("Home Phone"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "HOME_PHONE"),
                         ),
@@ -693,18 +686,18 @@ def customise_project_activity_controller(**attr):
                                  ]
 
                 report_options = Storage(
-                    rows=report_fields,
-                    cols=[],
-                    fact=[(T("Number of Activities"), "count(name)"),
-                          (T("Number of People"), "sum(beneficiary.value)"),
-                          ],
-                    defaults=Storage(rows="activity_activity_type.activity_type_id",
-                                     #cols="activity_group.group_id",
-                                     fact="count(name)",
-                                     totals=True,
-                                     chart = "barchart:rows",
-                                     table = "collapse",
-                                     )
+                    rows = report_fields,
+                    cols = [],
+                    fact = [(T("Number of Activities"), "count(name)"),
+                            (T("Number of People"), "sum(beneficiary.value)"),
+                            ],
+                    defaults = Storage(rows="activity_activity_type.activity_type_id",
+                                       #cols="activity_group.group_id",
+                                        fact="count(name)",
+                                       totals=True,
+                                       chart = "barchart:rows",
+                                       table = "collapse",
+                                       )
                     )
 
                 s3db.configure(tablename,
@@ -742,12 +735,6 @@ def customise_project_activity_controller(**attr):
 
                 table.person_id.comment = None
                 
-                # Hide Labels when just 1 column in inline form
-                s3db.doc_document.file.label = ""
-                s3db.project_activity_activity_type.activity_type_id.label = ""
-                s3db.project_activity_group.group_id.label = ""
-                s3db.project_beneficiary.value.label = ""
-
                 # Custom Crud Form
                 bttable = s3db.project_beneficiary_type
                 total = current.db(bttable.name == "Total").select(bttable.parameter_id,
@@ -762,13 +749,13 @@ def customise_project_activity_controller(**attr):
                     S3SQLInlineComponent(
                         "activity_activity_type",
                         label = T("Activity Type"),
-                        fields = ["activity_type_id"],
+                        fields = [("", "activity_type_id")],
                         multiple = False,
                     ),
                     S3SQLInlineComponent(
                         "activity_group",
                         label = T("Coalition"),
-                        fields = ["group_id"],
+                        fields = [("", "group_id")],
                         multiple = False,
                     ),
                     "location_id",
@@ -776,14 +763,14 @@ def customise_project_activity_controller(**attr):
                     S3SQLInlineComponent(
                         "activity_organisation",
                         label = T("Participating Organizations"),
-                        fields = ["organisation_id"],
+                        fields = [("", "organisation_id")],
                     ),
                     S3SQLInlineComponent(
                         "beneficiary",
                         label = T("Number of People Reached"),
                         link = False,
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "parameter_id",
                                         options = parameter_id
                                         ),
@@ -792,7 +779,7 @@ def customise_project_activity_controller(**attr):
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),
@@ -1020,7 +1007,6 @@ def customise_org_organisation_controller(**attr):
                 # Doesn't currently work Inline
                 #from s3.s3widgets import S3MultiSelectWidget
                 #s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
-                s3db.pr_contact.value.label = ""
                 form_fields = [
                     "name",
                     "logo",
@@ -1053,7 +1039,7 @@ def customise_org_organisation_controller(**attr):
                         name = "twitter",
                         label = T("Twitter"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "TWITTER"
                                         )
@@ -1306,15 +1292,12 @@ def customise_org_facility_controller(**attr):
                                                 label = T("Search"),
                                                ),
                                   S3OptionsFilter("site_org_group.group_id",
-                                                  header = True,
                                                   represent = "%(name)s",
                                                   ),
                                   S3HierarchyFilter("site_facility_type.facility_type_id",
-                                                    header = True,
                                                     label = T("Type of Place"),
                                                     ),
                                   S3OptionsFilter("organisation_id",
-                                                  header = True,
                                                   represent = "%(name)s",
                                                   ),
                                   ]
@@ -1327,16 +1310,16 @@ def customise_org_facility_controller(**attr):
                                  ]
 
                 report_options = Storage(
-                    rows=report_fields,
-                    cols=[],
-                    fact=[(T("Number of Places"), "count(name)")],
-                    defaults=Storage(rows="site_facility_type.facility_type_id",
-                                     #cols="site_org_group.group_id",
-                                     fact="count(name)",
-                                     totals=True,
-                                     chart = "barchart:rows",
-                                     table = "collapse",
-                                     )
+                    rows = report_fields,
+                    cols = [],
+                    fact = [(T("Number of Places"), "count(name)")],
+                    defaults = Storage(rows="site_facility_type.facility_type_id",
+                                       #cols="site_org_group.group_id",
+                                       fact="count(name)",
+                                       totals=True,
+                                       chart = "barchart:rows",
+                                       table = "collapse",
+                                       )
                     )
 
                 s3db.configure(tablename,
@@ -1374,10 +1357,6 @@ def customise_org_facility_controller(**attr):
                     # Doesn't currently work Inline
                     #s3db.org_site_org_group.group_id.widget = S3MultiSelectWidget(multiple=False)
 
-                # Hide Labels when just 1 column in inline form
-                s3db.doc_document.file.label = ""
-                s3db.org_site_org_group.group_id.label = ""
-
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
@@ -1390,7 +1369,7 @@ def customise_org_facility_controller(**attr):
                     S3SQLInlineComponent(
                         "site_org_group",
                         label = T("Coalition"),
-                        fields = ["group_id"],
+                        fields = [("", "group_id")],
                         multiple = False,
                     ),
                     "location_id",
@@ -1411,7 +1390,7 @@ def customise_org_facility_controller(**attr):
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),
@@ -1604,10 +1583,6 @@ def customise_stats_people_controller(**attr):
 
                     table.person_id.comment = None
     
-                # Hide Labels when just 1 column in inline form
-                s3db.doc_document.file.label = ""
-                s3db.stats_people_group.group_id.label = ""
-    
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
@@ -1616,7 +1591,7 @@ def customise_stats_people_controller(**attr):
                     S3SQLInlineComponent(
                         "people_group",
                         label = T("Coalition"),
-                        fields = ["group_id"],
+                        fields = [("", "group_id")],
                         multiple = False,
                     ),
                     "location_id",
@@ -1625,7 +1600,7 @@ def customise_stats_people_controller(**attr):
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),
@@ -1759,10 +1734,6 @@ def customise_vulnerability_evac_route_controller(**attr):
                     #                                            f="hazard",
                     #                                            title=T("Add Hazard Type")),
 
-                # Hide Labels when just 1 column in inline form
-                s3db.doc_document.file.label = ""
-                s3db.vulnerability_evac_route_group.group_id.label = ""
-
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
@@ -1770,7 +1741,7 @@ def customise_vulnerability_evac_route_controller(**attr):
                     S3SQLInlineComponent(
                         "evac_route_group",
                         label = T("Coalition"),
-                        fields = ["group_id"],
+                        fields = [("", "group_id")],
                         multiple = False,
                     ),
                     "location_id",
@@ -1778,7 +1749,7 @@ def customise_vulnerability_evac_route_controller(**attr):
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),
@@ -1930,10 +1901,6 @@ def customise_vulnerability_risk_controller(**attr):
                                                              show_postcode=True,
                                                              )
     
-                # Hide Labels when just 1 column in inline form
-                s3db.doc_document.file.label = ""
-                s3db.vulnerability_risk_group.group_id.label = ""
-    
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
@@ -1941,7 +1908,7 @@ def customise_vulnerability_risk_controller(**attr):
                     S3SQLInlineComponent(
                         "risk_group",
                         label = T("Coalition"),
-                        fields = ["group_id"],
+                        fields = [("", "group_id")],
                         multiple = False,
                     ),
                     "location_id",
@@ -1949,7 +1916,7 @@ def customise_vulnerability_risk_controller(**attr):
                         "document",
                         name = "file",
                         label = T("Files"),
-                        fields = ["file",
+                        fields = [("", "file"),
                                   #"comments",
                                   ],
                     ),

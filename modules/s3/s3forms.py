@@ -54,6 +54,9 @@ from gluon.validators import Validator
 from s3resource import S3FieldSelector
 from s3utils import s3_mark_required, s3_unicode, s3_store_last_record_id, s3_validate, s3_represent_value
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3SQLForm(object):
     """ SQL Form Base Class"""
@@ -1632,8 +1635,16 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             pkey = table._id.name
 
-            if "fields" in options:
-                fields = [f for f in options["fields"] if f in table.fields]
+            fields_opt = options.get("fields", None)
+            labels = {}
+            if fields_opt:
+                fields = []
+                for f in fields_opt:
+                    if isinstance(f, tuple):
+                        label, f = f
+                        labels[f] = label
+                    if f in table.fields:
+                        fields.append(f)
             else:
                 # Really?
                 fields = [f.name for f in table if f.readable or f.writable]
@@ -1672,14 +1683,26 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 records = data["rows"]
                 rfields = data["rfields"]
 
-                if extra_fields:
-                    for f in rfields:
-                        if f.fname in extra_fields:
-                            rfields.remove(f)
+                for f in rfields:
+                    if f.fname in extra_fields:
+                        rfields.remove(f)
+                    else:
+                        s = f.selector
+                        if s.startswith("~."):
+                            s = s[2:]
+                        label = labels.get(s, None)
+                        if label is not None:
+                            f.label = label
 
             else:
                 records = []
-                rfields = [component.resolve_selector(s) for s in fields]
+                rfields = []
+                for s in fields:
+                    rfield = component.resolve_selector(s)
+                    label = labels.get(s, None)
+                    if label is not None:
+                        rfield.label = label
+                    rfields.append(rfield)
                 for f in virtual_fields:
                     rfield = component.resolve_selector(f[1])
                     rfield.label = f[0]
@@ -1739,7 +1762,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         else:
             raise AttributeError("Undefined component")
 
-        return json.dumps(data)
+        return json.dumps(data, separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
     def parse(self, value):
@@ -1790,7 +1813,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             data = json.loads(value)
         else:
             data = value
-            value = json.dumps(value)
+            value = json.dumps(value, separators=SEPARATORS)
         if data is None:
             raise SyntaxError("No resource structure information")
 
@@ -3108,7 +3131,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         else:
             raise AttributeError("Undefined component")
 
-        return json.dumps(data)
+        return json.dumps(data, separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -3132,7 +3155,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             data = json.loads(value)
         else:
             data = value
-            value = json.dumps(value)
+            value = json.dumps(value, separators=SEPARATORS)
         if data is None:
             raise SyntaxError("No resource structure information")
 
@@ -3493,7 +3516,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             data = json.loads(value)
         else:
             data = value
-            value = json.dumps(value)
+            value = json.dumps(value, separators=SEPARATORS)
         if data is None:
             raise SyntaxError("No resource structure information")
 

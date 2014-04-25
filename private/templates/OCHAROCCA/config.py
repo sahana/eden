@@ -264,28 +264,23 @@ def customise_gis_location_controller(**attr):
                         )
 
     from s3.s3widgets import S3MultiSelectWidget
-
     s3db.gis_location.parent.widget = S3MultiSelectWidget(multiple=False)
     
-    s3db.gis_location_name.name_l10n.label = ""
-    s3db.gis_location_tag.value.label = ""
-
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-
     crud_form = S3SQLCustomForm("name",
                                 #"name_ru.name_l10n",
                                 S3SQLInlineComponent(
                                     "name_ru",
                                     label = T("Russian Name"),
                                     multiple = False,
-                                    fields = ["name_l10n"],
+                                    fields = [("", "name_l10n")],
                                 ),
                                 "level",
                                 S3SQLInlineComponent(
                                     "pcode",
                                     label = T("PCode"),
                                     multiple = False,
-                                    fields = ["value"],
+                                    fields = [("", "value")],
                                 ),
                                 #"pcode.value",
                                 "parent",
@@ -368,7 +363,6 @@ def customise_event_event_resource(r, tablename):
     location_field = s3db.event_event_location.location_id
     location_field.requires = IS_LOCATION_SELECTOR2(levels=gis_levels)
     location_field.widget = S3LocationSelectorWidget2(levels=gis_levels)
-    location_field.label = "" #For inline form
 
     impact_fields = OrderedDict(killed = "Killed",
                                 total_affected = "Total Affected",
@@ -399,7 +393,7 @@ def customise_event_event_resource(r, tablename):
                                                             label = label,
                                                             link = False,
                                                             multiple = False,
-                                                            fields = ["value"],
+                                                            fields = [("", "value")],
                                                             filterby = dict(field = "parameter_id",
                                                                             options = parameter
                                                                             )
@@ -411,8 +405,6 @@ def customise_event_event_resource(r, tablename):
                         stats_impact = impact_components,
                         )
 
-    # Hide label in CRUD form
-    db.stats_impact.value.label = ""
     crud_form = S3SQLCustomForm("name",
                                 "event_type_id",
                                 "start_date",
@@ -421,7 +413,7 @@ def customise_event_event_resource(r, tablename):
                                 #S3SQLInlineComponent("event_location",
                                 #                     label = T("Location"),
                                 #                     multiple = False,
-                                #                     fields = ["location_id"],
+                                #                     fields = [("", "location_id")],
                                 #                     ),
                                 "comments",
                                 *impact_crud_form_fields
@@ -495,10 +487,10 @@ def customise_vulnerability_data_resource(r, tablename):
     def represent_indicator(id):
         # @ToDo: Implement with S3Represent
         itable = db.vulnerability_indicator
-        row = db(itable.parameter_id == id
-                 ).select(itable.name,
-                          itable.description,
-                          limitby=(0, 1)).first()
+        row = db(itable.parameter_id == id).select(itable.name,
+                                                   itable.description,
+                                                   limitby=(0, 1)
+                                                   ).first()
         if row:
             represent = SPAN(row.name,
                              _class = "s3-popover")
@@ -507,7 +499,7 @@ def customise_vulnerability_data_resource(r, tablename):
         else:
             return ""
 
-    r.table.parameter_id.represent = represent_indicator
+    table.parameter_id.represent = represent_indicator
 
     def represent_year(date):
         if date:
@@ -515,16 +507,16 @@ def customise_vulnerability_data_resource(r, tablename):
         else:
             return ""
 
-    r.table.date.label = T("Year")
-    r.table.date.represent = represent_year
-    r.table.end_date.label = T("Until")
-    r.table.end_date.represent = represent_year
+    table.date.label = T("Year")
+    table.date.represent = represent_year
+    table.end_date.label = T("Until")
+    table.end_date.represent = represent_year
 
-    list_fields = s3db.get_config(r.tablename,"list_fields")
-    list_fields.insert(list_fields.index("date") + 1,"end_date")
+    list_fields = s3db.get_config(r.tablename, "list_fields")
+    list_fields.insert(list_fields.index("date") + 1, "end_date")
 
     if r.interactive:
-        s3.crud_strings["vulnerability_data"] = Storage(
+        current.response.s3.crud_strings["vulnerability_data"] = Storage(
             label_create = T("Create Baseline Data"),
             title_display = T("Baselines Data"),
             title_list = T("Baseline Data"),
@@ -604,7 +596,7 @@ def customise_org_facility_resource(r, tablename):
                          )
         )
 
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentMultiSelectWidget
     # Custom Crud Form
     crud_form = S3SQLCustomForm(
         "name",
@@ -622,13 +614,14 @@ def customise_org_facility_resource(r, tablename):
     )
 
     s3db.configure(tablename,
-                   crud_form=crud_form,
-                   filter_widgets=filter_widgets,
-                   list_fields=list_fields,
-                   report_options=report_options,
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   list_fields = list_fields,
+                   report_options = report_options,
                    )
 
 settings.customise_org_facility_resource = customise_org_facility_resource
+
 # =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them

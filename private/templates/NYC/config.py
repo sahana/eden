@@ -350,11 +350,10 @@ def customise_org_facility_controller(**attr):
                 # We default this onvalidation
                 table.name.notnull = False
                 table.name.requires = None
-                s3db.org_site_facility_type.facility_type_id.label = ""
                 crud_form = S3SQLCustomForm(S3SQLInlineComponent(
                                                 "site_facility_type",
                                                 label = T("Facility Type"),
-                                                fields = ["facility_type_id"],
+                                                fields = [("", "facility_type_id")],
                                                 multiple = False,
                                                 required = True,
                                             ),
@@ -407,9 +406,6 @@ def customise_org_organisation_controller(**attr):
             if not r.component:
                 from gluon.html import DIV, INPUT
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
-                s3db.pr_address.comments.label = ""
-                s3db.pr_contact.value.label = ""
-                s3db.doc_document.url.label = ""
                 crud_form = S3SQLCustomForm(
                     "name",
                     "acronym",
@@ -432,7 +428,7 @@ def customise_org_organisation_controller(**attr):
                         multiple = False,
                         # This is just Text - put into the Comments box for now
                         # Ultimately should go into location_id$addr_street
-                        fields = ["comments"],
+                        fields = [("", "comments")],
                     ),
                     S3SQLInlineComponentMultiSelectWidget(
                         "location",
@@ -450,7 +446,7 @@ def customise_org_organisation_controller(**attr):
                         name = "phone2",
                         label = T("Phone2"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "WORK_PHONE"
                                         )
@@ -460,7 +456,7 @@ def customise_org_organisation_controller(**attr):
                         name = "email",
                         label = T("Email"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "EMAIL"
                                         )
@@ -474,7 +470,7 @@ def customise_org_organisation_controller(**attr):
                         name = "rss",
                         label = T("RSS"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "RSS"
                                         )
@@ -484,8 +480,7 @@ def customise_org_organisation_controller(**attr):
                         name = "iCal",
                         label = "iCAL",
                         multiple = False,
-                        fields = ["url",
-                                  ],
+                        fields = [("", "url")],
                         filterby = dict(field = "name",
                                         options="iCal"
                                         )
@@ -495,8 +490,7 @@ def customise_org_organisation_controller(**attr):
                         name = "data",
                         label = T("Data"),
                         multiple = False,
-                        fields = ["url",
-                                  ],
+                        fields = [("", "url")],
                         filterby = dict(field = "name",
                                         options="Data"
                                         )
@@ -506,7 +500,7 @@ def customise_org_organisation_controller(**attr):
                         name = "twitter",
                         label = T("Twitter"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "TWITTER"
                                         )
@@ -516,7 +510,7 @@ def customise_org_organisation_controller(**attr):
                         name = "facebook",
                         label = T("Facebook"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "FACEBOOK"
                                         )
@@ -541,14 +535,11 @@ def customise_org_organisation_controller(**attr):
                                      #hidden = True,
                                      ),
                     S3OptionsFilter("service_organisation.service_id",
-                                    label = T("Service"),
-                                    represent = "%(name)s",
+                                    #label = T("Service"),
                                     #hidden = True,
                                     ),
                     S3OptionsFilter("organisation_type_id",
                                     label = T("Type"),
-                                    # Not translateable
-                                    #represent = "%(name)s",
                                     #hidden = True,
                                     ),
                     ]
@@ -561,6 +552,7 @@ def customise_org_organisation_controller(**attr):
                 s3db.configure("pr_contact",
                                onaccept = pr_contact_onaccept,
                                )
+
             elif r.component_name == "facility":
                 if r.method in (None, "create", "update"):
                     from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -653,8 +645,6 @@ def customise_org_group_controller(**attr):
                     if manhattan:
                         field.default = manhattan.id
 
-                s3db.pr_contact.value.label = ""
-                s3db.doc_document.url.label = ""
                 crud_form = S3SQLCustomForm(
                     "name",
                     "location_id",
@@ -663,7 +653,7 @@ def customise_org_group_controller(**attr):
                         name = "phone",
                         label = T("Phone"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "WORK_PHONE"
                                         )
@@ -673,7 +663,7 @@ def customise_org_group_controller(**attr):
                         name = "email",
                         label = T("Email"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "EMAIL"
                                         )
@@ -687,7 +677,7 @@ def customise_org_group_controller(**attr):
                         name = "rss",
                         label = T("RSS"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "RSS"
                                         )
@@ -697,8 +687,7 @@ def customise_org_group_controller(**attr):
                         name = "iCal",
                         label = "iCAL",
                         multiple = False,
-                        fields = ["url",
-                                  ],
+                        fields = [("", "url")],
                         filterby = dict(field = "name",
                                         options="iCal"
                                         )
@@ -708,8 +697,7 @@ def customise_org_group_controller(**attr):
                         name = "data",
                         label = T("Data"),
                         multiple = False,
-                        fields = ["url",
-                                  ],
+                        fields = [("", "url")],
                         filterby = dict(field = "name",
                                         options="Data"
                                         )
@@ -719,7 +707,7 @@ def customise_org_group_controller(**attr):
                         name = "twitter",
                         label = T("Twitter"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "TWITTER"
                                         )
@@ -729,13 +717,14 @@ def customise_org_group_controller(**attr):
                         name = "facebook",
                         label = T("Facebook"),
                         multiple = False,
-                        fields = ["value"],
+                        fields = [("", "value")],
                         filterby = dict(field = "contact_method",
                                         options = "FACEBOOK"
                                         )
                     ),
                     "comments",
                 )
+
                 s3db.configure("org_group",
                                crud_form = crud_form,
                                )
@@ -856,14 +845,13 @@ def customise_pr_group_controller(**attr):
         from s3.s3filter import S3TextFilter, S3OptionsFilter
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 
-        field = s3db.org_group_team.org_group_id
-        field.label = ""
-        field.represent = S3Represent(lookup="org_group", show_link=True)
+        s3db.org_group_team.org_group_id.represent = S3Represent(lookup="org_group",
+                                                                 show_link=True)
         crud_form = S3SQLCustomForm("name",
                                     "description",
                                     S3SQLInlineComponent("group_team",
                                                          label = T("Network"),
-                                                         fields = ["org_group_id"],
+                                                         fields = [("", "org_group_id")],
                                                          # @ToDo: Make this optional?
                                                          multiple = False,
                                                          ),
@@ -1112,7 +1100,6 @@ def customise_hrm_human_resource_resource(r, tablename):
 
     s3db = current.s3db
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-    s3db.org_group_person.group_id.label = ""
     crud_form = S3SQLCustomForm("person_id",
                                 "organisation_id",
                                 "site_id",
@@ -1120,7 +1107,7 @@ def customise_hrm_human_resource_resource(r, tablename):
                                     "group_person",
                                     label = T("Network"),
                                     link = False,
-                                    fields = ["group_id"],
+                                    fields = [("", "group_id")],
                                     multiple = False,
                                     ),
                                 "job_title_id",
@@ -1233,7 +1220,7 @@ def customise_project_project_controller(**attr):
                 S3SQLInlineComponent(
                     "location",
                     label = T("Location"),
-                    fields = ["location_id"],
+                    fields = [("", "location_id")],
                 ),
                 # Partner Orgs
                 S3SQLInlineComponent(

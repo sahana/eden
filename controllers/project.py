@@ -49,7 +49,6 @@ def project():
 
         if r.method == "datalist":
             # Set list_fields for renderer (project_project_list_layout)
-            # @ ToDo: move this to somewhere in trunk where it is called when projects are used in a profile page
             s3db.configure("project_project",
                            list_fields = ["name",
                                           "description",
@@ -159,7 +158,7 @@ def project():
                                        "time_estimated",
                                        "time_actual",
                                        "status",
-                                      ]
+                                       ]
                     ttable = component.table
                     for fieldname in unwanted_fields:
                         field = ttable[fieldname]
@@ -248,21 +247,15 @@ def project():
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
-
-            elif r.component_name == "task" and \
-                 "form" in output and \
-                 r.method != "report":
-                # Insert fields to control the Activity & Milestone
-                output = s3db.project_task_form_inject(r, output, project=False)
                 
         return output
     s3.postp = postp
 
     return s3_rest_controller(module, "project",
-                              rheader = s3db.project_rheader,
                               csv_template = "project",
                               hide_filter = {None: False, "_default": True},
-                             )
+                              rheader = s3db.project_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def open_tasks_for_project():

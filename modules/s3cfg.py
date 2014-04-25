@@ -2187,7 +2187,7 @@ class S3Config(Storage):
 
     def get_project_activities(self):
         """
-            Use Activities in Projects
+            Use Activities in Projects & Tasks
         """
         return self.project.get("activities", False)
 
@@ -2224,13 +2224,13 @@ class S3Config(Storage):
 
     def get_project_milestones(self):
         """
-            Use Milestones in Projects
+            Use Milestones in Projects & Tasks
         """
         return self.project.get("milestones", False)
 
     def get_project_projects(self):
         """
-            Link Activities to Projects
+            Link Activities & Tasks to Projects
         """
         return self.project.get("projects", False)
 

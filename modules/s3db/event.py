@@ -572,7 +572,6 @@ class S3IncidentModel(S3Model):
                           self.event_event_id(),
                           self.event_incident_type_id(),
                           self.scenario_scenario_id(),
-                          self.gis_location_id(),
                           Field("name", notnull=True, # Name could be a code
                                 length=64,
                                 label=T("Name")),
@@ -594,7 +593,12 @@ class S3IncidentModel(S3Model):
                                 default = False,
                                 represent = s3_yes_no_represent,
                                 label=T("Closed")),
-                          self.org_organisation_id(label="Lead Organisation"),
+                          # Enable this field in templates if-required
+                          self.org_organisation_id(label="Lead Organisation", # Lead Responder
+                                                   readable = False,
+                                                   writable = False,
+                                                   ),
+                          self.gis_location_id(),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -630,6 +634,7 @@ class S3IncidentModel(S3Model):
                                       #                                current.messages.AUTOCOMPLETE_HELP))
                                       )
 
+        # @ToDo: Move this workflow into Templates?
         if settings.has_module("project"):
             create_next_url = URL(args=["[id]", "task"])
         elif settings.has_module("hrm"):
@@ -654,42 +659,42 @@ class S3IncidentModel(S3Model):
 
         # Components
         add_components(tablename,
-                       project_task={"link": "event_task",
+                       project_task = {"link": "event_task",
+                                       "joinby": "incident_id",
+                                       "key": "task_id",
+                                       # @ToDo: Widget to handle embedded LocationSelector
+                                       #"actuate": "embed",
+                                       "actuate": "link",
+                                       "autocomplete": "name",
+                                       "autodelete": False,
+                                       },
+                       event_human_resource = "incident_id",
+                       hrm_human_resource = {"link": "event_human_resource",
+                                             "joinby": "incident_id",
+                                             "key": "human_resource_id",
+                                             # @ToDo: Widget to handle embedded AddPersonWidget
+                                             #"actuate": "embed",
+                                             "actuate": "link",
+                                             "autocomplete": "name",
+                                             "autodelete": False,
+                                             },
+                       asset_asset = {"link": "event_asset",
+                                      "joinby": "incident_id",
+                                      "key": "asset_id",
+                                      "actuate": "embed",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                      },
+                       event_site = "incident_id",
+                       gis_config = {"link": "event_config",
                                      "joinby": "incident_id",
-                                     "key": "task_id",
-                                     # @ToDo: Widget to handle embedded LocationSelector
-                                     #"actuate": "embed",
-                                     "actuate": "link",
+                                     "multiple": False,
+                                     "key": "config_id",
+                                     "actuate": "replace",
                                      "autocomplete": "name",
-                                     "autodelete": False,
-                                    },
-                       event_human_resource="incident_id",
-                       hrm_human_resource={"link": "event_human_resource",
-                                           "joinby": "incident_id",
-                                           "key": "human_resource_id",
-                                           # @ToDo: Widget to handle embedded AddPersonWidget
-                                           #"actuate": "embed",
-                                           "actuate": "link",
-                                           "autocomplete": "name",
-                                           "autodelete": False,
-                                          },
-                       asset_asset={"link": "event_asset",
-                                    "joinby": "incident_id",
-                                    "key": "asset_id",
-                                    "actuate": "embed",
-                                    "autocomplete": "name",
-                                    "autodelete": False,
-                                    },
-                       event_site="incident_id",
-                       gis_config={"link": "event_config",
-                                   "joinby": "incident_id",
-                                   "multiple": False,
-                                   "key": "config_id",
-                                   "actuate": "replace",
-                                   "autocomplete": "name",
-                                   "autodelete": True,
-                                  },
-                      )
+                                     "autodelete": True,
+                                     },
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict(event_incident_id = incident_id,
@@ -835,6 +840,9 @@ class S3IncidentReportModel(S3Model):
     """
         Incident Reports
          - reports about incidents
+         - useful for busy call centres which may receive many reports about a
+           single incident and may receive calls which need logging but don't
+           get responded to as an Incident (e.g. Out of Scope)
 
         @ToDo: Deprecate IRS module by porting functionality here
     """
@@ -878,31 +886,29 @@ class S3IncidentReportModel(S3Model):
             msg_list_empty = T("No Incident Reports currently registered for this event"))
 
         filter_widgets = [S3OptionsFilter("incident_type_id",
-                                          label=T("Type"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
+                                          label = T("Type"),
                                           ),
                           ]
 
         self.configure(tablename,
-                       super_entity="doc_entity",
                        filter_widgets = filter_widgets,
+                       super_entity = "doc_entity",
                        )
 
         # Components
         add_components(tablename,
                        # Coalitions
-                       org_group={"link": "event_incident_report_group",
-                                  "joinby": "incident_report_id",
-                                  "key": "group_id",
-                                  "actuate": "hide",
-                                 },
+                       org_group = {"link": "event_incident_report_group",
+                                    "joinby": "incident_report_id",
+                                    "key": "group_id",
+                                    "actuate": "hide",
+                                    },
                        # Format for InlineComponent/filter_widget
-                       event_incident_report_group="incident_report_id",
-                      )
+                       event_incident_report_group = "incident_report_id",
+                       )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return dict()
 
 # =============================================================================
 class S3IncidentGroupModel(S3Model):
@@ -1074,7 +1080,7 @@ class S3IncidentTypeTagModel(S3Model):
 # =============================================================================
 class S3EventActivityModel(S3Model):
     """
-        Link Activities to Events
+        Link Project Activities to Events
     """
 
     names = ["event_activity"]
