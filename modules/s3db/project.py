@@ -475,8 +475,8 @@ class S3ProjectModel(S3Model):
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
-                                readable=False,
-                                writable=False)
+                                readable = False,
+                                writable = False)
 
         return dict(project_project_id = lambda **attr: dummy("project_id"),
                     )
@@ -1151,8 +1151,8 @@ class S3ProjectActivityModel(S3Model):
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
-                                readable=False,
-                                writable=False)
+                                readable = False,
+                                writable = False)
 
         return dict(project_activity_id = lambda **attr: dummy("activity_id"),
                     )
@@ -2936,10 +2936,10 @@ class S3ProjectLocationModel(S3Model):
         """ Safe defaults for model-global names if module is disabled """
 
         project_location_id = S3ReusableField("project_location_id", "integer",
-                                              readable=False,
-                                              writable=False)
+                                              readable = False,
+                                              writable = False)
 
-        return dict(project_location_id = project_location_id,
+        return dict(project_location_id = lambda **attr: dummy("project_location_id"),
                     project_location_represent = lambda v, row=None: ""
                    )
 
@@ -4679,10 +4679,10 @@ class S3ProjectTaskModel(S3Model):
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
-                                readable=False,
-                                writable=False)
+                                readable = False,
+                                writable = False)
 
-        return dict(project_task_id = lambda: dummy("task_id"),
+        return dict(project_task_id = lambda **attr: dummy("task_id"),
                     project_task_active_statuses = [],
                     )
 
@@ -5364,8 +5364,7 @@ class S3ProjectTaskIReportModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(
-            )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
