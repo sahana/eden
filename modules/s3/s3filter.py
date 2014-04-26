@@ -1534,14 +1534,22 @@ class S3OptionsFilter(S3FilterWidget):
         except:
             opt_list.sort(key=lambda item: s3_unicode(item[1]))
         options = []
-        empty = None
+        empty = False
         for k, v in opt_list:
             if k is None:
-                empty = ("None", v)
+                if none:
+                    empty = True
+                    if none is True:
+                        # Use the represent
+                        options.append((k, v))
+                    else:
+                        # Must be a string to use as the represent:
+                        options.append((k, none))
             else:
                 options.append((k, v))
-        if empty and none:
-            options.append(empty)
+        if none and not empty:
+            # Add the value anyway (e.g. not found via the reverse lookup)
+            options.append((None, none))
 
         # Sort the options
         return (ftype, options, None)

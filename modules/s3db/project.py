@@ -4299,7 +4299,6 @@ class S3ProjectTaskModel(S3Model):
 
         filter_widgets.extend((S3OptionsFilter("pe_id",
                                                label = T("Assigned To"),
-                                               # Not currently working with Reverse Lookup
                                                none = T("Unassigned"),
                                                ),
                                S3OptionsFilter("created_by",
