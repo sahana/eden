@@ -1251,9 +1251,9 @@ class S3ProjectActivityTypeModel(S3Model):
         #
         tablename = "project_activity_type"
         define_table(tablename,
-                     Field("name", length=128,
+                     Field("name", length=128, notnull=True, unique=True,
                            label = T("Name"),
-                           notnull=True, unique=True),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1551,14 +1551,14 @@ class S3ProjectAnnualBudgetModel(S3Model):
                                                      )
                                 ),
                           Field("year", "integer", notnull=True,
-                                default=None, # make it current year
-                                requires=IS_INT_IN_RANGE(1950, 3000),
-                                label=T("Year"),
+                                default = None, # make it current year
+                                label = T("Year"),
+                                requires = IS_INT_IN_RANGE(1950, 3000),
                                 ),
                           Field("amount", "double", notnull=True,
-                                default=0.00,
-                                requires=IS_FLOAT_AMOUNT(),
-                                label=T("Amount"),
+                                default = 0.00,
+                                label = T("Amount"),
+                                requires = IS_FLOAT_AMOUNT(),
                                 ),
                           s3_currency(required=True),
                           *s3_meta_fields())
@@ -2493,13 +2493,10 @@ class S3ProjectHazardModel(S3Model):
         #
         tablename = "project_hazard"
         define_table(tablename,
-                     Field("name",
-                           length=128,
-                           notnull=True,
-                           unique=True,
-                           label=T("Name"),
-                           represent=lambda v: T(v) if v is not None \
-                                                    else NONE,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
+                           represent = lambda v: T(v) if v is not None \
+                                                      else NONE,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -3339,8 +3336,7 @@ class S3ProjectStatusModel(S3Model):
         #
         tablename = "project_status"
         self.define_table(tablename,
-                          Field("name", length=128,
-                                notnull=True, unique=True,
+                          Field("name", length=128, notnull=True, unique=True,
                                 label = T("Name"),
                                 ),
                           s3_comments(),
@@ -3414,13 +3410,10 @@ class S3ProjectThemeModel(S3Model):
         #
         tablename = "project_theme"
         define_table(tablename,
-                     Field("name",
-                           length=128,
-                           notnull=True,
-                           unique=True,
-                           label=T("Name"),
-                           represent=lambda v: T(v) if v is not None \
-                                                    else NONE,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
+                           represent = lambda v: T(v) if v is not None \
+                                                      else NONE,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4306,27 +4299,27 @@ class S3ProjectTaskModel(S3Model):
 
         filter_widgets.extend((S3OptionsFilter("pe_id",
                                                label = T("Assigned To"),
-                                               # @ToDo: Implement support for this in S3OptionsFilter
-                                               #null = T("Unassigned"),
+                                               # Not currently working with Reverse Lookup
+                                               none = T("Unassigned"),
                                                ),
                                S3OptionsFilter("created_by",
                                                label = T("Created By"),
                                                hidden = True,
                                                ),
-                               S3RangeFilter("created_on",
-                                             label = T("Date Created"),
-                                             hide_time = True,
-                                             hidden = True,
-                                             ),
-                               S3RangeFilter("date_due",
-                                             hide_time = True,
-                                             hidden = True,
-                                             ),
-                               S3RangeFilter("modified_on",
-                                             label = T("Date Modified"),
-                                             hide_time = True,
-                                             hidden = True,
-                                             ),
+                               S3DateFilter("created_on",
+                                            label = T("Date Created"),
+                                            hide_time = True,
+                                            hidden = True,
+                                            ),
+                               S3DateFilter("date_due",
+                                            hide_time = True,
+                                            hidden = True,
+                                            ),
+                               S3DateFilter("modified_on",
+                                            label = T("Date Modified"),
+                                            hide_time = True,
+                                            hidden = True,
+                                            ),
                                S3OptionsFilter("status",
                                                options = project_task_status_opts,
                                                ),
