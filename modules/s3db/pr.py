@@ -289,7 +289,7 @@ class S3PersonEntity(S3Model):
                             writable = False),
                       # Type filter, type of entities which can have this role
                       Field("entity_type", "string",
-                            requires = IS_EMPTY_OR(IS_IN_SET(pe_types,
+                            requires = IS_NULL_OR(IS_IN_SET(pe_types,
                                                              zero=T("ANY"))),
                             represent = lambda opt: \
                             pe_types.get(opt, UNKNOWN_OPT),
@@ -893,21 +893,40 @@ class S3PersonModel(S3Model):
 
         person_represent = pr_PersonRepresent()
 
-        if settings.get_pr_reverse_names():
-            sortby = ["last_name", "first_name", "middle_name"]
-            orderby="pr_person.last_name"
+        name_format = settings.get_pr_name_format()
+        test = name_format % dict(first_name=1,
+                                  middle_name=2,
+                                  last_name=3,
+                                  )
+        test = "".join(ch for ch in test if ch in ("1", "2", "3"))
+        if test[:1] == "1":
+            orderby = "pr_person.first_name"
+            if test[:2] == "2":
+                sortby = ["first_name", "middle_name", "last_name"]
+            else:
+                sortby = ["first_name", "last_name", "middle_name"]
+        elif test[:1] == "2":
+            orderby = "pr_person.middle_name"
+            if test[:2] == "1":
+                sortby = ["middle_name", "first_name", "last_name"]
+            else:
+                sortby = ["middle_name", "last_name", "first_name"]
         else:
-            sortby = ["first_name", "middle_name", "last_name"]
-            orderby="pr_person.first_name"
-            
+            orderby = "pr_person.last_name"
+            if test[:2] == "1":
+                sortby = ["last_name", "first_name", "middle_name"]
+            else:
+                sortby = ["last_name", "middle_name", "first_name"]
+
         person_id = S3ReusableField("person_id", "reference %s" % tablename,
                                     sortby = sortby,
                                     requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "pr_person.id",
-                                                          person_represent,
-                                                          orderby=orderby,
-                                                          sort=True,
-                                                          error_message=T("Person must be specified!"))),
+                                        IS_ONE_OF(db, "pr_person.id",
+                                                  person_represent,
+                                                  orderby = orderby,
+                                                  sort = True,
+                                                  error_message = T("Person must be specified!"))
+                                                  ),
                                     represent = person_represent,
                                     label = T("Person"),
                                     comment = person_id_comment,
@@ -932,45 +951,45 @@ class S3PersonModel(S3Model):
         # Components
         add_components(tablename,
                        # Personal Data
-                       pr_identity="person_id",
-                       pr_education="person_id",
-                       pr_person_details={"joinby": "person_id",
-                                          "multiple": False,
-                                          },
+                       pr_identity = "person_id",
+                       pr_education = "person_id",
+                       pr_person_details = {"joinby": "person_id",
+                                            "multiple": False,
+                                            },
                        # Saved Searches and Subscriptions
-                       pr_save_search="person_id",
-                       msg_subscription="person_id",
+                       pr_save_search = "person_id",
+                       msg_subscription = "person_id",
                        # Group Memberships
-                       pr_group_membership="person_id",
+                       pr_group_membership = "person_id",
                        # Organisation Memberships
-                       member_membership="person_id",
+                       member_membership = "person_id",
                        # User account
-                       auth_user={"link": "pr_person_user",
-                                  "joinby": "pe_id",
-                                  "key": "user_id",
-                                  "fkey": "id",
-                                  "pkey": "pe_id",
-                                  },
+                       auth_user = {"link": "pr_person_user",
+                                    "joinby": "pe_id",
+                                    "key": "user_id",
+                                    "fkey": "id",
+                                    "pkey": "pe_id",
+                                    },
                        # HR Records
-                       hrm_human_resource="person_id",
+                       hrm_human_resource = "person_id",
                        # Skills
-                       hrm_certification="person_id",
-                       hrm_competency="person_id",
-                       hrm_credential="person_id",
-                       hrm_training="person_id",
+                       hrm_certification = "person_id",
+                       hrm_competency = "person_id",
+                       hrm_credential = "person_id",
+                       hrm_training = "person_id",
                        # Experience
-                       hrm_experience="person_id",
-                       hrm_programme_hours={"name": "hours",
-                                            "joinby": "person_id",
-                                            },
+                       hrm_experience = "person_id",
+                       hrm_programme_hours = {"name": "hours",
+                                              "joinby": "person_id",
+                                              },
                        # Appraisals
-                       hrm_appraisal="person_id",
+                       hrm_appraisal = "person_id",
                        # Awards
-                       vol_volunteer_award={"name": "award",
-                                            "joinby": "person_id",
-                                            },
+                       vol_volunteer_award = {"name": "award",
+                                              "joinby": "person_id",
+                                              },
                        # Assets
-                       asset_asset="assigned_to_id",
+                       asset_asset = "assigned_to_id",
                        )
 
         # ---------------------------------------------------------------------
@@ -1311,10 +1330,18 @@ class S3PersonModel(S3Model):
                 if show_orgs:
                     fields.append("human_resource.organisation_id$name")
 
-            if settings.get_pr_reverse_names():
-                orderby = "pr_person.last_name"
-            else:
+            name_format = settings.get_pr_name_format()
+            test = name_format % dict(first_name=1,
+                                      middle_name=2,
+                                      last_name=3,
+                                      )
+            test = "".join(ch for ch in test if ch in ("1", "2", "3"))
+            if test[:1] == "1":
                 orderby = "pr_person.first_name"
+            elif test[:1] == "2":
+                orderby = "pr_person.middle_name"
+            else:
+                orderby = "pr_person.last_name"
             rows = resource.select(fields=fields,
                                    start=0,
                                    limit=limit,
@@ -2638,7 +2665,7 @@ class S3PersonIdentityModel(S3Model):
                           Field("type", "integer",
                                 label = T("ID type"),
                                 requires = IS_IN_SET(pr_id_type_opts,
-                                                        zero=None),
+                                                     zero=None),
                                 default = 1,
                                 represent = lambda opt: \
                                         pr_id_type_opts.get(opt,
@@ -2720,44 +2747,100 @@ class S3PersonIdentityModel(S3Model):
 class S3PersonEducationModel(S3Model):
     """ Education details for Persons """
 
-    names = ["pr_education"]
+    names = ["pr_education_level",
+             "pr_education",
+             ]
 
     def model(self):
 
         T = current.T
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
         NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
-        tablename = "pr_education"
-        self.define_table(tablename,
-                          self.pr_person_id(label = T("Person"),
-                                            ondelete="CASCADE"),
-                          Field("level",
-                                represent=lambda v: v or NONE,
-                                label=T("Level of Award")),
-                          Field("award",
-                                represent=lambda v: v or NONE,
-                                label=T("Name of Award")),
-                          Field("institute",
-                                represent=lambda v: v or NONE,
-                                label=T("Name of Institute")),
-                          Field("year", "integer",
-                                requires=IS_NULL_OR(
-                                            IS_INT_IN_RANGE(1900, 2100)
-                                          ),
-                                represent=lambda v: v or NONE,
-                                label=T("Year")),
-                          Field("major",
-                                represent=lambda v: v or NONE,
-                                label=T("Major")),
-                          Field("grade",
-                                represent=lambda v: v or NONE,
-                                label=T("Grade")),
-                          s3_comments(),
-                          *s3_meta_fields())
+        # Education Level
+        #
+        tablename = "pr_education_level"
+        define_table(tablename,
+                     Field("name", length=64, notnull=True, unique=True,
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        ADD_EDUCATION_LEVEL = T("Add Education Level")
+        crud_strings[tablename] = Storage(
+           label_create = ADD_EDUCATION_LEVEL,
+           title_display = T("Education Level"),
+           title_list = T("Education Levels"),
+           title_update = T("Edit Education Level"),
+           label_list_button = T("List Education Levels"),
+           msg_record_created = T("Education Level added"),
+           msg_record_modified = T("Education Level updated"),
+           msg_record_deleted = T("Education Level deleted"),
+           msg_list_empty = T("No Education Levels currently registered"))
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        level_id = S3ReusableField("level_id", "reference %s" % tablename,
+                                   comment = S3AddResourceLink(c="pr",
+                                                               f="education_level",
+                                                               label=ADD_EDUCATION_LEVEL,
+                                                               ),
+                                   label = T("Level of Award"),
+                                   ondelete = "RESTRICT",
+                                   represent = represent,
+                                   requires = IS_NULL_OR(
+                                        IS_ONE_OF(current.db, "pr_education_level.id",
+                                                  represent,
+                                                  )),
+                                   sortby = "name",
+                                   )
+
+        # ---------------------------------------------------------------------
+        # Education
+        #
+        tablename = "pr_education"
+        define_table(tablename,
+                     self.pr_person_id(label = T("Person"),
+                                       ondelete="CASCADE"),
+                     level_id(),
+                     # Enable this field for backwards-compatibility or to store details of the 'other' level
+                     Field("level",
+                           #label = T("Level other"),
+                           represent = lambda v: v or NONE,
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("award",
+                           label = T("Name of Award"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     Field("institute",
+                           label = T("Name of Institute"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     Field("year", "integer",
+                           label = T("Year"),
+                           represent = lambda v: v or NONE,
+                           requires = IS_NULL_OR(
+                                        IS_INT_IN_RANGE(1900, 2100)
+                                        ),
+                           ),
+                     Field("major",
+                           label = T("Major"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     Field("grade",
+                           label = T("Grade"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
             label_create = T("Add Education Detail"),
             title_display = T("Education Details"),
             title_list = T("Education Details"),
@@ -2883,12 +2966,12 @@ class S3PersonDetailsModel(S3Model):
                                 represent = lambda opt: \
                                     pr_religion_opts.get(opt, UNKNOWN_OPT),
                                 ),
-                          # Alternate free-text form
-                          #Field("religion_freetext",
-                          #      label = T("Religion"),
-                          #      readable = False,
-                          #      writable = False,
-                          #      ),
+                          # This field can either be used as a free-text version of religion, or to provide details of the 'other'
+                          Field("religion_other",
+                                #label = T("Other Religion"),
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("father_name",
                                 label = T("Name of Father"),
                                 ),
@@ -2980,7 +3063,7 @@ class S3SavedFilterModel(S3Model):
 
         represent = S3Represent(lookup=tablename, fields=["title"])
         filter_id = S3ReusableField("filter_id", "reference %s" % tablename,
-                                    requires = IS_EMPTY_OR(IS_ONE_OF(
+                                    requires = IS_NULL_OR(IS_ONE_OF(
                                                     db, "pr_filter.id",
                                                     represent,
                                                     orderby="pr_filter.title",
@@ -3076,7 +3159,7 @@ class S3SubscriptionModel(S3Model):
                                             options=MSG_CONTACT_OPTS,
                                             multiple=True)),
                           Field("email_format",
-                                requires=IS_EMPTY_OR(
+                                requires=IS_NULL_OR(
                                           IS_IN_SET(email_format_opts,
                                                     zero=None)),
                                 represent=S3Represent(
@@ -3958,7 +4041,7 @@ class S3PersonDescription(S3Model):
         define_table(tablename,
                      super_link("pe_id", "pr_pentity",
                                 readable = True,
-                                writable = True
+                                writable = True,
                                 ),
                      # Age Group - for use where we don't know the DoB
                      pr_age_group(readable = False,
@@ -3966,98 +4049,111 @@ class S3PersonDescription(S3Model):
                                   ),
                      # Race and complexion
                      Field("race", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_race_opts)),
                            label = T("Race"),
                            represent = lambda opt: \
-                                       pr_race_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_race_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_race_opts)),
+                           ),
                      Field("complexion", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_complexion_opts)),
                            label = T("Complexion"),
                            represent = lambda opt: \
-                                       pr_complexion_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_complexion_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_complexion_opts)),
+                           ),
                      Field("ethnicity", length=64, # Mayon Compatibility
-                           #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
-                           #readable=False,
-                           #writable=False,
                            label = T("Ethnicity"),
+                           #readable = False,
+                           #requires = IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
+                           #writable = False,
                            ),
                      # Height and weight
                      Field("height", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_height_opts)),
                            label = T("Height"),
                            represent = lambda opt: \
-                                       pr_height_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_height_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_height_opts)),
+                           ),
                      Field("height_cm", "integer",
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 300)),
                            label = T("Height (cm)"),
+                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 300)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Height"),
-                                                           T("The body height (crown to heel) in cm.")))
+                                                           T("The body height (crown to heel) in cm."))),
                            ),
                      Field("weight", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_weight_opts)),
                            label = T("Weight"),
                            represent = lambda opt: \
-                                       pr_weight_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_weight_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_weight_opts)),
+                           ),
                      Field("weight_kg", "integer",
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 500)),
                            label = T("Weight (kg)"),
+                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 500)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Weight"),
-                                                           T("The weight in kg.")))
+                                                           T("The weight in kg."))),
                            ),
                      # Blood type, eye color
                      Field("blood_type",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_blood_type_opts)),
                            label = T("Blood Type (AB0)"),
-                           represent = lambda opt: opt or UNKNOWN_OPT),
+                           represent = lambda opt: opt or UNKNOWN_OPT,
+                           requires = IS_NULL_OR(IS_IN_SET(pr_blood_type_opts)),
+                           ),
                      Field("eye_color", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_eye_color_opts)),
                            label = T("Eye Color"),
                            represent = lambda opt: \
-                                       pr_eye_color_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_eye_color_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_eye_color_opts)),
+                           ),
 
                      # Hair of the head
                      Field("hair_color", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                            label = T("Hair Color"),
                            represent = lambda opt: \
-                                       pr_hair_color_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_hair_color_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_color_opts)),
+                           ),
                      Field("hair_style", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_style_opts)),
                            label = T("Hair Style"),
                            represent = lambda opt: \
-                                       pr_hair_style_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_hair_style_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_style_opts)),
+                           ),
                      Field("hair_length", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_length_opts)),
                            label = T("Hair Length"),
                            represent = lambda opt: \
-                                       pr_hair_length_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_hair_length_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_length_opts)),
+                           ),
                      Field("hair_baldness", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_baldness_opts)),
                            label = T("Baldness"),
                            represent = lambda opt: \
-                                       pr_hair_baldness_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_hair_baldness_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_baldness_opts)),
+                           ),
                      Field("hair_comment",
                            label = T("Hair Comments"),
                            ),
 
                      # Facial hair
                      Field("facial_hair_type", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_type_opts)),
                            label = T("Facial hair, type"),
                            represent = lambda opt: \
-                                       pr_facial_hair_type_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_facial_hair_type_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_facial_hair_type_opts)),
+                           ),
                      Field("facial_hair_color", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                            label = T("Facial hair, color"),
                            represent = lambda opt: \
-                                       pr_hair_color_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_hair_color_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_color_opts)),
+                           ),
                      Field("facial_hair_length", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_length_opts)),
                            label = T("Facial hair, length"),
                            represent = lambda opt: \
-                                       pr_facial_hair_length_opts.get(opt, UNKNOWN_OPT)),
+                                       pr_facial_hair_length_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_NULL_OR(IS_IN_SET(pr_facial_hair_length_opts)),
+                           ),
                      Field("facial_hair_comment",
                            label = T("Facial hair, comment"),
                            ),
@@ -4570,10 +4666,10 @@ class pr_PersonRepresent(S3Represent):
             linkto = URL(c=controller, f="person", args=["[id]"])
 
         if not fields:
-            if current.deployment_settings.get_pr_reverse_names():
-                fields = ["last_name", "first_name", "middle_name"]
-            else:
-                fields = ["first_name", "middle_name", "last_name"]
+            fields = ["first_name", "middle_name", "last_name"]
+
+        if not labels:
+            labels = s3_fullname
 
         super(pr_PersonRepresent, self).__init__(lookup,
                                                  key,

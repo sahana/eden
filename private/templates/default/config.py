@@ -392,8 +392,8 @@ settings.L10n.decimal_separator = "."
 #settings.pr.request_gender = False
 # Uncomment to show field in S3AddPersonWidget
 #settings.pr.request_home_phone = True
-# Uncomment to reverse the order of Names
-#settings.pr.reverse_names = True
+# Uncomment to modify the order of Names
+#settings.pr.name_format = "%(last_name)s, %(first_name)s %(middle_name)s"
 # Uncomment to prevent selecting existing users in the old S3AddPersonWidget
 #settings.pr.select_existing = False
 # Uncomment to prevent showing HR details in S3PersonAutocompleteWidget results

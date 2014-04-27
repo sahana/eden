@@ -455,6 +455,14 @@ def customise_auth_user_controller(**attr):
             updateable = False, # Need to see all Orgs in Registration screens
             )
 
+    # Different settings for different NS
+    # Not possible for registration form, so fake with language!
+    root_org = current.auth.root_org_name()
+    if root_org == VNRC or current.session.s3.language == "vi":
+        # Too late to do via settings
+        #settings.org.site_label = "Office/Center"
+        current.db.auth_user.site_id.label = T("Office/Center")
+
     return attr
 
 settings.customise_auth_user_controller = customise_auth_user_controller
@@ -796,9 +804,11 @@ def customise_hrm_human_resource_controller(**attr):
             settings.hrm.vol_active = vol_active
         elif root_org == VNRC:
             vnrc = True
-            settings.pr.reverse_names = True
+            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
             # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
             settings.org.regions = False
+    #elif vnrc:
+    #    settings.org.site_label = "Office/Center"
 
     s3db = current.s3db
 
@@ -930,7 +940,7 @@ def customise_hrm_programme_controller(**attr):
         settings.hrm.vol_active = vol_active
         settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
     elif root_org == VNRC:
-        settings.pr.reverse_names = True
+        settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
         field = s3db.hrm_programme_hours.job_title_id
         field.readable = field.writable = False
         # @ToDo
@@ -958,7 +968,7 @@ def customise_hrm_programme_hours_controller(**attr):
     elif root_org in (CVTL, PMI, PRC):
         settings.hrm.vol_active = vol_active
     elif root_org == VNRC:
-        settings.pr.reverse_names = True
+        settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
         field = current.s3db.hrm_programme_hours.job_title_id
         field.readable = field.writable = False
         # Remove link to download Template
@@ -985,7 +995,7 @@ def customise_hrm_training_controller(**attr):
     elif root_org in (CVTL, PMI, PRC):
         settings.hrm.vol_active = vol_active
     elif root_org == VNRC:
-        settings.pr.reverse_names = True
+        settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
         # Remove link to download Template
         attr["csv_template"] = "hide"
 
@@ -1004,7 +1014,7 @@ def customise_hrm_training_event_controller(**attr):
     elif root_org in (CVTL, PMI, PRC):
         settings.hrm.vol_active = vol_active
     elif root_org == VNRC:
-        settings.pr.reverse_names = True
+        settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
         # Remove link to download Template
         attr["csv_template"] = "hide"
 
@@ -1034,7 +1044,7 @@ def customise_member_membership_controller(**attr):
     #if root_org == ARCS:
     #    settings.L10n.mandatory_lastname = False
     #elif root_org == VNRC:
-    #    settings.pr.reverse_names = True
+    #    settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
     #    # Remove link to download Template
     #    attr["csv_template"] = "hide"
 
@@ -1209,7 +1219,7 @@ def customise_pr_group_controller(**attr):
             # Special cases for different NS
             root_org = current.auth.root_org_name()
             if root_org == VNRC:
-                settings.pr.reverse_names = True
+                settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
                 # Update the represent as already set
                 s3db.pr_group_membership.person_id.represent = s3db.pr_PersonRepresent()
 
@@ -1303,17 +1313,18 @@ def customise_pr_person_controller(**attr):
         settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
     elif root_org == VNRC:
         vnrc = True
-        gis = current.gis
-        gis.get_location_hierarchy()
-        try:
-            gis.hierarchy_levels.pop("L3")
-        except:
-            # Must be already removed
-            pass
+        # Remove 'Commune' level for Addresses
+        #gis = current.gis
+        #gis.get_location_hierarchy()
+        #try:
+        #    gis.hierarchy_levels.pop("L3")
+        #except:
+        #    # Must be already removed
+        #    pass
         settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
         settings.hrm.use_skills = True
         settings.hrm.vol_experience = "both"
-        settings.pr.reverse_names = True
+        settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
         try:
             settings.modules.pop("asset")
         except:
@@ -1356,12 +1367,55 @@ def customise_pr_person_controller(**attr):
                                        filterby = "type",
                                        filter_opts = (4,),
                                        )
+        elif r.method == "cv" or component_name == "education":
+            if vnrc:
+                # Don't enable Legacy Freetext field
+                # Hide the 'Name of Award' field
+                field = s3db.pr_education.award
+                field.readable = field.writable = False
+            elif arcs:
+                # Don't enable Legacy Freetext field
+                pass
+            else:
+                # Enable Legacy Freetext field
+                field = s3db.pr_education.level
+                field.readable = field.writable = True
+                field.label = T("Other Level")
+                field.comment = T("Use main dropdown whenever possible")
 
         if arcs:
             if not r.component:
                 s3db.pr_person_details.father_name.label = T("Name of Grandfather")
 
         elif vnrc:
+            if not r.component:
+                # Use a free-text version of religion field
+                field = s3db.pr_person_details.religion_other
+                field.label = T("Religion")
+                field.readable = field.writable = True
+                # Also hide some other fields
+                from s3.s3forms import S3SQLCustomForm
+                crud_form = S3SQLCustomForm("first_name",
+                                            "middle_name",
+                                            "last_name",
+                                            "date_of_birth",
+                                            #"initials",
+                                            #"preferred_name",
+                                            #"local_name",
+                                            "gender",
+                                            "person_details.marital_status",
+                                            "person_details.nationality",
+                                            "person_details.religion_other",
+                                            "person_details.mother_name",
+                                            "person_details.father_name",
+                                            #"person_details.occupation",
+                                            #"person_details.company",
+                                            "person_details.affiliations",
+                                            "comments",
+                                            )
+                s3db.configure("pr_person",
+                               crud_form = crud_form,
+                               )
             if r.method == "record" or \
                component_name == "human_resource":
                 field = s3db.hrm_human_resource.job_title_id
@@ -1388,6 +1442,13 @@ def customise_pr_person_controller(**attr):
             elif component_name == "hours":
                 field = s3db.hrm_programme_hours.job_title_id
                 field.readable = field.writable = False
+
+            elif component_name == "physical_description":
+                # Add the less-specific blood types (as that's all the data currently available in some cases)
+                field = s3db.pr_physical_description.blood_type
+                from gluon.validators import IS_NULL_OR, IS_IN_SET
+                blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
+                field.requires = IS_NULL_OR(IS_IN_SET(blood_type_opts))
 
             elif r.method == "cv" or component_name == "experience":
                 table = s3db.hrm_experience

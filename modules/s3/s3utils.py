@@ -551,7 +551,6 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
 
     name = ""
     if fname or mname or lname:
-        reverse_order = current.deployment_settings.get_pr_reverse_names()
         if not fname:
             fname = ""
         if not mname:
@@ -562,16 +561,12 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
             fname = "%s" % s3_truncate(fname, 24)
             mname = "%s" % s3_truncate(mname, 24)
             lname = "%s" % s3_truncate(lname, 24, nice = False)
-        if not mname or mname.isspace():
-            if reverse_order:
-                name = ("%s, %s" % (lname, fname)).rstrip()
-            else:
-                name = ("%s %s" % (fname, lname)).rstrip()
-        else:
-            if reverse_order:
-                name = ("%s, %s %s" % (lname, fname, mname)).rstrip()
-            else:
-                name = ("%s %s %s" % (fname, mname, lname)).rstrip()
+        name_format = current.deployment_settings.get_pr_name_format()
+        name = name_format % dict(first_name=fname,
+                                  middle_name=mname,
+                                  last_name=lname,
+                                  )
+        name = name.replace("  ", " ").rstrip()
         if truncate:
             name = s3_truncate(name, 24, nice = False)
     return name
@@ -622,7 +617,7 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
 def s3_fullname_bulk(record_ids=[], truncate=True):
     """
         Returns the full name for a set of Persons
-        - used by GIS.get_representation()
+        - currently unused
 
         @param record_ids: a list of record_ids
         @param truncate: truncate the name to max 24 characters
@@ -663,15 +658,15 @@ def s3_comments_represent(text, show_link=True):
         import uuid
         unique =  uuid.uuid4()
         represent = DIV(
-                        DIV(text,
-                            _id=unique,
-                            _class="hide showall",
-                            _onmouseout="$('#%s').hide()" % unique
-                           ),
-                        A("%s..." % text[:76],
-                          _onmouseover="$('#%s').removeClass('hide').show()" % unique,
-                         ),
-                       )
+                DIV(text,
+                    _id=unique,
+                    _class="hide showall",
+                    _onmouseout="$('#%s').hide()" % unique
+                   ),
+                A("%s..." % text[:76],
+                  _onmouseover="$('#%s').removeClass('hide').show()" % unique,
+                 ),
+                )
         return represent
 
 # =============================================================================

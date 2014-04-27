@@ -404,6 +404,12 @@ def education():
     return s3_rest_controller("pr", "education")
 
 # -----------------------------------------------------------------------------
+def education_level():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller("pr", "education_level")
+
+# -----------------------------------------------------------------------------
 #def contact():
 #    """ RESTful CRUD controller """
 #

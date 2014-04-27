@@ -2135,9 +2135,9 @@ class S3Config(Storage):
         """ Include Home Phone in the AddPersonWidget2 """
         return self.pr.get("request_home_phone", False)
 
-    def get_pr_reverse_names(self):
-        """ Represent Names as 'Last, First Middle' instead of 'First Middle Last' """
-        return self.pr.get("reverse_names", False)
+    def get_pr_name_format(self):
+        """ Format with which to represent Person Names """
+        return self.pr.get("name_format", "%(first_name)s %(middle_name)s %(last_name)s")
 
     def get_pr_select_existing(self):
         """

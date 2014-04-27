@@ -1004,10 +1004,18 @@ class S3HRModel(S3Model):
             if show_orgs:
                 fields.append("organisation_id$name")
 
-            if settings.get_pr_reverse_names():
-                orderby = "pr_person.last_name"
-            else:
+            name_format = settings.get_pr_name_format()
+            test = name_format % dict(first_name=1,
+                                      middle_name=2,
+                                      last_name=3,
+                                      )
+            test = "".join(ch for ch in test if ch in ("1", "2", "3"))
+            if test[:1] == "1":
                 orderby = "pr_person.first_name"
+            elif test[:1] == "2":
+                orderby = "pr_person.middle_name"
+            else:
+                orderby = "pr_person.last_name"
             rows = resource.select(fields,
                                    start=0,
                                    limit=limit,
@@ -2041,6 +2049,7 @@ class S3HRSkillModel(S3Model):
         tablename = "hrm_training_event"
         define_table(tablename,
                      course_id(empty=False),
+                     organisation_id(label = T("Organized By")),
                      self.super_link("site_id", "org_site",
                                      label = site_label,
                                      instance_types = auth.org_site_types,
@@ -6381,10 +6390,18 @@ def hrm_configure_pr_group_membership():
                        "person_id$human_resource.organisation_id"),
                        (site_label, "person_id$human_resource.site_id"),
                        ]
-        if settings.get_pr_reverse_names():
-            orderby = "pr_person.last_name"
-        else:
+        name_format = settings.get_pr_name_format()
+        test = name_format % dict(first_name=1,
+                                  middle_name=2,
+                                  last_name=3,
+                                  )
+        test = "".join(ch for ch in test if ch in ("1", "2", "3"))
+        if test[:1] == "1":
             orderby = "pr_person.first_name"
+        elif test[:1] == "2":
+            orderby = "pr_person.middle_name"
+        else:
+            orderby = "pr_person.last_name"
     else:
         # Person
         list_fields = ["id",
