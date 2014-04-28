@@ -4,17 +4,20 @@
    <div class='span3'>
     <h3>{{=T("Site Links")}}</h3>
     <ul>
-
-       {{for opt in response.menu:}}
-        <li role='menuitem'>
-         <a href='{{=opt["url"]}}'>{{=opt["name"]}}</a>
-        </li>
-       {{pass}}
+    {{for opt in response.menu:}}
+     <li role='menuitem'>
+      <a href='{{=opt["url"]}}'>{{=opt["name"]}}</a>
+     </li>
+    {{pass}}
     </ul>
    </div>
    <div class='span3'>
     <h3>{{=T("Resources")}}</h3>
     <ul>
+    {{if auth.is_logged_in():}}
+     <li><a href='http://INTERNAL' target='_blank'>{{=T("ROCCA internal contact directory")}}</a></li>
+     <li><a href='http://REGIONAL' target='_blank'>{{=T("Regional UN holidays 2014")}}</a></li>
+    {{pass}}
      <li><a href='http://www.unocha.org/rocca/' target='_blank'>{{=T("ROCCA corporate website")}}</a></li>
      <li><a href='https://cod.humanitarianresponse.info/' target='_blank'>{{=T("COD/FOD registry")}}</a></li>
      <li><a href='https://rocca.humanitarianresponse.info/' target='_blank'>{{=T("ROCCA HumanitarianResponse.info")}}</a></li>
@@ -28,9 +31,9 @@
      <li><a href='http://www.unocha.org/rocca' target='_blank'>{{=T("OCHA ROCCA Main Site")}}</a></li>
     </ul>
    </div>
-  </div>
-  <div id='footer-copyrights' class='clearfix pt4'>
-   <p class='pull-left extra-small'>&copy; Sahana Eden. {{=T("All Rights Reserved.")}}</p>
+   <div id='footer-partner-logos' class='span3 hide-on-mobile'>
+    <p class='pull-right'><a target='_blank' href='http://eden.sahanafoundation.org' title='A Sahana Eden Site'><img src='/{{=appname}}/static/img/sahanasmall_05.png' width='92' height='41' style='vertical-align:middle' alt='{{=T("A Sahana Eden Site")}}' /></a></p>
+   </div>
   </div>
  </div>
 </footer>
