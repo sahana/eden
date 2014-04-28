@@ -132,7 +132,7 @@ class S3LocationModel(S3Model):
                   ),
             Field("level", length=2,
                   label = T("Level"),
-                  requires = IS_NULL_OR(IS_IN_SET(hierarchy_level_keys)),
+                  requires = IS_EMPTY_OR(IS_IN_SET(hierarchy_level_keys)),
                   represent = self.gis_level_represent,
                   ),
             Field("parent", "reference gis_location", # This form of hierarchy may not work on all Databases
@@ -156,7 +156,7 @@ class S3LocationModel(S3Model):
             # Points or Centroid for Polygons
             Field("lat", "double",
                   label = T("Latitude"),
-                  requires = IS_NULL_OR(IS_LAT()),
+                  requires = IS_EMPTY_OR(IS_LAT()),
                   comment = DIV(_class="tooltip",
                                 _id="gis_location_lat_tooltip",
                                 _title="%s|%s|%s|%s|%s|%s" % \
@@ -169,7 +169,7 @@ class S3LocationModel(S3Model):
                   ),
             Field("lon", "double",
                   label = T("Longitude"),
-                  requires = IS_NULL_OR(IS_LON()),
+                  requires = IS_EMPTY_OR(IS_LON()),
                   ),
             Field("wkt", "text",
                   # Full WKT validation is done in the onvalidation callback
@@ -249,7 +249,7 @@ class S3LocationModel(S3Model):
         table.owned_by_group.default = current.session.s3.system_roles.AUTHENTICATED
 
         # Can't be defined in-line as otherwise get a circular reference
-        table.parent.requires = IS_NULL_OR(
+        table.parent.requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "gis_location.id",
                                               gis_location_represent,
                                               # @ToDo: If level is known, filter on higher than that?
@@ -278,7 +278,7 @@ class S3LocationModel(S3Model):
                                       label = T("Location"),
                                       ondelete = "RESTRICT",
                                       represent = gis_location_represent,
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                                     IS_LOCATION_SELECTOR2()
                                                     ),
                                       widget = S3LocationSelectorWidget2(show_address=True,
@@ -286,21 +286,21 @@ class S3LocationModel(S3Model):
                                                                          show_postcode=settings.get_gis_postcode_selector(),
                                                                          ),
                                       # Alternate LocationSelector for when you don't have the Location Hierarchy available to load
-                                      #requires = IS_NULL_OR(
+                                      #requires = IS_EMPTY_OR(
                                       #              IS_LOCATION_SELECTOR()
                                       #              ),
                                       #widget = S3LocationSelectorWidget(),
                                       # Alternate simple Autocomplete (e.g. used by pr_person_presence)
-                                      #requires = IS_NULL_OR(IS_LOCATION()),
+                                      #requires = IS_EMPTY_OR(IS_LOCATION()),
                                       #widget = S3LocationAutocompleteWidget(),
                                       )
 
         represent = S3Represent(lookup=tablename, translate=True)
-        country_requires = IS_NULL_OR(IS_ONE_OF(db, "gis_location.id",
-                                                represent,
-                                                filterby = "level",
-                                                filter_opts = ["L0"],
-                                                sort=True))
+        country_requires = IS_EMPTY_OR(IS_ONE_OF(db, "gis_location.id",
+                                                 represent,
+                                                 filterby = "level",
+                                                 filter_opts = ["L0"],
+                                                 sort=True))
         country_id = S3ReusableField("location_id", "reference %s" % tablename,
                                      sortby = "name",
                                      label = messages.COUNTRY,
@@ -1508,7 +1508,7 @@ class S3GISConfigModel(S3Model):
         marker_represent = gis_MarkerRepresent()
         marker_id = S3ReusableField("marker_id", "reference %s" % tablename,
                                     sortby="name",
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "gis_marker.id",
                                                           "%(name)s",
                                                           zero=T("Use default"))),
@@ -1590,7 +1590,7 @@ class S3GISConfigModel(S3Model):
         represent = S3Represent(lookup=tablename)
         projection_id = S3ReusableField("projection_id", "reference %s" % tablename,
                                         sortby="name",
-                                        requires = IS_NULL_OR(
+                                        requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "gis_projection.id",
                                                               represent)),
                                         represent = represent,
@@ -1638,7 +1638,7 @@ class S3GISConfigModel(S3Model):
         represent = S3Represent(lookup=tablename)
         symbology_id = S3ReusableField("symbology_id", "reference %s" % tablename,
                                        sortby="name",
-                                       requires = IS_NULL_OR(
+                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "gis_symbology.id",
                                                               represent)),
                                        represent = represent,
@@ -1694,7 +1694,7 @@ class S3GISConfigModel(S3Model):
                      super_link("pe_id", "pr_pentity"),
                      # Gets populated onvalidation
                      Field("pe_type", "integer",
-                           requires = IS_NULL_OR(IS_IN_SET(pe_types)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pe_types)),
                            readable=False,
                            writable=False,
                            ),
@@ -1708,20 +1708,20 @@ class S3GISConfigModel(S3Model):
                      # Region field
                      location_id("region_location_id",
                                  widget = S3LocationAutocompleteWidget(),
-                                 requires = IS_NULL_OR(IS_LOCATION(level=gis.hierarchy_level_keys))),
+                                 requires = IS_EMPTY_OR(IS_LOCATION(level=gis.hierarchy_level_keys))),
 
                      # CRUD Settings
                      # Default Location
                      location_id("default_location_id",
                                  widget = S3LocationAutocompleteWidget(),
-                                 requires = IS_NULL_OR(IS_LOCATION())),
+                                 requires = IS_EMPTY_OR(IS_LOCATION())),
                      # Map Settings
                      Field("zoom", "integer",
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(1, 20))),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, 20))),
                      Field("lat", "double",
-                           requires = IS_NULL_OR(IS_LAT())),
+                           requires = IS_EMPTY_OR(IS_LAT())),
                      Field("lon", "double",
-                           requires = IS_NULL_OR(IS_LON())),
+                           requires = IS_EMPTY_OR(IS_LON())),
                      projection_id(#empty=False,
                                    # Nice if we could get this set to epsg field
                                    #default=900913
@@ -1731,19 +1731,19 @@ class S3GISConfigModel(S3Model):
                      Field("lat_min", "double",
                            # @ToDo: Remove default once we have cascading working
                            default=-90,
-                           requires = IS_NULL_OR(IS_LAT())),
+                           requires = IS_EMPTY_OR(IS_LAT())),
                      Field("lat_max", "double",
                            # @ToDo: Remove default once we have cascading working
                            default=90,
-                           requires = IS_NULL_OR(IS_LAT())),
+                           requires = IS_EMPTY_OR(IS_LAT())),
                      Field("lon_min", "double",
                            # @ToDo: Remove default once we have cascading working
                            default=-180,
-                           requires = IS_NULL_OR(IS_LON())),
+                           requires = IS_EMPTY_OR(IS_LON())),
                      Field("lon_max", "double",
                            # @ToDo: Remove default once we have cascading working
                            default=180,
-                           requires = IS_NULL_OR(IS_LON())),
+                           requires = IS_EMPTY_OR(IS_LON())),
 
                      # This should be turned off for Offline deployments or expensive SatComms, such as BGAN
                      Field("geocoder", "boolean"),
@@ -1753,7 +1753,7 @@ class S3GISConfigModel(S3Model):
                      # Note: This hasn't yet been changed for any instance
                      # Do we really need it to be configurable?
                      Field("zoom_levels", "integer",
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(1, 30)),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, 30)),
                            readable=False,
                            writable=False,
                            # @ToDo: Remove default once we have cascading working
@@ -2475,7 +2475,7 @@ class S3LayerEntityModel(S3Model):
                                          _title="%s|%s" % (T("GPS Marker"),
                                                            T("Defines the icon used for display of features on handheld GPS."))),
                            # This is the list of GPS Markers for Garmin devices
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_IN_SET(current.gis.gps_symbols(),
                                                   zero=T("Use default")))
                            ),
@@ -2844,7 +2844,7 @@ class S3MapModel(S3Model):
                      Field("marker_width", "integer"),
                      # or Shape/Size/Colour
                      Field("shape",
-                           requires=IS_NULL_OR(
+                           requires=IS_EMPTY_OR(
                                       IS_IN_SET(["circle",
                                                  "square",
                                                  "star",
@@ -2854,7 +2854,7 @@ class S3MapModel(S3Model):
                                                  ]))
                                      ),
                      Field("size", "integer"),
-                     Field("colour", requires=IS_NULL_OR(IS_HTML_COLOUR()),
+                     Field("colour", requires=IS_EMPTY_OR(IS_HTML_COLOUR()),
                            widget=S3ColorPickerWidget(),),
                      gis_opacity()(),
                      *s3_meta_fields())
@@ -3469,7 +3469,7 @@ class S3MapModel(S3Model):
                              Field("gis_feature_type", "integer",
                                    # Auto-populated by reading Shapefile
                                    writable=False,
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_IN_SET(gis_feature_type_opts,
                                                           zero=None)),
                                    represent = lambda opt: \
@@ -3607,7 +3607,7 @@ class S3MapModel(S3Model):
                                        _title="%s|%s" % (T("Feature Type"),
                                                          T("Mandatory. In GeoServer, this is the Layer Name. Within the WFS getCapabilities, this is the FeatureType Name part after the colon(:).")))),
                      Field("featureNS", label=T("Feature Namespace"),
-                           requires=IS_NULL_OR(IS_URL()),
+                           requires=IS_EMPTY_OR(IS_URL()),
                            comment=DIV(_class="tooltip",
                                        _title="%s|%s" % (T("Feature Namespace"),
                                                          T("Optional. In GeoServer, this is the Workspace Namespace URI (not the name!). Within the WFS getCapabilities, the workspace is the FeatureType Name part before the colon(:).")))),
@@ -3635,7 +3635,7 @@ class S3MapModel(S3Model):
                                                          T("Optional. The name of the geometry column. In PostGIS this defaults to 'the_geom'.")))),
                      Field("wfs_schema",
                            label=T("Schema"),
-                           requires=IS_NULL_OR(IS_URL()),
+                           requires=IS_EMPTY_OR(IS_URL()),
                            comment=DIV(_class="tooltip",
                                        _title="%s|%s" % (T("Schema"),
                                                          T("Optional. The name of the schema. In Geoserver this has the form http://host_name/geoserver/wfs/DescribeFeatureType?version=1.1.0&;typename=workspace_name:layer_name.")))),
@@ -3739,7 +3739,7 @@ class S3MapModel(S3Model):
                                                          T("Optional password for HTTP Basic Authentication.")))),
                      Field("img_format", length=32,
                            label=FORMAT,
-                           requires=IS_NULL_OR(IS_IN_SET(wms_img_formats)),
+                           requires=IS_EMPTY_OR(IS_IN_SET(wms_img_formats)),
                            default="image/png"),
                      # NB This is a WMS-server-side style NOT an internal JSON style
                      Field("style", length=32,
@@ -3749,7 +3749,7 @@ class S3MapModel(S3Model):
                                                          T("Optional selection of an alternate style.")))),
                      Field("bgcolor", length=32,
                            label=T("Background Color"),
-                           requires=IS_NULL_OR(IS_HTML_COLOUR()),
+                           requires=IS_EMPTY_OR(IS_HTML_COLOUR()),
                            widget=S3ColorPickerWidget(),
                            comment=DIV(_class="tooltip",
                                        _title="%s|%s" % (T("Background Color"),
@@ -3779,7 +3779,7 @@ class S3MapModel(S3Model):
                            comment=DIV(_class="tooltip",
                                        _title="%s|%s" % (T("Legend URL"),
                                                          T("Address of an image to use for this Layer in the Legend. This allows use of a controlled static image rather than querying the server automatically for what it provides (which won't work through GeoWebCache anyway).")))),
-                     #Field("legend_format", label=T("Legend Format"), requires = IS_NULL_OR(IS_IN_SET(gis_layer_wms_img_formats))),
+                     #Field("legend_format", label=T("Legend Format"), requires = IS_EMPTY_OR(IS_IN_SET(gis_layer_wms_img_formats))),
                      s3_role_required(),       # Single Role
                      #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                      *s3_meta_fields())
@@ -3869,7 +3869,7 @@ class S3MapModel(S3Model):
                      Field("lon", "double"),
                      Field("marker"),    # Used by KML
                      Field("source",
-                           requires=IS_NULL_OR(IS_URL())),
+                           requires=IS_EMPTY_OR(IS_URL())),
                      *s3_meta_fields())
 
         # Store downloaded KML feeds on the filesystem
@@ -4455,7 +4455,7 @@ class S3POIModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
         poi_type_id = S3ReusableField("poi_type_id", "reference %s" % tablename,
                                       sortby="name",
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                         IS_ONE_OF(current.db, "gis_poi_type.id",
                                                   represent)),
                                       represent = represent,
@@ -4573,7 +4573,7 @@ def source_name_field():
 def source_url_field():
     return S3ReusableField("source_url",
                            label=current.T("Source URL"),
-                           requires = IS_NULL_OR(IS_URL(mode="generic")),
+                           requires = IS_EMPTY_OR(IS_URL(mode="generic")),
                            represent = lambda v: v or current.messages["NONE"],
                            )
 

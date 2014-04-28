@@ -78,7 +78,7 @@ class S3AuthModel(S3Model):
                                                                 DOMAIN_HELP))),
                           Field("approver",
                                 label = T("Approver"),
-                                requires = IS_NULL_OR(IS_EMAIL()),
+                                requires = IS_EMPTY_OR(IS_EMAIL()),
                                 comment=DIV(_class="tooltip",
                                             _title="%s|%s" % (T("Approver"),
                                                                 APPROVER_HELP))),

@@ -79,7 +79,7 @@ class S3DVRModel(S3Model):
                           ),
                           self.gis_location_id(label = T("Home Address")),
                           Field("damage", "integer",
-                                requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
+                                requires = IS_EMPTY_OR(IS_IN_SET(dvr_damage_opts)),
                                 represent = lambda opt: \
                                     dvr_damage_opts.get(opt, UNKNOWN_OPT),
                                 label= T("Damage Assessment")),
@@ -88,7 +88,7 @@ class S3DVRModel(S3Model):
                                 label = T("Insurance")),
                           Field("status", "integer",
                                 default = 1,
-                                requires = IS_NULL_OR(IS_IN_SET(dvr_status_opts)),
+                                requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
                                 represent = lambda opt: \
                                     dvr_status_opts.get(opt, UNKNOWN_OPT),
                                 label= T("Status")),

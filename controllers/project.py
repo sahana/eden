@@ -142,7 +142,7 @@ def project():
                         # Project has already a lead organisation
                         # => exclude lead_role in component add-form
                         allowed_roles.pop(lead_role, None)
-                    otable.role.requires = IS_NULL_OR(IS_IN_SET(allowed_roles))
+                    otable.role.requires = IS_EMPTY_OR(IS_IN_SET(allowed_roles))
 
             elif component_name == "activity":
                 # Filter Activity Type based on Sector
@@ -173,12 +173,12 @@ def project():
             elif component_name == "beneficiary":
                 # Filter the location selector to the project's locations
                 component.table.project_location_id.requires = \
-                    IS_NULL_OR(IS_ONE_OF(db, "project_location.id",
-                                         s3db.project_location_represent,
-                                         sort=True,
-                                         filterby="project_id",
-                                         filter_opts=[r.id],
-                                        )
+                    IS_EMPTY_OR(IS_ONE_OF(db, "project_location.id",
+                                          s3db.project_location_represent,
+                                          sort=True,
+                                          filterby="project_id",
+                                          filter_opts=[r.id],
+                                          )
                                 )
 
             elif component_name == "human_resource":
@@ -307,7 +307,7 @@ def set_theme_requires(sector_ids):
                  if not row.project_theme_sector.sector_id or 
                     row.project_theme_sector.sector_id in sector_ids]
     table = s3db.project_theme_project
-    table.theme_id.requires = IS_NULL_OR(
+    table.theme_id.requires = IS_EMPTY_OR(
                                 IS_ONE_OF(db, "project_theme.id",
                                           s3base.S3Represent(lookup="project_theme"),
                                           filterby="id",
@@ -335,7 +335,7 @@ def set_activity_type_requires(tablename, sector_ids):
                         row.project_activity_type_sector.sector_id in sector_ids]
     else:
         activity_type_ids = []
-    s3db[tablename].activity_type_id.requires = IS_NULL_OR(
+    s3db[tablename].activity_type_id.requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "project_activity_type.id",
                                               s3base.S3Represent(lookup="project_activity_type"),
                                               filterby="id",

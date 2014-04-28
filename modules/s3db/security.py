@@ -92,7 +92,7 @@ class S3SecurityModel(S3Model):
                      Field("name",
                            label=T("Name")),
                      Field("zone_type_id", db.security_zone_type,
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "security_zone_type.id",
                                                   zone_type_represent,
                                                   sort=True)),
@@ -162,7 +162,7 @@ class S3SecurityModel(S3Model):
         define_table(tablename,
                      self.hrm_human_resource_id(),
                      Field("staff_type_id", "list:reference security_staff_type",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "security_staff_type.id",
                                                   staff_type_represent,
                                                   sort=True,
@@ -174,7 +174,7 @@ class S3SecurityModel(S3Model):
                                                        tooltip=T("Select a Staff Type from the list or click 'Add Staff Type'")),
                            label=T("Type")),
                      Field("zone_id", db.security_zone,
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "security_zone.id",
                                                   zone_represent,
                                                   sort=True)),

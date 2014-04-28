@@ -95,7 +95,7 @@ class S3FireModel(S3Model):
                      Field("name",
                            label=T("Name")),
                      Field("zone_type_id", db.fire_zone_type,
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                          IS_ONE_OF(db, "fire_zone_type.id",
                                                    zone_type_represent,
                                                    sort=True)),
@@ -199,7 +199,7 @@ class S3FireStationModel(S3Model):
                            label = T("Code")),
                      Field("facility_type", "integer",
                            label = T("Facility Type"),
-                           requires = IS_NULL_OR(IS_IN_SET(fire_station_types)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(fire_station_types)),
                            default = 1,
                            represent = lambda opt: \
                                        fire_station_types.get(opt, T("not specified"))
@@ -207,15 +207,15 @@ class S3FireStationModel(S3Model):
                      organisation_id(),
                      location_id(),
                      Field("phone", label = T("Phone"),
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires)),
                      Field("website", label=T("Website"),
-                           requires = IS_NULL_OR(IS_URL()),
+                           requires = IS_EMPTY_OR(IS_URL()),
                            represent = lambda url: s3_url_represent(url)),
                      Field("email", label = T("Email"),
-                           requires = IS_NULL_OR(IS_EMAIL())
+                           requires = IS_EMPTY_OR(IS_EMAIL())
                            ),
                      Field("fax", label = T("Fax"),
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires)),
                      Field("obsolete", "boolean",
                            label = T("Obsolete"),
                            represent = lambda opt: \
@@ -231,7 +231,7 @@ class S3FireStationModel(S3Model):
                        )
 
         station_id = S3ReusableField("station_id", "reference %s" % tablename,
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "fire_station.id",
                                                               self.fire_station_represent)),
                                      represent = self.fire_station_represent,
@@ -375,7 +375,7 @@ class S3FireStationModel(S3Model):
                      *s3_meta_fields())
 
         shift_id = S3ReusableField("shift_id", "reference %s" % tablename,
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "fire_shift.id",
                                                           self.fire_shift_represent)),
                                    represent = self.fire_shift_represent,

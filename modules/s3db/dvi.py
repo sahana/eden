@@ -106,7 +106,7 @@ class S3DVIModel(S3Model):
                                                            T("Please give an estimated figure about how many bodies have been found.")))),
                      Field("bodies_recovered", "integer",
                            label = T("Bodies recovered"),
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999)),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999)),
                            represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
                            default = 0),
                      Field("description", "text"),
@@ -147,7 +147,7 @@ class S3DVIModel(S3Model):
 
         # Reusable fields
         dvi_recreq_id = S3ReusableField("dvi_recreq_id", "reference %s" % tablename,
-                                        requires = IS_NULL_OR(IS_ONE_OF(db,
+                                        requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                         "dvi_recreq.id",
                                                         "[%(marker)s] %(date)s: %(bodies_found)s bodies")),
                                         represent = lambda id: id,
@@ -181,7 +181,7 @@ class S3DVIModel(S3Model):
 
         # Reusable Field
         morgue_id = S3ReusableField("morgue_id", "reference %s" % tablename,
-                                    requires = IS_NULL_OR(IS_ONE_OF(db,
+                                    requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                     "dvi_morgue.id", "%(name)s")),
                                     represent = self.morgue_represent,
                                     ondelete = "RESTRICT")

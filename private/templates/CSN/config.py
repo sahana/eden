@@ -10,7 +10,7 @@ except:
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.validators import IS_NULL_OR
+from gluon.validators import IS_EMPTY_OR
 
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
@@ -177,7 +177,7 @@ def customise_cms_post_controller(**attr):
     #field.readable = field.writable = False
     field = table.location_id
     field.represent = location_represent
-    field.requires = IS_NULL_OR(IS_LOCATION(level="L4"))
+    field.requires = IS_EMPTY_OR(IS_LOCATION(level="L4"))
     field.widget = S3LocationAutocompleteWidget(level="L4")
     table.created_by.represent = s3_auth_user_represent_name
     field = table.body

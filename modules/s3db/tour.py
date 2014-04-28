@@ -108,7 +108,7 @@ class S3GuidedTourModel(S3Model):
 
         represent = S3Represent(lookup=tablename, translate=True)
         tour_config_id = S3ReusableField("tour_config_id", "reference %s" % tablename,
-                                         requires = IS_NULL_OR(
+                                         requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "tour_config.id",
                                                               represent,
                                                               sort=True)),

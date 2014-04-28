@@ -176,7 +176,7 @@ class S3HRModel(S3Model):
         department_id = S3ReusableField("department_id", "reference %s" % tablename,
                                 sortby = "name",
                                 label = T("Department / Unit"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "hrm_department.id",
                                                       represent,
                                                       filterby="organisation_id",
@@ -282,7 +282,7 @@ class S3HRModel(S3Model):
                 msg_list_empty = T("Currently no entries in the catalog"))
 
         if  org_dependent_job_titles:
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_job_title.id",
                                   represent,
                                   filterby="organisation_id",
@@ -291,7 +291,7 @@ class S3HRModel(S3Model):
                                   not_filter_opts=not_filter_opts,
                                   ))
         else:
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_job_title.id",
                                   represent,
                                   not_filterby="type",
@@ -1403,7 +1403,7 @@ class S3HRJobModel(S3Model):
         #position_id = S3ReusableField("position_id", "reference %s" % tablename,
         #                              sortby = "name",
         #                              label = T("Position"),
-        #                              requires = IS_NULL_OR(IS_ONE_OF(db,
+        #                              requires = IS_EMPTY_OR(IS_ONE_OF(db,
         #                                                              "hrm_position.id",
         #                                                              hrm_position_represent)),
         #                              represent = hrm_position_represent,
@@ -1612,7 +1612,7 @@ class S3HRSkillModel(S3Model):
                             default=self.skill_type_default,
                             readable=skill_types,
                             writable=skill_types,
-                            requires = IS_NULL_OR(
+                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "hrm_skill_type.id",
                                                   represent
                                                   )),
@@ -1671,7 +1671,7 @@ class S3HRSkillModel(S3Model):
         skill_id = S3ReusableField("skill_id", "reference %s" % tablename,
                                    sortby = "name",
                                    label = T("Skill"),
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "hrm_skill.id",
                                                           represent,
                                                           sort=True
@@ -1687,7 +1687,7 @@ class S3HRSkillModel(S3Model):
         multi_skill_id = S3ReusableField("skill_id", "list:reference hrm_skill",
                                          sortby = "name",
                                          label = T("Skills"),
-                                         requires = IS_NULL_OR(
+                                         requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "hrm_skill.id",
                                                                   represent,
                                                                   sort=True,
@@ -1756,7 +1756,7 @@ class S3HRSkillModel(S3Model):
         competency_id = S3ReusableField("competency_id", "reference %s" % tablename,
                                         sortby = "priority",
                                         label = T("Competency"),
-                                        requires = IS_NULL_OR(
+                                        requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "hrm_competency_rating.id",
                                                               represent,
@@ -1867,7 +1867,7 @@ class S3HRSkillModel(S3Model):
         #skill_group_id = S3ReusableField("skill_provision_id", "reference %s" % tablename,
         #                           sortby = "name",
         #                           label = T("Skill Provision"),
-        #                           requires = IS_NULL_OR(IS_ONE_OF(db,
+        #                           requires = IS_EMPTY_OR(IS_ONE_OF(db,
         #                                                           "hrm_skill_provision.id",
         #                                                           represent)),
         #                           represent = represent,
@@ -1931,7 +1931,7 @@ class S3HRSkillModel(S3Model):
                            label = T("Performance Rating"),
                            # Default to pass/fail (can override to 5-levels in Controller)
                            # @ToDo: Build this onaccept of hrm_appraisal
-                           requires = IS_NULL_OR(IS_IN_SET(hrm_pass_fail_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(hrm_pass_fail_opts)),
                            represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 UNKNOWN_OPT),
@@ -2013,7 +2013,7 @@ class S3HRSkillModel(S3Model):
         course_id = S3ReusableField("course_id", "reference %s" % tablename,
                                     sortby = "name",
                                     label = T("Course"),
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "hrm_course.id",
                                                           represent,
                                                           filterby="organisation_id",
@@ -2100,7 +2100,7 @@ class S3HRSkillModel(S3Model):
         training_event_id = S3ReusableField("training_event_id", "reference %s" % tablename,
                                             sortby = "course_id",
                                             label = T("Training Event"),
-                                            requires = IS_NULL_OR(
+                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "hrm_training_event.id",
                                                                   represent,
                                                                   #filterby="organisation_id",
@@ -2347,7 +2347,7 @@ class S3HRSkillModel(S3Model):
         certificate_id = S3ReusableField("certificate_id", "reference %s" % tablename,
                                          sortby = "name",
                                          label = T("Certificate"),
-                                         requires = IS_NULL_OR(
+                                         requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db,
                                                                   "hrm_certificate.id",
                                                                   represent,
@@ -3118,7 +3118,7 @@ class S3HRAppraisalModel(S3Model):
                            label = T("Rating"),
                            # @ToDo: make this configurable
                            # 1 to 4
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_INT_IN_RANGE(1, 5)
                                       ),
                            widget = S3SliderWidget(1, 4, step=0.1,
@@ -3126,7 +3126,7 @@ class S3HRAppraisalModel(S3Model):
                            ),
                      person_id("supervisor_id",
                                label = T("Supervisor"),
-                               requires = IS_NULL_OR(
+                               requires = IS_EMPTY_OR(
                                             IS_ADD_PERSON_WIDGET2()
                                           ),
                                widget = S3AddPersonWidget2(),
@@ -3332,7 +3332,7 @@ class S3HRExperienceModel(S3Model):
                           self.gis_location_id(),
                           person_id("supervisor_id",
                                     label = T("Supervisor"),
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                         IS_ADD_PERSON_WIDGET2()
                                         ),
                                     widget = S3AddPersonWidget2(),
@@ -3457,7 +3457,7 @@ class S3HRProgrammeModel(S3Model):
         programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
                                 sortby = "name",
                                 label = T("Program"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "hrm_programme.id",
                                                       represent,
                                                       filterby="organisation_id",
@@ -5950,7 +5950,7 @@ def hrm_training_controller():
             #    s3db.configure("hrm_training",
             #                   onvalidation = hrm_training_onvalidation,
             #                   )
-            #    table.course_id.requires = IS_NULL_OR(table.course_id.requires)
+            #    table.course_id.requires = IS_EMPTY_OR(table.course_id.requires)
             #    f = table.training_event_id
             #    training_event_id = r.get_vars.get("~.training_event_id", None)
             #    if training_event_id:

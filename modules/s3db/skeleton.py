@@ -116,8 +116,8 @@ class S3SkeletonDataModel(S3Model):
         # -> make sure you prefix their names properly with the module prefix:
         skeleton_example_id = S3ReusableField("skeleton_example_id", "reference %s" % tablename,
                                                label = T("Skeleton Example"),
-                                               requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                     "skeleton_example.id")))
+                                               requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                                      "skeleton_example.id")))
 
         # Pass names back to global scope (s3.*)
         return dict(

@@ -112,7 +112,7 @@ class S3RequestModel(S3Model):
 
         req_status = S3ReusableField("req_status", "integer",
                                      label = T("Request Status"),
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_IN_SET(req_status_opts,
                                                               zero = None)),
                                      represent = lambda opt: \
@@ -206,7 +206,7 @@ class S3RequestModel(S3Model):
                                 represent = lambda opt: \
                                     req_priority_opts.get(opt, UNKNOWN_OPT),
                                 #represent = self.req_priority_represent,
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                                 IS_IN_SET(req_priority_opts))
                                 ),
                           # This is a component, so needs to be a super_link
@@ -454,7 +454,7 @@ class S3RequestModel(S3Model):
         # Reusable Field
         represent = self.req_represent
         req_id = S3ReusableField("req_id", "reference %s" % tablename,
-                                 requires = IS_NULL_OR(
+                                 requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db,
                                                           "req_req.id",
                                                           lambda id, row:
@@ -1667,7 +1667,7 @@ class S3RequestItemModel(S3Model):
 
         # Reusable Field
         req_item_id = S3ReusableField("req_item_id", "reference %s" % tablename,
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "req_req_item.id",
                                                               self.req_item_represent,
@@ -2441,7 +2441,7 @@ class S3CommitModel(S3Model):
         # Reusable Field
         commit_id = S3ReusableField("commit_id", "reference %s" % tablename,
                                     sortby="date",
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "req_commit.id",
                                                               self.commit_represent,
                                                               orderby="req_commit.date",

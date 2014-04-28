@@ -169,7 +169,7 @@ class S3WarehouseModel(S3Model):
 
         #warehouse_type_id = S3ReusableField("warehouse_type_id", "reference %s" % tablename,
         #                        sortby="name",
-        #                        requires = IS_NULL_OR(
+        #                        requires = IS_EMPTY_OR(
         #                                    IS_ONE_OF(db, "inv_warehouse_type.id",
         #                                              represent,
         #                                              sort=True
@@ -220,16 +220,16 @@ class S3WarehouseModel(S3Model):
                      self.gis_location_id(),
                      Field("phone1", label = T("Phone 1"),
                            represent = lambda v: v or NONE,
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires)),
                      Field("phone2", label = T("Phone 2"),
                            represent = lambda v: v or NONE,
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires)),
                      Field("email", label = T("Email"),
                            represent = lambda v: v or NONE,
-                           requires = IS_NULL_OR(IS_EMAIL())),
+                           requires = IS_EMPTY_OR(IS_EMAIL())),
                      Field("fax", label = T("Fax"),
                            represent = lambda v: v or NONE,
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires)),
                      Field("obsolete", "boolean",
                            label = T("Obsolete"),
                            represent = lambda opt: \
@@ -451,7 +451,7 @@ class S3InventoryModel(S3Model):
                           # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                           Field("status", "integer",
                                 label = T("Status"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_IN_SET(inv_item_status_opts)
                                             ),
                                 represent = lambda opt: \
@@ -484,7 +484,7 @@ class S3InventoryModel(S3Model):
                                           ondelete = "SET NULL"),
                           Field("source_type", "integer",
                                 label = T("Type"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_IN_SET(inv_source_type)
                                             ),
                                 represent = lambda opt: \
@@ -969,7 +969,7 @@ class S3InventoryTrackingModel(S3Model):
                      # This is a reference, not a super-link, so we can override
                      Field("to_site_id", self.org_site,
                            label = T("To %(site)s") % dict(site=SITE_LABEL),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   lambda id, row: \
                                                   org_site_represent(id, row,
@@ -1028,7 +1028,7 @@ class S3InventoryTrackingModel(S3Model):
                            ),
                      Field("driver_phone",
                            label = T("Driver Phone Number"),
-                           requires = IS_NULL_OR(s3_phone_requires),
+                           requires = IS_EMPTY_OR(s3_phone_requires),
                            represent = lambda v: v or "",
                            ),
                      Field("vehicle_plate_no",
@@ -1057,7 +1057,7 @@ class S3InventoryTrackingModel(S3Model):
                                  writable = False,
                                  ),
                      Field("status", "integer",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_IN_SET(shipment_status)
                                       ),
                            represent = lambda opt: \
@@ -1127,7 +1127,7 @@ class S3InventoryTrackingModel(S3Model):
         # Reusable Field
         send_id = S3ReusableField("send_id", "reference %s" % tablename,
                                   sortby="date",
-                                  requires = IS_NULL_OR(
+                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_send.id",
                                                           self.inv_send_represent,
                                                           orderby="inv_send_id.date",
@@ -1237,7 +1237,7 @@ class S3InventoryTrackingModel(S3Model):
                            label = T("From %(site)s") % dict(site=SITE_LABEL),
                            ondelete = "SET NULL",
                            #widget = S3SiteAutocompleteWidget(),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   lambda id, row: \
                                                   org_site_represent(id, row,
@@ -1275,7 +1275,7 @@ class S3InventoryTrackingModel(S3Model):
                                default = auth.s3_logged_in_person(),
                                comment = self.pr_person_comment(child="recipient_id")),
                      Field("status", "integer",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_IN_SET(shipment_status)
                                         ),
                            represent = lambda opt: \
@@ -1285,7 +1285,7 @@ class S3InventoryTrackingModel(S3Model):
                            writable = False,
                            ),
                      Field("grn_status", "integer",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                        IS_IN_SET(ship_doc_status)
                                        ),
                            represent = lambda opt: \
@@ -1302,7 +1302,7 @@ class S3InventoryTrackingModel(S3Model):
                                                                                                                             GRN_name=settings.get_inv_recv_form_name()))),
                            ),
                      Field("cert_status", "integer",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_IN_SET(ship_doc_status)
                                        ),
                            represent = lambda opt: \
@@ -1327,7 +1327,7 @@ class S3InventoryTrackingModel(S3Model):
         # Reusable Field
         recv_id = S3ReusableField("recv_id", "reference %s" % tablename,
                                   sortby="date",
-                                  requires = IS_NULL_OR(
+                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_recv.id",
                                                           self.inv_recv_represent,
                                                           orderby="inv_recv.date",
@@ -1551,7 +1551,7 @@ class S3InventoryTrackingModel(S3Model):
                      inv_item_id(name="send_inv_item_id",
                                  ondelete = "RESTRICT",
                                  # Local Purchases don't have this available
-                                 requires = IS_NULL_OR(
+                                 requires = IS_EMPTY_OR(
                                               IS_ONE_OF(db, "inv_inv_item.id",
                                                         self.inv_item_represent,
                                                         orderby="inv_inv_item.id",
@@ -1628,7 +1628,7 @@ S3OptionsFilter({
                                      ondelete = "SET NULL"),
                      Field("inv_item_status", "integer",
                            label = T("Item Status"),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_IN_SET(inv_item_status_opts)
                                         ),
                            represent = lambda opt: \
@@ -3858,7 +3858,7 @@ class S3InventoryAdjustModel(S3Model):
                              writable = False
                              ),
                      Field("status", "integer",
-                           requires = IS_NULL_OR(IS_IN_SET(adjust_status)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(adjust_status)),
                            represent = lambda opt: \
                                        adjust_status.get(opt, UNKNOWN_OPT),
                            default = 0,
@@ -3866,7 +3866,7 @@ class S3InventoryAdjustModel(S3Model):
                            writable = False
                            ),
                      Field("category", "integer",
-                           requires = IS_NULL_OR(IS_IN_SET(adjust_type)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(adjust_type)),
                            represent = lambda opt: \
                                        adjust_type.get(opt, UNKNOWN_OPT),
                            default = 1,
@@ -3890,7 +3890,7 @@ class S3InventoryAdjustModel(S3Model):
         # Reusable Field
         adj_id = S3ReusableField("adj_id", "reference %s" % tablename,
                                  sortby="date",
-                                 requires = IS_NULL_OR(
+                                 requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_adj.id",
                                                           self.inv_adj_represent,
                                                           orderby="inv_adj.adjustment_date",
@@ -3981,14 +3981,14 @@ class S3InventoryAdjustModel(S3Model):
                                  writable = track_pack_values),
                      Field("old_status", "integer",
                            label = T("Current Status"),
-                           requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
                            represent = lambda opt: \
                                        inv_item_status_opts.get(opt, UNKNOWN_OPT),
                            default = 0,
                            writable = False),
                      Field("new_status", "integer",
                            label = T("Revised Status"),
-                           requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
                            represent = lambda opt: \
                                        inv_item_status_opts.get(opt, UNKNOWN_OPT),
                            default = 0,),
@@ -4015,7 +4015,7 @@ class S3InventoryAdjustModel(S3Model):
         # Reusable Field
         adj_item_id = S3ReusableField("adj_item_id", "reference %s" % tablename,
                                       sortby="item_id",
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "inv_adj_item.id",
                                                               self.inv_adj_item_represent,
                                                               orderby="inv_adj_item.item_id",

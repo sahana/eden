@@ -161,7 +161,7 @@ class S3StatsModel(S3Model):
         source_id = S3ReusableField("source_id", "reference %s" % tablename,
                                     label = T("Source"),
                                     represent = represent,
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "stats_source.source_id",
                                                           represent,
                                                           sort=True)),
@@ -269,7 +269,7 @@ class S3StatsDemographicModel(S3Model):
                                  label = T("Description")),
                      # Link to the Demographic which is the Total, so that we can calculate percentages
                      Field("total_id", self.stats_parameter,
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "stats_parameter.parameter_id",
                                                   stats_parameter_represent,
                                                   instance_types = ("stats_demographic",),
@@ -1300,7 +1300,7 @@ class S3StatsImpactModel(S3Model):
         # Reusable Field
         impact_id = S3ReusableField("impact_id", "reference %s" % tablename,
                                      label = T("Impact"),
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                         IS_ONE_OF_EMPTY(db, "stats_impact.id")),
                                      represent = S3Represent(lookup=tablename),
                                      ondelete = "CASCADE")
@@ -1604,7 +1604,7 @@ class S3StatsTrainedPeopleModel(S3Model):
                      Field("value", "integer",
                            label = T("Number of Trained People"),
                            represent = IS_INT_AMOUNT.represent,
-                           requires=IS_NULL_OR(
+                           requires=IS_EMPTY_OR(
                                       IS_INT_IN_RANGE(0, 999999)
                                     ),
                            ),

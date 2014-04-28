@@ -115,7 +115,7 @@ class S3CampDataModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         shelter_type_id = S3ReusableField("shelter_type_id", "reference %s" % tablename,
-                                          requires = IS_NULL_OR(
+                                          requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
                                                                   represent)),
                                           represent = represent,
@@ -171,7 +171,7 @@ class S3CampDataModel(S3Model):
         shelter_service_id = S3ReusableField("shelter_service_id",
                                              "list:reference cr_shelter_service",
                                              sortby="name",
-                                             requires = IS_NULL_OR(
+                                             requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db,
                                                                       "cr_shelter_service.id",
                                                                       self.cr_shelter_service_represent,
@@ -213,11 +213,11 @@ class S3CampDataModel(S3Model):
                      self.gis_location_id(),
                      Field("phone",
                            label = T("Phone"),
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires)),
                      self.pr_person_id(label = T("Contact Person")),
                      Field("capacity_day", "integer",
                            label = T("Capacity (Day)"),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                       IS_INT_IN_RANGE(0, 999999)),
                            represent=lambda v: \
                                        IS_INT_AMOUNT.represent(v),
@@ -227,7 +227,7 @@ class S3CampDataModel(S3Model):
                            ),
                      Field("capacity_night", "integer",
                            label = T("Capacity (Night)"),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                        IS_INT_IN_RANGE(0, 999999)),
                            represent=lambda v: \
                                        IS_INT_AMOUNT.represent(v),
@@ -237,13 +237,13 @@ class S3CampDataModel(S3Model):
                            ),
                      Field("population", "integer",
                            label = T("Population"),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                        IS_INT_IN_RANGE(0, 999999)),
                            represent=lambda v: \
                                        IS_INT_AMOUNT.represent(v)
                            ),
                      Field("status", "integer",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                        IS_IN_SET(cr_shelter_opts)
                                        ),
                            represent = lambda opt: \
@@ -392,7 +392,7 @@ class S3CampDataModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename)
         shelter_id = S3ReusableField("shelter_id", "reference %s" % tablename,
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "cr_shelter.id",
                                                               represent,
                                                               sort=True)),
@@ -423,7 +423,7 @@ class S3CampDataModel(S3Model):
                      shelter_id(ondelete = "CASCADE"),
                      s3_date(),
                      Field("status", "integer",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                        IS_IN_SET(cr_shelter_opts)
                                        ),
                            represent = lambda opt: \
@@ -431,7 +431,7 @@ class S3CampDataModel(S3Model):
                            label = T("Status")),
                      Field("population", "integer",
                            label = T("Population"),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                        IS_INT_IN_RANGE(0, 999999)),
                            represent=lambda v: \
                                        IS_INT_AMOUNT.represent(v)

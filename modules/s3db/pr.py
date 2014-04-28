@@ -239,8 +239,8 @@ class S3PersonEntity(S3Model):
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
                                       label = T("ID Tag Number"),
-                                      requires = IS_NULL_OR(IS_NOT_ONE_OF(db,
-                                                            "pr_pentity.pe_label")))
+                                      requires = IS_EMPTY_OR(IS_NOT_ONE_OF(db,
+                                                             "pr_pentity.pe_label")))
 
         # Custom Method for S3AutocompleteWidget
         self.set_method("pr", "pentity",
@@ -289,7 +289,7 @@ class S3PersonEntity(S3Model):
                             writable = False),
                       # Type filter, type of entities which can have this role
                       Field("entity_type", "string",
-                            requires = IS_NULL_OR(IS_IN_SET(pe_types,
+                            requires = IS_EMPTY_OR(IS_IN_SET(pe_types,
                                                              zero=T("ANY"))),
                             represent = lambda opt: \
                             pe_types.get(opt, UNKNOWN_OPT),
@@ -920,7 +920,7 @@ class S3PersonModel(S3Model):
 
         person_id = S3ReusableField("person_id", "reference %s" % tablename,
                                     sortby = sortby,
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "pr_person.id",
                                                   person_represent,
                                                   orderby = orderby,
@@ -1828,7 +1828,7 @@ class S3GroupModel(S3Model):
                                    label = label,
                                    ondelete = "RESTRICT",
                                    represent = represent,
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "pr_group.id",
                                                           represent,
                                                           filterby="system",
@@ -2071,7 +2071,7 @@ class S3ContactModel(S3Model):
                            label= T("Relationship")),
                      Field("phone",
                            label = T("Phone"),
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires)),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2796,7 +2796,7 @@ class S3PersonEducationModel(S3Model):
                                    label = T("Level of Award"),
                                    ondelete = "RESTRICT",
                                    represent = represent,
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                         IS_ONE_OF(current.db, "pr_education_level.id",
                                                   represent,
                                                   )),
@@ -2829,7 +2829,7 @@ class S3PersonEducationModel(S3Model):
                      Field("year", "integer",
                            label = T("Year"),
                            represent = lambda v: v or NONE,
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_INT_IN_RANGE(1900, 2100)
                                         ),
                            ),
@@ -2948,7 +2948,7 @@ class S3PersonDetailsModel(S3Model):
                           self.pr_person_id(label = T("Person"),
                                             ondelete="CASCADE"),
                           Field("nationality",
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_IN_SET_LAZY(lambda: \
                                                 gis.get_countries(key_type="code"),
                                                 zero = messages.SELECT_LOCATION)),
@@ -2967,7 +2967,7 @@ class S3PersonDetailsModel(S3Model):
                           pr_marital_status(),
                           Field("religion", length=128,
                                 label = T("Religion"),
-                                requires = IS_NULL_OR(IS_IN_SET(pr_religion_opts)),
+                                requires = IS_EMPTY_OR(IS_IN_SET(pr_religion_opts)),
                                 represent = lambda opt: \
                                     pr_religion_opts.get(opt, UNKNOWN_OPT),
                                 ),
@@ -3068,7 +3068,7 @@ class S3SavedFilterModel(S3Model):
 
         represent = S3Represent(lookup=tablename, fields=["title"])
         filter_id = S3ReusableField("filter_id", "reference %s" % tablename,
-                                    requires = IS_NULL_OR(IS_ONE_OF(
+                                    requires = IS_EMPTY_OR(IS_ONE_OF(
                                                     db, "pr_filter.id",
                                                     represent,
                                                     orderby="pr_filter.title",
@@ -3164,7 +3164,7 @@ class S3SubscriptionModel(S3Model):
                                             options=MSG_CONTACT_OPTS,
                                             multiple=True)),
                           Field("email_format",
-                                requires=IS_NULL_OR(
+                                requires=IS_EMPTY_OR(
                                           IS_IN_SET(email_format_opts,
                                                     zero=None)),
                                 represent=S3Represent(
@@ -4057,18 +4057,18 @@ class S3PersonDescription(S3Model):
                            label = T("Race"),
                            represent = lambda opt: \
                                        pr_race_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_race_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_race_opts)),
                            ),
                      Field("complexion", "integer",
                            label = T("Complexion"),
                            represent = lambda opt: \
                                        pr_complexion_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_complexion_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_complexion_opts)),
                            ),
                      Field("ethnicity", length=64, # Mayon Compatibility
                            label = T("Ethnicity"),
                            #readable = False,
-                           #requires = IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
+                           #requires = IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
                            #writable = False,
                            ),
                      # Height and weight
@@ -4076,11 +4076,11 @@ class S3PersonDescription(S3Model):
                            label = T("Height"),
                            represent = lambda opt: \
                                        pr_height_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_height_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_height_opts)),
                            ),
                      Field("height_cm", "integer",
                            label = T("Height (cm)"),
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 300)),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 300)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Height"),
                                                            T("The body height (crown to heel) in cm."))),
@@ -4089,11 +4089,11 @@ class S3PersonDescription(S3Model):
                            label = T("Weight"),
                            represent = lambda opt: \
                                        pr_weight_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_weight_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_weight_opts)),
                            ),
                      Field("weight_kg", "integer",
                            label = T("Weight (kg)"),
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 500)),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 500)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Weight"),
                                                            T("The weight in kg."))),
@@ -4102,13 +4102,13 @@ class S3PersonDescription(S3Model):
                      Field("blood_type",
                            label = T("Blood Type (AB0)"),
                            represent = lambda opt: opt or UNKNOWN_OPT,
-                           requires = IS_NULL_OR(IS_IN_SET(pr_blood_type_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_blood_type_opts)),
                            ),
                      Field("eye_color", "integer",
                            label = T("Eye Color"),
                            represent = lambda opt: \
                                        pr_eye_color_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_eye_color_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_eye_color_opts)),
                            ),
 
                      # Hair of the head
@@ -4116,25 +4116,25 @@ class S3PersonDescription(S3Model):
                            label = T("Hair Color"),
                            represent = lambda opt: \
                                        pr_hair_color_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_color_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                            ),
                      Field("hair_style", "integer",
                            label = T("Hair Style"),
                            represent = lambda opt: \
                                        pr_hair_style_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_style_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_style_opts)),
                            ),
                      Field("hair_length", "integer",
                            label = T("Hair Length"),
                            represent = lambda opt: \
                                        pr_hair_length_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_length_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_length_opts)),
                            ),
                      Field("hair_baldness", "integer",
                            label = T("Baldness"),
                            represent = lambda opt: \
                                        pr_hair_baldness_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_baldness_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_baldness_opts)),
                            ),
                      Field("hair_comment",
                            label = T("Hair Comments"),
@@ -4145,19 +4145,19 @@ class S3PersonDescription(S3Model):
                            label = T("Facial hair, type"),
                            represent = lambda opt: \
                                        pr_facial_hair_type_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_facial_hair_type_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_type_opts)),
                            ),
                      Field("facial_hair_color", "integer",
                            label = T("Facial hair, color"),
                            represent = lambda opt: \
                                        pr_hair_color_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_hair_color_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_hair_color_opts)),
                            ),
                      Field("facial_hair_length", "integer",
                            label = T("Facial hair, length"),
                            represent = lambda opt: \
                                        pr_facial_hair_length_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_NULL_OR(IS_IN_SET(pr_facial_hair_length_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(pr_facial_hair_length_opts)),
                            ),
                      Field("facial_hair_comment",
                            label = T("Facial hair, comment"),

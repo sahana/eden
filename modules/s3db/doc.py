@@ -134,12 +134,12 @@ class S3DocumentLibrary(S3Model):
                            ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
-                           requires = IS_NULL_OR(IS_LENGTH(128)),
+                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
                            label = T("Name")
                            ),
                      Field("url",
                            label = T("URL"),
-                           requires = IS_NULL_OR(IS_URL()),
+                           requires = IS_EMPTY_OR(IS_URL()),
                            represent = lambda url: \
                            url and A(url, _href=url) or NONE
                            ),
@@ -249,9 +249,9 @@ class S3DocumentLibrary(S3Model):
                      super_link("pe_id", "pr_pentity"), # @ToDo: Remove & make Persons doc entities instead?
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
                      Field("file", "upload", autodelete=True,
-                           requires = IS_NULL_OR(
-                           IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))
-                           ),
+                           requires = IS_EMPTY_OR(
+                                        IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))
+                                      ),
                            represent = doc_image_represent,
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(folder,
@@ -260,10 +260,10 @@ class S3DocumentLibrary(S3Model):
                            widget=S3ImageCropWidget((300, 300))),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
-                           requires = IS_NULL_OR(IS_LENGTH(128)),
+                           requires = IS_EMPTY_OR(IS_LENGTH(128)),
                            label=T("Name")),
                      Field("url", label=T("URL"),
-                           requires = IS_NULL_OR(IS_URL())),
+                           requires = IS_EMPTY_OR(IS_URL())),
                      Field("type", "integer",
                            requires = IS_IN_SET(doc_image_type_opts,
                                                 zero=None),

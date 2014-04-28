@@ -105,7 +105,7 @@ class S3ProcurementModel(S3Model):
                      # @ToDo: Filter to orgs of type 'supplier'
                      self.org_organisation_id(label=T("Supplier")),
                      Field("shipping", "integer",
-                           requires = IS_NULL_OR(IS_IN_SET(proc_shipping_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(proc_shipping_opts)),
                            represent = lambda opt: \
                                        proc_shipping_opts.get(opt,
                                                               messages.UNKNOWN_OPT),
@@ -139,7 +139,7 @@ class S3ProcurementModel(S3Model):
 
         plan_id = S3ReusableField("plan_id", "reference %s" % tablename,
                                   sortby="date",
-                                  requires = IS_NULL_OR(
+                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "proc_plan.id",
                                                           self.proc_plan_represent,
                                                           orderby="proc_plan.date",

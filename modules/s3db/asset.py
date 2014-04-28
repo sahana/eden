@@ -249,7 +249,7 @@ S3OptionsFilter({
         # Reusable Field
         asset_id = S3ReusableField("asset_id", "reference %s" % tablename,
                                    sortby="number",
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "asset_asset.id",
                                                           self.asset_represent,
                                                           sort=True)),
@@ -938,7 +938,7 @@ def asset_log_prep(r):
                                                     error_message="Person must be specified!")
             table.check_in_to_person.readable = True
             table.check_in_to_person.writable = True
-            table.site_id.requires = IS_NULL_OR(
+            table.site_id.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   table.site_id.represent))
         elif type == "site":
@@ -951,7 +951,7 @@ def asset_log_prep(r):
                                                        table.organisation_id.represent,
                                                        orderby="org_organisation.name",
                                                        sort=True)
-            table.site_id.requires = IS_NULL_OR(
+            table.site_id.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   table.site_id.represent))
     elif "status" in request.get_vars:

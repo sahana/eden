@@ -80,7 +80,7 @@ class S3VolunteerModel(S3Model):
                                 represent = lambda opt: \
                                             availability_opts.get(opt,
                                                           UNKNOWN_OPT),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                              IS_IN_SET(availability_opts)
                                            ),
                                 ),
@@ -176,7 +176,7 @@ class S3VolunteerAwardModel(S3Model):
         represent = S3Represent(lookup=tablename)
         award_id = S3ReusableField("award_id", "reference %s" % tablename,
                                    label = T("Award"),
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db,
                                                           "vol_award.id",
                                                           represent,
@@ -266,7 +266,7 @@ class S3VolunteerClusterModel(S3Model):
         represent = S3Represent(lookup=tablename)
         vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", "reference %s" % tablename,
                                               label = T("Volunteer Cluster Type"),
-                                              requires = IS_NULL_OR(
+                                              requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_type.id",
                                                                       represent)),
@@ -307,7 +307,7 @@ class S3VolunteerClusterModel(S3Model):
         represent = S3Represent(lookup=tablename)
         vol_cluster_id = S3ReusableField("vol_cluster_id", "reference %s" % tablename,
                                          label = T("Volunteer Cluster"),
-                                         requires = IS_NULL_OR(
+                                         requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db,
                                                                   "vol_cluster.id",
                                                                   represent)),
@@ -348,7 +348,7 @@ class S3VolunteerClusterModel(S3Model):
         represent = S3Represent(lookup=tablename)
         vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", "reference %s" % tablename,
                                                 label = T("Volunteer Cluster Position"),
-                                                requires = IS_NULL_OR(
+                                                requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_position.id",
                                                                       represent)),

@@ -196,7 +196,7 @@ class S3ProjectModel(S3Model):
                            label = T("Calendar"),
                            readable = mode_task,
                            writable = mode_task,
-                           requires = IS_NULL_OR(IS_URL()),
+                           requires = IS_EMPTY_OR(IS_URL()),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Calendar"),
                                                            T("URL to a Google Calendar to display on the project timeline.")))),
@@ -339,7 +339,7 @@ class S3ProjectModel(S3Model):
         project_id = S3ReusableField("project_id", "reference %s" % tablename,
             label = T("Project"),
             represent = project_represent,
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "project_project.id",
                                   project_represent,
                                   updateable = True,
@@ -1038,7 +1038,7 @@ class S3ProjectActivityModel(S3Model):
                         label = T("Activity"),
                         ondelete = "CASCADE",
                         represent = represent,
-                        requires = IS_NULL_OR(
+                        requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "project_activity.id",
                                               represent,
                                               sort=True)),
@@ -1275,7 +1275,7 @@ class S3ProjectActivityTypeModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
         activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
                                            sortby = "name",
-                                           requires = IS_NULL_OR(
+                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "project_activity_type.id",
                                                                   represent,
                                                                   sort=True)),
@@ -1881,7 +1881,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", "reference %s" % tablename,
             sortby = "name",
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "project_beneficiary.id",
                                   self.project_beneficiary_represent,
                                   sort=True)),
@@ -2117,7 +2117,7 @@ class S3ProjectCampaignModel(S3Model):
         represent = S3Represent(lookup=tablename)
         campaign_id = S3ReusableField("campaign_id", "reference %s" % tablename,
                                       sortby="name",
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "project_campaign.id",
                                                               represent,
                                                               sort=True)),
@@ -2177,7 +2177,7 @@ class S3ProjectCampaignModel(S3Model):
         represent = S3Represent(lookup=tablename)
         message_id = S3ReusableField("campaign_message_id", "reference %s" % tablename,
                                      sortby="name",
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "project_campaign_message.id",
                                                               represent,
                                                               sort=True)),
@@ -2432,7 +2432,7 @@ class S3ProjectFrameworkModel(S3Model):
         represent = S3Represent(lookup=tablename)
         framework_id = S3ReusableField("framework_id", "reference %s" % tablename,
                                        label = ORGANISATION,
-                                       requires = IS_NULL_OR(
+                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "project_framework.id",
                                                               represent
                                                               )),
@@ -2522,7 +2522,7 @@ class S3ProjectHazardModel(S3Model):
         hazard_id = S3ReusableField("hazard_id", "reference %s" % tablename,
                                     sortby = "name",
                                     label = T("Hazards"),
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "project_hazard.id",
                                                           represent,
                                                           sort=True)),
@@ -2830,7 +2830,7 @@ class S3ProjectLocationModel(S3Model):
         # Reusable Field
         project_location_represent = project_LocationRepresent()
         project_location_id = S3ReusableField("project_location_id", "reference %s" % tablename,
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "project_location.id",
                                   project_location_represent,
                                   updateable = True,
@@ -3028,14 +3028,14 @@ class S3ProjectOrganisationModel(S3Model):
                           ),
                           Field("role", "integer",
                                 label = T("Role"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                              IS_IN_SET(project_organisation_roles)
                                            ),
                                 represent = lambda opt: \
                                             project_organisation_roles.get(opt,
                                                                            NONE)),
                           Field("amount", "double",
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                              IS_FLOAT_AMOUNT()),
                                 represent = lambda v: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2),
@@ -3368,7 +3368,7 @@ class S3ProjectStatusModel(S3Model):
                         label = T("Status"),
                         ondelete = "SET NULL",
                         represent = represent,
-                        requires = IS_NULL_OR(
+                        requires = IS_EMPTY_OR(
                                     IS_ONE_OF(current.db, "project_status.id",
                                               represent,
                                               sort=True)),
@@ -3439,7 +3439,7 @@ class S3ProjectThemeModel(S3Model):
         theme_id = S3ReusableField("theme_id", "reference %s" % tablename,
                                    label = T("Theme"),
                                    sortby = "name",
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "project_theme.id",
                                                           represent,
                                                           sort=True)),
@@ -3716,7 +3716,7 @@ class S3ProjectDRRModel(S3Model):
                           self.project_project_id(empty=False),
                           Field("hfa", "list:integer",
                                 label = T("HFA Priorities"),
-                                requires = IS_NULL_OR(IS_IN_SET(
+                                requires = IS_EMPTY_OR(IS_IN_SET(
                                             hfa_opts,
                                             multiple = True)),
                                 widget = S3GroupedOptionsWidget(
@@ -3804,7 +3804,7 @@ class S3ProjectDRRPPModel(S3Model):
                                 label = T("Activities")),
                           Field("rfa", "list:integer",
                                 label = T("RFA Priorities"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_rfa_opts.keys(),
                                                       labels = ["RFA %s" % \
                                                                 rfa for rfa in project_rfa_opts.keys()],
@@ -3819,7 +3819,7 @@ class S3ProjectDRRPPModel(S3Model):
                                                                 T("Applicable to projects in Pacific countries only")))),
                           Field("pifacc", "list:integer",
                                 label = T("PIFACC Priorities"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_pifacc_opts.keys(),
                                                       labels = ["PIFACC %s" % \
                                                                 pifacc for pifacc in project_pifacc_opts.keys()],
@@ -3834,7 +3834,7 @@ class S3ProjectDRRPPModel(S3Model):
                                                                 T("Pacific Islands Framework for Action on Climate Change. Applicable to projects in Pacific countries only")))),
                           Field("jnap", "list:integer",
                                 label = T("JNAP Priorities"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_jnap_opts.keys(),
                                                       labels = ["JNAP %s" % \
                                                                 jnap for jnap in project_jnap_opts.keys()],
@@ -3849,7 +3849,7 @@ class S3ProjectDRRPPModel(S3Model):
                                                                 T("Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation. Applicable to Cook Islands only")))),
                           Field("L1", "list:integer",
                                 label = T("Cook Islands"),
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "gis_location.id",
                                                       S3Represent(lookup="gis_location"),
                                                       filterby = "L0",
@@ -3875,7 +3875,7 @@ class S3ProjectDRRPPModel(S3Model):
                                 label = T("Focal Person")),
                           self.org_organisation_id(label = T("Organization")),
                           Field("email",
-                                requires=IS_NULL_OR(IS_EMAIL()),
+                                requires=IS_EMPTY_OR(IS_EMAIL()),
                                 represent = lambda v: v or NONE,
                                 label = T("Email")),
                           *s3_meta_fields())
@@ -4035,7 +4035,7 @@ class S3ProjectTaskModel(S3Model):
                                 )
         milestone_id = S3ReusableField("milestone_id", "reference %s" % tablename,
                                        sortby="name",
-                                       requires = IS_NULL_OR(
+                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "project_milestone.id",
                                                               represent)),
                                        represent = represent,
@@ -4382,7 +4382,7 @@ class S3ProjectTaskModel(S3Model):
         task_id = S3ReusableField("task_id", "reference %s" % tablename,
                                   label = T("Task"),
                                   sortby="name",
-                                  requires = IS_NULL_OR(
+                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "project_task.id",
                                                           represent)),
                                   represent = represent,

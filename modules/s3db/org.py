@@ -141,7 +141,7 @@ class S3OrganisationModel(S3Model):
         organisation_type_id = S3ReusableField("organisation_type_id",
                                     "reference %s" % tablename,
                                     sortby="name",
-                                    requires=IS_NULL_OR(
+                                    requires=IS_EMPTY_OR(
                                                 IS_ONE_OF(db,
                                                         "org_organisation_type.id",
                                                         represent,
@@ -200,7 +200,7 @@ class S3OrganisationModel(S3Model):
                 # Can't be defined in-line as otherwise get a circular reference
                 table = db[tablename]
                 table.parent.represent = region_represent
-                table.parent.requires = IS_NULL_OR(
+                table.parent.requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "org_region.id",
                                                       region_represent,
                                                       # Limited to just 1 level of parent
@@ -226,7 +226,7 @@ class S3OrganisationModel(S3Model):
 
             region_id = S3ReusableField("region_id", "reference %s" % tablename,
                 sortby="name",
-                requires=IS_NULL_OR(
+                requires=IS_EMPTY_OR(
                             IS_ONE_OF(db, "org_region.id",
                                       region_represent,
                                       sort=True,
@@ -284,7 +284,7 @@ class S3OrganisationModel(S3Model):
                            label=T("Home Country"),
                            #readable = False,
                            #writable = False,
-                           requires=IS_NULL_OR(IS_IN_SET_LAZY(
+                           requires=IS_EMPTY_OR(IS_IN_SET_LAZY(
                                 lambda: gis.get_countries(key_type="code"),
                                                           zero=messages.SELECT_LOCATION)),
                            represent=self.gis_country_code_represent,
@@ -294,19 +294,19 @@ class S3OrganisationModel(S3Model):
                            label=T("Phone #"),
                            #readable = False,
                            #writable = False,
-                           requires=IS_NULL_OR(s3_phone_requires),
+                           requires=IS_EMPTY_OR(s3_phone_requires),
                            represent=lambda v: v or NONE
                            ),
                      # http://hxl.humanitarianresponse.info/#organisationHomepage
                      Field("website",
                            label=T("Website"),
-                           requires=IS_NULL_OR(IS_URL()),
+                           requires=IS_EMPTY_OR(IS_URL()),
                            represent=s3_url_represent),
                      Field("year", "integer",
                            label=T("Year"),
                            #readable = False,
                            #writable = False,
-                           requires=IS_NULL_OR(
+                           requires=IS_EMPTY_OR(
                                       IS_INT_IN_RANGE(1850, 2100)),
                            represent=lambda v: v or NONE,
                            comment=DIV(_class="tooltip",
@@ -1094,7 +1094,7 @@ class S3OrganisationGroupModel(S3Model):
                          )),
                      Field("website",
                            label=T("Website"),
-                           requires=IS_NULL_OR(IS_URL()),
+                           requires=IS_EMPTY_OR(IS_URL()),
                            represent=s3_url_represent),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1140,7 +1140,7 @@ class S3OrganisationGroupModel(S3Model):
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    label = T(label),
                                    sortby="name",
-                                   requires=IS_NULL_OR(
+                                   requires=IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_group.id",
                                                           represent,
                                                           sort=True,
@@ -1649,7 +1649,7 @@ class S3OrganisationSectorModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
         sector_id = S3ReusableField("sector_id", "reference %s" % tablename,
                                     sortby="abrv",
-                                    requires=IS_NULL_OR(
+                                    requires=IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_sector.id",
                                                           represent,
                                                           sort=True,
@@ -1729,7 +1729,7 @@ class S3OrganisationSectorModel(S3Model):
 
         # subsector_id = S3ReusableField("subsector_id", "reference %s" % tablename,
                                        # sortby="abrv",
-                                       # requires = IS_NULL_OR(
+                                       # requires = IS_EMPTY_OR(
                                                         # IS_ONE_OF(db, "org_subsector.id",
                                                                   # self.org_subsector_represent,
                                                                   # sort=True)),
@@ -1901,7 +1901,7 @@ class S3OrganisationServiceModel(S3Model):
             # Can't be defined in-line as otherwise get a circular reference
             table = db[tablename]
             table.parent.represent = represent
-            table.parent.requires = IS_NULL_OR(
+            table.parent.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_service.id",
                                                   represent,
                                                   # If limiting to just 1 level of parent
@@ -1930,7 +1930,7 @@ class S3OrganisationServiceModel(S3Model):
         service_id = S3ReusableField("service_id", "reference %s" % tablename,
                                     sortby = "name",
                                     label = T("Services"),
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_service.id",
                                                           represent,
                                                           sort=True)),
@@ -2024,10 +2024,10 @@ class S3OrganisationSummaryModel(S3Model):
         self.define_table(tablename,
                           self.org_organisation_id(ondelete="CASCADE"),
                           Field("national_staff", "integer", # national is a reserved word in Postgres
-                                requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                                 label=T("# of National Staff")),
                           Field("international_staff", "integer",
-                                requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                                 label=T("# of International Staff")),
                           *s3_meta_fields())
 
@@ -2613,7 +2613,7 @@ class S3SiteDetailsModel(S3Model):
                      # Component not instance
                      super_link("site_id", "org_site"),
                      Field("facility_status", "integer",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                       IS_IN_SET(facility_status_opts)),
                            label = T("Facility Status"),
                            represent = lambda opt: \
@@ -2627,7 +2627,7 @@ class S3SiteDetailsModel(S3Model):
                              ),
                      Field("power_supply_type", "integer",
                            label = T("Power Supply Type"),
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_IN_SET(power_supply_type_opts,
                                                   zero=None)),
                            represent = lambda opt: \
@@ -2727,7 +2727,7 @@ class S3FacilityModel(S3Model):
             # Can't be defined in-line as otherwise get a circular reference
             table = db[tablename]
             table.parent.represent = type_represent
-            table.parent.requires = IS_NULL_OR(
+            table.parent.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_facility_type.id",
                                                   type_represent,
                                                   # If limiting to just 1 level of parent
@@ -2817,17 +2817,17 @@ class S3FacilityModel(S3Model):
                            label=T("Contact")),
                      Field("phone1",
                            label = T("Phone 1"),
-                           requires=IS_NULL_OR(s3_phone_requires),
+                           requires=IS_EMPTY_OR(s3_phone_requires),
                            represent = lambda v: v or NONE,
                            ),
                      Field("phone2",
                            label = T("Phone 2"),
-                           requires = IS_NULL_OR(s3_phone_requires),
+                           requires = IS_EMPTY_OR(s3_phone_requires),
                            represent = lambda v: v or NONE,
                            ),
                      Field("email",
                            label = T("Email"),
-                           requires = IS_NULL_OR(IS_EMAIL()),
+                           requires = IS_EMPTY_OR(IS_EMAIL()),
                            represent = lambda v: v or NONE,
                            ),
                      Field("website",
@@ -3368,7 +3368,7 @@ class S3RoomModel(S3Model):
         represent = S3Represent(lookup=tablename)
         room_id = S3ReusableField("room_id", "reference %s" % tablename,
                                   sortby="name",
-                                  requires=IS_NULL_OR(
+                                  requires=IS_EMPTY_OR(
                                             IS_ONE_OF(db, "org_room.id",
                                                       represent
                                                       )),
@@ -3455,7 +3455,7 @@ class S3OfficeModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
         office_type_id = S3ReusableField("office_type_id", "reference %s" % tablename,
                             sortby="name",
-                            requires=IS_NULL_OR(
+                            requires=IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_office_type.id",
                                                   represent,
                                                   sort=True
@@ -3511,19 +3511,19 @@ class S3OfficeModel(S3Model):
                                     ),
                      self.gis_location_id(),
                      Field("phone1", label=T("Phone 1"),
-                           requires=IS_NULL_OR(s3_phone_requires),
+                           requires=IS_EMPTY_OR(s3_phone_requires),
                            represent = lambda v: v or "",
                            ),
                      Field("phone2", label=T("Phone 2"),
-                           requires=IS_NULL_OR(s3_phone_requires),
+                           requires=IS_EMPTY_OR(s3_phone_requires),
                            represent = lambda v: v or "",
                            ),
                      Field("email", label=T("Email"),
-                           requires=IS_NULL_OR(IS_EMAIL()),
+                           requires=IS_EMPTY_OR(IS_EMAIL()),
                            represent = lambda v: v or "",
                            ),
                      Field("fax", label=T("Fax"),
-                           requires=IS_NULL_OR(s3_phone_requires),
+                           requires=IS_EMPTY_OR(s3_phone_requires),
                            represent = lambda v: v or "",
                            ),
                      Field("obsolete", "boolean",
@@ -3782,10 +3782,10 @@ class S3OfficeSummaryModel(S3Model):
                                 ondelete="CASCADE"
                                 ),
                           Field("national_staff", "integer", # national is a reserved word in Postgres
-                                requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                                 label=T("# of National Staff")),
                           Field("international_staff", "integer",
-                                requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
+                                requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
                                 label=T("# of International Staff")),
                           *s3_meta_fields())
 
@@ -3994,7 +3994,7 @@ def org_organisation_requires(required = False,
                          orderby = "org_organisation.name",
                          sort = True)
     if not required:
-        requires = IS_NULL_OR(requires)
+        requires = IS_EMPTY_OR(requires)
     return requires
 
 # =============================================================================
