@@ -108,11 +108,7 @@ def define_map(height = None,
         config = gis.get_config()
 
     legend = settings.get_gis_legend()
-
-    # @ToDo: Make these configurable
-    search = True
-    #googleEarth = True
-    #googleStreetview = True
+    search = settings.get_gis_search_geonames()
 
     if config.wmsbrowser_url:
         wms_browser = {"name" : config.wmsbrowser_name,

@@ -6056,9 +6056,9 @@ class MAP(DIV):
                 "gis_zoomin": T("Zoom In"),
                 }
 
-        ############
+        ##########
         # Viewport
-        ############
+        ##########
 
         height = opts.get("height", None)
         if height:
@@ -8392,17 +8392,29 @@ class S3Map(S3Method):
                               "marker"    : marker
                               }]
         settings = current.deployment_settings
+        catalogue_layers = settings.get_gis_widget_catalogue_layers()
         legend = settings.get_gis_legend()
+        search = settings.get_gis_search_geonames()
         toolbar = settings.get_gis_toolbar()
+        wms_browser = settings.get_gis_widget_wms_browser()
+        if wms_browser:
+            config = gis.get_config()
+            if config.wmsbrowser_url:
+                wms_browser = wms_browser = {"name" : config.wmsbrowser_name,
+                                             "url" : config.wmsbrowser_url,
+                                             }
+            else:
+                wms_browser = None
 
         map = gis.show_map(id = widget_id,
                            feature_resources = feature_resources,
-                           #catalogue_layers = True,
+                           catalogue_layers = catalogue_layers,
                            collapsed = True,
                            legend = legend,
                            toolbar = toolbar,
-                           #search = True,
                            save = False,
+                           search = search,
+                           wms_browser = wms_browser,
                            callback = callback,
                            )
         return map

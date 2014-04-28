@@ -121,6 +121,9 @@ settings.gis.nav_controls = False
 settings.gis.legend = "float"
 # Uncomment to Hide the Toolbar from the main Map
 settings.gis.toolbar = False
+# Uncomment to show WMS Browser in Map Widgets (e.g. Profile & Summary pages)
+# - NB This also requires the active gis_config to have one configured
+settings.gis.widget_wms_browser = True
 
 # Use PCodes for Locations import
 settings.gis.lookup_code = "PCode"

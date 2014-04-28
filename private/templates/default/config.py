@@ -271,10 +271,17 @@ settings.L10n.decimal_separator = "."
 #settings.gis.poi_resources = ["cr_shelter", "hms_hospital", "org_office"]
 # Uncomment to hide the ScaleLine control
 #settings.gis.scaleline = False
+# Uncomment to hide the GeoNames search box
+#settings.gis.search_geonames = False
 # Uncomment to modify the Simplify Tolerance
 #settings.gis.simplify_tolerance = 0.001
 # Uncomment to Hide the Toolbar from the main Map
 #settings.gis.toolbar = False
+# Uncomment to show Catalogue Layers in Map Widgets (e.g. Profile & Summary pages)
+#settings.gis.widget_catalogue_layers = True
+# Uncomment to show WMS Browser in Map Widgets (e.g. Profile & Summary pages)
+# - NB This also requires the active gis_config to have one configured
+#settings.gis.widget_wms_browser = True
 # Uncomment to hide the Zoom control
 #settings.gis.zoomcontrol = False
 

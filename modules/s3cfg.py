@@ -901,7 +901,9 @@ class S3Config(Storage):
                             ["cr_shelter", "hms_hospital", "org_office"])
 
     def get_gis_postcode_selector(self):
-        " Display Postcode form field when selecting Locations "
+        """
+            Display Postcode form field when selecting Locations
+        """
         return self.gis.get("postcode_selector", True)
 
     def get_gis_print_service(self):
@@ -910,6 +912,18 @@ class S3Config(Storage):
         """
         return self.gis.get("print_service", "")
 
+    def get_gis_scaleline(self):
+        """
+            Should the Map display a ScaleLine control?
+        """
+        return self.gis.get("scaleline", True)
+
+    def get_gis_search_geonames(self):
+        """
+            Whether the GeoNames search box should be visible on the map
+        """
+        return self.gis.get("search_geonames", True)
+
     def get_gis_simplify_tolerance(self):
         """
             Default Tolerance for the Simplification of Polygons
@@ -917,12 +931,6 @@ class S3Config(Storage):
             - a higher value is suitable for global views
         """
         return self.gis.get("simplify_tolerance", 0.01)
-
-    def get_gis_scaleline(self):
-        """
-            Should the Map display a ScaleLine control?
-        """
-        return self.gis.get("scaleline", True)
 
     def get_gis_spatialdb(self):
         """
@@ -934,6 +942,21 @@ class S3Config(Storage):
             return False
         else:
             return self.gis.get("spatialdb", False)
+
+    def get_gis_widget_catalogue_layers(self):
+        """
+            Should Map Widgets display Catalogue Layers?
+            - e.g. Profile & Summary pages
+        """
+        return self.gis.get("widget_catalogue_layers", False)
+
+    def get_gis_widget_wms_browser(self):
+        """
+            Should Map Widgets display a WMS Browser?
+            - e.g. Profile & Summary pages
+            NB This also requires the active gis_config to have one configured
+        """
+        return self.gis.get("widget_wms_browser", False)
 
     def get_gis_toolbar(self):
         """
