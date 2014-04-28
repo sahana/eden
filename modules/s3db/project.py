@@ -2188,10 +2188,10 @@ class S3ProjectCampaignModel(S3Model):
         # Components
         add_components(tablename,
                        # Responses
-                       #project_campaign_response="campaign_message_id",
+                       #project_campaign_response = "campaign_message_id",
                        # Summary
-                       project_campaign_response_summary="campaign_message_id",
-                      )
+                       project_campaign_response_summary = "campaign_message_id",
+                       )
 
         # ---------------------------------------------------------------------
         # Project Campaign Keyword
@@ -2296,9 +2296,10 @@ class S3ProjectCampaignModel(S3Model):
                      location_id(writable = False),
                      Field("value", "integer",
                            label = T("Number of Responses"),
-                           requires = IS_INT_IN_RANGE(0, 99999999),
                            represent = lambda v: \
-                           IS_INT_AMOUNT.represent(v)),
+                            IS_INT_AMOUNT.represent(v),
+                           requires = IS_INT_IN_RANGE(0, 99999999),
+                           ),
                      # @ToDo: Populate automatically from time Message is sent?
                      s3_date("date",
                              label = T("Start Date"),

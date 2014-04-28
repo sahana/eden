@@ -163,6 +163,11 @@ def resource():
     def prep(r):
         if r.interactive:
             if r.method in ("create", "update"):
+                if r.method == "create":
+                    # Enable Location field
+                    field = table.location_id
+                    field.readable = field.writable = False
+
                 get_vars = r.get_vars
                 table = r.table
                 # Context from a Profile page?"

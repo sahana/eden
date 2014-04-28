@@ -216,7 +216,7 @@ class S3DocumentLibrary(S3Model):
 
         # Reusable field
         represent = doc_DocumentRepresent(lookup = tablename,
-                                          fields = ["name", "file"],
+                                          fields = ["name", "file", "url"],
                                           labels = "%(name)s",
                                           show_link = True)
         document_id = S3ReusableField("document_id", "reference %s" % tablename,
@@ -642,12 +642,15 @@ class doc_DocumentRepresent(S3Represent):
         if row:
             try:
                 filename = row["doc_document.file"]
+                url = row["doc_document.url"]
             except AttributeError:
                 return v
             else:
-                url = URL(c="default", f="download", args=filename)
-                return A(v, _href=url)
-        else:
-            return v
+                if filename:
+                    url = URL(c="default", f="download", args=filename)
+                    return A(v, _href=url)
+                elif url:
+                    return A(v, _href=url)
+        return v
 
 # END =========================================================================

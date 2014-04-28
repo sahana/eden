@@ -14,8 +14,8 @@
          Demo:XXXX......................required.....demographic.name (Demographic = XX in column name, value = cell in row. Multiple allowed)
 
          Date...........................optional.....demographic_data.date
-         Source.........................optional.....stats_source.name
-         Source URL.....................optional.....stats_source.url
+         Source.........................optional.....doc_document.name
+         Source URL.....................optional.....doc_document.url
          Country........................optional.....gis_location.L0
          L1.............................optional.....gis_location.L1
          L2.............................optional.....gis_location.L2
@@ -353,31 +353,37 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Source">
-        <xsl:variable name="name" select="col[@field='Source']"/>
-        <xsl:variable name="location">
-            <xsl:call-template name="LocationUid"/>
-        </xsl:variable>
-        <xsl:variable name="tuid">
-            <xsl:choose>
-                <xsl:when test="col[@field='L1']!='' or col[@field='L2']!=''
-                             or col[@field='L3']!='' or col[@field='L4']!=''
-                             or col[@field='L5']!='' or col[@field='Location']!=''">
-                    <xsl:text>tuid</xsl:text>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:text>uuid</xsl:text>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
+        <xsl:variable name="SourceName" select="col[@field='Source']"/>
+        <xsl:if test="$SourceName!=''">
+            <xsl:variable name="date" select="col[@field='Date']"/>
+            <xsl:variable name="url" select="col[@field='Source URL']"/>
+            <xsl:variable name="location">
+                <xsl:call-template name="LocationUid"/>
+            </xsl:variable>
+            <xsl:variable name="tuid">
+                <xsl:choose>
+                    <xsl:when test="col[@field='L1']!='' or col[@field='L2']!=''
+                                 or col[@field='L3']!='' or col[@field='L4']!=''
+                                 or col[@field='L5']!='' or col[@field='Location']!=''">
+                        <xsl:text>tuid</xsl:text>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:text>uuid</xsl:text>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
 
-        <xsl:if test="$name!=''">
             <resource name="doc_document">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('doc_document/',$name)"/>
+                    <xsl:value-of select="concat('doc_document/',$SourceName)"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$name"/></data>
-                <data field="url"><xsl:value-of select="col[@field='Source URL']"/></data>
-                <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
+                <data field="name"><xsl:value-of select="$SourceName"/></data>
+                <xsl:if test="$url!=''">
+                    <data field="url"><xsl:value-of select="$url"/></data>
+                </xsl:if>
+                <xsl:if test="$date!=''">
+                    <data field="date"><xsl:value-of select="$date"/></data>
+                </xsl:if>
 
                 <!-- Link to Location -->
                 <xsl:call-template name="LocationReference">

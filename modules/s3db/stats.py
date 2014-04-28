@@ -35,6 +35,7 @@ __all__ = ["S3StatsModel",
            "S3StatsPeopleModel",
            "S3StatsTrainedPeopleModel",
            "stats_demographic_data_controller",
+           #"stats_SourceRepresent",
            ]
 
 from datetime import date
@@ -120,8 +121,8 @@ class S3StatsModel(S3Model):
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter"),
                      self.gis_location_id(
+                        requires = IS_LOCATION(),
                         widget = S3LocationAutocompleteWidget(),
-                        requires = IS_LOCATION()
                      ),
                      Field("value", "double",
                            label = T("Value"),
@@ -130,8 +131,9 @@ class S3StatsModel(S3Model):
                            ),
                      # @ToDo: This will need to be a datetime for some usecases
                      s3_date(),
-                     s3_date("date_end",
-                             label = T("End Date")),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
                      )
 
         # ---------------------------------------------------------------------
@@ -147,21 +149,22 @@ class S3StatsModel(S3Model):
         tablename = "stats_source"
         super_entity(tablename, "source_id", source_types,
                      Field("name",
-                           label=T("Name")),
-                           )
+                           label = T("Name"),
+                           ),
+                     )
 
         # For use by Instances or Components
         source_superlink = super_link("source_id", "stats_source")
 
         # For use by other FKs
-        represent = S3Represent(lookup="stats_source")
+        represent = stats_SourceRepresent(show_link = True)
         source_id = S3ReusableField("source_id", "reference %s" % tablename,
-                                    label=T("Source"),
+                                    label = T("Source"),
+                                    represent = represent,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "stats_source.source_id",
                                                           represent,
                                                           sort=True)),
-                                    represent=represent,
                                     )
 
         #self.add_components(tablename,
@@ -331,7 +334,7 @@ class S3StatsDemographicModel(S3Model):
                            ),
                      s3_date(required = True),
                      # Unused but needed for the stats_data SE
-                     #Field("date_end", "date",
+                     #Field("end_date", "date",
                      #      readable=False,
                      #      writable=False
                      #      ),
@@ -1700,5 +1703,166 @@ class S3StatsTrainedPeopleModel(S3Model):
             item.id = _duplicate.id
             item.data.id = _duplicate.id
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class stats_SourceRepresent(S3Represent):
+    """ Representation of Stats Sources """
+
+    def __init__(self,
+                 translate = False,
+                 show_link = False,
+                 multiple = False,
+                 ):
+
+        if show_link:
+            # Need a custom lookup
+            self.lookup_rows = self.custom_lookup_rows
+        # Need a custom representation
+        fields = ["name"]
+
+        super(stats_SourceRepresent,
+              self).__init__(lookup="stats_source",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def bulk(self, values, rows=None, list_type=False, show_link=True, include_blank=True):
+        """
+            Represent multiple values as dict {value: representation}
+
+            @param values: list of values
+            @param rows: the referenced rows (if values are foreign keys)
+            @param show_link: render each representation as link
+            @param include_blank: Also include a blank value
+
+            @return: a dict {value: representation}
+        """
+
+        show_link = show_link and self.show_link
+        if show_link and not rows:
+            # Retrieve the rows
+            rows = self.custom_lookup_rows(None, values)
+
+        self._setup()
+
+        # Get the values
+        if rows and self.table:
+            values = [row["stats_source.source_id"] for row in rows]
+        else:
+            values = [values] if type(values) is not list else values
+
+        # Lookup the representations
+        if values:
+            labels = self._lookup(values, rows=rows)
+            if show_link:
+                link = self.link
+                rows = self.rows
+                labels = dict((k, link(k, v, rows.get(k)))
+                               for k, v in labels.items())
+            for v in values:
+                if v not in labels:
+                    labels[v] = self.default
+        else:
+            labels = {}
+        if include_blank:
+            labels[None] = self.none
+        return labels
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for site rows, does a
+            left join with any instance_types found. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the site IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+        stable = s3db.stats_source
+
+        qty = len(values)
+        if qty == 1:
+            query = (stable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (stable.id.belongs(values))
+            limitby = (0, qty)
+
+        if self.show_link:
+            # We need the instance_type IDs
+            # Do a first query to see which instance_types we have
+            rows = db(query).select(stable.instance_type,
+                                    limitby=limitby)
+            instance_types = []
+            for row in rows:
+                if row.instance_type not in instance_types:
+                    instance_types.append(row.instance_type)
+
+            # Now do a second query which left-joins with all the instance tables we have
+            fields = [stable.source_id,
+                      stable.name,
+                      ]
+            left = []
+            for instance_type in instance_types:
+                table = s3db[instance_type]
+                fields.append(table.id)
+                left.append(table.on(table.source_id == stable.source_id))
+                if instance_type == "doc_document":
+                    # We need the URL
+                    fields.append(table.url)
+
+            rows = db(query).select(*fields,
+                                    left=left,
+                                    limitby=limitby)
+
+        else:
+            # Normal lookup
+            rows = db(query).select(stable.source_id,
+                                    stable.name,
+                                    limitby=limitby)
+
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+            @param k: the key (site_id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        if row:
+            try:
+                url = row["doc_document.url"]
+            except AttributeError:
+                return v
+            else:
+                if url:
+                    return A(v, _href=url, _target="blank")
+
+        # We have no way to determine the linkto
+        return v
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the org_site Row
+        """
+
+        name = row["stats_source.name"]
+        if not name:
+            return self.default
+
+        return s3_unicode(name)
 
 # END =========================================================================
