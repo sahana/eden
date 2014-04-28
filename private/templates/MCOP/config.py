@@ -484,7 +484,7 @@ def customise_event_incident_resource(r, tablename):
                             tablename = "project_task",
                             context = "incident",
                             #filter = S3FieldSelector("task_incident.incident_id") == r.id,
-                            icon = "icon-task",
+                            icon = "icon-tasks",
                             colspan = 1,
                             list_layout = s3db.project_task_list_layout,
                             )

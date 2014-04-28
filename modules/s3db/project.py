@@ -6609,7 +6609,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record, icon =
 
     assigned_to = record["project_task.pe_id"] or ""
 
-    if project:
+    if project and project != "-":
         project = SPAN(A(project,
                             _href = URL(c="project", f="project", args = [project_id, "profile"])
                             ),
@@ -6672,14 +6672,14 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record, icon =
 
     # Render the item
     item = DIV(DIV(I(_class="icon icon-%s" % icon),
-                   SPAN(project,
-                        name, _class="card-title"),
                    SPAN(location, _class="location-title"),
                    SPAN(date_due, _class="date-title"),
                    edit_bar,
                    _class="card-header",
                    ),
                DIV(org_logo,
+                   DIV(project,
+                        name, _class="card-title"),
                    DIV(DIV((description or ""),
                            DIV(author,
                                " - ",

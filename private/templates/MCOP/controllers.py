@@ -76,29 +76,29 @@ for(var i=0,len=layers.length;i<len;i++){
         output["cms_post_datalist"] = datalist.html()
 
         # Incidents Data List
-        resource = s3db.resource("project_project") # Temp: Uses relabelled project_project
+        resource = s3db.resource("event_incident") # Temp: Uses relabelled project_project
         list_fields = ["name",
-                       "description",
-                       "location.location_id",
-                       "start_date",
-                       "organisation_id",
-                       "organisation_id$logo",
+                       "location_id",
+                       "zero_hour",
                        "modified_by",
+                       "organisation_id",
+                       "comments"
                        ]
-        datalist, numrows, ids = resource.datalist(list_id = "project_project_datalist",
+        datalist, numrows, ids = resource.datalist(list_id = "event_incident_datalist",
                                                    fields = list_fields,
                                                    #start=None,
                                                    limit=5,
                                                    #list_id=list_id,
                                                    #orderby=orderby,
-                                                   layout = s3db.project_project_list_layout
+                                                   layout = s3db.event_incident_list_layout
                                                    )
-        output["project_project_datalist"] = datalist.html()
+        output["event_incident_datalist"] = datalist.html()
 
         # Tasks Data List
         resource = s3db.resource("project_task")
         list_fields = ["name",
                        "description",
+                       "comments",
                        "location_id",
                        "date_due",
                        "pe_id",
@@ -147,5 +147,12 @@ google.setOnLoadCallback(LoadDynamicFeedControl);
                                            resource = item["f"])
 
         return output
+# =============================================================================
+class about(S3CustomController):
+    """ Custom Home Page """
 
+    def __call__(self):
+        output = {}
+        self._view(THEME, "about.html")
+        return output
 # END =========================================================================

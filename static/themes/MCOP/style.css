@@ -47,19 +47,33 @@
 }
 
 
-.title h1, .title h2 {
-    background: url('../../img/semi_white_75.png');
-    display: table;
+
+.sahana_logo {
+    float: left;
+    height: 80px;
 }
+
 .title h1 {
-    font-size: 50px;
-    padding: 15px 10px 5px 10px;
+    float: left;
+    font-size: 60px;
+    line-height: 60px;
     margin: 0;
+    padding: 20px 0 0;
+}
+
+.mcop_logo {
+    float: left;
+    clear: left;
+    width: 150px;
+    margin: 0 5px 0 15px;
 }
 
 .title h2 {
-    font-size: 25px;
-    padding: 10px 10px 0px 10px;
+    float: left;
+    font-size: 20px;
+    line-height: 25px;
+    padding: 0;
+    margin: 0 0 0 10px;
 }
 
 h1, h2, h3 {
@@ -79,30 +93,30 @@ h3 {
     line-height: 35px;
 }
 .title .intro {
-    padding: 10px;
-    height: 100px; 
+    padding: 10px 15px;
+    height: 110px; 
     background: url('../../img/semi_white_75.png');
 }
 
+.intro p,
+.intro ul {
+    margin-bottom: 5px;
+}
+
 .title {
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+ol, ul {
+    list-style: disc;
 }
 
 .homepage .map {
     margin-bottom: 15px;
 }
 
-.homepage .link {
-    padding: 5px 10px 5px 10px;
-    margin-bottom:  10px;
-    background: url('../../img/semi_white_75.png');
-}
-
-.homepage .link:hover {
-    background-color: white;
-}
-.homepage .link:hover h3,
-.homepage .link:hover a {
+div:hover h3,
+div:hover a {
     color: #182640;
     text-decoration:none;
 }
@@ -143,7 +157,8 @@ h3 {
 }
 
 /* Customise Datalist Cards */
-#cms_post_datalist .card-title, 
+#cms_post_datalist .card-title,
+.card-header > .icon, 
 .homepage .card-header > .icon,
 #profile-list-project_project-3 .card-header > .icon,
 #profile-list-org_resource-2 img,
@@ -172,12 +187,40 @@ h2, #list-btn-add {
     clear: both;
 }
 
+.card-header {
+    padding: 1px 3px;
+}
+
 .card-holder .location-title {
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
-    margin-left: 10px;
+    /* border-left: 1px solid rgba(0, 0, 0, 0.1);
+    margin-left: 10px; */
+    border-left: None;
+    margin-left: 0;
     padding-bottom: 7px;
-    padding-left: 10px;
+    padding-left: 5px;
     padding-top: 7px;
     text-shadow: 0 1px 0 #FFFFFF;
     width: 10px;
+}
+
+.card-header .location-title {
+    border-left: None;
+    margin-left: 0;
+    padding-left: 5px;
+}
+
+.date-title {
+    padding-bottom: 5px;
+    padding-top: 6px;
+}
+
+.media .card-title {
+    font-size: 18px;
+    letter-spacing: 0;
+    text-shadow: None;
+    margin-bottom: 5px;
+}
+
+.dl-1-cols {
+    width: 96%;
 }
