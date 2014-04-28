@@ -1331,17 +1331,22 @@ class S3PersonModel(S3Model):
                     fields.append("human_resource.organisation_id$name")
 
             name_format = settings.get_pr_name_format()
-            test = name_format % dict(first_name=1,
-                                      middle_name=2,
-                                      last_name=3,
-                                      )
-            test = "".join(ch for ch in test if ch in ("1", "2", "3"))
-            if test[:1] == "1":
-                orderby = "pr_person.first_name"
-            elif test[:1] == "2":
-                orderby = "pr_person.middle_name"
+            match = re.match("\s*?%\((?P<fname>.*?)\)s.*", name_format)
+            if match:
+                orderby = "pr_person.%s" % match.group("fname")
             else:
-                orderby = "pr_person.last_name"
+                orderby = "pr_person.first_name"
+            #test = name_format % dict(first_name=1,
+                                      #middle_name=2,
+                                      #last_name=3,
+                                      #)
+            #test = "".join(ch for ch in test if ch in ("1", "2", "3"))
+            #if test[:1] == "1":
+                #orderby = "pr_person.first_name"
+            #elif test[:1] == "2":
+                #orderby = "pr_person.middle_name"
+            #else:
+                #orderby = "pr_person.last_name"
             rows = resource.select(fields=fields,
                                    start=0,
                                    limit=limit,
