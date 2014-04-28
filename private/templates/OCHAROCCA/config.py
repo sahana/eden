@@ -544,6 +544,14 @@ def customise_org_facility_resource(r, tablename):
 
     s3db = current.s3db
 
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2
+    levels = ("L0", "L1", "L2")
+    loc_field = r.table.location_id
+    loc_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+    loc_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                 show_address = True)
+
     list_fields = ["name",
                    (T("Type"),"facility_type.name"),
                    #"organisation_id",
