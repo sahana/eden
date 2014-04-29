@@ -45,6 +45,7 @@ __all__ = ["S3EventModel",
            "S3EventResourceModel",
            "S3EventSiteModel",
            "S3EventTaskModel",
+           "event_incident_list_layout",
            ]
 
 from gluon import *
@@ -999,9 +1000,10 @@ class S3EventResourceModel(S3Model):
                           self.org_organisation_id(),
                           self.pr_person_id(label = T("Contact")),
                           # Base Location: Enable field only in Create form
-                          self.gis_location_id(readable = False,
-                                               writable = False,
+                          self.gis_location_id(#readable = False,
+                                               #writable = False,
                                                ),
+                          s3_datetime(),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -1059,8 +1061,7 @@ class S3EventResourceModel(S3Model):
                                   "organisation": "organisation_id",
                                   },
                        filter_widgets = filter_widgets,
-                       # @ToDo:
-                       #list_layout = event_resource_list_layout,
+                       list_layout = event_resource_list_layout,
                        report_options = report_options,
                        super_entity = ("stats_data", "sit_trackable"),
                        )
@@ -1599,5 +1600,225 @@ class S3EventTaskModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+# =============================================================================
+def event_incident_list_layout(list_id, item_id, resource, rfields, record, icon = "incident"):
+    """
+        Default dataList item renderer for Projects on Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["event_incident.id"]
+    item_class = "thumbnail"
+
+    raw = record._row
+    author = record["event_incident.modified_by"]
+    date = record["event_incident.modified_on"]
+
+    name = record["event_incident.name"]
+    description = record["event_incident.comments"]
+    zero_hour = record["event_incident.zero_hour"]
+
+    organisation = record["event_incident.organisation_id"]
+    organisation_id = raw["event_incident.organisation_id"]
+    location = record["event_incident.location_id"]
+    location_id = raw["event_incident.location_id"]
+
+    comments = raw["event_incident.comments"]
+
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    org_logo = raw["org_organisation.logo"]
+    if org_logo:
+        org_logo = A(IMG(_src=URL(c="default", f="download", args=[org_logo]),
+                         _class="media-object",
+                         ),
+                     _href=org_url,
+                     _class="pull-left",
+                     )
+    else:
+        # @ToDo: use a dummy logo image
+        org_logo = A(IMG(_class="media-object"),
+                     _href=org_url,
+                     _class="pull-left",
+                     )
+
+    # Edit Bar
+    # @ToDo: Consider using S3NavigationItem to hide the auth-related parts
+    permit = current.auth.s3_has_permission
+    table = current.db.event_incident
+    if permit("update", table, record_id=record_id):
+        vars = {"refresh": list_id,
+                "record": record_id,
+                }
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="event", f="incident",
+                               args=[record_id, "update.popup"]
+                               ),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.event_incident.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-trash"),
+                       _class="dl-item-delete",
+                       _title=current.response.s3.crud_strings.event_incident.label_delete_button,
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    item = DIV(DIV(I(_class="icon icon-%s" % icon),
+                   SPAN(location, _class="location-title"),
+                   SPAN(zero_hour, _class="date-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(A(name,
+                          _href =  URL(c="event", f="incident", args = [record_id, "profile"])),
+                        _class="card-title"),
+                   DIV(DIV((description or ""),
+                           DIV(author or "",
+                               " - ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
+def event_resource_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        Default dataList item renderer for Resources on Profile pages
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["event_resource.id"]
+    item_class = "thumbnail"
+
+    raw = record._row
+    author = record["event_resource.modified_by"]
+    date = record["event_resource.date"]
+    quantity = record["event_resource.value"]
+    resource_type = record["event_resource.parameter_id"]
+    comments = raw["event_resource.comments"]
+    organisation = record["event_resource.organisation_id"]
+    organisation_id = raw["event_resource.organisation_id"]
+    location = record["event_resource.location_id"]
+    location_id = raw["event_resource.location_id"]
+    location_url = URL(c="gis", f="location",
+                       args=[location_id, "profile"])
+
+    org_url = URL(c="event", f="organisation", args=[organisation_id, "profile"])
+    logo = raw["org_organisation.logo"]
+    if logo:
+        logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
+                     _class="media-object",
+                     ),
+                 _href=org_url,
+                 _class="pull-left",
+                 )
+    else:
+        # @ToDo: use a dummy logo image
+        logo = A(IMG(_class="media-object"),
+                 _href=org_url,
+                 _class="pull-left",
+                 )
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = current.db.event_resource
+    if permit("update", table, record_id=record_id):
+        vars = {"refresh": list_id,
+                "record": record_id,
+                }
+        f = current.request.function
+        if f == "organisation" and organisation_id:
+            vars["(organisation)"] = organisation_id
+        elif f == "location" and location_id:
+            vars["(location)"] = location_id
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="event", f="resource",
+                               args=[record_id, "update.popup"],
+                               vars=vars),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.event_resource.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-trash"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    avatar = logo
+
+    item = DIV(DIV(SPAN(A(location,
+                          _href=location_url,
+                          ),
+                        _class="location-title",
+                        ),
+                   SPAN(date,
+                        _class="date-title",
+                        ),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(#avatar,
+                   DIV("%s %s" % (quantity, current.T(resource_type)), _class="card-title"),
+                   DIV(DIV(comments,
+                           DIV(author or "" ,
+                               " - ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
 
 # END =========================================================================
