@@ -67,7 +67,7 @@
     <!-- FOLDER                                                             -->
     <!-- ****************************************************************** -->
     <xsl:template match="folder">
-        <resource name="project_project">
+        <resource name="event_incident">
             <xsl:attribute name="uuid">
                 <xsl:value-of select="concat('wrike/', @id)"/>
             </xsl:attribute>
@@ -143,8 +143,8 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="task/parentId">
-        <resource name="project_task_project">
-            <reference field="project_id" resource="project_project">
+        <resource name="event_task">
+            <reference field="incident_id" resource="event_incident">
                 <xsl:attribute name="uuid">
                     <xsl:value-of select="concat('wrike/', text())"/>
                 </xsl:attribute>
