@@ -349,10 +349,21 @@ class S3SQLDefaultForm(S3SQLForm):
                                   _value=submit_label)
             if settings.submit_style:
                 submit_button.add_class(settings.submit_style)
-            buttons = [submit_button,
-                       A(T("Cancel"),
-                         _href=s3.cancel,
-                         _class="cancel-form-btn action-lnk")]
+
+            cancel = s3.cancel
+            cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
+            if isinstance(cancel, dict):
+                # Script-controlled cancel button (embedded form)
+                if "script" in cancel:
+                    # Custom script
+                    script = cancel["script"]
+                else:
+                    # Default script: hide form, show add-button
+                    script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
+                current.response.s3.jquery_ready.append(script % cancel)
+            else:
+                cancel_button.update(_href=s3.cancel)
+            buttons = [submit_button, cancel_button]
 
         # Generate the form
         if record is None:
@@ -878,10 +889,15 @@ class S3SQLCustomForm(S3SQLForm):
                                   _value=submit_label)
             if settings.submit_style:
                 submit_button.add_class(settings.submit_style)
-            buttons = [submit_button,
-                       A(T("Cancel"),
-                         _href=s3.cancel,
-                         _class="cancel-form-btn action-lnk")]
+
+            cancel = s3.cancel
+            cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
+            if isinstance(cancel, dict):
+                script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})''' % cancel
+                current.response.s3.jquery_ready.append(script)
+            else:
+                cancel_button.update(_href=s3.cancel)
+            buttons = [submit_button, cancel_button]
 
         # Render the form
         tablename = self.tablename

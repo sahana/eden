@@ -22,7 +22,6 @@ if theme != "default":
                  #"delete.html",
                  "display.html",
                  "list.html",
-                 "list_create.html",
                  "list_filter.html",
                  "map.html",
                  "popup.html",
