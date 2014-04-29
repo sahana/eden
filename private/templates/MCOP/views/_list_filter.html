@@ -1,8 +1,4 @@
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<div id='list-btn-add'>
-{{try:}}{{=showadd_btn}}{{hide_listadd = True}}
-{{except:}}{{hide_listadd = False}}{{pass}}
-</div>
 {{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}{{=XML(rheader)}}
@@ -13,14 +9,7 @@
 <div>
 {{pass}}
 <div id='map'></div>
-<div id='list-add'>
-{{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
-{{try:}}{{=addheader}}{{except:}}{{pass}}
-{{include "key.html"}}
-<div class='form-container'>
-{{try:}}{{=form}}{{except:}}{{pass}}
-</div>
-</div>
+{{include "../private/templates/%s/views/_listadd.html" % response.s3.theme}}
 {{try:}}{{if list_filter_form:}}
 <div id='list-filter' class='form-container'>
 {{=list_filter_form}}
@@ -44,9 +33,8 @@
 {{if ltype == "datalist":}}{{include "dataLists.html"}}
 {{else:}}{{include "dataTables.html"}}{{pass}}
 {{if r.http == "POST" or not hide_listadd:}}
-{{script = '''$('#list-add').show()
-$('#show-add-btn').hide()'''}}
-{{else:}}
-{{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
- $('#show-add-btn').hide()})'''}}
-{{pass}}{{s3.jquery_ready.append(script)}}
+{{script = '''$('#list-add').show();$('#show-add-btn').hide()'''}}
+{{s3.jquery_ready.append(script)}}
+{{pass}}
+{{script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown('medium',function(){$('#show-add-btn').hide()})})'''}}
+{{s3.jquery_ready.append(script)}}

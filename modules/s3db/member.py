@@ -114,7 +114,7 @@ class S3MembersModel(S3Model):
         membership_type_id = S3ReusableField("membership_type_id", "reference %s" % tablename,
                                              sortby = "name",
                                              label = T("Type"),
-                                             requires = IS_NULL_OR(
+                                             requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db, "member_membership_type.id",
                                                                       represent,
                                                                       filterby="organisation_id",

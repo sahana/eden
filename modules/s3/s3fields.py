@@ -1054,7 +1054,7 @@ def s3_role_required():
     represent = S3Represent(lookup="auth_group", fields=["role"])
     f = S3ReusableField("role_required", gtable,
             sortby="role",
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(current.db, "auth_group.id",
                                   represent,
                                   zero=T("Public"))),
@@ -1086,10 +1086,10 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     if "represent" not in attr:
         attr["represent"] = represent
     if "requires" not in attr:
-        attr["requires"] = IS_NULL_OR(IS_ONE_OF(current.db,
-                                                "auth_group.id",
-                                                represent,
-                                                multiple=True))
+        attr["requires"] = IS_EMPTY_OR(IS_ONE_OF(current.db,
+                                                 "auth_group.id",
+                                                 represent,
+                                                 multiple=True))
     if "comment" not in attr:
         attr["comment"] = DIV(_class="tooltip",
                               _title="%s|%s" % (T("Roles Permitted"),

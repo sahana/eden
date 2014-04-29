@@ -1400,7 +1400,7 @@ Thank you"""
             if deployment_settings.get_auth_registration_organisation_required():
                 organisation_id.requires = requires
             else:
-                organisation_id.requires = IS_NULL_OR(requires)
+                organisation_id.requires = IS_EMPTY_OR(requires)
 
             from s3layouts import S3AddResourceLink
             organisation_id.comment = S3AddResourceLink(c="org",
@@ -1433,7 +1433,7 @@ Thank you"""
             if deployment_settings.get_auth_registration_organisation_group_required():
                 org_group_id.requires = requires
             else:
-                org_group_id.requires = IS_NULL_OR(requires)
+                org_group_id.requires = IS_EMPTY_OR(requires)
             #from s3layouts import S3AddResourceLink
             #org_group_id.comment = S3AddResourceLink(c="org",
             #                                         f="group",
@@ -1488,7 +1488,7 @@ S3OptionsFilter({
                 if site_required:
                     field.requires = requires
                 else:
-                    field.requires = IS_NULL_OR(requires)
+                    field.requires = IS_EMPTY_OR(requires)
 
         if "profile" in request.args:
             return
@@ -8231,8 +8231,8 @@ class S3EntityRoleManager(S3Method):
         """
 
         fields = []
-        requires = IS_NULL_OR(IS_IN_SET(self.acls.keys(),
-                                        labels=self.acls.values()))
+        requires = IS_EMPTY_OR(IS_IN_SET(self.acls.keys(),
+                                         labels=self.acls.values()))
         for module_uid, module_label in self.modules.items():
             field = Field(module_uid,
                           label=module_label,

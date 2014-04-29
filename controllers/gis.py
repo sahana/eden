@@ -442,7 +442,7 @@ def location():
 
     country = S3ReusableField("country", "string", length=2,
                               label = COUNTRY,
-                              requires = IS_NULL_OR(IS_IN_SET_LAZY(
+                              requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
                                     lambda: gis.get_countries(key_type="code"),
                                     zero = SELECT_LOCATION)),
                               represent = lambda code: \
@@ -2340,7 +2340,7 @@ def theme_data():
     """ RESTful CRUD controller """
 
     field = s3db.gis_layer_theme_id()
-    field.requires = IS_NULL_OR(field.requires)
+    field.requires = IS_EMPTY_OR(field.requires)
     output = s3_rest_controller(csv_extra_fields = [
                                     # CSV column headers, so no T()
                                     dict(label="Layer",

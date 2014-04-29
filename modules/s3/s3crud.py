@@ -444,7 +444,7 @@ class S3CRUD(S3Method):
         get_config = resource.get_config
         tablename = resource.tablename
 
-        output = ""
+        output = {}
         insertable = get_config("insertable", True)
         if insertable:
 
@@ -465,31 +465,42 @@ class S3CRUD(S3Method):
                             raise
                     elif isinstance(populate, dict):
                         self.data = populate
-                view = current.response.view
+                        
+                response = current.response
+                view = response.view
+
+                # JS Cancel (no redirect with embedded form)
+                s3 = response.s3
+                cancel = s3.cancel
+                s3.cancel = {"hide": "list-add", "show": "show-add-btn"}
+                
                 form = self.create(r, **attr).get("form", None)
                 if form and form.accepted and self.next:
                     # Tell the summary handler that we're done
                     # and supposed to redirect to another view
                     return {"success": True, "next": self.next}
-                current.response.view = view
+
+                # Restore standard view and cancel-config
+                response.view = view
+                s3.cancel = cancel
+                
                 if form is not None:
-                    add_btn = self.crud_button(
-                                        tablename=tablename,
-                                        name="label_create",
-                                        icon="icon-plus",
-                                        _id="show-add-btn")
-                    output = DIV(add_btn,
-                                 DIV(form,
-                                     _id="list-add",
-                                     _class="form-container",
-                                     ),
-                                 _class="list-btn-add"
-                                 )
+                    output["form"] = form
+                    output["showadd_btn"] = self.crud_button(tablename=tablename,
+                                                             name="label_create",
+                                                             icon="icon-plus",
+                                                             _id="show-add-btn")
+                    addtitle = self.crud_string(tablename, "label_create")
+                    output["addtitle"] = addtitle
                     if r.http == "POST":
+                        # Always show the form if there was a form error
                         script = '''$('#list-add').show();$('#show-add-btn').hide()'''
-                    else:
-                        script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown('slow',function(){$('#show-add-btn').hide()})})'''
-                    current.response.s3.jquery_ready.append(script)
+                        s3.jquery_ready.append(script)
+                        
+                    # Add-button script
+                    script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown('medium',function(){$('#show-add-btn').hide()})})'''
+                    s3.jquery_ready.append(script)
+                    
             elif addbtn:
                 # No form, just Add-button linked to create-view
                 add_btn = self.crud_button(
@@ -497,8 +508,11 @@ class S3CRUD(S3Method):
                                     name="label_create",
                                     icon="icon-plus",
                                     _id="add-btn")
-                output = DIV(add_btn)
+                if buttons:
+                    output["buttons"] = {"add_btn": add_btn}
 
+        view = self._view(r, "listadd.html")
+        output = XML(response.render(view, output))
         return output
             
     # -------------------------------------------------------------------------
@@ -1084,7 +1098,13 @@ class S3CRUD(S3Method):
 
                 if listadd:
                     # Save the view
-                    view = current.response.view
+                    response = current.response
+                    view = response.view
+
+                    # JS Cancel (no redirect with embedded form)
+                    s3 = response.s3
+                    cancel = s3.cancel
+                    s3.cancel = {"hide": "list-add", "show": "show-add-btn"}
 
                     # Add a hidden add-form and a button to activate it
                     form = self.create(r, **attr).get("form", None)
@@ -1092,16 +1112,16 @@ class S3CRUD(S3Method):
                         output["form"] = form
                         addtitle = self.crud_string(tablename, "label_create")
                         output["addtitle"] = addtitle
-                        showadd_btn = self.crud_button(
-                                            None,
-                                            tablename=tablename,
-                                            name="label_create",
-                                            icon="icon-plus",
-                                            _id="show-add-btn")
+                        showadd_btn = self.crud_button(None,
+                                                       tablename=tablename,
+                                                       name="label_create",
+                                                       icon="icon-plus",
+                                                       _id="show-add-btn")
                         output["showadd_btn"] = showadd_btn
                         
                     # Restore the view
-                    current.response.view = view
+                    response.view = view
+                    s3.cancel = cancel
 
                 elif addbtn:
                     # Add an action-button linked to the create view

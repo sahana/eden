@@ -256,10 +256,10 @@ class S3IRSModel(S3Model):
                            label = T("Category"),
                            # The full set available to Admins & Imports/Exports
                            # (users use the subset by over-riding this in the Controller)
-                           requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
+                           requires = IS_EMPTY_OR(IS_IN_SET_LAZY(lambda: \
                                       sort_dict_by_values(irs_incident_type_opts))),
                            # Use this instead if a simpler set of Options required
-                           #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
+                           #requires = IS_EMPTY_OR(IS_IN_SET(irs_incident_type_opts)),
                            represent = lambda opt: \
                                        irs_incident_type_opts.get(opt, opt)),
                      self.hrm_human_resource_id(
@@ -472,7 +472,7 @@ class S3IRSModel(S3Model):
                       )
                       
         ireport_id = S3ReusableField("ireport_id", "reference %s" % tablename,
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "irs_ireport.id",
                                                               self.irs_ireport_represent)),
@@ -1129,7 +1129,7 @@ class S3IRSResponseModel(S3Model):
                                        ),
                      asset_id(label=T("Vehicle"),
                               # @ToDo: Limit to Vehicles which are assigned to this Incident
-                              requires = IS_NULL_OR(
+                              requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "asset_asset.id",
                                                       self.asset_represent,
                                                       filterby="type",
@@ -1176,11 +1176,11 @@ class S3IRSResponseModel(S3Model):
                  (ltable.closed == True) | \
                  (ltable.deleted == True))
         left = ltable.on(table.id == ltable.asset_id)
-        requires = IS_NULL_OR(IS_ONE_OF(current.db(query),
-                                        "asset_asset.id",
-                                        asset_represent,
-                                        left=left,
-                                        sort=True))
+        requires = IS_EMPTY_OR(IS_ONE_OF(current.db(query),
+                                         "asset_asset.id",
+                                         asset_represent,
+                                         left=left,
+                                         sort=True))
         return requires
 
     # -------------------------------------------------------------------------

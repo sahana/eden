@@ -90,7 +90,7 @@ class S3VehicleModel(S3Model):
         tablename = "vehicle_vehicle"
         self.define_table(tablename,
                           Field("type",
-                                requires = IS_NULL_OR(IS_IN_SET(vehicle_type_opts)),
+                                requires = IS_EMPTY_OR(IS_IN_SET(vehicle_type_opts)),
                                 represent = lambda opt: \
                                             vehicle_type_opts.get(opt, opt),
                                 label=T("Type")),
@@ -130,7 +130,7 @@ class S3VehicleModel(S3Model):
             msg_list_empty = T("No Vehicle Details currently defined"))
 
         vehicle_id = S3ReusableField("vehicle_id", "reference %s" % tablename,
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "vehicle_vehicle.id",
                                                               "%(name)s")),

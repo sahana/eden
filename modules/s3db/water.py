@@ -96,7 +96,7 @@ class S3WaterModel(S3Model):
                      Field("name",
                            label=T("Name")),
                      Field("zone_type_id", db.water_zone_type,
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                        IS_ONE_OF(db, "water_zone_type.id",
                                                  zone_type_represent,
                                                  sort=True)),
@@ -157,7 +157,7 @@ class S3WaterModel(S3Model):
 
         #represent = S3Represent(lookup = tablename)
         #river_id = S3ReusableField("river_id", "reference %s" % tablename,
-        #                           requires = IS_NULL_OR(IS_ONE_OF(db, "water_river.id", represent)),
+        #                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "water_river.id", represent)),
         #                           represent = represent,
         #                           label = T("River"),
         #                           comment = S3AddResourceLink(c="water",
@@ -186,7 +186,7 @@ class S3WaterModel(S3Model):
                      self.gis_location_id(),
                      Field("url",
                            label = T("URL"),
-                           requires = IS_NULL_OR(IS_URL()),
+                           requires = IS_EMPTY_OR(IS_URL()),
                            represent = lambda url: \
                                        A(url, _href=url, _target="blank")
                            ),
@@ -195,7 +195,7 @@ class S3WaterModel(S3Model):
                      Field("discharge", "integer",
                            label = T("Discharge (cusecs)")),
                      Field("status", "integer",
-                           requires = IS_NULL_OR(IS_IN_SET(flowstatus_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(flowstatus_opts)),
                            represent = lambda opt: \
                            flowstatus_opts.get(opt, opt),
                            label = T("Flow Status")),

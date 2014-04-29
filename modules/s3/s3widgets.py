@@ -523,7 +523,7 @@ class S3AddPersonWidget(FormWidget):
         if emailRequired:
             email_requires = IS_EMAIL()
         else:
-            email_requires = IS_NULL_OR(IS_EMAIL())
+            email_requires = IS_EMPTY_OR(IS_EMAIL())
 
         # Determine validation rule for mobile phone number
         mobile_phone_requires = IS_EMPTY_OR(IS_PHONE_NUMBER(
@@ -2875,7 +2875,7 @@ class S3LocationDropdownWidget(FormWidget):
         attr_dropdown = OptionsWidget._attributes(field, attr)
         requires = IS_IN_SET(locations)
         if empty:
-            requires = IS_NULL_OR(requires)
+            requires = IS_EMPTY_OR(requires)
         attr_dropdown["requires"] = requires
 
         attr_dropdown["represent"] = \
@@ -3065,7 +3065,7 @@ class S3LocationSelectorWidget(FormWidget):
         if request.controller == "appadmin":
             # Don't use this widget in appadmin
             return TAG[""](INPUT(**attr),
-                           requires=IS_NULL_OR(IS_LOCATION()),
+                           requires=IS_EMPTY_OR(IS_LOCATION()),
                            )
 
         # Hide the real field
@@ -3408,8 +3408,8 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                                value = ""),
                                                           **attributes)
             attr_dropdown["requires"] = \
-                IS_NULL_OR(IS_IN_SET(countries,
-                                     zero = SELECT_COUNTRY))
+                IS_EMPTY_OR(IS_IN_SET(countries,
+                                      zero = SELECT_COUNTRY))
             attr_dropdown["represent"] = \
                 lambda id: gis.get_country(id) or UNKNOWN_OPT
             opts = [OPTION(SELECT_COUNTRY, _value="")]
@@ -3927,7 +3927,7 @@ class S3LocationSelectorWidget2(FormWidget):
             if required:
                 requires = IS_LOCATION()
             else:
-                requires = IS_NULL_OR(IS_LOCATION())
+                requires = IS_EMPTY_OR(IS_LOCATION())
             return TAG[""](INPUT(**attr),
                            requires=requires,
                            )

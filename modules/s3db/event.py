@@ -116,7 +116,7 @@ class S3EventModel(S3Model):
             # Can't be defined in-line as otherwise get a circular reference
             table = db[tablename]
             table.parent.represent = type_represent
-            table.parent.requires = IS_NULL_OR(
+            table.parent.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "event_event_type.id",
                                                   type_represent,
                                                   # If limiting to just 1 level of parent
@@ -157,7 +157,7 @@ class S3EventModel(S3Model):
                                         label = T("Event Type"),
                                         ondelete = "RESTRICT",
                                         represent = type_represent,
-                                        requires = IS_NULL_OR(
+                                        requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "event_event_type.id",
                                                               type_represent,
                                                               orderby="event_event_type.name",
@@ -230,7 +230,7 @@ class S3EventModel(S3Model):
         represent = S3Represent(lookup=tablename)
         event_id = S3ReusableField("event_id", "reference %s" % tablename,
                                    sortby="name",
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "event_event.id",
                                                           represent,
                                                           filterby="closed",
@@ -634,7 +634,7 @@ class S3IncidentModel(S3Model):
         represent = S3Represent(lookup=tablename)
         incident_id = S3ReusableField("incident_id", "reference %s" % tablename,
                                       sortby="name",
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "event_incident.id",
                                                               represent,
                                                               filterby="closed",
@@ -1167,7 +1167,7 @@ class S3IncidentTypeModel(S3Model):
         represent = S3Represent(lookup=tablename)
         incident_type_id = S3ReusableField("incident_type_id", "reference %s" % tablename,
                                            sortby="name",
-                                           requires = IS_NULL_OR(
+                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "event_incident_type.id",
                                                                   represent,
                                                                   orderby="event_incident_type.name",

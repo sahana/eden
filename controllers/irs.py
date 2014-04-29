@@ -50,7 +50,7 @@ def ireport():
         ctable = s3db.irs_icategory
         allowed_opts = [irs_incident_type_opts.get(opt.code, opt.code) for opt in db().select(ctable.code)]
         allowed_opts.sort()
-        table.category.requires = IS_NULL_OR(IS_IN_SET(allowed_opts))
+        table.category.requires = IS_EMPTY_OR(IS_IN_SET(allowed_opts))
 
     # Pre-processor
     def prep(r):
@@ -58,7 +58,7 @@ def ireport():
         if r.method == "ushahidi":
             auth.settings.on_failed_authorization = r.url(method="", vars=None)
             # Allow the 'XX' levels
-            s3db.gis_location.level.requires = IS_NULL_OR(IS_IN_SET(
+            s3db.gis_location.level.requires = IS_EMPTY_OR(IS_IN_SET(
                                                 gis.get_all_current_levels()))
         elif r.interactive or r.representation == "aadata":
             if r.method == "update":

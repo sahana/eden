@@ -147,7 +147,7 @@ class S3SupplyModel(S3Model):
         brand_id = S3ReusableField("brand_id", "reference %s" % tablename,
             label = T("Brand"),
             represent = represent,
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "supply_brand.id",
                                   represent,
                                   sort=True)
@@ -190,7 +190,7 @@ class S3SupplyModel(S3Model):
         represent = S3Represent(lookup=tablename)
         catalog_id = S3ReusableField("catalog_id", "reference %s" % tablename,
             sortby="name",
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "supply_catalog.id",
                                   represent,
                                   sort=True,
@@ -280,7 +280,7 @@ class S3SupplyModel(S3Model):
             msg_list_empty = T("No Item Categories currently registered"))
 
         # Reusable Field
-        item_category_requires = IS_NULL_OR(
+        item_category_requires = IS_EMPTY_OR(
                                     IS_ONE_OF(db, "supply_item_category.id",
                                               item_category_represent_nocodes,
                                               sort=True)

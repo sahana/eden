@@ -151,7 +151,7 @@ class S3ScenarioModel(S3Model):
 
         scenario_id = S3ReusableField("scenario_id", "reference %s" % tablename,
                                       sortby="name",
-                                      requires = IS_NULL_OR(
+                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "scenario_scenario.id",
                                                               self.scenario_represent,
                                                               orderby="scenario_scenario.name",

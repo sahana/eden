@@ -98,7 +98,7 @@ def assess_tables():
                  *s3_meta_fields())
 
     assess_id = S3ReusableField("assess_id", "reference %s" % tablename,
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "assess_assess.id", "%(id)s")
                                             ),
                                 represent = lambda id: id,
@@ -165,10 +165,10 @@ def assess_tables():
     represent = S3Represent(tablename)
     baseline_type_id = S3ReusableField("baseline_type_id", "reference %s" % tablename,
                                        sortby="name",
-                                       requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                       "assess_baseline_type.id",
-                                                                       represent,
-                                                                       sort=True)),
+                                       requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                                        "assess_baseline_type.id",
+                                                                        represent,
+                                                                        sort=True)),
                                        represent = represent,
                                        label = T("Baseline Type"),
                                        comment = baseline_type_comment(),
@@ -399,26 +399,26 @@ def rat_tables():
                  human_resource_id("staff2_id", label=T("Staff2")),
                  Field("interview_location", "list:integer",
                        label = T("Interview taking place at"),
-                       requires = IS_NULL_OR(IS_IN_SET(rat_interview_location_opts,
-                                                       multiple=True,
-                                                       zero=None)),
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_interview_location_opts,
+                                                        multiple=True,
+                                                        zero=None)),
                        #widget = SQLFORM.widgets.checkboxes.widget,
                        represent = lambda opt, set=rat_interview_location_opts: \
                                       rat_represent_multiple(set, opt),
                        comment = "(%s)" % T("Select all that apply")),
                  Field("interviewee", "list:integer",
                        label = T("Person interviewed"),
-                       requires = IS_NULL_OR(IS_IN_SET(rat_interviewee_opts,
-                                                    multiple=True,
-                                                    zero=None)),
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_interviewee_opts,
+                                                        multiple=True,
+                                                        zero=None)),
                        #widget = SQLFORM.widgets.checkboxes.widget,
                       represent = lambda opt, set=rat_interviewee_opts: \
                                     rat_represent_multiple(set, opt),
                        comment = "(%s)" % T("Select all that apply")),
                  Field("accessibility", "integer",
                        label = T("Accessibility of Affected Location"),
-                       requires = IS_NULL_OR(IS_IN_SET(rat_accessibility_opts,
-                                                      zero=None)),
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_accessibility_opts,
+                                                        zero=None)),
                        represent = lambda opt: rat_accessibility_opts.get(opt, opt)),
                  s3_comments(),
                  #document_id(),  # Better to have multiple Documents on a Tab
@@ -491,7 +491,7 @@ def rat_tables():
     # -------------------------------------------------------------------------
     # re-usable field
     assessment_id = S3ReusableField("assessment_id", "reference %s" % tablename,
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "assess_rat.id",
                                                           rat_represent,
                                                           orderby="assess_rat.id")
@@ -664,9 +664,9 @@ def rat_tables():
                                    "Number of houses damaged, but usable",
                                    "How many houses suffered damage but remain usable (usable = windows broken, cracks in walls, roof slightly damaged)?")),
                          Field("houses_salvmat", "list:integer",
-                               requires = IS_NULL_OR(IS_IN_SET(rat_houses_salvmat_types,
-                                                               multiple=True,
-                                                               zero=None)),
+                               requires = IS_EMPTY_OR(IS_IN_SET(rat_houses_salvmat_types,
+                                                                multiple=True,
+                                                                zero=None)),
                                represent = lambda opt, set=rat_houses_salvmat_types: \
                                                rat_represent_multiple(set, opt),
                                **rat_label_and_tooltip(
@@ -1859,7 +1859,7 @@ def impact_tables():
     represent = S3Represent(tablename)
     impact_type_id = S3ReusableField("impact_type_id", "reference %s" % tablename,
                                      sortby="name",
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "impact_type.id",
                                                               represent,
@@ -1939,9 +1939,9 @@ def rat():
     table = db[tablename]
 
     # Villages only
-    #table.location_id.requires = IS_NULL_OR(IS_ONE_OF(db(db.gis_location.level == "L5"),
-    #                                                  "gis_location.id",
-    #                                                  repr_select, sort=True))
+    #table.location_id.requires = IS_EMPTY_OR(IS_ONE_OF(db(db.gis_location.level == "L5"),
+    #                                                   "gis_location.id",
+    #                                                   repr_select, sort=True))
 
     # Subheadings in forms:
     configure("assess_section2",

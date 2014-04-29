@@ -2185,7 +2185,7 @@ class S3Compose(S3CRUD):
             output["title"] = title
             #output["subtitle"] = subtitle
             #output["form"] = form
-            #current.response.view = self._view(r, "list_create.html")
+            #current.response.view = self._view(r, "list_filter.html")
             current.response.view = self._view(r, "create.html")
 
         return output

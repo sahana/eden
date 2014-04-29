@@ -783,6 +783,8 @@ class S3SyncRepository(object):
         self.url = repository.url
         self.username = repository.username
         self.password = repository.password
+        self.client_id = repository.client_id
+        self.client_secret = repository.client_secret
         self.site_key = repository.site_key
         self.refresh_token = repository.refresh_token
         self.proxy = repository.proxy

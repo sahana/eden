@@ -231,7 +231,7 @@ class S3Request(object):
 
         # Try to load the master record
         self.record = None
-        uid = self.vars.get("%s.uid" % self.name, None)
+        uid = self.vars.get("%s.uid" % self.name)
         if self.id or uid and not isinstance(uid, (list, tuple)):
             # Single record expected
             self.resource.load()
@@ -256,7 +256,7 @@ class S3Request(object):
         self.multiple = True # @todo: deprecate
 
         if self.component_name:
-            c = self.resource.components.get(self.component_name, None)
+            c = self.resource.components.get(self.component_name)
             if c:
                 self.component = c
                 self.pkey, self.fkey = c.pkey, c.fkey # @todo: deprecate
@@ -569,14 +569,14 @@ class S3Request(object):
 
         # Pre-process
         if s3 is not None:
-            preprocess = s3.get("prep", None)
+            preprocess = s3.get("prep")
         if preprocess:
             pre = preprocess(self)
             # Re-read representation after preprocess:
             representation = self.representation
             if pre and isinstance(pre, dict):
                 bypass = pre.get("bypass", False) is True
-                output = pre.get("output", None)
+                output = pre.get("output")
                 if not bypass:
                     success = pre.get("success", True)
                     if not success:
@@ -637,7 +637,7 @@ class S3Request(object):
 
         # Post-process
         if s3 is not None:
-            postprocess = s3.get("postp", None)
+            postprocess = s3.get("postp")
         if postprocess is not None:
             output = postprocess(self, output)
         if output is not None and isinstance(output, dict):
@@ -649,7 +649,7 @@ class S3Request(object):
         if self.next is not None and \
            (self.http != "GET" or self.method == "clear"):
             if isinstance(output, dict):
-                form = output.get("form", None)
+                form = output.get("form")
                 if form:
                     if not hasattr(form, "errors"):
                         form = form[0]
@@ -788,13 +788,13 @@ class S3Request(object):
         args = Storage()
 
         # Slicing
-        start = _vars.get("start", None)
+        start = _vars.get("start")
         if start is not None:
             try:
                 start = int(start)
             except ValueError:
                 start = None
-        limit = _vars.get("limit", None)
+        limit = _vars.get("limit")
         if limit is not None:
             try:
                 limit = int(limit)
@@ -802,7 +802,7 @@ class S3Request(object):
                 limit = None
 
         # msince
-        msince = _vars.get("msince", None)
+        msince = _vars.get("msince")
         if msince is not None:
             tfmt = current.xml.ISOFORMAT
             try:
@@ -887,7 +887,7 @@ class S3Request(object):
                             component=r.component.tablename)
                 if r.component.alias:
                     args.update(alias=r.component.alias)
-            mode = _vars.get("xsltmode", None)
+            mode = _vars.get("xsltmode")
             if mode is not None:
                 args.update(mode=mode)
 
@@ -1497,7 +1497,7 @@ class S3Request(object):
         """
 
         self.files = Storage()
-        content_type = self.env.get("content_type", None)
+        content_type = self.env.get("content_type")
 
         source = []
         if content_type and content_type.startswith("multipart/"):
@@ -1958,7 +1958,7 @@ class S3Method(object):
         _crud_strings = crud_strings.get(tablename, crud_strings)
         return _crud_strings.get(name,
                                  # Default fallback
-                                 crud_strings.get(name, None))
+                                 crud_strings.get(name))
 
 # =============================================================================
 # Global functions

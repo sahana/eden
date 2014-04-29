@@ -73,7 +73,7 @@ class S3PatientModel(S3Model):
                           #person_id(empty=False, label = T("Patient")),
                           Field("country",
                                 label = T("Current Location Country"),
-                                requires = IS_NULL_OR(IS_IN_SET_LAZY(
+                                requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
                                            lambda: gis.get_countries(key_type="code"),
                                            zero = messages.SELECT_LOCATION)),
                                 represent = lambda code: \
@@ -88,13 +88,13 @@ class S3PatientModel(S3Model):
                           Field("treatment_date", "date",
                                 label=T("Date of Treatment"),
                                 represent = s3_date_represent,
-                                requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
                                 widget = S3DateWidget()
                                 ),
                           Field("return_date", "date",
                                 label=T("Expected Return Home"),
                                 represent = s3_date_represent,
-                                requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
                                 widget = S3DateWidget()
                                 ),
                           s3_comments(),
@@ -209,7 +209,7 @@ class S3PatientModel(S3Model):
                               requires = IS_LOCATION(level="L2")
                           ),
                           Field("phone",
-                                requires=IS_NULL_OR(s3_phone_requires),
+                                requires=IS_EMPTY_OR(s3_phone_requires),
                                 label=T("Home Phone Number")),
                           s3_comments(),
                           *s3_meta_fields())

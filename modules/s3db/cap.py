@@ -244,12 +244,13 @@ class S3CAPModel(S3Model):
                            writable=True,
                            ),
                      Field("template_id", "reference cap_alert",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                          IS_ONE_OF(db, "cap_alert.id",
-                                             self.template_represent,
-                                             filterby="is_template",
-                                             filter_opts=(True,)
-                                       )),
+                                                   self.template_represent,
+                                                   filterby="is_template",
+                                                   filter_opts=(True,)
+                                                   )
+                                                  ),
                            represent = self.template_represent,
                            label = T("Template"),
                            comment = T("Apply a template"),
@@ -382,7 +383,7 @@ class S3CAPModel(S3Model):
                                    label = T("Alert"),
                                    ondelete = "RESTRICT",
                                    represent = self.alert_represent,
-                                   requires = IS_NULL_OR(
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "cap_alert.id",
                                                           self.alert_represent)),
                                    )
@@ -459,7 +460,7 @@ class S3CAPModel(S3Model):
                            writable=False,
                            ),
                      Field("template_info_id", "reference cap_info",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "cap_info.id",
                                                   self.template_represent,
                                                   filterby="is_template",
@@ -534,7 +535,7 @@ class S3CAPModel(S3Model):
                      Field("instruction", "text"),
                      Field("contact", "text"),
                      Field("web",
-                           requires=IS_NULL_OR(IS_URL())),
+                           requires=IS_EMPTY_OR(IS_URL())),
                      Field("parameter", "text",
                            label = T("Parameters"),
                            widget = S3KeyValueWidget(),
@@ -567,7 +568,7 @@ class S3CAPModel(S3Model):
 
         info_id = S3ReusableField("info_id", "reference %s" % tablename,
                                   sortby="identifier",
-                                  requires=IS_NULL_OR(
+                                  requires=IS_EMPTY_OR(
                                             IS_ONE_OF(db, "cap_info.id",
                                                       self.info_represent)),
                                   represent = self.info_represent,

@@ -141,7 +141,7 @@ class S3ContentModel(S3Model):
                                     readable = False,
                                     writable = False,
                                     represent = represent,
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "cms_series.id",
                                                           represent)),
                                     )
@@ -239,7 +239,7 @@ class S3ContentModel(S3Model):
                                   label = T("Post"),
                                   ondelete = "CASCADE",
                                   represent = represent,
-                                  requires = IS_NULL_OR(
+                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "cms_post.id",
                                                           represent)),
                                   sortby = "name",
@@ -478,7 +478,7 @@ class S3ContentModel(S3Model):
         tablename = "cms_comment"
         define_table(tablename,
                      Field("parent", "reference cms_comment",
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "cms_comment.id")),
                            readable = False,
                            ),

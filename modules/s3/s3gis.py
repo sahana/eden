@@ -1159,7 +1159,7 @@ class GIS(object):
             if tablename == "gis_location":
                 labels["L0"] = current.messages.COUNTRY
                 table.level.requires = \
-                    IS_NULL_OR(IS_IN_SET(labels))
+                    IS_EMPTY_OR(IS_IN_SET(labels))
             else:
                 for level in levels:
                     table[level].label = labels[level]
@@ -1170,7 +1170,7 @@ class GIS(object):
             if "gis_location" in db:
                 table = db.gis_location
                 table.level.requires = \
-                    IS_NULL_OR(IS_IN_SET(labels))
+                    IS_EMPTY_OR(IS_IN_SET(labels))
 
             # These tables store location hierarchy info for XSLT export.
             # Labels are used for PDF & XLS Reports
@@ -8720,7 +8720,7 @@ class S3ImportPOI(S3Method):
                 from s3widgets import S3LocationAutocompleteWidget
                 # dummy field
                 field = s3db.org_office.location_id
-                field.requires = IS_NULL_OR(IS_LOCATION())
+                field.requires = IS_EMPTY_OR(IS_LOCATION())
                 widget = S3LocationAutocompleteWidget()(field, None)
                 row = TR(TD(B("%s: " % T("Location"))),
                          TD(widget),

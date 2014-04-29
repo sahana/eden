@@ -1446,9 +1446,9 @@ def customise_pr_person_controller(**attr):
             elif component_name == "physical_description":
                 # Add the less-specific blood types (as that's all the data currently available in some cases)
                 field = s3db.pr_physical_description.blood_type
-                from gluon.validators import IS_NULL_OR, IS_IN_SET
+                from gluon.validators import IS_EMPTY_OR, IS_IN_SET
                 blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
-                field.requires = IS_NULL_OR(IS_IN_SET(blood_type_opts))
+                field.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
 
             elif r.method == "cv" or component_name == "experience":
                 table = s3db.hrm_experience

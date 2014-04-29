@@ -73,13 +73,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     # -------------------------------------------------------------------------
     def register(self):
         """
-            Register at the repository, in Wrike: use client ID (username)
-            and the authorization code (site key) to obtain the refresh_token
-            and store it in the repository config.
+            Register at the repository, in Wrike: use client ID and the
+            authorization code (site key), alternatively username and
+            password to obtain the refresh_token and store it in the
+            repository config.
 
-            @note: this invalidates the authorization code, so it will be
-                   set to None regardless whether this operation succeeds
-                   or not
+            @note: this invalidates the authorization code (if any), so it
+                   will be set to None regardless whether this operation
+                   succeeds or not
 
             @return: True if successful, otherwise False
         """
@@ -91,12 +92,32 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         remote = False
         skip = False
 
+        data = None
         site_key = repository.site_key
         if not site_key:
+            username = repository.username
+            password = repository.password
+            if username and password:
+                data = {
+                    "client_id": repository.client_id,
+                    "client_secret": repository.client_secret,
+                    "username": username,
+                    "password": password,
+                    "grant_type": "password",
+                }
+        else:
+            data = {
+                "client_id": repository.client_id,
+                "client_secret": repository.client_secret,
+                "grant_type": "authorization_code",
+                "code": site_key,
+            }
+
+        if not data:
             if not repository.refresh_token:
-                # Can't register without authorization code
+                # Can't register without credentials
                 result = log.WARNING
-                message = "No site key to obtain refresh token " \
+                message = "No credentials to obtain refresh token " \
                           "with, skipping registration"
             else:
                 # Already registered
@@ -104,17 +125,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 success = True
                 message = None
             skip = True
+            
         else:
             repository.refresh_token = None
             self.access_token = None
 
             # Get refresh token from peer
-            data = {
-                "client_id": repository.username,
-                "client_secret": repository.password,
-                "grant_type": "authorization_code",
-                "code": repository.site_key
-            }
             response, message = self.send(method = "POST",
                                           data = data,
                                           auth = True)
@@ -169,8 +185,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             error = "Login failed: no refresh token available (registration failed?)"
         else:
             data = {
-                "client_id": repository.username,
-                "client_secret": repository.password,
+                "client_id": repository.client_id,
+                "client_secret": repository.client_secret,
                 "grant_type": "refresh_token",
                 "refresh_token": refresh_token
             }

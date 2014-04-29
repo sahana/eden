@@ -112,7 +112,7 @@ class S3TransportModel(S3Model):
                      Field("storage_capacity", "double",
                            label=T("Storage Capacity (m3)")),
                      Field("storage_type", "integer",
-                           requires = IS_NULL_OR(IS_IN_SET(storage_types)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(storage_types)),
                            label=T("Storage Type")),
                      # @ToDo: put units inline
                      Field("parking_tarmac_space", "double",

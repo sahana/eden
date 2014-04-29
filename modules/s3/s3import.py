@@ -680,7 +680,7 @@ class S3Importer(S3Method):
         table = self.upload_table
 
         formstyle = s3.crud.formstyle
-        response.view = self._view(request, "list_create.html")
+        response.view = self._view(request, "list_filter.html")
 
         if REPLACE_OPTION in attr:
             replace_option = attr[REPLACE_OPTION]

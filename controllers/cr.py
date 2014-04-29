@@ -131,9 +131,9 @@ def shelter():
                 elif r.component.name == "presence":
                     field = prtable.shelter_id
                     represent = s3base.S3Represent(lookup="cr_shelter")
-                    field.requires = IS_NULL_OR(IS_ONE_OF(db, "cr_shelter.id",
-                                                          represent,
-                                                          sort=True))
+                    field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "cr_shelter.id",
+                                                           represent,
+                                                           sort=True))
                     field.represent = represent
                     field.ondelete = "RESTRICT"
                     if settings.get_ui_label_camp():

@@ -10,7 +10,7 @@ except:
 from gluon import current, URL
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.validators import IS_NULL_OR
+from gluon.validators import IS_EMPTY_OR
 
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
@@ -1588,7 +1588,7 @@ def customise_cms_post_fields():
     field = table.location_id
     field.label = ""
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
-    field.requires = IS_NULL_OR(
+    field.requires = IS_EMPTY_OR(
                         IS_LOCATION_SELECTOR2(levels=("L1", "L2", "L3"))
                      )
     field.widget = S3LocationSelectorWidget2(levels=("L1", "L2", "L3"),
@@ -2168,7 +2168,7 @@ def customise_event_event_controller(**attr):
             represent = S3Represent(lookup="gis_location")
             location_field.represent = represent
             # L1s only
-            location_field.requires = IS_NULL_OR(
+            location_field.requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "gis_location.id",
                                                   represent,
                                                   sort = True,

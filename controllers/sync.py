@@ -66,6 +66,17 @@ def repository():
 
     def prep(r):
         if r.interactive:
+
+            # Make the UUID field editable in the form
+            field = r.table.uuid
+            field.label = "UUID"
+            field.readable = True
+            field.writable = True
+            field.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (
+                                       T("Repository UUID"),
+                                       T("Identifier which the remote site uses to authenticate at this site when sending synchronization requests.")))
+            
             if r.component and r.id:
                 if r.component.alias == "job":
                     s3task.configure_tasktable_crud(

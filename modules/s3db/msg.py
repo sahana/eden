@@ -122,7 +122,7 @@ class S3ChannelModel(S3Model):
         # Reusable Field
         channel_id = S3ReusableField("channel_id", "reference %s" % tablename,
                                      label = T("Channel"),
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                         IS_ONE_OF_EMPTY(db, "msg_channel.id")),
                                      represent = S3Represent(lookup=tablename),
                                      ondelete = "SET NULL")
@@ -413,7 +413,7 @@ class S3MessageModel(S3Model):
         # Reusable Field
         message_represent = S3Represent(lookup=tablename, fields=["body"])
         message_id = S3ReusableField("message_id", "reference %s" % tablename,
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                         IS_ONE_OF_EMPTY(db, "msg_message.id")),
                                      represent = message_represent,
                                      ondelete = "RESTRICT")
@@ -1783,7 +1783,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         represent = S3Represent(lookup=tablename, fields=["keywords"])
         search_id = S3ReusableField("search_id", "reference %s" % tablename,
                     label = T("Search Query"),
-                    requires = IS_NULL_OR(
+                    requires = IS_EMPTY_OR(
                                 IS_ONE_OF_EMPTY(db, "msg_twitter_search.id")
                                 ),
                     represent = represent,
