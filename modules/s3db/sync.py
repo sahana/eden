@@ -137,84 +137,93 @@ class SyncDataModel(S3Model):
 
         tablename = "sync_repository"
         define_table(tablename,
-                     Field("name",
-                           length=64,
-                           notnull=True),
+                     Field("name", length=64, notnull=True,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Repository Name"),
+                                                T("Name of the repository (for you own reference)"))),
+                           ),
                      Field("apitype",
                            label=T("Repository Type"),
                            requires = IS_IN_SET(sync_repository_types),
                            default = "eden",
-                          represent = lambda opt: \
-                                      NONE if not opt else \
-                                      sync_repository_types.get(opt, NONE)),
+                           represent = lambda opt: \
+                                       NONE if not opt else \
+                                       sync_repository_types.get(opt, NONE),
+                           ),
                      Field("url",
                            label="URL",
                            requires = IS_EMPTY_OR(
-                                      IS_NOT_IN_DB(db, "sync_repository.url"))),
-                     Field("username"),
-                     Field("password", "password"),
+                                      IS_NOT_IN_DB(db, "sync_repository.url")),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Repository Base URL"),
+                                                T("Base URL of the remote Sahana Eden instance including application path, e.g. http://www.example.org/eden"))),
+                           ),
+                     Field("username",
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Username"),
+                                                T("Username to use for authentication at the remote site."))),
+                           ),
+                     Field("password", "password",
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Password"),
+                                                T("Password to use for authentication at the remote site."))),
+                           ),
+                     Field("client_id",
+                           label = T("Client ID"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Client ID"),
+                                                T("The client ID to use for authentication at the remote site (if required for this type of repository)."))),
+                           ),
+                     Field("client_secret", "password",
+                           label = T("Client Secret"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Client Secret"),
+                                                T("The client secret to use for authentication at the remote site (if required for this type of repository)."))),
+                           ),
                      Field("site_key",
-                           label = T("Site Key")),
+                           label = T("Site Key"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Site Key"),
+                                                T("Site Key which this site uses to authenticate at the remote site (if required for this type of repository)."))),
+                           ),
                      Field("refresh_token",
                            readable = False,
                            writable = False,
                            ),
                      Field("proxy",
                            label=T("Proxy Server URL"),
-                           requires=IS_EMPTY_OR(IS_URL(mode="generic"))),
+                           requires=IS_EMPTY_OR(IS_URL(mode="generic")),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Proxy Server URL"),
+                                                T("URL of the proxy server to connect to the repository (leave empty for default proxy)"))),
+                           ),
                      Field("last_status",
                            readable=False,
                            writable=False,
-                           label=T("Last status")),
+                           label=T("Last status"),
+                           ),
                      Field("accept_push", "boolean",
                            represent = s3_yes_no_represent,
                            default=False,
-                           label=T("Accept Push")),
+                           label=T("Accept Push"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Accept Push"),
+                                                T("Accept unsolicited data transmissions from the repository."))),
+                           ),
                      Field.Method("last_pull_time",
                                   self.sync_repository_last_pull_time),
                      Field.Method("last_push_time",
                                   self.sync_repository_last_push_time),
                      *s3_meta_fields())
-
-        # Field configuration
-        # @todo: make in-line
-        table = db[tablename]
-        table.uuid.label = "UUID"
-        table.uuid.readable = True
-        table.uuid.writable = True
-
-        table.name.comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (
-                                    T("Repository Name"),
-                                    T("Name of the repository (for you own reference)")))
-        table.url.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (
-                                    T("Repository Base URL"),
-                                    T("Base URL of the remote Sahana Eden instance including application path, e.g. http://www.example.org/eden")))
-        table.proxy.comment = DIV(_class="tooltip",
-                                  _title="%s|%s" % (
-                                    T("Proxy Server URL"),
-                                    T("URL of the proxy server to connect to the repository (leave empty for default proxy)")))
-        table.username.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (
-                                        T("Username"),
-                                        T("Username to use for authentication at the remote site.")))
-        table.password.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (
-                                        T("Password"),
-                                        T("Password to use for authentication at the remote site.")))
-        table.site_key.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (
-                                        T("Site Key"),
-                                        T("Site Key which this site uses to authenticate at the remote site (if required for this type of repository).")))
-        table.uuid.comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (
-                                    T("Repository UUID"),
-                                    T("Identifier which the remote site uses to authenticate at this site when sending synchronization requests.")))
-        table.accept_push.comment = DIV(_class="tooltip",
-                                        _title="%s|%s" % (
-                                            T("Accept Push"),
-                                            T("Accept unsolicited data transmissions from the repository.")))
 
         # CRUD Strings
         ADD_REPOSITORY = T("Create Repository")
@@ -236,12 +245,18 @@ class SyncDataModel(S3Model):
                                "accept_push",
                                (T("Last Pull"), "last_pull_time"),
                                (T("Last Push"), "last_push_time"),
-                              ],
+                               ],
                   onaccept=self.sync_repository_onaccept,
                   ondelete=self.sync_repository_ondelete,
-                  create_next=URL(c="sync", f="repository", args=["[id]",
-                                                                  "task"]),
-                  update_next=URL(c="sync", f="repository", args=["[id]"]))
+                  create_next=URL(c="sync",
+                                  f="repository",
+                                  args=["[id]", "task"],
+                                  ),
+                  update_next=URL(c="sync",
+                                  f="repository",
+                                  args=["[id]"],
+                                  )
+                  )
 
         set_method("sync", "repository", method="now", action=sync_now)
 
