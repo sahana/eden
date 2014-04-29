@@ -254,6 +254,8 @@ class S3Trackable(object):
             @param exclude: interlocks to break at (avoids circular check-ins)
 
             @return: a location record, or a list of location records (if multiple)
+
+            @ToDo: Also show Timestamp of when seen there
         """
 
         db = current.db

@@ -2,7 +2,7 @@
 
 """ Framework for filtered REST requests
 
-    @copyright: 2013 (c) Sahana Software Foundation
+    @copyright: 2013-14 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
@@ -72,6 +72,7 @@ def get_s3_filter_opts(tablename,
     """
         Lazy options getter
         - this is useful when the expected number of options is significantly smaller than the number of records to iterate through
+            NB This reason is no longer required with S3Filter, but is a legacy from S3Search: S3Filter already does an efficient Reverse-Query
         - note this doesn't check if options are actually in-use
 
         @param tablename: the name of the lookup table
@@ -231,7 +232,6 @@ class S3FilterWidget(object):
                                 use for context or virtual fields
                                 (L{S3DateFilter})
             @keyword hide_time: don't show time selector (L{S3DateFilter})
-
         """
 
         self.field = field
@@ -1214,30 +1214,42 @@ class S3OptionsFilter(S3FilterWidget):
         # search for records containing all the options or any
         # of the options:
         if len(options) > 1 and ftype[:4] == "list":
-            if self.operator == "anyof":
+            operator = opts.get("operator", None)
+            if operator:
+                self.operator = operator
+                any_all = ""
+            else:
+                operator = self.operator
+                any_all = True
+
+            if operator == "anyof":
                 filter_type = "any"
             else:
                 filter_type = "all"
-                if self.operator == "belongs":
-                    self.operator = "contains"
+                if operator == "belongs":
+                    operator = "contains"
 
-            T = current.T
-            any_all = DIV(T("Filter type"),
-                          INPUT(_name="%s_filter" % name,
-                                _id="%s_filter_any" % name,
-                                _type="radio",
-                                _value="any",
-                                value=filter_type),
-                          LABEL(T("Any"),
-                                _for="%s_filter_any" % name),
-                          INPUT(_name="%s_filter" % name,
-                                _id="%s_filter_all" % name,
-                                _type="radio",
-                                _value="all",
-                                value=filter_type),
-                          LABEL(T("All"),
-                                _for="%s_filter_all" % name),
-                          _class="s3-options-filter-anyall")
+            if any_all:
+                # Provide a form to prompt the user to choose
+                T = current.T
+                any_all = DIV(T("Filter type"),
+                              INPUT(_name="%s_filter" % name,
+                                    _id="%s_filter_any" % name,
+                                    _type="radio",
+                                    _value="any",
+                                    value=filter_type),
+                              LABEL(T("Any"),
+                                    _for="%s_filter_any" % name),
+                              INPUT(_name="%s_filter" % name,
+                                    _id="%s_filter_all" % name,
+                                    _type="radio",
+                                    _value="all",
+                                    value=filter_type),
+                              LABEL(T("All"),
+                                    _for="%s_filter_all" % name),
+                              _class="s3-options-filter-anyall",
+                              )
+
         else:
             any_all = ""
 
@@ -1445,6 +1457,9 @@ class S3OptionsFilter(S3FilterWidget):
                         kappend = opt_keys.append
                         for row in rows:
                             v = row[colname]
+                            # No support for new-style Field.Method in filter queries
+                            #if virtual:
+                            #    v = v()
                             if v not in opt_keys:
                                 kappend(v)
 
@@ -1549,6 +1564,8 @@ class S3OptionsFilter(S3FilterWidget):
                 options.append((k, v))
         if none and not empty:
             # Add the value anyway (e.g. not found via the reverse lookup)
+            if none is True:
+                none = current.messages["NONE"]
             options.append((None, none))
 
         # Sort the options

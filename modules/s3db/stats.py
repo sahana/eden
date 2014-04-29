@@ -2,7 +2,7 @@
 
 """ Sahana Eden Stats Model
 
-    @copyright: 2012-13 (c) Sahana Software Foundation
+    @copyright: 2012-14 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -35,6 +35,9 @@ __all__ = ["S3StatsModel",
            "S3StatsPeopleModel",
            "S3StatsTrainedPeopleModel",
            "stats_demographic_data_controller",
+           "stats_quantile",
+           "stats_year",
+           "stats_year_options",
            #"stats_SourceRepresent",
            ]
 
@@ -58,7 +61,6 @@ class S3StatsModel(S3Model):
              "stats_source_superlink",
              "stats_source_id",
              #"stats_source_details",
-             "stats_quantile",
              ]
 
     def model(self):
@@ -187,7 +189,6 @@ class S3StatsModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(stats_source_superlink = source_superlink,
                     stats_source_id = source_id,
-                    stats_quantile = self.quantile,
                     )
 
     # -------------------------------------------------------------------------
@@ -201,30 +202,6 @@ class S3StatsModel(S3Model):
                                                      writable=False,
                                                      )(),
             )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def quantile(data, q):
-        """
-            Return the specified quantile(s) q of the supplied list.
-            The function can be called with either a single value for q or a
-            list of values. In the latter case, the returned value is a tuple.
-        """
-
-        sx = sorted(data)
-        def get_quantile(q1):
-            pos = (len(sx) - 1) * q1
-            if abs(pos - int(pos) - 0.5) < 0.1:
-                # quantile in the middle between two values, average them
-                return (sx[int(pos)] + sx[int(pos) + 1]) * 0.5
-            else:
-                # otherwise return the nearest value
-                return sx[int(pos + 0.5)]
-
-        if hasattr(q, "__iter__"):
-            return tuple([get_quantile(qi) for qi in q])
-        else:
-            return get_quantile(q)
 
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
@@ -333,11 +310,16 @@ class S3StatsDemographicModel(S3Model):
                            required = True,
                            ),
                      s3_date(required = True),
-                     # Unused but needed for the stats_data SE
-                     #Field("end_date", "date",
-                     #      readable=False,
-                     #      writable=False
-                     #      ),
+                     Field("end_date", "date",
+                           # Just used for the year() VF
+                           readable = False,
+                           writable = False
+                           ),
+                     Field("year", "list:integer",
+                           compute = lambda row: \
+                             stats_year(row, "stats_demographic_data"),
+                           label = T("Year"),
+                           ),
                      # Link to Source
                      self.stats_source_id(),
                      s3_comments(),
@@ -374,32 +356,39 @@ class S3StatsDemographicModel(S3Model):
 
         filter_widgets = [S3OptionsFilter("parameter_id",
                                           label = T("Type"),
+                                          multiple = False,
                                           # Not translateable
                                           #represent = "%(name)s",
-                                          multiple = False,
                                           ),
+                          # Can't co-exist with any other filter yet
+                          #S3OptionsFilter("year",
+                          #                #multiple = False,
+                          #                operator = "anyof",
+                          #                options = lambda: \
+                          #                  stats_year_options("stats_demographic_data"),
+                          #                ),
                           S3OptionsFilter("location_id$level",
                                           label = T("Level"),
+                                          multiple = False,
                                           # Not translateable
                                           #represent = "%(name)s",
-                                          multiple = False,
                                           ),
                           S3LocationFilter("location_id",
                                            levels = levels,
                                            ),
                           ]
 
-        report_options = Storage(rows=location_fields,
-                                 cols=["parameter_id"],
-                                 fact=[(T("Value"), "sum(value)"),
-                                       ],
-                                 defaults=Storage(rows="location_id",
-                                                  cols="parameter_id",
-                                                  fact="sum(value)",
-                                                  totals=True,
-                                                  chart = "breakdown:rows",
-                                                  table = "collapse",
-                                                  )
+        report_options = Storage(rows = location_fields,
+                                 cols = ["parameter_id"],
+                                 fact = [(T("Value"), "sum(value)"),
+                                         ],
+                                 defaults = Storage(rows = "location_id",
+                                                    cols = "parameter_id",
+                                                    fact = "sum(value)",
+                                                    totals = True,
+                                                    chart = "breakdown:rows",
+                                                    table = "collapse",
+                                                    )
                                  )
 
         configure(tablename,
@@ -593,8 +582,8 @@ class S3StatsDemographicModel(S3Model):
 
         # Fire off a rebuild task
         current.s3task.async("stats_demographic_update_aggregates",
-                             vars=dict(records=records.json()),
-                             timeout=21600 # 6 hours
+                             vars = dict(records=records.json()),
+                             timeout = 21600 # 6 hours
                              )
 
     # -------------------------------------------------------------------------
@@ -1124,7 +1113,6 @@ class S3StatsDemographicModel(S3Model):
                           end_date = end_date,
                           **attr
                           )
-        return
 
 # =============================================================================
 def stats_demographic_data_controller():
@@ -1235,8 +1223,8 @@ class S3StatsImpactModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = ("doc_entity", "stats_parameter"),
                   deduplicate = self.stats_impact_type_duplicate,
+                  super_entity = ("doc_entity", "stats_parameter"),
                   )
 
         represent = S3Represent(lookup=tablename)
@@ -1703,6 +1691,134 @@ class S3StatsTrainedPeopleModel(S3Model):
             item.id = _duplicate.id
             item.data.id = _duplicate.id
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+def stats_quantile(data, q):
+    """
+        Return the specified quantile(s) q of the supplied list.
+        The function can be called with either a single value for q or a
+        list of values. In the latter case, the returned value is a tuple.
+    """
+
+    sx = sorted(data)
+    def get_quantile(q1):
+        pos = (len(sx) - 1) * q1
+        if abs(pos - int(pos) - 0.5) < 0.1:
+            # quantile in the middle between two values, average them
+            return (sx[int(pos)] + sx[int(pos) + 1]) * 0.5
+        else:
+            # otherwise return the nearest value
+            return sx[int(pos + 0.5)]
+
+    if hasattr(q, "__iter__"):
+        return tuple([get_quantile(qi) for qi in q])
+    else:
+        return get_quantile(q)
+
+# =============================================================================
+def stats_year(row, tablename):
+    """
+        Function to calculate computed field for stats_data
+        - returns the year of this entry
+
+        @param row: a dict of the Row
+    """
+
+    try:
+        start_date = row["date"]
+    except KeyError:
+        start_date = None
+    try:
+        end_date = row["end_date"]
+    except KeyError:
+        end_date = None
+
+    if not start_date or not end_date:
+        if tablename == "project_beneficiary":
+            # Fallback to the Project's
+            try:
+                project_id = row["project_id"]
+            except KeyError:
+                pass
+            else:
+                table = current.s3db.project_project
+                project = current.db(table.id == project_id).select(table.start_date,
+                                                                    table.end_date,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
+                if project:
+                    if not start_date:
+                        start_date = project.start_date
+                    if not end_date:
+                        end_date = project.end_date
+
+    if not start_date and not end_date:
+        return []
+    elif not end_date:
+        return [start_date.year]
+    elif not start_date:
+        return [end_date.year]
+    else:
+        return list(xrange(start_date.year, end_date.year + 1))
+
+# =============================================================================
+def stats_year_options(tablename):
+    """
+        returns a dict of the options for the year computed field
+        used by the filter widget
+
+        orderby needed for postgres
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = s3db[tablename]
+    # @ToDo: use auth.s3_accessible_query
+    query = (table.deleted == False)
+    min_field = table.date.min()
+    start_date_min = db(query).select(min_field,
+                                      orderby=min_field,
+                                      limitby=(0, 1)).first()[min_field]
+    max_field = table.end_date.max()
+    end_date_max = db(query).select(max_field,
+                                    orderby=max_field,
+                                    limitby=(0, 1)).first()[max_field]
+
+    if tablename == "project_beneficiary":
+        # Use the Project's Years as well, as the dates may not be filled in the project_beneficiary table
+        ptable = s3db.project_project
+        pquery = (ptable.deleted == False)
+        pmin = ptable.start_date.min()
+        pmax = ptable.end_date.max()
+        p_start_date_min = db(pquery).select(pmin,
+                                             orderby=pmin,
+                                             limitby=(0, 1)).first()[pmin]
+        p_end_date_max = db(pquery).select(pmax,
+                                           orderby=pmax,
+                                           limitby=(0, 1)).first()[pmax]
+        if p_start_date_min and start_date_min:
+            start_year = min(p_start_date_min,
+                             start_date_min).year
+        else:
+            start_year = (p_start_date_min and p_start_date_min.year) or \
+                         (start_date_min and start_date_min.year)
+        if p_end_date_max and end_date_max:
+            end_year = max(p_end_date_max,
+                           end_date_max).year
+        else:
+            end_year = (p_end_date_max and p_end_date_max.year) or \
+                       (end_date_max and end_date_max.year)
+
+    else:
+        start_year = start_date_min and start_date_min.year
+        end_year = end_date_max and end_date_max.year
+
+    if not start_year or not end_year:
+        return {start_year:start_year} or {end_year:end_year}
+    years = {}
+    for year in xrange(start_year, end_year + 1):
+        years[year] = year
+    return years
 
 # =============================================================================
 class stats_SourceRepresent(S3Represent):

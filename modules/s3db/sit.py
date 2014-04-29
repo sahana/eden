@@ -139,6 +139,7 @@ class S3SituationModel(S3Model):
         """
             Virtual Field to return the current location of a Trackable
             @ToDo: Bulk
+            @ToDo: Also show Timestamp of when seen there
         """
 
         s3db = current.s3db

@@ -193,7 +193,7 @@ class S3EventModel(S3Model):
                                                            # Should!
                            #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
                            ),
-                     s3_datetime(name="start_date",
+                     s3_datetime("start_date",
                                  default = "now",
                                  label = T("Start Date"),
                                  represent = "date",
@@ -402,14 +402,13 @@ class S3EventModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return dict(
-                event_event_id = S3ReusableField("event_id", "integer",
-                                                 readable=False,
-                                                 writable=False),
-                event_type_id = S3ReusableField("event_id", "integer",
-                                                readable=False,
-                                                writable=False),
-                )
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(event_event_id = lambda **attr: dummy("event_id"),
+                    event_type_id = lambda **attr: dummy("event_type_id"),
+                    )
 
     # =============================================================================
     @staticmethod
@@ -418,7 +417,7 @@ class S3EventModel(S3Model):
             Virtual field for event_event - returns the year of this entry
             used for report.
 
-            Requires "start_date" to be in the additional report_fields
+            Requires "start_date" to be in extra_fields
 
             @param row: the Row
         """
@@ -726,12 +725,12 @@ class S3IncidentModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return dict(
-                event_incident_id = S3ReusableField("incident_id", "integer",
-                                                    readable=False,
-                                                    writable=False),
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
-                )
+        return dict(event_incident_id = lambda **attr: dummy("incident_id"),
+                    )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -971,13 +970,13 @@ class S3EventResourceModel(S3Model):
                           # This is a component, so needs to be a super_link
                           # - can't override field name, ondelete or requires
                           super_link("parameter_id", "stats_parameter",
-                                     label = T("Resource Type"),
+                                     empty = False,
                                      instance_types = ("org_resource_type",),
+                                     label = T("Resource Type"),
                                      represent = S3Represent(lookup="stats_parameter",
                                                              translate=True),
                                      readable = True,
                                      writable = True,
-                                     empty = False,
                                      comment = S3AddResourceLink(c="org",
                                                                  f="resource_type",
                                                                  vars = dict(child = "parameter_id"),
@@ -1050,7 +1049,8 @@ class S3EventResourceModel(S3Model):
                                         "parameter_id$name",
                                         "comments",
                                         ],
-                                       label = T("Search")),
+                                       label = T("Search"),
+                                       ),
                           S3OptionsFilter("parameter_id",
                                           label = T("Type"),
                                           ),
@@ -1067,13 +1067,13 @@ class S3EventResourceModel(S3Model):
                                  fact = [(T("Total Number of Resources"), "sum(value)"),
                                          (T("Number of Resources"), "count(value)"),
                                          ],
-                                 defaults=Storage(rows = "incident_id",
-                                                  cols = "parameter_id",
-                                                  fact = "sum(value)",
-                                                  totals = True,
-                                                  chart = "barchart:rows",
-                                                  #table = "collapse",
-                                                  )
+                                 defaults = Storage(rows = "incident_id",
+                                                    cols = "parameter_id",
+                                                    fact = "sum(value)",
+                                                    totals = True,
+                                                    chart = "barchart:rows",
+                                                    #table = "collapse",
+                                                    )
                                  )
 
         self.configure(tablename,
@@ -1110,11 +1110,11 @@ class S3IncidentGroupModel(S3Model):
         tablename = "event_incident_report_group"
         self.define_table(tablename,
                           Field("incident_report_id", self.event_incident_report,
+                                represent = represent,
                                 requires = IS_ONE_OF(current.db, "event_incident_report.id",
                                                      represent,
                                                      sort=True,
                                                      ),
-                                represent = represent,
                                 ),
                           self.org_group_id(empty=False),
                           *s3_meta_fields())
@@ -1142,9 +1142,8 @@ class S3IncidentTypeModel(S3Model):
         #
         tablename = "event_incident_type"
         self.define_table(tablename,
-                          Field("name", notnull=True,
-                                length=64,
-                                label=T("Name"),
+                          Field("name", notnull=True, length=64,
+                                label = T("Name"),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -1166,15 +1165,15 @@ class S3IncidentTypeModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         incident_type_id = S3ReusableField("incident_type_id", "reference %s" % tablename,
-                                           sortby="name",
+                                           label = T("Incident Type"),
+                                           ondelete = "RESTRICT",
+                                           represent = represent,
                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "event_incident_type.id",
                                                                   represent,
                                                                   orderby="event_incident_type.name",
                                                                   sort=True)),
-                                           represent = represent,
-                                           label = T("Incident Type"),
-                                           ondelete = "RESTRICT",
+                                           sortby = "name",
                                            # Uncomment these to use an Autocomplete & not a Dropdown
                                            #widget = S3AutocompleteWidget()
                                            #comment = DIV(_class="tooltip",
@@ -1196,12 +1195,13 @@ class S3IncidentTypeModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return dict(
-            event_incident_type_id = S3ReusableField("incident_type_id", "integer",
-                                                     readable=False,
-                                                     writable=False),
-        )
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
+        return dict(event_incident_type_id = lambda **attr: dummy("incident_type_id"),
+                    )
+        
     # ---------------------------------------------------------------------
     @staticmethod
     def incident_type_duplicate(item):

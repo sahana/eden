@@ -734,7 +734,7 @@ class S3Resource(object):
                 if virtual:
                     osetattr(table, "virtualfields", vf)
 
-                if getids or left_joins:
+                if (getids or left_joins):
                     ids = [row[pkey] for row in rows]
                     totalrows = len(ids)
                     if limitby:
@@ -5648,6 +5648,7 @@ class S3ResourceQuery(object):
         if op == self.CONTAINS:
             q = l.contains(r, all=True)
         elif op == self.ANYOF:
+            # NB str/int doesn't matter here
             q = l.contains(r, all=False)
         elif op == self.BELONGS:
             if not isinstance(r, (list, tuple, set)):

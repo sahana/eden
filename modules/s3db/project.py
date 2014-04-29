@@ -353,68 +353,68 @@ class S3ProjectModel(S3Model):
 
         # Custom Methods
         set_method("project", "project",
-                   method="timeline",
-                   action=self.project_timeline)
+                   method = "timeline",
+                   action = self.project_timeline)
 
         set_method("project", "project",
-                   method="map",
-                   action=self.project_map)
+                   method = "map",
+                   action = self.project_map)
 
         # Components
         add_components(tablename,
                        # Sites
-                       #project_site="project_id",
+                       #project_site = "project_id",
                        # Activities
-                       project_activity="project_id",
+                       project_activity = "project_id",
                        # Activity Types
-                       project_activity_type={"link": "project_activity_type_project",
-                                              "joinby": "project_id",
-                                              "key": "activity_type_id",
-                                              "actuate": "link",
-                                             },
+                       project_activity_type = {"link": "project_activity_type_project",
+                                                "joinby": "project_id",
+                                                "key": "activity_type_id",
+                                                "actuate": "link",
+                                                },
                        # Milestones
-                       project_milestone="project_id",
+                       project_milestone = "project_id",
                        # Outputs
-                       project_output="project_id",
+                       project_output = "project_id",
                        # Tasks
-                       project_task={"link": "project_task_project",
-                                     "joinby": "project_id",
-                                     "key": "task_id",
-                                     "actuate": "replace",
-                                     "autocomplete": "name",
-                                     "autodelete": False,
-                                    },
-                       # Annual Budgets
-                       project_annual_budget="project_id",
-                       # Beneficiaries
-                       project_beneficiary="project_id",
-                       # Hazards
-                       project_hazard={"link": "project_hazard_project",
+                       project_task = {"link": "project_task_project",
                                        "joinby": "project_id",
-                                       "key": "hazard_id",
-                                       "actuate": "hide",
-                                      },
+                                       "key": "task_id",
+                                       "actuate": "replace",
+                                       "autocomplete": "name",
+                                       "autodelete": False,
+                                       },
+                       # Annual Budgets
+                       project_annual_budget = "project_id",
+                       # Beneficiaries
+                       project_beneficiary = "project_id",
+                       # Hazards
+                       project_hazard = {"link": "project_hazard_project",
+                                         "joinby": "project_id",
+                                         "key": "hazard_id",
+                                         "actuate": "hide",
+                                         },
                        # Human Resources
-                       project_human_resource="project_id",
+                       project_human_resource = "project_id",
                        # Locations
-                       project_location="project_id",
+                       project_location = "project_id",
                        # Sectors
-                       org_sector={"link": "project_sector_project",
-                                   "joinby": "project_id",
-                                   "key": "sector_id",
-                                   "actuate": "hide",
-                                  },
-                       # Format needed by S3Filter
-                       project_sector_project="project_id",
-                       # Themes
-                       project_theme={"link": "project_theme_project",
-                                      "joinby": "project_id",
-                                      "key": "theme_id",
-                                      "actuate": "hide",
+                       org_sector = {"link": "project_sector_project",
+                                     "joinby": "project_id",
+                                     "key": "sector_id",
+                                     "actuate": "hide",
                                      },
                        # Format needed by S3Filter
-                       project_theme_project="project_id",
-                      )
+                       project_sector_project = "project_id",
+                       # Themes
+                       project_theme = {"link": "project_theme_project",
+                                        "joinby": "project_id",
+                                        "key": "theme_id",
+                                        "actuate": "hide",
+                                        },
+                       # Format needed by S3Filter
+                       project_theme_project = "project_id",
+                       )
 
         if multi_orgs:
             add_components(tablename,
@@ -873,7 +873,13 @@ class S3ProjectActivityModel(S3Model):
                            # Gets populated from constituent Tasks
                            writable = False,
                            ),
+                     # @ToDo: Move to compute using stats_year
                      Field.Method("year", self.project_activity_year),
+                     #Field("year", "list:integer",
+                     #      compute = lambda row: \
+                     #        self.stats_year(row, "project_activity"),
+                     #      label = T("Year"),
+                     #      ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -969,13 +975,16 @@ class S3ProjectActivityModel(S3Model):
         # @ToDo: deployment_setting
         filter_widgets.append(
             S3OptionsFilter("year",
-                            label=T("Year"),
+                            label = T("Year"),
+                            #operator = "anyof",
+                            #options = lambda: \
+                            #    self.stats_year_options("project_activity"),
                             options = project_activity_year_options,
                             ),
             )
             
         if use_projects and settings.get_project_mode_drr():
-            rappend((T("Hazard"), "project_id$hazard.name"))
+            rappend(("project_id$hazard_project.hazard_id"))
             rappend((T("HFA"), "project_id$drr.hfa"))
         if mode_task:
             list_fields.insert(3, "time_estimated")
@@ -1053,72 +1062,72 @@ class S3ProjectActivityModel(S3Model):
         # Components
         add_components(tablename,
                        # Activity Types
-                       project_activity_type={"link": "project_activity_activity_type",
-                                              "joinby": "activity_id",
-                                              "key": "activity_type_id",
-                                              "actuate": "replace",
-                                              "autocomplete": "name",
-                                              "autodelete": False,
-                                             },
+                       project_activity_type = {"link": "project_activity_activity_type",
+                                                "joinby": "activity_id",
+                                                "key": "activity_type_id",
+                                                "actuate": "replace",
+                                                "autocomplete": "name",
+                                                "autodelete": False,
+                                                },
                        # Format for InlineComponent/filter_widget
-                       project_activity_activity_type="activity_id",
+                       project_activity_activity_type = "activity_id",
                        # Beneficiaries
-                       project_beneficiary={"link": "project_beneficiary_activity",
-                                            "joinby": "activity_id",
-                                            "key": "beneficiary_id",
-                                            "actuate": "hide",
+                       project_beneficiary = {"link": "project_beneficiary_activity",
+                                              "joinby": "activity_id",
+                                              "key": "beneficiary_id",
+                                              "actuate": "hide",
+                                              },
+                       # Format for InlineComponent/filter_widget
+                       project_beneficiary_activity = "activity_id",
+                       # Distributions
+                       supply_distribution = "activity_id",
+                       # Events
+                       event_event = {"link": "event_activity",
+                                      "joinby": "activity_id",
+                                      "key": "event_id",
+                                      "actuate": "hide",
+                                      },
+                       # Organisations
+                       org_organisation = {"link": "project_activity_organisation",
+                                           "joinby": "activity_id",
+                                           "key": "organisation_id",
+                                           "actuate": "hide",
                                            },
                        # Format for InlineComponent/filter_widget
-                       project_beneficiary_activity="activity_id",
-                       # Distributions
-                       supply_distribution="activity_id",
-                       # Events
-                       event_event={"link": "event_activity",
-                                    "joinby": "activity_id",
-                                    "key": "event_id",
-                                    "actuate": "hide",
-                                   },
-                       # Organisations
-                       org_organisation={"link": "project_activity_organisation",
-                                         "joinby": "activity_id",
-                                         "key": "organisation_id",
-                                         "actuate": "hide",
-                                        },
-                       # Format for InlineComponent/filter_widget
-                       project_activity_organisation="activity_id",
+                       project_activity_organisation = "activity_id",
                        # Organisation Groups (Coalitions/Networks)
-                       org_group={"link": "project_activity_group",
-                                  "joinby": "activity_id",
-                                  "key": "group_id",
-                                  "actuate": "hide",
-                                 },
-                       # Format for InlineComponent/filter_widget
-                       project_activity_group="activity_id",
-                       # Sectors
-                       org_sector={"link": "project_sector_activity",
-                                   "joinby": "activity_id",
-                                   "key": "sector_id",
-                                   "actuate": "hide",
-                                  },
-                       # Format for InlineComponent/filter_widget
-                       project_sector_activity="activity_id",
-                       # Tasks
-                       project_task={"link": "project_task_activity",
-                                     "joinby": "activity_id",
-                                     "key": "task_id",
-                                     "actuate": "replace",
-                                     "autocomplete": "name",
-                                     "autodelete": False,
+                       org_group = {"link": "project_activity_group",
+                                    "joinby": "activity_id",
+                                    "key": "group_id",
+                                    "actuate": "hide",
                                     },
-                       # Themes
-                       project_theme={"link": "project_theme_activity",
-                                      "joinby": "activity_id",
-                                      "key": "theme_id",
-                                      "actuate": "hide",
+                       # Format for InlineComponent/filter_widget
+                       project_activity_group = "activity_id",
+                       # Sectors
+                       org_sector = {"link": "project_sector_activity",
+                                     "joinby": "activity_id",
+                                     "key": "sector_id",
+                                     "actuate": "hide",
                                      },
                        # Format for InlineComponent/filter_widget
-                       project_theme_activity="activity_id",
-                      )
+                       project_sector_activity = "activity_id",
+                       # Tasks
+                       project_task = {"link": "project_task_activity",
+                                       "joinby": "activity_id",
+                                       "key": "task_id",
+                                       "actuate": "replace",
+                                       "autocomplete": "name",
+                                       "autodelete": False,
+                                       },
+                       # Themes
+                       project_theme = {"link": "project_theme_activity",
+                                        "joinby": "activity_id",
+                                        "key": "theme_id",
+                                        "actuate": "hide",
+                                        },
+                       # Format for InlineComponent/filter_widget
+                       project_theme_activity = "activity_id",
+                       )
 
         # ---------------------------------------------------------------------
         # Activity Type - Activity Link Table
@@ -1181,7 +1190,10 @@ class S3ProjectActivityModel(S3Model):
     # ---------------------------------------------------------------------
     @staticmethod
     def project_activity_year(row):
-        """ Virtual field for the project_activity table """
+        """
+            Virtual field for the project_activity table
+            @ToDo: Deprecate: replace with computed field
+        """
 
         if hasattr(row, "project_activity"):
             row = row.project_activity
@@ -1443,8 +1455,6 @@ class S3ProjectActivityOrganisationModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
-        return
-
     # -------------------------------------------------------------------------
     @staticmethod
     def project_activity_group_deduplicate(item):
@@ -1466,8 +1476,6 @@ class S3ProjectActivityOrganisationModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-        return
 
 # =============================================================================
 class S3ProjectActivitySectorModel(S3Model):
@@ -1521,8 +1529,6 @@ class S3ProjectActivitySectorModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-        return
 
 # =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
@@ -1700,8 +1706,12 @@ class S3ProjectBeneficiaryModel(S3Model):
                              #empty = False,
                              label = T("End Date"),
                              ),
+                     Field("year", "list:integer",
+                           compute = lambda row: \
+                             self.stats_year(row, "project_beneficiary"),
+                           label = T("Year"),
+                           ),
                      #self.stats_source_id(),
-                     Field.Method("year", self.project_beneficiary_year),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1719,57 +1729,6 @@ class S3ProjectBeneficiaryModel(S3Model):
             msg_record_deleted = T("Beneficiaries Deleted"),
             msg_list_empty = T("No Beneficiaries Found")
         )
-
-        # Resource Configuration
-        # ---------------------------------------------------------------------
-        def year_options():
-            """
-                returns a dict of the options for the year virtual field
-                used by the search widget
-
-                orderby needed for postgres
-            """
-
-            ptable = db.project_project
-            pbtable = db.project_beneficiary
-            pquery = (ptable.deleted == False)
-            pbquery = (pbtable.deleted == False)
-            pmin = ptable.start_date.min()
-            pbmin = pbtable.date.min()
-            p_start_date_min = db(pquery).select(pmin,
-                                                 orderby=pmin,
-                                                 limitby=(0, 1)).first()[pmin]
-            pb_date_min = db(pbquery).select(pbmin,
-                                             orderby=pbmin,
-                                             limitby=(0, 1)).first()[pbmin]
-            if p_start_date_min and pb_date_min:
-                start_year = min(p_start_date_min,
-                                 pb_date_min).year
-            else:
-                start_year = (p_start_date_min and p_start_date_min.year) or \
-                             (pb_date_min and pb_date_min.year)
-
-            pmax = ptable.end_date.max()
-            pbmax = pbtable.end_date.max()
-            p_end_date_max = db(pquery).select(pmax,
-                                               orderby=pmax,
-                                               limitby=(0, 1)).first()[pmax]
-            pb_end_date_max = db(pbquery).select(pbmax,
-                                                 orderby=pbmax,
-                                                 limitby=(0, 1)).first()[pbmax]
-            if p_end_date_max and pb_end_date_max:
-                end_year = max(p_end_date_max,
-                               pb_end_date_max).year
-            else:
-                end_year = (p_end_date_max and p_end_date_max.year) or \
-                           (pb_end_date_max and pb_end_date_max.year)
-
-            if not start_year or not end_year:
-                return {start_year:start_year} or {end_year:end_year}
-            years = {}
-            for year in xrange(start_year, end_year + 1):
-                years[year] = year
-            return years
 
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
@@ -1796,10 +1755,11 @@ class S3ProjectBeneficiaryModel(S3Model):
                             label = T("Beneficiary Type"),
                             #hidden = True,
                             ),
-            # @ToDo: OptionsFilter working with Lazy VF
+            # Can't co-exist with any other filter yet
             #S3OptionsFilter("year",
-            #                label = T("Year"),
-            #                options = year_options,
+            #                operator = "anyof",
+            #                options = lambda: \
+            #                    self.stats_year_options("project_beneficiary"),
             #                hidden = True,
             #                ),
             S3LocationFilter("location_id",
@@ -1811,17 +1771,18 @@ class S3ProjectBeneficiaryModel(S3Model):
         list_fields = ["project_id",
                        (T("Beneficiary Type"), "parameter_id"),
                        "value",
-                       (T("Year"), "year"),
+                       "year",
                        ]
 
         report_fields = [(T("Beneficiary Type"), "parameter_id"),
                          "project_id",
                          #"project_location_id",
-                         (T("Year"), "year"),
+                         # Can't work as a Report Axis yet
+                         #"year",
                          ]
 
         if settings.get_project_sectors():
-            report_fields.append("project_id$sector.name")
+            report_fields.append("project_id$sector_project.sector_id")
             filter_widgets.insert(0,
                 S3OptionsFilter("project_id$sector_project.sector_id",
                                 # Doesn't allow translation
@@ -1830,10 +1791,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                                 ))
 
         if settings.get_project_hazards():
-            report_fields.append("project_id$hazard.name")
+            report_fields.append("project_id$hazard_project.hazard_id")
 
         if settings.get_project_themes():
-            report_fields.append("project_id$theme.name")
+            report_fields.append("project_id$theme_project.theme_id")
             filter_widgets.append(
                 S3OptionsFilter("project_id$theme_project.theme_id",
                                 # Doesn't allow translation
@@ -1863,10 +1824,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                                                     fact="sum(beneficiary.value)",
                                                     totals=True
                                                     ),
-                                 extra_fields = ["project_id",
-                                                 #"date",
-                                                 #"end_date",
-                                                 ],
                                  )
 
         configure(tablename,
@@ -1880,18 +1837,19 @@ class S3ProjectBeneficiaryModel(S3Model):
 
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", "reference %s" % tablename,
-            sortby = "name",
+            label = T("Beneficiaries"),
+            ondelete = "SET NULL",
+            represent = self.project_beneficiary_represent,
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "project_beneficiary.id",
                                   self.project_beneficiary_represent,
                                   sort=True)),
-            represent = self.project_beneficiary_represent,
-            label = T("Beneficiaries"),
+            sortby = "name",
             comment = S3AddResourceLink(c="project", f="beneficiary",
                                         title=ADD_BNF,
                                         tooltip=\
                 T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
-            ondelete = "SET NULL")
+            )
 
         # ---------------------------------------------------------------------
         # Beneficiary <> Activity Link Table
@@ -1981,7 +1939,6 @@ class S3ProjectBeneficiaryModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2004,51 +1961,6 @@ class S3ProjectBeneficiaryModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_beneficiary_year(row):
-        """ Virtual field for the project_beneficiary table """
-
-        if hasattr(row, "project_beneficiary"):
-            row = row.project_beneficiary
-
-        try:
-            project_id = row.project_id
-        except AttributeError:
-            return []
-        try:
-            start_date = row.date
-        except AttributeError:
-            start_date = None
-        try:
-            end_date = row.end_date
-        except AttributeError:
-            end_date = None
-
-        if not start_date or not end_date:
-            s3db = current.s3db
-            table = s3db.project_project
-            project = current.db(table.id == project_id).select(table.start_date,
-                                                                table.end_date,
-                                                                cache=s3db.cache,
-                                                                limitby=(0, 1)
-                                                                ).first()
-            if project:
-                if not start_date:
-                    start_date = project.start_date
-                if not end_date:
-                    end_date = project.end_date
-
-        if not start_date and not end_date:
-            return []
-        elif not end_date:
-            return [start_date.year]
-        elif not start_date:
-            return [end_date.year]
-        else:
-            return list(xrange(start_date.year, end_date.year + 1))
 
 # =============================================================================
 class S3ProjectCampaignModel(S3Model):
@@ -2560,7 +2472,7 @@ class S3ProjectHazardModel(S3Model):
             msg_list_empty = T("No Hazards found for this Project"))
 
         self.configure(tablename,
-                       deduplicate=self.project_hazard_project_deduplicate,
+                       deduplicate = self.project_hazard_project_deduplicate,
                        )
 
         # Pass names back to global scope (s3.*)
@@ -2587,8 +2499,6 @@ class S3ProjectHazardModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-        return
 
 # =============================================================================
 class S3ProjectLocationModel(S3Model):
@@ -2933,13 +2843,13 @@ class S3ProjectLocationModel(S3Model):
     def defaults(self):
         """ Safe defaults for model-global names if module is disabled """
 
-        project_location_id = S3ReusableField("project_location_id", "integer",
+        project_location_id = S3ReusableField("dummy_id", "integer",
                                               readable = False,
                                               writable = False)
 
         return dict(project_location_id = lambda **attr: dummy("project_location_id"),
-                    project_location_represent = lambda v, row=None: ""
-                   )
+                    project_location_represent = lambda v, row=None: "",
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2984,8 +2894,6 @@ class S3ProjectLocationModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-        return
 
 # =============================================================================
 class S3ProjectOrganisationModel(S3Model):
@@ -3113,7 +3021,6 @@ class S3ProjectOrganisationModel(S3Model):
             if row:
                 form.errors.role = \
                     current.T("Lead Implementer for this project is already set, please choose another role.")
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3177,8 +3084,6 @@ class S3ProjectOrganisationModel(S3Model):
             # Set the project organisation_id to NULL (using None)
             db(ptable.id == project_id).update(organisation_id=None)
 
-        return
-
     # ---------------------------------------------------------------------
     @staticmethod
     def project_organisation_deduplicate(item):
@@ -3199,7 +3104,6 @@ class S3ProjectOrganisationModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
 
 # =============================================================================
 class S3ProjectOutputModel(S3Model):
@@ -3716,6 +3620,8 @@ class S3ProjectDRRModel(S3Model):
                           self.project_project_id(empty=False),
                           Field("hfa", "list:integer",
                                 label = T("HFA Priorities"),
+                                represent = S3Represent(options=hfa_opts,
+                                                        multiple=True),
                                 requires = IS_EMPTY_OR(IS_IN_SET(
                                             hfa_opts,
                                             multiple = True)),
@@ -3723,8 +3629,6 @@ class S3ProjectDRRModel(S3Model):
                                             cols=1,
                                             help_field=hfa_opts
                                          ),
-                                represent = S3Represent(options=hfa_opts,
-                                                        multiple=True),
                                 ),
                           *s3_meta_fields())
 
@@ -4062,29 +3966,27 @@ class S3ProjectTaskModel(S3Model):
         # These Statuses can be customised, although doing so limits the ability to do synchronization
         # - best bet is simply to comment statuses that you don't wish to use
         #
-        project_task_status_opts = {
-            1: T("Draft"),
-            2: T("New"),
-            3: T("Assigned"),
-            4: T("Feedback"),
-            5: T("Blocked"),
-            6: T("On Hold"),
-            7: T("Canceled"),
-            8: T("Duplicate"),
-            9: T("Ready"),
-            10: T("Verified"),
-            11: T("Reopened"),
-            12: T("Completed"),
-            #99: T("unspecified")
-        }
+        project_task_status_opts = {1  : T("Draft"),
+                                    2  : T("New"),
+                                    3  : T("Assigned"),
+                                    4  : T("Feedback"),
+                                    5  : T("Blocked"),
+                                    6  : T("On Hold"),
+                                    7  : T("Canceled"),
+                                    8  : T("Duplicate"),
+                                    9  : T("Ready"),
+                                    10 : T("Verified"),
+                                    11 : T("Reopened"),
+                                    12 : T("Completed"),
+                                    }
 
         project_task_active_statuses = [2, 3, 4, 11]
-        project_task_priority_opts = {
-            1:T("Urgent"),
-            2:T("High"),
-            3:T("Normal"),
-            4:T("Low")
-        }
+
+        project_task_priority_opts = {1 : T("Urgent"),
+                                      2 : T("High"),
+                                      3 : T("Normal"),
+                                      4 : T("Low")
+                                      }
 
         #staff = auth.s3_has_role("STAFF")
         staff = auth.is_logged_in()
@@ -4929,7 +4831,6 @@ class S3ProjectTaskModel(S3Model):
         elif vars.pe_id and str(vars.status) == "2":
             # Set the Status to 'Assigned' if left at default 'New'
             vars.status = 3
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4993,7 +4894,6 @@ class S3ProjectTaskModel(S3Model):
 
         # Notify Assignee
         task_notify(form)
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5122,7 +5022,6 @@ class S3ProjectTaskModel(S3Model):
 
         # Notify Assignee
         task_notify(form)
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5196,7 +5095,6 @@ class S3ProjectTaskModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5255,8 +5153,6 @@ class S3ProjectTaskModel(S3Model):
             # Update the Activity
             query = (atable.id == activity_id)
             db(query).update(time_actual=hours)
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5326,8 +5222,7 @@ class S3ProjectTaskHRMModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(
-            )
+        return dict()
 
 # =============================================================================
 class S3ProjectTaskIReportModel(S3Model):
@@ -5393,8 +5288,6 @@ class S3ProjectTaskIReportModel(S3Model):
         # Update the Task
         query = (table.id == task_id)
         db(query).update(location_id=location_id)
-
-        return
 
 # =============================================================================
 def multi_theme_percentage_represent(id):
@@ -5724,6 +5617,8 @@ def project_activity_year_options():
         used by the search widget
 
         orderby needed for postgres
+
+        @ToDo: Migrate to stats_year_options()
     """
 
     db = current.db
@@ -6406,6 +6301,7 @@ def project_project_filters(org_label):
         else:
             sector = T("Sector")
         append_filter(
+            # @ToDo: Move to FK & remove custom options lookup
             S3OptionsFilter("sector.id",
                             label = sector,
                             options = lambda: \
@@ -6420,6 +6316,7 @@ def project_project_filters(org_label):
     mode_drr = settings.get_project_mode_drr()
     if mode_drr:
         append_filter(
+            # @ToDo: Move to FK & remove custom options lookup
             S3OptionsFilter("hazard.id",
                             label = T("Hazard"),
                             options = lambda: \
@@ -6433,6 +6330,7 @@ def project_project_filters(org_label):
         
     if settings.get_project_mode_3w():
         append_filter(
+            # @ToDo: Move to FK & remove custom options lookup
             S3OptionsFilter("theme.id",
                             label = T("Theme"),
                             options = lambda: \
