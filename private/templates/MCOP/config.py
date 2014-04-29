@@ -901,7 +901,7 @@ def customise_project_task_resource(r, tablename):
     # Custom Form
     table.name.label = T("Name")
     table.description.label = T("Description")
-    #table.location_id.readable = table.location_id.writable = True
+    table.location_id.readable = table.location_id.writable = True
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
     crud_fields = ["status",
                    "priority",
