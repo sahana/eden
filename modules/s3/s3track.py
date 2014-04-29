@@ -2,7 +2,7 @@
 
 """ Simple Generic Location Tracking System
 
-    @copyright: 2011-13 (c) Sahana Software Foundation
+    @copyright: 2011-14 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -28,11 +28,16 @@
 
 """
 
-from gluon import current
-from gluon.dal import Table, Rows, Row
 from datetime import datetime, timedelta
 
-__all__ = ["S3Tracker"]
+from gluon import current
+from gluon.dal import Table, Rows, Row
+
+from s3rest import S3Method
+
+__all__ = ["S3Tracker",
+           "S3UpdateLocation",
+           ]
 
 UID = "uuid"                # field name for UIDs
 
@@ -479,11 +484,12 @@ class S3Trackable(object):
                     continue
                 tablename, record_id = presence.interlock.split(",", 1)
                 trackable = S3Trackable(tablename=tablename, record_id=record_id)
-                location = trackable.get_location(timestmp=timestmp,
+                location = trackable.get_location(_fields=["id"],
+                                                  timestmp=timestmp,
                                                   as_rows=True).first()
                 if timestmp - presence.timestmp < timedelta(seconds=1):
                     timestmp = timestmp + timedelta(seconds=1)
-                data = dict(location_id=location,
+                data = dict(location_id=location.id,
                             timestmp=timestmp,
                             interlock=None)
                 data.update({TRACK_ID:r[TRACK_ID]})
@@ -646,7 +652,7 @@ class S3Trackable(object):
 # =============================================================================
 class S3Tracker(object):
     """
-        S3 Tracking system, can be instantiated once as global "s3tracker" object
+        S3 Tracking system, can be instantiated once as global 's3tracker' object
     """
 
     def __init__(self):
@@ -697,5 +703,138 @@ class S3Tracker(object):
             to the given instance at the given time
         """
         raise NotImplementedError
+
+# -----------------------------------------------------------------------------
+class S3UpdateLocation(S3Method):
+    """
+        UI method to update the location of a Trackable resource:
+            * Check-in (i.e. 'Set Location')
+            * Check-out (i.e. revert to Base Location)
+            * Update Base Location
+
+        @ToDo: Complete
+        @ToDo: Inline version
+        @ToDo: Mobile version
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_method(r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.representation == "html":
+
+            from gluon.dal import Field
+            from gluon.html import FORM, INPUT, OPTION, SELECT
+            from gluon.validators import IS_IN_SET, IS_EMPTY_OR
+            from s3fields import s3_datetime
+            from s3validators import IS_LOCATION_SELECTOR2
+            from s3widgets import S3LocationSelectorWidget2
+
+            T = current.T
+            table = r.table
+            response = current.response
+            session = current.session
+            formstyle = current.deployment_settings.get_ui_formstyle()
+            tracker = S3Trackable(table, record_id=r.id)
+
+            form = FORM()
+            fappend = form.append
+            comment = ""
+
+            opts = {1 : T("Check-In"),
+                    2 : T("Check-Out"),
+                    3 : T("Update Base Location"),
+                    }
+            id = "action"
+            label = T("Action")
+            widget = SELECT([OPTION(opts[opt], _value=opt) for opt in opts],
+                            _id=id,
+                            _name=id,
+                            _value=1,
+                            requries = IS_IN_SET(opts),
+                            )
+            row = formstyle("%s__row" % id, label, widget, comment)
+            fappend(row)
+
+            field = s3_datetime()
+            field.tablename = r.tablename
+            id = "timestmp"
+            label = T("Time")
+            value = current.request.utcnow
+            widget = field.widget(field, value)
+            row = formstyle("%s__row" % id, label, widget, comment)
+            fappend(row)
+
+            field = table.location_id
+            field.requires = IS_EMPTY_OR(IS_LOCATION_SELECTOR2())
+            value = tracker.get_location(_fields=["id"],
+                                         as_rows=True).first().id
+            id = "location"
+            label = "" # Replaced by Widget
+            widget = S3LocationSelectorWidget2()(field, value)
+            row = formstyle("%s__row" % id, label, widget, comment)
+            fappend(row)
+
+            id = "submit"
+            label = ""
+            widget = INPUT(_type="submit", _value=T("Apply"))
+            row = formstyle("%s__row" % id, label, widget, comment)
+            fappend(row)
+
+            response.view = "create.html"
+            title = T("Update Location")
+            output = dict(title=title,
+                          form=form)
+
+            script = \
+'''$("#action").change(function(){
+var type=$("#action").val()
+if(type==2){$('#location__row').hide()}else{$('#location__row').show()}})'''
+            response.s3.jquery_ready.append(script)
+            if form.accepts(current.request.vars, current.session):
+
+                form_vars = form.vars
+                action = form_vars.get("action", None)
+                if action == "1":
+                    # Check-In
+                    location_id = form_vars.get("location_id", None)
+                    if location_id:
+                        # We're not Checking-in in S3Track terms (that's about interlocking with another object)
+                        #tracker.check_in()
+                        timestmp = form_vars.get("timestmp", None)
+                        if timestmp:
+                            # @ToDo: Convert from string
+                            pass
+                        tracker.set_location(location_id, timestmp=timestmp)
+                        response.confirmation = T("Checked-In successfully!")
+
+                elif action == "2":
+                    # Check-Out
+                    # We're not Checking-out in S3Track terms (that's about removing an interlock with another object)
+                    #tracker.check_out()
+                    timestmp = form_vars.get("timestmp", None)
+                    if timestmp:
+                        # @ToDo: Convert from string
+                        pass
+                    tracker.set_location(r.record.location_id, timestmp=timestmp)
+                    response.confirmation = T("Checked-Out successfully!")
+
+                elif action == "3":
+                    # Update Base Location
+                    location_id = form_vars.get("location_id", None)
+                    if location_id:
+                        tracker.set_base_location(location_id)
+                        response.confirmation = T("Base Location Updated!")
+
+            return output
+
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

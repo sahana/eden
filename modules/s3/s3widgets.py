@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -627,6 +627,8 @@ class S3AddPersonWidget2(FormWidget):
 
         @ToDo: get working AC/validator for human_resource_id
                - perhaps re-implement as S3SQLFormElement
+        @ToDo: provide option for entering data in 2-3 separate name fields
+               instead of all in 1 field
     """
 
     def __init__(self,
@@ -2581,9 +2583,9 @@ class S3InvBinWidget(FormWidget):
 
         match_lbl = LABEL(T("Select an existing bin"))
         match_div = SELECT(bins,
-                          _id = "%s_%s" % (self.tablename, field.name),
-                          _name = field.name,
-                         )
+                           _id = "%s_%s" % (self.tablename, field.name),
+                           _name = field.name,
+                           )
         new_lbl = LABEL(T("...or add a new bin"))
         return TAG[""](match_lbl,
                        match_div,

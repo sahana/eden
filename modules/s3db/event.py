@@ -2,7 +2,7 @@
 
 """ Sahana Eden Event Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1004,6 +1004,7 @@ class S3EventResourceModel(S3Model):
                           self.gis_location_id(#readable = False,
                                                #writable = False,
                                                ),
+                          #Field.Method("location", lambda row: self.sit_location(row, tablename)),
                           # @ToDo: Deprecate once we start using S3Track
                           s3_datetime(),
                           s3_comments(),
@@ -1023,6 +1024,25 @@ class S3EventResourceModel(S3Model):
             msg_record_modified=T("Resource updated"),
             msg_record_deleted=T("Resource deleted"),
             msg_list_empty=T("No Resources assigned to Incident"))
+
+        # Custom Methods
+        #self.set_method("event", "resource",
+        #                method = "location",
+        #                action = S3UpdateLocation())
+
+        # List Fields
+        #list_fields = ["id",
+        #               "incident_id",
+        #               "parameter_id",
+        #               "status",
+        #               "name",
+        #               "value",
+        #               "organisation_id",
+        #               "person_id",
+        #               "location_id",
+        #               #(T("Location"), "location"),
+        #               "comments",
+        #               ]
 
         # Filter Widgets
         filter_widgets = [S3TextFilter(["organisation_id$name",
@@ -1063,6 +1083,7 @@ class S3EventResourceModel(S3Model):
                                   "organisation": "organisation_id",
                                   },
                        filter_widgets = filter_widgets,
+                       #list_fields = list_fields,
                        list_layout = event_resource_list_layout,
                        report_options = report_options,
                        super_entity = ("stats_data", "sit_trackable"),

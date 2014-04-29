@@ -2,7 +2,7 @@
 
 """ Sahana Eden GIS Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -338,8 +338,8 @@ class S3LocationModel(S3Model):
 
         # Custom Method for S3LocationAutocompleteWidget
         self.set_method("gis", "location",
-                        method="search_ac",
-                        action=self.gis_search_ac)
+                        method = "search_ac",
+                        action = self.gis_search_ac)
 
         # Components
         add_components(tablename,
@@ -4333,8 +4333,8 @@ class S3GISThemeModel(S3Model):
 
         # Custom Method to generate a style
         self.set_method("gis", "layer_theme",
-                        method="style",
-                        action=self.gis_theme_style)
+                        method = "style",
+                        action = self.gis_theme_style)
 
         # =====================================================================
         # GIS Theme Data

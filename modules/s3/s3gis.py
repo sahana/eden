@@ -8656,6 +8656,7 @@ class S3ImportPOI(S3Method):
 
             title = T("Import from OpenStreetMap")
 
+            # @ToDo: use settings.get_ui_formstyle()
             res_select = [TR(TD(B("%s: " % T("Select resources to import")),
                                 _colspan=3))]
             for resource in current.deployment_settings.get_gis_poi_resources():
@@ -8675,7 +8676,7 @@ class S3ImportPOI(S3Method):
                         TR(TD(B("%s: " % T("File"))),
                            TD(INPUT(_type="file", _name="file", _size="50")),
                            TD(SPAN("*", _class="req",
-                                   _style="padding-right: 5px;"))
+                                   _style="padding-right:5px"))
                            ),
                         TR(TD(),
                            TD(T("or")),
@@ -8724,7 +8725,7 @@ class S3ImportPOI(S3Method):
                 row = TR(TD(B("%s: " % T("Location"))),
                          TD(widget),
                          TD(SPAN("*", _class="req",
-                                 _style="padding-right: 5px;"))
+                                 _style="padding-right:5px"))
                          )
                 form[0].insert(3, row)
 
@@ -8747,9 +8748,9 @@ class S3ImportPOI(S3Method):
                     else:
                         gtable = s3db.gis_location
                         record = current.db(gtable.id == form_vars.location_id).select(gtable.name,
-                                                                                  gtable.wkt,
-                                                                                  limitby=(0, 1)
-                                                                                  ).first()
+                                                                                       gtable.wkt,
+                                                                                       limitby=(0, 1)
+                                                                                       ).first()
                         if record.wkt is None:
                             form.errors["location_id"] = T("Location needs to have WKT!")
                             return output

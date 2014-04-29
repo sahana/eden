@@ -206,15 +206,15 @@ def location():
     set_method = s3db.set_method
     from s3.s3gis import S3ExportPOI
     set_method("gis", "location",
-               method="export_poi",
-               action=S3ExportPOI())
+               method = "export_poi",
+               action = S3ExportPOI())
     from s3.s3gis import S3ImportPOI
     set_method("gis", "location",
-               method="import_poi",
-               action=S3ImportPOI())
+               method = "import_poi",
+               action = S3ImportPOI())
     set_method("gis", "location",
-               method="parents",
-               action=s3_gis_location_parents)
+               method = "parents",
+               action = s3_gis_location_parents)
 
     location_hierarchy = gis.get_location_hierarchy()
     from s3.s3filter import S3TextFilter, S3OptionsFilter#, S3LocationFilter

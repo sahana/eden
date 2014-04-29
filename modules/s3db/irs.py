@@ -2,7 +2,7 @@
 
 """ Sahana Eden Incident Reporting Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -480,19 +480,18 @@ class S3IRSModel(S3Model):
                                      label = T("Incident"),
                                      ondelete = "CASCADE")
 
-        # ---------------------------------------------------------------------
         # Custom Methods
         set_method("irs", "ireport",
-                   method="dispatch",
+                   method = "dispatch",
                    action=self.irs_dispatch)
 
         set_method("irs", "ireport",
-                   method="timeline",
-                   action=self.irs_timeline)
+                   method = "timeline",
+                   action = self.irs_timeline)
 
         set_method("irs", "ireport",
-                   method="ushahidi",
-                   action=self.irs_ushahidi_import)
+                   method = "ushahidi",
+                   action = self.irs_ushahidi_import)
 
         if settings.has_module("fire"):
             create_next = URL(args=["[id]", "human_resource"])

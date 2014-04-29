@@ -1174,7 +1174,9 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             inputName = inputErrorId.replace('__error', '');
             inputId = $('[name=' + inputName + ']').attr('id');
             inputLabel = $('[for=' + inputId + ']');
-            window.scrollTo(0, inputLabel.offset().top);
+            try {
+                window.scrollTo(0, inputLabel.offset().top);
+            } catch(e) {}
         }
 
         // T2 Layer
