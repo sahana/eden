@@ -999,10 +999,12 @@ class S3EventResourceModel(S3Model):
                                 ),
                           self.org_organisation_id(),
                           self.pr_person_id(label = T("Contact")),
+                          # @ToDo: Make use of S3Track:
                           # Base Location: Enable field only in Create form
                           self.gis_location_id(#readable = False,
                                                #writable = False,
                                                ),
+                          # @ToDo: Deprecate once we start using S3Track
                           s3_datetime(),
                           s3_comments(),
                           *s3_meta_fields())
@@ -1600,8 +1602,10 @@ class S3EventTaskModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
 # =============================================================================
-def event_incident_list_layout(list_id, item_id, resource, rfields, record, icon = "incident"):
+def event_incident_list_layout(list_id, item_id, resource, rfields, record,
+                               icon="incident"):
     """
         Default dataList item renderer for Projects on Profile pages
 

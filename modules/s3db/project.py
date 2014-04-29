@@ -6475,7 +6475,8 @@ def project_project_filters(org_label):
     return filter_widgets
     
 # =============================================================================
-def project_project_list_layout(list_id, item_id, resource, rfields, record, icon = "tasks"):
+def project_project_list_layout(list_id, item_id, resource, rfields, record,
+                                icon="tasks"):
     """
         Default dataList item renderer for Projects on Profile pages
 
@@ -6552,7 +6553,8 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record, ico
     # Render the item
     item = DIV(DIV(I(_class="icon icon-%s" % icon),
                    SPAN(A(name,
-                          _href =  URL(c="project", f="project", args = [record_id, "profile"])),
+                          _href =  URL(c="project", f="project",
+                                       args=[record_id, "profile"])),
                         _class="card-title"),
                    SPAN(location, _class="location-title"),
                    SPAN(start_date, _class="date-title"),
@@ -6583,7 +6585,8 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record, ico
     return item
 
 # =============================================================================
-def project_task_list_layout(list_id, item_id, resource, rfields, record, icon = "tasks"):
+def project_task_list_layout(list_id, item_id, resource, rfields, record,
+                             icon="tasks"):
     """
         Default dataList item renderer for Tasks on Profile pages
 
@@ -6602,21 +6605,20 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record, icon =
     date = record["project_task.modified_on"]
 
     name = record["project_task.name"]
+    assigned_to = record["project_task.pe_id"] or ""
     description = record["project_task.description"]
     date_due = record["project_task.date_due"]
 
-    project = record["project_task_project.project_id"]
     project_id = raw["project_task_project.project_id"]
-
-    assigned_to = record["project_task.pe_id"] or ""
-
-    if project and project != "-":
+    if project_id:
+        project = record["project_task_project.project_id"]
         project = SPAN(A(project,
-                            _href = URL(c="project", f="project", args = [project_id, "profile"])
-                            ),
-                          " > ",
-                          _class="task_project_title"
-                          )
+                         _href = URL(c="project", f="project",
+                                     args=[project_id, "profile"])
+                         ),
+                       " > ",
+                       _class="task_project_title"
+                       )
     else:
         project = ""
 

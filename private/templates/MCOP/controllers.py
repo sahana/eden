@@ -76,13 +76,13 @@ for(var i=0,len=layers.length;i<len;i++){
         output["cms_post_datalist"] = datalist.html()
 
         # Incidents Data List
-        resource = s3db.resource("event_incident") # Temp: Uses relabelled project_project
+        resource = s3db.resource("event_incident")
         list_fields = ["name",
                        "location_id",
                        "zero_hour",
                        "modified_by",
                        "organisation_id",
-                       "comments"
+                       "comments",
                        ]
         datalist, numrows, ids = resource.datalist(list_id = "event_incident_datalist",
                                                    fields = list_fields,
@@ -147,6 +147,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl);
                                            resource = item["f"])
 
         return output
+
 # =============================================================================
 class about(S3CustomController):
     """ Custom Home Page """
@@ -155,4 +156,5 @@ class about(S3CustomController):
         output = {}
         self._view(THEME, "about.html")
         return output
+
 # END =========================================================================
