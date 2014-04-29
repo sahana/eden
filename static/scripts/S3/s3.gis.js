@@ -1235,7 +1235,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             _style['low'] = low;
             _style['high'] = high;
             if (low == high) {
-                _style['label'] = low;
+                _style['label'] = low.toString();
             } else {
                 _style['label'] = low + ' - ' + high;
             }

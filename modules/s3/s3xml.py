@@ -63,6 +63,9 @@ from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper, s3_validat
 
 ogetattr = object.__getattribute__
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3XML(S3Codec):
     """
@@ -783,7 +786,6 @@ class S3XML(S3Codec):
             @param element: the XML element
             @param location_data: dictionary of location data from gis.get_location_data()
 
-            @ToDo: Move the GIS-specific attributes to a separate nested <gis/> element
             @ToDo: Support multiple locations per master resource (e.g. event_event.location)
         """
 
@@ -830,15 +832,18 @@ class S3XML(S3Codec):
                     geometry.set("value", geojson)
                     if tablename in attributes:
                         # Add Attributes
-                        _attr = ""
+                        #_attr = ""
                         attrs = attributes[tablename][record_id]
-                        for a in attrs:
-                            if _attr:
-                                _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
-                            else:
-                                _attr = "[%s]=[%s]" % (a, attrs[a])
-                        if _attr:
-                            attr[ATTRIBUTE.attributes] = _attr
+                        #for a in attrs:
+                        #    if _attr:
+                        #        _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
+                        #    else:
+                        #        _attr = "[%s]=[%s]" % (a, attrs[a])
+                        #if _attr:
+                        #    attr[ATTRIBUTE.attributes] = _attr
+                        if attrs:
+                            _attr = json.dumps(attrs, separators=SEPARATORS)
+                            attr[ATTRIBUTE.attributes] = _attr.replace('"', "|")
             elif tablename in wkts:
                 # Nothing gets here currently
                 # tbc: KML Polygons (or we should also do these outside XSLT)
@@ -994,15 +999,18 @@ class S3XML(S3Codec):
 
             if tablename in attributes:
                 # Add Attributes
-                _attr = ""
+                #_attr = ""
                 attrs = attributes[tablename][record_id]
-                for a in attrs:
-                    if _attr:
-                        _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
-                    else:
-                        _attr = "[%s]=[%s]" % (a, attrs[a])
-                if _attr:
-                    attr[ATTRIBUTE.attributes] = _attr
+                #for a in attrs:
+                #    if _attr:
+                #        _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
+                #    else:
+                #        _attr = "[%s]=[%s]" % (a, attrs[a])
+                #if _attr:
+                #    attr[ATTRIBUTE.attributes] = _attr
+                if attrs:
+                    _attr = json.dumps(attrs, separators=SEPARATORS)
+                    attr[ATTRIBUTE.attributes] = _attr.replace('"', "|")
 
             if tablename in markers:
                 _markers = markers[tablename]
@@ -2063,6 +2071,7 @@ class S3XML(S3Codec):
             attributes = element.attrib
             skip_text = False
             tag = element.tag
+            numeric = False
             for a in attributes:
                 v = attributes[a]
                 if native:
@@ -2086,10 +2095,26 @@ class S3XML(S3Codec):
                         else:
                             skip_text = True
                         continue
+                    elif a == ATTRIBUTE.type and v == "numeric":
+                        numeric = True
+                        continue
                 obj[PREFIX.attribute + a] = v
 
             if element.text and not skip_text:
-                obj[PREFIX.text] = cls.xml_decode(element.text)
+                represent = cls.xml_decode(element.text)
+                if numeric:
+                    # Value should be a number not string
+                    try:
+                        float_represent = float(represent.replace(",", ""))
+                        int_represent = int(float_represent)
+                        if int_represent == float_represent:
+                            represent = int_represent
+                        else:
+                            represent = float_represent
+                    except:
+                        # @ToDo: Don't assume this i18n formatting...
+                        pass
+                obj[PREFIX.text] = represent
 
             if len(obj) == 1 and obj.keys()[0] in \
                (PREFIX.text, TAG.item, TAG.list):
@@ -2123,7 +2148,7 @@ class S3XML(S3Codec):
             js = json.dumps(root_dict, indent=4)
             return "\n".join([l.rstrip() for l in js.splitlines()])
         else:
-            return json.dumps(root_dict)
+            return json.dumps(root_dict, separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
     @staticmethod

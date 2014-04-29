@@ -2285,7 +2285,8 @@ class GIS(object):
                                 _attr = attr_cols[fieldname]
                                 ftype = _attr[0]
                                 if ftype == "integer":
-                                    # Attributes should be numbers not Strings
+                                    # Attributes should be numbers not strings
+                                    # NB This also relies on decoding within geojson/export.xsl and S3XML.__element2json()
                                     try:
                                         represent = int(represent.replace(",", ""))
                                     except:
@@ -2293,7 +2294,7 @@ class GIS(object):
                                         #        (although we *do* want the represent in the tooltips!)
                                         pass
                                 elif ftype == "double":
-                                    # Attributes should be numbers not Strings
+                                    # Attributes should be numbers not strings
                                     try:
                                         float_represent = float(represent.replace(",", ""))
                                         int_represent = int(float_represent)
