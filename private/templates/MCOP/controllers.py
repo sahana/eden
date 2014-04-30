@@ -150,6 +150,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl);
                                            resource = item["f"])
 
         return output
+
 # =============================================================================
 class about(S3CustomController):
     """ Custom Home Page """
@@ -158,4 +159,5 @@ class about(S3CustomController):
         output = {}
         self._view(THEME, "about.html")
         return output
+
 # END =========================================================================

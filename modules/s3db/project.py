@@ -3938,20 +3938,21 @@ class S3ProjectTaskModel(S3Model):
                                 labels="%(name)s: %(date)s",
                                 )
         milestone_id = S3ReusableField("milestone_id", "reference %s" % tablename,
-                                       sortby="name",
+                                       label = T("Milestone"),
+                                       ondelete = "RESTRICT",
+                                       represent = represent,
                                        requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "project_milestone.id",
                                                               represent)),
-                                       represent = represent,
+                                       sortby = "name",
                                        comment = S3AddResourceLink(c="project",
                                                                    f="milestone",
                                                                    title=ADD_MILESTONE,
                                                                    tooltip=T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")),
-                                       label = T("Milestone"),
-                                       ondelete = "RESTRICT")
+                                       )
 
         configure(tablename,
-                  orderby="project_milestone.date",
+                  orderby = "project_milestone.date",
                   )
 
         # ---------------------------------------------------------------------
@@ -3963,10 +3964,11 @@ class S3ProjectTaskModel(S3Model):
         # @ToDo: Task templates
         # @ToDo: Recurring tasks
         #
-        
-        project_task_status_opts = settings.get_project_task_status_opts()
-        project_task_active_statuses = settings.get_project_task_active_statuses()
+
         project_task_priority_opts = settings.get_project_task_priority_opts()
+        project_task_status_opts = settings.get_project_task_status_opts()
+        # Which options for the Status for a Task count as the task being 'Active'
+        project_task_active_statuses = [2, 3, 4, 11]
 
         #staff = auth.s3_has_role("STAFF")
         staff = auth.is_logged_in()
@@ -6503,25 +6505,28 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     else:
         project = ""
 
-    if priority == 2: 
-        priority_icon = DIV(I(" ", _class = "icon-exclamation"),
-                            _class = "task_priority") 
+    if priority in (1, 2): 
+        # Urgent / High
+        priority_icon = DIV(I(" ", _class="icon-exclamation"),
+                            _class="task_priority") 
     elif priority == 4:
-        priority_icon = DIV(I(" ", _class = "icon-arrow-down"),
-                            _class = "task_priority") 
+        # Low
+        priority_icon = DIV(I(" ", _class ="icon-arrow-down"),
+                            _class="task_priority") 
     else:
         priority_icon = ""
-    status_icon_colour = {3:"#AFC1E5",
-                          6:"#C8D571",
-                          7:"#CEC1FF",
-                          12:"#C6C6C6",
+    # @ToDo: Support more than just the Wrike/MCOP statuses
+    status_icon_colour = {2:  "#AFC1E5",
+                          6:  "#C8D571",
+                          7:  "#CEC1FF",
+                          12: "#C6C6C6",
                           }
     active_status = current.deployment_settings.get_project_task_active_statuses()
     priority_icon
-    status_icon  = DIV(I(" ", _class = "icon-check%s" %
+    status_icon  = DIV(I(" ", _class="icon-check%s" %
                          ("-empty" if status in active_status else "" )),
-                       _class = "task_status",
-                       _style = "background-color:%s" % (status_icon_colour.get(status,"none"))
+                       _class="task_status",
+                       _style="background-color:%s" % (status_icon_colour.get(status, "none"))
                        ) 
 
     location = record["project_task.location_id"]

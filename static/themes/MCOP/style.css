@@ -167,8 +167,6 @@ div:hover a {
     display: none;
 }
 
-
-
 /***********************************************/
 
 /* Needs fixing - test profile page
@@ -221,6 +219,7 @@ h2, #list-btn-add {
     margin-bottom: 5px;
 }
 
+/* @ToDo: Move to default/tasks.css ? */
 .task_priority,
 .task_name,
 .task_status {

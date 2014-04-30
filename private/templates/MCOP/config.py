@@ -106,7 +106,6 @@ settings.base.paper_size = T("Letter")
 # Uncomment this to Translate Location Names
 #settings.L10n.translate_gis_location = True
 
-
 # -----------------------------------------------------------------------------
 # GIS settings
 # Restrict the Location Selector to just certain countries
@@ -128,17 +127,21 @@ settings.gis.legend = "float"
 
 # -----------------------------------------------------------------------------
 # Module settings
-settings.project.task_status_opts = {
-            3: T("Active"),
-            6: T("Deferred"),
-            7: T("Cancelled"),
-            12: T("Completed"),
-        }
-settings.project.task_priority_opts = {
-            2:T("High"),
-            3:T("Normal"),
-            4:T("Low")
-        }
+# Uncomment to customise the list of options for the Priority of a Task.
+# NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
+# MCOP sets these to match Wrike
+settings.project.task_priority_opts = {2: T("High"),
+                                       3: T("Normal"),
+                                       4: T("Low")
+                                       }
+# Uncomment to customise the list of options for the Status of a Task.
+# NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
+# MCOP sets these to match Wrike
+settings.project.task_status_opts = {2: T("Active"),
+                                     6: T("Deferred"),
+                                     7: T("Cancelled"),
+                                    12: T("Completed"),
+                                    }
 # -----------------------------------------------------------------------------
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True

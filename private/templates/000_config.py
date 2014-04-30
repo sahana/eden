@@ -212,6 +212,9 @@ if os.path.exists(path):
 #        restricted = False,
 #        module_type = 10,
 #    )
+# Disable a module which is nromally used by the template
+# - NB Only templates with adaptive menus will work nicely with this!
+#del settings.modules["irs"]
 
 # After 1st_run, set this for Production to save 1x DAL hit/request
 #settings.base.prepopulate = 0

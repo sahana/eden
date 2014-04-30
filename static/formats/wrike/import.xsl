@@ -157,7 +157,7 @@
         <data field="status">
             <xsl:attribute name="value">
                 <xsl:choose>
-                    <xsl:when test="text()='Active'">3</xsl:when>
+                    <xsl:when test="text()='Active'">2</xsl:when>
                     <xsl:when test="text()='Deferred'">6</xsl:when>
                     <xsl:when test="text()='Cancelled'">7</xsl:when>
                     <xsl:when test="text()='Completed'">12</xsl:when>

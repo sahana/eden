@@ -124,6 +124,9 @@
   /* Used for Sites */
   content: "\f015";
 }
+.icon-link:before {
+  content: "\f0c1";
+}
 .icon-list:before {
   content: "\f03a";
 }

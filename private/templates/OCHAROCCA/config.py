@@ -595,34 +595,33 @@ def customise_org_facility_resource(r, tablename):
                      ]
 
     report_options = Storage(
-        rows=report_fields,
-        cols=[],
-        fact=[(T("Number of Facilities"), "count(name)")],
-        defaults=Storage(rows="site_facility_type.facility_type_id",
-                         #cols="site_org_group.group_id",
-                         fact="count(name)",
-                         totals=True,
-                         chart = "barchart:rows",
-                         table = "collapse",
-                         )
+        rows = report_fields,
+        cols = [],
+        fact = [(T("Number of Facilities"), "count(name)")],
+        defaults = Storage(rows = "site_facility_type.facility_type_id",
+                           #cols = "site_org_group.group_id",
+                           fact = "count(name)",
+                           totals = True,
+                           chart = "barchart:rows",
+                           table = "collapse",
+                           )
         )
 
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentMultiSelectWidget
     # Custom Crud Form
-    crud_form = S3SQLCustomForm(
-        "name",
-        S3SQLInlineComponentMultiSelectWidget(
-            "facility_type",
-            #label = T("Type of Place"),
-            field = "facility_type_id",
-        ),
-        #"organisation_id",
-        "location_id",
-        "contact",
-        "phone1",
-        "email",
-        "comments",
-    )
+    crud_form = S3SQLCustomForm("name",
+                                S3SQLInlineComponentMultiSelectWidget(
+                                    "facility_type",
+                                    #label = T("Type of Place"),
+                                    field = "facility_type_id",
+                                ),
+                                #"organisation_id",
+                                "location_id",
+                                "contact",
+                                "phone1",
+                                "email",
+                                "comments",
+                                )
 
     s3db.configure(tablename,
                    crud_form = crud_form,
