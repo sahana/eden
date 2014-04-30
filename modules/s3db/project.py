@@ -3876,6 +3876,7 @@ class S3ProjectTaskModel(S3Model):
              "project_task_activity",
              "project_task_milestone",
              "project_task_represent_w_project",
+             "project_task_active_statuses",
              ]
 
     def model(self):
@@ -6517,10 +6518,9 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                           7:  "#CEC1FF",
                           12: "#C6C6C6",
                           }
-    active_status = current.deployment_settings.get_project_task_active_statuses()
-    priority_icon
+    active_statuses = current.s3db.project_task_active_statuses
     status_icon  = DIV(I(" ", _class="icon-check%s" %
-                         ("-empty" if status in active_status else "" )),
+                         ("-empty" if status in active_statuses else "" )),
                        _class="task_status",
                        _style="background-color:%s" % (status_icon_colour.get(status, "none"))
                        ) 

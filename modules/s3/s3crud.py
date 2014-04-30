@@ -1483,7 +1483,8 @@ class S3CRUD(S3Method):
         list_fields = resource.list_fields()
 
         # Default orderby
-        orderby = get_config("list_orderby", None)
+        orderby = get_config("list_orderby",
+                             get_config("orderby", None))
         if orderby is None:
             if "created_on" in resource.fields:
                 default_orderby = ~(resource.table["created_on"])

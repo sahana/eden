@@ -1,13 +1,5 @@
-Series,Body,Country,L1,L2,L3,Incident
-Alert,"Bomb Scare in Port of Seattle",US,Washington,King,Seattle,
-Alert,"Heavy Rains Due",US,Washington,King,Seattle,
-Alert,"The Kraken Awakes",US,Washington,King,Seattle,
-Incident,"Collision between tanker and whale",US,Washington,King,Seattle,"Collision between tanker and whale"
-Incident,"Container stack collapsed",US,Washington,King,Seattle,"Container stack collapsed"
-Incident,"Train derailment",US,Washington,King,Seattle,"Train derailment"
-Plan,"District Plan",US,Washington,King,Seattle,
-Plan,"Fire Near Port of Tacoma",US,Washington,Pierce,Tacoma,
-Plan,"5 Year Strategic Plan Issues",US,Washington,King,Seattle,
-Report,"2013 Crime Statistics released",US,Washington,King,Seattle,
-Report,"Oil Spill management best practice",US,Washington,King,Seattle,
-Report,"Environmental Assessment Report",US,Washington,Pierce,Tacoma,
+Series,Body,Country,L1,L2,L3,Date,Incident
+,Bomb Scare in Port of Seattle,US,Washington,King,Seattle,1/1/14,New Year's Party - Drunks in Water
+,Heavy Rains Due,US,Washington,King,Seattle,4/2/14,Train derailment
+,Easter Weekend approaches,US,Washington,King,Seattle,4/3/14,Train derailment
+,The Kraken Awakes,US,Washington,King,Seattle,4/3/14,Collision between tanker and whale

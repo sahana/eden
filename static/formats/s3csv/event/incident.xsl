@@ -8,7 +8,9 @@
          CSV fields:
          Name.................................event_incident.name
          Type.................................event_incident.incident_type_id
+         Exercise.............................event_incident.exercise
          Zero Hour............................event_incident.zero_hour
+         Closed...............................event_incident.closed
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode
          Country.................optional.....gis_location.L0 Name or ISO2
@@ -65,12 +67,84 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <xsl:variable name="Exercise">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Exercise']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="Closed">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="col[@field='Closed']"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
 
         <!-- Incident -->
         <resource name="event_incident">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="datetime"><xsl:value-of select="col[@field='Date']"/></data>
-            
+            <data field="zero_hour"><xsl:value-of select="col[@field='Zero Hour']"/></data>
+            <xsl:choose>
+                <xsl:when test="$Exercise=''">
+                    <!-- Use System Default -->
+                </xsl:when>
+                <xsl:when test="$Exercise='Y'">
+                    <data field="exercise" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Exercise='YES'">
+                    <data field="exercise" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Exercise='T'">
+                    <data field="exercise" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Exercise='TRUE'">
+                    <data field="exercise" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Exercise='N'">
+                    <data field="exercise" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Exercise='NO'">
+                    <data field="exercise" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Exercise='F'">
+                    <data field="exercise" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Exercise='FALSE'">
+                    <data field="exercise" value="false">False</data>
+                </xsl:when>
+            </xsl:choose>
+            <xsl:choose>
+                <xsl:when test="$Closed=''">
+                    <!-- Use System Default -->
+                </xsl:when>
+                <xsl:when test="$Closed='Y'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='YES'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='T'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='TRUE'">
+                    <data field="closed" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="$Closed='N'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Closed='NO'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Closed='F'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+                <xsl:when test="$Closed='FALSE'">
+                    <data field="closed" value="false">False</data>
+                </xsl:when>
+            </xsl:choose>
+
             <xsl:if test="col[@field='Type']!=''">
                 <reference field="incident_type_id" resource="event_incident_type">
                     <xsl:attribute name="tuid">
@@ -96,7 +170,9 @@
                 </xsl:attribute>
             </reference>
 
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
 
         </resource>
         
