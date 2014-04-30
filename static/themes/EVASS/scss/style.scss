@@ -1,0 +1,41 @@
+@charset "UTF-8";
+//
+// Root template
+//
+// To start a new theme, copy this file into the theme's
+// scss directory, and rename it into style.scss.
+//
+// You can copy any of the other templates into the theme's scss
+// directory in order to customize it, and you can add additional
+// templates as needed.
+//
+// Compile it with e.g.:
+//   scss --load-path ../../foundation/scss --style expanded --update style.scss:../style.css --force
+//
+// => this will produce the style.css file in the theme directory
+//
+// For instant compilation use "watch":
+//   scss --load-path ../.. --style expanded --watch ../../foundation/scss --watch style.scss:../style.css
+//
+// @todo: integrate with foundation SCSS to re-use its mixins rather
+//        than copying them across (currently not possible because
+//        widget.css overrides :/ need to cleanup widget.css first)
+//
+// Leave the comment below intact (it gets copied into the CSS)
+// to indicate that the CSS is not the right place to edit things:
+
+/* Auto-generated file, please modify the SCSS sources instead */
+
+@import 'colors';
+@import 'branding';
+@import 'globals';
+@import 'page';
+@import 'forms';
+@import 'rheader';
+@import 'buttons';
+@import 'footer';
+@import 'menus';
+@import 'tables';
+@import 'charts';
+@import 'widgets';
+@import 'misc';
