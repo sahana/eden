@@ -1756,12 +1756,12 @@ class S3ProjectBeneficiaryModel(S3Model):
                             #hidden = True,
                             ),
             # Can't co-exist with any other filter yet
-            #S3OptionsFilter("year",
-            #                operator = "anyof",
-            #                options = lambda: \
-            #                    self.stats_year_options("project_beneficiary"),
-            #                hidden = True,
-            #                ),
+            S3OptionsFilter("year",
+                            operator = "anyof",
+                            options = lambda: \
+                                      self.stats_year_options("project_beneficiary"),
+                            hidden = True,
+                            ),
             S3LocationFilter("location_id",
                              levels = levels,
                              #hidden = True,
@@ -1778,7 +1778,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                          "project_id",
                          #"project_location_id",
                          # Can't work as a Report Axis yet
-                         #"year",
+                         "year",
                          ]
 
         if settings.get_project_sectors():
