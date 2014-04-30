@@ -683,6 +683,12 @@ settings.L10n.decimal_separator = "."
 #    5: T("Super"), # T("Beneficiary")?
 #}
 #settings.project.organisation_lead_role = 1
+# Uncomment to customise the list of options for the Priority of a Task.
+# NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
+#settings.project.task_priority_opts = 
+# Uncomment to customise the list of options for the Status of a Task.
+# NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
+#settings.project.task_status_opts = 
 
 # -----------------------------------------------------------------------------
 # Incidents

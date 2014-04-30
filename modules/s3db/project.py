@@ -1675,14 +1675,14 @@ class S3ProjectBeneficiaryModel(S3Model):
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
-                                label = T("Beneficiary Type"),
+                                empty = False,
                                 instance_types = ("project_beneficiary_type",),
+                                label = T("Beneficiary Type"),
                                 represent = S3Represent(lookup="stats_parameter",
                                                         translate=True,
                                                         ),
                                 readable = True,
                                 writable = True,
-                                empty = False,
                                 comment = S3AddResourceLink(c="project",
                                                             f="beneficiary_type",
                                                             vars = dict(child = "parameter_id"),
@@ -1755,7 +1755,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                             label = T("Beneficiary Type"),
                             #hidden = True,
                             ),
-            # Can't co-exist with any other filter yet
             S3OptionsFilter("year",
                             operator = "anyof",
                             options = lambda: \
@@ -1777,7 +1776,6 @@ class S3ProjectBeneficiaryModel(S3Model):
         report_fields = [(T("Beneficiary Type"), "parameter_id"),
                          "project_id",
                          #"project_location_id",
-                         # Can't work as a Report Axis yet
                          "year",
                          ]
 
@@ -3938,20 +3936,21 @@ class S3ProjectTaskModel(S3Model):
                                 labels="%(name)s: %(date)s",
                                 )
         milestone_id = S3ReusableField("milestone_id", "reference %s" % tablename,
-                                       sortby="name",
+                                       label = T("Milestone"),
+                                       ondelete = "RESTRICT",
+                                       represent = represent,
                                        requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "project_milestone.id",
                                                               represent)),
-                                       represent = represent,
+                                       sortby = "name",
                                        comment = S3AddResourceLink(c="project",
                                                                    f="milestone",
                                                                    title=ADD_MILESTONE,
                                                                    tooltip=T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")),
-                                       label = T("Milestone"),
-                                       ondelete = "RESTRICT")
+                                       )
 
         configure(tablename,
-                  orderby="project_milestone.date",
+                  orderby = "project_milestone.date",
                   )
 
         # ---------------------------------------------------------------------
@@ -3963,30 +3962,11 @@ class S3ProjectTaskModel(S3Model):
         # @ToDo: Task templates
         # @ToDo: Recurring tasks
         #
-        # These Statuses can be customised, although doing so limits the ability to do synchronization
-        # - best bet is simply to comment statuses that you don't wish to use
-        #
-        project_task_status_opts = {1  : T("Draft"),
-                                    2  : T("New"),
-                                    3  : T("Assigned"),
-                                    4  : T("Feedback"),
-                                    5  : T("Blocked"),
-                                    6  : T("On Hold"),
-                                    7  : T("Canceled"),
-                                    8  : T("Duplicate"),
-                                    9  : T("Ready"),
-                                    10 : T("Verified"),
-                                    11 : T("Reopened"),
-                                    12 : T("Completed"),
-                                    }
 
+        project_task_priority_opts = settings.get_project_task_priority_opts()
+        project_task_status_opts = settings.get_project_task_status_opts()
+        # Which options for the Status for a Task count as the task being 'Active'
         project_task_active_statuses = [2, 3, 4, 11]
-
-        project_task_priority_opts = {1 : T("Urgent"),
-                                      2 : T("High"),
-                                      3 : T("Normal"),
-                                      4 : T("Low")
-                                      }
 
         #staff = auth.s3_has_role("STAFF")
         staff = auth.is_logged_in()
@@ -6506,6 +6486,9 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     assigned_to = record["project_task.pe_id"] or ""
     description = record["project_task.description"]
     date_due = record["project_task.date_due"]
+    source_url = raw["project_task.source_url"]
+    status = raw["project_task.status"]
+    priority = raw["project_task.priority"]
 
     project_id = raw["project_task_project.project_id"]
     if project_id:
@@ -6519,6 +6502,30 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                        )
     else:
         project = ""
+
+    if priority in (1, 2): 
+        # Urgent / High
+        priority_icon = DIV(I(" ", _class="icon-exclamation"),
+                            _class="task_priority") 
+    elif priority == 4:
+        # Low
+        priority_icon = DIV(I(" ", _class ="icon-arrow-down"),
+                            _class="task_priority") 
+    else:
+        priority_icon = ""
+    # @ToDo: Support more than just the Wrike/MCOP statuses
+    status_icon_colour = {2:  "#AFC1E5",
+                          6:  "#C8D571",
+                          7:  "#CEC1FF",
+                          12: "#C6C6C6",
+                          }
+    active_status = current.deployment_settings.get_project_task_active_statuses()
+    priority_icon
+    status_icon  = DIV(I(" ", _class="icon-check%s" %
+                         ("-empty" if status in active_status else "" )),
+                       _class="task_status",
+                       _style="background-color:%s" % (status_icon_colour.get(status, "none"))
+                       ) 
 
     location = record["project_task.location_id"]
     location_id = raw["project_task.location_id"]
@@ -6566,8 +6573,18 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                        )
     else:
         delete_btn = ""
+        
+    if source_url:
+        source_btn =  A(I(" ", _class="icon icon-link"),
+                       _title=source_url,
+                       _href=source_url
+                       )
+    else:
+        source_btn = ""
+
     edit_bar = DIV(edit_btn,
                    delete_btn,
+                   source_btn,
                    _class="edit-bar fright",
                    )
 
@@ -6579,8 +6596,10 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                    _class="card-header",
                    ),
                DIV(org_logo,
+                   priority_icon,
                    DIV(project,
-                        name, _class="card-title"),
+                        name, _class="card-title task_priority"),
+                   status_icon,
                    DIV(DIV((description or ""),
                            DIV(author,
                                " - ",
