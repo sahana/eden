@@ -250,6 +250,11 @@ def s3_represent_value(field,
             text = val = record[field.name]
     else:
         text = val = value
+        
+    ftype = str(field.type)
+    if ftype[:5] == "list:" and not isinstance(val, list):
+        # Default list representation can't handle single values
+        val = [val]
 
     # Always XML-escape content markup if it is intended for xml output
     # This code is needed (for example) for a data table that includes a link
@@ -257,7 +262,6 @@ def s3_represent_value(field,
     # where the table displays a link to the warehouse
     if not non_xml_output:
         if not xml_escape and val is not None:
-            ftype = str(field.type)
             if ftype in ("string", "text"):
                 val = text = xml_encode(s3_unicode(val))
             elif ftype == "list:string":

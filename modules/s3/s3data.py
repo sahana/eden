@@ -1879,8 +1879,8 @@ class S3PivotTable(object):
                 if not is_numeric:
                     total = len(icol["records"])
                 header = Storage(value = icol.value,
-                                text = icol.text if "text" in icol
-                                                 else col_repr(icol.value))
+                                 text = icol.text if "text" in icol
+                                                  else col_repr(icol.value))
                 cols.append((i, total, header))
             if maxcols is not None:
                 ctail = self._tail(cols, maxcols, least=least, method=hmethod)
