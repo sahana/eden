@@ -120,9 +120,7 @@ class S3Summary(S3Method):
                 label = section["label"]
                 translate = section.get("translate", True)
                 if isinstance(label, basestring) and translate:
-                    self.label = current.T(label)
-                else:
-                    self.label = label
+                    label = current.T(label)
 
                 # Add tab
                 tablist.append(LI(A(label, _href="#%s" % section_id)))

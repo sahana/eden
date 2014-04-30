@@ -590,12 +590,12 @@ class S3IncidentModel(S3Model):
                                 label = T("Name"),
                                 ),
                           Field("exercise", "boolean",
+                                label = T("Exercise?"),
                                 represent = lambda opt: "√" if opt else None,
                                 #comment = DIV(_class="tooltip",
                                 #              _title="%s|%s" % (T("Exercise"),
                                                                  # Should!
                                 #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
-                                label=T("Exercise?"),
                                 ),
                           s3_datetime(name="zero_hour",
                                       default = "now",
@@ -610,7 +610,7 @@ class S3IncidentModel(S3Model):
                                 represent = s3_yes_no_represent,
                                 ),
                           # Enable this field in templates if-required
-                          self.org_organisation_id(label="Lead Organization", # Lead Responder
+                          self.org_organisation_id(label = T("Lead Organization"), # Lead Responder
                                                    readable = False,
                                                    writable = False,
                                                    ),
@@ -632,7 +632,9 @@ class S3IncidentModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         incident_id = S3ReusableField("incident_id", "reference %s" % tablename,
-                                      sortby="name",
+                                      label = T("Incident"),
+                                      ondelete = "RESTRICT",
+                                      represent = represent,
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "event_incident.id",
                                                               represent,
@@ -640,9 +642,7 @@ class S3IncidentModel(S3Model):
                                                               filter_opts=(False,),
                                                               orderby="event_incident.name",
                                                               sort=True)),
-                                      represent = represent,
-                                      label = T("Incident"),
-                                      ondelete = "RESTRICT",
+                                      sortby = "name",
                                       # Uncomment these to use an Autocomplete & not a Dropdown
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",
@@ -671,6 +671,8 @@ class S3IncidentModel(S3Model):
                                       "closed",
                                       "comments",
                                       ],
+                       # Most recent Incident first
+                       orderby = "event_incident.zero_hour desc",
                        )
 
         # Components
@@ -885,10 +887,12 @@ class S3IncidentReportModel(S3Model):
                           #self.event_incident_id(),
                           s3_datetime(),
                           Field("name", notnull=True,
-                                label=T("Name")),
+                                label = T("Name"),
+                                ),
                           self.event_incident_type_id(),
                           self.gis_location_id(),
-                          self.pr_person_id(label=T("Reported By")),
+                          self.pr_person_id(label = T("Reported By"),
+                                            ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -1085,6 +1089,7 @@ class S3EventResourceModel(S3Model):
                        filter_widgets = filter_widgets,
                        #list_fields = list_fields,
                        list_layout = event_resource_list_layout,
+                       orderby = "event_resource.date desc",
                        report_options = report_options,
                        super_entity = ("stats_data", "sit_trackable"),
                        )

@@ -19,6 +19,7 @@
          Name....................name
          Quantity................value (Optional: defaults to 1)
          Status..................status
+         Date....................date (@ToDo: Migrate this to using S3Track)
          Comments................comments
 
     *********************************************************************** -->
@@ -122,6 +123,9 @@
 
             <!-- Resource data -->
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <xsl:if test="col[@field='Date']!=''">
+                <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
+            </xsl:if> 
             <data field="status">
                 <xsl:choose>
                     <xsl:when test="$Status='Available'">

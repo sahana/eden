@@ -300,7 +300,8 @@ class S3Profile(S3CRUD):
                                  config("list_layout", None))
         orderby = widget.get("orderby",
                              config("list_orderby",
-                                    ~resource.table.created_on))
+                                    config("orderby",
+                                           ~resource.table.created_on)))
 
         filter = widget.get("filter", None)
         if filter:

@@ -40,19 +40,15 @@ for(var i=0,len=layers.length;i<len;i++){
                            )
         output["map"] = map
 
-        # Organisations Data List
-        #resource = s3db.resource("org_organisation")
-        
-        #datalist, numrows, ids = resource.datalist(list_id = "org_organisation_datalist",
-                                                   #fields=list_fields,
-                                                   #start=None,
-        #                                           limit=10,
-                                                   #orderby=orderby,
-        #                                           layout = s3db.org_organisation_list_layout
-        #                                           )
-        #output["org_organisation_datalist"] = datalist.html()
-
-        # News Feed Data List
+        # Alerts Data List
+        resource = s3db.resource("cms_post")
+        # Only show Alerts
+        #resource.add_filter(S3FieldSelector("series_id$name").belongs(["Alert"]))
+        #resource.add_filter(S3FieldSelector("post.series_id") != None)
+        # Only show Open Alerts
+        resource.add_filter(S3FieldSelector("expired") == False)
+        # Only show Alerts which are linked to Open Incidents
+        resource.add_filter(S3FieldSelector("incident.closed") == False)
         list_fields = ["series_id",
                        "location_id",
                        "date",
@@ -62,21 +58,21 @@ for(var i=0,len=layers.length;i<len;i++){
                        "document.file",
                        "event_post.event_id",
                        ]
-        resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name").belongs(["Alert"]))
-        #resource.add_filter(S3FieldSelector("post.series_id") != None)
-        datalist, numrows, ids = resource.datalist(list_id = "cms_post_datalist",
-                                                   fields=list_fields,
-                                                   #start=None,
-                                                   limit=5,
-                                                   #list_id=list_id,
-                                                   #orderby=orderby,
+        # Order with most recent Alert first
+        orderby = "cms_post.date desc"
+        datalist, numrows, ids = resource.datalist(fields = list_fields,
+                                                   #start = None,
+                                                   limit = 5,
+                                                   list_id = "cms_post_datalist",
+                                                   orderby = orderby,
                                                    layout = s3db.cms_post_list_layout
                                                    )
         output["cms_post_datalist"] = datalist.html()
 
         # Incidents Data List
         resource = s3db.resource("event_incident")
+        # Only show Open Incidents
+        resource.add_filter(S3FieldSelector("closed") == False)
         list_fields = ["name",
                        "location_id",
                        "zero_hour",
@@ -84,18 +80,24 @@ for(var i=0,len=layers.length;i<len;i++){
                        "organisation_id",
                        "comments",
                        ]
-        datalist, numrows, ids = resource.datalist(list_id = "event_incident_datalist",
-                                                   fields = list_fields,
-                                                   #start=None,
-                                                   limit=5,
-                                                   #list_id=list_id,
-                                                   #orderby=orderby,
+        # Order with most recent Incident first
+        orderby = "event_incident.zero_hour desc"
+        datalist, numrows, ids = resource.datalist(fields = list_fields,
+                                                   #start = None,
+                                                   limit = 5,
+                                                   list_id = "event_incident_datalist",
+                                                   orderby = orderby,
                                                    layout = s3db.event_incident_list_layout
                                                    )
         output["event_incident_datalist"] = datalist.html()
 
         # Tasks Data List
         resource = s3db.resource("project_task")
+        # Only show Active Tasks
+        active_statuses = s3db.project_task_active_statuses
+        resource.add_filter(S3FieldSelector("status").belongs(active_statuses))
+        # Only show Tasks which are linked to Open Incidents
+        resource.add_filter(S3FieldSelector("incident.incident_id$closed") == False)
         list_fields = ["name",
                        "description",
                        "comments",
@@ -109,17 +111,18 @@ for(var i=0,len=layers.length;i<len;i++){
                        "modified_by",
                        "source_url"
                         ]
-        datalist, numrows, ids = resource.datalist(list_id = "project_task_datalist",
-                                                   fields = list_fields,
-                                                   #start=None,
-                                                   limit=5,
-                                                   #list_id=list_id,
-                                                   orderby = "project_task.date_due asc",
+        # Order with most urgent Task first
+        orderby = "project_task.date_due asc"
+        datalist, numrows, ids = resource.datalist(fields = list_fields,
+                                                   #start = None,
+                                                   limit = 5,
+                                                   list_id = "project_task_datalist",
+                                                   orderby = orderby,
                                                    layout = s3db.project_task_list_layout
                                                    )
         output["project_task_datalist"] = datalist.html()
 
-        # MCOP News Feed
+        # MCOP RSS News Feed
         #s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
         s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
         s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")

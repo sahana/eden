@@ -3876,6 +3876,7 @@ class S3ProjectTaskModel(S3Model):
              "project_task_activity",
              "project_task_milestone",
              "project_task_represent_w_project",
+             "project_task_active_statuses",
              ]
 
     def model(self):
@@ -4260,7 +4261,7 @@ class S3ProjectTaskModel(S3Model):
                   )
 
         # Reusable field
-        represent = self.project_task_represent
+        represent = project_TaskRepresent()
         task_id = S3ReusableField("task_id", "reference %s" % tablename,
                                   label = T("Task"),
                                   sortby="name",
@@ -4274,6 +4275,9 @@ class S3ProjectTaskModel(S3Model):
                                                               tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
                                   ondelete = "CASCADE")
 
+        # Representation with project name, for time log form
+        project_task_represent_w_project = project_TaskRepresent(show_project=True)
+        
         # Custom Methods
         set_method("project", "task",
                    method = "dispatch",
@@ -4429,7 +4433,7 @@ class S3ProjectTaskModel(S3Model):
         define_table(tablename,
                      task_id(
                        requires = IS_ONE_OF(db, "project_task.id",
-                                            self.project_task_represent_w_project,
+                                            project_task_represent_w_project,
                                             ),
                      ),
                      self.pr_person_id(default=auth.s3_logged_in_person(),
@@ -4546,7 +4550,7 @@ class S3ProjectTaskModel(S3Model):
         return dict(
             project_task_id = task_id,
             project_task_active_statuses = project_task_active_statuses,
-            project_task_represent_w_project = self.project_task_represent_w_project,
+            project_task_represent_w_project = project_task_represent_w_project,
         )
 
     # -------------------------------------------------------------------------
@@ -4676,109 +4680,6 @@ class S3ProjectTaskModel(S3Model):
                 return current.messages.UNKNOWN_OPT
         else:
             return current.messages.UNKNOWN_OPT
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_task_represent(id, row=None, show_link=True,
-                               show_project=False):
-        """
-            FK representation
-
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            represent = row.name
-            if show_project:
-                db = current.db
-                ltable = db.project_task_project
-                ptable = db.project_project
-                query = (ltable.task_id == row.id) & \
-                        (ltable.project_id == ptable.id)
-                project = db(query).select(ptable.name,
-                                           limitby=(0, 1)).first()
-                if project:
-                    represent = "%s (%s)" % (represent, project.name)
-
-            if show_link:
-                return A(represent,
-                         _href=URL(c="project", f="task", extension="html",
-                                   args=[row.id]))
-            return represent
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.project_task
-        r = db(table.id == id).select(table.name,
-                                      limitby=(0, 1)).first()
-        try:
-            represent = r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-        else:
-            if show_project:
-                ltable = db.project_task_project
-                ptable = db.project_project
-                query = (ltable.task_id == id) & \
-                        (ltable.project_id == ptable.id)
-                project = db(query).select(ptable.name,
-                                           limitby=(0, 1)).first()
-                if project:
-                    represent = "%s (%s)" % (represent, project.name)
-
-            if show_link:
-                return A(represent,
-                         _href=URL(c="project", f="task", extension="html",
-                                   args=[id]))
-            return represent
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_task_represent_w_project(id, row=None):
-        """
-            FK representation
-            The show_project=True in the normal represent doesn't work as a lambda in IS_ONE_OF
-
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            db = current.db
-            ltable = db.project_task_project
-            ptable = db.project_project
-            query = (ltable.task_id == row.id) & \
-                    (ltable.project_id == ptable.id)
-            project = db(query).select(ptable.name,
-                                       limitby=(0, 1)).first()
-            if project:
-                represent = "%s: %s" % (project.name, row.name)
-            else:
-                represent = represent = "- %s" % row.name
-            return represent
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.project_task
-        r = db(table.id == id).select(table.name,
-                                      limitby=(0, 1)).first()
-        try:
-            name = r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-        else:
-            ltable = db.project_task_project
-            ptable = db.project_project
-            query = (ltable.task_id == id) & \
-                    (ltable.project_id == ptable.id)
-            project = db(query).select(ptable.name,
-                                       limitby=(0, 1)).first()
-            if project:
-                represent = "%s: %s" % (project.name, name)
-            else:
-                represent = "- %s" % name
-            return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5503,6 +5404,104 @@ def task_notify(form):
                  vars.description or "")
             current.msg.send_by_pe_id(pe_id, subject, message)
     return
+
+# =============================================================================
+class project_TaskRepresent(S3Represent):
+    """ Representation of project tasks """
+
+    def __init__(self,
+                 show_link=False,
+                 show_project=False,
+                 project_first=True):
+        """
+            Constructor
+
+            @param show_link: render representation as link to the task
+            @param show_project: show the project name in the representation
+            @param project_first: show the project name before the task name
+        """
+
+        task_url = URL(c="project", f="task", args=["[id]"])
+
+        super(project_TaskRepresent, self).__init__(lookup = "project_task",
+                                                    show_link = show_link,
+                                                    linkto = task_url,
+                                                    )
+
+        self.show_project = show_project
+        if show_project:
+            self.project_represent = S3Represent(lookup = "project_project")
+            
+        self.project_first = project_first
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+        
+        ttable = s3db.project_task
+        fields = [ttable.id, ttable.name]
+
+        show_project = self.show_project
+        if show_project:
+            ltable = s3db.project_task_project
+            left = ltable.on(ltable.task_id == ttable.id)
+            fields.append(ltable.project_id)
+        else:
+            left = None
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(left = left, *fields)
+        self.queries += 1
+
+        if show_project and rows:
+            # Bulk-represent the project_ids
+            project_ids = [row.project_task_project.project_id
+                           for row in rows]
+            if project_ids:
+                self.project_represent.bulk(project_ids)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        output = row["project_task.name"]
+        
+        if self.show_project:
+            
+            project_id = row["project_task_project.project_id"]
+            if self.project_first:
+                if project_id:
+                    strfmt = "%(project)s: %(task)s"
+                else:
+                    strfmt = "- %(task)s"
+            else:
+                if project_id:
+                    strfmt = "%(task)s (%(project)s)"
+                else:
+                    strfmt = "%(task)s"
+
+            output = strfmt % {"task": output,
+                               "project": self.project_represent(project_id),
+                               }
+                               
+        return output
 
 # =============================================================================
 class project_ActivityRepresent(S3Represent):
@@ -6519,10 +6518,9 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                           7:  "#CEC1FF",
                           12: "#C6C6C6",
                           }
-    active_status = current.response.s3.project_task_active_statuses
-
+    active_statuses = current.s3db.project_task_active_statuses
     status_icon  = DIV(I(" ", _class="icon-check%s" %
-                         ("-empty" if status in active_status else "" )),
+                         ("-empty" if status in active_statuses else "" )),
                        _class="task_status",
                        _style="background-color:%s" % (status_icon_colour.get(status, "none"))
                        ) 

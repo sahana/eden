@@ -161,7 +161,6 @@ def customise_no_rheader_controller(**attr):
     return attr
 
 settings.customise_cms_post_controller = customise_no_rheader_controller
-settings.customise_project_task_controller = customise_no_rheader_controller
 settings.customise_org_facility_controller = customise_no_rheader_controller
 settings.customise_org_organisation_controller = customise_no_rheader_controller
 settings.customise_org_resource_controller = customise_no_rheader_controller
@@ -298,7 +297,7 @@ def customise_cms_post_resource(r, tablename):
                        )
     else:
         # Insert into Form
-        crud_fields.insert(3, S3SQLInlineComponent("incident_post",
+        crud_fields.insert(0, S3SQLInlineComponent("incident_post",
                                                    label = T("Incident"),
                                                    fields = [("", "incident_id")],
                                                    multiple = False,
@@ -308,6 +307,9 @@ def customise_cms_post_resource(r, tablename):
 
     from s3.s3filter import S3OptionsFilter
     filter_widgets = s3db.get_config("cms_post", "filter_widgets")
+    # Remove the Type filter
+    # @ToDo: More robust way to identify it
+    del filter_widgets[1]
     filter_widgets.insert(1, S3OptionsFilter("incident_post.incident_id"))
 
     # Return to List view after create/update/delete
@@ -329,7 +331,22 @@ def customise_cms_post_resource(r, tablename):
 settings.customise_cms_post_resource = customise_cms_post_resource
 
 # -----------------------------------------------------------------------------
+def open_incident_filter(selector, tablename=None):
+    """
+        Default filter for Incidents (callback)
+    """
+
+    return [False]
+
+# -----------------------------------------------------------------------------
 def customise_event_incident_controller(**attr):
+
+    # Not working
+    if "summary" in current.request.args:
+        from s3.s3utils import s3_set_default_filter
+        s3_set_default_filter("~.closed",
+                              open_incident_filter,
+                              tablename = "event_incident")
 
     s3 = current.response.s3
 
@@ -407,12 +424,15 @@ def customise_event_incident_resource(r, tablename):
     #from gluon.validators import IS_EMPTY_OR
     #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
     from s3.s3forms import S3SQLCustomForm
-    crud_form = S3SQLCustomForm("zero_hour",
-                                "name",
-                                "location_id",
-                                "comments",
-                                "organisation_id",
-                                )
+    crud_fields = ["zero_hour",
+                   "name",
+                   "location_id",
+                   "comments",
+                   "organisation_id",
+                   ]
+    if r.method != "create":
+        crud_fields.append("closed")
+    crud_form = S3SQLCustomForm(*crud_fields)
 
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
     filter_widgets = [S3TextFilter(["name",
@@ -422,6 +442,9 @@ def customise_event_incident_resource(r, tablename):
                                    label = T("Search"),
                                    _class = "filter-search",
                                    ),
+                      S3OptionsFilter("closed",
+                                      cols = 2,
+                                      ),
                       S3LocationFilter("location_id",
                                        #label = T("Location"),
                                        levels = levels,
@@ -468,17 +491,18 @@ def customise_event_incident_resource(r, tablename):
                              type = "datalist",
                              tablename = "cms_post",
                              context = "incident",
-                             #filter = S3FieldSelector("event_post.incident_id") == r.id,
+                             # Only show Active Alerts
+                             filter = S3FieldSelector("expired") == False,
                              icon = "icon-alert",
                              colspan = 1,
-                             list_layout = s3db.cms_post_list_layout,
+                             #list_layout = s3db.cms_post_list_layout,
                              )
         resources_widget = dict(label = "Resources",
                                 label_create = "Add Resource",
                                 type = "datalist",
                                 tablename = "event_resource",
                                 context = "incident",
-                                #filter = S3FieldSelector("task_incident.incident_id") == r.id,
+                                #filter = S3FieldSelector("status").belongs(event_resource_active_statuses),
                                 icon = "icon-resource",
                                 colspan = 1,
                                 #list_layout = s3db.event_resource_list_layout,
@@ -488,10 +512,11 @@ def customise_event_incident_resource(r, tablename):
                             type = "datalist",
                             tablename = "project_task",
                             context = "incident",
-                            #filter = S3FieldSelector("task_incident.incident_id") == r.id,
+                            # Only show Active Tasks
+                            filter = S3FieldSelector("status").belongs(s3db.project_task_active_statuses),
                             icon = "icon-tasks",
                             colspan = 1,
-                            list_layout = s3db.project_task_list_layout,
+                            #list_layout = s3db.project_task_list_layout,
                             )
         record = r.record
         title = "%s : %s" % (crud_strings["event_incident"].title_list, record.name)
@@ -864,6 +889,30 @@ def customise_org_resource_resource(r, tablename):
     return True
 
 settings.customise_org_resource_resource = customise_org_resource_resource
+
+# -----------------------------------------------------------------------------
+def active_status_filter(selector, tablename=None):
+    """
+        Default filter for Tasks (callback)
+    """
+
+    return current.s3db.project_task_active_statuses
+
+# -----------------------------------------------------------------------------
+def customise_project_task_controller(**attr):
+
+    # Not working
+    if "summary" in current.request.args:
+        from s3.s3utils import s3_set_default_filter
+        s3_set_default_filter("~.status",
+                              active_status_filter,
+                              tablename = "project_task")
+
+    # Remove rheader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_project_task_controller = customise_project_task_controller
 
 # -----------------------------------------------------------------------------
 def customise_project_task_resource(r, tablename):

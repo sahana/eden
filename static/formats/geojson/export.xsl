@@ -454,24 +454,25 @@
     <xsl:template name="Attribute">
         <xsl:param name="attribute"/>
 
-        <!--
-        <xsl:variable name="key" select="substring-after(substring-before($attribute,']=['),'[')"/>
-        <xsl:variable name="value" select="normalize-space(substring-before(substring-after($attribute,']=['),']'))"/>-->
         <xsl:variable name="key" select="substring-before(substring-after(substring-before($attribute,':'),'|'),'|')"/>
         <xsl:variable name="value" select="substring-after($attribute,':')"/>
-        <xsl:variable name="numeric" select="true()"/>
-        <xsl:if test="contains($value,'|')">
-            <xsl:variable name="numeric" select="false()"/>
-            <xsl:variable name="value" select="substring-before(substring-after($value,'|'),'|')"/>
-        </xsl:if>
-        <xsl:element name="{$key}">
-            <xsl:if test="$numeric">
-                <xsl:attribute name="type">
-                    <xsl:text>numeric</xsl:text>
-                </xsl:attribute>
-            </xsl:if>
-            <xsl:value-of select="$value"/>
-        </xsl:element>
+        <xsl:choose>
+            <xsl:when test="contains($value,'|')">
+                <!-- Text -->
+                <xsl:element name="{$key}">
+                    <xsl:value-of select="substring-before(substring-after($value,'|'),'|')"/>
+                </xsl:element>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Numeric -->
+                <xsl:element name="{$key}">
+                    <xsl:attribute name="type">
+                        <xsl:text>numeric</xsl:text>
+                    </xsl:attribute>
+                    <xsl:value-of select="$value"/>
+                </xsl:element>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->
