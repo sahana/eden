@@ -360,13 +360,12 @@ class S3StatsDemographicModel(S3Model):
                                           # Not translateable
                                           #represent = "%(name)s",
                                           ),
-                          # Can't co-exist with any other filter yet
-                          #S3OptionsFilter("year",
-                          #                #multiple = False,
-                          #                operator = "anyof",
-                          #                options = lambda: \
-                          #                  stats_year_options("stats_demographic_data"),
-                          #                ),
+                          S3OptionsFilter("year",
+                                         #multiple = False,
+                                         operator = "anyof",
+                                         options = lambda: \
+                                           stats_year_options("stats_demographic_data"),
+                                         ),
                           S3OptionsFilter("location_id$level",
                                           label = T("Level"),
                                           multiple = False,
@@ -379,7 +378,7 @@ class S3StatsDemographicModel(S3Model):
                           ]
 
         report_options = Storage(rows = location_fields,
-                                 cols = ["parameter_id"],
+                                 cols = ["parameter_id", "year"],
                                  fact = [(T("Value"), "sum(value)"),
                                          ],
                                  defaults = Storage(rows = "location_id",
@@ -1724,16 +1723,18 @@ def stats_year(row, tablename):
         @param row: a dict of the Row
     """
 
+    NOT_PRESENT = lambda: None
+
     try:
         start_date = row["date"]
-    except KeyError:
-        start_date = None
+    except AttributeError:
+        start_date = NOT_PRESENT
     try:
         end_date = row["end_date"]
-    except KeyError:
-        end_date = None
+    except AttributeError:
+        end_date = NOT_PRESENT
 
-    if not start_date or not end_date:
+    if start_date is NOT_PRESENT or end_date is NOT_PRESENT:
         if tablename == "project_beneficiary":
             # Fallback to the Project's
             try:
@@ -1747,16 +1748,22 @@ def stats_year(row, tablename):
                                                                     limitby=(0, 1)
                                                                     ).first()
                 if project:
-                    if not start_date:
+                    if start_date is NOT_PRESENT:
                         start_date = project.start_date
-                    if not end_date:
+                    if end_date is NOT_PRESENT:
                         end_date = project.end_date
+
+
+    if start_date is NOT_PRESENT and end_date is NOT_PRESENT:
+        # Partial record update without dates => let it fail so
+        # we do not override the existing value
+        raise AttributeError("no data available")
 
     if not start_date and not end_date:
         return []
-    elif not end_date:
+    elif end_date is NOT_PRESENT or not end_date:
         return [start_date.year]
-    elif not start_date:
+    elif start_date is NOT_PRESENT or not start_date :
         return [end_date.year]
     else:
         return list(xrange(start_date.year, end_date.year + 1))

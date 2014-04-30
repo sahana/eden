@@ -1389,8 +1389,10 @@ class S3OptionsFilter(S3FilterWidget):
                 # scalability.
                 rows = None
                 if field:
-                    ktablename, key, multiple = s3_get_foreign_key(field, m2m=False)
+                    ktablename, key, m = s3_get_foreign_key(field, m2m=False)
                     if ktablename:
+
+                        multiple = m
 
                         ktable = current.s3db.table(ktablename)
                         key_field = ktable[key]
@@ -1443,25 +1445,21 @@ class S3OptionsFilter(S3FilterWidget):
                                            groupby=groupby,
                                            virtual=virtual,
                                            as_rows=True)
-                                           
-                opt_keys = []
+
+                opt_keys = [] # Can't use set => would make orderby pointless
                 if rows:
-                    if multiple:
-                        kextend = opt_keys.extend
-                        for row in rows:
-                            vals = row[colname]
-                            if vals:
-                                kextend([v for v in vals
-                                           if v not in opt_keys])
-                    else:
-                        kappend = opt_keys.append
-                        for row in rows:
-                            v = row[colname]
-                            # No support for new-style Field.Method in filter queries
-                            #if virtual:
-                            #    v = v()
-                            if v not in opt_keys:
-                                kappend(v)
+                    kappend = opt_keys.append
+                    kextend = opt_keys.extend
+                    for row in rows:
+                        val = row[colname]
+                        if virtual and callable(val):
+                            val = val()
+                        if multiple or \
+                           virtual and isinstance(val, (list, tuple, set)):
+                            kextend([v for v in val
+                                       if v not in opt_keys])
+                        elif val not in opt_keys:
+                            kappend(val)
 
         # No options?
         if len(opt_keys) < 1 or len(opt_keys) == 1 and not opt_keys[0]:
