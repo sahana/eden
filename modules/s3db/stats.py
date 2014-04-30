@@ -361,11 +361,11 @@ class S3StatsDemographicModel(S3Model):
                                           #represent = "%(name)s",
                                           ),
                           S3OptionsFilter("year",
-                                         #multiple = False,
-                                         operator = "anyof",
-                                         options = lambda: \
-                                           stats_year_options("stats_demographic_data"),
-                                         ),
+                                          #multiple = False,
+                                          operator = "anyof",
+                                          options = lambda: \
+                                            stats_year_options("stats_demographic_data"),
+                                          ),
                           S3OptionsFilter("location_id$level",
                                           label = T("Level"),
                                           multiple = False,
@@ -377,8 +377,8 @@ class S3StatsDemographicModel(S3Model):
                                            ),
                           ]
 
-        report_options = Storage(rows = location_fields,
-                                 cols = ["parameter_id", "year"],
+        report_options = Storage(rows = location_fields + ["year"],
+                                 cols = ["parameter_id"],
                                  fact = [(T("Value"), "sum(value)"),
                                          ],
                                  defaults = Storage(rows = "location_id",

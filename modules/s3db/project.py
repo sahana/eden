@@ -1675,14 +1675,14 @@ class S3ProjectBeneficiaryModel(S3Model):
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
-                                label = T("Beneficiary Type"),
+                                empty = False,
                                 instance_types = ("project_beneficiary_type",),
+                                label = T("Beneficiary Type"),
                                 represent = S3Represent(lookup="stats_parameter",
                                                         translate=True,
                                                         ),
                                 readable = True,
                                 writable = True,
-                                empty = False,
                                 comment = S3AddResourceLink(c="project",
                                                             f="beneficiary_type",
                                                             vars = dict(child = "parameter_id"),
@@ -1755,13 +1755,12 @@ class S3ProjectBeneficiaryModel(S3Model):
                             label = T("Beneficiary Type"),
                             #hidden = True,
                             ),
-            # Can't co-exist with any other filter yet
-            #S3OptionsFilter("year",
-            #                operator = "anyof",
-            #                options = lambda: \
-            #                    self.stats_year_options("project_beneficiary"),
-            #                hidden = True,
-            #                ),
+            S3OptionsFilter("year",
+                            operator = "anyof",
+                            options = lambda: \
+                                self.stats_year_options("project_beneficiary"),
+                            hidden = True,
+                            ),
             S3LocationFilter("location_id",
                              levels = levels,
                              #hidden = True,
@@ -1777,8 +1776,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         report_fields = [(T("Beneficiary Type"), "parameter_id"),
                          "project_id",
                          #"project_location_id",
-                         # Can't work as a Report Axis yet
-                         #"year",
+                         "year",
                          ]
 
         if settings.get_project_sectors():
