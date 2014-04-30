@@ -2290,7 +2290,7 @@ class S3Config(Storage):
     def get_project_organisation_roles(self):
         T = current.T
         return self.project.get("organisation_roles", {
-                1: T("Lead Implementer"), # T("Host National Society")
+                1: T("Lead Implementer"), # T("Host N    ational Society")
                 2: T("Partner"), # T("Partner National Society")
                 3: T("Donor"),
                 #4: T("Customer"), # T("Beneficiary")?
@@ -2299,7 +2299,41 @@ class S3Config(Storage):
 
     def get_project_organisation_lead_role(self):
         return self.project.get("organisation_lead_role", 1)
-    
+
+    def get_project_task_status_opts(self):
+        """
+                These Statuses can be customised, although doing so limits the ability to do synchronization
+                 - best bet is simply to comment statuses that you don't wish to use
+        """
+        T = current.T
+        return self.project.get("task_status_opts",{
+            1: T("Draft"),
+            2: T("New"),
+            3: T("Assigned"),
+            4: T("Feedback"),
+            5: T("Blocked"),
+            6: T("On Hold"),
+            7: T("Cancelled"),
+            8: T("Duplicate"),
+            9: T("Ready"),
+            10: T("Verified"),
+            11: T("Reopened"),
+            12: T("Completed"),
+            #99: T("unspecified")
+        })
+
+    def get_project_task_active_statuses(self):
+        return self.project.get("task_active_statuses",[2, 3, 4, 11])
+        
+    def get_project_task_priority_opts(self):
+        T = current.T
+        return self.project.get("task_priority_opts",{
+            1:T("Urgent"),
+            2:T("High"),
+            3:T("Normal"),
+            4:T("Low")
+        })
+
     # -------------------------------------------------------------------------
     # Requests Management Settings
     #

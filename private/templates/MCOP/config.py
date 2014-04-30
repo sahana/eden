@@ -106,6 +106,9 @@ settings.base.paper_size = T("Letter")
 # Uncomment this to Translate Location Names
 #settings.L10n.translate_gis_location = True
 
+
+# -----------------------------------------------------------------------------
+# GIS settings
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["US"]
 # Levels for the LocationSelector
@@ -123,6 +126,19 @@ settings.gis.nav_controls = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 
+# -----------------------------------------------------------------------------
+# Module settings
+settings.project.task_status_opts = {
+            3: T("Active"),
+            6: T("Deferred"),
+            7: T("Cancelled"),
+            12: T("Completed"),
+        }
+settings.project.task_priority_opts = {
+            2:T("High"),
+            3:T("Normal"),
+            4:T("Low")
+        }
 # -----------------------------------------------------------------------------
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
@@ -433,20 +449,6 @@ def customise_event_incident_resource(r, tablename):
     if r.method == "profile":
         # Customise tables used by widgets
         customise_project_task_resource(r, "project_task")
-
-        # Set list_fields for renderer (project_task_list_layout)
-        s3db.configure("project_task",
-                       list_fields = ["name",
-                                      "description",
-                                      "location_id",
-                                      "date_due",
-                                      "pe_id",
-                                      "task_project.project_id",
-                                      #"organisation_id$logo",
-                                      "pe_id",
-                                      "modified_by",
-                                      ],
-                       )
 
         from s3.s3resource import S3FieldSelector
         map_widget = dict(label = "Map",
@@ -886,7 +888,10 @@ def customise_project_task_resource(r, tablename):
                        "incident.incident_id",
                        #"organisation_id$logo",
                        "pe_id",
+                       "source_url",
                        "modified_by",
+                       "status",
+                       "priority",
                        ]
     else:
         list_fields = ["id",
@@ -896,6 +901,7 @@ def customise_project_task_resource(r, tablename):
                        (T("Task"), "name"),
                        "location_id",
                        "date_due",
+                       (T("Wrike Permalink"), "source_url"),
                        ]
 
     # Custom Form
@@ -925,7 +931,7 @@ def customise_project_task_resource(r, tablename):
                        )
     else:
         # Insert into Form
-        crud_fields.insert(4, S3SQLInlineComponent("incident",
+        crud_fields.insert(0, S3SQLInlineComponent("incident",
                                                    label = T("Incident"),
                                                    fields = [("", "incident_id")],
                                                    multiple = False,
@@ -964,6 +970,8 @@ def customise_project_task_resource(r, tablename):
                    crud_form = crud_form,
                    delete_next = url_next,
                    list_fields = list_fields,
+                   onvalidation = None, # don't check pe_id if status Active
+                   orderby = "project_task.date_due asc",
                    report_options = report_options,
                    update_next = url_next,
                    )

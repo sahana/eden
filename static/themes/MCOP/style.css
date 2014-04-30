@@ -221,6 +221,31 @@ h2, #list-btn-add {
     margin-bottom: 5px;
 }
 
+.task_priority,
+.task_name,
+.task_status {
+    float: left;
+    clear: right;
+}
+
+.task_priority {
+    margin-right: 3px;
+    margin-top: 3px;
+}
+
+.task_status {
+    float: right;
+    margin-left: 5px;
+    padding: 2px 3px;
+}
+
+.media-body {
+    clear: left;
+}
+
+.edit-bar {
+    position: static;
+}
 .dl-1-cols {
     width: 96%;
 }
