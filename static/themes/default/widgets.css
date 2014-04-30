@@ -1297,6 +1297,15 @@ body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     clear: right;
     float: right;
 }
+
+.filter-advanced {
+    text-decoration: none;
+    cursor: pointer;
+}
+.filter-advanced-label {
+    padding-right: 4px;
+}
+
 /* End */
 
 .widget-org-hierarchy-menu {

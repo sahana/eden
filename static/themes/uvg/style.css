@@ -34,32 +34,16 @@
 }
 
 /* Links should ALWAYS be unvisited */
-#content a:not(.action-btn):not(.delete-btn) {
-  color: #039;
-  text-decoration: underline;
-  outline: 0;
-}
-#content a:hover:not(.action-btn):not(.delete-btn) {
-  color: #c00;
-  text-decoration: none;
-  background-color: #ffffcc;
-  outline: 0;
-}
-#content a:active:not(.action-btn):not(.delete-btn),
-#content a:focus:not(.action-btn):not(.delete-btn) {
-  outline: 0;
-}
-#content a.help,
-#content a:link.help {
+#content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-#content a:hover.help {
+#content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-#content a:visited.help {
+#content a.help:visited {
   font-weight: normal;
   color: #666;
 }

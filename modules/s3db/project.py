@@ -6519,8 +6519,8 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                           7:  "#CEC1FF",
                           12: "#C6C6C6",
                           }
-    active_status = current.deployment_settings.get_project_task_active_statuses()
-    priority_icon
+    active_status = current.response.s3.project_task_active_statuses
+
     status_icon  = DIV(I(" ", _class="icon-check%s" %
                          ("-empty" if status in active_status else "" )),
                        _class="task_status",

@@ -38,34 +38,20 @@
 
 /* Links should ALWAYS be unvisited */
 #content {
-    a:not(.action-btn):not(.delete-btn) {
-        color: #039;
-        text-decoration: underline;
-        outline: 0;
-    }
-    a:hover:not(.action-btn):not(.delete-btn) {
-        color: #c00;
-        text-decoration: none;
-        background-color: #ffffcc;
-        outline: 0;
-    }
-    a:active:not(.action-btn):not(.delete-btn),
-    a:focus:not(.action-btn):not(.delete-btn) {
-        outline: 0;
-    }
-    a.help,
-    a:link.help {
-        color: #fff;
-        text-decoration: none;
-        margin-right: 10px;
-    }
-    a:hover.help {
-        background-color: #336699;
-        text-decoration: underline;
-    }
-    a:visited.help {
-        font-weight: normal;
-        color: #666;
+    a.help {
+        &:link {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        &:hover {
+            background-color: #336699;
+            text-decoration: underline;
+        }
+        &:visited {
+            font-weight: normal;
+            color: #666;
+        }
     }
     h1,
     h2 {

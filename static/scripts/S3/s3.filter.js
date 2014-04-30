@@ -1539,13 +1539,13 @@ S3.search = {};
             }
         });
         
-        var $btn = $($form.find('.filter-advanced'));
+        var $btn = $($form.find('.filter-advanced-label'));
         if (hidden) {
             // Change label to label_off
-            $btn.attr('value', $btn.attr('label_off'));
+            $btn.text($btn.data('off')).siblings().toggle();
         } else {
             // Change label to label_on
-            $btn.attr('value', $btn.attr('label_on'));
+            $btn.text($btn.data('on')).siblings().toggle();
         }
         
     };

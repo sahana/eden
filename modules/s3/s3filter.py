@@ -1859,11 +1859,16 @@ class S3FilterForm(object):
             else:
                 label = advanced
             label_off = T("Less Options")
-            advanced = INPUT(_type="button",
-                             _value=label,
-                             _label_on=label,
-                             _label_off=label_off,
-                             _class=_class)
+            advanced = A(SPAN(label,
+                              data = {"on": label,
+                                      "off": label_off,
+                                      },
+                              _class="filter-advanced-label",
+                              ),
+                         I(" ", _class="icon-down"),
+                         I(" ", _class="icon-up", _style="display:none"),
+                         _class=_class
+                         )
             controls.append(advanced)
 
         clear = opts.get("clear", True)

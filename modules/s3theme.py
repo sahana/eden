@@ -229,9 +229,13 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
 
         if isinstance(label, LABEL):
             label.add_class("left inline")
-                
-        label_col = DIV(label, _class="small-2 columns")
+
         controls_col = DIV(widget, _class="small-6 columns controls")
+        if label:
+            label_col = DIV(label, _class="small-2 columns")
+        else:
+            label_col = ""
+            controls_col.add_class("small-offset-2")
         comments_col = DIV(render_tooltip(label, comment),
                            _class="small-4 columns inline-tooltip")
 
