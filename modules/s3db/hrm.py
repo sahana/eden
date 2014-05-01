@@ -3504,7 +3504,7 @@ class S3HRProgrammeModel(S3Model):
                            ),
                      Field("training_id", self.hrm_training,
                            label = T("Course"),
-                           represent = self.hrm_training_represent,
+                           represent = hrm_TrainingRepresent(),
                            writable=False,
                            ),
                      Field.Method("month", hrm_programme_hours_month),
@@ -3609,33 +3609,6 @@ class S3HRProgrammeModel(S3Model):
             if row:
                 item.id = row.id
                 item.method = item.METHOD.UPDATE  
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_training_represent(id, row=None):
-        """
-           Represent a Training by it's Course
-           - used from within hrm_programme_hours
-        """
-
-        if not row:
-            if not id:
-                return current.messages["NONE"]
-        else:
-            id = row.id
-
-        db = current.db
-        table = db.hrm_training
-        ctable = db.hrm_course
-        query = (table.id == id) & \
-                (ctable.id == table.course_id)
-        row = db(query).select(ctable.name,
-                               limitby=(0, 1)).first()
-
-        try:
-            return row.name
-        except:
-            current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def hrm_programme_hours_month(row):
@@ -3878,97 +3851,145 @@ class hrm_HumanResourceRepresent(S3Represent):
         return ", ".join(representation)
         
 # =============================================================================
+class hrm_TrainingRepresent(S3Represent):
+    """
+        Represent a Training by its Course
+           - used from within hrm_programme_hours
+    """
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(hrm_TrainingRepresent, self).__init__(lookup = "hrm_training")
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        ttable = self.table
+        ctable = current.s3db.hrm_course
+
+        left = [ctable.on(ctable.id == ttable.course_id)]
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        rows = current.db(query).select(ttable.id,
+                                        ctable.name,
+                                        left = left)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+
+        name = row["hrm_course.name"]
+        if not name:
+            name = current.messages.UNKNOWN_OPT
+        return name
+
+# =============================================================================
 class hrm_TrainingEventRepresent(S3Represent):
-   """ Representation of training_event_id """
+    """ Representation of training_event_id """
 
-   def __init__(self):
-       """
-           Constructor
-       """
+    def __init__(self):
+        """
+            Constructor
+        """
 
-       super(hrm_TrainingEventRepresent, self).__init__(lookup = "hrm_training_event")
+        super(hrm_TrainingEventRepresent, self).__init__(
+                                                lookup = "hrm_training_event")
 
-   # -------------------------------------------------------------------------
-   def lookup_rows(self, key, values, fields=[]):
-       """
-           Custom rows lookup
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
 
-           @param key: the key Field
-           @param values: the values
-           @param fields: unused (retained for API compatibility)
-       """
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
 
-       s3db = current.s3db
-       
-       etable = self.table
-       ctable = s3db.hrm_course
-       stable = s3db.org_site
+        s3db = current.s3db
 
-       left = [ctable.on(ctable.id == etable.course_id),
-               stable.on(stable.site_id == etable.site_id),
-               ]
-       if len(values) == 1:
-           query = (key == values[0])
-       else:
-           query = key.belongs(values)
+        etable = self.table
+        ctable = s3db.hrm_course
+        stable = s3db.org_site
 
-       rows = current.db(query).select(etable.id,
-                                       etable.start_date,
-                                       etable.instructor,
-                                       ctable.name,
-                                       ctable.code,
-                                       stable.name,
-                                       left = left)
-       self.queries += 1
-       return rows
-                                    
-   # -------------------------------------------------------------------------
-   def represent_row(self, row):
-       """
-           Represent a row
+        left = [ctable.on(ctable.id == etable.course_id),
+                stable.on(stable.site_id == etable.site_id),
+                ]
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
 
-           NB This needs to be machine-parseable by training.xsl
+        rows = current.db(query).select(etable.id,
+                                        etable.start_date,
+                                        etable.instructor,
+                                        ctable.name,
+                                        ctable.code,
+                                        stable.name,
+                                        left = left)
+        self.queries += 1
+        return rows
 
-           @param row: the Row
-       """
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
 
-       # Course details
-       course = row.get("hrm_course")
-       if not course:
-           return current.messages.UNKNOWN_OPT
-       name = course.get("name")
-       if not name:
-           name = current.messages.UNKNOWN_OPT
-       code = course.get("code")
-       if code:
-           representation = ["%s (%s)" % (name, code)]
-       else:
-           representation = [name]
-       append = representation.append
+            NB This needs to be machine-parseable by training.xsl
 
-       # Venue and instructor
-       event = row.hrm_training_event
-       try:       
-           site = row.org_site.name
-       except:
-           site = None
-       instructor = event.get("instructor")
-       if instructor and site:
-           append(" %s - {%s}" % (instructor, site))
-       elif instructor:
-           append(" %s" % instructor)
-       elif site:
-           append(" {%s}" % site)
+            @param row: the Row
+        """
 
-       # Start date
-       start_date = event.start_date
-       if start_date:
-           # Easier for users & machines
-           start_date = S3DateTime.date_represent(start_date, format="%Y-%m-%d")
-           append(" [%s]" % start_date)
+        # Course details
+        course = row.get("hrm_course")
+        if not course:
+            return current.messages.UNKNOWN_OPT
+        name = course.get("name")
+        if not name:
+            name = current.messages.UNKNOWN_OPT
+        code = course.get("code")
+        if code:
+            representation = ["%s (%s)" % (name, code)]
+        else:
+            representation = [name]
+        append = representation.append
 
-       return " ".join(representation)
-       
+        # Venue and instructor
+        event = row.hrm_training_event
+        try:
+            site = row.org_site.name
+        except:
+            site = None
+        instructor = event.get("instructor")
+        if instructor and site:
+            append(" %s - {%s}" % (instructor, site))
+        elif instructor:
+            append(" %s" % instructor)
+        elif site:
+            append(" {%s}" % site)
+
+        # Start date
+        start_date = event.start_date
+        if start_date:
+            # Easier for users & machines
+            start_date = S3DateTime.date_represent(start_date, format="%Y-%m-%d")
+            append(" [%s]" % start_date)
+
+        return " ".join(representation)
+
 # =============================================================================
 #def hrm_position_represent(id, row=None):
 #    """
