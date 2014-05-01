@@ -409,17 +409,17 @@ def customise_event_incident_resource(r, tablename):
                    "comments",
                    "organisation_id",
                    ]
-    
+
     # Custom Form
-    #location_id_field = table.location_id
-    #from s3.s3validators import IS_LOCATION_SELECTOR2
-    #from s3.s3widgets import S3LocationSelectorWidget2
-    #location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    #location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-    #                                                     show_address=True,
-    #                                                     show_map=True)
-    ## Don't add new Locations here
-    #location_id_field.comment = None
+    location_id_field = table.location_id
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2
+    location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+    location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                         show_address=True,
+                                                         show_map=True)
+    # Don't add new Locations here
+    location_id_field.comment = None
 
     #from gluon.validators import IS_EMPTY_OR
     #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
