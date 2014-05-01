@@ -1204,7 +1204,7 @@ class S3OptionsFilter(S3FilterWidget):
         name = attr["_name"]
 
         # Get the options
-        ftype, options, noopt = self._options(resource)
+        ftype, options, noopt = self._options(resource, values=values)
         if noopt:
             return SPAN(noopt, _class="no-options-available")
         else:
@@ -1326,7 +1326,7 @@ class S3OptionsFilter(S3FilterWidget):
         return options
 
     # -------------------------------------------------------------------------
-    def _options(self, resource):
+    def _options(self, resource, values=None):
         """
             Helper function to retrieve the current options for this
             filter widget
@@ -1460,6 +1460,14 @@ class S3OptionsFilter(S3FilterWidget):
                                        if v not in opt_keys])
                         elif val not in opt_keys:
                             kappend(val)
+
+        # Make sure the selected options are in the available options
+        # (not possible if we have a fixed options dict)
+        if options is None and values:
+            for val in values:
+                if val not in opt_keys and \
+                   (not isinstance(val, (int, long)) or not str(val) in opt_keys):
+                    opt_keys.append(val)
 
         # No options?
         if len(opt_keys) < 1 or len(opt_keys) == 1 and not opt_keys[0]:
