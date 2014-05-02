@@ -49,7 +49,8 @@ for(var i=0,len=layers.length;i<len;i++){
         resource.add_filter(S3FieldSelector("expired") == False)
         # Only show Alerts which are linked to Open Incidents
         resource.add_filter(S3FieldSelector("incident.closed") == False)
-        list_fields = ["series_id",
+        list_id = "cms_post_datalist"
+        list_fields = [#"series_id",
                        "location_id",
                        "date",
                        "body",
@@ -63,16 +64,18 @@ for(var i=0,len=layers.length;i<len;i++){
         datalist, numrows, ids = resource.datalist(fields = list_fields,
                                                    #start = None,
                                                    limit = 5,
-                                                   list_id = "cms_post_datalist",
+                                                   list_id = list_id,
                                                    orderby = orderby,
                                                    layout = s3db.cms_post_list_layout
                                                    )
-        output["cms_post_datalist"] = datalist.html()
+        ajax_url = URL(c="cms", f="post", args="datalist.dl", vars={"list_id": list_id})
+        output[list_id] = datalist.html(ajaxurl = ajax_url)
 
         # Incidents Data List
         resource = s3db.resource("event_incident")
         # Only show Open Incidents
         resource.add_filter(S3FieldSelector("closed") == False)
+        list_id = "event_incident_datalist"
         list_fields = ["name",
                        "location_id",
                        "zero_hour",
@@ -85,11 +88,12 @@ for(var i=0,len=layers.length;i<len;i++){
         datalist, numrows, ids = resource.datalist(fields = list_fields,
                                                    #start = None,
                                                    limit = 5,
-                                                   list_id = "event_incident_datalist",
+                                                   list_id = list_id,
                                                    orderby = orderby,
                                                    layout = s3db.event_incident_list_layout
                                                    )
-        output["event_incident_datalist"] = datalist.html()
+        ajax_url = URL(c="event", f="incident", args="datalist.dl", vars={"list_id": list_id})
+        output[list_id] = datalist.html(ajaxurl = ajax_url)
 
         # Tasks Data List
         resource = s3db.resource("project_task")
@@ -98,6 +102,7 @@ for(var i=0,len=layers.length;i<len;i++){
         resource.add_filter(S3FieldSelector("status").belongs(active_statuses))
         # Only show Tasks which are linked to Open Incidents
         resource.add_filter(S3FieldSelector("incident.incident_id$closed") == False)
+        list_id = "project_task_datalist"
         list_fields = ["name",
                        "description",
                        "comments",
@@ -116,11 +121,12 @@ for(var i=0,len=layers.length;i<len;i++){
         datalist, numrows, ids = resource.datalist(fields = list_fields,
                                                    #start = None,
                                                    limit = 5,
-                                                   list_id = "project_task_datalist",
+                                                   list_id = list_id,
                                                    orderby = orderby,
                                                    layout = s3db.project_task_list_layout
                                                    )
-        output["project_task_datalist"] = datalist.html()
+        ajax_url = URL(c="project", f="task", args="datalist.dl", vars={"list_id": list_id})
+        output[list_id] = datalist.html(ajaxurl = ajax_url)
 
         # MCOP RSS News Feed
         #s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")

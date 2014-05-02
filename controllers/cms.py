@@ -101,8 +101,8 @@ def post():
 
     # Custom Method to add Comments
     s3db.set_method(module, resourcename,
-                    method="discuss",
-                    action=discuss)
+                    method = "discuss",
+                    action = discuss)
 
     def prep(r):
         if r.interactive:
@@ -450,7 +450,8 @@ def newsfeed():
                    # No Submit button (done automatically)
                    #filter_submit = (T("SEARCH"), "btn btn-primary"),
                    filter_widgets = filter_widgets,
-                   list_layout = s3db.cms_post_list_layout,
+                   # Default anyway now:
+                   #list_layout = s3db.cms_post_list_layout,
                    # Create form comes via AJAX in a Modal
                    #insertable = False,
                    notify_fields = notify_fields,

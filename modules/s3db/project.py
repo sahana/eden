@@ -6552,12 +6552,11 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     permit = current.auth.s3_has_permission
     table = current.db.project_task
     if permit("update", table, record_id=record_id):
-        vars = {"refresh": list_id,
-                "record": record_id,
-                }
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="project", f="task",
-                               args=[record_id, "update.popup"]
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id},
                                ),
                      _class="s3_modal",
                      _title=current.response.s3.crud_strings.project_task.title_update,

@@ -1470,6 +1470,7 @@ class S3CRUD(S3Method):
 
         resource = self.resource
         get_config = resource.get_config
+        get_vars = self.request.get_vars
 
         # Get table-specific parameters
         #sortby = get_config("sortby", [[1, "asc"]])
@@ -1477,7 +1478,8 @@ class S3CRUD(S3Method):
         layout = get_config("list_layout", None)
 
         # List ID
-        list_id = attr.get("list_id", "datalist")
+        list_id = get_vars.get("list_id",
+                               attr.get("list_id", "datalist"))
 
         # List fields
         list_fields = resource.list_fields()
@@ -1521,7 +1523,6 @@ class S3CRUD(S3Method):
         if pagelength % rowsize:
             pagelength = (int(pagelength / rowsize) + 1) * rowsize
 
-        get_vars = self.request.get_vars
         record_id = get_vars.get("record", None)
         if record_id is not None:
             # Ajax-reload of a single record

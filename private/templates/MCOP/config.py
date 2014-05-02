@@ -236,7 +236,10 @@ def customise_cms_post_resource(r, tablename):
     table = s3db.cms_post
 
     s3.dl_pagelength = 12
-    s3.dl_rowsize = 2
+    list_id = r.get_vars.get("list_id", None)
+    if list_id != "cms_post_datalist":
+        # Default page, not homepage
+        s3.dl_rowsize = 2
 
     #from s3.s3resource import S3FieldSelector
     #s3.filter = S3FieldSelector("series_id$name").belongs(["Alert"])
@@ -263,8 +266,9 @@ def customise_cms_post_resource(r, tablename):
     # Don't add new Locations here
     table.location_id.comment = None
 
-    table.series_id.readable = table.series_id.writable = True
-    table.series_id.label = T("Type")
+    #table.series_id.readable = table.series_id.writable = True
+    #table.series_id.label = T("Type")
+    table.series_id.default = "Alert"
 
     table.body.label = T("Description")
     table.body.widget = None
@@ -313,7 +317,7 @@ def customise_cms_post_resource(r, tablename):
     filter_widgets.insert(1, S3OptionsFilter("incident_post.incident_id"))
 
     # Return to List view after create/update/delete
-    # We now do all this in Popups
+    # We do all this in Popups
     url_next = URL(c="cms", f="post", args="datalist")
 
     s3db.configure("cms_post",
@@ -737,7 +741,7 @@ def customise_org_organisation_resource(r, tablename):
                                     context = "organisation",
                                     icon = "icon-resource",
                                     show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                    list_layout = s3db.org_resource_list_layout,
+                                    #list_layout = s3db.org_resource_list_layout,
                                     )
             projects_widget = dict(label = "Incidents",
                                    label_create = "Create Incident",
@@ -746,7 +750,7 @@ def customise_org_organisation_resource(r, tablename):
                                    context = "organisation",
                                    icon = "icon-incident",
                                    show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                   list_layout = s3db.event_incident_list_layout,
+                                   #list_layout = s3db.event_incident_list_layout,
                                    )
             #activities_widget = dict(label = "Activities",
             #                         label_create = "Create Activity",

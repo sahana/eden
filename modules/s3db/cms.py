@@ -1446,7 +1446,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                      _href=URL(c="cms", f="newsfeed",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
-                                     "record": record_id}),
+                                     "record": record_id}
+                               ),
                      _class="s3_modal",
                      _title=T("Edit %(type)s") % dict(type=series_title),
                      )
