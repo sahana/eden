@@ -81,6 +81,10 @@ class S3Hierarchy(object):
 
         self.__nodes = None
         self.__roots = None
+
+        self.__pkey = None
+        self.__fkey = None
+        self.__cat = None
         
     # -------------------------------------------------------------------------
     @property
@@ -140,6 +144,33 @@ class S3Hierarchy(object):
         nodes = self.nodes
         return self.__roots
         
+    # -------------------------------------------------------------------------
+    @property
+    def pkey(self):
+        """ The parent key """
+
+        if self.__pkey is None:
+            self.__keys()
+        return self.__pkey
+
+    # -------------------------------------------------------------------------
+    @property
+    def fkey(self):
+        """ The foreign key referencing the parent key """
+
+        if self.__fkey is None:
+            self.__keys()
+        return self.__fkey
+
+    # -------------------------------------------------------------------------
+    @property
+    def ckey(self):
+        """ The category field """
+
+        if self.__ckey is None:
+            self.__keys()
+        return self.__ckey
+
     # -------------------------------------------------------------------------
     def __connect(self):
         """ Connect this instance to the hierarchy """
@@ -318,35 +349,14 @@ class S3Hierarchy(object):
 
         s3db = current.s3db
         table = s3db[tablename]
-        
-        config = s3db.get_config(tablename, "hierarchy")
-        if not config:
-            return
-            
-        if isinstance(config, tuple):
-            parent, category = config[:2]
-        else:
-            parent, category = config, None
-        if parent is None:
-            pkey = table._id.name
-            parent_field = None
-            for field in table:
-                ftype = str(field.type)
-                if ftype[:9] == "reference":
-                    key = ftype[10:].split(".")
-                    if key[0] == tablename and \
-                       (len(key) == 1 or key[1] == pkey):
-                        parent = field.name
-                        parent_field = field
-                        break
-        else:
-            parent_field = table[parent]
-        if not parent_field:
-            raise AttributeError
-            
-        fields = [table._id, parent_field]
-        if category is not None:
-            fields.append(table[category])
+
+        pkey = self.pkey
+        fkey = self.fkey
+        ckey = self.ckey
+
+        fields = [pkey, fkey]
+        if ckey is not None:
+            fields.append(table[ckey])
 
         if "deleted" in table:
             query = (table.deleted != True)
@@ -358,10 +368,10 @@ class S3Hierarchy(object):
         
         add = self.add
         for row in rows:
-            n = row[table._id.name]
-            p = row[parent]
-            if category:
-                c = row[category]
+            n = row[pkey.name]
+            p = row[fkey.name]
+            if ckey:
+                c = row[ckey]
             else:
                 c = None
             add(n, parent_id=p, category=c)
@@ -373,6 +383,74 @@ class S3Hierarchy(object):
         self.__roots = None
         self.__nodes = None
         
+        return
+
+    # -------------------------------------------------------------------------
+    def __keys(self):
+        """ Introspect the key fields in the hierarchical table """
+        
+        tablename = self.tablename
+        if not tablename:
+            return
+
+        s3db = current.s3db
+        table = s3db[tablename]
+
+        config = s3db.get_config(tablename, "hierarchy")
+        if not config:
+            return
+
+        if isinstance(config, tuple):
+            parent, self.__ckey = config[:2]
+        else:
+            parent, self.__ckey = config, None
+
+        pkey = None
+        if parent is None:
+
+            # Assume self-reference
+            pkey = table._id
+
+            fkey = None
+            for field in table:
+                ftype = str(field.type)
+                if ftype[:9] == "reference":
+                    key = ftype[10:].split(".")
+                    if key[0] == tablename and \
+                       (len(key) == 1 or key[1] == pkey.name):
+                        parent = field.name
+                        fkey = field
+                        break
+        else:
+            fkey = table[parent]
+
+        if not fkey:
+            # No parent field found
+            raise AttributeError
+
+        if pkey is None:
+            ftype = str(fkey.type)
+            if ftype[:9] != "reference":
+                # Invalid parent field (not a foreign key)
+                raise SyntaxError("Invalid parent field: "
+                                  "%s is not a foreign key" % fkey)
+            key = ftype[10:].split(".")
+            if key[0] == tablename:
+                # Self-reference
+                pkey = table._id
+            else:
+                # Super-entity?
+                ktable = s3db[key[0]]
+                skey = ktable._id.name
+                if skey != "id" and "instance_type" in ktable:
+                    try:
+                        pkey = table[skey]
+                    except AttributeError:
+                        raise SyntaxError("%s is not an instance type of %s" %
+                                          (tablename, ktable._tablename))
+
+        self.__pkey = pkey
+        self.__fkey = fkey
         return
 
     # -------------------------------------------------------------------------
@@ -419,11 +497,11 @@ class S3Hierarchy(object):
         resource = current.s3db.resource(self.tablename,
                                          filter = self.filter)
 
-        pkey = resource._id.name
-        rows = resource.select([pkey], as_rows = True)
+        pkey = self.pkey
+        rows = resource.select([pkey.name], as_rows = True)
 
         if rows:
-            key = str(resource._id)
+            key = str(pkey)
             if self.leafonly:
                 # Select matching leaf nodes
                 ids = set()

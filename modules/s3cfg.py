@@ -102,6 +102,7 @@ class S3Config(Storage):
         self.inv = Storage()
         self.irs = Storage()
         self.L10n = Storage()
+        self.log = Storage()
         self.mail = Storage()
         self.msg = Storage()
         self.org = Storage()
@@ -113,7 +114,7 @@ class S3Config(Storage):
         self.search = Storage()
         self.security = Storage()
         self.ui = Storage()
-        self.log = Storage()
+        self.vulnerability = Storage()
 
     # -------------------------------------------------------------------------
     # Template
@@ -2502,5 +2503,11 @@ class S3Config(Storage):
 
     def get_supply_use_alt_name(self):
         return self.supply.get("use_alt_name", True)
+
+    # -------------------------------------------------------------------------
+    # Vulnerability
+    #
+    def get_vulnerability_indicator_hierarchical(self):
+        return self.vulnerability.get("indicator_hierarchical", False)
 
 # END =========================================================================
