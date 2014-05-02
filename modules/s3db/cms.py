@@ -1443,7 +1443,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     # Tool box
     if updateable:
         edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="newsfeed",
+                     _href=URL(c="cms", f="post",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
                                      "record": record_id}),

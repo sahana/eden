@@ -37,8 +37,8 @@ settings = current.deployment_settings
 settings.auth.registration_requires_verification = True
 # Users need to be approved
 settings.auth.registration_requires_approval = True
-#settings.auth.registration_requests_organisation = True
-#settings.auth.registration_organisation_required = True
+settings.auth.registration_requests_organisation = True
+settings.auth.registration_organisation_required = True
 
 # Approval emails get sent to all admins
 settings.mail.approver = "ADMIN"
@@ -70,6 +70,10 @@ settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
+
+# @ToDo: Investigate 
+settings.ui.use_button_glyphicons = True
+
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
@@ -274,14 +278,14 @@ def customise_cms_post_resource(r, tablename):
                    #"series_id",
                    "body",
                    "location_id",
-                   S3SQLInlineComponent(
-                       "document",
-                       name = "file",
-                       label = T("Files"),
-                       fields = [("", "file"),
-                                 #"comments",
-                                 ],
-                       ),
+                   #S3SQLInlineComponent(
+                   #    "document",
+                   #    name = "file",
+                   #    label = T("Files"),
+                   #    fields = [("", "file"),
+                   #              #"comments",
+                   #              ],
+                   #    ),
                    ]
 
     incident_id = r.get_vars.get("~.(incident)", None)
@@ -461,12 +465,12 @@ def customise_event_incident_resource(r, tablename):
                       #                ),
                       ]
 
-    url_next = URL(c="event", f="incident", args="summary")
+    url_next = URL(c="event", f="incident", args=["[id]", "profile"])
 
     s3db.configure("event_incident",
                    create_next = url_next,
                    crud_form = crud_form,
-                   delete_next = url_next,
+                   delete_next = URL(c="event", f="incident", args="summary"),
                    filter_widgets = filter_widgets,
                    list_fields = list_fields,
                    update_next = url_next,
@@ -503,7 +507,7 @@ def customise_event_incident_resource(r, tablename):
                                 tablename = "event_resource",
                                 context = "incident",
                                 #filter = S3FieldSelector("status").belongs(event_resource_active_statuses),
-                                icon = "icon-resource",
+                                icon = "icon-wrench",
                                 colspan = 1,
                                 #list_layout = s3db.event_resource_list_layout,
                                 )

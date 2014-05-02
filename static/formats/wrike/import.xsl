@@ -88,7 +88,8 @@
         <data field="name"><xsl:value-of select="text()"/></data>
     </xsl:template>
 
-    <!-- ****************************************************************** -->
+    <!-- ****************************************************************** 
+    The Account ID will be the same for all 
     <xsl:template match="folder/accountId">
         <reference field="organisation_id" resource="org_organisation">
             <xsl:attribute name="tuid">
@@ -96,7 +97,7 @@
             </xsl:attribute>
         </reference>
     </xsl:template>
-
+    -->
     <!-- ****************************************************************** -->
     <!-- TASK                                                               -->
     <!-- ****************************************************************** -->

@@ -50,13 +50,13 @@
 
 .sahana_logo {
     float: left;
-    height: 80px;
+    height: 100px;
 }
 
 .title h1 {
     float: left;
-    font-size: 60px;
-    line-height: 60px;
+    font-size: 80px;
+    line-height: 80px;
     margin: 0;
     padding: 20px 0 0;
 }
@@ -65,10 +65,10 @@
     float: left;
     clear: left;
     width: 150px;
-    margin: 0 5px 0 15px;
+    margin: 0 5px 10px 15px;
 }
 
-.title h2 {
+.header h2 {
     float: left;
     font-size: 20px;
     line-height: 25px;
@@ -92,18 +92,25 @@ h3 {
     font-size: 25px;
     line-height: 35px;
 }
-.title .intro {
-    padding: 10px 15px;
-    height: 110px; 
+.title {
+    padding-top: 30px;
+}
+
+.header {
     background: url('../../img/semi_white_75.png');
+}
+
+.header .intro {
+    padding: 10px 15px;
 }
 
 .intro p,
 .intro ul {
+    clear: both;
     margin-bottom: 5px;
 }
 
-.title {
+.header {
     margin-bottom: 20px;
 }
 
@@ -111,12 +118,20 @@ ol, ul {
     list-style: disc;
 }
 
+div.link {
+    float: left;
+}
+
+.homepage .icon-plus-sign.small-add {
+    top: 7px;
+}
+
 .homepage .map {
     margin-bottom: 15px;
 }
 
-div:hover h3,
-div:hover a {
+div.link:hover h3,
+div.link:hover a {
     color: #182640;
     text-decoration:none;
 }
@@ -143,6 +158,10 @@ div:hover a {
 }
 
 /* RSS Feed */
+#feed-control {
+    clear: both;
+}
+
 .gfg-title,
 .gfg-entry,
 .gfg-subtitle {
@@ -173,6 +192,15 @@ div:hover a {
 h2, #list-btn-add {
     float: left
 } */
+
+.summary-heading {
+    float: left;
+}
+
+.summary-create {
+    float: left;
+    margin: 12px 0 0 18px;
+}
 
 #list-btn-add {
     margin: 15px 0 0 15px;

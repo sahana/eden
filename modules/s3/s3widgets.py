@@ -1433,7 +1433,7 @@ class S3DateTimeWidget(FormWidget):
                 if lscript not in s3.scripts:
                     # 1st Datepicker
                     s3.scripts.append(lscript)
-                    script = '''$.datepicker.setDefaults($.datepicker.regional["%s"])''' % language
+                    script = '''$.datepicker.setDefaults($.datepicker.regional["%s"],showOptions=)''' % language
                     jquery_ready.append(script)
 
         # Option to hide the time slider
@@ -4656,8 +4656,8 @@ i18n.address_not_mapped="%s"
 i18n.location_found="%s"
 i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                    T("Address NOT Mapped"),
-                                   T("Location Found"),
-                                   T("Location NOT Found"),
+                                   T("Address Found"),
+                                   T("Address NOT Found"),
                                    ))
                 map_icon.append(DIV(DIV(_class="throbber hide"),
                                     DIV(_class="geocode_success hide"),
