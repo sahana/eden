@@ -1268,11 +1268,11 @@ class S3OptionsFilter(S3FilterWidget):
         else:
             # Default widget_type = "multiselect"
             widget_class = "multiselect-filter-widget"
-            w = S3MultiSelectWidget(
-                    filter = opts.get("filter", "auto"),
-                    header = opts.get("header", False),
-                    selectedList = opts.get("selectedList", 3),
-                    multiple = opts.get("multiple", True),)
+            w = S3MultiSelectWidget(filter = opts.get("filter", "auto"),
+                                    header = opts.get("header", False),
+                                    selectedList = opts.get("selectedList", 3),
+                                    multiple = opts.get("multiple", True),
+                                    )
 
 
         # Add widget class and default class
@@ -1428,7 +1428,24 @@ class S3OptionsFilter(S3FilterWidget):
                         # We do not allow the user to see values only used
                         # in records he's not permitted to see:
                         query &= accessible_query("read", resource.table)
-                        
+
+                        # Filter options by location?
+                        location_filter = opts.get("location_filter")
+                        if location_filter and "location_id" in ktable:
+                            location = current.session.s3.location_filter
+                            if location:
+                                query &= (ktable.location_id == location)
+
+                        # Filter options by organisation?
+                        org_filter = opts.get("org_filter")
+                        if org_filter and "organisation_id" in ktable:
+                            root_org = auth.root_org()
+                            if root_org:
+                                query &= ((ktable.organisation_id == root_org) | \
+                                          (ktable.organisation_id == None))
+                            #else:
+                            #    query &= (ktable.organisation_id == None)
+            
                         rows = current.db(query).select(key_field,
                                                         resource._id.min(),
                                                         groupby=key_field,

@@ -1499,7 +1499,9 @@ def pr_rheader(r, vnrc):
         # Simplify RHeader
         settings.hrm.vol_experience = None
 
-    return current.s3db.hrm_rheader(r)
+    s3db = current.s3db
+    s3db.hrm_vars()
+    return s3db.hrm_rheader(r)
 
 # -----------------------------------------------------------------------------
 def customise_req_commit_controller(**attr):

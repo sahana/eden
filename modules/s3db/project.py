@@ -6280,14 +6280,10 @@ def project_project_filters(org_label):
         else:
             sector = T("Sector")
         append_filter(
-            # @ToDo: Move to FK & remove custom options lookup
-            S3OptionsFilter("sector.id",
+            S3OptionsFilter("sector_project.sector_id",
                             label = sector,
-                            options = lambda: \
-                                get_s3_filter_opts("org_sector",
-                                                   location_filter=True,
-                                                   none=True,
-                                                   translate=True),
+                            location_filter = True,
+                            none = True,
                             hidden = True,
                             )
         )
@@ -6295,12 +6291,8 @@ def project_project_filters(org_label):
     mode_drr = settings.get_project_mode_drr()
     if mode_drr:
         append_filter(
-            # @ToDo: Move to FK & remove custom options lookup
-            S3OptionsFilter("hazard.id",
+            S3OptionsFilter("hazard_project.hazard_id",
                             label = T("Hazard"),
-                            options = lambda: \
-                                get_s3_filter_opts("project_hazard",
-                                                   translate=True),
                             help_field = project_hazard_help_fields,
                             cols = 4,
                             hidden = True,
@@ -6309,12 +6301,8 @@ def project_project_filters(org_label):
         
     if settings.get_project_mode_3w():
         append_filter(
-            # @ToDo: Move to FK & remove custom options lookup
-            S3OptionsFilter("theme.id",
+            S3OptionsFilter("theme_project.theme_id",
                             label = T("Theme"),
-                            options = lambda: \
-                                get_s3_filter_opts("project_theme",
-                                                   translate=True),
                             help_field = project_theme_help_fields,
                             cols = 4,
                             hidden = True,
