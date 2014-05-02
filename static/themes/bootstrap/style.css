@@ -72,6 +72,7 @@ input[class*="span"],
 select[class*="span"],
 textarea[class*="span"] {
     width: auto;
+    display: inline-block /*don't wrap help-block*/
 }
 
 /* Web2Py styles Inputs as x-large, which don't match other form inputs */
@@ -223,8 +224,13 @@ a i.icon.icon-plus-sign.big-add:hover {
 }
 
 .ui-dialog {
-	width: 600px !important;
+	width: 750px !important;
 	padding: 0;
+}
+
+.popup .form-container form.form-horizontal {
+    border: none;
+    box-shadow: none;
 }
 
 /* Page Elements */
@@ -319,8 +325,8 @@ body.rtl .form-horizontal .control-label {
 
 .form-horizontal div.controls .help-block {
     display: inline-block;
-    margin-left: 10px;
-    margin-top: 0;
+    margin-left: 5px;
+    margin-top: 5px;
 }
 
 .form-container .help-block div {
