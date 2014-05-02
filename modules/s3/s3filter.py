@@ -1268,11 +1268,11 @@ class S3OptionsFilter(S3FilterWidget):
         else:
             # Default widget_type = "multiselect"
             widget_class = "multiselect-filter-widget"
-            w = S3MultiSelectWidget(
-                    filter = opts.get("filter", "auto"),
-                    header = opts.get("header", False),
-                    selectedList = opts.get("selectedList", 3),
-                    multiple = opts.get("multiple", True),)
+            w = S3MultiSelectWidget(filter = opts.get("filter", "auto"),
+                                    header = opts.get("header", False),
+                                    selectedList = opts.get("selectedList", 3),
+                                    multiple = opts.get("multiple", True),
+                                    )
 
 
         # Add widget class and default class
