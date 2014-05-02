@@ -84,7 +84,7 @@ class S3Hierarchy(object):
 
         self.__pkey = None
         self.__fkey = None
-        self.__cat = None
+        self.__ckey = None
         
     # -------------------------------------------------------------------------
     @property
