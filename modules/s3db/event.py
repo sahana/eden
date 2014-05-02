@@ -1010,7 +1010,7 @@ class S3EventResourceModel(S3Model):
                                                ),
                           #Field.Method("location", lambda row: self.sit_location(row, tablename)),
                           # @ToDo: Deprecate once we start using S3Track
-                          s3_datetime(),
+                          s3_datetime(default = "now"),
                           s3_comments(),
                           *s3_meta_fields())
 

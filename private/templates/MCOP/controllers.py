@@ -69,7 +69,9 @@ for(var i=0,len=layers.length;i<len;i++){
                                                    layout = s3db.cms_post_list_layout
                                                    )
         ajax_url = URL(c="cms", f="post", args="datalist.dl", vars={"list_id": list_id})
-        output[list_id] = datalist.html(ajaxurl = ajax_url)
+        output[list_id] = datalist.html(ajaxurl = ajax_url,
+                                        pagesize = 5
+                                        )
 
         # Incidents Data List
         resource = s3db.resource("event_incident")
@@ -93,7 +95,9 @@ for(var i=0,len=layers.length;i<len;i++){
                                                    layout = s3db.event_incident_list_layout
                                                    )
         ajax_url = URL(c="event", f="incident", args="datalist.dl", vars={"list_id": list_id})
-        output[list_id] = datalist.html(ajaxurl = ajax_url)
+        output[list_id] = datalist.html(ajaxurl = ajax_url,
+                                        pagesize = 5
+                                        )
 
         # Tasks Data List
         resource = s3db.resource("project_task")
@@ -126,7 +130,9 @@ for(var i=0,len=layers.length;i<len;i++){
                                                    layout = s3db.project_task_list_layout
                                                    )
         ajax_url = URL(c="project", f="task", args="datalist.dl", vars={"list_id": list_id})
-        output[list_id] = datalist.html(ajaxurl = ajax_url)
+        output[list_id] = datalist.html(ajaxurl = ajax_url,
+                                        pagesize = 5
+                                        )
 
         # MCOP RSS News Feed
         #s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
