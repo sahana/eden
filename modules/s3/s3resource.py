@@ -2117,14 +2117,15 @@ class S3Resource(object):
         return
 
     # -------------------------------------------------------------------------
-    def get(self, key, component=None):
+    def get(self, key, component=None, link=None):
         """
             Get component records for a record currently stored in this
             instance.
 
             @param key: the record ID
             @param component: the name of the component
-                              (None to get the primary record)
+            @param link: the name of the link table
+            
             @return: a Row (if component is None) or a list of rows
         """
 
@@ -2139,32 +2140,35 @@ class S3Resource(object):
         except IndexError:
             raise NOT_FOUND
 
-        if not component:
+        if not component and not link:
             return master
+        elif link:
+            if link in self.links:
+                c = self.links[link]
+            else:
+                raise AttributeError("Undefined link %s" % link)
         else:
             if component in self.components:
                 c = self.components[component]
-            elif component in self.links:
-                c = self.links[component]
             else:
                 raise AttributeError("Undefined component %s" % component)
-            rows = c._rows
-            if rows is None:
-                rows = c.load()
-            if not rows:
-                return []
-            pkey, fkey = c.pkey, c.fkey
-            if pkey in master:
-                master_id = master[pkey]
-                if c.link:
-                    lkey, rkey = c.lkey, c.rkey
-                    lids = [r[rkey] for r in c.link if master_id == r[lkey]]
-                    rows = [record for record in rows if record[fkey] in lids]
-                else:
-                    rows = [record for record in rows if master_id == record[fkey]]
+        rows = c._rows
+        if rows is None:
+            rows = c.load()
+        if not rows:
+            return []
+        pkey, fkey = c.pkey, c.fkey
+        if pkey in master:
+            master_id = master[pkey]
+            if c.link:
+                lkey, rkey = c.lkey, c.rkey
+                lids = [r[rkey] for r in c.link if master_id == r[lkey]]
+                rows = [record for record in rows if record[fkey] in lids]
             else:
-                rows = []
-            return rows
+                rows = [record for record in rows if master_id == record[fkey]]
+        else:
+            rows = []
+        return rows
 
     # -------------------------------------------------------------------------
     def get_id(self):
@@ -2762,8 +2766,12 @@ class S3Resource(object):
 
                 if component.link is not None:
                     c = component.link
+                    calias = None
+                    lalias = c.alias
                 else:
                     c = component
+                    calias = c.alias
+                    lalias = None
 
                 # Before loading the component: add filters
                 if c._rows is None:
@@ -2803,7 +2811,10 @@ class S3Resource(object):
                     component_url = None
 
                 # Find related records
-                crecords = self.get(record[pkey], component=c.alias)
+                crecords = self.get(record[pkey],
+                                    component = calias,
+                                    link = lalias,
+                                    )
                 # @todo: load() should limit this automatically:
                 if not c.multiple and len(crecords):
                     crecords = [crecords[0]]

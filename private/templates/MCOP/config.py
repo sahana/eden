@@ -158,6 +158,16 @@ settings.project.task_status_opts = {2: T("Active"),
 
 settings.ui.update_label = "Edit"
 # -----------------------------------------------------------------------------
+# Mariner CommandBridge resource identifiers
+settings.sync.mcb_resource_identifiers = {"event_incident": "802017D4-08D1-40EA-A03D-4FCFC26883A4",
+                                          "project_task": "06831BE6-7B49-47F0-80CD-5FB27DEEC330",
+                                          "cms_post": "A6E68F53-72B8-415A-A50F-BB26D363CD30",
+                                          }
+# Mariner CommandBridge domain identifiers
+settings.sync.mcb_domain_identifiers = {"sahana": "9197B3DC-07DD-4922-96CA-9B6D8A1FC2D2",
+                                        "wrike": "69A069D9-23E8-422D-BB18-2A3A92FE291C",
+                                        }
+# -----------------------------------------------------------------------------
 # Disable rheaders
 def customise_no_rheader_controller(**attr):
     # Remove rheader

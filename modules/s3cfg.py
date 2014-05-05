@@ -113,6 +113,7 @@ class S3Config(Storage):
         self.supply = Storage()
         self.search = Storage()
         self.security = Storage()
+        self.sync = Storage()
         self.ui = Storage()
         self.vulnerability = Storage()
 
@@ -1468,6 +1469,28 @@ class S3Config(Storage):
     def get_search_filter_manager_load(self):
         """ Text for saved filter load-button """
         return self.search.get("filter_manager_load", None)
+
+    # =========================================================================
+    # Sync
+    #
+    def get_sync_mcb_resource_identifiers(self):
+        """
+            Resource (=data type) identifiers for synchronization with
+            Mariner CommandBridge, a dict {tablename:id}
+        """
+
+        return self.sync.get("mcb_resource_identifiers", {})
+
+    def get_sync_mcb_domain_identifiers(self):
+        """
+            Domain (of origin) identifiers for synchronization with
+            Mariner CommandBridge, a dict {domain: id} where
+            "domain" means the domain prefix of the record UUID
+            (e.g. uuid "wrike/IKY0192834" => domain "wrike"),
+            default domain is "sahana"
+        """
+
+        return self.sync.get("mcb_domain_identifiers", {})
 
     # =========================================================================
     # Modules

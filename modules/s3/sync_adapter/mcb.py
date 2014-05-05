@@ -115,11 +115,21 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Apply sync filters for this task
         filters = current.sync.get_filters(task.id)
 
+        settings = current.deployment_settings
+        
+        identifiers = settings.get_sync_mcb_resource_identifiers()
+        resources = "".join("[%s:%s]" % (k, v) for k, v in identifiers.items())
+        
+        identifiers = settings.get_sync_mcb_domain_identifiers()
+        domains = "".join("[%s:%s]" % (k, v) for k, v in identifiers.items())
+
         # Export the resource as S3XML
         data = resource.export_xml(filters = filters,
                                    msince = last_push,
                                    stylesheet = stylesheet,
                                    pretty_print = True,
+                                   resources = resources,
+                                   domains = domains,
                                    )
 
         count = resource.results or 0
@@ -131,6 +141,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         if data and count:
 
+            print data
+            #response, message = None, None
             response, message = self.send(method = "POST",
                                           path = "BulkStream",
                                           data = data)
