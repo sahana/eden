@@ -650,7 +650,7 @@ def render_locations(list_id, item_id, resource, rfields, record):
                                                 limitby=(0, 1)
                                                 ).first()
         if loc:
-            from s3.codecs.svg import S3SVG
+            from s3.s3codecs.svg import S3SVG
             S3SVG.write_file(filename, loc.wkt)
 
     # Render the item
@@ -2643,7 +2643,7 @@ def customise_gis_location_controller(**attr):
                                                             limitby=(0, 1)
                                                             ).first()
                     if loc:
-                        from s3.codecs.svg import S3SVG
+                        from s3.s3codecs.svg import S3SVG
                         S3SVG.write_file(filename, loc.wkt)
 
                 name = location.name

@@ -69,10 +69,10 @@ class S3Codec(object):
     def get_codec(format):
 
         # Import the codec classes
-        from codecs import S3SHP
-        from codecs import S3SVG
-        from codecs import S3XLS
-        from codecs import S3RL_PDF
+        from s3codecs import S3SHP
+        from s3codecs import S3SVG
+        from s3codecs import S3XLS
+        from s3codecs import S3RL_PDF
 
         # Register the codec classes
         CODECS = Storage(

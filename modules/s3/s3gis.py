@@ -4083,7 +4083,7 @@ class GIS(object):
                                       lat_max=lat_max)
                 ttable.insert(location_id=new_id,
                               tag="geonames",
-                              value=geoname_id)
+                              value=geonameid)
             else:
                 continue
 
