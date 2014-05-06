@@ -21,7 +21,6 @@
          Lon............................optional.....Longitude
          Capacity Day...................cr_shelter.capacity_day
          Capacity Night.................cr_shelter.capacity_night
-         Population.....................cr_shelter.population
          Status.........................cr_shelter.status (@ToDo: Populate cr_shelter_status for historical data)
 
     *********************************************************************** -->
@@ -112,7 +111,6 @@
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
             <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
-            <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
 
             <xsl:choose>
                 <xsl:when test="$Status='Closed'">
