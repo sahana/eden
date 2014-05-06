@@ -38,6 +38,14 @@ settings = current.deployment_settings
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
 settings.base.prepopulate = ["EVASS"]
 
+settings.base.system_name = T("EVASS - Sahana Eden for Italy")
+settings.base.system_name_short = T("Sahana Eden for Italy")
+
+# Use system_name_short as default email subject (Appended).
+settings.mail.default_email_subject = True
+# Append name and surname of logged in user to email subject
+settings.mail.auth_user_in_email_subject = True
+
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "EVASS"
 settings.ui.formstyle = "foundation"
@@ -665,7 +673,10 @@ def customise_pr_person_resource(r, tablename):
                                empty = False).requires
         dob_requires.error_message = T("Please enter a date of birth")
         table.date_of_birth.requires = dob_requires
-    
+
+        s3db.pr_person_details.requires = IS_NOT_EMPTY(
+                        error_message = T("Please enter a place of birth"))
+
     # Disable unneeded physical details
     pdtable = s3db.pr_physical_description
     hide_fields = [
@@ -873,13 +884,12 @@ settings.modules = OrderedDict([
        #restricted = True,
        #module_type = 10,
     #)),
-    # @todo: implement evr module
-#     ("evr", Storage(
-#          name_nice = T("Evacuees"),
-#          #description = "Evacuees Registry",
-#          restricted = True, # use Access Control Lists to see this module
-#          module_type = 7
-#     )),
+    ("evr", Storage(
+         name_nice = T("Evacuees"),
+         #description = "Evacuees Registry",
+         restricted = True, # use Access Control Lists to see this module
+         module_type = 7
+    )),
     ("event", Storage(
         name_nice = T("Events"),
         #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",

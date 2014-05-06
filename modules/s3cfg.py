@@ -1122,6 +1122,53 @@ class S3Config(Storage):
         """ Password for Pootle server """
         return self.L10n.get("pootle_password", False)
 
+    def get_L10n_measurement_lenght_m(self):
+        lenght_m = {1: "m",
+                    2: "yd",
+                    }
+        return self.L10n.get("measurement_lenght_m", lenght_m)
+    def get_L10n_measurement_lenght_cm(self):
+        lenght_cm = {1: "cm",
+                     2: "in",
+                     3: "ft",
+                     }
+        return self.L10n.get("measurement_lenght_cm", lenght_cm)
+    def get_L10n_measurement_lenght_km(self):
+        lenght_km = {1: "Km",
+                     2: "mi",
+                     3: "naut mi",
+                     }
+        return self.L10n.get("measurement_lenght_km", lenght_km)
+    def get_L10n_measurement_area_m(self):
+        area_m = {1: "m²",
+                  2: "yd²",
+                  3: "ac",
+                  }
+        return self.L10n.get("measurement_area_m", area_m)
+    def get_L10n_measurement_area_km(self):
+        area_km = {1: "Km²",
+                   2: "mi²",
+                   3: "ac",
+                   }
+        return self.L10n.get("measurement_area_km", area_km)
+    def get_L10n_measurement_vol_l(self):
+        vol_l = {1: "l",
+                 2: "US_gal",
+                 3: "Uk_gal",
+                 }
+        return self.L10n.get("measurement_vol_l", vol_l)
+    def get_L10n_measurement_weight_g(self):
+        weight_g = {1: "g",
+                    2: "oz",
+                    3: "ozt",
+                    }
+        return self.L10n.get("measurement_weight_g", weight_g)
+    def get_L10n_measurement_weight_kg(self):
+        weight_kg = {1: "kg",
+                     2: "lb",
+                     }
+        return self.L10n.get("measurement_weight_kg", weight_kg)
+
     # -------------------------------------------------------------------------
     # PDF settings
     def get_paper_size(self):
@@ -1375,6 +1422,18 @@ class S3Config(Storage):
             - unless overridden by per-domain entries in auth_organsiation
         """
         return self.mail.get("approver", "useradmin@example.org")
+    
+    def get_mail_default_subject(self):
+        """
+            Use system_name_short as default email subject (Appended).
+        """
+        return self.mail.get("default_email_subject", False)
+
+    def get_mail_auth_user_in_subject(self):
+        """
+            Append name and surname of logged in user to email subject
+        """
+        return self.mail.get("mail.auth_user_in_email_subject", False)
 
     def get_mail_limit(self):
         """

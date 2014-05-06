@@ -96,8 +96,7 @@ $('#login-btn').click(function(){
             output["incident_reports_btn"] = self.incident_reports_btn()
             output["staff_btn"] = self.staff_btn()
             output["volunteers_btn"] = self.volunteers_btn()
-            # @todo: implement evr module
-            #output["evacuees_btn"] = self.evacuees_btn()
+            output["evacuees_btn"] = self.evacuees_btn()
             output["warehouses_btn"] = self.warehouses_btn()
             output["shelters_btn"] = self.shelters_btn()
             output["hospitals_btn"] = self.hospitals_btn()
