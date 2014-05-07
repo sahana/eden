@@ -462,7 +462,7 @@ def newsfeed():
 
     def prep(r):
         if r.interactive or r.representation == "aadata":
-            s3db.cms_customize_post_fields()
+            s3db.cms_customise_post_fields()
 
         if r.interactive:
             field = table.series_id

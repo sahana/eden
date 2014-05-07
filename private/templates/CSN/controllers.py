@@ -50,7 +50,7 @@ def homepage():
     response = current.response
     s3 = response.s3
 
-    current.deployment_settings.ui.customize_cms_post()
+    current.deployment_settings.ui.customise_cms_post()
 
     list_layout = render_homepage_posts
 

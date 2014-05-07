@@ -34,7 +34,7 @@ __all__ = ["S3ContentModel",
            "S3ContentUserModel",
            "cms_index",
            "cms_rheader",
-           "cms_customize_post_fields",
+           "cms_customise_post_fields",
            "cms_post_list_layout",
            "S3CMS",
            ]
@@ -1096,7 +1096,7 @@ class S3CMS(S3Method):
         return output
 
 # =============================================================================
-def cms_customize_post_fields():
+def cms_customise_post_fields():
     """
         Customize cms_post fields for the Newsfeed / Home Pages
     """

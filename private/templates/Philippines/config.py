@@ -1383,8 +1383,8 @@ def customise_gis_location_controller(**attr):
                 # Customise tables used by widgets
                 #customise_hrm_human_resource_fields()
                 customise_org_facility_fields()
-                s3db.req_customize_req_fields()
-                s3db.req_customize_commit_fields()
+                s3db.req_customise_req_fields()
+                s3db.req_customise_commit_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -1900,7 +1900,7 @@ def customise_org_facility_controller(**attr):
                 # Customise tables used by widgets
                 customise_hrm_human_resource_fields()
                 customise_site_needs_fields(profile=True)
-                s3db.req_customize_req_fields()
+                s3db.req_customise_req_fields()
 
                 list_fields = ["name",
                                "id",
@@ -2818,14 +2818,14 @@ def customise_req_req_controller(**attr):
 
         s3db = current.s3db
         if r.component_name == "commit":
-            s3db.req_customize_commit_fields()
+            s3db.req_customise_commit_fields()
         else:
-            s3db.req_customize_req_fields()
+            s3db.req_customise_req_fields()
         if r.method in ("datalist", "datalist.dl"):
             s3.filter = (r.table.req_status.belongs([0, 1]))
         elif r.method == "profile":
             # Customise tables used by widgets
-            s3db.req_customize_commit_fields()
+            s3db.req_customise_commit_fields()
             customise_org_facility_fields()
 
             record = r.record
@@ -2941,7 +2941,7 @@ def customise_req_commit_controller(**attr):
         #if callable(standard_prep):
         #    result = standard_prep(r)
 
-        current.s3db.req_customize_commit_fields()
+        current.s3db.req_customise_commit_fields()
 
         if r.method in ("datalist", "datalist.dl"):
             s3.filter = (r.table.cancel != True)

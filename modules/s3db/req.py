@@ -42,9 +42,9 @@ __all__ = ["S3RequestModel",
            "req_rheader",
            "req_match",
            "req_add_from_template",
-           "req_customize_req_fields",
+           "req_customise_req_fields",
            "req_req_list_layout",
-           "req_customize_commit_fields",
+           "req_customise_commit_fields",
            "req_commit_list_layout",
            ]
 
@@ -308,7 +308,7 @@ class S3RequestModel(S3Model):
                                     #default = auth.s3_logged_in_person()
                                     ),
                           # Simple Status
-                          # - currently just enabled in customize_req_fields() workflow
+                          # - currently just enabled in customise_req_fields() workflow
                           req_status(readable = False,
                                      writable = False,
                                      ),
@@ -3900,7 +3900,7 @@ def req_add_from_template(req_id):
     return id
 
 # =============================================================================
-def req_customize_req_fields():
+def req_customise_req_fields():
     """
         Customize req_req fields for the Home page & dataList view
         - this assumes Simple Requests (i.e. type 'Other')
@@ -4305,7 +4305,7 @@ def req_req_list_layout(list_id, item_id, resource, rfields, record):
     return item
 
 # =============================================================================
-def req_customize_commit_fields():
+def req_customise_commit_fields():
     """
         Customize req_commit fields for the Home page & dataList view
     """

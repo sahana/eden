@@ -116,7 +116,7 @@ $('#login-btn').click(function(){
 
         list_id = "latest_reqs"
         resource = s3db.resource("req_req")
-        s3db.req_customize_req_fields()
+        s3db.req_customise_req_fields()
         list_fields = s3db.get_config("req_req", "list_fields")
         layout = s3db.req_req_list_layout
         resource.add_filter(S3FieldSelector("cancel") != True)
@@ -135,7 +135,7 @@ $('#login-btn').click(function(){
                        "tablename",
                        "record_id",
                        ]
-        #current.deployment_settings.ui.customize_s3_audit()
+        #current.deployment_settings.ui.customise_s3_audit()
         db = current.db
         db.s3_audit.user_id.represent = s3_auth_user_represent_name
         list_id = "log"

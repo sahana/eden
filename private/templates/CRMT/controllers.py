@@ -93,7 +93,7 @@ for(var i=0,len=layers.length;i<len;i++){
                        "tablename",
                        "record_id",
                        ]
-        #current.deployment_settings.ui.customize_s3_audit()
+        #current.deployment_settings.ui.customise_s3_audit()
         db.s3_audit.user_id.represent = s3_auth_user_represent_name
         list_id = "log"
         datalist, numrows, ids = resource.datalist(fields=list_fields,
