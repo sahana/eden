@@ -2841,15 +2841,17 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             @todo: implement audit
         """
 
+        s3db = current.s3db
+
         # Name of the real input field
         fname = self._formname(separator="_")
         resource = self.resource
 
-        success = True
+        success = False
 
         if fname in form.vars:
 
-            # Retrieve the data
+            # Extract the new values from the form
             values = form.vars[fname]
             if values is None:
                 values = []
@@ -2860,47 +2862,48 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             # Get the link table
             component, link = self.get_link()
 
-            # Select current ids
-            linktable = link.table
-            rkey = linktable[component.rkey]
-            rows = link.select([component.rkey], as_rows=True)
-            if rows:
-                current_ids = set(str(row[rkey]) for row in rows)
-                delete = current_ids - values
-                insert = values - current_ids
+            # Get the master identity (pkey)
+            pkey = component.pkey
+            if pkey == resource._id.name:
+                master = {pkey: master_id}
             else:
-                delete = None
-                insert = values
+                # Different pkey (e.g. super-key) => reload the master
+                query = (resource._id == master_id)
+                master = current.db(query).select(resource.table[pkey],
+                                                  limitby=(0, 1)).first()
 
-            # Delete links which are no longer used
-            # @todo: apply filterby to only delete within the subset?
-            if delete:
-                query = S3FieldSelector(component.rkey).belongs(delete)
-                lresource = current.s3db.resource(link.tablename, filter = query)
-                lresource.delete()
+            if master:
+                # Find existing links
+                query = S3FieldSelector(component.lkey) == master[pkey]
+                lresource = s3db.resource(link.tablename, filter = query)
+                rows = lresource.select([component.rkey], as_rows=True)
 
-            # New records to insert?
-            insert.discard("")
-            if insert:
-                pkey = component.pkey
-                if pkey == resource._id.name:
-                    master = {pkey: master_id}
+                # Determine which to delete and which to add
+                if rows:
+                    rkey = link.table[component.rkey]
+                    current_ids = set(str(row[rkey]) for row in rows)
+                    delete = current_ids - values
+                    insert = values - current_ids
                 else:
-                    # Different pkey (e.g. super-key) => read the master record
-                    query = (resource._id == master_id)
-                    master = current.db(query).select(resource.table[pkey],
-                                                      limitby=(0, 1)).first()
-                if master:
+                    delete = None
+                    insert = values
+
+                # Delete links which are no longer used
+                # @todo: apply filterby to only delete within the subset?
+                if delete:
+                    query = S3FieldSelector(component.rkey).belongs(delete)
+                    lresource = s3db.resource(link.tablename, filter = query)
+                    lresource.delete()
+
+                # Insert new links
+                insert.discard("")
+                if insert:
                     # Insert new links
                     for record_id in insert:
                         record = {component.fkey: record_id}
                         link.update_link(master, record)
-                else:
-                    # Master not present? (should never get here)
-                    success = False
-        else:
-            # No data
-            success = False
+                        
+                success = True
 
         return success
 

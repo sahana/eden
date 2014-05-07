@@ -2891,18 +2891,26 @@ class S3FacilityModel(S3Model):
             report_fields.append(lfield)
             text_fields.append(lfield)
 
+        if hierarchical_facility_types:
+            type_filter = S3HierarchyFilter("site_facility_type.facility_type_id",
+                                            label = T("Type"),
+                                            )
+        else:
+            type_filter = S3OptionsFilter("site_facility_type.facility_type_id",
+                                          # @ToDo: Introspect need for header based on # records
+                                          #header = True,
+                                          label = T("Type"),
+                                          represent = "%(name)s",
+                                          widget = "multiselect",
+                                          )
+
+            
         filter_widgets = [
             S3TextFilter(text_fields,
                          label = T("Search"),
                          #_class = "filter-search",
                          ),
-            S3OptionsFilter("site_facility_type.facility_type_id",
-                            # @ToDo: Introspect need for header based on # records
-                            #header = True,
-                            label = T("Type"),
-                            represent = "%(name)s",
-                            widget = "multiselect",
-                            ),
+            type_filter,
             S3OptionsFilter("organisation_id",
                             # @ToDo: Introspect need for header based on # records
                             #header = True,
@@ -2985,13 +2993,18 @@ class S3FacilityModel(S3Model):
             )
 
         # Custom Form
+        if hierarchical_facility_types:
+            type_widget = "hierarchy"
+        else:
+            type_widget = "groupedopts"
         crud_form = S3SQLCustomForm("name",
                                     "code",
-                                    S3SQLInlineComponentCheckbox(
-                                        "facility_type",
-                                        label = T("Facility Type"),
-                                        field = "facility_type_id",
-                                        cols = 3,
+                                    S3SQLInlineLink(
+                                          "facility_type",
+                                          label = T("Facility Type"),
+                                          field = "facility_type_id",
+                                          widget = type_widget,
+                                          cols = 3,
                                     ),
                                     "organisation_id",
                                     "location_id",

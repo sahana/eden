@@ -1331,7 +1331,7 @@ def customise_org_facility_controller(**attr):
                                )
             else:
                 # Custom Form (Read/Create/Update)
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
                 if method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
@@ -1359,10 +1359,11 @@ def customise_org_facility_controller(**attr):
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
-                    S3SQLInlineComponentMultiSelectWidget(
+                    S3SQLInlineLink(
                         "facility_type",
                         label = T("Type of Place"),
                         field = "facility_type_id",
+                        widget = "hierarchy",
                     ),
                     "organisation_id",
                     S3SQLInlineComponent(
