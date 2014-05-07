@@ -282,7 +282,15 @@ def customise_cms_post_resource(r, tablename):
 
     #table.series_id.readable = table.series_id.writable = True
     #table.series_id.label = T("Type")
-    table.series_id.default = "Alert"
+    stable = s3db.cms_series
+    try:
+        series_id = current.db(stable.name == "Alert").select(stable.id,
+                                                              limitby=(0, 1)
+                                                              ).first().id
+        table.series_id.default = series_id
+    except:
+        # No suitable prepop
+        pass
 
     table.body.label = T("Description")
     table.body.widget = None
