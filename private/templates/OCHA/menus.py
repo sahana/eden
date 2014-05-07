@@ -18,7 +18,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         controller, so each controller has its own options menu function
         in this class.
 
-        Each of these option menu functions can be customized separately,
+        Each of these option menu functions can be customised separately,
         by simply overriding (re-defining) the default function. The
         options menu function must return an instance of the item layout.
 

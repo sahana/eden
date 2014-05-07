@@ -2,7 +2,7 @@
 
 """ S3 RESTful API
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1548,7 +1548,7 @@ class S3Request(object):
 
             @note: the hook itself can call r.customise_resource in order
                    to cascade customizations as necessary
-            @note: if a table is customized that is not currently loaded,
+            @note: if a table is customised that is not currently loaded,
                    then it will be loaded for this process
         """
 

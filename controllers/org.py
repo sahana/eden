@@ -22,7 +22,7 @@ def index_alt():
         Module homepage for non-Admin users when no CMS content found
     """
 
-    # @ToDo: Move this to the Template (separate deployment_setting or else a customize for non-REST controllers)
+    # @ToDo: Move this to the Template (separate deployment_setting or else a customise for non-REST controllers)
     template = settings.get_template()
     if template == "SandyRelief":
         # Just redirect to the Facilities

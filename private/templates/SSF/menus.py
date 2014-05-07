@@ -18,9 +18,9 @@ class S3MainMenu(default.S3MainMenu):
         Custom Application Main Menu:
 
         The main menu consists of several sub-menus, each of which can
-        be customized separately as a method of this class. The overall
+        be customised separately as a method of this class. The overall
         composition of the menu is defined in the menu() method, which can
-        be customized as well:
+        be customised as well:
 
         Function        Sub-Menu                Access to (standard)
 
@@ -91,7 +91,7 @@ class S3MainMenu(default.S3MainMenu):
         #controller, so each controller has its own options menu function
         #in this class.
 
-        #Each of these option menu functions can be customized separately,
+        #Each of these option menu functions can be customised separately,
         #by simply overriding (re-defining) the default function. The
         #options menu function must return an instance of the item layout.
 
