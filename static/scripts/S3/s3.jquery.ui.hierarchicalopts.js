@@ -47,7 +47,12 @@
             this.buttonText = $('<span>' + hint + '</span>').appendTo(this.button);
 
             // The tree
-            this.tree = el.find('.s3-hierarchy-tree').first().hide().before(this.button);
+            this.tree = el.find('.s3-hierarchy-tree')
+                          .first()
+                          .hide()
+                          .before(this.button)
+                          .detach()
+                          .appendTo('body');
             this._isOpen = false;
         },
 
@@ -62,7 +67,9 @@
             
             this._unbindEvents();
             $(this.button).remove();
-            $(this.tree).show();
+            $(this.tree).detach()
+                        .appendTo(this.element)
+                        .show();
         },
 
         refresh: function() {
@@ -248,11 +255,11 @@
             }
             
             var button = $(this.button);
-            var pos = button.position();
+            var pos = button.offset();
             
             $(this.tree).css({
                 position: 'absolute',
-                top: pos.top + button.outerHeight() + 2,
+                top: pos.top + button.outerHeight(),
                 left: pos.left,
                 minWidth: button.outerWidth() - 8,
                 'z-index': 999999
