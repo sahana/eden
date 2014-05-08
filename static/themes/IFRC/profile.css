@@ -194,48 +194,48 @@ div.media a.pull-left img.media-object {
     /* Color doesn't work with Images, only with Fonts */
     color: #E74C3C;
 }
-.edit-bar .icon-edit:before,
-.edit-bar .icon-file-alt:before,
-.edit-bar .icon-trash:before {
+.icon-edit:before,
+.icon-file-alt:before,
+.icon-trash:before {
     /* Override font-awesome icons */
     content: none;
 }
 
-.icon.icon-file-alt {
+.icon-file-alt {
     background: url(img/file.png) no-repeat;
 }
-.icon.icon-edit {
+.icon-edit {
     background: url(img/pencil.png) no-repeat;
 }
-.icon.icon-search {
+.icon-search {
     background: url(img/magnifier.png) no-repeat;
 }
-.icon.icon-trash {
+.icon-trash {
     background: url(img/trashbin.png) no-repeat;
 }
 
-.icon.icon-deploy,
-.icon.icon-deployed {
+.icon-deploy,
+.icon-deployed {
     margin-left: 2px;
     margin-right: 4px;
     background: url(img/deploy.png) no-repeat;
 }
-.icon.icon-deploy {
+.icon-deploy {
     background-position: -14px 0;
 }
-.icon.icon-deployed {
+.icon-deployed {
     background-position: 0 0;
 }
 
-.icon.icon-sent,
-.icon.icon-unsent {
+.icon-sent,
+.icon-unsent {
     margin-right: 4px;
     background: url(img/deploy.png) no-repeat;
 }
-.icon.icon-unsent {
+.icon-unsent {
     background-position: -28px 0;
 }
-.icon.icon-sent {
+.icon-sent {
     background-position: 0 0;
 }
 

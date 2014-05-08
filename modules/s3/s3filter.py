@@ -73,6 +73,7 @@ def get_s3_filter_opts(tablename,
         Lazy options getter
         - this is useful when the expected number of options is significantly smaller than the number of records to iterate through
             NB This reason is no longer required with S3Filter, but is a legacy from S3Search: S3Filter already does an efficient Reverse-Query
+            @ToDo: Deprecate
         - note this doesn't check if options are actually in-use
 
         @param tablename: the name of the lookup table
