@@ -5486,20 +5486,20 @@ def hrm_human_resource_controller(extra_filter=None):
                            )                           
 
             # Remove controller filter
-            s3.filter = None
+            #s3.filter = None
 
-        elif r.representation in ("geojson", "plain") or deploy:
-            # No filter
-            pass
+        #elif r.representation in ("geojson", "plain") or deploy:
+        #    # No filter
+        #    pass
 
-        else:
-            if vol:
-                # Default to Volunteers
-                type_filter = S3FieldSelector("type") == 2
-            else:
-                # Default to Staff
-                type_filter = S3FieldSelector("type") == 1
-            r.resource.add_filter(type_filter)
+        #else:
+        #    if vol:
+        #        # Default to Volunteers
+        #        type_filter = S3FieldSelector("type") == 2
+        #    else:
+        #        # Default to Staff
+        #        type_filter = S3FieldSelector("type") == 1
+        #    r.resource.add_filter(type_filter)
 
         # Others
         if r.interactive:
