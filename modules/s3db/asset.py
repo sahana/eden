@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3AssetModel",
+           "S3AssetTeamModel",
            #"asset_rheader",
            "asset_types",
            "asset_log_status",
@@ -168,8 +169,11 @@ class S3AssetModel(S3Model):
                      Field("kit", "boolean",
                            default = False,
                            label = T("Kit?"),
+                           # Enable in template if-required
+                           readable = False,
                            represent = lambda opt: \
                                        (opt and [T("Yes")] or [NONE])[0],
+                           writable = False,
                            ),
                      organisation_id(requires=self.org_organisation_requires(
                                                  updateable=True,
@@ -330,37 +334,6 @@ S3OptionsFilter({
                              )
             )
 
-        # Custom CRUD Form to allow ad-hoc Kits
-        crud_form = S3SQLCustomForm("number",
-                                    "type",
-                                    "item_id",
-                                    "organisation_id",
-                                    "site_id",
-                                    "kit",
-                                    # If not ad-hoc Kit
-                                    "sn",
-                                    "supply_org_id",
-                                    "purchase_date",
-                                    "purchase_price",
-                                    "purchase_currency",
-                                    # If ad-hoc Kit
-                                    S3SQLInlineComponent(
-                                        "item",
-                                        label = T("Items"),
-                                        fields = ["item_id",
-                                                  "quantity",
-                                                  "sn",
-                                                  # These are too wide for the screen & hence hide the AddResourceLinks
-                                                  #"supply_org_id",
-                                                  #"purchase_date",
-                                                  #"purchase_price",
-                                                  #"purchase_currency",
-                                                  "comments",
-                                                  ],
-                                        ),
-                                    "comments",
-                                    )
-
         # Default summary
         summary = [{"name": "addform",
                     "common": True,
@@ -387,7 +360,6 @@ S3OptionsFilter({
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
-                  crud_form = crud_form,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   mark_required = ["organisation_id"],
@@ -401,11 +373,13 @@ S3OptionsFilter({
 
         # Components
         add_components(tablename,
-                       asset_item="asset_id",
-                       asset_log="asset_id",
-                       vehicle_gps="asset_id",
-                       vehicle_vehicle={"joinby": "asset_id",
-                                        "multiple": False},
+                       asset_group = "asset_id",
+                       asset_item = "asset_id",
+                       asset_log = "asset_id",
+                       vehicle_gps = "asset_id",
+                       vehicle_vehicle = {"joinby": "asset_id",
+                                          "multiple": False,
+                                          },
                        )
 
         # =====================================================================
@@ -825,6 +799,36 @@ S3OptionsFilter({
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
 
         return
+
+# =============================================================================
+class S3AssetTeamModel(S3Model):
+    """
+        Optionally link Assets to Teams
+    """
+
+    names = ["asset_group",
+             ]
+
+    def model(self):
+
+        T = current.T
+
+        #--------------------------------------------------------------------------
+        # Assets <> Groups
+        #
+        tablename = "asset_group"
+        self.define_table(tablename,
+                          self.asset_asset_id(empty = False),
+                          self.pr_group_id(comment = None,
+                                           empty = False,
+                                           ),
+                          #s3_comments(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
 
 # =============================================================================
 def asset_get_current_log(asset_id):

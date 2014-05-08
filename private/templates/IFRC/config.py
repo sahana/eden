@@ -429,17 +429,72 @@ def user_org_default_filter(selector, tablename=None):
         return {}
 
 # -----------------------------------------------------------------------------
-def customise_asset_asset_controller(**attr):
+def customise_asset_asset_resource(r, tablename):
+
+    s3db = current.s3db
+    table = s3db.asset_asset
 
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.asset_asset.organisation_id,
+    ns_only(table.organisation_id,
             required = True,
             branches = True,
             )
 
-    return attr
+    # Custom CRUD Form to allow ad-hoc Kits & link to Teams
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    table.kit.readable = table.kit.writable = True
+    crud_form = S3SQLCustomForm("number",
+                                "type",
+                                "item_id",
+                                "organisation_id",
+                                "site_id",
+                                "kit",
+                                # If not ad-hoc Kit
+                                "sn",
+                                "supply_org_id",
+                                "purchase_date",
+                                "purchase_price",
+                                "purchase_currency",
+                                # If ad-hoc Kit
+                                S3SQLInlineComponent(
+                                    "item",
+                                    label = T("Items"),
+                                    fields = ["item_id",
+                                              "quantity",
+                                              "sn",
+                                              # These are too wide for the screen & hence hide the AddResourceLinks
+                                              #"supply_org_id",
+                                              #"purchase_date",
+                                              #"purchase_price",
+                                              #"purchase_currency",
+                                              "comments",
+                                              ],
+                                    ),
+                                S3SQLInlineComponent(
+                                    "group",
+                                    label = T("Team"),
+                                    fields = [("", "group_id")],
+                                    filterby = dict(field = "group_type",
+                                                    options = 3
+                                                    ),
+                                    multiple = False,
+                                    ),
+                                "comments",
+                                )
 
-settings.customise_asset_asset_controller = customise_asset_asset_controller
+    from s3.s3filter import S3OptionsFilter
+    filter_widgets = s3db.get_config(tablename, "filter_widgets")
+    filter_widgets.insert(-1, S3OptionsFilter("group.group_id",
+                                              label = T("Team"),
+                                              represent = "%(name)s",
+                                              hidden = True,
+                                              ))
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   )
+
+settings.customise_asset_asset_resource = customise_asset_asset_resource
 
 # -----------------------------------------------------------------------------
 def customise_auth_user_controller(**attr):
