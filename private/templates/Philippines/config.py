@@ -2001,7 +2001,7 @@ def customise_org_facility_controller(**attr):
                                                 filter = layer_filter)
                 lat = None
                 lon = None
-                gtable=s3db.gis_location
+                gtable = s3db.gis_location
                 query = (r.id == ftable.id) & \
                         (ftable.location_id == gtable.id)
                 lat_lon = db(query).select(gtable.lat,

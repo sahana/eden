@@ -545,12 +545,26 @@ def customise_event_incident_resource(r, tablename):
                             #list_layout = s3db.project_task_list_layout,
                             )
         record = r.record
-        title = "%s : %s" % (crud_strings["event_incident"].title_list, record.name)
+        record_id = record.id
+        record_name = record.name
+        title = "%s : %s" % (crud_strings["event_incident"].title_list, record_name)
+        marker = current.gis.get_marker(controller = "event",
+                                        function = "incident")
+        layer = dict(name = record_name,
+                     id = "profile-header-%s-%s" % (tablename, record_id),
+                     active = True,
+                     tablename = tablename,
+                     url = "/%s/event/incident.geojson?incident.id=%s" % \
+                        (r.application, record_id),
+                     marker = marker,
+                     )
+
         s3db.configure("event_incident",
                        profile_title = title,
                        profile_header = DIV(H2(title),
                                             _class="profile_header",
                                             ),
+                       profile_layers = [layer],
                        profile_widgets = [alerts_widget,
                                           resources_widget,
                                           tasks_widget,
