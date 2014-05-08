@@ -254,6 +254,9 @@ if len(pop_list) > 0:
                    onaccept = lambda form: auth.s3_approve_user(form.vars))
     s3db.add_components("auth_user", auth_membership="user_id")
 
+    # Flag that Assets are being imported, not synced
+    s3.asset_import = True
+
     # Allow population via shell scripts
     if not request.env.request_method:
         request.env.request_method = "GET"

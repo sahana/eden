@@ -2,7 +2,7 @@
 
 """ Sahana Eden Request Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -595,9 +595,11 @@ class S3RequestModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        req_ref = S3ReusableField("req_ref", "string",
-                                  readable=False, writable=False)
-        return dict(req_req_ref = req_ref,
+        dummy = S3ReusableField("dummy", "string",
+                                readable = False,
+                                writable = False)
+
+        return dict(req_req_ref = lambda **attr: dummy("req_ref"),
                     )
 
     # -------------------------------------------------------------------------
@@ -1768,9 +1770,12 @@ S3OptionsFilter({
         """
             Safe defaults for model-global names in case module is disabled
         """
-        req_item_id = S3ReusableField("req_item_id", "integer",
-                                      readable=False, writable=False)
-        return dict(req_item_id = req_item_id
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(req_item_id = lambda **attr: dummy("req_item_id"),
                     )
 
     # -------------------------------------------------------------------------

@@ -132,6 +132,13 @@ class S3AssetModel(S3Model):
                            ASSET_TYPE_OTHER       : T("Other"),
                            }
 
+        asset_condition_opts = {1:T("Good Condition"),
+                                2:T("Minor Damage"),
+                                3:T("Major Damage"),
+                                4:T("Un-Repairable"),
+                                5:T("Needs Maintenance"),
+                                }
+
         ctable = self.supply_item_category
         itable = self.supply_item
         supply_item_represent = self.supply_item_represent
@@ -217,21 +224,29 @@ S3OptionsFilter({
                              label = T("Purchase Date"),
                              ),
                      Field("purchase_price", "double",
-                           #default=0.00,
-                           represent=lambda v, row=None: \
-                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           #default = 0.00,
+                           represent = lambda v, row=None: \
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
                            ),
                      s3_currency("purchase_currency"),
                      # Base Location, which should always be a Site & set via Log
-                     location_id(readable=False,
-                                 writable=False,
+                     location_id(readable = False,
+                                 writable = False,
                                  ),
                      # Populated onaccept of the log to make a component tab
                      person_id("assigned_to_id",
-                               readable=False,
-                               writable=False,
-                               comment=self.pr_person_comment(child="assigned_to_id"),
+                               readable = False,
+                               writable = False,
+                               comment = self.pr_person_comment(child="assigned_to_id"),
                                ),
+                     # Populated onaccept of the log for reporting/filtering
+                     Field("cond", "integer",
+                           label = T("Condition"),
+                           represent = lambda opt: \
+                                       asset_condition_opts.get(opt, UNKNOWN_OPT),
+                           #readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -289,6 +304,7 @@ S3OptionsFilter({
                          (T("Item"), "item_id"),
                          "organisation_id",
                          "site_id",
+                         "cond",
                          ]
 
         text_fields = ["number",
@@ -303,7 +319,8 @@ S3OptionsFilter({
             text_fields.append(lfield)
             list_fields.append(lfield)
 
-        list_fields.append("comments")
+        list_fields.extend(("cond",
+                            "comments"))
 
         filter_widgets = [
             S3TextFilter(text_fields,
@@ -321,6 +338,9 @@ S3OptionsFilter({
                              levels = levels,
                              hidden = True,
                              ),
+            S3OptionsFilter("cond",
+                            hidden = True,
+                            ),
             ]
 
         report_options = Storage(
@@ -436,13 +456,6 @@ S3OptionsFilter({
                                  ASSET_LOG_DESTROY  : T("Destroyed"),
                                  }
 
-        asset_condition_opts = {1:T("Good Condition"),
-                                2:T("Minor Damage"),
-                                3:T("Major Damage"),
-                                4:T("Un-Repairable"),
-                                5:T("Needs Maintenance"),
-                                }
-
         if auth.permission.format == "html":
             # T isn't JSON serializable
             site_types = auth.org_site_types
@@ -473,13 +486,13 @@ S3OptionsFilter({
                                        asset_log_status_opts.get(opt, UNKNOWN_OPT)
                            ),
                      s3_datetime("datetime",
-                                 default="now",
-                                 empty=False,
-                                 represent="date",
+                                 default = "now",
+                                 empty = False,
+                                 represent = "date",
                                  ),
                      s3_datetime("datetime_until",
                                  label = T("Date Until"),
-                                 represent="date",
+                                 represent = "date",
                                  ),
                      person_id(label = T("Assigned To")),
                      Field("check_in_to_person", "boolean",
@@ -491,13 +504,13 @@ S3OptionsFilter({
                                          _title="%s|%s" % (T("Track with this Person?"),
                                                            T("If selected, then this Asset's Location will be updated whenever the Person's Location is updated."))),
                            readable = False,
-                           writable = False),
+                           writable = False,
+                           ),
                      # The Organisation to whom the loan is made
-                     organisation_id(
-                            readable = False,
-                            writable = False,
-                            widget = None
-                            ),
+                     organisation_id(readable = False,
+                                     widget = None,
+                                     writable = False,
+                                     ),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("site_id", "org_site",
@@ -527,14 +540,15 @@ S3OptionsFilter({
                                                            T("'Cancel' will indicate an asset log entry did not occur")))
                            ),
                      Field("cond", "integer",  # condition is a MySQL reserved word
-                           requires = IS_IN_SET(asset_condition_opts,
-                                                zero = "%s..." % T("Please select")),
+                           label = T("Condition"),
                            represent = lambda opt: \
                                        asset_condition_opts.get(opt, UNKNOWN_OPT),
-                           label = T("Condition")),
+                           requires = IS_IN_SET(asset_condition_opts,
+                                                zero = "%s..." % T("Please select")),
+                           ),
                      person_id("by_person_id",
-                               label = T("Assigned By"),               # This can either be the Asset controller if signed-out from the store
-                               default = auth.s3_logged_in_person(),   # or the previous owner if passed on directly (e.g. to successor in their post)
+                               default = auth.s3_logged_in_person(),   # This can either be the Asset controller if signed-out from the store
+                               label = T("Assigned By"),               # or the previous owner if passed on directly (e.g. to successor in their post)
                                comment = self.pr_person_comment(child="by_person_id"),
                                ),
                      s3_comments(),
@@ -571,6 +585,7 @@ S3OptionsFilter({
                                  "comments",
                                  ],
                   onaccept = self.asset_log_onaccept,
+                  orderby = "asset_log.datetime desc",
                   )
 
         # ---------------------------------------------------------------------
@@ -585,10 +600,12 @@ S3OptionsFilter({
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        asset_id = S3ReusableField("asset_id", "integer",
-                                   writable=False,
-                                   readable=False)
-        return dict(asset_asset_id=asset_id)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(asset_asset_id = lambda **attr: dummy("asset_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -797,6 +814,9 @@ S3OptionsFilter({
                                                          timestmp = request.utcnow)
                 # Also do component items
                 db(aitable.asset_id == asset_id).update(location_id = location_id)
+
+            # Update condition in main record
+            db(atable.id == asset_id).update(cond=form_vars.cond)
 
         return
 

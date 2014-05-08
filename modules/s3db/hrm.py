@@ -838,9 +838,12 @@ class S3HRModel(S3Model):
         """
             Safe defaults for model-global names in case module is disabled
         """
-        human_resource_id = S3ReusableField("human_resource_id", "integer",
-                                            readable=False, writable=False)
-        return dict(hrm_human_resource_id = human_resource_id,
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(hrm_human_resource_id = lambda **attr: dummy("human_resource_id"),
                     )
 
     # -------------------------------------------------------------------------

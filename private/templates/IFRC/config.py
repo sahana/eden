@@ -484,7 +484,7 @@ def customise_asset_asset_resource(r, tablename):
 
     from s3.s3filter import S3OptionsFilter
     filter_widgets = s3db.get_config(tablename, "filter_widgets")
-    filter_widgets.insert(-1, S3OptionsFilter("group.group_id",
+    filter_widgets.insert(-2, S3OptionsFilter("group.group_id",
                                               label = T("Team"),
                                               represent = "%(name)s",
                                               hidden = True,
