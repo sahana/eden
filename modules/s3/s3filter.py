@@ -759,7 +759,7 @@ class S3LocationFilter(S3FilterWidget):
         opts = self.opts
         name = attr["_name"]
 
-        ftype, levels, noopt = self._options(resource)
+        ftype, levels, noopt = self._options(resource, values=values)
         if noopt:
             return SPAN(noopt, _class="no-options-available")
 
@@ -896,7 +896,7 @@ class S3LocationFilter(S3FilterWidget):
         return opts
 
     # -------------------------------------------------------------------------
-    def _options(self, resource, inject_hierarchy=True):
+    def _options(self, resource, inject_hierarchy=True, values=None):
 
         T = current.T
 
@@ -944,6 +944,11 @@ class S3LocationFilter(S3FilterWidget):
         options = opts.get("options")
         if options:
             # Fixed options (=list of location IDs)
+            if values:
+                # Make sure the selected options are in the available options
+                for val in values:
+                    if val not in options:
+                        options.append(val)
             resource = current.s3db.resource("gis_location", id=options)
             fields = ["id"] + [l for l in levels]
             if translate:
@@ -969,6 +974,7 @@ class S3LocationFilter(S3FilterWidget):
             return default
         
         # Find the options
+        # @ToDo: Make sure the selected options are in the available options
         rows = resource.select(fields=fields,
                                limit=None,
                                virtual=False,

@@ -244,8 +244,8 @@ class S3Resource(object):
 
         # Resource Filter
         self.rfilter = None
-        self.fquery = None
-        self.fvfltr = None
+        #self.fquery = None
+        #self.fvfltr = None
 
         # Rows ----------------------------------------------------------------
 
