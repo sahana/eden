@@ -134,6 +134,11 @@ settings.gis.lookup_code = "PCode"
 settings.event.types_hierarchical = True
 
 # -----------------------------------------------------------------------------
+# Vulnerability
+# Make Indicator Types Hierarchical
+settings.vulnerability.indicator_hierarchical = True
+
+# -----------------------------------------------------------------------------
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
