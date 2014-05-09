@@ -896,9 +896,73 @@ class S3LocationFilter(S3FilterWidget):
         return opts
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def __options(row, levels, inject_hierarchy, hierarchy, _level, translate, name_l10n):
+
+        if inject_hierarchy:
+            parent = None
+            grandparent = None
+            greatgrandparent = None
+            greatgreatgrandparent = None
+            greatgreatgreatgrandparent = None
+            i = 0
+        for level in levels:
+            v = row[level]
+            if v:
+                o = levels[level]["options"]
+                if v not in o:
+                    if translate:
+                        o[v] = name_l10n.get(v, v)
+                    else:
+                        o.append(v)
+            if inject_hierarchy:
+                if i == 0:
+                    h = hierarchy[_level]
+                    if v not in h:
+                        h[v] = {}
+                    parent = v
+                elif i == 1:
+                    h = hierarchy[_level][parent]
+                    if v not in h:
+                        h[v] = {}
+                    grandparent = parent
+                    parent = v
+                elif i == 2:
+                    h = hierarchy[_level][grandparent][parent]
+                    if v not in h:
+                        h[v] = {}
+                    greatgrandparent = grandparent
+                    grandparent = parent
+                    parent = v
+                elif i == 3:
+                    h = hierarchy[_level][greatgrandparent][grandparent][parent]
+                    if v not in h:
+                        h[v] = {}
+                    greatgreatgrandparent = greatgrandparent
+                    greatgrandparent = grandparent
+                    grandparent = parent
+                    parent = v
+                elif i == 4:
+                    h = hierarchy[_level][greatgreatgrandparent][greatgrandparent][grandparent][parent]
+                    if v not in h:
+                        h[v] = {}
+                    greatgreatgreatgrandparent = greatgreatgrandparent
+                    greatgreatgrandparent = greatgrandparent
+                    greatgrandparent = grandparent
+                    grandparent = parent
+                    parent = v
+                elif i == 5:
+                    h = hierarchy[_level][greatgreatgreatgrandparent][greatgreatgrandparent][greatgrandparent][grandparent][parent]
+                    if v not in h:
+                        h[v] = {}
+                i += 1
+
+    # -------------------------------------------------------------------------
     def _options(self, resource, inject_hierarchy=True, values=None):
 
         T = current.T
+        s3db = current.s3db
+        gtable = s3db.gis_location
 
         NOOPT = T("No options available")
 
@@ -936,7 +1000,7 @@ class S3LocationFilter(S3FilterWidget):
         if resource is None:
             rname = opts.get("resource")
             if rname:
-                resource = current.s3db.resource(rname)
+                resource = s3db.resource(rname)
                 selector = opts.get("lookup", "location_id")
         else:
             selector = self.field
@@ -944,12 +1008,7 @@ class S3LocationFilter(S3FilterWidget):
         options = opts.get("options")
         if options:
             # Fixed options (=list of location IDs)
-            if values:
-                # Make sure the selected options are in the available options
-                for val in values:
-                    if val not in options:
-                        options.append(val)
-            resource = current.s3db.resource("gis_location", id=options)
+            resource = s3db.resource("gis_location", id=options)
             fields = ["id"] + [l for l in levels]
             if translate:
                 fields.append("path")
@@ -967,21 +1026,78 @@ class S3LocationFilter(S3FilterWidget):
             joined = True
             # Filter out old Locations
             # @ToDo: Allow override
-            resource.add_filter(current.s3db.gis_location.end_date == None)
+            resource.add_filter(gtable.end_date == None)
 
         else:
             # Neither fixed options nor resource to look them up
             return default
-        
+
         # Find the options
-        # @ToDo: Make sure the selected options are in the available options
         rows = resource.select(fields=fields,
                                limit=None,
                                virtual=False,
                                as_rows=True)
-        # No options?
+        rows2 = []
         if not rows:
-            return default
+            if values:
+                # Make sure the selected options are in the available options
+                resource = s3db.resource("gis_location")
+                fields = ["id"] + [l for l in levels]
+                if translate:
+                    fields.append("path")
+                joined = False
+                rows = []
+                for f in values:
+                    v = values[f]
+                    if not v:
+                        continue
+                    level = "L%s" % f.split("L", 1)[1][0]
+                    resource.clear_query()
+                    query = (gtable.level == level) & \
+                            (gtable.name.belongs(v))
+                    resource.add_filter(query)
+                    # Filter out old Locations
+                    # @ToDo: Allow override
+                    resource.add_filter(gtable.end_date == None)
+                    _rows = resource.select(fields=fields,
+                                            limit=None,
+                                            virtual=False,
+                                            as_rows=True)
+                    if rows:
+                        rows &= _rows
+                    else:
+                        rows = _rows
+
+            if not rows:
+                # No options
+                return default
+
+        elif values:
+            # Make sure the selected options are in the available options
+            resource2 = s3db.resource("gis_location")
+            fields = ["id"] + [l for l in levels]
+            if translate:
+                fields.append("path")
+            for f in values:
+                v = values[f]
+                if not v:
+                    continue
+                level = "L%s" % f.split("L", 1)[1][0]
+                resource2.clear_query()
+                query = (gtable.level == level) & \
+                        (gtable.name.belongs(v))
+                resource2.add_filter(query)
+                # Filter out old Locations
+                # @ToDo: Allow override
+                resource2.add_filter(gtable.end_date == None)
+                _rows = resource2.select(fields=fields,
+                                         limit=None,
+                                         virtual=False,
+                                         as_rows=True)
+                if rows2:
+                    rows2 &= _rows
+                else:
+                    rows2 = _rows
 
         # Initialise Options Storage & Hierarchy
         hierarchy = {}
@@ -996,6 +1112,7 @@ class S3LocationFilter(S3FilterWidget):
                              }
 
         # Generate a name localization lookup dict
+        name_l10n = {}
         if translate:
             # Get IDs via Path to lookup name_l10n
             ids = set()
@@ -1022,16 +1139,24 @@ class S3LocationFilter(S3FilterWidget):
                         path = path.split("/")
                 if path:
                     ids |= set(path)
+            for row in rows2:
+                path = row.path
+                if path:
+                    path = path.split("/")
+                else:
+                    # Build it
+                    if "id" in row:
+                        path = current.gis.update_location_tree(row)
+                        path = path.split("/")
+                if path:
+                    ids |= set(path)
             # Build lookup table for name_l10n
-            name_l10n = {}
-            s3db = current.s3db
-            table = s3db.gis_location
             ntable = s3db.gis_location_name
-            query = (table.id.belongs(ids)) & \
+            query = (gtable.id.belongs(ids)) & \
                     (ntable.deleted == False) & \
-                    (ntable.location_id == table.id) & \
+                    (ntable.location_id == gtable.id) & \
                     (ntable.language == current.session.s3.language)
-            nrows = current.db(query).select(table.name,
+            nrows = current.db(query).select(gtable.name,
                                              ntable.name_l10n,
                                              limitby=(0, len(ids)),
                                              )
@@ -1041,63 +1166,9 @@ class S3LocationFilter(S3FilterWidget):
         # Populate the Options and the Hierarchy
         for row in rows:
             _row = getattr(row, "gis_location") if joined else row
-            if inject_hierarchy:
-                parent = None
-                grandparent = None
-                greatgrandparent = None
-                greatgreatgrandparent = None
-                greatgreatgreatgrandparent = None
-                i = 0
-            for level in levels:
-                v = _row[level]
-                if v:
-                    o = levels[level]["options"]
-                    if v not in o:
-                        if translate:
-                            o[v] = name_l10n.get(v, v)
-                        else:
-                            o.append(v)
-                if inject_hierarchy:
-                    if i == 0:
-                        h = hierarchy[_level]
-                        if v not in h:
-                            h[v] = {}
-                        parent = v
-                    elif i == 1:
-                        h = hierarchy[_level][parent]
-                        if v not in h:
-                            h[v] = {}
-                        grandparent = parent
-                        parent = v
-                    elif i == 2:
-                        h = hierarchy[_level][grandparent][parent]
-                        if v not in h:
-                            h[v] = {}
-                        greatgrandparent = grandparent
-                        grandparent = parent
-                        parent = v
-                    elif i == 3:
-                        h = hierarchy[_level][greatgrandparent][grandparent][parent]
-                        if v not in h:
-                            h[v] = {}
-                        greatgreatgrandparent = greatgrandparent
-                        greatgrandparent = grandparent
-                        grandparent = parent
-                        parent = v
-                    elif i == 4:
-                        h = hierarchy[_level][greatgreatgrandparent][greatgrandparent][grandparent][parent]
-                        if v not in h:
-                            h[v] = {}
-                        greatgreatgreatgrandparent = greatgreatgrandparent
-                        greatgreatgrandparent = greatgrandparent
-                        greatgrandparent = grandparent
-                        grandparent = parent
-                        parent = v
-                    elif i == 5:
-                        h = hierarchy[_level][greatgreatgreatgrandparent][greatgreatgrandparent][greatgrandparent][grandparent][parent]
-                        if v not in h:
-                            h[v] = {}
-                    i += 1
+            self.__options(_row, levels, inject_hierarchy, hierarchy, _level, translate, name_l10n)
+        for row in rows2:
+            self.__options(row, levels, inject_hierarchy, hierarchy, _level, translate, name_l10n)
 
         if translate:
             # Sort the options dicts
@@ -1446,7 +1517,7 @@ class S3OptionsFilter(S3FilterWidget):
                         # Filter options by organisation?
                         org_filter = opts.get("org_filter")
                         if org_filter and "organisation_id" in ktable:
-                            root_org = auth.root_org()
+                            root_org = current.auth.root_org()
                             if root_org:
                                 query &= ((ktable.organisation_id == root_org) | \
                                           (ktable.organisation_id == None))
