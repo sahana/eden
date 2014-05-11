@@ -1,0 +1,16 @@
+*** Settings ***
+Documentation       Global keywords for Eden tests
+
+*** Variables ***
+${CONFIRMATION}     jquery=div.alert-success
+${ERROR}            jquery=div.alert-error
+
+*** Keywords ***
+Should Show Confirmation
+    [Documentation]  Fails if no confirmation message is visible in the page
+    Sleep  1s  Wait for message to render
+    Page Should Contain Element  ${CONFIRMATION}  Confirmation message not shown
+
+Should Show Error
+    [Documentation]  Fails if no error message is visible in the page
+    Page Should Contain Element  ${ERROR}  Error message not shown
