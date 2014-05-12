@@ -819,8 +819,7 @@ class S3RepresentLazy(object):
 
         # Render value
         text = self.represent()
-        if hasattr(text, "xml"):
-            text = s3_unicode(text)
+        text = s3_unicode(text)
 
         # Strip markup + XML-escape
         if text and "<" in text:

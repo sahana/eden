@@ -2530,7 +2530,7 @@ class S3Resource(object):
         root = etree.Element(xml.TAG.root)
 
         export_map = Storage()
-        reference_map = []
+        all_references = []
 
         prefix = self.prefix
         name = self.name
@@ -2546,6 +2546,8 @@ class S3Resource(object):
 
         export_resource = self.__export_resource
 
+        # Collect all references from master records
+        reference_map = []
         for record in self._rows:
             element = export_resource(record,
                                       rfields=rfields,
@@ -2562,6 +2564,10 @@ class S3Resource(object):
                                       xmlformat=xmlformat)
             if element is None:
                 results -= 1
+
+        if reference_map:
+            all_references.extend(reference_map)
+            
         #if DEBUG:
         #    end = datetime.datetime.now()
         #    duration = end - _start
@@ -2575,6 +2581,7 @@ class S3Resource(object):
 
         define_resource = current.s3db.resource
 
+        # Iteratively resolve all references
         depth = maxdepth if dereference else 0
         while reference_map and depth:
             depth -= 1
@@ -2601,7 +2608,9 @@ class S3Resource(object):
                     else:
                         load_map[tname] = ids
 
+            # Collect all references from the referenced records
             reference_map = []
+            
             REF = xml.ATTRIBUTE.ref
             for tablename in load_map:
                 load_list = load_map[tablename]
@@ -2655,6 +2664,9 @@ class S3Resource(object):
                     # Mark as referenced element (for XSLT)
                     if element is not None:
                         element.set(REF, "True")
+                if reference_map:
+                    all_references.extend(reference_map)
+
         #if DEBUG:
         #    end = datetime.datetime.now()
         #    duration = end - _start
@@ -2666,6 +2678,10 @@ class S3Resource(object):
         if lazy:
             for renderer, element, attr, f in lazy:
                 renderer.render_node(element, attr, f)
+
+        # Add Lat/Lon attributes to all location references
+        if all_references:
+            xml.latlon(all_references)
 
         # Complete the tree
         tree = xml.tree(None,

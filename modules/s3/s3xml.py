@@ -748,27 +748,44 @@ class S3XML(S3Codec):
             else:
                 attr[VALUE] = r.value
 
-            # Add Lat/Lon to location references
-            if r.table == "gis_location":
-                ktable = current.s3db.table(r.table)
-                if ktable is not None and not r.multiple:
-                    # Ignore multi-references
-                    r_id = r.id[0]
-                    LAT = self.Lat
-                    LON = self.Lon
-                    # @ToDo: Bulk Lookup
-                    LatLon = current.db(ktable.id == r_id).select(ktable[LAT],
-                                                                  ktable[LON],
-                                                                  limitby=(0, 1)
-                                                                  ).first()
-                    if LatLon:
-                        lat = LatLon[LAT]
-                        lon = LatLon[LON]
-                        if lat is not None and lon is not None:
-                            attr[ATTRIBUTE.lat] = "%.4f" % lat
-                            attr[ATTRIBUTE.lon] = "%.4f" % lon
-
             r.element = reference
+
+    # -------------------------------------------------------------------------
+    def latlon(self, rmap):
+        """
+            Add lat/lon to location references
+
+            @param rmap: the reference map of the tree
+        """
+        
+        ATTRIBUTE = self.ATTRIBUTE
+        
+        locations = {}
+        for reference in rmap:
+            if reference.table == "gis_location" and len(reference.id) == 1:
+                location_id = reference.id[0]
+                if location_id not in locations:
+                    locations[location_id] = [reference]
+                else:
+                    locations[location_id].append(reference)
+        if locations:
+            ltable = current.s3db.gis_location
+            rows = current.db(ltable._id.belongs(locations.keys())) \
+                             .select(ltable.id,
+                                     ltable.lat,
+                                     ltable.lon,
+                                     ).as_dict()
+
+            for location_id, row in rows.items():
+                lat = row["lat"]
+                lon = row["lon"]
+                if lat is not None and lon is not None:
+                    references = locations.get(location_id, ())
+                    for reference in references:
+                        attr = reference.element.attrib
+                        attr[ATTRIBUTE.lat] = "%.4f" % lat
+                        attr[ATTRIBUTE.lon] = "%.4f" % lon
+        return
 
     # -------------------------------------------------------------------------
     def gis_encode(self,
