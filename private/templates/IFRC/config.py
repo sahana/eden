@@ -1417,7 +1417,7 @@ def customise_pr_person_controller(**attr):
             field.comment = None
             field.label = T("Sector") # RDRT-specific
             from s3.s3validators import IS_ONE_OF
-            field.requires = IS_ONE_OF(db, "hrm_job_title.id",
+            field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
                                        field.represent,
                                        filterby = "type",
                                        filter_opts = (4,),

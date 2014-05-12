@@ -1900,6 +1900,67 @@ class deploy_MissionProfileLayout(S3DataListLayout):
     """ DataList layout for Mission Profile """
 
     # -------------------------------------------------------------------------
+    def prep(self, resource, records):
+        """
+            Bulk actions for cards
+        """
+
+        tablename = resource.tablename
+        if tablename == "deploy_response":
+
+            dcount = {}
+            avgrat = {}
+
+            for record in records:
+                human_resource_id = record["_row"]["hrm_human_resource.id"]
+                if human_resource_id:
+                    dcount[human_resource_id] = 0
+                    avgrat[human_resource_id] = None
+
+            hr_ids = dcount.keys()
+            if hr_ids:
+                db = current.db
+                s3db = current.s3db
+
+                # Number of previous deployments
+                table = s3db.deploy_assignment
+                human_resource_id = table.human_resource_id
+                deployment_count = table.id.count()
+                
+                query = (human_resource_id.belongs(hr_ids)) & \
+                        (table.deleted != True)
+                rows = db(query).select(human_resource_id,
+                                        deployment_count,
+                                        groupby = human_resource_id,
+                                        )
+                for row in rows:
+                    dcount[row[human_resource_id]] = row[deployment_count]
+                
+                # Average appraisal rating
+                atable = s3db.hrm_appraisal
+                htable = s3db.hrm_human_resource
+                human_resource_id = htable.id
+                average_rating = atable.rating.avg()
+                
+                query = (human_resource_id.belongs(hr_ids)) & \
+                        (htable.person_id == atable.person_id) & \
+                        (atable.deleted != True) & \
+                        (atable.rating != None) & \
+                        (atable.rating > 0)
+
+                rows = db(query).select(human_resource_id,
+                                        average_rating,
+                                        groupby = human_resource_id,
+                                        )
+                for row in rows:
+                    avgrat[row[human_resource_id]] = row[average_rating]
+                    
+            self.dcount = dcount
+            self.avgrat = avgrat
+            
+        return
+
+    # -------------------------------------------------------------------------
     def render_header(self, list_id, item_id, resource, rfields, record):
         """
             Render the card header
@@ -2146,29 +2207,11 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 docs = ""
 
             # Number of previous deployments and average rating
-            # @todo: bulk lookups instead of per-card
-            if human_resource_id:
-                s3db = current.s3db
-                table = s3db.deploy_assignment
-                query = (table.human_resource_id == human_resource_id) & \
-                        (table.deleted != True)
-                dcount = db(query).count()
-
-                table = s3db.hrm_appraisal
-                htable = s3db.hrm_human_resource
-                query = (htable.id == human_resource_id) & \
-                        (htable.person_id == table.person_id) & \
-                        (table.deleted != True) & \
-                        (table.rating != None) & \
-                        (table.rating > 0)
-                avgrat = table.rating.avg()
-                row = db(query).select(avgrat).first()
-                if row:
-                    avgrat = row[avgrat]
-                else:
-                    avgrat = None
-            else:
-                dcount = avgrat = "?"
+            # (looked up in-bulk in self.prep)
+            if hasattr(self, "dcount"):
+                dcount = self.dcount.get(human_resource_id, 0)
+            if hasattr(self, "avgrat"):
+                avgrat = self.avgrat.get(human_resource_id)
             dcount_id = "profile-data-dcount-%s" % record_id
             avgrat_id = "profile-data-avgrat-%s" % record_id
             dinfo = DIV(LABEL("%s:" % T("Previous Deployments"),

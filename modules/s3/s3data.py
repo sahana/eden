@@ -990,6 +990,11 @@ class S3DataList(object):
 
         records = self.records
         if records is not None:
+
+            # Call prep if present
+            if hasattr(render, "prep"):
+                render.prep(resource, records)
+
             items = [
                 DIV(T("Total Records: %(numrows)s") % {"numrows": self.total},
                     _class="dl-header",
