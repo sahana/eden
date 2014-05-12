@@ -1900,22 +1900,40 @@ class deploy_MissionProfileLayout(S3DataListLayout):
     """ DataList layout for Mission Profile """
 
     # -------------------------------------------------------------------------
+    def __init__(self):
+        """ Constructor """
+
+        self.dcount = {}
+        self.avgrat = {}
+        self.deployed = set()
+
+    # -------------------------------------------------------------------------
     def prep(self, resource, records):
         """
-            Bulk actions for cards
+            Bulk lookups for cards
+
+            @param resource: the resource
+            @param records: the records as returned from S3Resource.select
         """
 
         tablename = resource.tablename
         if tablename == "deploy_response":
 
-            dcount = {}
-            avgrat = {}
+            dcount = self.dcount
+            avgrat = self.avgrat
+            deployed = self.deployed
+            
+            mission_id = None
 
             for record in records:
-                human_resource_id = record["_row"]["hrm_human_resource.id"]
+                raw = record["_row"]
+                human_resource_id = raw["hrm_human_resource.id"]
                 if human_resource_id:
                     dcount[human_resource_id] = 0
                     avgrat[human_resource_id] = None
+                if not mission_id:
+                    # Should be the same for all rows
+                    mission_id = raw["deploy_response.mission_id"]
 
             hr_ids = dcount.keys()
             if hr_ids:
@@ -1935,7 +1953,15 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                         )
                 for row in rows:
                     dcount[row[human_resource_id]] = row[deployment_count]
-                
+
+                # Members deployed for this mission
+                query = (human_resource_id.belongs(hr_ids)) & \
+                        (table.mission_id == mission_id) & \
+                        (table.deleted != True)
+                rows = db(query).select(human_resource_id)
+                for row in rows:
+                    deployed.add(row[human_resource_id])
+
                 # Average appraisal rating
                 atable = s3db.hrm_appraisal
                 htable = s3db.hrm_human_resource
@@ -1955,9 +1981,6 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 for row in rows:
                     avgrat[row[human_resource_id]] = row[average_rating]
                     
-            self.dcount = dcount
-            self.avgrat = avgrat
-            
         return
 
     # -------------------------------------------------------------------------
@@ -2258,21 +2281,15 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                         )
 
             # Workflow
-            # @todo: bulk lookup instead of per-card
             if human_resource_id:
-                mission_id = raw["deploy_response.mission_id"]
-                table = current.s3db.deploy_assignment
-                query = (table.mission_id == mission_id) & \
-                        (table.human_resource_id == human_resource_id) & \
-                        (table.deleted != True)
-                row = db(query).select(table.id, limitby=(0, 1)).first()
-                if row:
+                if hasattr(self, "deployed") and human_resource_id in self.deployed:
                     deploy = A(I(" ", _class="icon icon-deployed"),
                                SPAN(T("Member Deployed"),
                                     _class="card-action"),
                                _class="action-lnk"
                              )
                 else:
+                    mission_id = raw["deploy_response.mission_id"]
                     url = URL(f="mission",
                               args=[mission_id, "assignment", "create"],
                               vars={"member_id": human_resource_id})
