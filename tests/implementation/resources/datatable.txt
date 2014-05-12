@@ -1,0 +1,41 @@
+*** Settings ***
+Documentation       Keywords for datatables
+
+*** Variables ***
+${DataTableID}      datatable
+
+*** Keywords ***
+Should Give X Results
+    [Arguments]  ${number}
+    [Documentation]  Fails if the total number of records in the datatable is not _number_
+    # Convert to int if passed as string
+    ${expected}=  Set Variable  ${${number}}
+    ${count}=  Execute JavaScript  return $('#datatable').dataTable().fnSettings()._iRecordsTotal;
+    Should Be Equal  ${count}  ${expected}  msg=Should have found ${expected} results but found ${count}  values=${false}
+
+DataTable Should Contain
+    [Arguments]  ${text}
+    [Documentation]  Fails if the datatable does not contain _text_
+    Table Should Contain  ${DataTableID}  ${text}
+
+Click Edit In Row
+    [Arguments]  ${index}
+    [Documentation]  Clicks the Edit-button in datatable row _index_ (_index_ 1
+    ...              is the first row). Only visible Edit-buttons can be clicked.
+    Click Link  xpath=//table[@id='${DataTableID}']//td[contains(@class, 'actions')][${index}]//a[contains(@class, 'edit')]
+
+DataTable Row Should Contain
+    [Arguments]  ${index}  ${label}  ${text}
+    [Documentation]  Fails if row _index_ in the datatable does not contain _text_
+    ...              in the column with _label_
+    # Convert to int if passed as string    
+    ${index}=  Set Variable  ${${index}}
+    ${column}=  Get DataTable Column By Label  ${label}
+    Table Cell Should Contain  ${DataTableID}  ${index + 1}  ${column}  ${text}
+    
+Get DataTable Column By Label
+    [Arguments]  ${label}
+    ${column}=  Execute JavaScript  return $('#${DataTableID} th[role="columnheader"]').filter(function(){
+                ...                 return $(this).text() === '${label}';}).index()+1;
+    Should Be True  ${column} > ${0}  Column not found in datatable: "${label}"
+    [Return]  ${column}

@@ -1,0 +1,26 @@
+*** Settings ***
+Documentation     Main resource file for Eden Tests
+Library           Selenium2Library
+Variables         ../../execution/config.py
+Resource          auth.txt
+Resource          base.txt
+Resource          crud.txt
+Resource          filter.txt
+Resource          datatable.txt
+Resource          widgets.txt
+
+*** Variables ***
+${DELAY}            0
+${BASEURL}          ${SERVER}/${APPNAME}
+${HOMEPAGE}         http://${BASEURL}/default/index
+
+*** Keywords ***
+Start Testing
+    [Documentation]  Starts the test
+    Login To Eden
+    Set Selenium Speed    ${DELAY}
+
+End Testing
+    [Documentation]  Ends the test
+    Logout From Eden
+    Close Browser
