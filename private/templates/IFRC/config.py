@@ -416,7 +416,7 @@ def ns_only(f, required = True, branches = True, updateable=True):
 def user_org_default_filter(selector, tablename=None):
     """
         Default filter for organisation_id:
-        * Use the user's organisation if logged in and associated with an
+        * Use the user's organisation if logged-in and associated with an
           organisation.
     """
 

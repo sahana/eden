@@ -2,7 +2,7 @@
 
 """ S3 Profile
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -943,6 +943,8 @@ class S3Profile(S3CRUD):
         """
 
         page_cols = current.s3db.get_config(r.tablename, "profile_cols")
+        if not page_cols:
+            page_cols = 2
         widget_cols = widget.get("colspan", 1)
         span = int(12 / page_cols) * widget_cols
 

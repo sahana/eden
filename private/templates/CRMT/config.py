@@ -442,8 +442,7 @@ def customise_pr_person_controller(**attr):
                 # Custom Widgets/Validators
                 widgets = True
                 from s3.s3validators import IS_ONE_OF
-                # Doesn't currently work Inline
-                #from s3.s3widgets import S3MultiSelectWidget
+                from s3.s3widgets import S3MultiSelectWidget
                 from s3layouts import S3AddResourceLink
             else:
                 widgets = False
@@ -455,9 +454,8 @@ def customise_pr_person_controller(**attr):
             represent = S3Represent(lookup="org_site")
             site_field.represent = represent
             if widgets:
-                # Doesn't currently work Inline
-                #htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
-                #site_field.widget = S3MultiSelectWidget(multiple=False)
+                htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
+                site_field.widget = S3MultiSelectWidget(multiple=False)
                 site_field.requires = IS_ONE_OF(db, "org_site.site_id",
                                                 represent,
                                                 orderby = "org_site.name")
@@ -714,12 +712,11 @@ def customise_project_activity_controller(**attr):
                 if method in ("create", "update"):
                     # Custom Widgets/Validators
                     from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2#, S3MultiSelectWidget
+                    from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
 
-                    # Doesn't currently work Inline
-                    #s3db.project_activity_activity_type.activity_type_id.widget = S3MultiSelectWidget(multiple=False)
-                    #s3db.project_activity_group.group_id.widget = S3MultiSelectWidget(multiple=False)
-                    #s3db.project_activity_organisation.organisation_id.widget = S3MultiSelectWidget(multiple=False)
+                    s3db.project_activity_activity_type.activity_type_id.widget = S3MultiSelectWidget(multiple=False)
+                    s3db.project_activity_group.group_id.widget = S3MultiSelectWidget(multiple=False)
+                    s3db.project_activity_organisation.organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
@@ -1003,9 +1000,8 @@ def customise_org_organisation_controller(**attr):
                                                              )
 
                 # Custom Crud Form
-                # Doesn't currently work Inline
-                #from s3.s3widgets import S3MultiSelectWidget
-                #s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
+                from s3.s3widgets import S3MultiSelectWidget
+                s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
                 form_fields = [
                     "name",
                     "logo",
@@ -1254,7 +1250,7 @@ def customise_org_facility_controller(**attr):
                            ]
 
             s3db.configure(tablename,
-                           list_fields=list_fields,
+                           list_fields = list_fields,
                            )
 
         if r.interactive or representation == "json":
@@ -1312,12 +1308,12 @@ def customise_org_facility_controller(**attr):
                     rows = report_fields,
                     cols = [],
                     fact = [(T("Number of Places"), "count(name)")],
-                    defaults = Storage(rows="site_facility_type.facility_type_id",
-                                       #cols="site_org_group.group_id",
-                                       fact="count(name)",
-                                       totals=True,
+                    defaults = Storage(rows = "site_facility_type.facility_type_id",
+                                       #cols = "site_org_group.group_id",
+                                       fact = "count(name)",
                                        chart = "barchart:rows",
                                        table = "collapse",
+                                       totals = True,
                                        )
                     )
 
@@ -1353,8 +1349,7 @@ def customise_org_facility_controller(**attr):
                                                              )
 
                     table.organisation_id.widget = S3MultiSelectWidget(multiple=False)
-                    # Doesn't currently work Inline
-                    #s3db.org_site_org_group.group_id.widget = S3MultiSelectWidget(multiple=False)
+                    s3db.org_site_org_group.group_id.widget = S3MultiSelectWidget(multiple=False)
 
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
@@ -1553,8 +1548,7 @@ def customise_stats_people_controller(**attr):
                     from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
 
                     table.parameter_id.widget = S3MultiSelectWidget(multiple=False)
-                    # Doesn't currently work Inline
-                    #s3db.stats_people_group.group_id.widget = S3MultiSelectWidget(multiple=False)
+                    s3db.stats_people_group.group_id.widget = S3MultiSelectWidget(multiple=False)
     
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
@@ -1718,10 +1712,9 @@ def customise_vulnerability_evac_route_controller(**attr):
                     # Custom Widgets/Validators
                     #from s3layouts import S3AddResourceLink
                     from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2#, S3MultiSelectWidget
+                    from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
 
-                    # Doesn't currently work Inline
-                    #s3db.vulnerability_evac_route_group.group_id.widget = S3MultiSelectWidget(multiple=False)
+                    s3db.vulnerability_evac_route_group.group_id.widget = S3MultiSelectWidget(multiple=False)
 
                     table.location_id.label = "" # Gets replaced by widget
                     levels = ("L3",)
@@ -1884,10 +1877,9 @@ def customise_vulnerability_risk_controller(**attr):
                 if method in ("create", "update"):
                     # Custom Widgets/Validators
                     from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2#, S3MultiSelectWidget
+                    from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
 
-                    # Doesn't currently work Inline
-                    #s3db.vulnerability_risk_group.group_id.widget = S3MultiSelectWidget(multiple=False)
+                    s3db.vulnerability_risk_group.group_id.widget = S3MultiSelectWidget(multiple=False)
 
                     field = table.location_id
                     field.label = "" # Gets replaced by widget

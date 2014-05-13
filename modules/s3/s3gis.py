@@ -5,7 +5,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
 
-    @copyright: (c) 2010-2013 Sahana Software Foundation
+    @copyright: (c) 2010-2014 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -8234,7 +8234,7 @@ class S3Map(S3Method):
             Entry point to apply map method to S3Requests
             - produces a full page with S3FilterWidgets above a Map
 
-            @param r: the S3Request isntance
+            @param r: the S3Request instance
             @param attr: controller attributes for the request
 
             @return: output object to send to the view
