@@ -35,7 +35,7 @@ class index(S3CustomController):
         s3.jquery_ready.append('''$('#myCarousel').carousel()''')
 
         # Latest 4 Events and Alerts
-        from s3.s3resource import S3FieldSelector
+        from s3.s3query import FS
         s3db = current.s3db
         layout = s3.render_posts
         list_id = "news_datalist"
@@ -51,7 +51,7 @@ class index(S3CustomController):
                        ]
 
         resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Event")
+        resource.add_filter(FS("series_id$name") == "Event")
         # Only show Future Events
         resource.add_filter(resource.table.date >= current.request.now)
         # Order with next Event first
@@ -59,7 +59,7 @@ class index(S3CustomController):
         output["events"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Alert")
+        resource.add_filter(FS("series_id$name") == "Alert")
         # Order with most recent Alert first
         orderby = "date desc"
         output["alerts"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)

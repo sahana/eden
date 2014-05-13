@@ -34,7 +34,7 @@ from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3report import S3Report
-from s3resource import S3FieldSelector
+from s3query import FS
 
 # =============================================================================
 class S3Profile(S3CRUD):
@@ -217,26 +217,26 @@ class S3Profile(S3CRUD):
 
         elif type(context) is tuple:
             context, field = context
-            query = (S3FieldSelector(context) == r.record[field])
+            query = (FS(context) == r.record[field])
 
         elif context == "location":
             # Show records linked to this Location & all it's Child Locations
             s = "(location)$path"
             # This version doesn't serialize_url
             #m = ("%(id)s/*,*/%(id)s/*" % dict(id=id)).split(",")
-            #filter = (S3FieldSelector(s).like(m)) | (S3FieldSelector(s) == id)
+            #filter = (FS(s).like(m)) | (FS(s) == id)
             m = ("%(id)s,%(id)s/*,*/%(id)s/*,*/%(id)s" % dict(id=record_id)).split(",")
             m = [f.replace("*", "%") for f in m]
-            query = (S3FieldSelector(s).like(m))
+            query = (FS(s).like(m))
         # @ToDo:
         #elif context == "organisation":
         #    # Show records linked to this Organisation and all it's Branches
         #    s = "(%s)" % context
-        #    query = (S3FieldSelector(s) == id)
+        #    query = (FS(s) == id)
         else:
             # Normal: show just records linked directly to this master resource
             s = "(%s)" % context
-            query = (S3FieldSelector(s) == record_id)
+            query = (FS(s) == record_id)
 
         # Define target resource
         resource = current.s3db.resource(tablename, filter=query)
@@ -319,7 +319,7 @@ class S3Profile(S3CRUD):
             record_id = get_vars.get("record", None)
             if record_id is not None:
                 # Ajax-update of a single record
-                resource.add_filter(S3FieldSelector("id") == record_id)
+                resource.add_filter(FS("id") == record_id)
                 start, limit = 0, 1
             else:
                 # Ajax-update of full page

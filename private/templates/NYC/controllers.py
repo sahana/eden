@@ -91,7 +91,7 @@ $('#login-btn').click(function(){
         output["register_form"] = register_form
 
         # Latest 4 Events and Requests
-        from s3.s3resource import S3FieldSelector
+        from s3.s3query import FS
         s3db = current.s3db
         layout = s3db.cms_post_list_layout
         list_id = "latest_events"
@@ -107,7 +107,7 @@ $('#login-btn').click(function(){
                        ]
 
         resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Event")
+        resource.add_filter(FS("series_id$name") == "Event")
         # Only show Future Events
         resource.add_filter(resource.table.date >= request.now)
         # Order with next Event first
@@ -119,7 +119,7 @@ $('#login-btn').click(function(){
         s3db.req_customise_req_fields()
         list_fields = s3db.get_config("req_req", "list_fields")
         layout = s3db.req_req_list_layout
-        resource.add_filter(S3FieldSelector("cancel") != True)
+        resource.add_filter(FS("cancel") != True)
         # Order with most recent Request first
         orderby = "date desc"
         output["latest_reqs"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
@@ -127,7 +127,7 @@ $('#login-btn').click(function(){
         # Site Activity Log
         from s3.s3utils import s3_auth_user_represent_name
         resource = s3db.resource("s3_audit")
-        resource.add_filter(S3FieldSelector("~.method") != "delete")
+        resource.add_filter(FS("~.method") != "delete")
         orderby = "s3_audit.timestmp desc"
         list_fields = ["id",
                        "method",

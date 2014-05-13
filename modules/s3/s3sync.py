@@ -57,7 +57,7 @@ from gluon.storage import Storage
 
 from s3rest import S3Method
 from s3import import S3ImportItem
-from s3resource import S3URLQuery
+from s3query import S3URLQuery
 from s3utils import s3_unicode
 
 DEBUG = False

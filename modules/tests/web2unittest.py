@@ -40,7 +40,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from gluon import current
 from gluon.storage import Storage
 
-from s3.s3resource import S3FieldSelector
+from s3.s3query import FS
 from s3.s3utils import s3_unicode
 from s3.s3widgets import *
 
@@ -378,9 +378,9 @@ class SeleniumUnitTest(Web2UnitTest):
             searchFields = simpleSearch[1].field
             for i in xrange(len(searchFields)):
                 if i == 0:
-                    query = (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
+                    query = (FS(searchFields[i]).like("%" + key + "%"))
                 else:
-                    query |= (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
+                    query |= (FS(searchFields[i]).like("%" + key + "%"))
 
             filters = row_count.get("filters", None)
             if filters is not None:

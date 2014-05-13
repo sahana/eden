@@ -977,15 +977,15 @@ class S3HRModel(S3Model):
             # - & second word against either middle_name or last_name
             value1, value2 = value.split(" ", 1)
             value2 = value2.strip()
-            query = ((S3FieldSelector("person_id$first_name").lower().like(value1 + "%")) & \
-                    ((S3FieldSelector("person_id$middle_name").lower().like(value2 + "%")) | \
-                     (S3FieldSelector("person_id$last_name").lower().like(value2 + "%"))))
+            query = ((FS("person_id$first_name").lower().like(value1 + "%")) & \
+                    ((FS("person_id$middle_name").lower().like(value2 + "%")) | \
+                     (FS("person_id$last_name").lower().like(value2 + "%"))))
         else:
             # Single word - check for match against any of the 3 names
             value = value.strip()
-            query = ((S3FieldSelector("person_id$first_name").lower().like(value + "%")) | \
-                     (S3FieldSelector("person_id$middle_name").lower().like(value + "%")) | \
-                     (S3FieldSelector("person_id$last_name").lower().like(value + "%")))
+            query = ((FS("person_id$first_name").lower().like(value + "%")) | \
+                     (FS("person_id$middle_name").lower().like(value + "%")) | \
+                     (FS("person_id$last_name").lower().like(value + "%")))
 
         resource.add_filter(query)
 
@@ -5312,7 +5312,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                    label_create = "Create Contact",
                                    tablename = "pr_contact",
                                    type = "datalist",
-                                   filter = S3FieldSelector("pe_id") == pe_id,
+                                   filter = FS("pe_id") == pe_id,
                                    icon = "icon-phone",
                                    # Default renderer:
                                    #list_layout = s3db.pr_render_contact,
@@ -5322,7 +5322,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                   label_create = "Add Address",
                                   type = "datalist",
                                   tablename = "pr_address",
-                                  filter = S3FieldSelector("pe_id") == pe_id,
+                                  filter = FS("pe_id") == pe_id,
                                   icon = "icon-home",
                                   # Default renderer:
                                   #list_layout = s3db.pr_render_address,
@@ -5332,7 +5332,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       label_create = "Create Sector",
                                       type = "datalist",
                                       tablename = "hrm_credential",
-                                      filter = S3FieldSelector("person_id") == person_id,
+                                      filter = FS("person_id") == person_id,
                                       icon = "icon-tags",
                                       # Default renderer:
                                       #list_layout = hrm_credential_list_layout,
@@ -5341,7 +5341,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                  label_create = "Create Skill",
                                  type = "datalist",
                                  tablename = "hrm_competency",
-                                 filter = S3FieldSelector("person_id") == person_id,
+                                 filter = FS("person_id") == person_id,
                                  icon = "icon-comment-alt",
                                  # Default renderer:
                                  #list_layout = hrm_competency_list_layout,
@@ -5350,7 +5350,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     label_create = "Add Training",
                                     type = "datalist",
                                     tablename = "hrm_training",
-                                    filter = S3FieldSelector("person_id") == person_id,
+                                    filter = FS("person_id") == person_id,
                                     icon = "icon-wrench",
                                     # Default renderer:
                                     #list_layout = hrm_training_list_layout,
@@ -5359,7 +5359,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                      label_create = "Add New Experience",
                                      type = "datalist",
                                      tablename = "hrm_experience",
-                                     filter = S3FieldSelector("person_id") == person_id,
+                                     filter = FS("person_id") == person_id,
                                      icon = "icon-truck",
                                      # Default renderer:
                                      #list_layout = hrm_experience_list_layout,
@@ -5368,7 +5368,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                label_create = "Add New Document",
                                type = "datalist",
                                tablename = "doc_document",
-                               filter = S3FieldSelector("doc_id") == record.doc_id,
+                               filter = FS("doc_id") == record.doc_id,
                                icon = "icon-paperclip",
                                # Default renderer:
                                #list_layout = s3db.doc_document_list_layout,
@@ -5495,10 +5495,10 @@ def hrm_human_resource_controller(extra_filter=None):
         #else:
         #    if vol:
         #        # Default to Volunteers
-        #        type_filter = S3FieldSelector("type") == 2
+        #        type_filter = FS("type") == 2
         #    else:
         #        # Default to Staff
-        #        type_filter = S3FieldSelector("type") == 1
+        #        type_filter = FS("type") == 1
         #    r.resource.add_filter(type_filter)
 
         # Others
@@ -6281,8 +6281,8 @@ def hrm_record(r, **attr):
             vol_experience = settings.get_hrm_vol_experience()
             if vol_experience in ("programme", "both"):
                 # Exclude records which are just to link to Programme & also Training Hours
-                filter = (S3FieldSelector("hours") != None) & \
-                         (S3FieldSelector("programme_id") != None)
+                filter = (FS("hours") != None) & \
+                         (FS("programme_id") != None)
                 list_fields = ["id",
                                "date",
                                "programme_id",

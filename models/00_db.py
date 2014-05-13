@@ -170,6 +170,9 @@ current.gis = gis
 # s3_request
 s3_request = s3base.s3_request
 
+# Field Selectors
+FS = s3base.FS
+
 # S3XML
 s3xml = s3base.S3XML()
 current.xml = s3xml

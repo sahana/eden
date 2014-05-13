@@ -320,8 +320,8 @@ def customise_org_facility_controller(**attr):
             types = r.get_vars.get("site_facility_type.facility_type_id__belongs", None)
             if not types:
                 # Hide Private Residences
-                from s3.s3resource import S3FieldSelector
-                s3.filter = S3FieldSelector("site_facility_type.facility_type_id$name") != "Private Residence"
+                from s3.s3query import FS
+                s3.filter = FS("site_facility_type.facility_type_id$name") != "Private Residence"
 
         if r.interactive:
             tablename = "org_facility"

@@ -14,7 +14,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import S3FieldSelector, S3CustomController
+from s3 import FS, S3CustomController
 from s3theme import formstyle_foundation_inline
 
 THEME = "EVASS"
@@ -153,7 +153,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         s3db = current.s3db
 
         resource = s3db.resource("cr_shelter",
-                                    filter = S3FieldSelector("status")
+                                    filter = FS("status")
                                                             .belongs([2, None]))
         data = resource.select(["id", "name"])
         shelter_list = UL(_id = "shelter_list",

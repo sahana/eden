@@ -138,7 +138,7 @@ def human_resource():
     s3db.add_components("hrm_human_resource",
                         deploy_alert_recipient="human_resource_id")
 
-    q = s3base.S3FieldSelector("application.active") == True
+    q = FS("application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)
     return output
 
@@ -328,7 +328,7 @@ def hr_search():
     """
 
     # Filter to just deployables (RDRT Members)
-    s3.filter = s3base.S3FieldSelector("application.active") == True
+    s3.filter = FS("application.active") == True
 
     s3.prep = lambda r: r.method == "search_ac"
 
@@ -343,7 +343,7 @@ def person_search():
     """
 
     # Filter to just deployables (RDRT Members)
-    s3.filter = s3base.S3FieldSelector("application.active") == True
+    s3.filter = FS("application.active") == True
 
     s3.prep = lambda r: r.method == "search_ac"
 
@@ -543,9 +543,9 @@ def email_inbox():
     table.channel_id.readable = False
     table.to_address.readable = False
 
-    from s3.s3resource import S3FieldSelector
-    s3.filter = (S3FieldSelector("response.id") == None) & \
-                (S3FieldSelector("inbound") == True)
+    from s3.s3query import FS
+    s3.filter = (FS("response.id") == None) & \
+                (FS("inbound") == True)
 
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
     crud_form = S3SQLCustomForm("date",

@@ -796,11 +796,11 @@ class S3OrganisationModel(S3Model):
                             "Missing option! Require value")
             raise HTTP(400, body=output)
 
-        query = (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
-                (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
+        query = (FS("organisation.name").lower().like(value + "%")) | \
+                (FS("organisation.acronym").lower().like(value + "%"))
         if use_branches:
-            query |= (S3FieldSelector("parent.name").lower().like(value + "%")) | \
-                     (S3FieldSelector("parent.acronym").lower().like(value + "%"))
+            query |= (FS("parent.name").lower().like(value + "%")) | \
+                     (FS("parent.acronym").lower().like(value + "%"))
         resource.add_filter(query)
 
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
@@ -2495,16 +2495,16 @@ class S3SiteModel(S3Model):
             raise HTTP(400, body=output)
 
         # Construct query
-        query = (S3FieldSelector("name").lower().like(value + "%"))
+        query = (FS("name").lower().like(value + "%"))
 
         # Add template specific search criteria
         extra_fields = settings.get_org_site_autocomplete_fields()
         for field in extra_fields:
             if "addr_street" in field:
                 # Need to be able to get through the street number
-                query |= (S3FieldSelector(field).lower().like("%" + value + "%"))
+                query |= (FS(field).lower().like("%" + value + "%"))
             else:
-                query |= (S3FieldSelector(field).lower().like(value + "%"))
+                query |= (FS(field).lower().like(value + "%"))
 
         resource.add_filter(query)
 
@@ -4661,7 +4661,7 @@ def org_organisation_controller():
                     use_branches = settings.get_org_branches()
                     if use_branches:
                         # Filter Branches
-                        branch_filter = (S3FieldSelector("parent.id") == None)
+                        branch_filter = (FS("parent.id") == None)
                     # Filter Locations
                     lfilter = current.session.s3.location_filter
                     if lfilter:
@@ -4684,8 +4684,8 @@ def org_organisation_controller():
                                                        limitby=(0, 1)).first()
                                 code = tag.value
                             # Filter out Branches
-                            branch_filter |= (S3FieldSelector("parent.country") != code) | \
-                                             (S3FieldSelector("parent.country") == None)
+                            branch_filter |= (FS("parent.country") != code) | \
+                                             (FS("parent.country") == None)
                     if use_branches:
                         r.resource.add_filter(branch_filter)
 

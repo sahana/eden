@@ -6062,8 +6062,8 @@ def project_task_controller():
             except:
                 current.session.error = T("Project not Found")
                 redirect(URL(args=None, vars=None))
-            s3.filter = (S3FieldSelector("task_id:project_task_project.project_id") == project) & \
-                        (S3FieldSelector("status").belongs(statuses))
+            s3.filter = (FS("task_id:project_task_project.project_id") == project) & \
+                        (FS("status").belongs(statuses))
             crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
             crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
             # Add Activity

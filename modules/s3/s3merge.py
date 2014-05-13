@@ -37,7 +37,7 @@ from gluon import *
 from gluon.html import BUTTON
 from gluon.storage import Storage
 from s3rest import S3Method
-from s3resource import S3FieldSelector
+from s3query import FS
 from s3widgets import *
 from s3validators import *
 from s3utils import s3_unicode, s3_represent_value
@@ -249,7 +249,7 @@ class S3Merge(S3Method):
             bookmarks = session_s3[DEDUPLICATE]
             if tablename in bookmarks:
                 record_ids = bookmarks[tablename]
-        query = S3FieldSelector(resource._id.name).belongs(record_ids)
+        query = FS(resource._id.name).belongs(record_ids)
         resource.add_filter(query)
 
         # Representation

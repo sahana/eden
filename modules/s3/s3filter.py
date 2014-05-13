@@ -53,7 +53,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3rest import S3Method
-from s3resource import S3ResourceField, S3URLQuery
+from s3query import S3ResourceField, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget

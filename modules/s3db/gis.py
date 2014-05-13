@@ -899,19 +899,19 @@ class S3LocationModel(S3Model):
             response.headers["Content-Type"] = "application/json"
             return output
 
-        query = S3FieldSelector("name").lower().like(value + "%")
+        query = FS("name").lower().like(value + "%")
         field2 = _vars.get("field2", None)
         if field2:
             # S3LocationSelectorWidget's s3_gis_autocomplete_search
             # addr_street
             fieldname = str.lower(field2)
             fields.append(fieldname)
-            query |= S3FieldSelector(fieldname).lower().like(value + "%")
+            query |= FS(fieldname).lower().like(value + "%")
         elif loc_select:
             fields.append("level")
             fields.append("parent")
         elif search_l10n:
-            query |= S3FieldSelector("name.name_l10n").lower().like(value + "%")
+            query |= FS("name.name_l10n").lower().like(value + "%")
         resource.add_filter(query)
 
         if level:
@@ -4912,15 +4912,15 @@ def gis_location_filter(r):
                 tag = db(query).select(ttable.value,
                                        limitby=(0, 1)).first()
                 code = tag.value
-            filter = (S3FieldSelector(selector) == code)
+            filter = (FS(selector) == code)
         elif resource.name == "project":
             # Go via project_location link table
             selector = "location.location_id$%s" % row.level
-            filter = (S3FieldSelector(selector) == row.name)
+            filter = (FS(selector) == row.name)
         else:
             # Normal case: resource with location_id
             selector = "%s.location_id$%s" % (resource.name, row.level)
-            filter = (S3FieldSelector(selector) == row.name)
+            filter = (FS(selector) == row.name)
         resource.add_filter(filter)
 
 # =============================================================================

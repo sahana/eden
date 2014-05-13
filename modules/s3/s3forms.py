@@ -51,7 +51,7 @@ from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
 from gluon.validators import Validator
 
-from s3resource import S3FieldSelector
+from s3query import FS
 from s3utils import s3_mark_required, s3_unicode, s3_store_last_record_id, s3_validate, s3_represent_value
 
 # Compact JSON encoding
@@ -1397,7 +1397,7 @@ class S3SQLField(S3SQLFormElement):
         """
 
         # Import S3ResourceField only here, to avoid circular dependency
-        from s3resource import S3ResourceField
+        from s3query import S3ResourceField
 
         rfield = S3ResourceField(resource, self.selector)
 
@@ -2874,7 +2874,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
 
             if master:
                 # Find existing links
-                query = S3FieldSelector(component.lkey) == master[pkey]
+                query = FS(component.lkey) == master[pkey]
                 lresource = s3db.resource(link.tablename, filter = query)
                 rows = lresource.select([component.rkey], as_rows=True)
 
@@ -2891,7 +2891,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 # Delete links which are no longer used
                 # @todo: apply filterby to only delete within the subset?
                 if delete:
-                    query = S3FieldSelector(component.rkey).belongs(delete)
+                    query = FS(component.rkey).belongs(delete)
                     lresource = s3db.resource(link.tablename, filter = query)
                     lresource.delete()
 
@@ -2986,7 +2986,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
 
             # filterby is a field selector for the component
             # that shall match certain conditions
-            filter_selector = S3FieldSelector(filterby)
+            filter_selector = FS(filterby)
 
             if filteropts is not None:
                 # filterby-field shall match one of the given filteropts
@@ -3390,9 +3390,9 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                 options = filterby["options"]
                 filter_field = filterby["field"]
                 if isinstance(options, list):
-                    _resource.add_filter(S3FieldSelector(filter_field).belongs(options))
+                    _resource.add_filter(FS(filter_field).belongs(options))
                 else:
-                    _resource.add_filter(S3FieldSelector(filter_field) == options)
+                    _resource.add_filter(FS(filter_field) == options)
 
             rows = _resource.select(fields=fields,
                                     limit=None,

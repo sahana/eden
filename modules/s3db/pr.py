@@ -1298,14 +1298,14 @@ class S3PersonModel(S3Model):
         if " " in value:
             value1, value2 = value.split(" ", 1)
             value2 = value2.strip()
-            query = (S3FieldSelector("first_name").lower().like(value1 + "%")) & \
-                    ((S3FieldSelector("middle_name").lower().like(value2 + "%")) | \
-                     (S3FieldSelector("last_name").lower().like(value2 + "%")))
+            query = (FS("first_name").lower().like(value1 + "%")) & \
+                    ((FS("middle_name").lower().like(value2 + "%")) | \
+                     (FS("last_name").lower().like(value2 + "%")))
         else:
             value = value.strip()
-            query = ((S3FieldSelector("first_name").lower().like(value + "%")) | \
-                    (S3FieldSelector("middle_name").lower().like(value + "%")) | \
-                    (S3FieldSelector("last_name").lower().like(value + "%")))
+            query = ((FS("first_name").lower().like(value + "%")) | \
+                    (FS("middle_name").lower().like(value + "%")) | \
+                    (FS("last_name").lower().like(value + "%")))
 
         resource.add_filter(query)
 
@@ -1544,17 +1544,17 @@ class S3PersonModel(S3Model):
 
         # Perform Search
         # Names could be in the wrong order
-        query = (S3FieldSelector("first_name").lower().like(first_name + "%")) | \
-                (S3FieldSelector("middle_name").lower().like(first_name + "%")) | \
-                (S3FieldSelector("last_name").lower().like(first_name + "%"))
+        query = (FS("first_name").lower().like(first_name + "%")) | \
+                (FS("middle_name").lower().like(first_name + "%")) | \
+                (FS("last_name").lower().like(first_name + "%"))
         if middle_name:
-            query |= (S3FieldSelector("first_name").lower().like(middle_name + "%")) | \
-                     (S3FieldSelector("middle_name").lower().like(middle_name + "%")) | \
-                     (S3FieldSelector("last_name").lower().like(middle_name + "%"))
+            query |= (FS("first_name").lower().like(middle_name + "%")) | \
+                     (FS("middle_name").lower().like(middle_name + "%")) | \
+                     (FS("last_name").lower().like(middle_name + "%"))
         if last_name:
-            query |= (S3FieldSelector("first_name").lower().like(last_name + "%")) | \
-                     (S3FieldSelector("middle_name").lower().like(last_name + "%")) | \
-                     (S3FieldSelector("last_name").lower().like(last_name + "%"))
+            query |= (FS("first_name").lower().like(last_name + "%")) | \
+                     (FS("middle_name").lower().like(last_name + "%")) | \
+                     (FS("last_name").lower().like(last_name + "%"))
 
         resource = r.resource
         resource.add_filter(query)
@@ -1590,7 +1590,7 @@ class S3PersonModel(S3Model):
                 # Remove the name filter (last one in)
                 resource.rfilter.filters.pop()
                 resource.rfilter.query = None
-                query = (S3FieldSelector("date_of_birth") == dob)
+                query = (FS("date_of_birth") == dob)
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
                                        start=0,
@@ -1600,7 +1600,7 @@ class S3PersonModel(S3Model):
                 # Remove the name filter (last one in)
                 resource.rfilter.filters.pop()
                 resource.rfilter.query = None
-                query = (S3FieldSelector("contact.value") == email) & (S3FieldSelector("contact.contact_method") == "EMAIL")
+                query = (FS("contact.value") == email) & (FS("contact.contact_method") == "EMAIL")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
                                        start=0,
@@ -1610,7 +1610,7 @@ class S3PersonModel(S3Model):
                 # Remove the name filter (last one in)
                 resource.rfilter.filters.pop()
                 resource.rfilter.query = None
-                query = (S3FieldSelector("contact.value") == mobile_phone) & (S3FieldSelector("contact.contact_method") == "SMS")
+                query = (FS("contact.value") == mobile_phone) & (FS("contact.contact_method") == "SMS")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
                                        start=0,
@@ -1620,7 +1620,7 @@ class S3PersonModel(S3Model):
                 # Remove the name filter (last one in)
                 resource.rfilter.filters.pop()
                 resource.rfilter.query = None
-                query = (S3FieldSelector("contact.value") == home_phone) & (S3FieldSelector("contact.contact_method") == "HOME_PHONE")
+                query = (FS("contact.value") == home_phone) & (FS("contact.contact_method") == "HOME_PHONE")
                 resource.add_filter(query)
                 rows = resource.select(fields=fields,
                                        start=0,
@@ -3416,11 +3416,11 @@ class S3SavedSearch(S3Model):
             Returns a string of nice labels and represent-ed values
         """
 
-        from s3.s3resource import S3Resource, S3ResourceField, S3ResourceFilter
+        from s3.s3query import S3ResourceField, S3URLQuery
         from s3.s3xml import S3XML
         import urlparse
 
-        resource = S3Resource(tablename)
+        resource = current.s3db.resource(tablename)
 
         if tablename == "project_hazard":
             resource.table.id.label = current.T("Hazard")

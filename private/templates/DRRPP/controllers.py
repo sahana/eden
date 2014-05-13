@@ -776,8 +776,8 @@ class organisations():
         T = current.T
 
         s3request = s3_request("org", "organisation", extension="aadata")
-        # (S3FieldSelector("project.id") != None) & \
-        f = (S3FieldSelector("organisation_type_id$name").anyof(["Regional Organisation",
+        # (FS("project.id") != None) & \
+        f = (FS("organisation_type_id$name").anyof(["Regional Organisation",
                                                                  "Regional Office",
                                                                  "Regional Center"]))
         s3request.resource.add_filter(f)
@@ -810,8 +810,8 @@ class organisations():
                                      s3db.org_organisation_address)
 
         s3request = s3_request("org", "organisation", extension="aadata")
-        #(S3FieldSelector("project.id") != None) & \
-        f = (S3FieldSelector("organisation_type_id$name").anyof(["Committees/Mechanism/Forum",
+        #(FS("project.id") != None) & \
+        f = (FS("organisation_type_id$name").anyof(["Committees/Mechanism/Forum",
                                                                  "Network"]))
         s3request.resource.add_filter(f)
 

@@ -11,6 +11,7 @@ import unittest
 
 from gluon import *
 from s3.s3timeplot import *
+from s3.s3query import FS
 
 # =============================================================================
 class EventTests(unittest.TestCase):
@@ -681,21 +682,21 @@ class TimePlotTests(unittest.TestCase):
 
         tp = S3TimePlot()
 
-        query = S3FieldSelector("event_type") == "STARTEND"
+        query = FS("event_type") == "STARTEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end)
         # falls back to first start date
         self.assertEqual(ef.start, dt(2011, 1, 3, 0, 0, 0))
         self.assertTrue(self.is_now(ef.end))
 
-        query = S3FieldSelector("event_type") == "NOSTART"
+        query = FS("event_type") == "NOSTART"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end)
         # falls back to first end date minus 1 day
         self.assertEqual(ef.start, dt(2012, 2, 12, 0, 0, 0))
         self.assertTrue(self.is_now(ef.end))
 
-        query = S3FieldSelector("event_type") == "NOEND"
+        query = FS("event_type") == "NOEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end)
         # falls back to first start date
@@ -722,7 +723,7 @@ class TimePlotTests(unittest.TestCase):
         tp = S3TimePlot()
 
         end = "2011-03-01"
-        query = S3FieldSelector("event_type") == "STARTEND"
+        query = FS("event_type") == "STARTEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end, end=end)
         # falls back to first start date
@@ -732,7 +733,7 @@ class TimePlotTests(unittest.TestCase):
         self.assertEqual(ef.slots, "weeks")
 
         end = "2013-01-01"
-        query = S3FieldSelector("event_type") == "NOSTART"
+        query = FS("event_type") == "NOSTART"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end, end=end)
         # falls back to first end date minus 1 day
@@ -742,7 +743,7 @@ class TimePlotTests(unittest.TestCase):
         self.assertEqual(ef.slots, "months")
 
         end = "2016-06-01"
-        query = S3FieldSelector("event_type") == "NOEND"
+        query = FS("event_type") == "NOEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end, end=end)
         # falls back to first start date
@@ -762,7 +763,7 @@ class TimePlotTests(unittest.TestCase):
 
         # Check with manual slot length
         end = "2016-06-01"
-        query = S3FieldSelector("event_type") == "NOEND"
+        query = FS("event_type") == "NOEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end, end=end, slots="years")
         # falls back to first start date
@@ -773,7 +774,7 @@ class TimePlotTests(unittest.TestCase):
         # Check with manual start date
         start = "2011-02-15"
         end = "2011-03-01"
-        query = S3FieldSelector("event_type") == "STARTEND"
+        query = FS("event_type") == "STARTEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
         ef = tp.create_event_frame(event_start, event_end, start=start, end=end)
         # falls back to first start date
