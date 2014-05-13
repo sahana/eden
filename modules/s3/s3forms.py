@@ -218,10 +218,10 @@ class S3SQLForm(object):
                             done.append(k)
                             if isinstance(k, int):
                                 # Don't display a section title
-                                repr = ""
+                                represent = ""
                             else:
-                                repr = k 
-                            form[0].insert(i, TR(TD(repr, _colspan=3,
+                                represent = k
+                            form[0].insert(i, TR(TD(represent, _colspan=3,
                                                     _class="subheading"),
                                                  _class = "subheading",
                                                  _id = "%s_%s__subheading" %
@@ -596,33 +596,33 @@ class S3SQLDefaultForm(S3SQLForm):
                 current.audit("update", prefix, name, form=form,
                               record=record_id, representation=format)
 
-            vars = form.vars
+            form_vars = form.vars
 
             # Update super entity links
             s3db = current.s3db
-            s3db.update_super(table, vars)
+            s3db.update_super(table, form_vars)
 
             # Update component link
             if link and link.postprocess is None:
                 resource = link.resource
                 master = link.master
-                resource.update_link(master, vars)
+                resource.update_link(master, form_vars)
 
-            if vars.id:
+            if form_vars.id:
                 if record_id is None:
                     # Set record owner
                     auth = current.auth
-                    auth.s3_set_record_owner(table, vars.id)
-                    auth.s3_make_session_owner(table, vars.id)
+                    auth.s3_set_record_owner(table, form_vars.id)
+                    auth.s3_make_session_owner(table, form_vars.id)
                 else:
                     # Update realm
                     update_realm = s3db.get_config(table, "update_realm")
                     if update_realm:
-                        current.auth.set_realm_entity(table, vars,
+                        current.auth.set_realm_entity(table, form_vars,
                                                       force_update=True)
                 # Store session vars
-                self.resource.lastid = str(vars.id)
-                s3_store_last_record_id(tablename, vars.id)
+                self.resource.lastid = str(form_vars.id)
+                s3_store_last_record_id(tablename, form_vars.id)
 
             # Execute onaccept
             try:
@@ -835,7 +835,7 @@ class S3SQLCustomForm(S3SQLForm):
                     f.writable = False
                 if labels is not None and f.name not in labels:
                     if f.required:
-                        flabels, h = s3_mark_required([f], mark_required=[f])
+                        flabels = s3_mark_required([f], mark_required=[f])[0]
                         labels[f.name] = flabels[f.name]
                     else:
                         labels[f.name] = "%s:" % f.label
@@ -854,10 +854,9 @@ class S3SQLCustomForm(S3SQLForm):
                     sfields = dict([(n, (f.name, f.label))
                                     for a, n, f in fields
                                     if a == alias and n in ctable])
-                    slabels, h = s3_mark_required(
-                                    [ctable[n] for n in sfields],
-                                    mark_required=mark_required,
-                                    map_names=sfields)
+                    slabels = s3_mark_required([ctable[n] for n in sfields],
+                                               mark_required=mark_required,
+                                               map_names=sfields)[0]
                     if labels:
                         labels.update(slabels)
                     else:
@@ -1320,7 +1319,8 @@ class S3SQLFormElement(object):
         elif skip_post_validation and \
            current.request.env.request_method == "POST":
             requires = SKIP_POST_VALIDATION(field.requires)
-            widget = None
+            # Some widgets may need disabling here
+            widget = field.widget
             required = False
             notnull = False
         else:
@@ -2765,7 +2765,6 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             @return: the widget
         """
 
-        resource = self.resource
         component, link = self.get_link()
 
         # Field dummy
@@ -3225,9 +3224,9 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             row_index = 0
             col_index = 0
 
-            for id in options:
+            for _id in options:
                 input_id = "id-%s-%s-%s" % (field_name, row_index, col_index)
-                option = options[id]
+                option = options[_id]
                 v = option["name"]
                 if translate:
                     v = T(v)
@@ -3240,7 +3239,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                                   _id=input_id,
                                   _name=field_name,
                                   _type="checkbox",
-                                  _value=id,
+                                  _value=_id,
                                   hideerror=True,
                                   value=option["selected"],
                                   ),
