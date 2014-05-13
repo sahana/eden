@@ -349,7 +349,7 @@ def user_coalition(row):
     if hasattr(row, "pr_person_user"):
         row = row.pr_person_user
     try:
-       user_id = row.user_id
+        user_id = row.user_id
     except:
         # not available
         return current.messages["NONE"]
@@ -421,7 +421,6 @@ def customise_pr_person_controller(**attr):
         if r.interactive:
             if current.request.controller != "default":
                 # CRUD Strings
-                ADD_CONTACT = T("Create Contact")
                 s3.crud_strings[tablename] = Storage(
                     label_create = T("Create Contact"),
                     title_display = T("Contact Details"),
@@ -625,6 +624,8 @@ def customise_project_activity_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+            if not result:
+                return False
 
         s3db = current.s3db
         tablename = "project_activity"
@@ -818,7 +819,7 @@ def org_facility_types(row):
     if hasattr(row, "org_facility"):
         row = row.org_facility
     try:
-       site_id = row.site_id
+        site_id = row.site_id
     except:
         # not available
         return current.messages["NONE"]
@@ -1119,8 +1120,8 @@ def customise_org_group_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
-        else:
-            result = True
+            if not result:
+                return False
 
         if r.interactive:
             from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -1135,7 +1136,7 @@ def customise_org_group_controller(**attr):
                                                      polygons=True,
                                                      )
 
-        return result
+        return True
     s3.prep = custom_prep
 
     attr["rheader"] = None
@@ -1226,6 +1227,8 @@ def customise_org_facility_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+            if not result:
+                return False
 
         s3db = current.s3db
         tablename = "org_facility"
@@ -1434,6 +1437,8 @@ def customise_stats_people_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+            if not result:
+                return False
 
         s3db = current.s3db
         tablename = "stats_people"
@@ -1625,6 +1630,8 @@ def customise_vulnerability_evac_route_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+            if not result:
+                return False
 
         s3db = current.s3db
         tablename = "vulnerability_evac_route"
@@ -1772,6 +1779,8 @@ def customise_vulnerability_risk_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+            if not result:
+                return False
 
         s3db = current.s3db
         tablename = "vulnerability_risk"
@@ -1942,6 +1951,8 @@ def customise_gis_config_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+            if not result:
+                return False
 
         if r.interactive:
             auth = current.auth

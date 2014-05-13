@@ -360,7 +360,7 @@ class S3SQLDefaultForm(S3SQLForm):
                 else:
                     # Default script: hide form, show add-button
                     script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
-                current.response.s3.jquery_ready.append(script % cancel)
+                s3.jquery_ready.append(script % cancel)
             else:
                 cancel_button.update(_href=s3.cancel)
             buttons = [submit_button, cancel_button]
@@ -894,7 +894,7 @@ class S3SQLCustomForm(S3SQLForm):
             cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
             if isinstance(cancel, dict):
                 script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})''' % cancel
-                current.response.s3.jquery_ready.append(script)
+                s3.jquery_ready.append(script)
             else:
                 cancel_button.update(_href=s3.cancel)
             buttons = [submit_button, cancel_button]
@@ -3298,35 +3298,35 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         else:
             fields = ["id", "name"]
 
-        filter = opts.get("filter", None)
-        if filter:
-            linktable = s3db[filter["linktable"]]
-            lkey = filter["lkey"]
-            rkey = filter["rkey"]
-            if "values" in filter:
+        opt_filter = opts.get("filter", None)
+        if opt_filter:
+            linktable = s3db[opt_filter["linktable"]]
+            lkey = opt_filter["lkey"]
+            rkey = opt_filter["rkey"]
+            if "values" in opt_filter:
                 # Option A - from AJAX request
-                values = filter["values"]
+                values = opt_filter["values"]
             else:
                 # Option B - from record
-                lookuptable = filter.get("lookuptable", None)
+                lookuptable = opt_filter.get("lookuptable", None)
                 if lookuptable:
                     # e.g. Project Community Activity Types filtered by Sector of parent Project
-                    lookupkey = filter.get("lookupkey", None)
+                    lookupkey = opt_filter.get("lookupkey", None)
                     if not lookupkey:
                         raise
                     if resource._rows:
-                        id = resource._rows[0][lookupkey]
-                        _resource = s3db.resource(lookuptable, id=id)
+                        _id = resource._rows[0][lookupkey]
+                        _resource = s3db.resource(lookuptable, id=_id)
                     else:
-                        id = None
+                        _id = None
                 else:
                     # e.g. Project Themes filtered by Sector
                     if resource._ids:
-                        id = resource._ids[0]
+                        _id = resource._ids[0]
                         _resource = resource
                     else:
-                        id = None
-                if id:
+                        _id = None
+                if _id:
                     _table = _resource.table
                     if rkey in _table.fields:
                         values = [_table[rkey]]
@@ -3423,24 +3423,30 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         audit = current.audit
         for i in xrange(len(items)):
             item = items[i]
-            # Get the item record ID
-            if "_id" in item:
-                record_id = item["_id"]
-                # Check permissions to edit this item
-                editable = not "_readonly" in item
-                audit("read", prefix, name,
-                      record=record_id, representation="html")
-                if fieldname in item:
-                    id = item[fieldname]["value"]
-                    try:
-                        options[id].update(selected=True,
-                                           editable=editable)
-                    except:
-                        # e.g. Theme filtered by Sector
-                        current.session.error = \
-                            current.T("Invalid data: record %(id)s not accessible in table %(table)s") % \
-                                dict(id=id, table=table)
-                        redirect(URL(args=None, vars=None))
+            if fieldname in item:
+                if "_delete" in item:
+                    continue
+                _id = item[fieldname]["value"]
+                if "_id" in item:
+                    record_id = item["_id"]
+                    # Check permissions to edit this item
+                    editable = not "_readonly" in item
+                    # Audit
+                    audit("read", prefix, name,
+                          record=record_id, representation="html")
+                elif "_changed" in item:
+                    # Form had errors
+                    editable = True
+                    _id = int(_id)
+                try:
+                    options[_id].update(selected=True,
+                                        editable=editable)
+                except:
+                    # e.g. Theme filtered by Sector
+                    current.session.error = \
+                        current.T("Invalid data: record %(id)s not accessible in table %(table)s") % \
+                            dict(id=_id, table=table)
+                    redirect(URL(args=None, vars=None))
 
         return options
 
@@ -3541,9 +3547,11 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
 
         T = current.T
 
+        jquery_ready = current.response.s3.jquery_ready
+
         script = self.options.get("script", None)
-        if script:
-            current.response.s3.jquery_ready.append(script)
+        if script and script not in jquery_ready:
+            jquery_ready.append(script)
 
         # @ToDo: Render read-only if self.readonly
 
@@ -3577,16 +3585,16 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             opts = []
             vals = []
             oappend = opts.append
-            for id in options:
-                option = options[id]
+            for _id in options:
+                option = options[_id]
                 v = option["name"]
                 if translate:
                     v = T(v)
                 oappend(OPTION(v,
-                               _value=id,
+                               _value=_id,
                                _disabled = not option["editable"]))
                 if option["selected"]:
-                    vals.append(id)
+                    vals.append(_id)
 
             widget = SELECT(*opts,
                             value=vals,
@@ -3599,7 +3607,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             # jQueryUI widget
             # (this section could be made optional)
             opts = self.options
-            filter = opts.get("filter", False)
+            opt_filter = opts.get("filter", False)
             header = opts.get("header", False)
             selectedList = opts.get("selectedList", 3)
             noneSelectedText = "Select"
@@ -3617,9 +3625,10 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                  header,
                  selectedList,
                  T(noneSelectedText))
-            if filter:
+            if opt_filter:
                 script = '''%s.multiselectfilter()''' % script
-            current.response.s3.jquery_ready.append(script)
+            if script not in jquery_ready: # Prevents loading twice when form has errors
+                jquery_ready.append(script)
 
         # Real input: a hidden text field to store the JSON data
         real_input = "%s_%s" % (self.resource.tablename, field_name)
