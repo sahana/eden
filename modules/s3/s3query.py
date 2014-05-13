@@ -1282,30 +1282,66 @@ class S3ResourceQuery(object):
 
         ktablename, key, multiple = s3_get_foreign_key(l)
         if not ktablename:
-            q = self._query_belongs(l, r)
-        else:
-            from s3hierarchy import S3Hierarchy
-            hierarchy = S3Hierarchy(ktablename)
-            if hierarchy.config is None:
-                q = self._query_belongs(l, r)
-            else:
-                none = False
-                if not isinstance(r, (list, tuple, set)):
-                    r = [r]
-                nodes = set()
-                for node in r:
-                    if r is None:
-                        none = True
+            ktablename = l.tablename
+
+        from s3hierarchy import S3Hierarchy
+        hierarchy = S3Hierarchy(ktablename)
+        if hierarchy.config is None:
+            return self._query_belongs(l, r)
+
+        field = l
+        keys = r
+            
+        if not key:
+
+            ktable = current.s3db[ktablename]
+            if l.name != ktable._id.name:
+                
+                kresource = current.s3db.resource(ktablename)
+                fs = S3FieldSelector(l.name)
+                if isinstance(r, (list, tuple, set)):
+                    expr = fs.belongs(r)
+                elif str(l.type) in ("string", "text") and \
+                     isinstance(r, basestring):
+                    if "*" in r and "%" not in r:
+                        s = r.replace("*", "%")
                     else:
-                        try:
-                            node_id = long(node)
-                        except ValueError:
-                            continue
-                        nodes.add(node_id)
-                nodeset = hierarchy.findall(nodes, inclusive=True)
-                q = l.belongs(nodeset)
-                if none:
-                    q |= (l == None)
+                        s = r
+                    expr = (fs.like(s)) if "%" in s else (fs == s)
+                else:
+                    expr = (fs == r)
+                subquery = expr.query(kresource)
+                if not subquery:
+                    return None
+                if current.xml.DELETED in ktable.fields:
+                    subquery &= ktable[current.xml.DELETED] != True
+                rows = current.db(subquery).select(ktable._id)
+                keys = set([row[ktable._id.name] for row in rows])
+
+                field = ktable._id
+
+        if keys:
+            
+            none = False
+            if not isinstance(keys, (list, tuple, set)):
+                keys = set([keys])
+            nodes = set()
+            for node in keys:
+                if node is None:
+                    none = True
+                else:
+                    try:
+                        node_id = long(node)
+                    except ValueError:
+                        continue
+                    nodes.add(node_id)
+            nodeset = hierarchy.findall(nodes, inclusive=True)
+            q = field.belongs(nodeset)
+            if none:
+                q |= (field == None)
+        else:
+            q = field.belongs(set())
+            
         return q
 
     # -------------------------------------------------------------------------
