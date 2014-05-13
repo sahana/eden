@@ -109,8 +109,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         // Add the GeoExt UI
         // @ToDo: Make this optional
-        // @ToDo: Make the map DIV configurable (needed to support >1/page)
-        options.renderTo = 'map_panel';
+        options.renderTo = map_id + '_panel';
         addMapUI(map);
 
         // If we were instantiated with bounds, use these now

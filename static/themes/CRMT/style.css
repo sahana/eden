@@ -121,7 +121,7 @@ h2.summary {
 #summary-common { 
     float: left;
     margin-top: 10px;
-    width: 50%;
+    width: 70%;
     line-height: 18px;
 }
 
@@ -145,7 +145,7 @@ h2.summary {
 #summary-tabs.ui-widget-content {
     width: 100%;
     float: left;
-    margin: -33px;
+    margin: -10px;
 }
 
 #summary-tabs #filter-form {
@@ -162,7 +162,7 @@ h2.summary {
     padding: 92px 20px 20px 20px;
 }
 
-/* Breaks list_formats (hidden on Contacts page, unclickable on Smmary page)
+/* Breaks list_formats (hidden on Contacts page, unclickable on Summary page)
 .dataTables_wrapper {
     clear: none;
 } */

@@ -466,7 +466,7 @@ http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ 
 }
 
 /* Location Selector */
-form.form-horizontal #map_panel {
+form.form-horizontal .map_wrapper {
     margin-left: 30px;	
     margin-bottom: 10px;
 }

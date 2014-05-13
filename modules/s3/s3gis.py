@@ -5982,7 +5982,7 @@ class MAP(DIV):
 
         # Options for server-side processing
         self.opts = opts
-        self.id = opts.get("id", "default_map")
+        self.id = map_id = opts.get("id", "default_map")
 
         # Options for client-side processing
         self.options = {}
@@ -5994,7 +5994,7 @@ class MAP(DIV):
         # Needs to be an ID which means we can't have multiple per page :/
         # - Alternatives are also fragile. See s3.gis.js
         components.append(DIV(DIV(_class="map_loader"),
-                              _id="map_panel"))
+                              _id="%s_panel" % map_id))
 
         self.components = components
         for c in components:
@@ -6002,7 +6002,7 @@ class MAP(DIV):
 
         # Other DIV settings
         self.attributes = {"_class": "map_wrapper",
-                           "_id": self.id,
+                           "_id": map_id,
                            }
         self.parent = None
 

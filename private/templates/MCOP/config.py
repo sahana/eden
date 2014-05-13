@@ -185,11 +185,10 @@ settings.ui.summary = [#{"common": True,
                        # "name": "cms",
                        # "widgets": [{"method": "cms"}]
                        # },
-                       # Embedded Location Selector Widgets are conflicting with Summary Map
-                       #{"common": True,
-                       # "name": "add",
-                       # "widgets": [{"method": "create"}],
-                       # },
+                       {"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
@@ -209,6 +208,8 @@ settings.search.filter_manager = False
 # =============================================================================
 # Customise Resources
 
+# -----------------------------------------------------------------------------
+# Alerts (cms_post)
 # -----------------------------------------------------------------------------
 def cms_post_age(row):
     """
@@ -356,6 +357,8 @@ def customise_cms_post_resource(r, tablename):
 
 settings.customise_cms_post_resource = customise_cms_post_resource
 
+# -----------------------------------------------------------------------------
+# Incidents (event_incident)
 # -----------------------------------------------------------------------------
 def open_incident_filter(selector, tablename=None):
     """
@@ -576,6 +579,8 @@ def customise_event_incident_resource(r, tablename):
 settings.customise_event_incident_resource = customise_event_incident_resource
 
 # -----------------------------------------------------------------------------
+# Facilities (org_facility)
+# -----------------------------------------------------------------------------
 def customise_org_facility_resource(r, tablename):
     """
         Customise org_resource resource
@@ -655,6 +660,8 @@ def customise_org_facility_resource(r, tablename):
 
 settings.customise_org_facility_resource = customise_org_facility_resource
 
+# -----------------------------------------------------------------------------
+# Stakeholders (org_organisation)
 # -----------------------------------------------------------------------------
 def customise_org_organisation_resource(r, tablename):
     """
@@ -868,6 +875,8 @@ def customise_org_organisation_resource(r, tablename):
 settings.customise_org_organisation_resource = customise_org_organisation_resource
 
 # -----------------------------------------------------------------------------
+# Resource Inventory (org_resource)
+# -----------------------------------------------------------------------------
 def customise_org_resource_resource(r, tablename):
     """
         Customise org_resource resource
@@ -930,6 +939,8 @@ def customise_org_resource_resource(r, tablename):
 
 settings.customise_org_resource_resource = customise_org_resource_resource
 
+# -----------------------------------------------------------------------------
+# Tasks (project_task)
 # -----------------------------------------------------------------------------
 def active_status_filter(selector, tablename=None):
     """
@@ -1070,6 +1081,8 @@ def customise_project_task_resource(r, tablename):
 
 settings.customise_project_task_resource = customise_project_task_resource
 
+# -----------------------------------------------------------------------------
+# Contacts (pr_person)
 # -----------------------------------------------------------------------------
 def customise_pr_person_controller(**attr):
 
@@ -1577,6 +1590,7 @@ def render_facilities(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
 # =============================================================================
 # Modules
 # Comment/uncomment modules here to disable/enable them

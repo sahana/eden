@@ -79,7 +79,7 @@ ol, ul {
     font-size: 14px;
     font-weight: bolder;
     padding: 5px 5px 2px 5px;
-    border-bottom: 1px #006699 solid;
+    border-bottom: 1px #069 solid;
     margin-bottom: 10px;
 }
 #content h4 {
@@ -88,7 +88,7 @@ ol, ul {
     font-size: 13px;
     font-weight: bolder;
     padding: 2px 2px 1px 2px;
-    border-bottom: 1px #003366 dotted;
+    border-bottom: 1px #036 dotted;
     margin-bottom: 10px;
 }
 
@@ -134,7 +134,7 @@ a.help, a:link.help {
     margin-right: 10px;
 }
 a:hover.help {
-    background-color: #336699;
+    background-color: #369;
     text-decoration: underline;
 }
 a:visited.help {
