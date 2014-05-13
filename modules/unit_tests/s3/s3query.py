@@ -1270,13 +1270,6 @@ class ResourceFieldTests(unittest.TestCase):
         self.assertRaises(AttributeError, S3ResourceField, resource, selector)
 
 # =============================================================================
-class QueryConstructionTests(unittest.TestCase):
-    """ Test query construction """
-
-    def testTypeOf(self):
-        pass
-
-# =============================================================================
 class ResourceDataAccessTests(unittest.TestCase):
     """ Test data access via resources """
 
@@ -1773,8 +1766,6 @@ if __name__ == "__main__":
         ResourceFilterQueryTests,
         ResourceContextFilterTests,
 
-        QueryConstructionTests,
-        
         URLQueryParserTests,
 
         URLQuerySerializerTests,
