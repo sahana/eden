@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3resource import S3FieldSelector
+from s3.s3query import FS
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent
 
 T = current.T
@@ -1399,7 +1399,7 @@ def customise_gis_location_controller(**attr):
                                    tablename = "req_req",
                                    context = "location",
                                    default = default,
-                                   filter = S3FieldSelector("req_status").belongs([0, 1]),
+                                   filter = FS("req_status").belongs([0, 1]),
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
@@ -1412,7 +1412,7 @@ def customise_gis_location_controller(**attr):
                                       tablename = "req_commit",
                                       context = "location",
                                       default = default,
-                                      filter = S3FieldSelector("cancel") == False,
+                                      filter = FS("cancel") == False,
                                       icon = "icon-truck",
                                       layer = "Donations",
                                       # provided by Catalogue Layer
@@ -1425,7 +1425,7 @@ def customise_gis_location_controller(**attr):
                                     tablename = "org_facility",
                                     context = "location",
                                     default = default,
-                                    filter = S3FieldSelector("obsolete") == False,
+                                    filter = FS("obsolete") == False,
                                     icon = "icon-home",
                                     layer = "Facilities",
                                     # provided by Catalogue Layer
@@ -1877,7 +1877,7 @@ def customise_org_facility_controller(**attr):
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "site",
-                                   filter = S3FieldSelector("req_status").belongs([0, 1]),
+                                   filter = FS("req_status").belongs([0, 1]),
                                    icon = "icon-flag",
                                    show_on_map = False, # Since they will show within Sites
                                    list_layout = s3db.req_req_list_layout,
@@ -1887,7 +1887,7 @@ def customise_org_facility_controller(**attr):
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "site",
-                                      filter = S3FieldSelector("cancel") == False,
+                                      filter = FS("cancel") == False,
                                       icon = "icon-truck",
                                       layer = "Donations",
                                       # provided by Catalogue Layer
@@ -2168,7 +2168,7 @@ def customise_org_organisation_controller(**attr):
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
-                                   filter = S3FieldSelector("req_status").belongs([0, 1]),
+                                   filter = FS("req_status").belongs([0, 1]),
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
@@ -2180,7 +2180,7 @@ def customise_org_organisation_controller(**attr):
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "organisation",
-                                      filter = S3FieldSelector("cancel") == False,
+                                      filter = FS("cancel") == False,
                                       icon = "icon-truck",
                                       layer = "Donations",
                                       # provided by Catalogue Layer
@@ -2192,7 +2192,7 @@ def customise_org_organisation_controller(**attr):
                                     type = "datalist",
                                     tablename = "org_facility",
                                     context = "organisation",
-                                    filter = S3FieldSelector("obsolete") == False,
+                                    filter = FS("obsolete") == False,
                                     icon = "icon-home",
                                     layer = "Facilities",
                                     # provided by Catalogue Layer
@@ -2768,14 +2768,14 @@ def customise_req_req_controller(**attr):
                                   tablename = "req_commit",
                                   context = "request",
                                   default = "req_id=%s" % record_id,
-                                  filter = S3FieldSelector("cancel") == False,
+                                  filter = FS("cancel") == False,
                                   icon = "icon-truck",
                                   layer = "Donations",
                                   # provided by Catalogue Layer
                                   #marker = "donation",
                                   list_layout = s3db.req_commit_list_layout,
                                   )
-            filter = (S3FieldSelector("obsolete") == False)
+            filter = (FS("obsolete") == False)
             sites_widget = dict(label = "Sites",
                                 #label_create = "Add New Site",
                                 type = "datalist",

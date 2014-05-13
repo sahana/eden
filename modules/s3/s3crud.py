@@ -1526,7 +1526,7 @@ class S3CRUD(S3Method):
         record_id = get_vars.get("record", None)
         if record_id is not None:
             # Ajax-reload of a single record
-            from s3resource import S3FieldSelector as FS
+            from s3query import FS
             resource.add_filter(FS("id") == record_id)
             start = 0
             limit = 1

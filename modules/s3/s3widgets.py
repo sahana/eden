@@ -5815,8 +5815,8 @@ def search_ac(r, **attr):
 
     limit = int(_vars.limit or 0)
 
-    from s3resource import S3FieldSelector
-    field = S3FieldSelector(fieldname)
+    from s3query import FS
+    field = FS(fieldname)
 
     # Default fields to return
     fields = ["id", fieldname]
@@ -5859,7 +5859,7 @@ def search_ac(r, **attr):
             fq = (linktable[rkey] == table[fkey]) & \
                  (linktable[lkey] == _id)
             linked = current.db(fq).select(table._id)
-            pkey = S3FieldSelector("id")
+            pkey = FS("id")
             exclude = (~(pkey.belongs([r[table._id.name]
                                        for r in linked])))
         except Exception, e:

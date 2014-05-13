@@ -16,7 +16,7 @@ from gluon.html import *
 #from gluon.storage import Storage
 
 from s3.s3filter import S3FilterForm, S3FilterString, S3OptionsFilter
-from s3.s3resource import S3FieldSelector, S3URLQuery
+from s3.s3query import FS, S3URLQuery
 from s3.s3summary import S3Summary
 from s3.s3utils import s3_auth_user_represent_name, S3CustomController
 
@@ -85,7 +85,7 @@ for(var i=0,len=layers.length;i<len;i++){
 
         # Site Activity Log
         resource = s3db.resource("s3_audit")
-        resource.add_filter(S3FieldSelector("~.method") != "delete")
+        resource.add_filter(FS("~.method") != "delete")
         orderby = "s3_audit.timestmp desc"
         list_fields = ["id",
                        "method",
@@ -227,7 +227,7 @@ class filters(S3CustomController):
         s3 = current.response.s3
 
         # Filter
-        f = S3FieldSelector("pe_id") == pe_id
+        f = FS("pe_id") == pe_id
         s3.filter = f
 
         # List Fields

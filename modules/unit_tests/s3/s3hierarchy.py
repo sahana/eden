@@ -8,7 +8,7 @@
 import unittest
 from gluon.dal import Query
 from s3.s3utils import *
-from s3 import S3FieldSelector, S3Hierarchy, s3_uid
+from s3 import FS, S3Hierarchy, s3_uid
 from lxml import etree
 
 # =============================================================================
@@ -311,7 +311,7 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
 
         h = S3Hierarchy("test_hierarchy",
-                        filter = S3FieldSelector("type") == "D",
+                        filter = FS("type") == "D",
                         leafonly = True)
 
         # Check nodes
@@ -338,7 +338,7 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
 
         h = S3Hierarchy("test_hierarchy",
-                        filter = S3FieldSelector("type") == "C",
+                        filter = FS("type") == "C",
                         leafonly = False)
 
         # Check nodes

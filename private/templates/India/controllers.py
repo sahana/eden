@@ -16,7 +16,7 @@ from gluon.storage import Storage
 
 from s3.s3crud import S3CRUD
 from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
-from s3.s3resource import S3FieldSelector
+from s3.s3query import FS
 from s3.s3utils import s3_avatar_represent, S3CustomController
 
 THEME = "India"
@@ -52,7 +52,7 @@ class index(S3CustomController):
                        ]
 
         resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Event")
+        resource.add_filter(FS("series_id$name") == "Event")
         # Only show Future Events
         resource.add_filter(resource.table.date >= current.request.now)
         # Order with next Event first
@@ -60,7 +60,7 @@ class index(S3CustomController):
         output["events"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Incident")
+        resource.add_filter(FS("series_id$name") == "Incident")
         # Order with most recent Incident first
         orderby = "date desc"
         output["alerts"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)

@@ -8626,7 +8626,7 @@ class S3ExportPOI(S3Method):
             @param resource: the resource
         """
 
-        from s3resource import S3FieldSelector as FS
+        from s3query import FS
         query = (FS("location_id$path").contains("/%s/" % lx)) | \
                 (FS("location_id$path").like("%s/%%" % lx))
         resource.add_filter(query)

@@ -710,7 +710,7 @@ def req_item():
 
     # Filter out Template Items
     if request.function != "fema":
-        s3.filter = (s3base.S3FieldSelector("req_id$is_template") == False)
+        s3.filter = (FS("req_id$is_template") == False)
 
     def prep(r):
         
@@ -878,7 +878,7 @@ def req_skill():
     """
 
     # Filter out Template Items
-    s3.filter = (s3base.S3FieldSelector("req_id$is_template") == False)
+    s3.filter = (FS("req_id$is_template") == False)
 
     def prep(r):
         if r.interactive or r.representation == "aadata":

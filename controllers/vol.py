@@ -46,7 +46,7 @@ def volunteer():
     """ Volunteers Controller """
 
     # Volunteers only
-    s3.filter = s3base.S3FieldSelector("type") == 2
+    s3.filter = FS("type") == 2
 
     vol_experience = settings.get_hrm_vol_experience()
     
@@ -586,7 +586,7 @@ def hr_search():
     """
 
     # Filter to just Volunteers
-    s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
+    s3.filter = FS("human_resource.type") == 2
 
     # Only allow use in the search_ac method
     s3.prep = lambda r: r.method == "search_ac"
@@ -602,7 +602,7 @@ def person_search():
     """
 
     # Filter to just Volunteers
-    s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
+    s3.filter = FS("human_resource.type") == 2
 
     # Only allow use in the search_ac method
     s3.prep = lambda r: r.method == "search_ac"
@@ -699,7 +699,7 @@ def job_title():
         return True
     s3.prep = prep
 
-    s3.filter = s3base.S3FieldSelector("human_resource.type").belongs((2, 3))
+    s3.filter = FS("human_resource.type").belongs((2, 3))
 
     if not auth.s3_has_role(ADMIN):
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
@@ -827,7 +827,7 @@ def training():
     """ Training Controller - used for Searching for Participants """
 
     # Filter to just Volunteers
-    s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
+    s3.filter = FS("human_resource.type") == 2
 
     return s3db.hrm_training_controller()
 
@@ -845,7 +845,7 @@ def competency():
     """ RESTful CRUD controller used to allow searching for people by Skill"""
 
     # Filter to just Volunteers
-    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 2
+    s3.filter = FS("person_id$human_resource.type") == 2
 
     return s3db.hrm_competency_controller()
 
@@ -854,7 +854,7 @@ def credential():
     """ Credentials Controller """
 
     # Filter to just Volunteers
-    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 2
+    s3.filter = FS("person_id$human_resource.type") == 2
 
     return s3db.hrm_credential_controller()
 
@@ -863,7 +863,7 @@ def experience():
     """ Experience Controller """
 
     # Filter to just Volunteers
-    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 2
+    s3.filter = FS("person_id$human_resource.type") == 2
 
     return s3db.hrm_experience_controller()
 

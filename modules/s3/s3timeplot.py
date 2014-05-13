@@ -50,7 +50,7 @@ from gluon.storage import Storage
 from gluon.html import *
 
 from s3rest import S3Method
-from s3resource import S3FieldSelector
+from s3query import FS
 
 # =============================================================================
 class S3TimePlot(S3Method):
@@ -229,7 +229,7 @@ class S3TimePlot(S3Method):
         # Filter by event frame start:
         # End date of events must be after the event frame start date
         if event_end:
-            end_selector = S3FieldSelector(event_end.selector)
+            end_selector = FS(event_end.selector)
             start = event_frame.start
             query = (end_selector == None) | (end_selector >= start)
         else:
@@ -238,7 +238,7 @@ class S3TimePlot(S3Method):
 
         # Filter by event frame end:
         # Start date of events must be before event frame end date
-        start_selector = S3FieldSelector(event_start.selector)
+        start_selector = FS(event_start.selector)
         end = event_frame.end
         q = (start_selector == None) | (start_selector <= end)
         query = query & q if query is not None else q
@@ -334,7 +334,7 @@ class S3TimePlot(S3Method):
 
         if not start_dt and event_start and event_start.field:
             # No interval start => fall back to first event start
-            query = S3FieldSelector(event_start.selector) != None
+            query = FS(event_start.selector) != None
             resource.add_filter(query)
             rows = resource.select([event_start.selector],
                                     limit=1,
@@ -352,7 +352,7 @@ class S3TimePlot(S3Method):
         if not start_dt and event_end and event_end.field:
             # No interval start => fall back to first event end minus
             # one standard slot length:
-            query = S3FieldSelector(event_end.selector) != None
+            query = FS(event_end.selector) != None
             resource.add_filter(query)
             rows = resource.select([event_end.selector],
                                     limit=1,

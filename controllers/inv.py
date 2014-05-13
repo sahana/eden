@@ -1349,7 +1349,7 @@ def track_item():
                        orderby = "inv_send.site_id",
                        sort = True
                       )
-        s3.filter = (s3base.S3FieldSelector("send_id") != None)
+        s3.filter = (FS("send_id") != None)
 
     elif report == "inc":
         # Summary of Incoming Supplies
@@ -1374,7 +1374,7 @@ def track_item():
                                         ],
                         orderby = "inv_recv.recipient_id",
                         )
-        s3.filter = (s3base.S3FieldSelector("recv_id") != None)
+        s3.filter = (FS("recv_id") != None)
 
     elif report == "util":
         # Utilization Report
@@ -1397,7 +1397,7 @@ def track_item():
                                         ]
                         )
 
-        s3.filter = (s3base.S3FieldSelector("item_id") != None)
+        s3.filter = (FS("item_id") != None)
 
     elif report == "exp":
         # Expiration Report
@@ -1416,7 +1416,7 @@ def track_item():
                                         (T("Total Cost"), "total_value"),
                                         ]
                         )
-        s3.filter = (s3base.S3FieldSelector("expiry_date") != None)
+        s3.filter = (FS("expiry_date") != None)
 
     output = s3_rest_controller(rheader=s3db.inv_rheader)
     return output

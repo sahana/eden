@@ -11,8 +11,7 @@ from lxml import etree
 from gluon import *
 from gluon.storage import Storage
 from gluon.dal import Row
-from s3.s3resource import *
-from s3.s3fields import s3_meta_fields
+from s3 import *
 
 # =============================================================================
 class ComponentJoinConstructionTests(unittest.TestCase):
@@ -241,7 +240,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         """ Inner field queries don't contain joins """
 
         resource = current.s3db.resource("pr_person")
-        q = S3FieldSelector("first_name") == "test"
+        q = FS("first_name") == "test"
 
         # Test joins
         joins, distinct = q.joins(resource)
@@ -261,7 +260,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         s3db = current.s3db
 
         resource = s3db.resource("project_project")
-        q = S3FieldSelector("organisation_id$name") == "test"
+        q = FS("organisation_id$name") == "test"
 
         # Test joins
         joins, distinct = q.joins(resource)
@@ -289,7 +288,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         s3db = current.s3db
 
         resource = s3db.resource("pr_person")
-        q = S3FieldSelector("identity.value") == "test"
+        q = FS("identity.value") == "test"
 
         # Test joins
         joins, distinct = q.joins(resource)
@@ -316,7 +315,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         s3db = current.s3db
         
         resource = s3db.resource("pr_person")
-        q = S3FieldSelector("contact.value") == "test"
+        q = FS("contact.value") == "test"
 
         # Test joins
         joins, distinct = q.joins(resource)
@@ -347,7 +346,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         s3db = current.s3db
 
         resource = s3db.resource("project_project")
-        q = S3FieldSelector("task.description") == "test"
+        q = FS("task.description") == "test"
 
         # Test joins
         joins, distinct = q.joins(resource)
@@ -382,8 +381,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
         s3db = current.s3db
 
         resource = s3db.resource("project_project")
-        q = (S3FieldSelector("organisation_id$name") == "test") & \
-            (S3FieldSelector("task.description") == "test")
+        q = (FS("organisation_id$name") == "test") & \
+            (FS("task.description") == "test")
 
         # Test joins
         joins, distinct = q.joins(resource)
@@ -424,8 +423,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        q = (S3FieldSelector("organisation_id$name") == "test") & \
-            (S3FieldSelector("task.description") == "test")
+        q = (FS("organisation_id$name") == "test") & \
+            (FS("task.description") == "test")
         resource = s3db.resource("project_project", filter=q)
 
         # Test left joins
@@ -472,7 +471,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        q = (S3FieldSelector("id").lower().like("%123%"))
+        q = (FS("id").lower().like("%123%"))
         resource = s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
         org_organisation = resource.table
@@ -481,7 +480,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
                     (org_organisation.id.like("%123%")))
         self.assertEqual(str(query), str(expected))
 
-        q = (S3FieldSelector("id").lower().like("%12%3%"))
+        q = (FS("id").lower().like("%12%3%"))
         resource = s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
         org_organisation = resource.table
@@ -490,7 +489,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
                     (org_organisation.id.like("%12%3%")))
         self.assertEqual(str(query), str(expected))
 
-        q = (S3FieldSelector("id").lower().like("%abc%"))
+        q = (FS("id").lower().like("%abc%"))
         resource = s3db.resource("org_organisation", filter=q)
         query = resource.rfilter.get_query()
         org_organisation = resource.table
@@ -511,8 +510,8 @@ class ResourceFilterQueryTests(unittest.TestCase):
         project_task_project = s3db.project_task_project
         project_task = s3db.project_task
 
-        q = (S3FieldSelector("organisation_id$name") == "test") & \
-            (S3FieldSelector("task.description") == "test")
+        q = (FS("organisation_id$name") == "test") & \
+            (FS("task.description") == "test")
         resource = current.s3db.resource("project_project", filter=q)
 
         rfilter = resource.rfilter
@@ -568,8 +567,8 @@ class ResourceFilterQueryTests(unittest.TestCase):
         project_task_project = s3db.project_task_project
         project_task = s3db.project_task
 
-        q1 = (S3FieldSelector("organisation_id$name") == "test")
-        q2 = (S3FieldSelector("task.description") == "test")
+        q1 = (FS("organisation_id$name") == "test")
+        q2 = (FS("task.description") == "test")
         resource = s3db.resource("project_project", filter=q1)
         resource.add_filter(q2)
 
@@ -625,8 +624,8 @@ class ResourceFilterQueryTests(unittest.TestCase):
         org_organisation = s3db.org_organisation
         hrm_human_resource = s3db.hrm_human_resource
 
-        q1 = (S3FieldSelector("human_resource.organisation_id$name") == "test")
-        q2 = (S3FieldSelector("identity.value") == "test")
+        q1 = (FS("human_resource.organisation_id$name") == "test")
+        q2 = (FS("identity.value") == "test")
         resource = s3db.resource("pr_person", filter=q1)
 
         resource.add_filter(q2)
@@ -720,7 +719,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         resource = current.s3db.resource("pr_person",
                                          id=1,
                                          components=["competency"],
-                                         filter=(S3FieldSelector("competency.id") == 1))
+                                         filter=(FS("competency.id") == 1))
 
         component = resource.components["competency"]
         query = component.get_query()
@@ -739,8 +738,6 @@ class ResourceFilterQueryTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testAnyOf(self):
         """ Test filter construction with containment methods (contains vs anyof) """
-
-        FS = S3FieldSelector
 
         resource = current.s3db.resource("req_req_skill")
         req_req_skill = resource.table
@@ -866,7 +863,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         self.assertTrue("Context12" in names)
 
         # Global context filter 1
-        s3db.context = S3FieldSelector("(organisation)$uuid").belongs(["CONTEXTORG1"])
+        s3db.context = FS("(organisation)$uuid").belongs(["CONTEXTORG1"])
 
         resource = s3db.resource("org_office",
                                  uid=["CONTEXT1OFFICE1",
@@ -895,7 +892,7 @@ class ResourceContextFilterTests(unittest.TestCase):
         self.assertTrue("Context12" in names)
         
         # Global context filter 2
-        s3db.context = S3FieldSelector("(organisation)$uuid").belongs(["CONTEXTORG2"])
+        s3db.context = FS("(organisation)$uuid").belongs(["CONTEXTORG2"])
         
         resource = s3db.resource("org_office",
                                  uid=["CONTEXT1OFFICE1",
@@ -938,7 +935,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQuerySimpleString(self):
         """ Simple string comparison serialization """
 
-        FS = S3FieldSelector
         q = FS("person.first_name") == "Test"
 
         u = q.serialize_url()
@@ -953,7 +949,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryWildcardString(self):
         """ Wildcard string comparison serialization """
 
-        FS = S3FieldSelector
         q = FS("person.first_name").lower().like("Test%")
 
         u = q.serialize_url()
@@ -968,7 +963,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryMultiSelectorMatch(self):
         """ Wildcard string comparison serialization, multiple selectors """
 
-        FS = S3FieldSelector
         q = (FS("person.first_name").lower().like("Test%")) | \
             (FS("person.last_name").lower().like("Test%"))
 
@@ -984,7 +978,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryMultiSelectorValueMismatch(self):
         """ Wildcard string comparison serialization, multiple selectors, value mismatch """
 
-        FS = S3FieldSelector
         q = (FS("person.first_name").lower().like("Test%")) | \
             (FS("person.last_name").lower().like("Other%"))
 
@@ -998,7 +991,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryMultiSelectorOperatorMismatch(self):
         """ Wildcard string comparison serialization, multiple selectors, operator mismatch """
 
-        FS = S3FieldSelector
         q = (FS("person.first_name").lower().like("Test%")) | \
             (~(FS("person.last_name").lower().like("Test%")))
 
@@ -1012,7 +1004,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryMultiSelectorMatchNegated(self):
         """ Wildcard string comparison serialization, multiple selectors, negation """
 
-        FS = S3FieldSelector
         q = (~(FS("person.first_name").lower().like("Test%"))) | \
             (~(FS("person.last_name").lower().like("Test%")))
 
@@ -1028,7 +1019,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryAlternativeValues(self):
         """ Wildcard string comparison serialization, alternative values, OR """
 
-        FS = S3FieldSelector
         q = (FS("person.first_name").lower().like("Test%")) | \
             (FS("person.first_name").lower().like("Other%"))
 
@@ -1044,7 +1034,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryAlternativeValuesSingleOperator(self):
         """ Wildcard string comparison serialization, alternative values, single operator """
 
-        FS = S3FieldSelector
         q = FS("first_name").like(["Test%", "Other%"])
 
         resource = current.s3db.resource("pr_person")
@@ -1062,7 +1051,6 @@ class URLQuerySerializerTests(unittest.TestCase):
     def testSerializeURLQueryListContainmentOperator(self):
         """ Wildcard string comparison serialization, alternative values, containment operator """
 
-        FS = S3FieldSelector
         q = FS("person.first_name").belongs(["Test", "Other"])
 
         u = q.serialize_url()
@@ -1099,7 +1087,6 @@ class URLFilterSerializerTests(unittest.TestCase):
 
         resource = current.s3db.resource("pr_person")
 
-        FS = S3FieldSelector
         q = FS("first_name").like(["Test%", "Other%"])
         resource.add_filter(q)
 
@@ -1528,7 +1515,7 @@ class ResourceDataAccessTests(unittest.TestCase):
 
         # This filter query produces ambiguous rows (=the same
         # organisation record appears once for each office):
-        query = (S3FieldSelector("office.name").like("DATestOffice%"))
+        query = (FS("office.name").like("DATestOffice%"))
 
         # load() should not load any duplicate rows
         resource = s3db.resource("org_organisation")
@@ -1539,7 +1526,7 @@ class ResourceDataAccessTests(unittest.TestCase):
         self.assertEqual(resource._length, 1)
 
         # Try the same with an additional virtual field filter:
-        query = query & (S3FieldSelector("testfield") == "TEST")
+        query = query & (FS("testfield") == "TEST")
 
         # Should still not give any duplicates:
         resource = s3db.resource("org_organisation")
@@ -1561,7 +1548,7 @@ class ResourceDataAccessTests(unittest.TestCase):
 
         # This filter query produces ambiguous rows (=the same
         # organisation record appears once for each office):
-        query = (S3FieldSelector("office.name").like("DATestOffice%"))
+        query = (FS("office.name").like("DATestOffice%"))
 
         # load() should not load any duplicate rows
         resource = s3db.resource("org_organisation")
@@ -1571,7 +1558,7 @@ class ResourceDataAccessTests(unittest.TestCase):
         self.assertEqual(uid, "DATESTORG")
 
         # Try the same with an additional virtual field filter:
-        query = query & (S3FieldSelector("testfield") == "TEST")
+        query = query & (FS("testfield") == "TEST")
 
         # Should still not give any duplicates:
         resource = s3db.resource("org_organisation")
@@ -1592,7 +1579,7 @@ class ResourceDataAccessTests(unittest.TestCase):
 
         # This filter query produces ambiguous rows (=the same
         # organisation record appears once for each office):
-        query = (S3FieldSelector("office.name").like("DATestOffice%"))
+        query = (FS("office.name").like("DATestOffice%"))
 
         # count() should properly deduplicate the rows before counting them
         resource = s3db.resource("org_organisation")
@@ -1600,7 +1587,7 @@ class ResourceDataAccessTests(unittest.TestCase):
         self.assertEqual(resource.count(), 1)
 
         # Try the same with an additional virtual field filter:
-        query = query & (S3FieldSelector("testfield") == "TEST")
+        query = query & (FS("testfield") == "TEST")
 
         # Should still not give any duplicates:
         resource = s3db.resource("org_organisation")
@@ -1638,8 +1625,8 @@ class ResourceAxisFilterTests(unittest.TestCase):
             s3db = current.s3db
 
             resource = s3db.resource(tablename)
-            q = (S3FieldSelector("facility_type_id").contains([1,2,3])) & \
-                (~(S3FieldSelector("facility_type_id") == 2))
+            q = (FS("facility_type_id").contains([1,2,3])) & \
+                (~(FS("facility_type_id") == 2))
             resource.add_filter(q)
             query = resource.get_query()
             af = S3AxisFilter(query.as_dict(flat=True), tablename)
@@ -1652,8 +1639,8 @@ class ResourceAxisFilterTests(unittest.TestCase):
             self.assertTrue("3" in values)
 
             resource = s3db.resource(tablename)
-            q = (S3FieldSelector("facility_type_id").contains([1,2,3])) & \
-                (~(S3FieldSelector("facility_type_id") != 2))
+            q = (FS("facility_type_id").contains([1,2,3])) & \
+                (~(FS("facility_type_id") != 2))
             resource.add_filter(q)
             query = resource.get_query()
             af = S3AxisFilter(query.as_dict(flat=True), tablename)
@@ -1664,8 +1651,8 @@ class ResourceAxisFilterTests(unittest.TestCase):
             self.assertTrue("3" in values)
 
             resource = s3db.resource(tablename)
-            q = (S3FieldSelector("facility_type_id").contains([1,2,3])) | \
-                (~(S3FieldSelector("facility_type_id") == 2))
+            q = (FS("facility_type_id").contains([1,2,3])) | \
+                (~(FS("facility_type_id") == 2))
             resource.add_filter(q)
             query = resource.get_query()
             af = S3AxisFilter(query.as_dict(flat=True), tablename)
@@ -1676,8 +1663,8 @@ class ResourceAxisFilterTests(unittest.TestCase):
             self.assertTrue("3" in values)
 
             resource = s3db.resource(tablename)
-            q = (S3FieldSelector("facility_type_id").contains([1,2,3])) | \
-                (~(S3FieldSelector("facility_type_id") != 2))
+            q = (FS("facility_type_id").contains([1,2,3])) | \
+                (~(FS("facility_type_id") != 2))
             resource.add_filter(q)
             query = resource.get_query()
             af = S3AxisFilter(query.as_dict(flat=True), tablename)
@@ -3158,7 +3145,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
 
         resource = current.s3db.resource("pr_person")
 
-        from s3.s3resource import S3ResourceField
+        from s3 import S3ResourceField
         rfield = S3ResourceField(resource, "name")
         self.assertEqual(rfield.field, None)
         self.assertEqual(rfield.ftype, "virtual")
@@ -3201,7 +3188,7 @@ class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
 
         resource = current.s3db.resource("pr_person")
 
-        from s3.s3resource import S3FieldSelector as FS
+        from s3 import FS
         query = FS("name").like("Admin%")
         resource.add_filter(query)
 

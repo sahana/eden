@@ -67,7 +67,7 @@ def project():
 
         # Filter human resource records if "group" in get_vars
         elif component_name == "human_resource":
-            type_field = s3base.S3FieldSelector("human_resource.type")
+            type_field = FS("human_resource.type")
             if hr_group == "staff":
                 query = (type_field == 1)
             elif hr_group == "volunteer":
@@ -167,7 +167,7 @@ def project():
                 if "open" in r.get_vars:
                     # Show only the Open Tasks for this Project (unused?)
                     statuses = s3.project_task_active_statuses
-                    query = s3base.S3FieldSelector("status").belongs(statuses)
+                    query = FS("status").belongs(statuses)
                     r.resource.add_component_filter("task", query)
 
             elif component_name == "beneficiary":

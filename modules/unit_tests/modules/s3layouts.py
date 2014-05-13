@@ -8,7 +8,7 @@
 import unittest
 
 from gluon import current
-from s3layouts import homepage, S3AddResourceLink
+from s3.s3layouts import homepage, S3AddResourceLink
 
 # =============================================================================
 class LayoutTests(unittest.TestCase):

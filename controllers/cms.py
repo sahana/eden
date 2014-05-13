@@ -314,7 +314,6 @@ def newsfeed():
     title_list = T("Latest Information")
 
     # Hide Posts linked to Modules & Expired Posts
-    FS = s3base.S3FieldSelector
     s3.filter = (FS("post_module.module") == None) & (FS("expired") != True)
 
     # Ensure that filtered views translate into options which update the Widget

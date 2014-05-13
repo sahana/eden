@@ -41,7 +41,7 @@ def staff():
     """ Staff Controller """
 
     # Staff only
-    s3.filter = s3base.S3FieldSelector("type") == 1
+    s3.filter = FS("type") == 1
 
     def prep(r):
 
@@ -56,7 +56,7 @@ def staff():
         resource = r.resource
         if "expiring" in get_vars:
             # Filter for staff with contracts expiring in the next 4 weeks
-            query = s3base.S3FieldSelector("end_date") < \
+            query = FS("end_date") < \
                         (request.utcnow + datetime.timedelta(weeks=4))
             resource.add_filter(query)
             # Adapt CRUD strings
@@ -300,9 +300,9 @@ def hr_search():
     # Filter
     group = request.get_vars.get("group", None)
     if group == "staff":
-        s3.filter = s3base.S3FieldSelector("human_resource.type") == 1
+        s3.filter = FS("human_resource.type") == 1
     elif group == "volunteer":
-        s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
+        s3.filter = FS("human_resource.type") == 2
 
     s3.prep = lambda r: r.method == "search_ac"
 
@@ -319,9 +319,9 @@ def person_search():
     # Filter
     group = request.get_vars.get("group", None)
     if group == "staff":
-        s3.filter = s3base.S3FieldSelector("human_resource.type") == 1
+        s3.filter = FS("human_resource.type") == 1
     elif group == "volunteer":
-        s3.filter = s3base.S3FieldSelector("human_resource.type") == 2
+        s3.filter = FS("human_resource.type") == 2
 
     s3.prep = lambda r: r.method == "search_ac"
 
@@ -406,7 +406,7 @@ def job_title():
         return True
     s3.prep = prep
 
-    s3.filter = s3base.S3FieldSelector("human_resource.type").belongs((1, 3))
+    s3.filter = FS("human_resource.type").belongs((1, 3))
 
     if not auth.s3_has_role(ADMIN):
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
@@ -525,7 +525,7 @@ def certificate_skill():
 def training():
     """ Training Controller - used for Searching for Participants """
 
-    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
+    s3.filter = FS("person_id$human_resource.type") == 1
     return s3db.hrm_training_controller()
 
 # -----------------------------------------------------------------------------
@@ -538,14 +538,14 @@ def training_event():
 def credential():
     """ Credentials Controller """
 
-    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
+    s3.filter = FS("person_id$human_resource.type") == 1
     return s3db.hrm_credential_controller()
 
 # -----------------------------------------------------------------------------
 def experience():
     """ Experience Controller """
 
-    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
+    s3.filter = FS("person_id$human_resource.type") == 1
     return s3db.hrm_experience_controller()
 
 # -----------------------------------------------------------------------------
@@ -554,7 +554,7 @@ def competency():
         RESTful CRUD controller used to allow searching for people by Skill
     """
 
-    s3.filter = s3base.S3FieldSelector("person_id$human_resource.type") == 1
+    s3.filter = FS("person_id$human_resource.type") == 1
     return s3db.hrm_competency_controller()
 
 # =============================================================================

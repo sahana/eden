@@ -15,7 +15,7 @@ from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_NOT_EMPTY
 
 from s3.s3fields import S3Represent
-from s3.s3resource import S3FieldSelector
+from s3.s3query import FS
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_ONE_OF
 
@@ -2404,7 +2404,7 @@ def customise_event_event_controller(**attr):
                                      tablename = "cms_post",
                                      context = "event",
                                      default = default,
-                                     filter = S3FieldSelector("series_id$name") == "Alert",
+                                     filter = FS("series_id$name") == "Alert",
                                      icon = "icon-alert",
                                      layer = "Alerts",
                                      # provided by Catalogue Layer
@@ -2417,7 +2417,7 @@ def customise_event_event_controller(**attr):
                                         tablename = "cms_post",
                                         context = "event",
                                         default = default,
-                                        filter = S3FieldSelector("series_id$name") == "Incident",
+                                        filter = FS("series_id$name") == "Incident",
                                         icon = "icon-incident",
                                         layer = "Incidents",
                                         # provided by Catalogue Layer
@@ -2430,7 +2430,7 @@ def customise_event_event_controller(**attr):
                                           tablename = "cms_post",
                                           context = "event",
                                           default = default,
-                                          filter = S3FieldSelector("series_id$name") == "Assessment",
+                                          filter = FS("series_id$name") == "Assessment",
                                           icon = "icon-assessment",
                                           layer = "Assessments",
                                           # provided by Catalogue Layer
@@ -2443,7 +2443,7 @@ def customise_event_event_controller(**attr):
                                          tablename = "cms_post",
                                          context = "event",
                                          default = default,
-                                         filter = S3FieldSelector("series_id$name") == "Activity",
+                                         filter = FS("series_id$name") == "Activity",
                                          icon = "icon-activity",
                                          layer = "Activities",
                                          # provided by Catalogue Layer
@@ -2456,7 +2456,7 @@ def customise_event_event_controller(**attr):
                                       tablename = "cms_post",
                                       context = "event",
                                       default = default,
-                                      filter = S3FieldSelector("series_id$name") == "Report",
+                                      filter = FS("series_id$name") == "Report",
                                       icon = "icon-report",
                                       layer = "Reports",
                                       # provided by Catalogue Layer
@@ -2673,7 +2673,7 @@ def customise_gis_location_controller(**attr):
                                         tablename = "cms_post",
                                         context = "location",
                                         default = default,
-                                        filter = (S3FieldSelector("series_id$name") == "Incident") & (S3FieldSelector("expired") == False),
+                                        filter = (FS("series_id$name") == "Incident") & (FS("expired") == False),
                                         icon = "icon-incident",
                                         layer = "Incidents",
                                         # provided by Catalogue Layer
@@ -2686,7 +2686,7 @@ def customise_gis_location_controller(**attr):
                                       tablename = "cms_post",
                                       context = "location",
                                       default = default,
-                                      filter = S3FieldSelector("series_id$name") == "Report",
+                                      filter = FS("series_id$name") == "Report",
                                       icon = "icon-report",
                                       layer = "Reports",
                                       # provided by Catalogue Layer
@@ -2709,7 +2709,7 @@ def customise_gis_location_controller(**attr):
                                          tablename = "cms_post",
                                          context = "location",
                                          default = default,
-                                         filter = S3FieldSelector("series_id$name") == "Activity",
+                                         filter = FS("series_id$name") == "Activity",
                                          icon = "icon-activity",
                                          layer = "Activities",
                                          # provided by Catalogue Layer
@@ -3160,7 +3160,7 @@ def customise_org_organisation_controller(**attr):
                                          type = "datalist",
                                          tablename = "cms_post",
                                          context = "organisation",
-                                         filter = S3FieldSelector("series_id$name") == "Activity",
+                                         filter = FS("series_id$name") == "Activity",
                                          icon = "icon-activity",
                                          layer = "Activities",
                                          # provided by Catalogue Layer
@@ -3172,7 +3172,7 @@ def customise_org_organisation_controller(**attr):
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
-                                      filter = S3FieldSelector("series_id$name") == "Report",
+                                      filter = FS("series_id$name") == "Report",
                                       icon = "icon-report",
                                       layer = "Reports",
                                       # provided by Catalogue Layer
@@ -3184,7 +3184,7 @@ def customise_org_organisation_controller(**attr):
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",
-                                          filter = S3FieldSelector("series_id$name") == "Assessment",
+                                          filter = FS("series_id$name") == "Assessment",
                                           icon = "icon-assessment",
                                           layer = "Assessments",
                                           # provided by Catalogue Layer

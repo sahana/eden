@@ -360,10 +360,9 @@ def email_inbox():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
-    from s3.s3resource import S3FieldSelector
-    s3.filter = (S3FieldSelector("inbound") == True)
+    s3.filter = (FS("inbound") == True)
 
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     crud_form = S3SQLCustomForm("date",
                                 "subject",
                                 "from_address",

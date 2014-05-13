@@ -1862,8 +1862,8 @@ def customise_vulnerability_risk_controller(**attr):
             if method in ("summary", "report"):
                 # Not needed now that Risk data is moved to WMS
                 # Filter out data not associated with any Coalition
-                #from s3.s3resource import S3FieldSelector
-                #group_filter = (S3FieldSelector("group.id") != None)
+                #from s3.s3query import FS
+                #group_filter = (FS("group.id") != None)
                 #r.resource.add_filter(group_filter)
 
                 from s3.s3filter import S3OptionsFilter, S3TextFilter
@@ -1917,8 +1917,8 @@ def customise_vulnerability_risk_controller(**attr):
         #    layer = current.request.get_vars.get("layer", None)
         #    if not layer:
         #        # Filter out data not associated with any Coalition
-        #        from s3.s3resource import S3FieldSelector
-        #        group_filter = (S3FieldSelector("group.id") != None)
+        #        from s3.s3query import FS
+        #        group_filter = (FS("group.id") != None)
         #        r.resource.add_filter(group_filter)
 
         return True
@@ -2130,8 +2130,8 @@ def customise_s3_audit_controller(**attr):
     from s3.s3utils import s3_auth_user_represent_name
     current.db.s3_audit.user_id.represent = s3_auth_user_represent_name
 
-    from s3.s3resource import S3FieldSelector
-    current.response.s3.filter = (S3FieldSelector("~.method") != "delete")
+    from s3.s3query import FS
+    current.response.s3.filter = (FS("~.method") != "delete")
 
     tablename = "s3_audit"
     current.s3db.configure(tablename,

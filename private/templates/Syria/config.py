@@ -826,7 +826,7 @@ def customise_org_organisation_controller(**attr):
                 #customise_org_office_fields()
                 customise_project_project_fields()
 
-                from s3.s3resource import S3FieldSelector
+                from s3.s3query import FS
                 contacts_widget = dict(label = "Contacts",
                                        label_create = "Create Contact",
                                        type = "datalist",
@@ -870,7 +870,7 @@ def customise_org_organisation_controller(**attr):
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
-                                      filter = S3FieldSelector("series_id$name") == "Report",
+                                      filter = FS("series_id$name") == "Report",
                                       icon = "icon-report",
                                       layer = "Reports",
                                       # provided by Catalogue Layer
@@ -882,7 +882,7 @@ def customise_org_organisation_controller(**attr):
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",
-                                          filter = S3FieldSelector("series_id$name") == "Assessment",
+                                          filter = FS("series_id$name") == "Assessment",
                                           icon = "icon-assessment",
                                           layer = "Assessments",
                                           # provided by Catalogue Layer

@@ -1283,7 +1283,7 @@ def deploy_apply(r, **attr):
                         filters = S3URLQuery.parse_url(post_vars.ajaxURL)
                     else:
                         filters = None
-                    query = ~(S3FieldSelector("id").belongs(selected))
+                    query = ~(FS("id").belongs(selected))
                     hresource = s3db.resource("hrm_human_resource",
                                               filter=query, vars=filters)
                     rows = hresource.select(["id"], as_rows=True)
@@ -1455,7 +1455,7 @@ def deploy_alert_select_recipients(r, **attr):
     s3db = current.s3db
 
     response = current.response
-    member_query = S3FieldSelector("application.active") == True
+    member_query = FS("application.active") == True
 
     if r.http == "POST":
 
@@ -1476,7 +1476,7 @@ def deploy_alert_select_recipients(r, **attr):
                 else:
                     filters = None
                 query = member_query & \
-                        (~(S3FieldSelector("id").belongs(selected)))
+                        (~(FS("id").belongs(selected)))
 
                 hresource = s3db.resource("hrm_human_resource",
                                           filter=query, vars=filters)
@@ -1653,7 +1653,7 @@ def deploy_response_select_mission(r, **attr):
                             )
         
     response = current.response
-    mission_query = S3FieldSelector("mission.status") == 2
+    mission_query = FS("mission.status") == 2
 
     get_vars = r.get_vars or {}
     mission_id = get_vars.get("mission_id", None)

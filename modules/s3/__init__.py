@@ -72,6 +72,7 @@ from s3hierarchy import *
 from s3model import S3Model
 
 # Resource Framework
+from s3query import *
 from s3resource import *
 
 # Authentication, Authorization, Accounting

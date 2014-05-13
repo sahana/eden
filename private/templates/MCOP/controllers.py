@@ -4,7 +4,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3resource import S3FieldSelector
+from s3.s3query import FS
 from s3.s3utils import S3CustomController
 
 THEME = "MCOP"
@@ -43,12 +43,12 @@ for(var i=0,len=layers.length;i<len;i++){
         # Alerts Data List
         resource = s3db.resource("cms_post")
         # Only show Alerts
-        #resource.add_filter(S3FieldSelector("series_id$name").belongs(["Alert"]))
-        #resource.add_filter(S3FieldSelector("post.series_id") != None)
+        #resource.add_filter(FS("series_id$name").belongs(["Alert"]))
+        #resource.add_filter(FS("post.series_id") != None)
         # Only show Open Alerts
-        resource.add_filter(S3FieldSelector("expired") == False)
+        resource.add_filter(FS("expired") == False)
         # Only show Alerts which are linked to Open Incidents
-        resource.add_filter(S3FieldSelector("incident.closed") == False)
+        resource.add_filter(FS("incident.closed") == False)
         list_id = "cms_post_datalist"
         list_fields = [#"series_id",
                        "location_id",
@@ -76,7 +76,7 @@ for(var i=0,len=layers.length;i<len;i++){
         # Incidents Data List
         resource = s3db.resource("event_incident")
         # Only show Open Incidents
-        resource.add_filter(S3FieldSelector("closed") == False)
+        resource.add_filter(FS("closed") == False)
         list_id = "event_incident_datalist"
         list_fields = ["name",
                        "location_id",
@@ -103,9 +103,9 @@ for(var i=0,len=layers.length;i<len;i++){
         resource = s3db.resource("project_task")
         # Only show Active Tasks
         active_statuses = s3db.project_task_active_statuses
-        resource.add_filter(S3FieldSelector("status").belongs(active_statuses))
+        resource.add_filter(FS("status").belongs(active_statuses))
         # Only show Tasks which are linked to Open Incidents
-        resource.add_filter(S3FieldSelector("incident.incident_id$closed") == False)
+        resource.add_filter(FS("incident.incident_id$closed") == False)
         list_id = "project_task_datalist"
         list_fields = ["name",
                        "description",
