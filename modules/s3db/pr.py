@@ -2235,7 +2235,11 @@ class S3AddressModel(S3Model):
         levels = hierarchy.keys()
         if len(settings.get_gis_countries()) == 1 or \
            s3.gis.config.region_location_id:
-            levels.remove("L0")
+            try:
+                levels.remove("L0")
+            except:
+                # Already removed
+                pass
         # Display in reverse order, like Addresses
         levels.reverse()
 

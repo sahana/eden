@@ -17,11 +17,8 @@ T = current.T
 settings = current.deployment_settings
 
 """
-    Template settings
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
+    Settings for the EVASS template:
+        http://eden.sahanafoundation.org/wiki/Deployments/Italy/EVASS
 """
 
 # Pre-Populate
@@ -368,7 +365,7 @@ settings.org.branches = True
 #settings.org.groups = "Coalition"
 #settings.org.groups = "Network"
 # Enable the use of Organisation Regions
-settings.org.regions = True
+#settings.org.regions = True
 # Set the length of the auto-generated org/site code the default is 10
 #settings.org.site_code_len = 3
 # Set the label for Sites
