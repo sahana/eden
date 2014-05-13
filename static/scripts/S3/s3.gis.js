@@ -3660,7 +3660,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } catch(e) {}
         
         // Search box
-        if (i18n.gis_search) {
+        if (options.geonames) {
             if (false === options.nav) {
                 // LocationSelector has fewer toolbar buttons, so can handle a greater width
                 // & this functionality is very useful here
@@ -3677,7 +3677,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 minChars: 2,
                 // @ToDo: Restrict to the Country if using a Country config
                 //countryString: ,
-                emptyText: i18n.gis_search
+                emptyText: i18n.gis_search,
+                username: options.geonames
             });
             toolbar.addSeparator();
             toolbar.add(mapSearch);

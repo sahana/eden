@@ -5892,7 +5892,7 @@ class GIS(object):
             @param area: Show the Area tool on the Toolbar
             @param nav: Show the Navigation controls on the Toolbar
             @param save: Show the Save tool on the Toolbar
-            @param search: Show the Geonames search box
+            @param search: Show the Geonames search box (requires a username to be configured)
             @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal', 'mgrs', False (defaults to checking deployment_settings, which defaults to 'normal')
             @param overview: Show the Overview Map (defaults to checking deployment_settings, which defaults to True)
             @param permalink: Show the Permalink control (defaults to checking deployment_settings, which defaults to True)
@@ -6249,10 +6249,13 @@ class MAP(DIV):
 
             # Search
             if opts.get("search", False):
-                # Presence of label adds support JS in Loader and turns feature on in s3.gis.js
-                # @ToDo: Provide explicit option to support multiple maps in a page with different options
-                i18n["gis_search"] = T("Search location in Geonames")
-                #i18n["gis_search_no_internet"] = T("Geonames.org search requires Internet connectivity!")
+                geonames_username = settings.get_gis_geonames_username()
+                if geonames_username:
+                    # Presence of username turns feature on in s3.gis.js
+                    options["geonames"] = geonames_username
+                    # Presence of label adds support JS in Loader
+                    i18n["gis_search"] = T("Search location in Geonames")
+                    #i18n["gis_search_no_internet"] = T("Geonames.org search requires Internet connectivity!")
 
             # Show NAV controls?
             # e.g. removed within S3LocationSelectorWidget[2]

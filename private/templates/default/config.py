@@ -284,6 +284,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.widget_wms_browser = True
 # Uncomment to hide the Zoom control
 #settings.gis.zoomcontrol = False
+# GeoNames username
+settings.gis.geonames_username = "eden_test"
 
 # Messaging Settings
 # If you wish to use a parser.py in another folder than "default"

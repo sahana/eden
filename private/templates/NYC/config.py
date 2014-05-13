@@ -106,6 +106,8 @@ settings.ui.label_attachments = "Media"
 
 # Uncomment to disable checking that LatLons are within boundaries of their parent
 #settings.gis.check_within_parent_boundaries = False
+# GeoNames username
+settings.gis.geonames_username = "eden_nyc"
 
 # Uncomment to show created_by/modified_by using Names not Emails
 settings.ui.auth_user_represent = "name"

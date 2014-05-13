@@ -143,6 +143,8 @@ settings.gis.nav_controls = False
 settings.gis.legend = "float"
 # Uncomment to disable the ability to add PoIs to the main map
 settings.gis.pois = False
+# GeoNames username
+settings.gis.geonames_username = "tldrmp"
 
 # -----------------------------------------------------------------------------
 # Finance settings

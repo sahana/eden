@@ -124,6 +124,8 @@ settings.gis.toolbar = False
 # Uncomment to show WMS Browser in Map Widgets (e.g. Profile & Summary pages)
 # - NB This also requires the active gis_config to have one configured
 settings.gis.widget_wms_browser = True
+# GeoNames username
+settings.gis.geonames_username = "ocharocca"
 
 # Use PCodes for Locations import
 settings.gis.lookup_code = "PCode"

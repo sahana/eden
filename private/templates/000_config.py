@@ -157,6 +157,8 @@ settings.frontpage.rss = [
 #settings.gis.api_google = ""
 # Yahoo API Key (for Geocoder)
 #settings.gis.api_yahoo = ""
+# GeoNames username
+#settings.gis.geonames_username = ""
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
 # NB Needs to be publically-accessible URL for querying via client JS
 #settings.gis.geoserver_url = "http://localhost/geoserver"

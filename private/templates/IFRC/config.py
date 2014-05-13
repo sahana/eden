@@ -187,6 +187,8 @@ settings.gis.map_width = 869
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?
 settings.gis.display_L0 = True
+# GeoNames username
+settings.gis.geonames_username = "rms_dev"
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings

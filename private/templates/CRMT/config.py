@@ -285,6 +285,8 @@ settings.gis.permalink = False
 settings.gis.pois = False
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
+# GeoNames username
+settings.gis.geonames_username = "lacrmt"
 
 # Don't simplify Polygons as much to retain their original shape
 settings.gis.simplify_tolerance = 0.0001

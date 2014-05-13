@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -763,6 +763,12 @@ class S3Config(Storage):
     def get_gis_geocode_imported_addresses(self):
         " Should Addresses imported from CSV be passed to a Geocoder to try and automate Lat/Lon? "
         return self.gis.get("geocode_imported_addresses", False)
+
+    def get_gis_geonames_username(self):
+        """
+            Username for the GeoNames search box
+        """
+        return self.gis.get("geonames_username", None)
 
     def get_gis_geoserver_url(self):
         return self.gis.get("geoserver_url", "")

@@ -130,6 +130,9 @@ settings.gis.check_within_parent_boundaries = False
 # Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
 
+# GeoNames username
+settings.gis.geonames_username = "nereids"
+
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {

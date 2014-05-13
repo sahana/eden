@@ -125,6 +125,8 @@ levels = ("L1", "L2", "L3", "L4")
 settings.gis.nav_controls = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# GeoNames username
+settings.gis.geonames_username = "eden_yolanda"
 
 # -----------------------------------------------------------------------------
 # Finance settings

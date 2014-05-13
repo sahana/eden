@@ -128,6 +128,8 @@ levels = ("L1", "L2", "L3")
 settings.gis.nav_controls = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# GeoNames username
+settings.gis.geonames_username = "mcop"
 
 # -----------------------------------------------------------------------------
 # Module settings
