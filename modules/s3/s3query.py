@@ -1284,9 +1284,11 @@ class S3ResourceQuery(object):
         if not ktablename:
             ktablename = l.tablename
 
+        # Connect to the hierarchy
         from s3hierarchy import S3Hierarchy
         hierarchy = S3Hierarchy(ktablename)
         if hierarchy.config is None:
+            # No hierarchy configured => fall back to belongs
             return self._query_belongs(l, r)
 
         field = l
@@ -1296,23 +1298,47 @@ class S3ResourceQuery(object):
 
             ktable = current.s3db[ktablename]
             if l.name != ktable._id.name:
-                
-                kresource = current.s3db.resource(ktablename)
+                # Lookup-field rather than primary key => resolve it
+
+                # Build a filter expression for the lookup table
                 fs = S3FieldSelector(l.name)
-                if isinstance(r, (list, tuple, set)):
-                    expr = fs.belongs(r)
-                elif str(l.type) in ("string", "text") and \
-                     isinstance(r, basestring):
-                    if "*" in r and "%" not in r:
-                        s = r.replace("*", "%")
+                if str(l.type) in ("string", "text"):
+                    if not isinstance(r, (list, tuple, set)):
+                        items = [r]
                     else:
-                        s = r
-                    expr = (fs.like(s)) if "%" in s else (fs == s)
+                        items = r
+                    expr = None
+                    for item in items:
+                        if isinstance(item, basestring):
+                            if "*" in item and "%" not in item:
+                                s = item.replace("*", "%")
+                            else:
+                                s = item
+                        else:
+                            try:
+                                s = str(item)
+                            except:
+                                continue
+                        _expr = (fs.like(s)) if "%" in s else (fs == s)
+                        if expr is not None:
+                            expr |= _expr
+                        else:
+                            expr = _expr
+                elif isinstance(r, (list, tuple, set)):
+                    expr = fs.belongs(r)
                 else:
                     expr = (fs == r)
-                subquery = expr.query(kresource)
+
+                # Resolve filter expression into subquery
+                kresource = current.s3db.resource(ktablename)
+                if expr is not None:
+                    subquery = expr.query(kresource)
+                else:
+                    subquery = None
                 if not subquery:
                     return None
+
+                # Execute query and retrieve the lookup table IDs
                 if current.xml.DELETED in ktable.fields:
                     subquery &= ktable[current.xml.DELETED] != True
                 rows = current.db(subquery).select(ktable._id)
@@ -1321,7 +1347,7 @@ class S3ResourceQuery(object):
                 field = ktable._id
 
         if keys:
-            
+            # Lookup all descendant types from the hierarchy
             none = False
             if not isinstance(keys, (list, tuple, set)):
                 keys = set([keys])
@@ -1338,8 +1364,10 @@ class S3ResourceQuery(object):
             nodeset = hierarchy.findall(nodes, inclusive=True)
             q = field.belongs(nodeset)
             if none:
+                # None needs special handling with older DAL versions
                 q |= (field == None)
         else:
+            # Filter doesn't match
             q = field.belongs(set())
             
         return q

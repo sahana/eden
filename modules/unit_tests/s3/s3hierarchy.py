@@ -368,18 +368,21 @@ class S3HierarchyTests(unittest.TestCase):
                 self.assertTrue(parent_id in nodes)
 
     # -------------------------------------------------------------------------
-    def testTypeOf(self):
-        """ Test resolution of __typeof queries """
+    def testTypeOfReferenceSingle(self):
+        """
+            Test resolution of __typeof queries, for field in referencing
+            table, with single value
+        """
 
         db = current.db
-        
+
         uids = self.uids
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in referencing table
         table = resource.table
         expr = FS("test_hierarchy_id").typeof(uids["HIERARCHY1"])
-        
+
         expected = ("HIERARCHY1",
                     "HIERARCHY1-1",
                     "HIERARCHY1-1-1",
@@ -392,7 +395,55 @@ class S3HierarchyTests(unittest.TestCase):
                             uids[uid] for uid in expected
                          )
         query = expr.query(resource)
-        self.assertEqual(query, expected_query)
+        self.assertEqual(query.first, expected_query.first)
+        self.assertEqual(query.op, expected_query.op)
+        self.assertEqual(query.second, expected_query.second)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfReferenceMultiple(self):
+        """
+            Test resolution of __typeof queries, for field in referencing
+            table, with multiple values
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with field in referencing table
+        table = resource.table
+        expr = FS("test_hierarchy_id").typeof((uids["HIERARCHY1-2"],
+                                               uids["HIERARCHY2-1"]
+                                               )
+                                              )
+
+        expected = ("HIERARCHY1-2",
+                    "HIERARCHY1-2-1",
+                    "HIERARCHY1-2-2",
+                    "HIERARCHY2-1",
+                    "HIERARCHY2-1-1",
+                    "HIERARCHY2-1-2",
+                    )
+        expected_query = table.test_hierarchy_id.belongs(
+                            uids[uid] for uid in expected
+                         )
+        query = expr.query(resource)
+        self.assertEqual(query.first, expected_query.first)
+        self.assertEqual(query.op, expected_query.op)
+        self.assertEqual(query.second, expected_query.second)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfLookupTableSingle(self):
+        """
+            Test resolution of __typeof queries, for field in lookup table,
+            with single value
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table
         table = db.test_hierarchy
@@ -409,7 +460,51 @@ class S3HierarchyTests(unittest.TestCase):
                             uids[uid] for uid in expected
                          )
         query = expr.query(resource)
-        self.assertEqual(query, expected_query)
+        self.assertEqual(query.first, expected_query.first)
+        self.assertEqual(query.op, expected_query.op)
+        self.assertEqual(query.second, expected_query.second)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfLookupTableMultiple(self):
+        """
+            Test resolution of __typeof queries, for field in lookup table,
+            with multiple values
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with field in hierarchy table
+        table = db.test_hierarchy
+        expr = FS("test_hierarchy_id$name").typeof(("Type 1-2", "Type 2-1"))
+        expected = ("HIERARCHY1-2",
+                    "HIERARCHY1-2-1",
+                    "HIERARCHY1-2-2",
+                    "HIERARCHY2-1",
+                    "HIERARCHY2-1-1",
+                    "HIERARCHY2-1-2",
+                    )
+        expected_query = table.id.belongs(
+                            uids[uid] for uid in expected
+                         )
+        query = expr.query(resource)
+        self.assertEqual(query.first, expected_query.first)
+        self.assertEqual(query.op, expected_query.op)
+        self.assertEqual(query.second, expected_query.second)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfLookupTableSingleWildcard(self):
+        """
+            Test resolution of __typeof queries, for field in lookup table,
+            with single value with wildcards
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard
         table = db.test_hierarchy
@@ -425,7 +520,50 @@ class S3HierarchyTests(unittest.TestCase):
                             uids[uid] for uid in expected
                          )
         query = expr.query(resource)
-        self.assertEqual(query, expected_query)
+        self.assertEqual(query.first, expected_query.first)
+        self.assertEqual(query.op, expected_query.op)
+        self.assertEqual(query.second, expected_query.second)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfLookupTableMultipleWildcard(self):
+        """
+            Test resolution of __typeof queries, for field in lookup table,
+            with multiple values with wildcards
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with field in hierarchy table, with wildcard
+        table = db.test_hierarchy
+        expr = FS("test_hierarchy_id$name").typeof(("Type 1-1-*", "Type 2-1*"))
+        expected = ("HIERARCHY1-1-1",
+                    "HIERARCHY1-1-2",
+                    "HIERARCHY2-1",
+                    "HIERARCHY2-1-1",
+                    "HIERARCHY2-1-2",
+                    )
+        expected_query = table.id.belongs(
+                            uids[uid] for uid in expected
+                         )
+        query = expr.query(resource)
+        self.assertEqual(query.first, expected_query.first)
+        self.assertEqual(query.op, expected_query.op)
+        self.assertEqual(query.second, expected_query.second)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfLookupTableSingleUnresolvable(self):
+        """
+            Test resolution of __typeof queries, for field in lookup table,
+            with unresolvable value
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
         
         # Test with field in hierarchy table, with wildcard, no match
         table = db.test_hierarchy
