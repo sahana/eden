@@ -584,6 +584,7 @@ class S3Resource(object):
         dfields, djoins, l, d = resolve(fields, extra_fields=False)
         joins.update(djoins)
         #dtables = left_joins.extend(l)
+        left_joins.extend(l)
         distinct |= d
 
         # Temporarily deactivate (mandatory) virtual fields
