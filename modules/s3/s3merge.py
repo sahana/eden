@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2012-13 (c) Sahana Software Foundation
+    @copyright: 2012-14 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -259,11 +259,11 @@ class S3Merge(S3Method):
         list_fields = resource.list_fields()
 
         # Start/Limit
-        vars = r.get_vars
+        get_vars = r.get_vars
         if representation == "aadata":
-            start = vars.get("iDisplayStart", None)
-            limit = vars.get("iDisplayLength", None)
-            sEcho = int(vars.sEcho or 0)
+            start = get_vars.get("iDisplayStart", None)
+            limit = get_vars.get("iDisplayLength", None)
+            sEcho = int(get_vars.sEcho or 0)
         else: # catch all
             start = 0
             limit = s3.ROWSPERPAGE
@@ -287,7 +287,7 @@ class S3Merge(S3Method):
         totalrows = None
         if representation == "aadata":
             searchq, orderby, left = resource.datatable_filter(list_fields,
-                                                               vars)
+                                                               get_vars)
             if searchq is not None:
                 totalrows = resource.count()
                 resource.add_filter(searchq)
@@ -312,7 +312,6 @@ class S3Merge(S3Method):
         dt = S3DataTable(data["rfields"], data["rows"])
         
         datatable_id = "s3merge_1"
-        response = current.response
 
         if representation == "aadata":
             output = dt.json(totalrows,
@@ -361,7 +360,7 @@ class S3Merge(S3Method):
                 )
 
             s3.dataTableID = [datatable_id]
-            response.view = self._view(r, "list.html")
+            current.response.view = self._view(r, "list.html")
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)

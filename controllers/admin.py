@@ -257,7 +257,7 @@ def user():
 
         if r.method == "delete" and r.http == "GET":
             if r.id == session.auth.user.id: # we're trying to delete ourself
-                request.get_vars.update({"user.id":str(r.id)})
+                get_vars.update({"user.id":str(r.id)})
                 r.id = None
                 s3db.configure(r.tablename,
                                delete_next = URL(c="default", f="user/logout"))
@@ -787,7 +787,7 @@ def translate():
                - only opt 2 makes use of this so it's unnecessary overhead!
     """
 
-    opt = request.get_vars.get("opt", None)
+    opt = get_vars.get("opt", None)
     if not opt:
         # Show index page
         return dict()

@@ -45,9 +45,8 @@ def index2():
         # Start of TEST CODE for multiple dataTables,
         #this also required views/inv/index.html to be modified
         from s3.s3data import S3DataTable
-        vars = request.get_vars
         representation = request.extension
-        if representation == "html" or request.vars.id == "warehouse_list_1":
+        if representation == "html" or get_vars.id == "warehouse_list_1":
             resource = s3db.resource("inv_warehouse")
             totalrows = resource.count()
             list_fields = ["id",
@@ -56,11 +55,11 @@ def index2():
                            ]
             orderby = "inv_warehouse.name asc"
             if representation == "aadata":
-                query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                query, orderby, left = resource.datatable_filter(list_fields, get_vars)
                 if orderby is None:
                     orderby = default_orderby
-            start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-            limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
+            start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
+            limit = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else s3.ROWSPERPAGE
             data = resource.select(list_fields,
                                    start=start,
                                    limit=limit,
@@ -90,11 +89,11 @@ def index2():
                 warehouse = dt.json(totalrows,
                                     filteredrows,
                                     "warehouse_list_1",
-                                    int(request.vars.sEcho),
+                                    int(get_vars.sEcho),
                                     )
                 return warehouse
         # Second Table
-        if representation == "html" or request.vars.id == "inventory_list_1":
+        if representation == "html" or get_vars.id == "inventory_list_1":
             if "Adjust" in request.post_vars:
                 if request.post_vars.selected == "":
                     inventory = "Well you could have selected something :("
@@ -114,7 +113,7 @@ def index2():
                                ]
                 orderby = "inv_inv_item.site_id asc"
                 if representation == "aadata":
-                    query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                    query, orderby, left = resource.datatable_filter(list_fields, get_vars)
                     if orderby is None:
                         orderby = default_orderby
                 site_list = {}
@@ -138,8 +137,8 @@ def index2():
                     formatted_site_list[str(repr(key))] = value
                 if isinstance(orderby, bool):
                     orderby = [table.site_id, stable.name, ~table.quantity]
-                start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-                limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
+                start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
+                limit = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else s3.ROWSPERPAGE
                 data = resource.select(list_fields,
                                        orderby=orderby,
                                        start=start,
@@ -201,7 +200,7 @@ def index2():
                     inventory = dt.json(totalrows,
                                         filteredrows,
                                         "inventory_list_1",
-                                        int(request.vars.sEcho),
+                                        int(get_vars.sEcho),
                                         dt_action_col=-1,
                                         dt_bulk_actions = "Adjust",
                                         dt_group_totals=[formatted_site_list],
@@ -224,7 +223,7 @@ def index2():
                                )
                     return output
         # Third table
-        if representation == "html" or request.vars.id == "supply_list_1":
+        if representation == "html" or get_vars.id == "supply_list_1":
             resource = s3db.resource("supply_item")
             list_fields = ["id",
                            "name",
@@ -233,7 +232,7 @@ def index2():
                            ]
             orderby = "inv_inv_item.site_id asc"
             if representation == "aadata":
-                query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                query, orderby, left = resource.datatable_filter(list_fields, get_vars)
                 if orderby is None:
                     orderby = default_orderby
             data = resource.select(list_fields,
@@ -262,7 +261,7 @@ def index2():
                 supply_items = dt.json(numrows,
                                        numrows,
                                        "supply_list_1",
-                                       int(request.vars.sEcho),
+                                       int(get_vars.sEcho),
                                        dt_action_col=1,
                                        )
                 return supply_items
@@ -282,8 +281,8 @@ def warehouse():
         RESTful CRUD controller
     """
 
-    if "viewing" in request.get_vars:
-        viewing = request.get_vars.viewing
+    if "viewing" in get_vars:
+        viewing = get_vars.viewing
         tn, id = viewing.split(".", 1)
         if tn == "inv_warehouse":
             request.args.insert(0, id)
@@ -368,7 +367,7 @@ def warehouse():
         return output
     s3.postp = postp
 
-    if "extra_data" in request.get_vars:
+    if "extra_data" in get_vars:
         resourcename = "inv_item"
     else:
         resourcename = "warehouse"
@@ -397,7 +396,7 @@ def supplier():
         Filtered version of the organisation() REST controller
     """
 
-    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    get_vars["organisation.organisation_type_id$name"] = "Supplier"
 
     # Load model
     table = s3db.org_organisation
@@ -432,7 +431,7 @@ def inv_item():
     """ REST Controller """
 
     # If this url has a viewing track items then redirect to track_movement
-    viewing = request.get_vars.get("viewing", None)
+    viewing = get_vars.get("viewing", None)
     if viewing:
         tn, id = viewing.split(".", 1)
         if tn == "inv_track_item":
@@ -455,7 +454,7 @@ def inv_item():
 
     s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
-    report = request.get_vars.get("report")
+    report = get_vars.get("report")
     if report == "mon":
             s3.crud_strings[tablename].update(dict(
                 title_list = T("Monetization Report"),
@@ -513,7 +512,6 @@ def inv_item():
             Deletes all Stock records of the organisation/branch
             before processing a new data import
         """
-        request = current.request
         resource, tree = data
         xml = current.xml
         tag = xml.TAG
@@ -547,17 +545,19 @@ def inv_item():
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
-    output = s3_rest_controller(rheader=s3db.inv_rheader,
-                                #csv_extra_fields = [dict(label="Organisation",
+    output = s3_rest_controller(#csv_extra_fields = [dict(label="Organisation",
                                 #                         field=s3db.org_organisation_id(comment=None))
                                 #                    ],
                                 pdf_paper_alignment = "Landscape",
                                 pdf_table_autogrow = "B",
                                 pdf_groupby = "site_id, item_id",
                                 pdf_orderby = "expiry_date, supply_org_id",
+                                rheader=s3db.inv_rheader,
                                 )
+
     if "add_btn" in output and not settings.get_inv_direct_stock_edits():
         del output["add_btn"]
+
     return output
 
 # -----------------------------------------------------------------------------
@@ -575,8 +575,8 @@ def track_movement():
 
     def prep(r):
         if r.interactive:
-            if "viewing" in request.vars:
-                dummy, item_id = request.vars.viewing.split(".")
+            if "viewing" in get_vars:
+                dummy, item_id = get_vars.viewing.split(".")
                 if item_id != "None":
                     filter = (table.send_inv_item_id == item_id ) | \
                              (table.recv_inv_item_id == item_id)
@@ -585,7 +585,7 @@ def track_movement():
     s3.prep = prep
 
     output = s3_rest_controller("inv", "track_item",
-                                rheader=s3db.inv_rheader,
+                                rheader = s3db.inv_rheader,
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -1325,7 +1325,7 @@ def track_item():
                    deletable=False,
                    )
 
-    report = request.get_vars.get("report")
+    report = get_vars.get("report")
     if report == "rel":
         # Summary of Releases
         s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Releases"),
@@ -1459,17 +1459,17 @@ def adj():
                     table.site_id.writable = False
                     table.comments.writable = False
                 else:
-                    if "item" in request.vars and "site" in request.vars:
+                    if "item" in get_vars and "site" in get_vars:
                         # create a adj record with a single adj_item record
                         adj_id = table.insert(adjuster_id = auth.s3_logged_in_person(),
-                                              site_id = request.vars.site,
+                                              site_id = get_vars.site,
                                               adjustment_date = request.utcnow,
                                               status = 0,
                                               category = 1,
                                               comments = "Single item adjustment"
                                               )
                         inv_item_table = s3db.inv_inv_item
-                        inv_item = inv_item_table[request.vars.item]
+                        inv_item = inv_item_table[get_vars.item]
                         adjitemtable = s3db.inv_adj_item
                         adj_item_id = adjitemtable.insert(reason = 0,
                                     adj_id = adj_id,
@@ -1495,9 +1495,9 @@ def adj():
                                              "update"]))
                     else:
                         table.comments.default = "Complete Stock Adjustment"
-                        if "site" in request.vars:
+                        if "site" in get_vars:
                             table.site_id.writable = True
-                            table.site_id.default = request.vars.site
+                            table.site_id.default = get_vars.site
         return True
     s3.prep = prep
 

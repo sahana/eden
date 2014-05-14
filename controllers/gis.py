@@ -17,7 +17,6 @@ def index():
     response.title = module_name
 
     # Read user request
-    get_vars = request.get_vars
     config = get_vars.get("config", None)
     if config:
         try:
@@ -143,7 +142,7 @@ def define_map(height = None,
             s3.js_global.append(script)
 
     # @ToDo: Generalise with feature/tablename?
-    poi = request.get_vars.get("poi", None)
+    poi = get_vars.get("poi", None)
     if poi:
         ptable = s3db.gis_poi
         gtable = db.gis_location
@@ -484,8 +483,8 @@ def ldata():
     # Translate options using gis_location_name?
     translate = settings.get_L10n_translate_gis_location()
     if translate:
-        language = current.session.s3.language
-        if language == current.deployment_settings.get_L10n_default_language():
+        language = session.s3.language
+        if language == settings.get_L10n_default_language():
             translate = False
 
     table = s3db.gis_location
@@ -590,8 +589,8 @@ def hdata():
     # @ToDo: Translate options using gis_hierarchy_name?
     #translate = settings.get_L10n_translate_gis_location()
     #if translate:
-    #    language = current.session.s3.language
-    #    if language == current.deployment_settings.get_L10n_default_language():
+    #    language = session.s3.language
+    #    if language == settings.get_L10n_default_language():
     #        translate = False
 
     table = s3db.gis_hierarchy
@@ -1256,7 +1255,7 @@ def layer_config():
     if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
         auth.permission.fail()
 
-    layer = request.get_vars.get("layer", None)
+    layer = get_vars.get("layer", None)
     if layer:
         csv_stylesheet = "layer_%s.xsl" % layer
     else:
@@ -2802,7 +2801,6 @@ def poi():
                 field = r.table.location_id
                 field.label = ""
                 # Lat/Lon from Feature?
-                get_vars = request.get_vars
                 lat = get_vars.get("lat", None)
                 if lat is not None:
                     lon = get_vars.get("lon", None)

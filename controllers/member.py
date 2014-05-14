@@ -165,7 +165,7 @@ def person():
                 if not r.record:
                     session.error = T("Record not found")
                     redirect(URL(f="membership"))
-                member_id = request.get_vars.get("membership.id", None)
+                member_id = get_vars.get("membership.id", None)
                 if member_id and r.component_name == "membership":
                     r.component_id = member_id
                 s3db.configure("member_membership",

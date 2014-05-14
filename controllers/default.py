@@ -371,7 +371,8 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                   register_div=register_div
                   )
 
-    output = s3_guided_tour(output)
+    if get_vars.tour:
+        output = s3db.tour_builder(output)
 
     return output
 # -----------------------------------------------------------------------------
@@ -380,11 +381,9 @@ def organisation():
         Function to handle pagination for the org list on the homepage
     """
 
-    request = current.request
-    get_vars = request.get_vars
     representation = request.extension
 
-    resource = current.s3db.resource("org_organisation")
+    resource = s3db.resource("org_organisation")
     totalrows = resource.count()
     display_start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
     display_length = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else 10
@@ -409,7 +408,7 @@ def organisation():
 
     dt = S3DataTable(rfields, data)
     dt.defaultActionButtons(resource)
-    current.response.s3.no_formats = True
+    s3.no_formats = True
 
     if representation == "html":
         items = dt.html(totalrows,
@@ -481,7 +480,7 @@ def message():
 def rapid():
     """ Set/remove rapid data entry flag """
 
-    val = request.vars.get("val", True)
+    val = get_vars.get("val", True)
     if val == "0":
         val = False
     else:
@@ -930,7 +929,7 @@ def facebook():
     """ Login using Facebook """
 
     if not auth.settings.facebook:
-        redirect(URL(f="user", args=request.args, vars=request.vars))
+        redirect(URL(f="user", args=request.args, vars=get_vars))
 
     from s3oauth import FaceBookAccount
     auth.settings.login_form = FaceBookAccount()
@@ -943,7 +942,7 @@ def google():
     """ Login using Google """
 
     if not auth.settings.google:
-        redirect(URL(f="user", args=request.args, vars=request.vars))
+        redirect(URL(f="user", args=request.args, vars=get_vars))
 
     from s3oauth import GooglePlusAccount
     auth.settings.login_form = GooglePlusAccount()

@@ -3,7 +3,7 @@
 """
     S3 Adobe PDF codec
 
-    @copyright: 2011-13 (c) Sahana Software Foundation
+    @copyright: 2011-14 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -306,9 +306,9 @@ class S3RL_PDF(S3Codec):
                                      f.name != "comments" or
                                      not self.pdf_hide_comments]
 
-        vars = Storage(current.request.vars)
-        vars["iColumns"] = len(list_fields)
-        filter, orderby, left = resource.datatable_filter(list_fields, vars)
+        get_vars = Storage(current.request.get_vars)
+        get_vars["iColumns"] = len(list_fields)
+        filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(filter)
 
         result = resource.select(list_fields,

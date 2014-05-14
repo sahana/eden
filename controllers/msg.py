@@ -82,8 +82,6 @@ def mark_sender():
     except:
         raise SyntaxError
 
-    db = current.db
-    s3db = current.s3db
     mtable = s3db.msg_message
     stable = s3db.msg_sender
 
@@ -1742,7 +1740,7 @@ def search():
     # JQuery UI Autocomplete uses 'term' instead of 'value'
     # (old JQuery Autocomplete uses 'q' instead of 'value')
     value = request.vars.term or request.vars.q
-    type = request.get_vars.get("type", None)
+    type = get_vars.get("type", None)
     if value:
         # Call the search function
         if type:

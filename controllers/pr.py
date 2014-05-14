@@ -221,7 +221,6 @@ def address():
 
     # CRUD pre-process
     def prep(r):
-        get_vars = request.get_vars
         person_id = get_vars.get("person", None)
         if person_id:
             # Currently no other options available, but we could create hrm
@@ -263,7 +262,6 @@ def contact():
 
     # CRUD pre-process
     def prep(r):
-        get_vars = request.get_vars
         person_id = get_vars.get("person", None)
         if person_id:
             # Currently no other options available, but we could create hrm
@@ -305,7 +303,6 @@ def contact_emergency():
 
     # CRUD pre-process
     def prep(r):
-        get_vars = request.get_vars
         controller = get_vars.get("controller", "pr")
         person_id = get_vars.get("person", None)
         if person_id:
@@ -392,7 +389,7 @@ def education():
     def prep(r):
         if r.method in ("create", "create.popup", "update", "update.popup"):
             # Coming from Profile page?
-            person_id = request.get_vars.get("~.person_id", None)
+            person_id = get_vars.get("~.person_id", None)
             if person_id:
                 field = s3db.pr_education.person_id
                 field.default = person_id

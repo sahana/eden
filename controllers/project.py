@@ -32,7 +32,7 @@ def create():
 def project():
     """ RESTful CRUD controller """
 
-    if "tasks" in request.get_vars:
+    if "tasks" in get_vars:
         # Open-Tasks-For-Project Selector
         return open_tasks_for_project()
         
@@ -100,12 +100,12 @@ def project():
             if not r.component:
                 if r.method in ("create", "update"):
                     # Context from a Profile page?"
-                    location_id = request.get_vars.get("(location)", None)
+                    location_id = get_vars.get("(location)", None)
                     if location_id:
                         field = s3db.project_location.location_id
                         field.default = location_id
                         field.readable = field.writable = False
-                    organisation_id = request.get_vars.get("(organisation)", None)
+                    organisation_id = get_vars.get("(organisation)", None)
                     if organisation_id:
                         field = r.table.organisation_id
                         field.default = organisation_id
@@ -117,7 +117,7 @@ def project():
                     
                 elif r.get_vars.get("project.status_id", None):
                     stable = s3db.project_status
-                    status = request.get_vars.get("project.status_id")
+                    status = get_vars.get("project.status_id")
                     row = db(stable.name == status).select(stable.id,
                                                            limitby=(0, 1)).first()
                     if row:
@@ -412,7 +412,7 @@ def theme_sector_widget():
     """ Render a Widget with Theme options filtered by Sector """
 
     try:
-        values = request.get_vars.sector_ids.split(",")
+        values = get_vars.sector_ids.split(",")
         values = [int(v) for v in values]
     except:
         values = []
@@ -468,7 +468,7 @@ def organisation():
 
         #list_btn = A(T("Funding Report"),
         #             _href=URL(c="project", f="organisation",
-        #                      args="report", vars=request.get_vars),
+        #                      args="report", vars=get_vars),
         #             _class="action-btn")
 
         return s3_rest_controller(#list_btn=list_btn,
@@ -504,7 +504,7 @@ def beneficiary():
 
     list_btn = A(T("Beneficiary Report"),
                  _href=URL(c="project", f="beneficiary",
-                           args="report", vars=request.get_vars),
+                           args="report", vars=get_vars),
                  _class="action-btn")
 
     #def prep(r):
@@ -568,9 +568,9 @@ def activity():
 
     table = s3db.project_activity
 
-    if "project_id" in request.get_vars:
+    if "project_id" in get_vars:
         field = table.project_id
-        field.default = request.get_vars.project_id
+        field.default = get_vars.project_id
         field.writable = False
         field.comment = None
 
@@ -729,7 +729,7 @@ def partners():
     """
 
     # @ToDo: This could need to be a deployment setting
-    request.get_vars["organisation.organisation_type_id$name"] = \
+    get_vars["organisation.organisation_type_id$name"] = \
         "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency"
 
     # Load model
@@ -811,9 +811,9 @@ def task_milestone():
 def milestone():
     """ RESTful CRUD controller """
 
-    if "project_id" in request.get_vars:
+    if "project_id" in get_vars:
         field = s3db.project_milestone.project_id
-        field.default = request.get_vars.project_id
+        field.default = get_vars.project_id
         field.writable = False
         field.comment = None
 
@@ -826,8 +826,7 @@ def time():
     # Load model to get normal CRUD strings
     table = s3db.project_time
     hide_filter = False
-    vars = request.get_vars
-    if "mine" in vars:
+    if "mine" in get_vars:
         # Display this user's Logged Hours in reverse-order
         hide_filter = True
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
@@ -863,17 +862,17 @@ def time():
                        orderby="project_time.date desc",
                        list_fields=list_fields)
 
-    elif "week" in vars:
+    elif "week" in get_vars:
         # Filter to the specified number of weeks
-        weeks = int(vars.get("week", 1))
+        weeks = int(get_vars.get("week", 1))
         now = request.utcnow
         week = datetime.timedelta(days=7)
         delta = week * weeks
         s3.filter = (table.date > (now - delta))
 
-    elif "month" in vars:
+    elif "month" in get_vars:
         # Filter to the specified number of months
-        months = int(vars.get("month", 1))
+        months = int(get_vars.get("month", 1))
         now = request.utcnow
         month = datetime.timedelta(weeks=4)
         delta = month * months

@@ -223,7 +223,7 @@ def profile():
         # Assets as component of people
         s3db.add_components("pr_person", asset_asset="assigned_to_id")
 
-    group = request.get_vars.get("group", "staff")
+    group = get_vars.get("group", "staff")
 
     # Configure human resource table
     tablename = "hrm_human_resource"
@@ -298,7 +298,7 @@ def hr_search():
     """
 
     # Filter
-    group = request.get_vars.get("group", None)
+    group = get_vars.get("group", None)
     if group == "staff":
         s3.filter = FS("human_resource.type") == 1
     elif group == "volunteer":
@@ -317,7 +317,7 @@ def person_search():
     """
 
     # Filter
-    group = request.get_vars.get("group", None)
+    group = get_vars.get("group", None)
     if group == "staff":
         s3.filter = FS("human_resource.type") == 1
     elif group == "volunteer":
@@ -362,7 +362,7 @@ def group_membership():
     def prep(r):
         if r.method in ("create", "create.popup", "update", "update.popup"):
             # Coming from Profile page?
-            person_id = current.request.get_vars.get("~.person_id", None)
+            person_id = get_vars.get("~.person_id", None)
             if person_id:
                 field = table.person_id
                 field.default = person_id

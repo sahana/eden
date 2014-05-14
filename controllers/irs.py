@@ -37,7 +37,7 @@ def ireport():
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
 
-    if "open" in request.get_vars:
+    if "open" in get_vars:
         # Filter out Reports that are closed or Expired
         s3.crud_strings[tablename].title_list = T("Open Incidents")
         response.s3.filter = (table.closed == False) & \

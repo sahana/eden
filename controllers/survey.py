@@ -161,8 +161,8 @@ def templateRead():
     """
     """
 
-    if len(request.get_vars) > 0:
-        dummy, template_id = request.get_vars.viewing.split(".")
+    if len(get_vars) > 0:
+        dummy, template_id = get_vars.viewing.split(".")
     else:
         template_id = request.args[0]
 
@@ -201,8 +201,8 @@ def templateSummary():
 
     def postp(r, output):
         if r.interactive:
-            if len(request.get_vars) > 0:
-                dummy, template_id = request.get_vars.viewing.split(".")
+            if len(get_vars) > 0:
+                dummy, template_id = get_vars.viewing.split(".")
             else:
                 template_id = r.id
             form = s3db.survey_build_template_summary(template_id)
@@ -1016,25 +1016,23 @@ def completed_chart():
         chart drawn is managed by the analysis widget.
     """
 
-    vars = request.vars
-    if "series_id" in vars:
-        seriesID = vars.series_id
-    else:
+    series_id = get_vars.get("series_id")
+    if not series_id:
         return "Programming Error: Series ID missing"
-    if "question_id" in vars:
-        qstnID = vars.question_id
-    else:
+
+    question_id = get_vars.get("question_id")
+    if not question_id:
         return "Programming Error: Question ID missing"
-    if "type" in vars:
-        type = vars.type
-    else:
+
+    q_type = get_vars.get("type")
+    if not q_type:
         return "Programming Error: Question Type missing"
 
     getAnswers = s3db.survey_getAllAnswersForQuestionInSeries
-    answers = getAnswers(qstnID, seriesID)
-    analysisTool = survey_analysis_type[type](qstnID, answers)
+    answers = getAnswers(question_id, series_id)
+    analysisTool = survey_analysis_type[q_type](question_id, answers)
     qstnName = analysisTool.qstnWidget.question.name
-    image = analysisTool.drawChart(seriesID, output="png")
+    image = analysisTool.drawChart(series_id, output="png")
     return image
 
 # -----------------------------------------------------------------------------
@@ -1123,11 +1121,11 @@ def newAssessment():
 
     def prep(r):
         if r.interactive:
-            viewing = request.get_vars.get("viewing", None)
+            viewing = get_vars.get("viewing", None)
             if viewing:
                 dummy, series_id = viewing.split(".")
             else:
-                series_id = request.get_vars.get("series", None)
+                series_id = get_vars.get("series", None)
 
             if not series_id:
                 series_id = r.id
@@ -1147,11 +1145,11 @@ def newAssessment():
     def postp(r, output):
         if r.interactive:
             # Not sure why we need to repeat this & can't do it outside the prep/postp
-            viewing = request.get_vars.get("viewing", None)
+            viewing = get_vars.get("viewing", None)
             if viewing:
                 dummy, series_id = viewing.split(".")
             else:
-                series_id = request.get_vars.get("series", None)
+                series_id = get_vars.get("series", None)
 
             if not series_id:
                 series_id = r.id
@@ -1200,7 +1198,7 @@ def complete():
 
     series_id = None
     try:
-        viewing = request.get_vars.get("viewing", None)
+        viewing = get_vars.get("viewing", None)
         if viewing:
             dummy, series_id = viewing.split(".")
             series_name = s3.survey_getSeriesName(series_id)
@@ -1334,8 +1332,9 @@ def analysis():
     """
 
     s3db.configure("survey_complete",
-                   listadd=False,
-                   deletable=False)
+                   deletable = False,
+                   listadd = False,
+                   )
 
     output = s3_rest_controller(module, "complete")
     return output
@@ -1344,20 +1343,20 @@ def analysis():
 def admin():
     """ Custom Page """
 
-    series_id = False
-    vars = Storage()
+    series_id = None
+    get_vars_new = Storage()
     try:
         series_id = int(request.args[0])
     except:
         try:
-            (dummy, series_id) = request.vars["viewing"].split(".")
+            (dummy, series_id) = get_vars["viewing"].split(".")
             series_id = int(series_id)
         except:
             pass
     if series_id:
-        vars.viewing = "survey_complete.%s" % series_id
+        get_vars_new.viewing = "survey_complete.%s" % series_id
 
     return dict(series_id = series_id,
-                vars = vars)
+                vars = get_vars_new)
 
 # END =========================================================================

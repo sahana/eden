@@ -45,9 +45,8 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
-from gluon.dal import Expression, Field
+from gluon.dal import Expression
 from gluon.html import *
-from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 

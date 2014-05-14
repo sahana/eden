@@ -276,12 +276,12 @@ def resource():
             if r.method in ("create", "update"):
                 # Context from a Profile page?"
                 table = r.table
-                location_id = request.get_vars.get("(location)", None)
+                location_id = get_vars.get("(location)", None)
                 if location_id:
                     field = table.location_id
                     field.default = location_id
                     field.readable = field.writable = False
-                organisation_id = request.get_vars.get("(organisation)", None)
+                organisation_id = get_vars.get("(organisation)", None)
                 if organisation_id:
                     field = table.organisation_id
                     field.default = organisation_id

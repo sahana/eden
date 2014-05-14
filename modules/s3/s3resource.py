@@ -2,7 +2,7 @@
 
 """ S3 Data Objects API
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -66,7 +66,7 @@ from gluon.tools import callback
 from s3data import S3DataTable, S3DataList, S3PivotTable
 from s3fields import S3Represent, s3_all_meta_field_names
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3LeftJoins, S3URLQuery
-from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3TypeConverter, s3_get_last_record_id, s3_remove_last_record_id
+from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, s3_get_last_record_id, s3_remove_last_record_id
 from s3validators import IS_ONE_OF
 from s3xml import S3XMLFormat
 
@@ -583,7 +583,7 @@ class S3Resource(object):
             fields = [f.name for f in self.readable_fields()]
         dfields, djoins, l, d = resolve(fields, extra_fields=False)
         joins.update(djoins)
-        dtables = left_joins.extend(l)
+        #dtables = left_joins.extend(l)
         distinct |= d
 
         # Temporarily deactivate (mandatory) virtual fields
@@ -1400,7 +1400,7 @@ class S3Resource(object):
                             query = (table._id != this[pkey]) & \
                                     (table[rkey] == this[rkey])
                             if DELETED in table:
-                                query != (table[DELETED] != True)
+                                query &= (table[DELETED] != True)
                             remaining = db(query).select(table._id,
                                                          limitby=(0, 1)).first()
                             if not remaining:
@@ -1561,10 +1561,10 @@ class S3Resource(object):
         DELETED = current.xml.DELETED
 
         INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
-        has_permission = current.auth.s3_has_permission
+        #has_permission = current.auth.s3_has_permission
         #audit = current.audit
-        prefix = self.prefix
-        name = self.name
+        #prefix = self.prefix
+        #name = self.name
         tablename = self.tablename
         table = self.table
         pkey = table._id.name
@@ -1857,7 +1857,7 @@ class S3Resource(object):
                         limit=limit,
                         total=numrows,
                         layout=layout)
-                        
+
         return dl, numrows, data["ids"]
 
     # -------------------------------------------------------------------------
@@ -1976,7 +1976,7 @@ class S3Resource(object):
                     continue
 
                 # Must include all super-keys
-                ktablename, key, multiple = s3_get_foreign_key(table[f], m2m=False)
+                ktablename = s3_get_foreign_key(table[f], m2m=False)[0]
                 if ktablename:
                     ktable = s3db.table(ktablename)
                     if ktable and hasattr(ktable, "instance_type"):
@@ -4095,14 +4095,14 @@ class S3Resource(object):
         return link_id
 
     # -------------------------------------------------------------------------
-    def datatable_filter(self, fields, vars):
+    def datatable_filter(self, fields, get_vars):
         """
             Parse datatable search/sort vars into a tuple of
             query, orderby and left joins
 
             @param fields: list of field selectors representing
                            the order of fields in the datatable (list_fields)
-            @param vars: the datatable GET vars
+            @param get_vars: the datatable GET vars
 
             @return: tuple of (query, orderby, left joins)
         """
@@ -4130,15 +4130,15 @@ class S3Resource(object):
         # FILTER --------------------------------------------------------------
 
         searchq = None
-        if sSearch in vars and iColumns in vars:
+        if sSearch in get_vars and iColumns in get_vars:
 
             # Build filter
-            text = vars[sSearch]
+            text = get_vars[sSearch]
             words = [w for w in text.lower().split()]
 
             if words:
                 try:
-                    numcols = int(vars[iColumns])
+                    numcols = int(get_vars[iColumns])
                 except ValueError:
                     numcols = 0
 
@@ -4164,7 +4164,9 @@ class S3Resource(object):
                         tn = ftype[10:]
                         if parent is not None and \
                            parent.tablename == tn and field.name != fkey:
-                            alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
+                            alias = "%s_%s_%s" % (parent.prefix,
+                                                  "linked",
+                                                  parent.name)
                             ktable = db[tn].with_alias(alias)
                             ktable._id = ktable[ktable._id.name]
                             tn = alias
@@ -4242,27 +4244,27 @@ class S3Resource(object):
         # ORDERBY -------------------------------------------------------------
 
         orderby = []
-        if iSortingCols in vars:
+        if iSortingCols in get_vars:
 
             # Sorting direction
             def direction(i):
-                dir = vars["sSortDir_%s" % str(i)]
-                return dir and " %s" % dir or ""
+                sort_dir = get_vars["sSortDir_%s" % str(i)]
+                return sort_dir and " %s" % sort_dir or ""
 
             # Get the fields to order by
             try:
-                numcols = int(vars[iSortingCols])
+                numcols = int(get_vars[iSortingCols])
             except:
                 numcols = 0
             columns = []
             for i in xrange(numcols):
                 try:
-                    iSortCol = int(vars["iSortCol_%s" % i])
+                    iSortCol = int(get_vars["iSortCol_%s" % i])
                     # Map sortable-column index to the real list_fields
                     # index: for every non-sortable column to the left
                     # of sortable column subtract 1
                     for j in xrange(iSortCol):
-                        if vars.get("bSortable_%s" % j, "true") == "false":
+                        if get_vars.get("bSortable_%s" % j, "true") == "false":
                             iSortCol -= 1
                     rfield = rfields[iSortCol + 1]
                 except:
@@ -4281,7 +4283,9 @@ class S3Resource(object):
                     continue
                 ftype = str(field.type)
 
-                if hasattr(field.represent, "dt_orderby"):
+                represent = field.represent
+                if not hasattr(represent, "skip_dt_orderby") and \
+                   hasattr(represent, "dt_orderby"):
                     # Custom orderby logic in field.represent
                     field.represent.dt_orderby(field,
                                                direction(i),

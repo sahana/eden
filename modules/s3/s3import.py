@@ -2,7 +2,7 @@
 
 """ Resource Import Tools
 
-    @copyright: 2011-13 (c) Sahana Software Foundation
+    @copyright: 2011-14 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1264,8 +1264,8 @@ class S3Importer(S3Method):
         # Datatable Filter
         totalrows = displayrows = None
         if representation == "aadata":
-            searchq, orderby, left = resource.datatable_filter(
-                                        list_fields, request.get_vars)
+            searchq, orderby, left = resource.datatable_filter(list_fields,
+                                                               request.get_vars)
             if searchq is not None:
                 totalrows = resource.count()
                 resource.add_filter(searchq)

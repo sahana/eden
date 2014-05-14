@@ -169,17 +169,17 @@ class S3Request(object):
         # Parse the request
         self.__parse()
         self.custom_action = None
-        vars = Storage(self.get_vars)
+        get_vars = Storage(self.get_vars)
 
         # Interactive representation format?
         self.interactive = self.representation in self.INTERACTIVE_FORMATS
 
         # Show information on deleted records?
         include_deleted = False
-        if self.representation == "xml" and "include_deleted" in vars:
+        if self.representation == "xml" and "include_deleted" in get_vars:
             include_deleted = True
-        if "components" in vars:
-            cnames = vars["components"]
+        if "components" in get_vars:
+            cnames = get_vars["components"]
             if isinstance(cnames, list):
                 cnames = ",".join(cnames)
             cnames = cnames.split(",")
@@ -193,14 +193,14 @@ class S3Request(object):
         component_id = self.component_id
         if component_name and component_id:
             varname = "%s.id" % component_name
-            if varname in vars:
-                var = vars[varname]
+            if varname in get_vars:
+                var = get_vars[varname]
                 if not isinstance(var, (list, tuple)):
                     var = [var]
                 var.append(component_id)
-                vars[varname] = var
+                get_vars[varname] = var
             else:
-                vars[varname] = component_id
+                get_vars[varname] = component_id
 
         # Define the target resource
         _filter = current.response.s3.filter
@@ -217,7 +217,7 @@ class S3Request(object):
         self.resource = S3Resource(tablename,
                                    id=self.id,
                                    filter=_filter,
-                                   vars=vars,
+                                   vars=get_vars,
                                    components=components,
                                    approved=approved,
                                    unapproved=unapproved,
@@ -237,8 +237,8 @@ class S3Request(object):
             self.resource.load()
             if len(self.resource) == 1:
                 self.record = self.resource.records().first()
-                id = table._id.name
-                self.id = self.record[id]
+                _id = table._id.name
+                self.id = self.record[_id]
                 s3_store_last_record_id(self.tablename, self.id)
             else:
                 error = current.ERROR.BAD_RECORD
@@ -1004,9 +1004,9 @@ class S3Request(object):
         stylesheet = r.stylesheet(method="import")
         # Target IDs
         if r.method == "create":
-            id = None
+            _id = None
         else:
-            id = r.id
+            _id = r.id
 
         # Transformation mode?
         if "xsltmode" in _vars:
@@ -1035,7 +1035,7 @@ class S3Request(object):
 
         try:
             output = r.resource.import_xml(source,
-                                           id=id,
+                                           id=_id,
                                            format=format,
                                            files=r.files,
                                            stylesheet=stylesheet,
@@ -1503,9 +1503,9 @@ class S3Request(object):
         if content_type and content_type.startswith("multipart/"):
             import cgi
             ext = ".%s" % self.representation
-            vars = self.post_vars
-            for v in vars:
-                p = vars[v]
+            post_vars = self.post_vars
+            for v in post_vars:
+                p = post_vars[v]
                 if isinstance(p, cgi.FieldStorage) and p.filename:
                     self.files[p.filename] = p.file
                     if p.filename.endswith(ext):
@@ -1567,7 +1567,7 @@ class S3Request(object):
             # override the custom settings when loaded later)
             db = current.db
             if tablename not in db:
-                table = db.table(tablename)
+                db.table(tablename)
             customise = current.deployment_settings.customise_resource(tablename)
             if customise:
                 customise(self, tablename)

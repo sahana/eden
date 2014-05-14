@@ -283,7 +283,6 @@ def person():
                   editable = False,
                   deletable = False)
 
-    get_vars = request.get_vars
     group = get_vars.get("group", "volunteer")
     hr_id = get_vars.get("human_resource.id", None)
     if not str(hr_id).isdigit():
@@ -657,7 +656,7 @@ def group_membership():
     def prep(r):
         if r.method in ("create", "create.popup", "update", "update.popup"):
             # Coming from Profile page?
-            person_id = request.get_vars.get("~.person_id", None)
+            person_id = get_vars.get("~.person_id", None)
             if person_id:
                 field = table.person_id
                 field.default = person_id
@@ -968,7 +967,7 @@ def volunteer_award():
     #def prep(r):
     #    if r.method in ("create", "create.popup", "update", "update.popup"):
     #        # Coming from Profile page?
-    #        person_id = request.get_vars.get("~.person_id", None)
+    #        person_id = get_vars.get("~.person_id", None)
     #        if person_id:
     #            field = r.table.person_id
     #            field.default = person_id

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Organisation Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -436,8 +436,8 @@ class S3OrganisationModel(S3Model):
 
         # Custom Method for S3OrganisationAutocompleteWidget
         self.set_method("org", "organisation",
-                        method="search_ac",
-                        action=self.org_search_ac)
+                        method = "search_ac",
+                        action = self.org_search_ac)
 
         # Components
         add_components(tablename,
@@ -878,11 +878,6 @@ class S3OrganisationBranchModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-
-        configure = self.configure
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
 
         organisation_id = self.org_organisation_id
 
@@ -890,18 +885,18 @@ class S3OrganisationBranchModel(S3Model):
         # Organisation Branches
         #
         tablename = "org_organisation_branch"
-        define_table(tablename,
-                     organisation_id(ondelete="CASCADE"),
-                     organisation_id("branch_id",
-                                     label=T("Branch"),
-                                     default=None,
-                                     ondelete="CASCADE"),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          organisation_id(ondelete = "CASCADE"),
+                          organisation_id("branch_id",
+                                          default = None,
+                                          label = T("Branch"),
+                                          ondelete = "CASCADE",
+                                          ),
+                          *s3_meta_fields())
 
         # CRUD strings
-        ADD_BRANCH = T("Add Branch Organization")
-        crud_strings[tablename] = Storage(
-            label_create=ADD_BRANCH,
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create=T("Add Branch Organization"),
             title_display=T("Branch Organization Details"),
             title_list=T("Branch Organizations"),
             title_update=T("Edit Branch Organization"),
@@ -913,12 +908,12 @@ class S3OrganisationBranchModel(S3Model):
             msg_record_deleted=T("Branch Organization deleted"),
             msg_list_empty=T("No Branch Organizations currently registered"))
 
-        configure(tablename,
-                    deduplicate=self.org_branch_duplicate,
-                    onaccept=self.org_branch_onaccept,
-                    onvalidation=self.org_branch_onvalidation,
-                    ondelete=self.org_branch_ondelete,
-                    )
+        self.configure(tablename,
+                       deduplicate = self.org_branch_duplicate,
+                       onaccept = self.org_branch_onaccept,
+                       ondelete=self.org_branch_ondelete,
+                       onvalidation=self.org_branch_onvalidation,
+                       )
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -4044,9 +4039,15 @@ class org_OrganisationRepresent(S3Represent):
                  show_link=False,
                  parent=True,
                  acronym=True,
-                 multiple=False):
+                 multiple=False,
+                 skip_dt_orderby=False,
+                 ):
 
         self.acronym = acronym
+
+        if skip_dt_orderby:
+            # org/branch component which doesn't like the left join
+            self.skip_dt_orderby = True
 
         if parent and current.deployment_settings.get_org_branches():
             # Need a custom lookup
@@ -4139,7 +4140,7 @@ class org_OrganisationRepresent(S3Represent):
 
         otable = current.s3db.org_organisation
         left.add(otable.on(field == otable.id))
-        
+
         if self.parent:
             # If we use a hierarchical representation, order by root
             # organisation name first because it appears before the
@@ -4151,8 +4152,8 @@ class org_OrganisationRepresent(S3Represent):
                             "org_organisation.name%s" % direction])
         else:
             # Otherwise: order by organisation name
+            # e.g. the branches component view
             orderby.append("org_organisation.name%s" % direction)
-        return
 
 # =============================================================================
 class org_SiteRepresent(S3Represent):
@@ -4651,7 +4652,6 @@ def org_organisation_controller():
                                           "list_fields") or []
             s3db.configure(r.tablename, list_fields=list_fields + ["pe_id"])
         elif r.interactive or r.representation == "aadata":
-            request = current.request
             gis = current.gis
             r.table.country.default = gis.get_default_country("code")
 
@@ -4690,7 +4690,7 @@ def org_organisation_controller():
                         r.resource.add_filter(branch_filter)
 
             if not r.component or r.component_name == "branch":
-                type_filter = request.get_vars.get("organisation.organisation_type_id$name", None)
+                type_filter = r.get_vars.get("organisation.organisation_type_id$name", None)
                 if type_filter:
                     type_names = [name.lower().strip()
                                   for name in type_filter.split(",")]
@@ -4713,9 +4713,9 @@ def org_organisation_controller():
                             query = (type_table.name == type_filter)
                             row = db(query).select(type_table.id,
                                                    limitby=(0, 1)).first()
-                            type = row and row.id
-                            if type:
-                                field.default = type
+                            type_id = row and row.id
+                            if type_id:
+                                field.default = type_id
                                 field.writable = False
                     elif not method or method in ("create", "update"):
                         # Limit the Type
@@ -4744,8 +4744,11 @@ def org_organisation_controller():
                     # @ToDo: Update for components
                     #otable.sector_id.default = record.sector_id
                     # Represent orgs without the parent prefix as we have that context already
-                    s3db.org_organisation_branch.branch_id.represent = \
-                        org_OrganisationRepresent(parent=False)
+                    branch_represent = org_OrganisationRepresent(parent=False,
+                                                                 skip_dt_orderby=True,
+                                                                 )
+                    s3db.org_organisation_branch.branch_id.represent = branch_represent
+                        
 
                 elif cname == "task" and \
                      method != "update" and method != "read":
@@ -4775,7 +4778,7 @@ def org_organisation_controller():
                     s3db.configure(tn,
                                    post_process='''S3.hide_host_role($('#%s').val())''')
                     s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
-                        request.application)
+                        r.application)
 
                     s3db.configure("project_project", create_next=None)
 

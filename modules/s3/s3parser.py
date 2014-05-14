@@ -5,7 +5,7 @@
    This file imports the Message parsers from the core code
    and links them with the respective parsing tasks defined in msg_parser
 
-   @copyright: 2012-13 (c) Sahana Software Foundation
+   @copyright: 2012-14 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person

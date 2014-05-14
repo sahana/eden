@@ -28,7 +28,7 @@ def document():
 
         if r.method in ("create", "create.popup"):
             # Coming from Profile page
-            doc_id = request.get_vars.get("~.doc_id", None)
+            doc_id = get_vars.get("~.doc_id", None)
             if doc_id:
                 s3db.doc_document.doc_id.default = doc_id
 
@@ -137,7 +137,7 @@ def image():
 
         if r.method in ("create", "create.popup"):
             # Coming from Profile page
-            doc_id = request.get_vars.get("~.doc_id", None)
+            doc_id = get_vars.get("~.doc_id", None)
             if doc_id:
                 s3db.doc_image.doc_id.default = doc_id
 

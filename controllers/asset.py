@@ -115,7 +115,7 @@ def item_category():
 def supplier():
     """ RESTful CRUD controller """
 
-    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    get_vars["organisation.organisation_type_id$name"] = "Supplier"
 
     # Load model
     table = s3db.org_organisation

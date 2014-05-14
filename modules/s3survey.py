@@ -2,7 +2,7 @@
 
 """  Custom UI Widgets used by the survey application
 
-    @copyright: 2011-2013 (c) Sahana Software Foundation
+    @copyright: 2011-2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -2926,32 +2926,33 @@ class S3AbstractAnalysis():
             When a chart is not appropriate then the subclass will override this
             function with a nul function.
         """
+
         if len(self.valueList) == 0:
             return None
-        if series_id == None:
+        if series_id is None:
             return None
-        src = URL(r=current.request,
-                  f="completed_chart",
-                  vars={"question_id":self.question_id,
+        src = URL(f="completed_chart",
+                  vars={"question_id": self.question_id,
                         "series_id" : series_id,
                         "type" : self.type
                         }
-                 )
+                  )
         link = A(current.T("Chart"), _href=src, _target="blank",
                  _class="action-btn")
         return DIV(link, _class="surveyChart%sWidget" % self.type)
 
     # -------------------------------------------------------------------------
     def getChartName(self, series_id):
+        """
+        """
+
         import hashlib
-        request = current.request
         h = hashlib.sha256()
         h.update(self.qstnWidget.question.code)
         encoded_part = h.hexdigest()
-        chartName = "survey_series_%s_%s" % \
-                    (series_id,
-                     encoded_part
-                    )
+        chartName = "survey_series_%s_%s" % (series_id,
+                                             encoded_part
+                                             )
         return chartName
 
     # -------------------------------------------------------------------------

@@ -1318,8 +1318,6 @@ class S3CRUD(S3Method):
         if not linkto:
             linkto = self._linkto(r)
 
-        session = current.session
-
         left = []
         #distinct = self.method == "search"
         distinct = False
@@ -1338,7 +1336,7 @@ class S3CRUD(S3Method):
                 dt_pagination = "true"
                 if not limit:
                     limit = 2 * display_length
-                session.s3.filter = get_vars
+                current.session.s3.filter = get_vars
                 if orderby is None:
                     dt_sorting = {"iSortingCols": "1",
                                   "sSortDir_0": "asc"
@@ -1351,7 +1349,8 @@ class S3CRUD(S3Method):
                         dt_sorting["bSortable_0"] = "true"
                         dt_sorting["iSortCol_0"] = "0"
 
-                    q, orderby, left = resource.datatable_filter(list_fields, dt_sorting)
+                    q, orderby, left = resource.datatable_filter(list_fields,
+                                                                 dt_sorting)
                 #if r.method == "search" and not orderby:
                 #    orderby = default_orderby
             else:
@@ -1369,13 +1368,13 @@ class S3CRUD(S3Method):
             if not dt.data:
                 # Empty table - or just no match?
                 #if dt.empty:
-                    #datatable = DIV(self.crud_string(resource.tablename,
-                                                     #"msg_list_empty"),
-                                    #_class="empty")
+                #    datatable = DIV(self.crud_string(resource.tablename,
+                #                                     "msg_list_empty"),
+                #                    _class="empty")
                 #else:
-                    #datatable = DIV(self.crud_string(resource.tablename,
-                                                     #"msg_no_match"),
-                                    #_class="empty")
+                #    #datatable = DIV(self.crud_string(resource.tablename,
+                #                                      "msg_no_match"),
+                #                     _class="empty")
                 s3.no_formats = True
 
                 if r.component and "showadd_btn" in output:

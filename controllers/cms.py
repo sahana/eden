@@ -108,7 +108,6 @@ def post():
         if r.interactive:
             if r.method in ("create", "update"):
                 table = r.table
-                get_vars = request.get_vars
 
                 # Filter from a Profile page?"
                 series = get_vars.get("~.series_id$name", None)
@@ -149,7 +148,7 @@ def post():
                     table.location_id.readable = table.location_id.writable = False
                     table.date.readable = table.date.writable = False
                     table.expired.readable = table.expired.writable = False
-                    resource = request.get_vars.get("resource", None)
+                    resource = get_vars.get("resource", None)
                     if resource in ("contact", "index"):
                         # We're creating/updating text for a Contact page
                         table.name.default = "Contact Page"
@@ -317,7 +316,6 @@ def newsfeed():
     s3.filter = (FS("post_module.module") == None) & (FS("expired") != True)
 
     # Ensure that filtered views translate into options which update the Widget
-    get_vars = request.get_vars
     if "~.series_id$name" in get_vars:
         series_name = get_vars["~.series_id$name"]
         # Disabled as can change filters dynamically

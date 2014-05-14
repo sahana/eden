@@ -98,8 +98,8 @@ s3.l10n_languages = settings.get_L10n_languages()
 # Default strings are in US English
 T.current_languages = ["en", "en-us"]
 # Check if user has selected a specific language
-if request.get_vars._language:
-    language = request.get_vars._language
+if get_vars._language:
+    language = get_vars._language
     session.s3.language = language
 elif session.s3.language:
     # Use the last-selected language

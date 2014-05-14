@@ -238,10 +238,10 @@ def assignment():
                     get_vars = {}
                     if popup:
                         method = "update.popup"
-                        refresh = request.get_vars.get("refresh", None)
+                        refresh = get_vars.get("refresh", None)
                         if refresh:
                             get_vars["refresh"] = refresh
-                        record = request.get_vars.get("record", None)
+                        record = get_vars.get("record", None)
                         if record:
                             get_vars["record"] = record
                     else:
@@ -263,10 +263,10 @@ def assignment():
                     
                     if popup:
                         method = "create.popup"
-                        refresh = request.get_vars.get("refresh", None)
+                        refresh = get_vars.get("refresh", None)
                         if refresh:
                             get_vars["refresh"] = refresh
-                        record = request.get_vars.get("record", None)
+                        record = get_vars.get("record", None)
                         if record:
                             get_vars["record"] = record
                     else:

@@ -115,26 +115,25 @@ def repository():
 def sync():
     """ Synchronization """
 
-    if "resource" in request.get_vars:
-        tablename = request.get_vars["resource"]
+    if "resource" in get_vars:
+        tablename = get_vars["resource"]
         if "_" in tablename:
 
             # URL variables from peer:
             # repository ID, msince and sync filters
-            get_vars = Storage(include_deleted=True)
+            get_vars_new = Storage(include_deleted=True)
             
-            _vars = request.get_vars
-            for k, v in _vars.items():
+            for k, v in get_vars.items():
                 if k in ("repository", "msince") or \
                    k[0] == "[" and "]" in k:
-                    get_vars[k] = v
+                    get_vars_new[k] = v
 
             # Request
             prefix, name = tablename.split("_", 1)
             r = s3_request(prefix=prefix,
                            name=name,
                            args=["sync"],
-                           get_vars=get_vars)
+                           get_vars=get_vars_new)
 
             # Response
             output = r()
@@ -146,11 +145,11 @@ def sync():
 def log():
     """ Log Reader """
 
-    if "return" in request.get_vars:
-        c, f = request.get_vars["return"].split(".", 1)
+    if "return" in get_vars:
+        c, f = get_vars["return"].split(".", 1)
         list_btn = URL(c=c, f=f, args="sync_log")
     else:
-        list_btn = URL(c="sync", f="log", vars=request.get_vars)
+        list_btn = URL(c="sync", f="log", vars=get_vars)
 
     list_btn = A(T("List all Entries"), _href=list_btn, _class="action-btn")
 

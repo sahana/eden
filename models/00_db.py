@@ -10,8 +10,10 @@ if settings.get_L10n_languages_readonly():
     # Make the Language files read-only for improved performance
     T.is_writable = False
 
+get_vars = request.get_vars
+
 # Are we running in debug mode?
-request_debug = request.get_vars.get("debug", None)
+request_debug = get_vars.get("debug", None)
 s3.debug = request_debug or settings.get_base_debug()
 if request_debug:
     # Also override log level:

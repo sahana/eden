@@ -228,7 +228,7 @@ def req_controller():
                      }
             elif "req.site_id" in r.get_vars:
                 # Called from 'Make new request' button on [siteinstance]/req page
-                table.site_id.default = request.get_vars.get("req.site_id")
+                table.site_id.default = get_vars.get("req.site_id")
                 table.site_id.writable = False
                 if r.http == "POST":
                     del r.get_vars["req.site_id"]
@@ -799,36 +799,31 @@ def req_item_inv_item():
                           _class = "action-btn"
                           )
 
-    output["req_item"] = TABLE( TR(
-                                    TH( "%s: " % T("Requested By") ),
-                                    rtable.site_id.represent(req.site_id),
-                                    TH( "%s: " % T("Item")),
-                                    ritable.item_id.represent(req_item.item_id),
-                                   ),
-                                TR(
-                                    TH( "%s: " % T("Requester") ),
-                                    rtable.requester_id.represent(req.requester_id),
-                                    TH( "%s: " % T("Quantity")),
-                                    req_item.quantity,
-                                   ),
-                                TR(
-                                    TH( "%s: " % T("Date Requested") ),
-                                    rtable.date.represent(req.date),
-                                    TH( T("Quantity Committed")),
-                                    req_item.quantity_commit,
-                                   ),
-                                TR(
-                                    TH( "%s: " % T("Date Required") ),
-                                    rtable.date_required.represent(req.date_required),
-                                    TH( "%s: " % T("Quantity in Transit")),
-                                    req_item.quantity_transit,
-                                   ),
-                                TR(
-                                    TH( "%s: " % T("Priority") ),
-                                    rtable.priority.represent(req.priority),
-                                    TH( "%s: " % T("Quantity Fulfilled")),
-                                    req_item.quantity_fulfil,
-                                   )
+    output["req_item"] = TABLE(TR(TH( "%s: " % T("Requested By") ),
+                                  rtable.site_id.represent(req.site_id),
+                                  TH( "%s: " % T("Item")),
+                                  ritable.item_id.represent(req_item.item_id),
+                                  ),
+                               TR(TH( "%s: " % T("Requester") ),
+                                  rtable.requester_id.represent(req.requester_id),
+                                  TH( "%s: " % T("Quantity")),
+                                  req_item.quantity,
+                                  ),
+                               TR(TH( "%s: " % T("Date Requested") ),
+                                  rtable.date.represent(req.date),
+                                  TH( T("Quantity Committed")),
+                                  req_item.quantity_commit,
+                                  ),
+                               TR(TH( "%s: " % T("Date Required") ),
+                                  rtable.date_required.represent(req.date_required),
+                                  TH( "%s: " % T("Quantity in Transit")),
+                                  req_item.quantity_transit,
+                                  ),
+                               TR(TH( "%s: " % T("Priority") ),
+                                  rtable.priority.represent(req.priority),
+                                  TH( "%s: " % T("Quantity Fulfilled")),
+                                  req_item.quantity_fulfil,
+                                  )
                                )
 
     s3.no_sspag = True # pagination won't work with 2 datatables on one page @todo: test
@@ -842,7 +837,7 @@ def req_item_inv_item():
     inv_items = s3_rest_controller("inv", "inv_item")
     output["items"] = inv_items["items"]
 
-    if current.deployment_settings.get_supply_use_alt_name():
+    if settings.get_supply_use_alt_name():
         # Get list of alternative inventory items
         atable = s3db.supply_item_alt
         query = (atable.item_id == req_item.item_id ) & \
@@ -1592,7 +1587,7 @@ def organisation_needs():
             if r.method == "create":
                 # Filter from a Profile page?
                 # If so, then default the fields we know
-                organisation_id = request.get_vars.get("~.(organisation)", None)
+                organisation_id = get_vars.get("~.(organisation)", None)
                 if organisation_id:
                     field = s3db.req_organisation_needs.organisation_id
                     field.default = organisation_id
@@ -1618,7 +1613,7 @@ def site_needs():
         if r.interactive and r.method == "create":
             # Filter from a Profile page?
             # If so, then default the fields we know
-            site_id = request.get_vars.get("~.(site)", None)
+            site_id = get_vars.get("~.(site)", None)
             if site_id:
                 field = s3db.req_site_needs.site_id
                 field.default = site_id

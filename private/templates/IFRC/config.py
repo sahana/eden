@@ -1155,7 +1155,7 @@ def customise_org_organisation_controller(**attr):
         else:
             result = True
 
-        if not r.component or r.component.name == "branch":
+        if not r.component or r.component_name == "branch":
             if r.interactive or r.representation == "aadata":
                 s3db = current.s3db
                 list_fields = ["id",

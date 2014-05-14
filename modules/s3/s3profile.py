@@ -380,19 +380,19 @@ class S3Profile(S3CRUD):
         if pagesize and numrows > pagesize:
             # Button to display the rest of the records in a Modal
             more = numrows - pagesize
-            vars = {}
+            get_vars_new = {}
             if context:
                 filters = context.serialize_url(resource)
                 for f in filters:
-                    vars[f] = filters[f]
+                    get_vars_new[f] = filters[f]
             if filter:
                 filters = filter.serialize_url(resource)
                 for f in filters:
-                    vars[f] = filters[f]
+                    get_vars_new[f] = filters[f]
             c, f = tablename.split("_", 1)
             f = widget.get("function", f)
             url = URL(c=c, f=f, args=["datalist.popup"],
-                      vars=vars)
+                      vars=get_vars_new)
             more = DIV(A(BUTTON("%s (%s)" % (T("see more"), more),
                                 _class="btn btn-mini",
                                 _type="button",
