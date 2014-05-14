@@ -32,8 +32,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3XML"]
-
 import datetime
 import os
 import re
