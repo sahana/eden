@@ -542,7 +542,6 @@ class S3CRUD(S3Method):
 
         _config = self._config
         editable = _config("editable", True)
-        #deletable = _config("deletable", True)
         list_fields = _config("list_fields")
 
         # List fields
@@ -751,7 +750,6 @@ class S3CRUD(S3Method):
         # Get table configuration
         _config = self._config
         editable = _config("editable", True)
-        #deletable = _config("deletable", True)
 
         # Get callbacks
         onvalidation = _config("update_onvalidation") or \
@@ -1261,7 +1259,6 @@ class S3CRUD(S3Method):
         get_config = resource.get_config
 
         # Get table-specific parameters
-        #sortby = get_config("sortby", [[1, "asc"]])
         linkto = get_config("linkto", None)
 
         # List ID
@@ -1272,14 +1269,6 @@ class S3CRUD(S3Method):
 
         # Default orderby
         orderby = get_config("orderby", None)
-        #if orderby is None:
-        #    for f in list_fields:
-        #        rfield = resource.resolve_selector(f)
-        #        if rfield.field:
-        #            default_orderby = rfield.field
-        #            break
-        #else:
-        #    default_orderby = None
 
         representation = r.representation
 
@@ -1319,7 +1308,6 @@ class S3CRUD(S3Method):
             linkto = self._linkto(r)
 
         left = []
-        #distinct = self.method == "search"
         distinct = False
         dtargs = attr.get("dtargs", {})
 
@@ -1351,8 +1339,6 @@ class S3CRUD(S3Method):
 
                     q, orderby, left = resource.datatable_filter(list_fields,
                                                                  dt_sorting)
-                #if r.method == "search" and not orderby:
-                #    orderby = default_orderby
             else:
                 dt_pagination = "false"
 
@@ -1412,8 +1398,6 @@ class S3CRUD(S3Method):
                 totalrows = None
 
             # Orderby fallbacks
-            #if r.method == "search" and not orderby:
-            #    orderby = default_orderby
             if orderby is None:
                 orderby = get_config("orderby", None)
 
@@ -1472,8 +1456,6 @@ class S3CRUD(S3Method):
         get_vars = self.request.get_vars
 
         # Get table-specific parameters
-        #sortby = get_config("sortby", [[1, "asc"]])
-        #linkto = get_config("linkto", None)
         layout = get_config("list_layout", None)
 
         # List ID
@@ -1685,17 +1667,8 @@ class S3CRUD(S3Method):
         # Get table-specific parameters
         _config = self._config
         orderby = _config("orderby", None)
-        #sortby = _config("sortby", [[1, "asc"]])
         linkto = _config("linkto", None)
-        #insertable = _config("insertable", True)
-        #listadd = _config("listadd", True)
-        #addbtn = _config("addbtn", False)
         list_fields = _config("list_fields")
-
-        #report_groupby = _config("report_groupby")
-        #report_hide_comments = _config("report_hide_comments")
-        #report_filename = _config("report_filename")
-        #report_formname = _config("report_formname")
 
         list_id = "datatable"
 
@@ -1786,8 +1759,6 @@ class S3CRUD(S3Method):
                     del get_vars["iSortingCols"]
                     del get_vars["iSortCol_0"]
                     del get_vars["sSortDir_0"]
-                #if r.method == "search" and not orderby:
-                #    orderby = fields[0]
             else:
                 dt_pagination = "false"
 
@@ -1830,8 +1801,6 @@ class S3CRUD(S3Method):
                 totalrows = None
 
             # Orderby fallbacks
-            #if r.method == "search" and not orderby:
-            #    orderby = fields[0]
             if orderby is None:
                 orderby = _config("orderby", None)
 

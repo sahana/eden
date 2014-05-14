@@ -233,8 +233,6 @@ class S3Resource(object):
 
         # Resource Filter
         self.rfilter = None
-        #self.fquery = None
-        #self.fvfltr = None
 
         # Rows ----------------------------------------------------------------
 
@@ -583,7 +581,6 @@ class S3Resource(object):
             fields = [f.name for f in self.readable_fields()]
         dfields, djoins, l, d = resolve(fields, extra_fields=False)
         joins.update(djoins)
-        #dtables = left_joins.extend(l)
         left_joins.extend(l)
         distinct |= d
 
@@ -1562,10 +1559,6 @@ class S3Resource(object):
         DELETED = current.xml.DELETED
 
         INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
-        #has_permission = current.auth.s3_has_permission
-        #audit = current.audit
-        #prefix = self.prefix
-        #name = self.name
         tablename = self.tablename
         table = self.table
         pkey = table._id.name
@@ -2907,8 +2900,6 @@ class S3Resource(object):
                     f = ogetattr(table, fn)
                     auth_user_represent[fn] = f.represent
                     f.represent = current.auth_user_represent
-
-        #postprocess = s3db.get_config(tablename, "onexport", None)
 
         default = (None, None)
 
