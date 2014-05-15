@@ -3504,11 +3504,8 @@ def customise_pr_person_controller(**attr):
                                                    title=T("Office"),
                                                    tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
 
-            # Best to have no labels when only 1 field in the row
-            s3db.pr_contact.value.label = ""
-            image_field = s3db.pr_image.image
-            image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
+            image_field = s3db.pr_image.image
             from gluon.validators import IS_IMAGE
             image_field.requires = IS_IMAGE()
             image_field.widget = None
@@ -3527,28 +3524,27 @@ def customise_pr_person_controller(**attr):
                     hr_fields.remove("organisation_id")
 
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-            s3_sql_custom_fields = [
-                    "first_name",
-                    #"middle_name",
-                    "last_name",
-                    S3SQLInlineComponent(
-                        "human_resource",
-                        name = "human_resource",
-                        label = "",
-                        multiple = False,
-                        fields = hr_fields,
-                    ),
-                    S3SQLInlineComponent(
-                        "image",
-                        name = "image",
-                        label = T("Photo"),
-                        multiple = False,
-                        fields = ["image"],
-                        filterby = dict(field = "profile",
-                                        options=[True]
-                                        )
-                    ),
-                ]
+            s3_sql_custom_fields = ["first_name",
+                                    #"middle_name",
+                                    "last_name",
+                                    S3SQLInlineComponent(
+                                        "human_resource",
+                                        name = "human_resource",
+                                        label = "",
+                                        multiple = False,
+                                        fields = hr_fields,
+                                        ),
+                                    S3SQLInlineComponent(
+                                        "image",
+                                        name = "image",
+                                        label = T("Photo"),
+                                        multiple = False,
+                                        fields = [("", "image")],
+                                        filterby = dict(field = "profile",
+                                                        options = [True]
+                                                        )
+                                        ),
+                                    ]
 
             list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
                            "first_name",
@@ -3569,7 +3565,7 @@ def customise_pr_person_controller(**attr):
                                             name = "phone",
                                             label = MOBILE,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "SMS")),
                                             )
@@ -3579,7 +3575,7 @@ def customise_pr_person_controller(**attr):
                                             name = "email",
                                             label = EMAIL,
                                             multiple = False,
-                                            fields = ["value"],
+                                            fields = [("", "value")],
                                             filterby = dict(field = "contact_method",
                                                             options = "EMAIL")),
                                             )

@@ -628,6 +628,10 @@ class S3RequestModel(S3Model):
         if settings.get_req_requester_from_site():
             # Filter the list of Contacts to those for the site
             table.requester_id.widget = None
+            table.requester_id.comment = S3AddResourceLink(c="pr", f="person",
+                                                           vars = dict(child="requester_id",
+                                                                       parent="req"),
+                                                           title=s3.crud_strings["pr_person"].label_create)
             s3.jquery_ready.append('''
 S3OptionsFilter({
  'triggerName':'site_id',
@@ -744,6 +748,10 @@ S3OptionsFilter({
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
+                    table.requester_id.comment = S3AddResourceLink(c="pr", f="person",
+                                                                   vars = dict(child="requester_id",
+                                                                               parent="req"),
+                                                                   title=s3.crud_strings["pr_person"].label_create)
                     jquery_ready.append('''
 S3OptionsFilter({
  'triggerName':'site_id',
@@ -808,6 +816,10 @@ S3OptionsFilter({
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
+                    table.requester_id.comment = S3AddResourceLink(c="pr", f="person",
+                                                                   vars = dict(child="requester_id",
+                                                                               parent="req"),
+                                                                   title=s3.crud_strings["pr_person"].label_create)
                     s3.jquery_ready.append('''
 S3OptionsFilter({
  'triggerName':'site_id',

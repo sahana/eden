@@ -17,11 +17,7 @@ T = current.T
 settings = current.deployment_settings
 
 """
-    Template settings for US
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
+    Template settings for NYC Prepared
 """
 
 # Pre-Populate
@@ -317,6 +313,8 @@ def customise_org_facility_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
+            if not result:
+                return False
 
         if r.method not in ("read", "update"):
             types = r.get_vars.get("site_facility_type.facility_type_id__belongs", None)
@@ -776,9 +774,110 @@ def customise_pr_person_controller(**attr):
         else:
             result = True
 
-        if r.interactive and \
-           r.component_name == "group_membership":
-            current.s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        s3db = current.s3db
+
+        #if r.method == "validate":
+        #    # Can't validate image without the file
+        #    image_field = s3db.pr_image.image
+        #    image_field.requires = None
+
+        if r.interactive or r.representation == "aadata":
+
+            if not r.component:
+                hr_fields = ["organisation_id",
+                             "job_title_id",
+                             "site_id",
+                             ]
+                if r.method in ("create", "update"):
+                    get_vars = r.get_vars
+                    # Context from a Profile page?"
+                    organisation_id = get_vars.get("(organisation)", None)
+                    if organisation_id:
+                        field = s3db.hrm_human_resource.organisation_id
+                        field.default = organisation_id
+                        field.readable = field.writable = False
+                        hr_fields.remove("organisation_id")
+                    site_id = get_vars.get("(site)", None)
+                    if site_id:
+                        field = s3db.hrm_human_resource.site_id
+                        field.default = site_id
+                        field.readable = field.writable = False
+                        hr_fields.remove("site_id")
+
+                # ImageCrop widget doesn't currently work within an Inline Form
+                #image_field = s3db.pr_image.image
+                #from gluon.validators import IS_IMAGE
+                #image_field.requires = IS_IMAGE()
+                #image_field.widget = None
+
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                s3_sql_custom_fields = ["first_name",
+                                        #"middle_name",
+                                        "last_name",
+                                        S3SQLInlineComponent(
+                                            "human_resource",
+                                            name = "human_resource",
+                                            label = "",
+                                            multiple = False,
+                                            fields = hr_fields,
+                                            ),
+                                        #S3SQLInlineComponent(
+                                        #    "image",
+                                        #    name = "image",
+                                        #    label = T("Photo"),
+                                        #    multiple = False,
+                                        #    fields = [("", "image")],
+                                        #    filterby = dict(field = "profile",
+                                        #                    options=[True]
+                                        #                    )
+                                        #    ),
+                                        ]
+
+                list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+                               "first_name",
+                               #"middle_name",
+                               "last_name",
+                               (T("Job Title"), "human_resource.job_title_id"),
+                               (T("Office"), "human_resource.site_id"),
+                               ]
+
+                # Don't include Email/Phone for unauthenticated users
+                if current.auth.is_logged_in():
+                    MOBILE = settings.get_ui_label_mobile_phone()
+                    EMAIL = T("Email")
+                    list_fields += [(MOBILE, "phone.value"),
+                                    (EMAIL, "email.value"),
+                                    ]
+                    s3_sql_custom_fields.insert(3,
+                                                S3SQLInlineComponent(
+                                                "contact",
+                                                name = "phone",
+                                                label = MOBILE,
+                                                multiple = False,
+                                                fields = [("", "value")],
+                                                filterby = dict(field = "contact_method",
+                                                                options = "SMS")),
+                                                )
+                    s3_sql_custom_fields.insert(3,
+                                                S3SQLInlineComponent(
+                                                "contact",
+                                                name = "email",
+                                                label = EMAIL,
+                                                multiple = False,
+                                                fields = [("", "value")],
+                                                filterby = dict(field = "contact_method",
+                                                                options = "EMAIL")),
+                                                )
+
+                crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
+
+                s3db.configure(r.tablename,
+                               crud_form = crud_form,
+                               )
+
+            elif r.component_name == "group_membership":
+                s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+            
 
         return result
     s3.prep = custom_prep
@@ -962,16 +1061,16 @@ def pr_contact_onaccept(form):
                                             limitby=(0, 1)
                                             ).first().name
     # Add RSS Channel
-    id = table.insert(name=name, enabled=True, url=url)
-    record = dict(id=id)
+    _id = table.insert(name=name, enabled=True, url=url)
+    record = dict(id=_id)
     s3db.update_super(table, record)
     # Enable
     channel_id = record["channel_id"]
     s3db.msg_channel_enable("msg_rss_channel", channel_id)
     # Setup Parser
     table = s3db.msg_parser
-    id = table.insert(channel_id=channel_id, function_name="parse_rss", enabled=True)
-    s3db.msg_parser_enable(id)
+    _id = table.insert(channel_id=channel_id, function_name="parse_rss", enabled=True)
+    s3db.msg_parser_enable(_id)
     # Check Now
     async = current.s3task.async
     async("msg_poll", args=["msg_rss_channel", channel_id])
@@ -1419,13 +1518,13 @@ def req_req_postprocess(form):
                                                            ).first().location_id
     # Create Post
     ptable = s3db.cms_post
-    id = ptable.insert(series_id=series_id,
-                       title=title,
-                       body=body,
-                       location_id=location_id,
-                       person_id=row.requester_id,
-                       )
-    record = dict(id=id)
+    _id = ptable.insert(series_id=series_id,
+                        title=title,
+                        body=body,
+                        location_id=location_id,
+                        person_id=row.requester_id,
+                        )
+    record = dict(id=_id)
     s3db.update_super(ptable, record)
 
     # Add source link
@@ -1446,6 +1545,17 @@ def customise_req_req_resource(r, tablename):
                           tooltip=current.messages.AUTOCOMPLETE_HELP)
 
     current.response.s3.req_req_postprocess = req_req_postprocess
+
+    if not r.component and r.method in ("create", "update"):
+        script = \
+'''$('#req_req_site_id').change(function(){
+var url=$('#person_add').attr('href')
+url=url.split('?')
+var q=S3.queryString.parse(url[1])
+q['(site)']=$(this).val()
+url=url[0]+'?'+S3.queryString.stringify(q)
+$('#person_add').attr('href',url)})'''
+        current.response.s3.jquery_ready.append(script)
 
 settings.customise_req_req_resource = customise_req_req_resource
 

@@ -976,30 +976,30 @@ a#register-btn.action-lnk {
     margin-left: 15px;
 }
 
-span.password-min-char {
+.password-min-char {
     font-size: 12px;
 }
 
-div#password-strength {
+#password-strength {
     margin-left: 5px;
     padding-left: 5px;
 }
 
-span.password-strength-bar {
+.password-strength-bar {
     color: #2d2d2c;
     padding-left: 12px;
     border-radius: 3px;
 }
 
-div.toggle-div {
+.toggle-div {
     cursor: pointer;
 }
-span.toggle-text i {
+.toggle-text i {
     margin-right: 5px;
 }
 
 /* Contacts Page */
-.form-container #pr_person_sub_human_resourcehuman_resource__label {
+#pr_person_sub_human_resourcehuman_resource__label {
     /* Hide the colon */
     display: none;
 }

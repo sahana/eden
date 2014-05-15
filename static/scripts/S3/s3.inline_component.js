@@ -1,5 +1,5 @@
 /**
- * Used by S3SQLInlineComponent (modules/s3forms.py)
+ * Used by S3SQLInlineComponent & sub-Classes (modules/s3forms.py)
  */
 
 $(function() {
