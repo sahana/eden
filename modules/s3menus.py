@@ -1470,11 +1470,11 @@ class S3OptionsMenu(object):
 
         return M(c="pr", restrict=ADMIN)(
                     M("Persons", f="person")(
-                        M("Add Person", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                     M("Groups", f="group")(
-                        M("Create Group", m="create"),
+                        M("Create", m="create"),
                         #M("Search"),
                     ),
                 )

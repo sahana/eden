@@ -196,3 +196,11 @@ b.red {
 .pt-table {
     overflow: auto;
 }
+
+/* Tweak the AddPerson popup */
+#popup.cf .form-horizontal.pr_person {
+    margin-left: -50px;
+}
+#pr_person_sub_human_resourcehuman_resource__row .controls {
+    margin-left: 80px;
+}

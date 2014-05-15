@@ -882,6 +882,22 @@ def customise_pr_person_controller(**attr):
         return result
     s3.prep = custom_prep
 
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            if "form" in output:
+                output["form"].add_class("pr_person")
+            elif "item" in output and hasattr(output["item"], "add_class"):
+                output["item"].add_class("pr_person")
+
+        return output
+    s3.postp = custom_postp
+
     return attr
 
 settings.customise_pr_person_controller = customise_pr_person_controller
@@ -933,14 +949,14 @@ def customise_pr_group_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
-        else:
-            result = True
+            if not result:
+                return False
 
         s3db = current.s3db
 
         # Format for filter_widgets & imports
         s3db.add_components("pr_group",
-                            org_group_team="group_id")
+                            org_group_team = "group_id")
 
         from s3.s3fields import S3Represent
         from s3.s3filter import S3TextFilter, S3OptionsFilter
@@ -980,13 +996,18 @@ def customise_pr_group_controller(**attr):
                        filter_widgets = filter_widgets,
                        )
 
-        #if r.component_name == "group_membership":
         s3db.pr_group_membership.group_head.label = T("Group Chairperson")
+        if r.component_name == "group_membership":
+            from s3layouts import S3AddResourceLink
+            s3db.pr_group_membership.person_id.comment = \
+                S3AddResourceLink(c="pr", f="person",
+                                  title=T("Create Person"),
+                                  tooltip=current.messages.AUTOCOMPLETE_HELP)
         #else:
         #    # RHeader wants a simplified version, but don't want inconsistent across tabs
         #    s3db.pr_group_membership.group_head.label = T("Chairperson")
 
-        return result
+        return True
     s3.prep = custom_prep
 
     return attr
