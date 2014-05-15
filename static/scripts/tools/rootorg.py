@@ -4,7 +4,7 @@
 # Post-migration script to update root_organisation in all
 # org_organisation records
 #
-# Execute like: python web2py.py -S eden -M -R applications/vita/static/scripts/tools/rootorg.py
+# Execute like: python web2py.py -S eden -M -R applications/eden/static/scripts/tools/rootorg.py
 #
 # @todo: remove when obsolete
 #
