@@ -1296,40 +1296,35 @@ class S3OptionsMenu(object):
 
         # Do we have a series_id?
         series_id = False
-        vars = Storage()
+        get_vars = Storage()
         try:
             series_id = int(current.request.args[0])
         except:
             try:
-                (dummy, series_id) = current.request.vars["viewing"].split(".")
+                (dummy, series_id) = current.request.get_vars["viewing"].split(".")
                 series_id = int(series_id)
             except:
                 pass
         if series_id:
-            vars.viewing = "survey_complete.%s" % series_id
+            get_vars.viewing = "survey_complete.%s" % series_id
 
         return M(c="survey")(
                     M("Assessment Templates", f="template")(
-                        M("Create Assessment Template", m="create"),
-                        #M("Search"),
+                        M("Create", m="create"),
                     ),
                     #M("Section", f="section")(
                     #    M("Create", args="create"),
-                    #    M("Search"),
                     #),
                     M("Disaster Assessments", f="series")(
-                        M("Create Disaster Assessment", m="create"),
-                        #M("Search"),
+                        M("Create", m="create"),
                     ),
                     M("Administration", f="admin", restrict=[ADMIN])(
-                        #M("Create", m="create"),
-                        #M("Search"),
                         M("Import Templates", f="question_list",
                           m="import", p="create"),
                         M("Import Template Layout", f="formatter",
                           m="import", p="create"),
                         M("Import Completed Assessment Forms", f="complete",
-                          m="import", p="create", vars=vars, check=series_id),
+                          m="import", p="create", vars=get_vars, check=series_id),
                     ),
                 )
 
