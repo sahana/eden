@@ -1346,6 +1346,11 @@ class S3ResourceQuery(object):
 
                 field = ktable._id
 
+        list_type = str(field.type)[:5] == "list:"
+        
+        q = None
+        none = False
+        
         if keys:
             # Lookup all descendant types from the hierarchy
             none = False
@@ -1362,17 +1367,24 @@ class S3ResourceQuery(object):
                         continue
                     nodes.add(node_id)
             nodeset = hierarchy.findall(nodes, inclusive=True)
-            if str(field.type)[:5] == "list:":
-                q = field.contains(list(nodeset))
-            else:
-                q = field.belongs(nodeset)
-                if none:
-                    # None needs special handling with older DAL versions
+            if nodeset:
+                if list_type:
+                    q = field.contains(list(nodeset))
+                else:
+                    q = field.belongs(nodeset)
+                
+        elif keys is None:
+            none = True
+
+        if none:
+            if not list_type:
+                if q is None:
+                    q = (field == None)
+                else:
                     q |= (field == None)
-        else:
-            # Filter doesn't match
+        if q is None:
             q = field.belongs(set())
-            
+
         return q
 
     # -------------------------------------------------------------------------
