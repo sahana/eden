@@ -32,7 +32,7 @@ import re
 import sys
 
 from gluon import current
-from gluon.dal import Row, Field
+from gluon.dal import Row, Field, Query
 from gluon.storage import Storage
 
 from s3fields import S3RepresentLazy
@@ -1362,10 +1362,13 @@ class S3ResourceQuery(object):
                         continue
                     nodes.add(node_id)
             nodeset = hierarchy.findall(nodes, inclusive=True)
-            q = field.belongs(nodeset)
-            if none:
-                # None needs special handling with older DAL versions
-                q |= (field == None)
+            if str(field.type)[:5] == "list:":
+                q = field.contains(list(nodeset))
+            else:
+                q = field.belongs(nodeset)
+                if none:
+                    # None needs special handling with older DAL versions
+                    q |= (field == None)
         else:
             # Filter doesn't match
             q = field.belongs(set())

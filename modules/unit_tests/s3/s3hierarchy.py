@@ -30,6 +30,7 @@ class S3HierarchyTests(unittest.TestCase):
 
         s3db.define_table("test_hierarchy_reference",
                           Field("test_hierarchy_id", "reference test_hierarchy"),
+                          Field("test_hierarchy_multi_id", "list:reference test_hierarchy"),
                           *s3_uid()
                           )
                           
@@ -564,13 +565,116 @@ class S3HierarchyTests(unittest.TestCase):
 
         uids = self.uids
         resource = current.s3db.resource("test_hierarchy_reference")
-        
+
         # Test with field in hierarchy table, with wildcard, no match
         table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof("Type 1-3*")
         expected_query = table.id.belongs(set())
         query = expr.query(resource)
         self.assertEqual(query, expected_query)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfListReferenceSingle(self):
+        """
+            Test resolution of __typeof queries, for list:reference,
+            with single value
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with field in hierarchy table, with wildcard, no match
+        table = resource.table
+        expr = FS("test_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
+        query = expr.query(resource)
+        
+        expected = ("HIERARCHY1",
+                    "HIERARCHY1-1",
+                    "HIERARCHY1-1-1",
+                    "HIERARCHY1-1-2",
+                    "HIERARCHY1-2",
+                    "HIERARCHY1-2-1",
+                    "HIERARCHY1-2-2",
+                    )
+        expected = set(uids[uid] for uid in expected)
+
+        found = self.inspect_multi_query(query,
+                                         field = table.test_hierarchy_multi_id,
+                                         conjunction = db._adapter.OR,
+                                         op = db._adapter.CONTAINS)
+
+        self.assertEqual(found, expected)
+        
+    # -------------------------------------------------------------------------
+    def testTypeOfListReferenceMultiple(self):
+        """
+            Test resolution of __typeof queries, for list:reference,
+            with multiple values
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with field in hierarchy table, with wildcard, no match
+        table = resource.table
+        expr = FS("test_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
+                                                     uids["HIERARCHY2-1"]))
+        query = expr.query(resource)
+
+        expected = ("HIERARCHY1-2",
+                    "HIERARCHY1-2-1",
+                    "HIERARCHY1-2-2",
+                    "HIERARCHY2-1",
+                    "HIERARCHY2-1-1",
+                    "HIERARCHY2-1-2",
+                    )
+        expected = set(uids[uid] for uid in expected)
+
+        found = self.inspect_multi_query(query,
+                                         field = table.test_hierarchy_multi_id,
+                                         conjunction = db._adapter.OR,
+                                         op = db._adapter.CONTAINS)
+
+        self.assertEqual(found, expected)
+
+    # -------------------------------------------------------------------------
+    def inspect_multi_query(self, query, field=None, conjunction=None, op=None):
+        """
+            Inspect a list:reference multi-value containment query
+
+            @param query: the query
+            @param field: the list:reference field
+            @param conjunction: the conjunction operator (AND or OR)
+            @param op: the containment operator (usually CONTAINS)
+        """
+
+        found = set()
+
+        first = query.first
+        second = query.second
+
+        assertEqual = self.assertEqual
+        inspect_multi_query = self.inspect_multi_query
+
+        if isinstance(first, Query) and isinstance(second, Query):
+
+            assertEqual(query.op, conjunction)
+            found |= inspect_multi_query(first,
+                                         conjunction = conjunction,
+                                         op = op)
+            found |= inspect_multi_query(second,
+                                         conjunction = conjunction,
+                                         op = op)
+        else:
+            assertEqual(query.first, field)
+            assertEqual(query.op, op)
+            found.add(int(query.second))
+            
+        return found
 
 # =============================================================================
 def run_suite(*test_classes):
