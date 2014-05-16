@@ -883,8 +883,8 @@ def customise_hrm_human_resource_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
-        else:
-            result = True
+            if not result:
+                return False
 
         if arcs:
             field = s3db.vol_details.card
@@ -893,7 +893,7 @@ def customise_hrm_human_resource_controller(**attr):
             field = r.table.job_title_id
             field.readable = field.writable = False
 
-        return result
+        return True
     s3.prep = custom_prep
 
     # Custom postp
@@ -1255,8 +1255,7 @@ def customise_pr_group_controller(**attr):
     s3db = current.s3db
 
     # Organisation needs to be an NS/Branch
-    table = s3db.org_organisation_team.organisation_id
-    ns_only(table,
+    ns_only(s3db.org_organisation_team.organisation_id,
             required = False,
             branches = True,
             )
@@ -1401,8 +1400,8 @@ def customise_pr_person_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
-        else:
-            result = True
+            if not result:
+                return False
 
         component_name = r.component_name
         if component_name == "appraisal":
@@ -1439,6 +1438,13 @@ def customise_pr_person_controller(**attr):
                 field.readable = field.writable = True
                 field.label = T("Other Level")
                 field.comment = T("Use main dropdown whenever possible")
+
+        elif r.method =="record" or component_name == "human_resource":
+            # Organisation needs to be an NS/Branch
+            ns_only(s3db.hrm_human_resource.organisation_id,
+                    required = True,
+                    branches = True,
+                    )
 
         if arcs:
             if not r.component:
@@ -1533,7 +1539,7 @@ def customise_pr_person_controller(**attr):
                                               ],
                                )
 
-        return result
+        return True
     s3.prep = custom_prep
 
     attr["rheader"] = lambda r, vnrc=vnrc: pr_rheader(r, vnrc)
