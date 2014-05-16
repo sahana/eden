@@ -1287,8 +1287,9 @@ class S3ResourceQuery(object):
         # Connect to the hierarchy
         from s3hierarchy import S3Hierarchy
         hierarchy = S3Hierarchy(ktablename)
-        if hierarchy.config is None:
-            # No hierarchy configured => fall back to belongs
+        if hierarchy.config is None and str(l.type)[:5] != "list:":
+            # No hierarchy configured and no list:reference
+            # => no need to resolve expression, can simply use belongs
             return self._query_belongs(l, r)
 
         field = l
@@ -1317,9 +1318,10 @@ class S3ResourceQuery(object):
                 if current.xml.DELETED in ktable.fields:
                     subquery &= ktable[current.xml.DELETED] != True
                 rows = current.db(subquery).select(ktable._id)
-                keys = set([row[ktable._id.name] for row in rows])
 
+                # Override field/keys
                 field = ktable._id
+                keys = set([row[ktable._id.name] for row in rows])
 
         list_type = str(field.type)[:5] == "list:"
         
@@ -1341,12 +1343,17 @@ class S3ResourceQuery(object):
                     except ValueError:
                         continue
                     nodes.add(node_id)
-            nodeset = hierarchy.findall(nodes, inclusive=True)
+            if hierarchy.config is not None:
+                nodeset = hierarchy.findall(nodes, inclusive=True)
+            else:
+                nodeset = nodes
             if nodeset:
                 if list_type:
-                    q = field.contains(list(nodeset))
+                    q = (field.contains(list(nodeset)))
+                elif len(nodeset) > 1:
+                    q = (field.belongs(nodeset))
                 else:
-                    q = field.belongs(nodeset)
+                    q = (field == tuple(nodeset)[0])
                 
         elif keys is None:
             none = True

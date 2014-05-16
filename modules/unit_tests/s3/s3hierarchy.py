@@ -677,7 +677,7 @@ class S3HierarchyTests(unittest.TestCase):
         expr = FS("test_hierarchy_id$name").typeof([None, "Type 1-1-2"])
         query = expr.query(resource)
         #table = db.test_hierarchy
-        expected_query = table.id.belongs(set([uids["HIERARCHY1-1-2"]]))
+        expected_query = (table.id == uids["HIERARCHY1-1-2"])
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -736,7 +736,7 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
         resource = current.s3db.resource("test_hierarchy_reference")
 
-        # Test with field in hierarchy table, with wildcard, no match
+        # Test with single value
         expr = FS("test_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
         query = expr.query(resource)
         
@@ -768,7 +768,7 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
         resource = current.s3db.resource("test_hierarchy_reference")
 
-        # Test with field in hierarchy table, with wildcard, no match
+        # Test with multiple values
         expr = FS("test_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
                                                      uids["HIERARCHY2-1"]))
         query = expr.query(resource)
@@ -822,6 +822,50 @@ class S3HierarchyTests(unittest.TestCase):
         expected = set(uids[uid] for uid in ("HIERARCHY2-1",
                                              "HIERARCHY2-1-1",
                                              "HIERARCHY2-1-2",
+                                             ))
+        found = self.inspect_multi_query(query,
+                                         field = table.test_hierarchy_multi_id,
+                                         conjunction = db._adapter.OR,
+                                         op = db._adapter.CONTAINS)
+
+        self.assertEqual(found, expected)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfListReferenceNoHierarchy(self):
+        """
+            Test resolution of __typeof queries, for list:reference,
+            with single value
+        """
+
+        db = current.db
+        uids = self.uids
+        
+        # Remove hierarchy setting
+        current.s3db.clear_config("test_hierarchy", "hierarchy")
+
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with single value
+        expr = FS("test_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
+        query = expr.query(resource)
+
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1",))
+        found = self.inspect_multi_query(query,
+                                         field = table.test_hierarchy_multi_id,
+                                         conjunction = db._adapter.OR,
+                                         op = db._adapter.CONTAINS)
+
+        self.assertEqual(found, expected)
+
+        # Test with multiple values
+        expr = FS("test_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
+                                                     uids["HIERARCHY2-1"]))
+        query = expr.query(resource)
+
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY2-1",
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.test_hierarchy_multi_id,
