@@ -1681,7 +1681,7 @@ class S3PersonModel(S3Model):
                     }
             date_of_birth = row.get("pr_person.date_of_birth", None)
             if date_of_birth:
-                item["dob"] = date_of_birth
+                item["dob"] = date_of_birth.isoformat()
             gender = row.get("pr_person.gender", None)
             if gender in (2, 3):
                 # 1 = unknown
