@@ -108,8 +108,6 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy")
         resource.import_xml(xmltree)
 
-        resource.configure(hierarchy=("parent", "category"))
-
     # -------------------------------------------------------------------------
     @classmethod
     def tearDownClass(cls):
@@ -132,6 +130,9 @@ class S3HierarchyTests(unittest.TestCase):
             self.rows[uid] = row
             self.uids[uid] = row.id
             self.ids[row.id] = uid
+
+        current.s3db.configure("test_hierarchy",
+                               hierarchy=("parent", "category"))
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -381,71 +382,20 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in referencing table
-        table = resource.table
         expr = FS("test_hierarchy_id").typeof(uids["HIERARCHY1"])
-
-        expected = ("HIERARCHY1",
-                    "HIERARCHY1-1",
-                    "HIERARCHY1-1-1",
-                    "HIERARCHY1-1-2",
-                    "HIERARCHY1-2",
-                    "HIERARCHY1-2-1",
-                    "HIERARCHY1-2-2",
-                    )
-        expected_query = table.test_hierarchy_id.belongs(
-                            uids[uid] for uid in expected
-                         )
         query = expr.query(resource)
-        self.assertTrue(self.equivalent(query, expected_query),
-                        msg = "%s != %s" % (query, expected_query))
 
-    # -------------------------------------------------------------------------
-    def testTypeOfReferenceNone(self):
-        """
-            Test resolution of __typeof queries, for field in referencing
-            table, with None value
-        """
-
-        db = current.db
-
-        uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
-
-        # Test with None
         table = resource.table
-        expr = FS("test_hierarchy_id").typeof(None)
-
-        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+        expected = set(uids[uid] for uid in ("HIERARCHY1",
+                                             "HIERARCHY1-1",
+                                             "HIERARCHY1-1-1",
+                                             "HIERARCHY1-1-2",
+                                             "HIERARCHY1-2",
                                              "HIERARCHY1-2-1",
                                              "HIERARCHY1-2-2",
                                              ))
-        expected_query = (table.test_hierarchy_id == None)
-        query = expr.query(resource)
-        self.assertEquivalent(query, expected_query)
-
-        # Test with list
-        table = resource.table
-        expr = FS("test_hierarchy_id").typeof([None])
-
-        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
-                                             "HIERARCHY1-2-1",
-                                             "HIERARCHY1-2-2",
-                                             ))
-        expected_query = (table.test_hierarchy_id == None)
-        query = expr.query(resource)
-        self.assertEquivalent(query, expected_query)
-
-        # Test with multiple values
-        table = resource.table
-        expr = FS("test_hierarchy_id").typeof([None, uids["HIERARCHY1-2"]])
-
-        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
-                                             "HIERARCHY1-2-1",
-                                             "HIERARCHY1-2-2",
-                                             ))
-        expected_query = (table.test_hierarchy_id.belongs(expected)) | \
-                         (table.test_hierarchy_id == None)
-        query = expr.query(resource)
+        expected_query = table.test_hierarchy_id.belongs(expected)
+        
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -461,25 +411,109 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in referencing table
-        table = resource.table
         expr = FS("test_hierarchy_id").typeof((uids["HIERARCHY1-2"],
-                                               uids["HIERARCHY2-1"]
-                                               )
-                                              )
-
-        expected = ("HIERARCHY1-2",
-                    "HIERARCHY1-2-1",
-                    "HIERARCHY1-2-2",
-                    "HIERARCHY2-1",
-                    "HIERARCHY2-1-1",
-                    "HIERARCHY2-1-2",
-                    )
-        expected_query = table.test_hierarchy_id.belongs(
-                            uids[uid] for uid in expected
-                         )
+                                               uids["HIERARCHY2-1"],
+                                               ))
         query = expr.query(resource)
+
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             "HIERARCHY2-1",
+                                             "HIERARCHY2-1-1",
+                                             "HIERARCHY2-1-2",
+                                             ))
+        expected_query = table.test_hierarchy_id.belongs(expected)
+        
         self.assertEquivalent(query, expected_query)
 
+    # -------------------------------------------------------------------------
+    def testTypeOfReferenceNone(self):
+        """
+            Test resolution of __typeof queries, for field in referencing
+            table, with None value
+        """
+
+        db = current.db
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with None
+        expr = FS("test_hierarchy_id").typeof(None)
+        query = expr.query(resource)
+
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             ))
+        expected_query = (table.test_hierarchy_id == None)
+        self.assertEquivalent(query, expected_query)
+
+        # Test with list
+        expr = FS("test_hierarchy_id").typeof([None])
+        query = expr.query(resource)
+
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             ))
+        expected_query = (table.test_hierarchy_id == None)
+        self.assertEquivalent(query, expected_query)
+
+        # Test with multiple values
+        expr = FS("test_hierarchy_id").typeof([None, uids["HIERARCHY1-2"]])
+        query = expr.query(resource)
+        
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             ))
+        expected_query = (table.test_hierarchy_id.belongs(expected)) | \
+                         (table.test_hierarchy_id == None)
+        self.assertEquivalent(query, expected_query)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfReferenceNoHierarchy(self):
+        """
+            Test resolution of __typeof queries, for field in referencing
+            table, with no hierarchy configured
+        """
+
+        db = current.db
+        uids = self.uids
+
+        # Remove hierarchy setting
+        current.s3db.clear_config("test_hierarchy", "hierarchy")
+
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with field in referencing table, single value
+        expr = FS("test_hierarchy_id").typeof(uids["HIERARCHY1-2"])
+        query = expr.query(resource)
+
+        expected = uids["HIERARCHY1-2"]
+        expected_query = resource.table.test_hierarchy_id == expected
+
+        self.assertEquivalent(query, expected_query)
+
+        # Test with field in referencing table, multiple values
+        expr = FS("test_hierarchy_id").typeof((uids["HIERARCHY1-2"],
+                                               uids["HIERARCHY2-1"]
+                                               ))
+        query = expr.query(resource)
+
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY2-1",
+                                             ))
+        expected_query = resource.table.test_hierarchy_id.belongs(expected)
+
+        self.assertEquivalent(query, expected_query)
+        
     # -------------------------------------------------------------------------
     def testTypeOfLookupTableSingle(self):
         """
@@ -493,20 +527,20 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof("Type 1")
-        expected = ("HIERARCHY1",
-                    "HIERARCHY1-1",
-                    "HIERARCHY1-1-1",
-                    "HIERARCHY1-1-2",
-                    "HIERARCHY1-2",
-                    "HIERARCHY1-2-1",
-                    "HIERARCHY1-2-2",
-                    )
-        expected_query = table.id.belongs(
-                            uids[uid] for uid in expected
-                         )
         query = expr.query(resource)
+        
+        table = db.test_hierarchy
+        expected = set(uids[uid] for uid in ("HIERARCHY1",
+                                             "HIERARCHY1-1",
+                                             "HIERARCHY1-1-1",
+                                             "HIERARCHY1-1-2",
+                                             "HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             ))
+        expected_query = table.id.belongs(expected)
+        
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -522,19 +556,19 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof(("Type 1-2", "Type 2-1"))
-        expected = ("HIERARCHY1-2",
-                    "HIERARCHY1-2-1",
-                    "HIERARCHY1-2-2",
-                    "HIERARCHY2-1",
-                    "HIERARCHY2-1-1",
-                    "HIERARCHY2-1-2",
-                    )
-        expected_query = table.id.belongs(
-                            uids[uid] for uid in expected
-                         )
         query = expr.query(resource)
+        
+        table = db.test_hierarchy
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             "HIERARCHY2-1",
+                                             "HIERARCHY2-1-1",
+                                             "HIERARCHY2-1-2",
+                                             ))
+        expected_query = table.id.belongs(expected)
+        
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -550,19 +584,19 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof("Type 1-*")
-        expected = ("HIERARCHY1-1",
-                    "HIERARCHY1-1-1",
-                    "HIERARCHY1-1-2",
-                    "HIERARCHY1-2",
-                    "HIERARCHY1-2-1",
-                    "HIERARCHY1-2-2",
-                    )
-        expected_query = table.id.belongs(
-                            uids[uid] for uid in expected
-                         )
         query = expr.query(resource)
+        
+        table = db.test_hierarchy
+        expected = set(uids[uid] for uid in ("HIERARCHY1-1",
+                                             "HIERARCHY1-1-1",
+                                             "HIERARCHY1-1-2",
+                                             "HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             ))
+        expected_query = table.id.belongs(expected)
+        
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -578,18 +612,18 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof(("Type 1-1-*", "Type 2-1*"))
-        expected = ("HIERARCHY1-1-1",
-                    "HIERARCHY1-1-2",
-                    "HIERARCHY2-1",
-                    "HIERARCHY2-1-1",
-                    "HIERARCHY2-1-2",
-                    )
-        expected_query = table.id.belongs(
-                            uids[uid] for uid in expected
-                         )
         query = expr.query(resource)
+        
+        table = db.test_hierarchy
+        expected = set(uids[uid] for uid in ("HIERARCHY1-1-1",
+                                             "HIERARCHY1-1-2",
+                                             "HIERARCHY2-1",
+                                             "HIERARCHY2-1-1",
+                                             "HIERARCHY2-1-2",
+                                             ))
+        expected_query = table.id.belongs(expected)
+        
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -605,10 +639,12 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard, no match
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof("Type 1-3*")
-        expected_query = table.id.belongs(set())
         query = expr.query(resource)
+        
+        table = db.test_hierarchy
+        expected_query = table.id.belongs(set())
+        
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -624,24 +660,68 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with None
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof(None)
-        expected_query = table.id.belongs(set())
         query = expr.query(resource)
+        table = db.test_hierarchy
+        expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with list
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof([None])
-        expected_query = table.id.belongs(set())
         query = expr.query(resource)
+        #table = db.test_hierarchy
+        expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with multiple values
-        table = db.test_hierarchy
         expr = FS("test_hierarchy_id$name").typeof([None, "Type 1-1-2"])
-        expected_query = table.id.belongs(set([uids["HIERARCHY1-1-2"]]))
         query = expr.query(resource)
+        #table = db.test_hierarchy
+        expected_query = table.id.belongs(set([uids["HIERARCHY1-1-2"]]))
+        self.assertEquivalent(query, expected_query)
+
+    # -------------------------------------------------------------------------
+    def testTypeOfLookupTableNoHierarchy(self):
+        """
+            Test resolution of __typeof queries, for field in lookup
+            table, with no hierarchy configured
+        """
+
+        db = current.db
+
+        uids = self.uids
+        
+        # Remove hierarchy setting
+        current.s3db.clear_config("test_hierarchy", "hierarchy")
+
+        resource = current.s3db.resource("test_hierarchy_reference")
+
+        # Test with field in lookup table, single value
+        expr = FS("test_hierarchy_id$name").typeof("Type 1-2")
+        query = expr.query(resource)
+
+        table = db.test_hierarchy
+        expected_query = (table.name == "Type 1-2")
+
+        self.assertEquivalent(query, expected_query)
+
+        # Test with field in lookup table
+        expr = FS("test_hierarchy_id$name").typeof(("Type 1-2", "Type 2-1"))
+        query = expr.query(resource)
+
+        table = db.test_hierarchy
+        expected_query = table.name.belongs(("Type 1-2", "Type 2-1"))
+
+        self.assertEquivalent(query, expected_query)
+
+        # Test with field in lookup table, multiple values + wildcards
+        expr = FS("test_hierarchy_id$name").typeof(("Type 1-*", "Type 2-1"))
+        query = expr.query(resource)
+
+        table = db.test_hierarchy
+        expected_query = (table.name.like("Type 1-%")) | \
+                         (table.name == "Type 2-1")
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -657,20 +737,18 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard, no match
-        table = resource.table
         expr = FS("test_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
         query = expr.query(resource)
         
-        expected = ("HIERARCHY1",
-                    "HIERARCHY1-1",
-                    "HIERARCHY1-1-1",
-                    "HIERARCHY1-1-2",
-                    "HIERARCHY1-2",
-                    "HIERARCHY1-2-1",
-                    "HIERARCHY1-2-2",
-                    )
-        expected = set(uids[uid] for uid in expected)
-
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1",
+                                             "HIERARCHY1-1",
+                                             "HIERARCHY1-1-1",
+                                             "HIERARCHY1-1-2",
+                                             "HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             ))
         found = self.inspect_multi_query(query,
                                          field = table.test_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,
@@ -691,20 +769,18 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard, no match
-        table = resource.table
         expr = FS("test_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
                                                      uids["HIERARCHY2-1"]))
         query = expr.query(resource)
 
-        expected = ("HIERARCHY1-2",
-                    "HIERARCHY1-2-1",
-                    "HIERARCHY1-2-2",
-                    "HIERARCHY2-1",
-                    "HIERARCHY2-1-1",
-                    "HIERARCHY2-1-2",
-                    )
-        expected = set(uids[uid] for uid in expected)
-
+        table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY1-2",
+                                             "HIERARCHY1-2-1",
+                                             "HIERARCHY1-2-2",
+                                             "HIERARCHY2-1",
+                                             "HIERARCHY2-1-1",
+                                             "HIERARCHY2-1-2",
+                                             ))
         found = self.inspect_multi_query(query,
                                          field = table.test_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,
@@ -725,31 +801,28 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy_reference")
 
         # Test with None
-        table = resource.table
         expr = FS("test_hierarchy_multi_id").typeof(None)
         query = expr.query(resource)
+        table = resource.table
         expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with list
-        table = resource.table
         expr = FS("test_hierarchy_multi_id").typeof([None])
         query = expr.query(resource)
+        #table = resource.table
         expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with multiple values
-        table = resource.table
         expr = FS("test_hierarchy_multi_id").typeof((None,
                                                      uids["HIERARCHY2-1"]))
         query = expr.query(resource)
-
-        expected = ("HIERARCHY2-1",
-                    "HIERARCHY2-1-1",
-                    "HIERARCHY2-1-2",
-                    )
-        expected = set(uids[uid] for uid in expected)
-
+        #table = resource.table
+        expected = set(uids[uid] for uid in ("HIERARCHY2-1",
+                                             "HIERARCHY2-1-1",
+                                             "HIERARCHY2-1-2",
+                                             ))
         found = self.inspect_multi_query(query,
                                          field = table.test_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,

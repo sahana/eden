@@ -1302,32 +1302,7 @@ class S3ResourceQuery(object):
 
                 # Build a filter expression for the lookup table
                 fs = S3FieldSelector(l.name)
-                if str(l.type) in ("string", "text"):
-                    if not isinstance(r, (list, tuple, set)):
-                        items = [r]
-                    else:
-                        items = r
-                    expr = None
-                    for item in items:
-                        if isinstance(item, basestring):
-                            if "*" in item and "%" not in item:
-                                s = item.replace("*", "%")
-                            else:
-                                s = item
-                        else:
-                            try:
-                                s = str(item)
-                            except:
-                                continue
-                        _expr = (fs.like(s)) if "%" in s else (fs == s)
-                        if expr is not None:
-                            expr |= _expr
-                        else:
-                            expr = _expr
-                elif isinstance(r, (list, tuple, set)):
-                    expr = fs.belongs(r)
-                else:
-                    expr = (fs == r)
+                expr = self._query_belongs(l, r, field = fs)
 
                 # Resolve filter expression into subquery
                 kresource = current.s3db.resource(ktablename)
@@ -1388,22 +1363,72 @@ class S3ResourceQuery(object):
         return q
 
     # -------------------------------------------------------------------------
-    def _query_belongs(self, l, r):
+    def _query_belongs(self, l, r, field=None):
         """
-            Translate BELONGS into DAL expression
+            Resolve BELONGS into a DAL expression (or S3ResourceQuery if
+            field is an S3FieldSelector)
 
             @param l: the left operator
             @param r: the right operator
+            @param field: alternative left operator
         """
 
+        if field is None:
+            field = l
+
+        expr = None
+        none = False
+        
         if not isinstance(r, (list, tuple, set)):
-            r = [r]
-        if None in r:
-            _r = [item for item in r if item is not None]
-            q = ((l.belongs(_r)) | (l == None))
+            items = [r]
         else:
-            q = l.belongs(r)
-        return q
+            items = r
+        if None in items:
+            none = True
+            items = [item for item in items if item is not None]
+            
+        wildcard = False
+        
+        if str(l.type) in ("string", "text"):
+            for item in items:
+                if isinstance(item, basestring):
+                    if "*" in item and "%" not in item:
+                        s = item.replace("*", "%")
+                    else:
+                        s = item
+                else:
+                    try:
+                        s = str(item)
+                    except:
+                        continue
+                if "%" in s:
+                    wildcard = True
+                    _expr = (field.like(s))
+                else:
+                    _expr = (field == s)
+                    
+                if expr is None:
+                    expr = _expr
+                else:
+                    expr |= _expr
+                    
+        if not wildcard:
+            if len(items) == 1:
+                # Don't use belongs() for single value
+                expr = (field == items[0])
+            elif items:
+                expr = (field.belongs(items))
+
+        if none:
+            # None needs special handling with older DAL versions
+            if expr is None:
+                expr = (field == None)
+            else:
+                expr |= (field == None)
+        elif expr is None:
+            expr = field.belongs(set())
+
+        return expr
 
     # -------------------------------------------------------------------------
     def __call__(self, resource, row, virtual=True):
