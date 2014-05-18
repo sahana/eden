@@ -21,7 +21,9 @@ settings = current.deployment_settings
 settings.base.prepopulate = ["SSF"]
 
 # Theme
-#settings.base.theme = "SSF"
+settings.base.theme = "SSF"
+settings.ui.formstyle_row = "bootstrap"
+settings.ui.formstyle = "bootstrap"
 
 # Should users be allowed to register themselves?
 settings.security.self_registration = True
@@ -65,7 +67,7 @@ settings.auth.always_notify_approver = True
 
 # Base settings
 settings.base.system_name = T("The Sahana Sunflower: A Community Portal")
-settings.base.system_name_short = T("Sahana Sunflower")
+settings.base.system_name_short = T("Sunflower")
 
 # Assign the new users the permission to read.
 settings.auth.registration_roles = {"organisation_id": ["PROJECT_READ"],
@@ -338,8 +340,8 @@ def form_style(self, xfields):
         form.append(formstyle_row(id, a, b, c))
 
     return form
-settings.ui.formstyle_row = formstyle_row
-settings.ui.formstyle = formstyle_row
+# settings.ui.formstyle_row = formstyle_row
+# settings.ui.formstyle = formstyle_row
 
 
 from s3 import s3forms
