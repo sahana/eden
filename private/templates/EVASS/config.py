@@ -33,7 +33,17 @@ settings = current.deployment_settings
 # ["roles", "user"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
+
 settings.base.prepopulate = ["EVASS"]
+
+settings.base.system_name = T("EVASS - Sahana Eden for Italy")
+settings.base.system_name_short = T("Sahana Eden for Italy")
+
+# Use system_name_short as default email subject (Appended).   
+settings.mail.default_email_subject = True
+
+# Append name and surname of logged in user to email subject
+settings.mail.auth_user_in_email_subject = True
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "EVASS"
@@ -115,6 +125,14 @@ settings.auth.always_notify_approver = False
 #settings.auth.create_unknown_locations = True
 
 # L10n settings
+# Languages used in the deployment (used for Language Toolbar & GIS Locations)
+# http://www.loc.gov/standards/iso639-2/php/code_list.php
+settings.L10n.languages = OrderedDict([
+    ("en", "English"),
+    ("it", "Italiano"),
+])
+# Default language for Language Toolbar (& GIS Locations in future)
+settings.L10n.default_language = "en"
 # Default timezone for users
 #settings.L10n.utc_offset = "UTC +0000"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
@@ -212,11 +230,13 @@ settings.fin.currencies = {
 #settings.ui.pdf_logo = "static/img/mylogo.png"
 
 # GIS (Map) settings
+# GeoNames username
+settings.gis.geonames_username = "evass"
 # Size of the Embedded Map
 # Change this if-required for your theme
 # NB API can override this in specific modules
-#settings.gis.map_height = 600
-#settings.gis.map_width = 1000
+#settings.gis.map_height = 500
+#settings.gis.map_width = 800
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
@@ -363,7 +383,7 @@ settings.security.policy = 5
 settings.org.branches = True
 # Enable the use of Organisation Groups & what their name is
 #settings.org.groups = "Coalition"
-#settings.org.groups = "Network"
+settings.org.groups = "Network"
 # Enable the use of Organisation Regions
 #settings.org.regions = True
 # Set the length of the auto-generated org/site code the default is 10
@@ -402,25 +422,25 @@ settings.org.branches = True
 # Uncomment to change the label for 'Staff'
 #settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
-settings.hrm.email_required = False
+#settings.hrm.email_required = False
 # Uncomment to allow Staff & Volunteers to be registered without an Organisation
-settings.hrm.org_required = False
+#settings.hrm.org_required = False
 # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
-settings.hrm.deletable = True
+#settings.hrm.deletable = True
 # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
 #settings.hrm.filter_certificates = True
 # Uncomment to allow HRs to have multiple Job Titles
-settings.hrm.multiple_job_titles = True
+#settings.hrm.multiple_job_titles = True
 # Uncomment to hide the Staff resource
-settings.hrm.show_staff = False
+#settings.hrm.show_staff = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #settings.hrm.skill_types = True
 # Uncomment to disable Staff experience
-settings.hrm.staff_experience = False
+#settings.hrm.staff_experience = False
 # Uncomment to disable Volunteer experience
-settings.hrm.vol_experience = False
+#settings.hrm.vol_experience = False
 # Uncomment to show the Organisation name in HR represents
-settings.hrm.show_organisation = True
+#settings.hrm.show_organisation = True
 # Uncomment to consolidate tabs into a single CV
 #settings.hrm.cv_tab = True
 # Uncomment to consolidate tabs into Staff Record
@@ -586,35 +606,35 @@ settings.hrm.show_organisation = True
 # -----------------------------------------------------------------------------
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-settings.project.mode_3w = True
+#settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
-settings.project.mode_drr = True
+#settings.project.mode_drr = True
 # Uncomment this to use settings suitable for detailed Task management
-settings.project.mode_task = True
+#settings.project.mode_task = True
 # Uncomment this to use Activities for projects
-settings.project.activities = True
+#settings.project.activities = True
 # Uncomment this to use Activity Types for Activities/Projects
-settings.project.activity_types = True
+#settings.project.activity_types = True
 # Uncomment this to use Codes for projects
-settings.project.codes = True
+#settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
-settings.project.community = True
+#settings.project.community = True
 # Uncomment this to enable Hazards in 3W projects
-settings.project.hazards = True
+#settings.project.hazards = True
 # Uncomment this to enable Milestones in projects
-settings.project.milestones = True
+#settings.project.milestones = True
 # Uncomment this to link Activities to Projects
-settings.project.projects = True
+#settings.project.projects = True
 # Uncomment this to disable Sectors in projects
 #settings.project.sectors = False
 # Uncomment this to enable Themes in 3W projects
 #settings.project.themes = True
 # Uncomment this to use Theme Percentages for projects
-settings.project.theme_percentages = True
+#settings.project.theme_percentages = True
 # Uncomment this to use multiple Budgets per project
-settings.project.multiple_budgets = True
+#settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
-settings.project.multiple_organisations = True
+#settings.project.multiple_organisations = True
 # Uncomment this to customise
 # Links to Filtered Components for Donors & Partners
 #settings.project.organisation_roles = {
@@ -634,6 +654,49 @@ settings.project.multiple_organisations = True
 #settings.base.youtube_id = [dict(id = "introduction",
 #                                 title = T("Introduction"),
 #                                 video_id = "HR-FtR2XkBU"),]
+
+#*****************************Frontpage settings*************************
+# RSS feeds
+settings.frontpage.rss = [
+    {"title": "RSS News - Dipartimento della Protezione Civile ",
+     # Trac timeline
+     "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=12170&lang=it#"
+     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+    },
+    {"title": "RSS Vigilanza Meteo - Dipartimento della Protezione Civile ",
+     # Trac timeline
+     "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=23573&lang=it#"
+     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+    },
+    {"title": "RSS Previsioni Meteo - Dipartimento della Protezione Civile ",
+     # Trac timeline
+     "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=23575&lang=it#"
+     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+    },
+    {"title": "RSS Comunicati Stampa - Dipartimento della Protezione Civile ",
+     # Trac timeline
+     "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=23577&lang=it#"
+     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+    },
+    {"title": "Twitter - Croce Rossa Italia",
+     # @crocerossa
+     #"url": "https://search.twitter.com/search.rss?q=from%3Acrocerossa" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+     "url": "http://www.rssitfor.me/getrss?name=@crocerossa"
+     # Hashtag
+     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+     #"url": "http://api2.socialmention.com/search?q=protezionecivile&t=all&f=rss"
+    },
+#    {"title": "Twitter - Dipartimento della Protezione Civile",
+#     # @protezionecivile
+#     "url": "http://www.rssitfor.me/getrss?name=@protezionecivile"
+#     # Hashtag
+#     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+#     "url": "http://api2.socialmention.com/search?q=protezionecivile&t=all&f=rss"
+#    }
+]
+#***********************************************************************
+
+
 
 # -----------------------------------------------------------------------------
 def customise_pr_person_resource(r, tablename):
@@ -768,7 +831,7 @@ settings.modules = OrderedDict([
         name_nice = T("Map"),
         #description = "Situation Awareness & Geospatial Analysis",
         restricted = True,
-        module_type = 6,     # 6th item in the menu
+        module_type = 1,     # 6th item in the menu
     )),
     ("pr", Storage(
         name_nice = T("Person Registry"),
@@ -781,39 +844,39 @@ settings.modules = OrderedDict([
         name_nice = T("Organizations"),
         #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
         restricted = True,
-        module_type = 2
+        module_type = 10
     )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
         name_nice = T("Staff"),
         #description = "Human Resources Management",
         restricted = True,
-        module_type = 3,
+        module_type = 10,
     )),
     ("vol", Storage(
         name_nice = T("Volunteers"),
         #description = "Human Resources Management",
         restricted = True,
-        module_type = 4,
+        module_type = 10,
     )),
-    ("cms", Storage(
-      name_nice = T("Content Management"),
-      #description = "Content Management System",
-      restricted = True,
-      module_type = 9,
-    )),
-    ("doc", Storage(
-        name_nice = T("Documents"),
-        #description = "A library of digital resources, such as photos, documents and reports",
-        restricted = True,
-        module_type = None,
-    )),
+    #("cms", Storage(
+    #  name_nice = T("Content Management"),
+    #  #description = "Content Management System",
+     # restricted = True,
+    #  module_type = 10,
+    #)),
+    #("doc", Storage(
+    #    name_nice = T("Documents"),
+    #    #description = "A library of digital resources, such as photos, documents and reports",
+    #    restricted = True,
+    #    module_type = None,
+    #)),
     ("msg", Storage(
         name_nice = T("Messaging"),
         #description = "Sends & Receives Alerts via Email & SMS",
         restricted = True,
         # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-        module_type = 1,
+        module_type = 2,
     )),
     ("supply", Storage(
         name_nice = T("Supply Chain Management"),
@@ -825,7 +888,7 @@ settings.modules = OrderedDict([
         name_nice = T("Warehouses"),
         #description = "Receiving and Sending Items",
         restricted = True,
-        module_type = 4
+        module_type = 10
     )),
     #("asset", Storage(
         #name_nice = T("Assets"),
@@ -839,11 +902,17 @@ settings.modules = OrderedDict([
     #    restricted = True,
     #    module_type = 10,
     #)),
+    ("project", Storage(
+        name_nice = T("Projects"),
+        #description = "Tracking of Projects, Activities and Tasks",
+        restricted = True,
+        module_type = 2
+    )),
     ("cr", Storage(
         name_nice = T("Shelters"),
         #description = "Tracks the location, capacity and breakdown of victims in Shelters",
         restricted = True,
-        module_type = 5
+        module_type = 10
     )),
     ("hms", Storage(
         name_nice = T("Hospitals"),
@@ -855,7 +924,7 @@ settings.modules = OrderedDict([
         name_nice = T("Incidents"),
         #description = "Incident Reporting System",
         restricted = True,
-        module_type = 6
+        module_type = 10
     )),
     #("dvi", Storage(
        #name_nice = T("Disaster Victim Identification"),
@@ -881,14 +950,19 @@ settings.modules = OrderedDict([
         name_nice = T("Events"),
         #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
         restricted = True,
-        module_type = 8,
+        module_type = 10,
     )),
-    ("stats", Storage(
-            name_nice = T("Statistics"),
-            #description = "Manages statistics",
-            restricted = True,
-            module_type = None,
-        )),
+    ("transport", Storage(
+       name_nice = T("Transport"),
+       restricted = True,
+       module_type = 10,
+    )),
+    #("stats", Storage(
+    #        name_nice = T("Statistics"),
+    #        #description = "Manages statistics",
+    #        restricted = True,
+    #        module_type = 3,
+    #    )),
     # @ToDo: Rewrite in a modern style
     #("budget", Storage(
     #        name_nice = T("Budgeting Module"),

@@ -93,12 +93,15 @@ $('#login-btn').click(function(){
             output["shelter_list"] = self.shelter_list()
             output["organizations_btn"] = self.organizations_btn()
             output["events_btn"] = self.events_btn()
+            output["projects_btn"] = self.projects_btn()
             output["incident_reports_btn"] = self.incident_reports_btn()
+            output["pr_btn"] = self.pr_btn()
             output["staff_btn"] = self.staff_btn()
             output["volunteers_btn"] = self.volunteers_btn()
             # @todo: implement evr module
             #output["evacuees_btn"] = self.evacuees_btn()
             output["warehouses_btn"] = self.warehouses_btn()
+            output["transports_btn"] = self.transports_btn()
             output["shelters_btn"] = self.shelters_btn()
             output["hospitals_btn"] = self.hospitals_btn()
 
@@ -225,6 +228,13 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                     _class="button button-home")
                   )
 
+# -------------------------------------------------------------------------
+    def projects_btn(self):
+        return LI(A("Projects",
+                    _href=URL(c="project", f="project"),
+                    _class="button button-home")
+                  )
+
     # -------------------------------------------------------------------------
     def incident_reports_btn(self):
         return LI(A("Incident Reports",
@@ -233,6 +243,14 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                     _id="incident-report-btn")
                   )
 
+    # -------------------------------------------------------------------------
+    def pr_btn(self):
+        return LI(A("Person Registry",
+                    _href=URL(c="pr", f="index"),
+                    _class="button button-home",
+                    _id="incident-report-btn")
+                  )
+        
     # -------------------------------------------------------------------------
     def staff_btn(self):
         return LI(A("Staff",
@@ -258,6 +276,13 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
     def warehouses_btn(self):
         return LI(A("Warehouse",
                     _href=URL(c="inv", f="warehouse"),
+                    _class="button button-home")
+                  )
+        
+    # -------------------------------------------------------------------------
+    def transports_btn(self):
+        return LI(A("Transports",
+                    _href=URL(c="transport", f="airport"),
                     _class="button button-home")
                   )
 

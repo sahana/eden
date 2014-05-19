@@ -1,0 +1,4 @@
+Name,Description,URL,Symbology,Marker,Enabled,Visible,Folder,Image
+"Earthquakes","USGS: Global 7-day","http://earthquake.usgs.gov/eqcenter/catalogs/eqs7day-M2.5.xml",US,earthquake,False,False,,
+"Floods","Dartmouth Flood Observatory","http://www.gdacs.org/xml/rssfl.xml",US,flood,False,False,,"gdas:gfds_image"
+"Volcanoes","USGS: US recent","http://volcano.wr.usgs.gov/rss/vhpcaprss.xml",US,volcano,False,False,,
