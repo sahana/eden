@@ -55,6 +55,8 @@ class S3MainMenu(default.S3MainMenu):
 #             ),
 #             homepage("cr"),
             homepage("msg"),
+#            homepage("project")
+#            homepage("stats"),
 #            homepage("event"),
 #            homepage("irs"),
 #            homepage("vol"),

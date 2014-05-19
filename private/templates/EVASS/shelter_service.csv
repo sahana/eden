@@ -1,11 +1,24 @@
 Name,Comments
-Kitchen,
-Local Warehouse,
-Pharmacy,
-Electric Power Generator,
-Scholastic Services,
-Nursery School,
-Doctor,
-Pediatrician,
-Paved Road,
-Dirt Road,
+Facility/ Kitchen,
+Facility/ Local Warehouse,
+Facility/ Pharmacy,
+Facility/ Canteen,
+Assistance/ General Practitioner,
+Assistance/ Nurse 
+Assistance/ Pediatrician,
+Service/ Scholastic Services,
+Service/ Nursery School,
+Description/ Paved Road,
+Description/ Dirt Road,
+Description/ Drinkable Water Available,
+Description/ Nearby Available Area,
+Description/ Nearby Parking Area,
+Base/ Temporary baths
+Base/ Showers
+Base/ Static baths
+Base/ Drainage System,
+Base/ Electric Power Generator,
+Base/ Sewer System,
+Base/ Static Illumination System
+Base/ Temporary Illumination System
+

@@ -2548,6 +2548,7 @@ class S3ProjectLocationModel(S3Model):
                      Field("name",
                            writable=False),
                      self.project_project_id(),
+                     self.project_status_id(),
                      self.gis_location_id(
                      widget = S3LocationAutocompleteWidget(),
                      requires = IS_LOCATION(),
