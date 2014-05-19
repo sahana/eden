@@ -700,9 +700,7 @@ settings.frontpage.rss = [
 
 # -----------------------------------------------------------------------------
 def customise_pr_person_resource(r, tablename):
-    """ Customise pr_person resource """
 
-    T = current.T
     s3db = current.s3db
     
     table = r.resource.table
@@ -772,6 +770,14 @@ def customise_pr_person_resource(r, tablename):
     place_of_birth.readable = place_of_birth.writable = True
 
 settings.customise_pr_person_resource = customise_pr_person_resource
+
+# -----------------------------------------------------------------------------
+def customise_project_location_resource(r, tablename):
+
+    field = current.s3db.project_location.status_id
+    field.readable = field.writable = True
+
+settings.customise_project_location_resource = customise_project_location_resource
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
