@@ -2237,7 +2237,7 @@ class S3AddressModel(S3Model):
            s3.gis.config.region_location_id:
             try:
                 levels.remove("L0")
-            except:
+            except ValueError:
                 # Already removed
                 pass
         # Display in reverse order, like Addresses

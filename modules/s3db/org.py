@@ -2866,7 +2866,8 @@ class S3FacilityModel(S3Model):
            s3.gis.config.region_location_id:
             try:
                 levels.remove("L0")
-            except:
+            except ValueError:
+                # Already removed
                 pass
 
         text_fields = ["name",
@@ -3572,7 +3573,11 @@ class S3OfficeModel(S3Model):
         levels = hierarchy.keys()
         if len(settings.get_gis_countries()) == 1 or \
            s3.gis.config.region_location_id:
-            levels.remove("L0")
+            try:
+                levels.remove("L0")
+            except ValueError:
+                # Already removed
+                pass
 
         text_fields = ["name",
                        "code",
@@ -4702,7 +4707,8 @@ def org_organisation_controller():
                                                       "list_fields")
                         try:
                             list_fields.remove("organisation_type_id")
-                        except:
+                        except ValueError:
+                            # Already removed
                             pass
                         else:
                             s3db.configure("org_organisation",

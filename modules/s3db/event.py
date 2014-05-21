@@ -252,7 +252,11 @@ class S3EventModel(S3Model):
         levels = hierarchy.keys()
         if len(settings.get_gis_countries()) == 1 or \
            s3.gis.config.region_location_id:
-            levels.remove("L0")
+            try:
+                levels.remove("L0")
+            except ValueError:
+                # Already removed
+                pass
 
         if hierarchical_event_types:
             filter_widgets = [S3HierarchyFilter("event_type_id",

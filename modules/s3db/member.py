@@ -208,7 +208,11 @@ class S3MembersModel(S3Model):
         levels = hierarchy.keys()
         if len(settings.get_gis_countries()) == 1 or \
            s3.gis.config.region_location_id:
-            levels.remove("L0")
+            try:
+                levels.remove("L0")
+            except ValueError:
+                # Already removed
+                pass
 
         list_fields = ["person_id",
                        "organisation_id",

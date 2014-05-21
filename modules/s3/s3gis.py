@@ -35,6 +35,7 @@ __all__ = ["GIS",
            "S3ImportPOI",
            ]
 
+import datetime         # Needed for Feed Refresh checks
 import os
 import re
 import sys
@@ -45,7 +46,6 @@ try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
-from datetime import timedelta  # Needed for Feed Refresh checks
 
 try:
     from lxml import etree # Needed to follow NetworkLinks
@@ -85,7 +85,6 @@ from s3utils import s3_include_ext, s3_unicode
 
 DEBUG = False
 if DEBUG:
-    import datetime
     print >> sys.stderr, "S3GIS: DEBUG MODE"
     def _debug(m):
         print >> sys.stderr, m
@@ -1082,15 +1081,15 @@ class GIS(object):
         if not results:
             results = {}
 
-        id = feature_id
-        # if we don't have a feature or a feature id return the dict as-is
+        _id = feature_id
+        # if we don't have a feature or a feature ID return the dict as-is
         if not feature_id and not feature:
             return results
         if not feature_id and "path" not in feature and "parent" in feature:
             # gis_location_onvalidation on a Create => no ID yet
             # Read the Parent's path instead
             feature = self._lookup_parent_path(feature.parent)
-            id = feature.id
+            _id = feature.id
         elif not feature or "path" not in feature or "parent" not in feature:
             feature = self._lookup_parent_path(feature_id)
 
@@ -1104,7 +1103,7 @@ class GIS(object):
             if feature.parent:
                 strict = self.get_strict_hierarchy(feature.parent)
             else:
-                strict = self.get_strict_hierarchy(id)
+                strict = self.get_strict_hierarchy(_id)
             if path and strict and not names:
                 # No need to do a db lookup for parents in this case -- we
                 # know the levels of the parents from their position in path.
@@ -1113,10 +1112,10 @@ class GIS(object):
                 path_ids = map(int, path.split("/"))
                 # This skips the last path element, which is the supplied
                 # location.
-                for (i, id) in enumerate(path_ids[:-1]):
-                    results["L%i" % i] = id
+                for (i, _id) in enumerate(path_ids[:-1]):
+                    results["L%i" % i] = _id
             elif path:
-                ancestors = self.get_parents(id, feature=feature)
+                ancestors = self.get_parents(_id, feature=feature)
                 if ancestors:
                     for ancestor in ancestors:
                         if ancestor.level and ancestor.level in self.hierarchy_level_keys:
@@ -1526,8 +1525,8 @@ class GIS(object):
                                         cache=s3db.cache)
         if len(rows) > 1:
             # Remove the Site Default
-            filter = lambda row: row.uuid == "SITE_DEFAULT"
-            rows.exclude(filter)
+            _filter = lambda row: row.uuid == "SITE_DEFAULT"
+            rows.exclude(_filter)
         row = rows.first()
         if row:
             strict = row.strict_hierarchy
@@ -2154,7 +2153,6 @@ class GIS(object):
         s3db = current.s3db
         request = current.request
         get_vars = request.get_vars
-        format = current.auth.permission.format
 
         ftable = s3db.gis_layer_feature
 
@@ -2213,7 +2211,6 @@ class GIS(object):
             trackable = False
             polygons = False
         
-
         table = resource.table
         tablename = resource.tablename
         pkey = table._id.name
@@ -2224,7 +2221,8 @@ class GIS(object):
         _pkey = table[pkey]
         # Ensure there are no ID represents to confuse things
         _pkey.represent = None
-        if format == "geojson":
+        geojson = current.auth.permission.format == "geojson"
+        if geojson:
             if popup_fields or attr_fields:
                 # Build the Attributes &/Popup Tooltips now so that representations can be
                 # looked-up in bulk rather than as a separate lookup per record
@@ -2310,7 +2308,7 @@ class GIS(object):
                         attr[record_id] = attribute
 
                     if popup_cols:
-                        tooltip = _tooltip
+                        tooltip = s3_unicode(_tooltip)
                         first = True
                         for fieldname in popup_cols:
                             represent = row[fieldname]
@@ -2450,7 +2448,7 @@ class GIS(object):
                 settings = current.deployment_settings
                 tolerance = settings.get_gis_simplify_tolerance()
                 if settings.get_gis_spatialdb():
-                    if format == "geojson":
+                    if geojson:
                         # Do the Simplify & GeoJSON direct from the DB
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
@@ -2466,22 +2464,22 @@ class GIS(object):
                     rows = db(query).select(table.id,
                                             gtable.wkt)
                     simplify = GIS.simplify
-                    if format == "geojson":
+                    if geojson:
                         # Simplify the polygon to reduce download size
                         if join:
                             for row in rows:
-                                geojson = simplify(row["gis_location"].wkt,
-                                                   tolerance=tolerance,
-                                                   output="geojson")
-                                if geojson:
-                                    geojsons[row[tablename].id] = geojson
+                                g = simplify(row["gis_location"].wkt,
+                                             tolerance=tolerance,
+                                             output="geojson")
+                                if g:
+                                    geojsons[row[tablename].id] = g
                         else:
                             for row in rows:
-                                geojson = simplify(row.wkt,
-                                                   tolerance=tolerance,
-                                                   output="geojson")
-                                if geojson:
-                                    geojsons[row.id] = geojson
+                                g = simplify(row.wkt,
+                                             tolerance=tolerance,
+                                             output="geojson")
+                                if g:
+                                    geojsons[row.id] = g
                     else:
                         # Simplify the polygon to reduce download size
                         # & also to work around the recursion limit in libxslt
@@ -6040,7 +6038,7 @@ class MAP(DIV):
         get_vars = request.get_vars
 
         # JS Globals
-        globals = {}
+        js_globals = {}
 
         # Map Options for client-side processing
         options = {}
@@ -6399,7 +6397,7 @@ class MAP(DIV):
         if mouse_position == "mgrs":
             options["mouse_position"] = "mgrs"
             # Tell loader to load support scripts
-            globals["mgrs"] = True
+            js_globals["mgrs"] = True
         elif mouse_position:
             options["mouse_position"] = True
 
@@ -6557,7 +6555,7 @@ class MAP(DIV):
         # These can be read/modified after _setup() & before xml()
         self.options = options
 
-        self.globals = globals
+        self.globals = js_globals
         self.i18n = i18n
         self.scripts = scripts
 
@@ -6607,14 +6605,14 @@ class MAP(DIV):
         js_global_append(i18n)
 
         globals_dict = self.globals
-        globals = []
-        globals_append = globals.append
+        js_globals = []
+        globals_append = js_globals.append
         dumps = json.dumps
         for key, val in globals_dict.items():
             # @ToDo: Check if already inserted (optimise multiple maps)
             globals_append('''S3.gis.%s=%s''' % (key, dumps(val, separators=SEPARATORS)))
-        globals = '''\n'''.join(globals)
-        js_global_append(globals)
+        js_globals = '''\n'''.join(js_globals)
+        js_global_append(js_globals)
 
         scripts = s3.scripts
         script = URL(c="static", f="scripts/S3/s3.gis.loader.js")
@@ -6828,8 +6826,8 @@ def addFeatureResources(feature_resources):
     for layer in feature_resources:
         name = str(layer["name"])
         _layer = dict(name=name)
-        id = str(layer["id"])
-        id = re.sub("\W", "_", id)
+        _id = str(layer["id"])
+        _id = re.sub("\W", "_", _id)
         _layer["id"] = id
 
         # Are we loading a Catalogue Layer or a simple URL?
@@ -7073,6 +7071,8 @@ class Projection(object):
 class Layer(object):
     """
         Abstract base class for Layers from Catalogue
+
+        @ToDo: Single DB query for all layers instead of 1 per layer type
     """
 
     def __init__(self):
@@ -7145,7 +7145,7 @@ class Layer(object):
             lappend(layer_id)
             # Check if layer is enabled
             _config = _record["gis_layer_config"]
-            if not _config.enabled:
+            if _config.enabled is False:
                 continue
             # Check user is allowed to access the layer
             role_required = record.role_required
@@ -7561,7 +7561,7 @@ class LayerGeoRSS(Layer):
             refresh = self.refresh or 900 # 15 minutes set if we have no data (legacy DB)
             if existing_cached_copy:
                 modified_on = existing_cached_copy.modified_on
-                cutoff = modified_on + timedelta(seconds=refresh)
+                cutoff = modified_on + datetime.timedelta(seconds=refresh)
                 if request.utcnow < cutoff:
                     download = False
             if download:
@@ -7841,7 +7841,7 @@ class LayerKML(Layer):
                 refresh = self.refresh or 900 # 15 minutes set if we have no data (legacy DB)
                 if cached:
                     modified_on = cached.modified_on
-                    cutoff = modified_on + timedelta(seconds=refresh)
+                    cutoff = modified_on + datetime.timedelta(seconds=refresh)
                     if request.utcnow < cutoff:
                         download = False
 
@@ -8384,10 +8384,10 @@ class S3Map(S3Method):
         url = URL(extension="geojson", args=None)
 
         # @ToDo: Support maps with multiple layers (Dashboards)
-        #id = "search_results_%s" % widget_id
-        id = "search_results"
+        #_id = "search_results_%s" % widget_id
+        _id = "search_results"
         feature_resources = [{"name"      : current.T("Search Results"),
-                              "id"        : id,
+                              "id"        : _id,
                               "layer_id"  : layer_id,
                               "tablename" : tablename,
                               "url"       : url,
@@ -8472,7 +8472,7 @@ class S3ExportPOI(S3Method):
             @param attr: controller options for this request
         """
 
-        import datetime, time
+        import time
         tfmt = current.xml.ISOFORMAT
 
         # Determine request Lx
@@ -8663,11 +8663,11 @@ class S3ImportPOI(S3Method):
             res_select = [TR(TD(B("%s: " % T("Select resources to import")),
                                 _colspan=3))]
             for resource in current.deployment_settings.get_gis_poi_resources():
-                id = "res_" + resource
-                res_select.append(TR(TD(LABEL(resource, _for=id)),
+                _id = "res_" + resource
+                res_select.append(TR(TD(LABEL(resource, _for=_id)),
                                      TD(INPUT(_type="checkbox",
                                               _name=id,
-                                              _id=id,
+                                              _id=_id,
                                               _checked=True)),
                                      TD()))
 
@@ -8816,7 +8816,7 @@ class S3ImportPOI(S3Method):
 
                 for tablename in import_res:
                     try:
-                        table = s3db[tablename]
+                        s3db[tablename]
                     except:
                         # Module disabled
                         continue
@@ -8824,8 +8824,8 @@ class S3ImportPOI(S3Method):
                     s3xml = xml.transform(tree, stylesheet_path=stylesheet,
                                           name=resource.name)
                     try:
-                        success = resource.import_xml(s3xml,
-                                                      ignore_errors=ignore_errors)
+                        resource.import_xml(s3xml,
+                                            ignore_errors=ignore_errors)
                         import_count += resource.import_count
                     except:
                         response.error += str(sys.exc_info()[1])

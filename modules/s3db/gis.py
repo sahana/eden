@@ -3498,6 +3498,7 @@ class S3MapModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
+                  deduplicate = self.gis_layer_openstreetmap_deduplicate,
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
@@ -4113,9 +4114,6 @@ class S3MapModel(S3Model):
     @staticmethod
     def gis_layer_kml_deduplicate(item):
         """
-          This callback will be called when importing Symbology records it will look
-          to see if the record being imported is a duplicate.
-
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
@@ -4136,11 +4134,30 @@ class S3MapModel(S3Model):
         
     # -------------------------------------------------------------------------
     @staticmethod
+    def gis_layer_openstreetmap_deduplicate(item):
+        """
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+        """
+
+        if item.tablename == "gis_layer_openstreetmap":
+            # Match if url1 is identical
+            table = item.table
+            data = item.data
+            url1 = data.url1
+            query = (table.url1 == url1)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
     def gis_layer_wfs_deduplicate(item):
         """
-          This callback will be called when importing Symbology records it will look
-          to see if the record being imported is a duplicate.
-
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
@@ -4165,9 +4182,6 @@ class S3MapModel(S3Model):
     @staticmethod
     def gis_layer_shapefile_deduplicate(item):
         """
-          This callback will be called when importing Symbology records it will look
-          to see if the record being imported is a duplicate.
-
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 

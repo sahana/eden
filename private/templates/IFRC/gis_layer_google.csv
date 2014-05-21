@@ -1,6 +1,7 @@
-"Name","Description","Type","Enabled","Default","Config"
+Name,Description,Type,Enabled,Default,Config
 "Google Maps","Streets","maps","True",,
-"Google Maps","Streets","maps","True","True","TL"
+"Google Maps","Streets","maps","True","True",TL
+"Google Maps","Streets","maps","True","True",VN
 "Google Hybrid","Streets over Satellite imagery","hybrid","False",,
 "Google Satellite","Satellite imagery","satellite","True",,
 "Google Terrain","Streets over topography","terrain","False",,

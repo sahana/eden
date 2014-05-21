@@ -2122,7 +2122,11 @@ class S3HRSkillModel(S3Model):
         levels = hierarchy.keys()
         if len(settings.get_gis_countries()) == 1 or \
            s3.gis.config.region_location_id:
-            levels.remove("L0")
+            try:
+                levels.remove("L0")
+            except ValueError:
+                # Already removed
+                pass
 
         filter_widgets = [
             S3TextFilter(["course_id$name",
@@ -5451,7 +5455,11 @@ def hrm_human_resource_controller(extra_filter=None):
             levels = hierarchy.keys()
             if len(settings.get_gis_countries()) == 1 or \
                s3.gis.config.region_location_id:
-                levels.remove("L0")
+                try:
+                    levels.remove("L0")
+                except ValueError:
+                    # Already removed
+                    pass
 
             for level in levels:
                 rappend("location_id$%s" % level)

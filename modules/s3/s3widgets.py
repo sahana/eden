@@ -3946,7 +3946,7 @@ class S3LocationSelectorWidget2(FormWidget):
                s3.gis.config.region_location_id:
                 try:
                     levels.remove("L0")
-                except:
+                except ValueError:
                     pass
 
         hide_lx = self.hide_lx
