@@ -503,15 +503,13 @@ class S3Importer(S3Method):
             error_tip = ""
 
         rowcount = len(self._get_all_items(upload_id))
-        rheader = DIV(TABLE(
-            TR(
-                TH("%s: " % self.messages.job_total_records),
-                TD(rowcount, _id="totalAvailable"),
-                TH("%s: " % self.messages.job_records_selected),
-                TD(0, _id="totalSelected"),
-                TH(error_tip)
-              ),
-        ))
+        rheader = DIV(TABLE(TR(TH("%s: " % self.messages.job_total_records),
+                               TD(rowcount, _id="totalAvailable"),
+                               TH("%s: " % self.messages.job_records_selected),
+                               TD(0, _id="totalSelected"),
+                               TH(error_tip)
+                               ),
+                            ))
 
         output["title"] = self.messages.title_job_read
         output["rheader"] = rheader

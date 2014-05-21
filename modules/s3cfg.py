@@ -65,6 +65,7 @@ class S3Config(Storage):
                     "el": "%d/%m/%Y",
                     "es": "%d/%m/%Y",
                     "fr": "%d/%m/%Y",
+                    "hr": "%d.%m.%Y",
                     "it": "%d/%m/%Y",
                     "ja": "%Y/%m/%d",
                     "km": "%d-%m-%Y",
@@ -75,6 +76,7 @@ class S3Config(Storage):
                     "pt": "%d/%m/%Y",
                     "pt-br": "%d/%m/%Y",
                     "ru": "%d.%m.%Y",
+                    "sr": "%d.%m.%Y",
                     "sv": "%Y-%m-%d",
                     #"tet": "",
                     #"tl": "",
@@ -1018,6 +1020,7 @@ class S3Config(Storage):
                                                        ("ur", "اردو"),
                                                        ("vi", "Tiếng Việt"),
                                                        ]))
+
     def get_L10n_languages_readonly(self):
         return self.L10n.get("languages_readonly", True)
 
