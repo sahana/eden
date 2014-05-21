@@ -1229,7 +1229,7 @@ def s3_orderby_fields(table, orderby, expr=False):
             tn, fn = ([tablename] + fn.split(".", 1))[-2:]
             if tn:
                 try:
-                    f = s3db[tn][fn]
+                    f = s3db.table(tn, db_only=True)[fn]
                 except (AttributeError, KeyError):
                     continue
             else:
