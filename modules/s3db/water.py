@@ -45,6 +45,8 @@ class S3WaterModel(S3Model):
              "water_zone",
              "water_river",
              "water_gauge",
+             #"water_debris_basin",
+             #"water_reservoir",
              ]
 
     def model(self):
@@ -52,9 +54,9 @@ class S3WaterModel(S3Model):
         T = current.T
         db = current.db
 
-        # Shortcuts
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        location_id = self.gis_location_id
 
         # -----------------------------------------------------------
         # Water Zone Types
@@ -62,7 +64,8 @@ class S3WaterModel(S3Model):
         tablename = "water_zone_type"
         define_table(tablename,
                      Field("name",
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -94,19 +97,21 @@ class S3WaterModel(S3Model):
         tablename = "water_zone"
         define_table(tablename,
                      Field("name",
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      Field("zone_type_id", db.water_zone_type,
+                           label = T("Type"),
+                           represent = zone_type_represent,
                            requires = IS_EMPTY_OR(
                                        IS_ONE_OF(db, "water_zone_type.id",
                                                  zone_type_represent,
                                                  sort=True)),
-                           represent = zone_type_represent,
                            comment = S3AddResourceLink(c="water",
                                                        f="zone_type",
                                                        label=ADD_ZONE_TYPE,
                                                        tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
-                           label=T("Type")),
-                     self.gis_location_id(
+                           ),
+                     location_id(
                         widget = S3LocationSelectorWidget2(
                            catalog_layers=True,
                            polygons=True
@@ -116,9 +121,8 @@ class S3WaterModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ZONE = T("Add Zone")
         crud_strings[tablename] = Storage(
-            label_create = ADD_ZONE,
+            label_create = T("Add Zone"),
             title_display = T("Zone Details"),
             title_list = T("Zones"),
             title_update = T("Edit Zone"),
@@ -137,8 +141,15 @@ class S3WaterModel(S3Model):
         tablename = "water_river"
         define_table(tablename,
                      Field("name",
-                           label=T("Name"),
-                           requires = IS_NOT_EMPTY()),
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     location_id(
+                        widget = S3LocationSelectorWidget2(
+                           catalog_layers=True,
+                           polygons=True
+                           )
+                        ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -157,13 +168,14 @@ class S3WaterModel(S3Model):
 
         #represent = S3Represent(lookup = tablename)
         #river_id = S3ReusableField("river_id", "reference %s" % tablename,
-        #                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "water_river.id", represent)),
-        #                           represent = represent,
         #                           label = T("River"),
+        #                           ondelete = "RESTRICT",
+        #                           represent = represent,
+        #                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "water_river.id", represent)),
         #                           comment = S3AddResourceLink(c="water",
         #                                                       f="river",
         #                                                       title=ADD_RIVER),
-        #                           ondelete = "RESTRICT")
+        #                           )
 
         # -----------------------------------------------------------------------------
         # Gauges
@@ -179,32 +191,36 @@ class S3WaterModel(S3Model):
         tablename = "water_gauge"
         define_table(tablename,
                      Field("name",
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      Field("code",
-                           label=T("Code")),
+                           label = T("Code"),
+                           ),
                      #super_link("source_id", "doc_source_entity"),
-                     self.gis_location_id(),
+                     location_id(),
                      Field("url",
                            label = T("URL"),
-                           requires = IS_EMPTY_OR(IS_URL()),
                            represent = lambda url: \
-                                       A(url, _href=url, _target="blank")
+                                       A(url, _href=url, _target="blank"),
+                           requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("image_url",
-                           label=T("Image URL")),
+                           label = T("Image URL"),
+                           ),
                      Field("discharge", "integer",
-                           label = T("Discharge (cusecs)")),
+                           label = T("Discharge (cusecs)"),
+                           ),
                      Field("status", "integer",
-                           requires = IS_EMPTY_OR(IS_IN_SET(flowstatus_opts)),
+                           label = T("Flow Status"),
                            represent = lambda opt: \
-                           flowstatus_opts.get(opt, opt),
-                           label = T("Flow Status")),
+                            flowstatus_opts.get(opt, opt),
+                           requires = IS_EMPTY_OR(IS_IN_SET(flowstatus_opts)),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        ADD_GAUGE = T("Add Gauge")
         crud_strings[tablename] = Storage(
-            label_create = ADD_GAUGE,
+            label_create = T("Add Gauge"),
             title_display = T("Gauge Details"),
             title_list = T("Gauges"),
             title_update = T("Edit Gauge"),
@@ -213,9 +229,57 @@ class S3WaterModel(S3Model):
             msg_record_created = T("Gauge added"),
             msg_record_modified = T("Gauge updated"),
             msg_record_deleted = T("Gauge deleted"),
-            msg_list_empty = T("No Gauges currently registered"),
-            name_nice = T("Gauge"),
-            name_nice_plural = T("Gauges"))
+            msg_list_empty = T("No Gauges currently registered"))
+
+        # -----------------------------------------------------------------------------
+        # Debris Basins
+        # http://dpw.lacounty.gov/wrd/sediment/why_move_dirt.cfm
+        #
+        #tablename = "water_debris_basin"
+        #define_table(tablename,
+        #             Field("name",
+        #                   label = T("Name"),
+        #                   ),
+        #             location_id(),
+        #             s3_comments(),
+        #             *s3_meta_fields())
+
+        #crud_strings[tablename] = Storage(
+        #    label_create = T("Add Debris Basin"),
+        #    title_display = T("Debris Basin Details"),
+        #    title_list = T("Debris Basins"),
+        #    title_update = T("Edit Debris Basin"),
+        #    title_map = T("Map of Debris Basins"),
+        #    label_list_button = T("List Debris Basins"),
+        #    msg_record_created = T("Debris Basin added"),
+        #    msg_record_modified = T("Debris Basin updated"),
+        #    msg_record_deleted = T("Debris Basin deleted"),
+        #    msg_list_empty = T("No Debris Basins currently registered"))
+
+        # -----------------------------------------------------------------------------
+        # Reservoirs
+        # Water Storage areas
+        #
+        #tablename = "water_reservoir"
+        #define_table(tablename,
+        #             Field("name",
+        #                   label = T("Name"),
+        #                   ),
+        #             location_id(),
+        #             s3_comments(),
+        #             *s3_meta_fields())
+
+        #crud_strings[tablename] = Storage(
+        #    label_create = T("Add Reservoir"),
+        #    title_display = T("Reservoir Details"),
+        #    title_list = T("Reservoirs"),
+        #    title_update = T("Edit Reservoir"),
+        #    title_map = T("Map of Reservoirs"),
+        #    label_list_button = T("List Reservoirs"),
+        #    msg_record_created = T("Reservoir added"),
+        #    msg_record_modified = T("Reservoir updated"),
+        #    msg_record_deleted = T("Reservoir deleted"),
+        #    msg_list_empty = T("No Reservoirs currently registered"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

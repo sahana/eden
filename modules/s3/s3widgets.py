@@ -4601,7 +4601,7 @@ class S3LocationSelectorWidget2(FormWidget):
             # (=> multiple callbacks, as well as the need to migrate options from globals to a parameter)
             map = gis.show_map(id = "location_selector_%s" % fieldname,
                                collapsed = True,
-                               height = 320,
+                               height = 340,
                                width = 480,
                                add_feature = not polygons,
                                add_feature_active = not polygons,

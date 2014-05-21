@@ -1413,9 +1413,12 @@ class S3StatsPeopleModel(S3Model):
                            represent = IS_INT_AMOUNT.represent,
                            requires = IS_INT_IN_RANGE(0, 999999),
                            ),
-                     self.gis_location_id(label=T("Address")),
-                     self.pr_person_id(label=T("Contact Person"),
-                                       requires = IS_ADD_PERSON_WIDGET2(),
+                     self.gis_location_id(label = T("Address"),
+                                          ),
+                     self.pr_person_id(label = T("Contact Person"),
+                                       requires = IS_EMPTY_OR(
+                                                    IS_ADD_PERSON_WIDGET2()
+                                                    ),
                                        widget = S3AddPersonWidget2(controller="pr"),
                                        ),
                      s3_comments(),
@@ -1591,9 +1594,9 @@ class S3StatsTrainedPeopleModel(S3Model):
                      Field("value", "integer",
                            label = T("Number of Trained People"),
                            represent = IS_INT_AMOUNT.represent,
-                           requires=IS_EMPTY_OR(
-                                      IS_INT_IN_RANGE(0, 999999)
-                                    ),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, 999999)
+                                        ),
                            ),
                      self.org_organisation_id(),
                      self.gis_location_id(label=T("Address")),

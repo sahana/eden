@@ -2323,9 +2323,7 @@ def supply_item_entity_controller():
         msg_record_created = T("Item added"),
         msg_record_modified = T("Item updated"),
         msg_record_deleted = T("Item deleted"),
-        msg_list_empty = T("No Items currently registered"),
-        name_nice = T("Item"),
-        name_nice_plural = T("Items"))
+        msg_list_empty = T("No Items currently registered"))
 
     table.category = Field.Method("category",
                                   supply_item_entity_category)

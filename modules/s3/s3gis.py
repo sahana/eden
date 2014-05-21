@@ -2304,6 +2304,8 @@ class GIS(object):
                                         # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
                                         #        (although we *do* want the represent in the tooltips!)
                                         pass
+                                else:
+                                    represent = s3_unicode(represent)
                                 attribute[_attr[1]] = represent
                         attr[record_id] = attribute
 
@@ -6591,6 +6593,7 @@ class MAP(DIV):
         # @ToDo: Do this conditionally on whether Ext UI is used
         s3_include_ext()
 
+        dumps = json.dumps
         s3 = current.response.s3
 
         js_global_append = s3.js_global.append
@@ -6599,18 +6602,18 @@ class MAP(DIV):
         i18n = []
         i18n_append = i18n.append
         for key, val in i18n_dict.items():
-            # @ToDo: Check if already inserted (optimise multiple maps)
-            i18n_append('''i18n.%s="%s"''' % (key, val))
+            line = '''i18n.%s="%s"''' % (key, val)
+            if line not in i18n:
+                i18n_append(line)
         i18n = '''\n'''.join(i18n)
         js_global_append(i18n)
 
         globals_dict = self.globals
         js_globals = []
-        globals_append = js_globals.append
-        dumps = json.dumps
         for key, val in globals_dict.items():
-            # @ToDo: Check if already inserted (optimise multiple maps)
-            globals_append('''S3.gis.%s=%s''' % (key, dumps(val, separators=SEPARATORS)))
+            line = '''S3.gis.%s=%s''' % (key, dumps(val, separators=SEPARATORS))
+            if line not in js_globals:
+                js_globals.append(line)
         js_globals = '''\n'''.join(js_globals)
         js_global_append(js_globals)
 
@@ -6623,7 +6626,10 @@ class MAP(DIV):
         map_id = self.id
         options = self.options
         projection = options["projection"]
-        options = dumps(options, separators=SEPARATORS)
+        try:
+            options = dumps(options, separators=SEPARATORS)
+        except Exception, exception:
+            current.log.error("Map %s failed to initialise" % map_id, exception)
         plugin_callbacks = '''\n'''.join(self.plugin_callbacks)
         if callback:
             if callback == "DEFAULT":
@@ -6828,7 +6834,7 @@ def addFeatureResources(feature_resources):
         _layer = dict(name=name)
         _id = str(layer["id"])
         _id = re.sub("\W", "_", _id)
-        _layer["id"] = id
+        _layer["id"] = _id
 
         # Are we loading a Catalogue Layer or a simple URL?
         layer_id = layer.get("layer_id", None)
