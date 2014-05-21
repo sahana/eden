@@ -119,6 +119,7 @@ settings.base.guided_tour = True
 # http://www.loc.gov/standards/iso639-2/php/code_list.php
 #settings.L10n.languages = OrderedDict([
 #    ("ar", "العربية"),
+#    ("bs", "Bosanski"),
 #    ("en", "English"),
 #    ("fr", "Français"),
 #    ("de", "Deutsch"),
