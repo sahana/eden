@@ -1,4 +1,5 @@
 {{# Include dynamically added Scripts at the end of the body}}
+{{include "chat.html"}}
 {{for script in s3.scripts:}}
  {{=SCRIPT(_src=script)}}
 {{pass}}

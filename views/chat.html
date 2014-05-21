@@ -1,0 +1,13 @@
+{{chat_server = settings.get_chat_server()}}
+{{if chat_server:}} 
+{{if s3.debug:}}
+{{main_css = "<link href='/%s/static/styles/plugins/converse.css' rel='stylesheet' type='text/css'/>" % appname}}
+{{s3.scripts.append(URL(c="static", f="scripts", args=["converse.min.js"]))}}
+{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.chat.js"]))}}
+{{else:}}
+{{main_css = "<link href='/%s/static/styles/plugins/converse.min.css' rel='stylesheet' type='text/css'/>" % appname}}
+{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.chat.min.js"]))}}
+{{pass}}
+{{s3.js_global.append('''S3.chat_url="%s"\n$('link:first').before("%s")''' % ("http://"+str(chat_server+"/http-bind/"),main_css))}}
+<div id="conversejs"></div>
+{{pass}}
