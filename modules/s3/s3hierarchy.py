@@ -799,7 +799,8 @@ class S3Hierarchy(object):
             table = current.s3db.table(tablename) if tablename else None
             if table and "name" in table.fields:
                 from s3fields import S3Represent
-                self.represent = renderer = S3Represent(lookup=tablename)
+                self.represent = renderer = S3Represent(lookup = tablename,
+                                                        key = self.pkey.name)
             else:
                 renderer = s3_unicode
         if hasattr(renderer, "bulk"):
