@@ -17,6 +17,12 @@ def index():
     return s3db.cms_index(module)
 
 # -----------------------------------------------------------------------------
+def debris_basin():
+    """ Debris Basins, RESTful controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def gauge():
     """ Flood Gauges, RESTful controller """
 

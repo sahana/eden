@@ -4663,7 +4663,7 @@ class S3POIModel(S3Model):
                      poi_type_id(),
                      Field("name",
                            label = T("Title"),
-                           requires = IS_NOT_EMPTY(),
+                           #requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(comment = None,
                                  label = T("Description"),

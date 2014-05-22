@@ -29,8 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import *
-from gluon.storage import Storage
+from gluon import current, A, DIV, LI, UL
 
 from s3filter import S3FilterForm
 from s3gis import MAP
@@ -67,7 +66,6 @@ class S3Summary(S3Method):
 
         output = {}
         response = current.response
-        s3 = response.s3
         resource = self.resource
         get_config = resource.get_config
 
@@ -276,7 +274,7 @@ class S3Summary(S3Method):
             # Render the Sections as Tabs
             script = '''S3.search.summary_tabs("%s",%s,"%s")''' % \
                      (form_id, active_tab, pending)
-            s3.jquery_ready.append(script)
+            response.s3.jquery_ready.append(script)
 
         if active_map:
             # If there is a map on the active tab then we need to add

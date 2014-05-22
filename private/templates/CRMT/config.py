@@ -282,7 +282,7 @@ settings.gis.overview = False
 # Uncomment to hide the permalink control (we have our own saved maps functionality)
 settings.gis.permalink = False
 # Uncomment to disable the ability to add PoIs to the main map
-settings.gis.pois = False
+settings.gis.pois = False # Doesn't yet work without the toolbar
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
 # GeoNames username
@@ -641,7 +641,7 @@ def customise_project_activity_controller(**attr):
                            "name",
                            "activity_activity_type.activity_type_id",
                            "activity_group.group_id",
-                           "location_id",
+                           (T("Address"), "location_id"),
                            "location_id$addr_postcode",
                            "person_id",
                            (T("Number of People"), "beneficiary.value"),
@@ -657,7 +657,6 @@ def customise_project_activity_controller(**attr):
             s3.crud_strings[tablename].title_update = T("Update Activities")
             table.date.label = T("Date")
             table.name.label = T("Activity Name")
-            table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             # Custom Form (Read/Create/Update inc embedded Summary)
@@ -1244,7 +1243,7 @@ def customise_org_facility_controller(**attr):
                            (T("Type of Place"), "facility_type.name"),
                            "organisation_id",
                            "site_org_group.group_id",
-                           "location_id",
+                           (T("Address"), "location_id"),
                            "location_id$addr_postcode",
                            "contact",
                            "phone1",
@@ -1262,7 +1261,6 @@ def customise_org_facility_controller(**attr):
             # CRUD Strings / Represent
             table.name.label = T("Place Name")
             table.phone1.label = T("Phone")
-            table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
@@ -1459,7 +1457,7 @@ def customise_stats_people_controller(**attr):
                            "parameter_id",
                            "value",
                            "people_group.group_id",
-                           "location_id",
+                           (T("Address"), "location_id"),
                            "location_id$addr_postcode",
                            "person_id",
                            "comments",
@@ -1471,7 +1469,6 @@ def customise_stats_people_controller(**attr):
 
         if r.interactive or representation == "json": #or representation == "plain"
             # CRUD Strings / Represent
-            #table.location_id.label = T("Address")
             #table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
@@ -1502,6 +1499,7 @@ def customise_stats_people_controller(**attr):
                 field.requires = IS_LOCATION_SELECTOR2(levels=levels)
                 field.widget = S3LocationSelectorWidget2(levels=levels,
                                                          hide_lx=False,
+                                                         #polygons=True,
                                                          reverse_lx=True,
                                                          show_postcode=True,
                                                          show_map=False,
@@ -1606,6 +1604,10 @@ def customise_stats_people_controller(**attr):
                                # No Map for People
                                #summary = [s for s in settings.ui.summary if s["name"] != "map"],
                                )
+
+            elif r.representation == "plain":
+                # Map Popups
+                table.location_id.label = T("Address")
 
         return True
     s3.prep = custom_prep
@@ -1796,7 +1798,7 @@ def customise_vulnerability_risk_controller(**attr):
                            "name",
                            #(T("Hazard Type"), "hazard_id"),
                            "risk_group.group_id",
-                           "location_id",
+                           (T("Address"), "location_id"),
                            "location_id$addr_postcode",
                            "comments",
                            ]
@@ -1808,7 +1810,6 @@ def customise_vulnerability_risk_controller(**attr):
         if r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             table.name.label = T("Description")
-            table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
@@ -2270,4 +2271,9 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = None
     )),
+    #("water", Storage(
+    #    name_nice = T("Water"),
+    #    restricted = True,
+    #    module_type = None
+    #)),
 ])

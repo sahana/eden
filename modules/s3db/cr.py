@@ -90,9 +90,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Camp Type added"),
                 msg_record_modified = T("Camp Type updated"),
                 msg_record_deleted = T("Camp Type deleted"),
-                msg_list_empty = T("No Camp Types currently registered"),
-                name_nice = T("Camp"),
-                name_nice_plural = T("Camps"))
+                msg_list_empty = T("No Camp Types currently registered"))
         else:
             ADD_SHELTER_TYPE = T("Create Shelter Type")
             SHELTER_TYPE_LABEL = T("Shelter Type")
@@ -105,9 +103,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Shelter Type added"),
                 msg_record_modified = T("Shelter Type updated"),
                 msg_record_deleted = T("Shelter Type deleted"),
-                msg_list_empty = T("No Shelter Types currently registered"),
-                name_nice = T("Shelter"),
-                name_nice_plural = T("Shelters"))
+                msg_list_empty = T("No Shelter Types currently registered"))
 
         configure(tablename,
                   deduplicate = self.cr_shelter_type_duplicate,
@@ -149,9 +145,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Camp Service added"),
                 msg_record_modified = T("Camp Service updated"),
                 msg_record_deleted = T("Camp Service deleted"),
-                msg_list_empty = T("No Camp Services currently registered"),
-                name_nice = T("Camp Service"),
-                name_nice_plural = T("Camp Services"))
+                msg_list_empty = T("No Camp Services currently registered"))
         else:
             ADD_SHELTER_SERVICE = T("Create Shelter Service")
             SHELTER_SERVICE_LABEL = T("Shelter Service")
@@ -164,9 +158,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Shelter Service added"),
                 msg_record_modified = T("Shelter Service updated"),
                 msg_record_deleted = T("Shelter Service deleted"),
-                msg_list_empty = T("No Shelter Services currently registered"),
-                name_nice = T("Shelter Service"),
-                name_nice_plural = T("Shelter Services"))
+                msg_list_empty = T("No Shelter Services currently registered"))
 
         shelter_service_id = S3ReusableField("shelter_service_id",
                                              "list:reference cr_shelter_service",
@@ -277,9 +269,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Camp added"),
                 msg_record_modified = T("Camp updated"),
                 msg_record_deleted = T("Camp deleted"),
-                msg_list_empty = T("No Camps currently registered"),
-                name_nice = T("Camp"),
-                name_nice_plural = T("Camps"))
+                msg_list_empty = T("No Camps currently registered"))
 
         else:
             ADD_SHELTER = T("Create Shelter")
@@ -294,9 +284,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Shelter added"),
                 msg_record_modified = T("Shelter updated"),
                 msg_record_deleted = T("Shelter deleted"),
-                msg_list_empty = T("No Shelters currently registered"),
-                name_nice = T("Shelter"),
-                name_nice_plural = T("Shelters"))
+                msg_list_empty = T("No Shelters currently registered"))
 
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
@@ -452,9 +440,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Camp Status added"),
                 msg_record_modified = T("Camp Status updated"),
                 msg_record_deleted = T("Camp Status deleted"),
-                msg_list_empty = T("No Camp Statuses currently registered"),
-                name_nice = T("Camp Status"),
-                name_nice_plural = T("Camp Statuses"))
+                msg_list_empty = T("No Camp Statuses currently registered"))
         else:
             ADD_SHELTER_STATUS = T("Create Shelter Status")
             SHELTER_STATUS_LABEL = T("Shelter Status")
@@ -467,9 +453,7 @@ class S3CampDataModel(S3Model):
                 msg_record_created = T("Shelter Status added"),
                 msg_record_modified = T("Shelter Status updated"),
                 msg_record_deleted = T("Shelter Status deleted"),
-                msg_list_empty = T("No Shelter Statuses currently registered"),
-                name_nice = T("Shelter Status"),
-                name_nice_plural = T("Shelter Statuses"))
+                msg_list_empty = T("No Shelter Statuses currently registered"))
 
         # Pass variables back to global scope (response.s3.*)
         return Storage(

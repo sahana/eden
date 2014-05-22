@@ -60,10 +60,12 @@ class S3Config(Storage):
 
     # Formats from static/scripts/i18n/jquery-ui-i18n.js converted to Python style
     date_formats = {"ar": "%d/%m/%Y",
+                    "bs": "%d.%m.%Y",
                     "de": "%d.%m.%Y",
                     "el": "%d/%m/%Y",
                     "es": "%d/%m/%Y",
                     "fr": "%d/%m/%Y",
+                    "hr": "%d.%m.%Y",
                     "it": "%d/%m/%Y",
                     "ja": "%Y/%m/%d",
                     "km": "%d-%m-%Y",
@@ -74,6 +76,7 @@ class S3Config(Storage):
                     "pt": "%d/%m/%Y",
                     "pt-br": "%d/%m/%Y",
                     "ru": "%d.%m.%Y",
+                    "sr": "%d.%m.%Y",
                     "sv": "%Y-%m-%d",
                     #"tet": "",
                     #"tl": "",
@@ -997,6 +1000,7 @@ class S3Config(Storage):
         return self.L10n.get("languages", OrderedDict([("ar", "العربية"),
                                                        ("zh-cn", "中文 (简体)"),
                                                        ("zh-tw", "中文 (繁體)"),
+                                                       #("bs", "Bosanski"),
                                                        ("en", "English"),
                                                        ("fr", "Français"),
                                                        ("de", "Deutsch"),
@@ -1016,6 +1020,7 @@ class S3Config(Storage):
                                                        ("ur", "اردو"),
                                                        ("vi", "Tiếng Việt"),
                                                        ]))
+
     def get_L10n_languages_readonly(self):
         return self.L10n.get("languages_readonly", True)
 
