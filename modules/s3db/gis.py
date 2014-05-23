@@ -1119,8 +1119,8 @@ class S3LocationNameModel(S3Model):
         if job.tablename == "gis_location_name":
             table = job.table
             data = job.data
-            language = "language" in data and data.language or None
-            location = "location_id" in data and data.location_id or None
+            language = data.get("language", None)
+            location = data.get("location", None)
 
             if not language or not location:
                 return
@@ -1221,8 +1221,8 @@ class S3LocationTagModel(S3Model):
         if job.tablename == "gis_location_tag":
             table = job.table
             data = job.data
-            tag = "tag" in data and data.tag or None
-            location = "location_id" in data and data.location_id or None
+            tag = data.get("tag", None)
+            location = data.get("location", None)
 
             if not tag or not location:
                 return
@@ -4637,9 +4637,10 @@ class S3POIModel(S3Model):
                                       sortby = "name",
                                       )
 
-        #self.configure(tablename,
-        #               onaccept = self.gis_poi_type_onaccept,
-        #               )
+        self.configure(tablename,
+                       deduplicate = self.gis_poi_type_deduplicate,
+                       #onaccept = self.gis_poi_type_onaccept,
+                       )
 
         ADD_POI_TYPE = T("Create PoI Type")
         crud_strings[tablename] = Storage(
@@ -4691,6 +4692,28 @@ class S3POIModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_poi_type_deduplicate(job):
+        """
+           If the record is a duplicate then it will set the job method to update
+        """
+
+        if job.tablename == "gis_poi_type":
+            table = job.table
+            data = job.data
+            name = data.get("name", None)
+
+            if not name:
+                return
+
+            _duplicate = current.db(table.name == name).select(table.id,
+                                                               limitby=(0, 1)
+                                                               ).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
