@@ -253,13 +253,15 @@ settings.gis.countries = ["US"]
 settings.gis.geocode_imported_addresses = "google"
 
 # Uncomment to Hide the Toolbar from the main Map
-settings.gis.toolbar = False
-# Hide unnecessary Toolbar items
-#settings.gis.nav_controls = False
+#settings.gis.toolbar = False
 # Uncomment to use CMS to provide Metadata on Map Layers
 settings.gis.layer_metadata = True
 # Uncomment to show Clear Layers tool
-settings.gis.clear_layers = True
+settings.gis.clear_layers = "toolbar"
+# Uncomment to hide the Geolocation control
+settings.gis.geolocate_control = False
+# Uncomment to hide the WMS GetFeatureInfo control
+settings.gis.getfeature_control = False
 # Uncomment to hide Layer Properties tool
 settings.gis.layer_properties = False
 # Uncomment to hide the Base Layers folder in the LayerTree
@@ -285,6 +287,10 @@ settings.gis.permalink = False
 settings.gis.pois = False # Doesn't yet work without the toolbar
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
+# Uncomment to hide the Save control, or set to "float"
+settings.gis.save = "float"
+# Uncomment to hide the GeoNames search box
+settings.gis.search_geonames = False
 # GeoNames username
 settings.gis.geonames_username = "lacrmt"
 

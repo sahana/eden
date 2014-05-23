@@ -246,6 +246,10 @@ settings.L10n.decimal_separator = "."
 #settings.gis.layer_metadata = True
 # Uncomment to show Clear Layers tool
 #settings.gis.clear_layers = True
+# Uncomment to hide the Geolocation control
+#settings.gis.geolocate_control = False
+# Uncomment to hide the WMS GetFeatureInfo control
+#settings.gis.getfeature_control = False
 # Uncomment to hide Layer Properties tool
 #settings.gis.layer_properties = False
 # Uncomment to hide the Base Layers folder in the LayerTree
@@ -270,6 +274,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.pois = False
 # PoIs to export in KML/OSM feeds from Admin locations
 #settings.gis.poi_resources = ["cr_shelter", "hms_hospital", "org_office"]
+# Uncomment to hide the Save control, or set to "float"
+#settings.gis.save = False
 # Uncomment to hide the ScaleLine control
 #settings.gis.scaleline = False
 # Uncomment to hide the GeoNames search box

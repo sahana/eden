@@ -632,10 +632,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
                 addPolygonControl(map, null, active, true);
             }
-            if (options.save) {
-                addSavePanel(map);
-            }
             addThrobber(map);
+        }
+        if (options.save == 'float') {
+            addSavePanel(map);
         }
 
         var mapPanelContainer = new Ext.Panel({
@@ -1025,7 +1025,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             children: nodesArr
         });
 
-        if (i18n.gis_properties || i18n.gis_clearlayers || i18n.gis_uploadlayer) {
+        var clear_layers = options.clearlayers & options.clearlayers != 'toolbar';
+
+        if (clear_layers || i18n.gis_properties || i18n.gis_uploadlayer) {
             var tbar = new Ext.Toolbar();
         } else {
             var tbar = null;
@@ -1071,8 +1073,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             addLayerPropertiesButton(map, layerTree);
         }
         // Clear Layers
-        if (i18n.gis_clearlayers) {
-            addClearLayersButton(map, layerTree);
+        if (clear_layers) {
+            addClearLayersButton(map, layerTree.getTopToolbar());
         }
 
         return layerTree;
@@ -3448,24 +3450,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             tooltip: i18n.gis_zoomfull
         });
 
-        var zoomout = new GeoExt.Action({
-            control: new OpenLayers.Control.ZoomBox({ out: true }),
-            map: map,
-            iconCls: 'zoomout',
-            // button options
-            tooltip: i18n.gis_zoomout,
-            toggleGroup: 'controls'
-        });
-
-        var zoomin = new GeoExt.Action({
-            control: new OpenLayers.Control.ZoomBox(),
-            map: map,
-            iconCls: 'zoomin',
-            // button options
-            tooltip: i18n.gis_zoominbutton,
-            toggleGroup: 'controls'
-        });
-
         var line_pressed,
             pan_pressed,
             point_pressed,
@@ -3571,13 +3555,31 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         toolbar.add(zoomfull);
 
-        if (navigator.geolocation) {
+        if (i18n.gis_geoLocate && navigator.geolocation) {
             // HTML5 geolocation is available :)
             addGeolocateControl(toolbar);
         }
 
-        // Don't include the Nav controls in the Location Selector
+        // Nav Controls
         if (undefined === options.nav) {
+            var zoomout = new GeoExt.Action({
+                control: new OpenLayers.Control.ZoomBox({ out: true }),
+                map: map,
+                iconCls: 'zoomout',
+                // button options
+                tooltip: i18n.gis_zoomout,
+                toggleGroup: 'controls'
+            });
+
+            var zoomin = new GeoExt.Action({
+                control: new OpenLayers.Control.ZoomBox(),
+                map: map,
+                iconCls: 'zoomin',
+                // button options
+                tooltip: i18n.gis_zoominbutton,
+                toggleGroup: 'controls'
+            });
+
             var panButton = new GeoExt.Action({
                 control: new OpenLayers.Control.Navigation(),
                 map: map,
@@ -3598,7 +3600,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         // Save Viewport
-        if (options.save) {
+        if (options.save && options.save != 'float') {
             addSaveButton(toolbar);
         }
         toolbar.addSeparator();
@@ -3606,6 +3608,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Measure Tools
         // @ToDo: Make these optional
         addMeasureControls(toolbar);
+
+        if (options.clear_layers == 'toolbar') {
+            addClearLayersButton(map, toolbar);
+        }
 
         // MGRS Grid PDFs
         if (options.mgrs_url) {
@@ -4550,7 +4556,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Get the State of the Map
     // so that it can be Saved & Reloaded later
     // @ToDo: so that it can be Saved for Printing
-    // @ToDo: so that a Bookmark can be shared
     var getState = function(map) {
 
         // State stored a a JSON array
@@ -4898,7 +4903,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Clear Layers control
-    var addClearLayersButton = function(map, layerTree) {
+    var addClearLayersButton = function(map, toolbar) {
         var clearLayersButton = new Ext.Toolbar.Button({
             iconCls: 'icon-clearlayers',
             tooltip: i18n.gis_clearlayers,
@@ -4912,7 +4917,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
             }
         });
-        var toolbar = layerTree.getTopToolbar();
         toolbar.add(clearLayersButton);
     };
 

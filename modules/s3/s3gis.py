@@ -6244,9 +6244,11 @@ class MAP(DIV):
             i18n["gis_length_message"] = T("The length is")
             i18n["gis_length_tooltip"] = T("Measure Length: Click the points along the path & end with a double-click")
             i18n["gis_zoomfull"] = T("Zoom to maximum map extent")
-            i18n["gis_zoominbutton"] = T("Zoom In: click in the map or use the left mouse button and drag to create a rectangle")
-            i18n["gis_zoomout"] = T("Zoom Out: click in the map or use the left mouse button and drag to create a rectangle")
-            i18n["gis_geoLocate"] = T("Zoom to Current Location")
+
+            if settings.get_gis_geolocate_control():
+                # Presence of label turns feature on in s3.gis.js
+                # @ToDo: Provide explicit option to support multiple maps in a page with different options
+                i18n["gis_geoLocate"] = T("Zoom to Current Location")
 
             # Search
             if opts.get("search", False):
@@ -6264,6 +6266,8 @@ class MAP(DIV):
             if nav is None:
                 nav = settings.get_gis_nav_controls()
             if nav:
+                i18n["gis_zoominbutton"] = T("Zoom In: click in the map or use the left mouse button and drag to create a rectangle")
+                i18n["gis_zoomout"] = T("Zoom Out: click in the map or use the left mouse button and drag to create a rectangle")
                 i18n["gis_pan"] = T("Pan Map: keep the left mouse button pressed and drag the map")
                 i18n["gis_navPrevious"] = T("Previous View")
                 i18n["gis_navNext"] = T("Next View")
@@ -6278,7 +6282,7 @@ class MAP(DIV):
 
             # Show Save control?
             # e.g. removed within S3LocationSelectorWidget[2]
-            if opts.get("save", True) and auth.is_logged_in():
+            if opts.get("save") is True and auth.s3_logged_in():
                 options["save"] = True
                 i18n["gis_save"] = T("Save: Default Lat, Lon & Zoom for the Viewport")
                 if MAP_ADMIN or (config.pe_id == auth.user.pe_id):
@@ -6299,35 +6303,38 @@ class MAP(DIV):
                 options["mgrs_name"] = mgrs["name"]
                 options["mgrs_url"] = mgrs["url"]
         else:
-            # No Toolbar
-            # Show Save control?
-            # e.g. removed within S3LocationSelectorWidget[2]
-            if opts.get("save", True) and auth.is_logged_in():
-                db = current.db
-                permit = auth.s3_has_permission
-                ctable = db.gis_config
-                if permit("create", ctable):
-                    options["save"] = True
-                    i18n["gis_save_map"] = T("Save Map")
-                    i18n["gis_new_map"] = T("Save as New Map?")
-                    i18n["gis_name_map"] = T("Name of Map")
-                    i18n["save"] = T("Save")
-                    i18n["saved"] = T("Saved")
-                    config_id = config.id
-                    _config = db(ctable.id == config_id).select(ctable.uuid,
-                                                                ctable.name,
-                                                                limitby=(0, 1),
-                                                                ).first()
-                    if MAP_ADMIN:
-                        i18n["gis_my_maps"] = T("Saved Maps")
-                    else:
-                        options["pe_id"] = auth.user.pe_id
-                        i18n["gis_my_maps"] = T("My Maps")
-                    if permit("update", ctable, record_id=config_id):
-                        options["config_id"] = config_id
-                        options["config_name"] = _config.name
-                    elif _config.uuid != "SITE_DEFAULT":
-                        options["config_name"] = _config.name
+            # No toolbar
+            if opts.get("save") is True:
+                opts["save"] = "float"
+
+        # Show Save control?
+        # e.g. removed within S3LocationSelectorWidget[2]
+        if opts.get("save") == "float" and auth.s3_logged_in():
+            db = current.db
+            permit = auth.s3_has_permission
+            ctable = db.gis_config
+            if permit("create", ctable):
+                options["save"] = "float"
+                i18n["gis_save_map"] = T("Save Map")
+                i18n["gis_new_map"] = T("Save as New Map?")
+                i18n["gis_name_map"] = T("Name of Map")
+                i18n["save"] = T("Save")
+                i18n["saved"] = T("Saved")
+                config_id = config.id
+                _config = db(ctable.id == config_id).select(ctable.uuid,
+                                                            ctable.name,
+                                                            limitby=(0, 1),
+                                                            ).first()
+                if MAP_ADMIN:
+                    i18n["gis_my_maps"] = T("Saved Maps")
+                else:
+                    options["pe_id"] = auth.user.pe_id
+                    i18n["gis_my_maps"] = T("My Maps")
+                if permit("update", ctable, record_id=config_id):
+                    options["config_id"] = config_id
+                    options["config_name"] = _config.name
+                elif _config.uuid != "SITE_DEFAULT":
+                    options["config_name"] = _config.name
 
         # Legend panel
         legend = opts.get("legend", False)
@@ -6370,8 +6377,9 @@ class MAP(DIV):
                 options["draw_polygon"] = "inactive"
 
         # Clear Layers
-        if settings.get_gis_clear_layers():
-            # Presence of label turns feature on in s3.gis.js
+        clear_layers = settings.get_gis_clear_layers()
+        if clear_layers:
+            options["clear_layers"] = clear_layers
             i18n["gis_clearlayers"] = T("Clear all Layers")
 
         # Layer Properties
@@ -6546,7 +6554,7 @@ class MAP(DIV):
 
         # WMS getFeatureInfo
         # (loads conditionally based on whether queryable WMS Layers have been added)
-        if s3.gis.get_feature_info:
+        if s3.gis.get_feature_info and settings.get_gis_getfeature_control():
             # Presence of label turns feature on
             # @ToDo: Provide explicit option to support multiple maps in a page with different options
             i18n["gis_get_feature_info"] = T("Get Feature Info")
@@ -6869,9 +6877,9 @@ def addFeatureResources(feature_resources):
             url = "%s.geojson?layer=%i&components=None&maxdepth=%s%s" % \
                 (URL(row.controller, row.function), row.id, maxdepth, show_ids)
             # Use specified filter or fallback to the one in the layer
-            filter = layer.get("filter", row.filter)
-            if filter:
-                url = "%s&%s" % (url, filter)
+            _filter = layer.get("filter", row.filter)
+            if _filter:
+                url = "%s&%s" % (url, _filter)
             if row.trackable:
                 url = "%s&track=1" % url
             opacity = layer.get("opacity", row.opacity)
@@ -6881,7 +6889,7 @@ def addFeatureResources(feature_resources):
                                          row.cluster_distance)
             cluster_threshold = layer.get("cluster_threshold",
                                           row.cluster_threshold)
-            dir = layer.get("dir", row.dir)
+            _dir = layer.get("dir", row.dir)
             if style:
                 try:
                     # JSON Object?
@@ -6922,7 +6930,7 @@ def addFeatureResources(feature_resources):
                                          CLUSTER_DISTANCE)
             cluster_threshold = layer.get("cluster_threshold",
                                           CLUSTER_THRESHOLD)
-            dir = layer.get("dir", None)
+            _dir = layer.get("dir", None)
             style = layer.get("style", None)
             if style:
                 try:
@@ -6943,8 +6951,8 @@ def addFeatureResources(feature_resources):
             _layer["cluster_distance"] = cluster_distance
         if cluster_threshold != CLUSTER_THRESHOLD:
             _layer["cluster_threshold"] = cluster_threshold
-        if dir:
-            _layer["dir"] = dir
+        if _dir:
+            _layer["dir"] = _dir
 
         if style:
             _layer["style"] = style
@@ -8790,7 +8798,8 @@ class S3ImportPOI(S3Method):
                            ]
                     import subprocess
                     try:
-                        result = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                        #result = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                        subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
                     except subprocess.CalledProcessError, e:
                         current.session.error = T("OSM file generation failed: %s") % e.output
                         redirect(URL(args=r.id))

@@ -127,9 +127,6 @@ settings.gis.countries = ["GR"] # ["GR", "CY"]
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 settings.gis.check_within_parent_boundaries = False
 
-# Hide unnecessary Toolbar items
-settings.gis.nav_controls = False
-
 # GeoNames username
 settings.gis.geonames_username = "nereids"
 

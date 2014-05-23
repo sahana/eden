@@ -175,6 +175,8 @@ def define_map(height = None,
         lon = None
         feature_resources = None
 
+    save = settings.get_gis_save()
+
     map = gis.show_map(height = height,
                        width = width,
                        lat = lat,
@@ -184,7 +186,7 @@ def define_map(height = None,
                        feature_resources = feature_resources,
                        legend = legend,
                        print_tool = print_tool,
-                       save = True,
+                       save = save,
                        search = search,
                        toolbar = toolbar,
                        wms_browser = wms_browser,
