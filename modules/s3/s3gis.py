@@ -1464,8 +1464,8 @@ class GIS(object):
                                 *fields)
         if len(rows) > 1:
             # Remove the Site Default
-            filter = lambda row: row.uuid == "SITE_DEFAULT"
-            rows.exclude(filter)
+            _filter = lambda row: row.uuid == "SITE_DEFAULT"
+            rows.exclude(_filter)
         elif not rows:
             # prepop hasn't run yet
             if level:

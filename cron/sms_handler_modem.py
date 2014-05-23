@@ -37,8 +37,6 @@ from pygsm.autogsmmodem import GsmModemNotFound
 
 from gluon import current
 
-import s3msg
-
 class ModemThread(threading.Thread):
     def __init__(self, modem):
         self.modem = modem

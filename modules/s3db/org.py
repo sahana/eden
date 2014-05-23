@@ -49,6 +49,7 @@ __all__ = ["S3OrganisationModel",
            "S3OfficeTypeTagModel",
            "org_organisation_logo",
            "org_organisation_address",
+           "org_parents",
            "org_root_organisation",
            "org_root_organisation_name",
            "org_organisation_requires",
@@ -3909,6 +3910,43 @@ def org_organisation_logo(id,
     return DIV() # no logo so return an empty div
 
 # =============================================================================
+def org_parents(organisation_id, path=[]):
+    """
+        Lookup the parent organisations of a branch organisation
+
+        @param organisation_id: the organisation's record ID
+
+        @return: list of ids of the parent organisations, starting with the immediate parent
+    """
+
+    if not organisation_id:
+        return path
+
+    db = current.db
+    s3db = current.s3db
+    otable = s3db.org_organisation
+    btable = s3db.org_organisation.with_alias("org_branch_organisation")
+    ltable = s3db.org_organisation_branch
+
+    query = (btable.id == organisation_id)
+    join = (ltable.deleted != True) & \
+           (btable.deleted != True) & \
+           (otable.deleted != True) & \
+           (btable.id == ltable.branch_id) & \
+           (otable.id == ltable.organisation_id)
+    row = db(query & join).select(otable.id,
+                                  limitby=(0, 1)).first()
+
+    if row is not None:
+        # Parent exists
+        organisation_id = row.id
+        path.insert(0, organisation_id)
+        return org_parents(organisation_id, path)
+    else:
+        # This is the root org
+        return path
+
+# =============================================================================
 def org_root_organisation(organisation_id):
     """
         Lookup the root organisation of a branch organisation
@@ -3943,8 +3981,6 @@ def org_root_organisation(organisation_id):
     else:
         # This is the root org
         return organisation_id
-
-    return None
 
 # =============================================================================
 def org_root_organisation_name(organisation_id):

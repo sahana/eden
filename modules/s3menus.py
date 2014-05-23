@@ -1815,15 +1815,18 @@ class S3OptionsMenu(object):
         """
 
         return [
-            M("Email Settings", c="msg", f="email_channel"),
-            M("Parsing Settings", c="msg", f="parser"),
-            M("RSS Settings", c="msg", f="rss_channel"),
-            M("SMS Gateway Settings", c="msg", f="sms_outbound_gateway",
-                args=[1], m="update"),
-            M("Mobile Commons SMS Settings", c="msg", f="mcommons_channel"),
-            M("Twilio SMS Settings", c="msg", f="twilio_channel"),
+            M("Email Channels (Inbound)", c="msg", f="email_channel"),
+            M("RSS Channels", c="msg", f="rss_channel"),
+            M("SMS Outbound Gateways", c="msg", f="sms_outbound_gateway")(
+                M("SMS Modem Channels", c="msg", f="sms_modem_channel"),
+                M("SMS SMTP Channels", c="msg", f="sms_smtp_channel"),
+                M("SMS WebAPI Channels", c="msg", f="sms_webapi_channel"),
+            ),
+            M("Mobile Commons Channels", c="msg", f="mcommons_channel"),
+            M("Twilio Channels", c="msg", f="twilio_channel"),
+            M("Parsers", c="msg", f="parser"),
             M("Twitter Settings", c="msg", f="twitter_channel",
-                args=[1], m="update")
+              args=[1], m="update")
         ]
 
     # -------------------------------------------------------------------------

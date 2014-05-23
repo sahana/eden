@@ -122,10 +122,11 @@ class S3ChannelModel(S3Model):
         # Reusable Field
         channel_id = S3ReusableField("channel_id", "reference %s" % tablename,
                                      label = T("Channel"),
+                                     ondelete = "SET NULL",
+                                     represent = S3Represent(lookup=tablename),
                                      requires = IS_EMPTY_OR(
                                         IS_ONE_OF_EMPTY(db, "msg_channel.id")),
-                                     represent = S3Represent(lookup=tablename),
-                                     ondelete = "SET NULL")
+                                     )
 
         self.add_components(tablename,
                             msg_channel_status = "channel_id",
@@ -672,20 +673,24 @@ class S3MCommonsModel(S3ChannelModel):
                            represent = s3_yes_no_represent,
                            ),
                      Field("campaign_id", length=128, unique=True,
-                           requires=IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("url",
                            default = \
                               "https://secure.mcommons.com/api/messages",
                            requires = IS_URL()
                            ),
                      Field("username",
-                           requires=IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("password", "password",
                            readable = False,
-                           requires=IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("query"),
                      Field("timestmp", "datetime",
-                           writable=False),
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         self.configure(tablename,
@@ -694,16 +699,16 @@ class S3MCommonsModel(S3ChannelModel):
                        )
 
         set_method("msg", "mcommons_channel",
-                   method="enable",
-                   action=self.msg_channel_enable_interactive)
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
 
         set_method("msg", "mcommons_channel",
-                   method="disable",
-                   action=self.msg_channel_disable_interactive)
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
 
         set_method("msg", "mcommons_channel",
-                   method="poll",
-                   action=self.msg_channel_poll)
+                   method = "poll",
+                   action = self.msg_channel_poll)
 
         # ---------------------------------------------------------------------
         return dict()
@@ -744,7 +749,8 @@ class S3ParsingModel(S3Model):
                      # Source
                      channel_id(ondelete = "CASCADE"),
                      Field("function_name",
-                           label = T("Parser")),
+                           label = T("Parser"),
+                           ),
                      Field("enabled", "boolean",
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
@@ -756,16 +762,16 @@ class S3ParsingModel(S3Model):
                        )
 
         set_method("msg", "parser",
-                   method="enable",
-                   action=self.parser_enable_interactive)
+                   method = "enable",
+                   action = self.parser_enable_interactive)
 
         set_method("msg", "parser",
-                   method="disable",
-                   action=self.parser_disable_interactive)
+                   method = "disable",
+                   action = self.parser_disable_interactive)
 
         set_method("msg", "parser",
-                   method="parse",
-                   action=self.parser_parse)
+                   method = "parse",
+                   action = self.parser_parse)
 
         # ---------------------------------------------------------------------
         # Message parsing status
@@ -779,10 +785,11 @@ class S3ParsingModel(S3Model):
                      channel_id(ondelete = "CASCADE"),
                      Field("is_parsed", "boolean",
                            default = False,
+                           label = T("Parsing Status"),
                            represent = lambda parsed: \
                                        (parsed and [T("Parsed")] or \
                                                    [T("Not Parsed")])[0],
-                           label = T("Parsing Status")),
+                           ),
                      message_id("reply_id",
                                 label = T("Reply"),
                                 ondelete = "CASCADE",
@@ -798,10 +805,12 @@ class S3ParsingModel(S3Model):
                      Field("from_address"),
                      Field("email"),
                      Field("created_datetime", "datetime",
-                           default = current.request.utcnow),
+                           default = current.request.utcnow,
+                           ),
                      Field("expiration_time", "integer"),
                      Field("is_expired", "boolean",
-                           default = False),
+                           default = False,
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -810,7 +819,8 @@ class S3ParsingModel(S3Model):
         tablename = "msg_keyword"
         define_table(tablename,
                      Field("keyword",
-                           label=T("Keyword")),
+                           label = T("Keyword"),
+                           ),
                      # @ToDo: Move this to a link table
                      self.event_incident_type_id(),
                      *s3_meta_fields())
@@ -822,11 +832,13 @@ class S3ParsingModel(S3Model):
         tablename = "msg_sender"
         define_table(tablename,
                      Field("sender",
-                           label=T("Sender")),
+                           label = T("Sender"),
+                           ),
                      # @ToDo: Make pe_id work for this
                      #self.super_link("pe_id", "pr_pentity"),
                      Field("priority", "integer",
-                           label=T("Priority")),
+                           label = T("Priority"),
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -1160,6 +1172,12 @@ class S3SMSModel(S3Model):
     def model(self):
 
         #T = current.T
+        user = current.auth.user
+        if user and user.organisation_id:
+            # SMS Messages need to be tagged to their org so that they can be sent through the correct gateway
+            default = user.organisation_id
+        else:
+            default = None
 
         # ---------------------------------------------------------------------
         # SMS Messages: InBox & Outbox
@@ -1169,6 +1187,7 @@ class S3SMSModel(S3Model):
                           # Instance
                           self.super_link("message_id", "msg_message"),
                           self.msg_channel_id(),
+                          self.org_organisation_id(default = default),
                           s3_datetime(default="now"),
                           Field("body", "text",
                                 # Allow multi-part SMS
@@ -1216,8 +1235,8 @@ class S3SMSOutboundModel(S3Model):
 
     names = ["msg_sms_outbound_gateway",
              "msg_sms_modem_channel",
-             "msg_sms_webapi_channel",
              "msg_sms_smtp_channel",
+             "msg_sms_webapi_channel",
              ]
 
     def model(self):
@@ -1229,19 +1248,32 @@ class S3SMSOutboundModel(S3Model):
 
         # ---------------------------------------------------------------------
         # SMS Outbound Gateway
-        # - select which gateway is in active use
+        # - select which gateway is in active use for which Organisation/Branch
         #
         tablename = "msg_sms_outbound_gateway"
         define_table(tablename,
-                      Field("outgoing_sms_handler", length=32,
-                            requires = IS_IN_SET(current.msg.GATEWAY_OPTS,
-                                                zero=None)),
-                      # @ToDo: Allow selection of different gateways based on Organisation/Branch
-                      #self.org_organisation_id(),
-                      # @ToDo: Allow addition of relevant country code (currently in deployment_settings)
-                      #Field("default_country_code", "integer",
-                      #      default=44),
-                      *s3_meta_fields())
+                     self.msg_channel_id(
+                        requires = IS_ONE_OF(current.db, "msg_channel.channel_id",
+                                             S3Represent(lookup="msg_channel"),
+                                             instance_types = ("msg_sms_modem_channel",
+                                                               "msg_sms_webapi_channel",
+                                                               "msg_sms_smtp_channel",
+                                                               ),
+                                             sort = True,
+                                             ),
+                                         ),
+                     #Field("outgoing_sms_handler", length=32,
+                     #      requires = IS_IN_SET(current.msg.GATEWAY_OPTS,
+                     #                           zero = None),
+                     #      ),
+                     # Allow selection of different gateways based on Organisation/Branch
+                     self.org_organisation_id(),
+                     # @ToDo: Allow selection of different gateways based on destination Location
+                     #self.gis_location_id(),
+                     # @ToDo: Allow addition of relevant country code (currently in deployment_settings)
+                     #Field("default_country_code", "integer",
+                     #      default = 44),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # SMS Modem Channel
@@ -1251,12 +1283,34 @@ class S3SMSOutboundModel(S3Model):
                      self.super_link("channel_id", "msg_channel"),
                      Field("name"),
                      Field("description"),
-                     # Nametag to remember account - To be used later
-                     #Field("account_name"),
                      Field("modem_port"),
                      Field("modem_baud", "integer",
                            default = 115200,
                            ),
+                     Field("enabled", "boolean",
+                           default = True,
+                           ),
+                     Field("max_length", "integer",
+                           default = 160,
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  super_entity = "msg_channel",
+                  )
+
+        # ---------------------------------------------------------------------
+        # SMS via SMTP Channel
+        #
+        tablename = "msg_sms_smtp_channel"
+        define_table(tablename,
+                     self.super_link("channel_id", "msg_channel"),
+                     Field("name"),
+                     Field("description"),
+                     Field("address", length=64,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("subject", length=64),
                      Field("enabled", "boolean",
                            default = True,
                            ),
@@ -1281,23 +1335,23 @@ class S3SMSOutboundModel(S3Model):
                      Field("name"),
                      Field("description"),
                      Field("url",
+                           default = "https://api.clickatell.com/http/sendmsg", # Clickatell
+                           #default = "https://secure.mcommons.com/api/send_message", # Mobile Commons
                            requires = IS_URL(),
-                           default = "https://api.clickatell.com/http/sendmsg" # Clickatell
-                           #default = "https://secure.mcommons.com/api/send_message" # Mobile Commons
                            ),
                      Field("parameters",
-                           default="user=yourusername&password=yourpassword&api_id=yourapiid" # Clickatell
-                           #default = "campaign_id=yourid" # Mobile Commons
+                           default="user=yourusername&password=yourpassword&api_id=yourapiid", # Clickatell
+                           #default = "campaign_id=yourid", # Mobile Commons
                            ),
                      Field("message_variable", "string",
+                           default = "text", # Clickatell
+                           #default = "body", # Mobile Commons
                            requires = IS_NOT_EMPTY(),
-                           default = "text" # Clickatell
-                           #default = "body" # Mobile Commons
                            ),
                      Field("to_variable", "string",
+                           default = "to", # Clickatell
+                           #default = "phone_number", # Mobile Commons
                            requires = IS_NOT_EMPTY(),
-                           default = "to" # Clickatell
-                           #default = "phone_number" # Mobile Commons
                            ),
                      Field("max_length", "integer",
                            default = 480, # Clickatell concat 3
@@ -1306,28 +1360,7 @@ class S3SMSOutboundModel(S3Model):
                      Field("username"),
                      Field("password"),
                      Field("enabled", "boolean",
-                           default = True),
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  super_entity = "msg_channel",
-                  )
-
-        # ---------------------------------------------------------------------
-        # SMS via SMTP Channel
-        #
-        tablename = "msg_sms_smtp_channel"
-        define_table(tablename,
-                     self.super_link("channel_id", "msg_channel"),
-                     Field("name"),
-                     Field("description"),
-                     Field("address", length=64,
-                           requires=IS_NOT_EMPTY()),
-                     Field("subject", length=64),
-                     Field("enabled", "boolean",
-                           default = True),
-                     Field("max_length", "integer",
-                           default = 160,
+                           default = True,
                            ),
                      *s3_meta_fields())
 
@@ -1391,8 +1424,10 @@ class S3MessageSubscriptionModel(S3Model):
                           *s3_meta_fields())
 
         self.configure("msg_subscription",
-                       list_fields=["subscribe_mode",
-                                    "subscription_frequency"])
+                       list_fields = ["subscribe_mode",
+                                      "subscription_frequency",
+                                      ],
+                       )
 
         # ---------------------------------------------------------------------
         return dict()
@@ -1559,6 +1594,8 @@ class S3TwitterModel(S3Model):
         define_table(tablename,
                      #Instance
                      self.super_link("channel_id", "msg_channel"),
+                     # @ToDo: Allow different Twitter accounts for different PEs (Orgs / Teams)
+                     #self.pr_pe_id(),
                      Field("name"),
                      Field("description"),
                      Field("enabled", "boolean",

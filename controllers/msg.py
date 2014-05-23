@@ -613,48 +613,18 @@ def tropo():
 def sms_outbound_gateway():
     """ SMS Outbound Gateway selection for the messaging framework """
 
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-    table.outgoing_sms_handler.label = T("Outgoing SMS Handler")
-    table.outgoing_sms_handler.comment = DIV(DIV(_class="tooltip",
-        _title="%s|%s" % (T("Outgoing SMS Handler"),
-                          T("Selects what type of gateway to use for outbound SMS"))))
     # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMS Outbound Gateway"),
-        msg_record_modified = T("SMS Outbound Gateway updated")
-    )
-
-    def prep(r):
-        if r.http == "POST":
-            # Go to the details page for the chosen SMS Gateway
-            outgoing_sms_handler = request.post_vars.get("outgoing_sms_handler",
-                                                         None)
-            if outgoing_sms_handler == "WEB_API":
-                s3db.configure(tablename,
-                               update_next = URL(f="sms_webapi_channel",
-                                                 args=[1, "update"]))
-            elif outgoing_sms_handler == "SMTP":
-                s3db.configure(tablename,
-                               update_next = URL(f="sms_smtp_channel",
-                                                 args=[1, "update"]))
-            elif outgoing_sms_handler == "MODEM":
-                s3db.configure(tablename,
-                               update_next = URL(f="sms_modem_channel",
-                                                 args=[1, "update"]))
-            elif outgoing_sms_handler == "TROPO":
-                s3db.configure(tablename,
-                               update_next = URL(f="tropo_channel",
-                                                 args=[1, "update"]))
-            else:
-                s3db.configure(tablename,
-                               update_next = URL(args=[1, "update"]))
-        return True
-    s3.prep = prep
-
-    s3db.configure(tablename,
-                   deletable=False,
-                   listadd=False)
+    s3.crud_strings["msg_sms_outbound_gateway"] = Storage(
+        label_create=T("Create SMS Outbound Gateway"),
+        title_display=T("SMS Outbound Gateway Details"),
+        title_list=T("SMS Outbound Gateways"),
+        title_update=T("Edit SMS Outbound Gateway"),
+        label_list_button=T("List SMS Outbound Gateways"),
+        label_delete_button=T("Delete SMS Outbound Gateway"),
+        msg_record_created=T("SMS Outbound Gateway added"),
+        msg_record_modified=T("SMS Outbound Gateway updated"),
+        msg_record_deleted=T("SMS Outbound Gateway deleted"),
+        msg_list_empty=T("No SMS Outbound Gateways currently registered"))
 
     return s3_rest_controller()
 
@@ -760,7 +730,7 @@ def mcommons_channel():
     table.name.label = T("Account Name")
     table.name.comment = DIV(_class="tooltip",
                              _title="%s|%s" % (T("Account Name"),
-                                               T("Name for your Twilio Account.")))
+                                               T("Name for your Mobile Commons Account")))
 
     table.campaign_id.label = T("Campaign ID")
 
@@ -848,22 +818,15 @@ def rss_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_display = T("RSS Setting Details"),
-        title_list = T("RSS Settings"),
-        label_create = T("Add RSS Settings"),
-        title_update = T("Edit RSS Settings"),
-        label_list_button = T("View RSS Settings"),
-        msg_record_created = T("Setting added"),
-        msg_record_deleted = T("RSS Setting deleted"),
-        msg_list_empty = T("No Settings currently defined"),
-        msg_record_modified = T("RSS settings updated")
-        )
-
-    #response.menu_options = admin_menu_options
-    s3db.configure(tablename,
-                   deletable = True,
-                   listadd = True,
-                   )
+        title_display = T("RSS Channel Details"),
+        title_list = T("RSS Channels"),
+        label_create = T("Add RSS Channel"),
+        title_update = T("Edit RSS Channel"),
+        label_list_button = T("View RSS Channels"),
+        msg_record_created = T("Channel added"),
+        msg_record_deleted = T("RSS Channel deleted"),
+        msg_list_empty = T("No RSS Channels currently defined"),
+        msg_record_modified = T("RSS Channel updated"))
 
     def status_represent(v):
         try:
@@ -938,16 +901,15 @@ def twilio_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_display = T("Twilio Setting Details"),
-        title_list = T("Twilio Settings"),
-        label_create = T("Add Twilio Settings"),
-        title_update = T("Edit Twilio Settings"),
-        label_list_button = T("View Twilio Settings"),
-        msg_record_created = T("Twilio Setting added"),
-        msg_record_deleted = T("Twilio Setting deleted"),
-        msg_list_empty = T("No Twilio Settings currently defined"),
-        msg_record_modified = T("Twilio settings updated")
-        )
+        title_display = T("Twilio Channel Details"),
+        title_list = T("Twilio Channels"),
+        label_create = T("Add Twilio Channel"),
+        title_update = T("Edit Twilio Channel"),
+        label_list_button = T("View Twilio Channels"),
+        msg_record_created = T("Twilio Channel added"),
+        msg_record_deleted = T("Twilio Channel deleted"),
+        msg_record_modified = T("Twilio Channel updated"),
+        msg_list_empty = T("No Twilio Channels currently defined"))
 
     def postp(r, output):
         if r.interactive:
@@ -1015,24 +977,17 @@ def sms_modem_channel():
                                                   T("Unselect to disable the modem")))
 
     # CRUD Strings
-    ADD_SETTING = T("Add Setting")
     s3.crud_strings[tablename] = Storage(
-        label_create = ADD_SETTING,
-        title_display = T("Setting Details"),
-        title_list = T("Settings"),
-        title_update = T("Edit Modem Settings"),
-        label_list_button = T("View Settings"),
-        msg_record_created = T("Setting added"),
-        msg_record_modified = T("Modem settings updated"),
-        msg_record_deleted = T("Setting deleted"),
-        msg_list_empty = T("No Settings currently defined")
-    )
+        label_create = T("Add Modem Channel"),
+        title_display = T("Modem Channel Details"),
+        title_list = T("Modem Channels"),
+        title_update = T("Edit Modem Channel"),
+        label_list_button = T("View Modem Channels"),
+        msg_record_created = T("Modem Channel added"),
+        msg_record_modified = T("Modem Channel updated"),
+        msg_record_deleted = T("Modem Channel deleted"),
+        msg_list_empty = T("No Modem Channels currently defined"))
 
-    s3db.configure(tablename,
-                   #deletable=False,
-                   #listadd=False,
-                   #update_next = URL(args=[1, "update"])
-                   )
     return s3_rest_controller()
 
 #------------------------------------------------------------------------------
@@ -1041,8 +996,6 @@ def sms_smtp_channel():
     """
         RESTful CRUD controller for SMTP to SMS Outbound channels
         - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
     """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1062,14 +1015,19 @@ def sms_smtp_channel():
                                                   T("Unselect to disable this SMTP service")))
 
     # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMTP to SMS Settings"),
-        msg_record_modified = T("SMTP to SMS settings updated"),
-    )
+    s3.crud_strings["msg_sms_outbound_gateway"] = Storage(
+        label_create=T("Create SMTP to SMS Channel"),
+        title_display=T("SMTP to SMS Channel Details"),
+        title_list=T("SMTP to SMS Channels"),
+        title_update=T("Edit SMTP to SMS Channel"),
+        label_list_button=T("List SMTP to SMS Channels"),
+        label_delete_button=T("Delete SMTP to SMS Channel"),
+        msg_record_created=T("SMTP to SMS Channel added"),
+        msg_record_modified=T("SMTP to SMS Channel updated"),
+        msg_record_deleted=T("SMTP to SMS Channel deleted"),
+        msg_list_empty=T("No SMTP to SMS Channels currently registered"))
 
     s3db.configure(tablename,
-                   deletable=False,
-                   listadd=False,
                    update_next = URL(args=[1, "update"]))
 
     return s3_rest_controller()
@@ -1080,8 +1038,6 @@ def sms_webapi_channel():
     """
         RESTful CRUD controller for Web API channels
         - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
     """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1117,14 +1073,16 @@ def sms_webapi_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Web API Settings"),
-        msg_record_modified = T("Web API settings updated"),
-    )
-
-    s3db.configure(tablename,
-                   deletable=False,
-                   listadd=False,
-                   update_next = URL(args=[1, "update"]))
+        label_create=T("Create Web API Channel"),
+        title_display=T("Web API Channel Details"),
+        title_list=T("Web API Channels"),
+        title_update=T("Edit Web API Channel"),
+        label_list_button=T("List Web API Channels"),
+        label_delete_button=T("Delete Web API Channel"),
+        msg_record_created=T("Web API Channel added"),
+        msg_record_modified=T("Web API Channel updated"),
+        msg_record_deleted=T("Web API Channel deleted"),
+        msg_list_empty=T("No Web API Channels currently registered"))
 
     return s3_rest_controller()
 
@@ -1134,8 +1092,6 @@ def tropo_channel():
     """
         RESTful CRUD controller for Tropo channels
         - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
     """
 
     tablename = "msg_tropo_channel"
@@ -1149,15 +1105,16 @@ def tropo_channel():
     #table.token_voice.comment = DIV(DIV(_class="stickytip",_title=T("Tropo Voice Token") + "|" + T("The token associated with this application on") + " <a href='https://www.tropo.com/docs/scripting/troposessionapi.htm' target=_blank>Tropo.com</a>"))
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Tropo Settings"),
-        msg_record_modified = T("Tropo settings updated"),
-    )
-
-    s3db.configure(tablename,
-                   deletable = False,
-                   listadd = False,
-                   update_next = URL(args=[1, "update"]),
-                   )
+        label_create=T("Create Tropo Channel"),
+        title_display=T("Tropo Channel Details"),
+        title_list=T("Tropo Channels"),
+        title_update=T("Edit Tropo Channel"),
+        label_list_button=T("List Tropo Channels"),
+        label_delete_button=T("Delete Tropo Channel"),
+        msg_record_created=T("Tropo Channel added"),
+        msg_record_modified=T("Tropo Channel updated"),
+        msg_record_deleted=T("Tropo Channel deleted"),
+        msg_list_empty=T("No Tropo Channels currently registered"))
 
     return s3_rest_controller()
 
@@ -1260,8 +1217,9 @@ def twitter_channel():
     s3.postp = postp
 
     s3db.configure(tablename,
-                   listadd=False,
-                   deletable=False)
+                   listadd = False,
+                   deletable = False,
+                   )
 
     return s3_rest_controller(deduplicate="", list_btn="")
 
@@ -1601,7 +1559,7 @@ def parser():
                                                   sort = True,
                                                   )
             table.function_name.requires = IS_IN_SET(parse_opts,
-                                                     zero=None)
+                                                     zero = None)
         return True
     s3.prep = prep
 
