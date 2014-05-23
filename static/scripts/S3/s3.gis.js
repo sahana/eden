@@ -4800,6 +4800,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                 });
                                 tabPanel.items.items[1].on('activate', function() {
                                     // Find which search form to load
+                                    // @ToDo: Migrate to S3Filter!
                                     // @ToDo: Look for overrides (e.g. Warehouses/Staff/Volunteers)
                                     // @ToDo: Read current filter settings to default widgets to
                                     var search_url;
@@ -4814,10 +4815,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                         url: search_url,
                                         discardUrl: false,
                                         callback: function() {
-                                            // Activate Help Tooltips
-                                            S3.addTooltips();
+                                            // Activate Help Tooltips, etc
+                                            S3.redraw();
                                             // Handle Options Widgets with collapsed options
-                                            S3.search.select_letter_label();
+                                            //S3.search.select_letter_label();
                                         },
                                         // @ToDo: i18n
                                         text: 'Loading...',

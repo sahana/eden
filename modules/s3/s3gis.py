@@ -1400,16 +1400,16 @@ class GIS(object):
             @ToDo: Config() class
         """
 
-        gis = current.response.s3.gis
+        _gis = current.response.s3.gis
 
-        if not gis.config:
+        if not _gis.config:
             # Ask set_config to put the appropriate config in response.
             if current.session.s3.gis_config_id:
                 GIS.set_config(current.session.s3.gis_config_id)
             else:
                 GIS.set_config()
 
-        return gis.config
+        return _gis.config
 
     # -------------------------------------------------------------------------
     def get_location_hierarchy(self, level=None, location=None):
@@ -5991,8 +5991,6 @@ class MAP(DIV):
         components = []
 
         # Map (Embedded not Window)
-        # Needs to be an ID which means we can't have multiple per page :/
-        # - Alternatives are also fragile. See s3.gis.js
         components.append(DIV(DIV(_class="map_loader"),
                               _id="%s_panel" % map_id))
 
@@ -6015,7 +6013,7 @@ class MAP(DIV):
               into scripts (callback or otherwise)
         """
 
-        # Default configuration
+        # Read configuration
         config = GIS.get_config()
         if not config:
             # No prepop - Bail
@@ -6088,14 +6086,16 @@ class MAP(DIV):
             # No bounds or we've been passed bounds which aren't sane
             bbox = None
             # Use Lat/Lon/Zoom to center instead
-            if "lat" in get_vars and get_vars.lat:
-                lat = float(get_vars.lat)
+            lat = get_vars.get("lat", None)
+            if lat is not None:
+                lat = float(lat)
             else:
                 lat = opts.get("lat", None)
             if lat is None or lat == "":
                 lat = config.lat
-            if "lon" in get_vars and get_vars.lon:
-                lon = float(get_vars.lon)
+            lon = get_vars.get("lon", None)
+            if lon is not None:
+                lon = float(lon)
             else:
                 lon = opts.get("lon", None)
             if lon is None or lon == "":
@@ -6112,8 +6112,9 @@ class MAP(DIV):
             options["lat"] = lat
             options["lon"] = lon
 
-        if "zoom" in get_vars:
-            zoom = int(get_vars.zoom)
+        zoom = get_vars.get("zoom", None)
+        if zoom is not None:
+            zoom = int(zoom)
         else:
             zoom = opts.get("zoom", None)
         if not zoom:

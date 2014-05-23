@@ -74,8 +74,8 @@ settings.base.debug = False
 
 # Configure the log level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"), None = turn off logging
 #settings.log.level = "WARNING"
-# Uncomment to write log messages to the console (sys.stderr)
-#settings.log.console = True
+# Uncomment to prevent writing log messages to the console (sys.stderr)
+#settings.log.console = False
 # Configure a log file (file name)
 #settings.log.logfile = None
 # Uncomment to get detailed caller information

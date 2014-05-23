@@ -22,9 +22,10 @@ def index():
         try:
             config = int(config)
         except:
-            pass
+            config = None
         else:
-            gis.set_config(config)
+            config = gis.set_config(config)
+
     height = get_vars.get("height", None)
     width = get_vars.get("width", None)
     toolbar = get_vars.get("toolbar", None)
@@ -62,13 +63,14 @@ def index():
     s3.scripts.append(script)
 
     # Include an embedded Map on the index page
-    map = define_map(height=height,
-                     width=width,
-                     window=False,
-                     toolbar=toolbar,
-                     collapsed=collapsed,
-                     closable=False,
-                     maximizable=False)
+    map = define_map(height = height,
+                     width = width,
+                     window = False,
+                     toolbar = toolbar,
+                     collapsed = collapsed,
+                     closable = False,
+                     maximizable = False,
+                     config = config)
 
     return dict(map=map,
                 title = T("Map"))
@@ -80,10 +82,10 @@ def map_viewing_client():
         UI for a user to view the overall Maps with associated Features
     """
 
-    map = define_map(window=True,
-                     toolbar=True,
-                     closable=False,
-                     maximizable=False)
+    map = define_map(window = True,
+                     toolbar = True,
+                     closable = False,
+                     maximizable = False)
 
     response.title = T("Map Viewing Client")
     return dict(map=map)
@@ -812,26 +814,25 @@ def config():
     # Custom Methods to set as default
     set_method = s3db.set_method
     set_method(module, resourcename,
-               method="default",
-               action=config_default)
+               method = "default",
+               action = config_default)
 
     # Custom Methods to enable/disable layers
     set_method(module, resourcename,
-               component_name="layer_entity",
-               method="enable",
-               action=enable_layer)
+               component_name = "layer_entity",
+               method = "enable",
+               action = enable_layer)
     set_method(module, resourcename,
-               component_name="layer_entity",
-               method="disable",
-               action=disable_layer)
+               component_name = "layer_entity",
+               method = "disable",
+               action = disable_layer)
 
     # Pre-process
     def prep(r):
         if r.representation == "url":
             # Save from Map
             if r.method == "create" and \
-                 auth.is_logged_in() and \
-                 not auth.s3_has_role(MAP_ADMIN):
+                 auth.is_logged_in():
                 pe_id = auth.user.pe_id
                 r.table.pe_id.default = pe_id
                 r.table.pe_type.default = 1
@@ -920,8 +921,8 @@ def config():
                     else:
                         crud_form = None
                     s3db.configure("gis_config",
-                                   crud_form=crud_form,
-                                   insertable=False,
+                                   crud_form = crud_form,
+                                   insertable = False,
                                    list_fields = list_fields,
                                    )
 
@@ -944,27 +945,28 @@ def config():
                     ltable.layer_id.writable = False
                     # Hide irrelevant fields
                     query = (table.layer_id == r.component_id)
-                    type = db(query).select(table.instance_type,
-                                            limitby=(0, 1)).first().instance_type
-                    if type in ("gis_layer_coordinate",
-                                "gis_layer_georss",
-                                "gis_layer_gpx",
-                                "gis_layer_mgrs",
-                                "gis_layer_openweathermap",
-                                ):
+                    instance_type = db(query).select(table.instance_type,
+                                                     limitby=(0, 1)
+                                                     ).first().instance_type
+                    if instance_type in ("gis_layer_coordinate",
+                                         "gis_layer_georss",
+                                         "gis_layer_gpx",
+                                         "gis_layer_mgrs",
+                                         "gis_layer_openweathermap",
+                                         ):
                         ltable.base.readable = ltable.base.writable = False
-                    elif type in ("gis_layer_bing",
-                                  "gis_layer_google",
-                                  "gis_layer_tms",
-                                  ):
+                    elif instance_type in ("gis_layer_bing",
+                                           "gis_layer_google",
+                                           "gis_layer_tms",
+                                           ):
                         ltable.visible.readable = ltable.visible.writable = False
-                    elif type in ("gis_layer_feature",
-                                  "gis_layer_geojson",
-                                  "gis_layer_kml",
-                                  "gis_layer_shapefile",
-                                  "gis_layer_theme",
-                                  "gis_layer_wfs",
-                                  ):
+                    elif instance_type in ("gis_layer_feature",
+                                           "gis_layer_geojson",
+                                           "gis_layer_kml",
+                                           "gis_layer_shapefile",
+                                           "gis_layer_theme",
+                                           "gis_layer_wfs",
+                                           ):
                         ltable.base.readable = ltable.base.writable = False
                         ltable.style.readable = ltable.style.writable = True
                 else:
@@ -1035,14 +1037,14 @@ def config():
                 for layer in layers:
                     if "id" in layer and layer["id"] != "search_results":
                         layer_id = layer["id"]
-                        vars = Storage(config_id = id,
-                                       layer_id = layer_id,
-                                       )
+                        form_vars = Storage(config_id = id,
+                                            layer_id = layer_id,
+                                            )
                         if "base" in layer:
-                            vars.base = layer["base"]
-                        vars.visible = layer.get("visible", False)
+                            form_vars.base = layer["base"]
+                        form_vars.visible = layer.get("visible", False)
                         if "style" in layer:
-                            vars.style = json.dumps(layer["style"])
+                            form_vars.style = json.dumps(layer["style"])
                         # Update or Insert?
                         query = (ltable.config_id == id) & \
                                 (ltable.layer_id == layer_id)
@@ -1050,13 +1052,13 @@ def config():
                                                   limitby=(0, 1)).first()
                         if record:
                             record_id = record.id
-                            vars.id = record_id
-                            db(ltable.id == record_id).update(**vars)
+                            form_vars.id = record_id
+                            db(ltable.id == record_id).update(**form_vars)
                         else:
                             # How could this happen?
-                            vars.id = ltable.insert(**vars)
+                            form_vars.id = ltable.insert(**form_vars)
                         # Ensure that Default Base processing happens properly
-                        form.vars = vars
+                        form.vars = form_vars
                         s3db.gis_layer_config_onaccept(form)
 
         return output
