@@ -1027,7 +1027,7 @@ class S3Config(Storage):
         return self.L10n.get("languages", OrderedDict([("ar", "العربية"),
                                                        ("zh-cn", "中文 (简体)"),
                                                        ("zh-tw", "中文 (繁體)"),
-                                                       #("bs", "Bosanski"),
+                                                       ("bs", "Bosanski"),
                                                        ("en", "English"),
                                                        ("fr", "Français"),
                                                        ("de", "Deutsch"),
