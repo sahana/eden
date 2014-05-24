@@ -1054,9 +1054,6 @@ class S3Config(Storage):
     def get_L10n_religions(self):
         """
             Religions used in Person Registry
-
-            @ToDo: find a better code
-            http://eden.sahanafoundation.org/ticket/594
         """
         T = current.T
         return self.L10n.get("religions", {"none": T("none"),
