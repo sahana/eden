@@ -265,7 +265,7 @@ settings.gis.getfeature_control = False
 # Uncomment to hide Layer Properties tool
 settings.gis.layer_properties = False
 # Uncomment to hide the Base Layers folder in the LayerTree
-settings.gis.layer_tree_base = False
+#settings.gis.layer_tree_base = False
 # Uncomment to hide the Overlays folder in the LayerTree
 #settings.gis.layer_tree_overlays = False
 # Uncomment to change the label of the Overlays folder in the LayerTree
