@@ -60,14 +60,14 @@ from gluon import *
 from gluon.dal import Row, Rows, Query, Table
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
-from gluon.tools import Auth, callback, addrow
+from gluon.tools import Auth, callback
 from gluon.utils import web2py_uuid
 
 from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method
 from s3track import S3Tracker
-from s3utils import s3_mark_required
+from s3utils import s3_addrow, s3_mark_required
 
 DEFAULT = lambda: None
 #table_field = re.compile("[\w_]+\.[\w_]+")
@@ -561,10 +561,16 @@ Thank you"""
 
         # Do we use our own login form, or from a central source?
         if settings.login_form == self:
-            # Needs work
-            #formstyle = deployment_settings.get_ui_formstyle()
-            #formstyle = settings.formstyle
-            formstyle = "table3cols"
+
+            formstyle = deployment_settings.get_ui_login_formstyle()
+
+            # @ToDo: adapt bootstrap/style.css rules for login form
+            # elements to bootstrap formstyle, then remove this:
+            formstyle_name = deployment_settings.ui.login_formstyle
+            if isinstance(formstyle_name, basestring) and \
+               formstyle_name.startswith("bootstrap"):
+                formstyle = "table3cols"
+                
             form = SQLFORM(utable,
                            fields=[username, passfield],
                            hidden=dict(_next=request.vars._next),
@@ -574,34 +580,48 @@ Thank you"""
                            formstyle=formstyle,
                            separator=settings.label_separator
                            )
+                           
             if settings.remember_me_form:
                 # Add a new input checkbox "remember me for longer"
-                addrow(form, XML("&nbsp;"),
-                       DIV(XML("&nbsp;"),
-                           INPUT(_type='checkbox',
-                                 _class='checkbox',
-                                 _id="auth_user_remember",
-                                 _name="remember",
-                                 ),
-                           XML("&nbsp;&nbsp;"),
-                           LABEL(messages.label_remember_me,
-                                 _for="auth_user_remember",
-                                 )), "",
-                       formstyle,
-                       "auth_user_remember__row")
+                s3_addrow(form,
+                          XML("&nbsp;"),
+                          DIV(XML("&nbsp;"),
+                              INPUT(_type='checkbox',
+                                    _class='checkbox',
+                                    _id="auth_user_remember",
+                                    _name="remember",
+                                    ),
+                              XML("&nbsp;&nbsp;"),
+                              LABEL(messages.label_remember_me,
+                                    _for="auth_user_remember",
+                                    ),
+                              ),
+                          "",
+                          formstyle,
+                          "auth_user_remember__row")
 
             if deployment_settings.get_auth_set_presence_on_login():
-                addrow(form, XML(""), INPUT(_id="auth_user_clientlocation",
-                                            _name="auth_user_clientlocation",
-                                            _style="display:none"),
-                       "display:none", "auth_user_client_location")
+                s3_addrow(form,
+                          XML(""),
+                          INPUT(_id="auth_user_clientlocation",
+                                _name="auth_user_clientlocation",
+                                _style="display:none",
+                                ),
+                          "",
+                          formstyle,
+                          "auth_user_client_location",
+                          )
                 response.s3.jquery_ready.append('''S3.getClientLocation($('#auth_user_clientlocation'))''')
 
             captcha = settings.login_captcha or \
                 (settings.login_captcha != False and settings.captcha)
             if captcha:
-                addrow(form, captcha.label, captcha, captcha.comment,
-                       formstyle, "captcha__row")
+                s3_addrow(form,
+                          captcha.label,
+                          captcha,
+                          captcha.comment,
+                          formstyle,
+                          "captcha__row")
 
             accepted_form = False
             if form.accepts(request.post_vars, session,

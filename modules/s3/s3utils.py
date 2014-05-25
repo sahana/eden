@@ -57,6 +57,7 @@ from gluon import *
 from gluon.dal import Expression, Field, Row
 from gluon.storage import Storage
 from gluon.languages import lazyT
+from gluon.tools import addrow
 
 DEBUG = False
 if DEBUG:
@@ -480,6 +481,36 @@ def s3_mark_required(fields,
     return (labels, _required)
     #else:
     #    return None
+
+# =============================================================================
+def s3_addrow(form, label, widget, comment, formstyle, row_id, position=-1):
+    """
+        Add a row to a form, applying formstyle
+
+        @param form: the FORM
+        @param label: the label
+        @param widget: the widget
+        @param comment: the comment
+        @param formstyle: the formstyle
+        @param row_id: the form row HTML id
+        @param position: position where to insert the row
+    """
+
+    if callable(formstyle):
+        row = formstyle(row_id, label, widget, comment)
+        if isinstance(row, (tuple, list)):
+            length = len(row)
+            position *= length
+            for subrow in row:
+                form[0].insert(position, subrow)
+                if position >= 0:
+                    position += 1
+        else:
+            form[0].insert(position, row)
+    else:
+        addrow(form, label, widget, comment, formstyle, row_id,
+               position = position)
+    return
 
 # =============================================================================
 def s3_truncate(text, length=48, nice=True):
