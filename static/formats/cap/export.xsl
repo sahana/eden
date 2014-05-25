@@ -240,7 +240,7 @@
 
             <xsl:if test="data[@field='category']">
                 <xsl:call-template name="split-into-nodes">
-                    <xsl:with-param name="string"><xsl:value-of select="data[@field='category']"/>
+                    <xsl:with-param name="string"><xsl:value-of select="translate(data[@field='category']/@value, '&quot;][', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="node-name">category</xsl:with-param>
                 </xsl:call-template>
@@ -250,7 +250,7 @@
 
             <xsl:if test="data[@field='response_type']">
                 <xsl:call-template name="split-into-nodes">
-                    <xsl:with-param name="string"><xsl:value-of select="data[@field='response_type']"/>
+                    <xsl:with-param name="string"><xsl:value-of select="translate(data[@field='response_type']/@value, '&quot;][', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="node-name">responseType</xsl:with-param>
                 </xsl:call-template>
