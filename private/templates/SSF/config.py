@@ -73,6 +73,9 @@ settings.base.system_name_short = T("Sunflower")
 settings.auth.registration_roles = {"organisation_id": ["PROJECT_READ"],
                                     }
 
+# Uncomment this to enable Milestones in projects
+settings.project.milestones = True
+
 # L10n settings
 settings.L10n.languages = OrderedDict([
     ("ar", "العربية"),

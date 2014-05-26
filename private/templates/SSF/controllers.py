@@ -19,8 +19,6 @@ class index(S3CustomController):
         settings = current.deployment_settings
         request = current.request
         s3 = response.s3
-        T = current.T
-        gis = current.gis
 
         output = {}
         output["title"] = response.title = current.deployment_settings.get_system_name()
@@ -34,39 +32,8 @@ class index(S3CustomController):
             from gluon.http import HTTP
             raise HTTP(404, "Unable to open Custom View: %s" % view)
 
-        project_task_status_opts = settings.get_project_task_status_opts()
-        # Which options for the Status for a Task count as the task being 'Active'
-        project_task_active_statuses = [2, 3, 4, 11]
-
-        s3db = current.s3db
-
-        # TODO : Set the layout.
-        # layout = s3.render_posts
-        # list_id = "news_datalist"
-        limit = 10
-        list_fields = ["name",
-                       "description",
-                       "priority",
-                       "status",
-                       "created_by",
-                       "created_by$organisation_id",
-                       ]
-
-        resource = s3db.resource("project_task")
-        
-        resource.add_filter(S3FieldSelector("status").belongs(project_task_active_statuses))
-        
-        orderby = "priority"
-
-        # TODO : Does not return any records if not logged in.
-        datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                               start=None,
-                                               limit=limit,
-                                               # list_id=list_id,
-                                               orderby=orderby,
-                                               # layout=layout
-                                               )
-        output["tasks"] = datalist.html()
+        # Add map to the output
+        output["map"] = current.gis.show_map()
 
         s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
         feed_control = "".join(('''
@@ -74,15 +41,15 @@ function LoadFeeds(){
  var feeds=[
   {
    title:'Tasks',
-   url:\'''', settings.base.public_url, '''/''', request.application, '''/project/task.rss'
-  },
-  {
-   title:'Wiki Updates',
-   url:'http://eden.sahanafoundation.org/timeline?changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss'
+   url:\'''', settings.base.public_url, '''/''', request.application, '''/project/task.rss?task.status=2,3,4,11'
   },
   {
    title:'Tickets',
    url:'http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&max=50&daysback=90&format=rss'
+  },
+  {
+   title:'Wiki',
+   url:'http://eden.sahanafoundation.org/timeline?changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss'
   },
   {
    title:'Github',
@@ -92,6 +59,10 @@ function LoadFeeds(){
    title:'Twitter',
    url:'http://www.rssitfor.me/getrss?name=@SahanaFOSS'
   },
+  {
+   title:'Blog',
+   url:'http://sahanafoundation.org/feed/?cat=33,39'
+  }
  ];
  
  var feedControl = new google.feeds.FeedControl();
@@ -110,25 +81,24 @@ function LoadFeeds(){
  });
  
  // Initialise feed-url input
- $('#feed-url').val(feeds[0].url);
+ $('#feed-url').attr('href', feeds[0].url);
+ $('#feed-url').attr('title', feeds[0].title);
 
  // Show feed-url
  $('.gfc-tabHeader').click(feeds, function(){
   activeTab = $('.gfc-tabhActive').html();
   for(i=0; i<feeds.length; i++){
    if(feeds[i].title == activeTab){
-    $('#feed-url').val(feeds[i].url);
+    $('#feed-url').attr('href', feeds[i].url);
+    $('#feed-url').attr('title', feeds[i].title);
     break;
    }
   }
- });     
- 
+ });
 }
 google.load('feeds','1')
 google.setOnLoadCallback(LoadFeeds)'''))
         s3.js_global.append(feed_control)
-
-        output["map"] = gis.show_map()
         
         return output
 

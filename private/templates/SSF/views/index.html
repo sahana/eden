@@ -3,7 +3,7 @@
 @media(min-width:1200px){div.container.main-container{width:1200px!important;}}</style>
 
 
-<section id='what-they-do' class='st'>
+<section id='intro-section' style='padding-bottom:20px;'>
   <div class='container'>
     <div class='row'>
       <div class='span6'>
@@ -67,13 +67,15 @@
    <div class='span4'>
     
     <h2><i class='icon-news'></i> {{=T("Updates Feed")}}</h2>
-    <div class = 'well' id='feed-control'>
-     <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
-    </div>
-
-    <div>
-     <b>URL for the feed :</b>
-     	<input id='feed-url' type='text' readonly='readonly' style='cursor:auto;' value=''>
+    <div class = 'well'>
+     <div id='feed-control'>
+      <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
+     </div>
+     <div> &nbsp;
+       <a id='feed-url' type='button' class='pull-right btn btn-lg btn-primary' target='_blank'>
+        <i class="icon-rss"></i>
+       </a>
+     </div>
     </div>
    </div>
 
