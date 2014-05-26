@@ -35,7 +35,7 @@ __all__ = ["S3CAPModel",
            "cap_info_rheader",
            ]
 
-import time
+import datetime
 
 from gluon import *
 from gluon.storage import Storage
@@ -657,7 +657,7 @@ class S3CAPModel(S3Model):
                         limitby=(0, 1),
                         orderby=~table.id).first()
 
-        _time = time.strftime("%Y%m%dT%H:%M:%S%z")
+        _time = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y/%m/%dT%H:%M:%S")
         if r:
             next_id = int(r.id) + 1
         else:
