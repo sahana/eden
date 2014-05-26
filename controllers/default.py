@@ -315,9 +315,9 @@ $('#login-btn').click(function(){
             s3.jquery_ready.append(register_script)
 
         # Provide a login box on front page
-        request.args = ["login"]
+        #request.args = ["login"]
         auth.messages.submit_button = T("Login")
-        login_form = auth()
+        login_form = auth.login(inline=True)
         login_div = DIV(H3(T("Login")),
                         P(XML(T("Registered users can %(login)s to access the system") % \
                               dict(login=B(T("login"))))))
@@ -568,6 +568,8 @@ def user():
     if form:
         if s3.crud.submit_style:
             form[0][-1][1][0]["_class"] = s3.crud.submit_style
+        # @ToDo: already included in formstyle - remove
+        #        here once formstyle is supported?
         elif settings.ui.formstyle == "bootstrap":
             form[0][-1][1][0]["_class"] = "btn btn-primary"
 

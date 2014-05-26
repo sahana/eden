@@ -81,9 +81,8 @@ $('#login-btn').click(function(){
 #                s3.js_global.append(feed_control)
 
             # Provide a login box on front page
-            request.args = ["login"]
             auth.messages.submit_button = T("Login")
-            login_form = auth()
+            login_form = auth.login(inline=True)
             login_div = DIV(H3(T("Login")),
                             P(XML(T("Registered users can %(login)s to access the system") % \
                                   dict(login=B(T("login"))))))
