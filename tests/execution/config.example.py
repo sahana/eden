@@ -10,3 +10,7 @@ BROWSER = "Chrome"
 VALID_USER = "admin@example.com"
 # The password for the test user
 VALID_PASSWORD = "testing"
+# HTTP Proxy (Firefox only, empty string to not use an HTTP proxy)
+HTTP_PROXY = ""
+# No Proxy (exemptions for HTTP Proxy)
+NO_PROXY = "localhost, 127.0.0.1"

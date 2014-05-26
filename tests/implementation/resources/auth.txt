@@ -10,8 +10,8 @@ ${PasswordField}    auth_user_password
 
 *** Keywords ***
 Open Browser To Login Page
-    [Documentation]  Opens the specified browser at the login page
-    Open Browser  ${LOGIN URL}  ${BROWSER}
+    [Documentation]  Open the browser at the login page
+    Go To  ${LOGIN URL}
     Maximize Browser Window
     Title Should Be  Login
 
