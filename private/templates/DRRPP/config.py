@@ -667,7 +667,7 @@ def customise_project_framework_controller(**attr):
             # Don't show Update/Delete button on List View
             if r.method is None:
                 s3db.configure("project_framework",
-                               deletable = False
+                               deletable = False,
                                editable = False,
                                insertable = False,
                                )

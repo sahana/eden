@@ -96,8 +96,7 @@ class index():
             lappend(card)
             odd = False if odd else True
 
-        request.args = ["login"]
-        login = current.auth()
+        login = current.auth.login(inline=True)
 
         appname = request.application
         s3 = response.s3
@@ -665,11 +664,8 @@ class login():
 
         response.title = T("Login")
 
-        request.args = ["login"]
-        login = current.auth()
-
         return dict(
-            form = login
+            form = current.auth.login()
         )
 
 # =============================================================================

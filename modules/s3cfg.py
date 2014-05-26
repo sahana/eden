@@ -1217,6 +1217,21 @@ class S3Config(Storage):
         else:
             return setting
 
+    def get_ui_inline_formstyle(self):
+        """ Get the _inline formstyle for the current formstyle """
+
+        setting = self.ui.get("formstyle", "default")
+
+        formstyles = self.FORMSTYLE
+        
+        if isinstance(setting, basestring):
+            inline_formstyle_name = "%s_inline" % setting
+            if inline_formstyle_name in formstyles:
+                return formstyles[inline_formstyle_name]
+            elif setting in formstyles:
+                return formstyles[setting]
+        return setting
+
     # -------------------------------------------------------------------------
     def get_ui_auth_user_represent(self):
         """
