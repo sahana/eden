@@ -96,9 +96,8 @@ class S3BudgetModel(S3Model):
                      )
 
         # CRUD Strings
-        ADD_BUDGET = T("Create Budget")
         crud_strings[tablename] = Storage(
-            label_create = ADD_BUDGET,
+            label_create = T("Create Budget"),
             title_display = T("Budget Details"),
             title_list = T("Budgets"),
             title_update = T("Edit Budget"),
@@ -219,9 +218,8 @@ class S3BudgetModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_LOCATION = T("Create Location")
         crud_strings[tablename] = Storage(
-            label_create = ADD_LOCATION,
+            label_create = T("Create Location"),
             title_display = T("Location Details"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),
@@ -300,9 +298,8 @@ class S3BudgetModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_STAFF_TYPE = T("Add Staff Type")
         crud_strings[tablename] = Storage(
-            label_create = ADD_STAFF_TYPE,
+            label_create = T("Create Staff Type"),
             title_display = T("Staff Type Details"),
             title_list = T("Staff Types"),
             title_update = T("Edit Staff Type"),
@@ -554,20 +551,7 @@ class S3BudgetKitModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # CRUD Strings
-        ADD_KIT = T("Add Kit")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_KIT,
-            title_display = T("Kit Details"),
-            title_list = T("Kits"),
-            title_update = T("Edit Kit"),
-            label_list_button = T("List Kits"),
-            label_delete_button = T("Delete Kit"),
-            msg_record_created = T("Kit added"),
-            msg_record_modified = T("Kit updated"),
-            msg_record_deleted = T("Kit deleted"),
-            msg_list_empty = T("No Kits currently registered"),
-        )
+    # 
 
         # Represent
         budget_kit_represent = S3Represent(lookup=tablename, fields=["code"])
@@ -685,9 +669,8 @@ class S3BudgetKitModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ITEM = T("Add Item")
         crud_strings[tablename] = Storage(
-            label_create = ADD_ITEM,
+            label_create = T("Create Item"),
             title_display = T("Item Details"),
             title_list = T("Items"),
             title_update = T("Edit Item"),
@@ -926,9 +909,8 @@ class S3BudgetBundleModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_BUNDLE = T("Add Bundle")
         crud_strings[tablename] = Storage(
-            label_create = ADD_BUNDLE,
+            label_create = T("Create Bundle"),
             title_display = T("Bundle Details"),
             title_list = T("Bundles"),
             title_update = T("Edit Bundle"),
@@ -1008,7 +990,7 @@ class S3BudgetBundleModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # @todo: CRUD Strings
+        # @todo : Crud strings
 
         # Configuration
         configure(tablename,
@@ -1042,7 +1024,19 @@ class S3BudgetBundleModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # @todo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Item"),
+            title_display = T("Bundle Items"),
+            title_list = T("Bundles"),
+            title_update = T("Edit Items"),
+            label_list_button = T("List Items"),
+            label_delete_button = T("Delete Items"),
+            msg_record_created = T("Item added"),
+            msg_record_modified = T("Item updated"),
+            msg_record_deleted = T("Item deleted"),
+            msg_list_empty = T("No Bundle Items"),
+        )
 
         # Configuration
         configure(tablename,
@@ -1072,7 +1066,19 @@ class S3BudgetBundleModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # @todo: CRUD Strings
+        # CRUD Strings 
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Budget Bundle"),
+            title_display = T("Bundles"),
+            title_list = T("Bundles"),
+            title_update = T("Edit Bundle"),
+            label_list_button = T("List Bundle"),
+            label_delete_button = T("Delete Bundle"),
+            msg_record_created = T("Bundle added"),
+            msg_record_modified = T("Bundle updated"),
+            msg_record_deleted = T("Bundle deleted"),
+            msg_list_empty = T("No Bundles currently registered"),
+        )
 
         # Configuration
         configure(tablename,
