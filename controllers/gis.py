@@ -3656,4 +3656,14 @@ def proxy():
     except Exception, E:
         raise(HTTP(500, "Some unexpected error occurred. Error text was: %s" % str(E)))
 
+# =============================================================================
+def screenshot():
+    """
+        Take a screenshot of a map
+    """
+
+    config_id = request.args(0) or 1
+
+    return gis.get_screenshot(config_id)
+
 # END =========================================================================

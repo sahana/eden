@@ -2541,6 +2541,73 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def get_screenshot(config_id):
+        """
+            Save a Screenshot of a saved map
+
+            @requires:
+                PhantomJS http://phantomjs.org
+                Selenium https://pypi.python.org/pypi/selenium
+
+            @ToDo: print.css
+        """
+
+        from selenium import webdriver
+
+        request = current.request
+        response = current.response
+
+        driver = webdriver.PhantomJS()
+
+        # Set the size of the browser
+        # @ToDo: Make Configurable
+        driver.set_window_size(1980, 1080)
+
+        # Load the homepage
+        # (Cookie needs to be set on same domain as it takes effect)
+        public_url = current.deployment_settings.get_base_public_url()
+        appname = request.application
+        url = "%s/%s" % (public_url, appname)
+        driver.get(url)
+
+        # Reuse current session to allow access to ACL-controlled resources
+        session_id = response.session_id
+        driver.add_cookie({"name":  response.session_id_name,
+                           "value": session_id,
+                           "path":  "/",
+                           })
+        # For sync connections
+        current.session._unlock(response)
+
+        # Load the map
+        url = "%s/%s/gis/index?config=%s" % (public_url, appname, config_id)
+        driver.get(url)
+
+        # Wait for page to load
+        # Read S3.gis.maps[map_id].s3.loaded
+
+        # Save the Output
+        # @ToDo: Can we use StringIO instead of cluttering filesystem?
+        # @ToDo: Allow option of PDF (as well as PNG)
+        cachepath = os.path.join(request.folder, "static", "cache", "png")
+
+        if not os.path.exists(cachepath):
+            try:
+                os.mkdir(cachepath)
+            except OSError, os_error:
+                error = "GIS: PNG files cannot be saved: %s %s" % \
+                                  (cachepath, os_error)
+                current.log.error(error)
+                current.session.error = error
+                redirect(URL(c="gis", f="index", vars={"config_id": config_id}))
+
+        driver.save_screenshot(os.path.join(cachepath, "%s.png" % session_id))
+
+        # Pass the result back to the User
+        redirect(URL(c="static", f="cache", args=["png", "%s.png" % session_id]))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def get_shapefile_geojson(resource):
         """
             Lookup Shapefile Layer polygons once per layer and not per-record

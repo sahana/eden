@@ -126,6 +126,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
         });
 
+        // Set a flag to show that we've completed loading
+        S3.gis.maps[map_id].s3.loaded = true;
+
         // Return the map object
         return map;
     };
