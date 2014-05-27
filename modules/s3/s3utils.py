@@ -499,8 +499,6 @@ def s3_addrow(form, label, widget, comment, formstyle, row_id, position=-1):
     if callable(formstyle):
         row = formstyle(row_id, label, widget, comment)
         if isinstance(row, (tuple, list)):
-            length = len(row)
-            position *= length
             for subrow in row:
                 form[0].insert(position, subrow)
                 if position >= 0:
