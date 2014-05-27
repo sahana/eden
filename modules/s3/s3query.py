@@ -1553,30 +1553,42 @@ class S3ResourceQuery(object):
         """
 
         result = False
-
-        contains = self._contains
         convert = S3TypeConverter.convert
+
+        # Fallbacks for TYPEOF
+        if op == self.TYPEOF:
+            if isinstance(l, (list, tuple, set)):
+                op = self.ANYOF
+            elif isinstance(r, (list, tuple, set)):
+                op = self.BELONGS
+            else:
+                op = self.EQ
+
         if op == self.CONTAINS:
             r = convert(l, r)
-            result = contains(l, r)
+            result = self._probe_contains(l, r)
+            
         elif op == self.ANYOF:
-            if not isinstance(r, (list, tuple)):
+            if not isinstance(r, (list, tuple, set)):
                 r = [r]
             for v in r:
-                if isinstance(l, (list, tuple, basestring)):
-                    if contains(l, v):
+                if isinstance(l, (list, tuple, set, basestring)):
+                    if self._probe_contains(l, v):
                         return True
                 elif l == v:
                     return True
             return False
+            
         elif op == self.BELONGS:
-            if not isinstance(r, (list, tuple)):
+            if not isinstance(r, (list, tuple, set)):
                 r = [r]
             r = convert(l, r)
-            result = contains(r, l)
+            result = self._probe_contains(r, l)
+            
         elif op == self.LIKE:
             pattern = re.escape(str(r)).replace("\\%", ".*").replace(".*.*", "\\%")
             return re.match(pattern, str(l)) is not None
+            
         else:
             r = convert(l, r)
             if op == self.LT:
@@ -1591,11 +1603,12 @@ class S3ResourceQuery(object):
                 result = l >= r
             elif op == self.GT:
                 result = l > r
+                
         return result
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _contains(a, b):
+    def _probe_contains(a, b):
         """
             Probe whether a contains b
         """
@@ -1605,8 +1618,8 @@ class S3ResourceQuery(object):
         try:
             if isinstance(a, basestring):
                 return str(b) in a
-            elif isinstance(a, (list, tuple)):
-                if isinstance(b, (list, tuple)):
+            elif isinstance(a, (list, tuple, set)):
+                if isinstance(b, (list, tuple, set)):
                     convert = S3TypeConverter.convert
                     found = True
                     for _b in b:

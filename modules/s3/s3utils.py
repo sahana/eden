@@ -1795,8 +1795,8 @@ class S3TypeConverter(object):
             raise TypeError
         if type(b) is type(a) or isinstance(b, type(a)):
             return b
-        if isinstance(a, (list, tuple)):
-            if isinstance(b, (list, tuple)):
+        if isinstance(a, (list, tuple, set)):
+            if isinstance(b, (list, tuple, set)):
                 return b
             elif isinstance(b, basestring):
                 if "," in b:
@@ -1810,7 +1810,7 @@ class S3TypeConverter(object):
                 return [cnv(a[0], item) for item in b]
             else:
                 return b
-        if isinstance(b, (list, tuple)):
+        if isinstance(b, (list, tuple, set)):
             cnv = cls.convert
             return [cnv(a, item) for item in b]
         if isinstance(a, basestring):

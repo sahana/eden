@@ -25,6 +25,8 @@ class S3HierarchyTests(unittest.TestCase):
                           Field("category"),
                           Field("type"),
                           Field("parent", "reference test_hierarchy"),
+                          Field.Method("vsfield", lambda row: "test"),
+                          Field.Method("vmfield", lambda row: ["test1", "test2", "test3"]),
                           *s3_uid()
                           )
 
@@ -105,7 +107,7 @@ class S3HierarchyTests(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
 
         current.auth.override = True
-        resource = current.s3db.resource("test_hierarchy")
+        resource = s3db.resource("test_hierarchy")
         resource.import_xml(xmltree)
 
     # -------------------------------------------------------------------------
@@ -875,6 +877,56 @@ class S3HierarchyTests(unittest.TestCase):
         self.assertEqual(found, expected)
 
     # -------------------------------------------------------------------------
+    def testVirtualFieldSingle(self):
+        """ Test fallbacks for __typeof with single value virtual field """
+
+        resource = current.s3db.resource("test_hierarchy")
+        row = self.rows["HIERARCHY1"]
+
+        # vsfield returns "test"
+
+        expr = FS("vsfield").typeof("test")
+        result = expr(resource, row, virtual=True)
+        self.assertTrue(result)
+
+        expr = FS("vsfield").typeof("other")
+        result = expr(resource, row, virtual=True)
+        self.assertFalse(result)
+
+        expr = FS("vsfield").typeof(["test", "test1", "test2"])
+        result = expr(resource, row, virtual=True)
+        self.assertTrue(result)
+
+        expr = FS("vsfield").typeof(["other", "other1", "other2"])
+        result = expr(resource, row, virtual=True)
+        self.assertFalse(result)
+
+    # -------------------------------------------------------------------------
+    def testVirtualFieldMultiple(self):
+        """ Test fallbacks for __typeof with multi-value virtual field """
+
+        resource = current.s3db.resource("test_hierarchy")
+        row = self.rows["HIERARCHY2"]
+
+        # vmfield returns ["test1", "test2", "test3"]
+
+        expr = FS("vmfield").typeof("test1")
+        result = expr(resource, row, virtual=True)
+        self.assertTrue(result)
+
+        expr = FS("vmfield").typeof("other")
+        result = expr(resource, row, virtual=True)
+        self.assertFalse(result)
+
+        expr = FS("vmfield").typeof(["test1", "other"])
+        result = expr(resource, row, virtual=True)
+        self.assertTrue(result)
+
+        expr = FS("vmfield").typeof(["other1", "other2"])
+        result = expr(resource, row, virtual=True)
+        self.assertFalse(result)
+
+    # -------------------------------------------------------------------------
     def inspect_multi_query(self, query, field=None, conjunction=None, op=None):
         """
             Inspect a list:reference multi-value containment query
@@ -942,7 +994,7 @@ class S3HierarchyTests(unittest.TestCase):
         
         self.assertTrue(self.equivalent(query, expected_query),
                         msg = "%s != %s" % (query, expected_query))
-                        
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
