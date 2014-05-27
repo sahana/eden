@@ -1280,48 +1280,61 @@ class S3ResourceQuery(object):
             @param r: the right operator
         """
 
-        ktablename, key, multiple = s3_get_foreign_key(l)
-        if not ktablename:
-            ktablename = l.tablename
-
-        # Connect to the hierarchy
         from s3hierarchy import S3Hierarchy
-        hierarchy = S3Hierarchy(ktablename)
-        if hierarchy.config is None and str(l.type)[:5] != "list:":
+        
+        tablename = l.tablename
+        
+        # Connect to the hierarchy
+        hierarchy = S3Hierarchy(tablename)
+        if hierarchy.config is None:
+            # Reference to a hierarchical table?
+            ktablename, key = s3_get_foreign_key(l)[:2]
+            if ktablename:
+                hierarchy = S3Hierarchy(ktablename)
+        else:
+            key = None
+
+        list_type = str(l.type)[:5] == "list:"
+        if hierarchy.config is None and not list_type:
             # No hierarchy configured and no list:reference
             # => no need to resolve expression, can simply use belongs
             return self._query_belongs(l, r)
 
-        field = l
-        keys = r
-            
+        field, keys = l, r
+        
         if not key:
 
-            ktable = current.s3db[ktablename]
-            if l.name != ktable._id.name:
+            s3db = current.s3db
+
+            table = s3db[tablename]
+            if l.name != table._id.name:
                 # Lookup-field rather than primary key => resolve it
 
                 # Build a filter expression for the lookup table
                 fs = S3FieldSelector(l.name)
-                expr = self._query_belongs(l, r, field = fs)
+                if list_type:
+                    expr = fs.contains(r)
+                else:
+                    expr = self._query_belongs(l, r, field = fs)
 
                 # Resolve filter expression into subquery
-                kresource = current.s3db.resource(ktablename)
+                resource = s3db.resource(tablename)
                 if expr is not None:
-                    subquery = expr.query(kresource)
+                    subquery = expr.query(resource)
                 else:
                     subquery = None
                 if not subquery:
                     return None
 
                 # Execute query and retrieve the lookup table IDs
-                if current.xml.DELETED in ktable.fields:
-                    subquery &= ktable[current.xml.DELETED] != True
-                rows = current.db(subquery).select(ktable._id)
+                DELETED = current.xml.DELETED
+                if DELETED in table.fields:
+                    subquery &= table[DELETED] != True
+                rows = current.db(subquery).select(table._id)
 
                 # Override field/keys
-                field = ktable._id
-                keys = set([row[ktable._id.name] for row in rows])
+                field = table._id
+                keys = set([row[table._id.name] for row in rows])
 
         list_type = str(field.type)[:5] == "list:"
         
