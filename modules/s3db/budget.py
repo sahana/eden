@@ -123,9 +123,9 @@ class S3BudgetModel(S3Model):
                                 comment = S3AddResourceLink(
                                             c = "budget",
                                             f = "budget",
-                                            label = T("Create Budget"),
+                                            label = ADD_BUDGET,
                                             title = T("Budget"),
-                                            tooltip = T("You can add a new budget by clicking link 'Create Budget'.")
+                                            tooltip = T("You can create a new budget by clicking link '%s'." %(ADD_BUDGET))
                                           ),
                                 ondelete = "CASCADE",
                            )
@@ -247,9 +247,9 @@ class S3BudgetModel(S3Model):
                                 comment = S3AddResourceLink(
                                             c = "budget",
                                             f = "location",
-                                            label = T("Create Location"),
+                                            label = ADD_LOCATION,
                                             title = T("Location"),
-                                            tooltip = T("You can add a new location by clicking link 'Create Location'.")
+                                            tooltip = T("You can create a new location by clicking link '%s'." %(ADD_LOCATION))
                                           ),
                                 ondelete = "CASCADE",
                              )
@@ -300,7 +300,7 @@ class S3BudgetModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_STAFF_TYPE = T("Add Staff Type")
+        ADD_STAFF_TYPE = T("Create Staff Type")
         crud_strings[tablename] = Storage(
             label_create = ADD_STAFF_TYPE,
             title_display = T("Staff Type Details"),
@@ -328,9 +328,9 @@ class S3BudgetModel(S3Model):
                                 comment = S3AddResourceLink(
                                             c = "budget",
                                             f = "staff",
-                                            label = T("Add Staff"),
+                                            label = ADD_STAFF_TYPE,
                                             title = T("Staff"),
-                                            tooltip = T("You can add new staff by clicking link 'Add Staff'.")
+                                            tooltip = T("You can create new staff by clicking link '%s'." %(ADD_STAFF_TYPE))
                                           ),
                                 ondelete = "RESTRICT",
                           )
@@ -555,7 +555,7 @@ class S3BudgetKitModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_KIT = T("Add Kit")
+        ADD_KIT = T("Create Kit")
         crud_strings[tablename] = Storage(
             label_create = ADD_KIT,
             title_display = T("Kit Details"),
@@ -582,9 +582,9 @@ class S3BudgetKitModel(S3Model):
                                 comment = S3AddResourceLink(
                                             c = "budget",
                                             f = "kit",
-                                            label = T("Add kit"),
+                                            label = ADD_KIT,
                                             title = T("Kit"),
-                                            tooltip = T("You can add a new kit by clicking link 'Add Kit'.")
+                                            tooltip = T("You can create a new kit by clicking link '%s'." %(ADD_KIT))
                                           ),
                                 ondelete = "RESTRICT",
                              )
@@ -685,7 +685,7 @@ class S3BudgetKitModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ITEM = T("Add Item")
+        ADD_ITEM = T("Create Item")
         crud_strings[tablename] = Storage(
             label_create = ADD_ITEM,
             title_display = T("Item Details"),
@@ -714,9 +714,9 @@ class S3BudgetKitModel(S3Model):
                                 comment = S3AddResourceLink(
                                             c = "budget",
                                             f = "item",
-                                            label = T("Add item"),
+                                            label = ADD_ITEM,
                                             title = T("Item"),
-                                            tooltip = T("You can add a new item by clicking link 'Add Item'.")
+                                            tooltip = T("You can create a new item by clicking link '%s'." %(ADD_ITEM))
                                           ),
                                 ondelete = "RESTRICT",
                              )
@@ -926,7 +926,7 @@ class S3BudgetBundleModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_BUNDLE = T("Add Bundle")
+        ADD_BUNDLE = T("Create Bundle")
         crud_strings[tablename] = Storage(
             label_create = ADD_BUNDLE,
             title_display = T("Bundle Details"),
@@ -974,9 +974,9 @@ class S3BudgetBundleModel(S3Model):
                                 comment = S3AddResourceLink(
                                             c = "budget",
                                             f = "bundle",
-                                            label = T("Add Bundle"),
+                                            label = ADD_BUNDLE,
                                             title = T("Bundle"),
-                                            tooltip = T("You can add a new bundle by clicking link 'Add Bundle'.")
+                                            tooltip = T("You can create a new bundle by clicking link '%s'." %(ADD_BUNDLE))
                                           ),
                                 ondelete = "RESTRICT",
                              )
@@ -1008,7 +1008,19 @@ class S3BudgetBundleModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # @todo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Kit"),
+            title_display = T("Kit Details"),
+            title_list = T("Kits"),
+            title_update = T("Edit Kit"),
+            label_list_button = T("List Kits"),
+            label_delete_button = T("Delete Kit"),
+            msg_record_created = T("Kit added"),
+            msg_record_modified = T("Kit updated"),
+            msg_record_deleted = T("Kit deleted"),
+            msg_list_empty = T("No Kits currently registered in this bundle"),
+        )
 
         # Configuration
         configure(tablename,
@@ -1041,8 +1053,20 @@ class S3BudgetBundleModel(S3Model):
                            label = T("Megabytes per Month"),
                            ),
                      *s3_meta_fields())
-
-        # @todo: CRUD Strings
+                     
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Item"),
+            title_display = T("Item Details"),
+            title_list = T("Items"),
+            title_update = T("Edit Item"),
+            label_list_button = T("List Items"),
+            label_delete_button = T("Delete Items"),
+            msg_record_created = T("Item added"),
+            msg_record_modified = T("Item updated"),
+            msg_record_deleted = T("Item deleted"),
+            msg_list_empty = T("No Items currently registered in this bundle"),
+        )
 
         # Configuration
         configure(tablename,
@@ -1072,7 +1096,19 @@ class S3BudgetBundleModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # @todo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Bundle"),
+            title_display = T("Bundle Details"),
+            title_list = T("Budget Bundles"),
+            title_update = T("Edit Bundle"),
+            label_list_button = T("List Bundles"),
+            label_delete_button = T("Delete Bundle"),
+            msg_record_created = T("Bundle added"),
+            msg_record_modified = T("Bundle updated"),
+            msg_record_deleted = T("Bundle deleted"),
+            msg_list_empty = T("No Bundles currently registered"),
+        )
 
         # Configuration
         configure(tablename,
