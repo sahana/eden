@@ -4925,6 +4925,7 @@ class S3HierarchyWidget(FormWidget):
         widget_opts = {"selected": selected,
                        "selectedText": str(T("# selected")),
                        "noneSelectedText": str(T("Select")),
+                       "noOptionsText": str(T("No options available")),
                        "multiple": self.multiple,
                        "leafonly": leafonly,
                        }

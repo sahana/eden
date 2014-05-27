@@ -23,6 +23,7 @@
             selected: null,
             noneSelectedText: 'Select',
             selectedText: 'selected',
+            noOptionsText: 'No options available',
             multiple: true,
             leafonly: true
         },
@@ -30,7 +31,7 @@
         _create: function() {
             // Create the widget
             var el = $(this.element),
-                hint = this.options.noneSelectedText;
+                opts = this.options;
 
             this.id = hierarchicaloptsID;
             hierarchicaloptsID += 1;
@@ -44,12 +45,16 @@
 
             // The button
             this.button = $('<button type="button" class="s3-hierarchy-button ui-multiselect ui-widget ui-state-default ui-corner-all"><span class="ui-icon ui-icon-triangle-1-s"></span></button>');
-            this.buttonText = $('<span>' + hint + '</span>').appendTo(this.button);
+            this.buttonText = $('<span>' + opts.noneSelectedText + '</span>').appendTo(this.button);
+
+            // No-options section
+            this.noopts = $('<span class="no-options-available">' + opts.noOptionsText + '</span>').hide();
 
             // The tree
             this.tree = el.find('.s3-hierarchy-tree')
                           .first()
                           .hide()
+                          .before(this.noopts)
                           .before(this.button)
                           .detach()
                           .appendTo('body');
@@ -67,6 +72,7 @@
             
             this._unbindEvents();
             $(this.button).remove();
+            $(this.noopts).remove();
             $(this.tree).detach()
                         .appendTo(this.element)
                         .show();
@@ -77,6 +83,15 @@
             this._unbindEvents();
 
             var opts = this.options;
+
+            if (!this.tree.find('li').length) {
+                this.button.hide();
+                this.noopts.show();
+                return;
+            } else {
+                this.noopts.hide();
+                this.button.show();
+            }
             
             var selected = [],
                 s = opts.selected;
@@ -291,14 +306,7 @@
             }).bind('uncheck_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
             })
-            if (widget.options.leafonly && !widget.options.multiple) {
-                // Hide checkboxes on parent nodes if single-select and leaf-only
-                // @todo: indicate 3rd state?
-                tree.bind('loaded.jstree', function (event, data) {
-                    tree.find(' li[rel="parent"] > a > ins.jstree-checkbox').css({display: 'none'});
-                });
-            }
-
+            
             button.bind('click' + namespace, function() {
                 if (!widget._isOpen) {
                     widget.open();
