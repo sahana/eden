@@ -1,7 +1,7 @@
 Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Default,Polygons,Style,Folder,Visible,Enabled,Cluster Distance,Cluster Threshold,Refresh
 Debris Basins (Community Data),,gis,poi,CRMT,debris,,Debris Basin,name,poi_type_id,~.poi_type_id$name=Debris Basin,,,,,False,,30,,
 "Flood Channel / Street Intersections (Community Data)",,gis,poi,CRMT,manhole,,Water Storage Tank,name,poi_type_id,~.poi_type_id$name=Flood Channel / Street Intersection,,,,,False,,30,,
-Water Storage Tanks (Community Data),,gis,poi,CRMT,water,,Water Storage Tank,name,poi_type_id,~.poi_type_id$name=Water Storage Tank,,,,,False,,30,,
+Water Storage Tanks (Community Data),,gis,poi,CRMT,water_tank,,Water Storage Tank,name,poi_type_id,~.poi_type_id$name=Water Storage Tank,,,,,False,,30,,
 Training (Community Data),,project,activity,CRMT,activity,,,name,,activity_type.name=Training,True,,,Activities,False,,30,,
 Outreach (Community Data),,project,activity,CRMT,activity,,,name,,activity_type.name=Outreach,,,,Activities,False,,30,,
 Meetings (Community Data),,project,activity,CRMT,activity,,,name,,activity_type.name=Meetings,,,,Activities,False,,30,,
