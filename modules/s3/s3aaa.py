@@ -101,7 +101,6 @@ class AuthS3(Auth):
             - requires_membership
 
         - S3 extension for user registration:
-            - s3_registration_form
             - s3_register_validation
             - s3_user_register_onaccept
 
@@ -513,11 +512,14 @@ Thank you"""
 
     # -------------------------------------------------------------------------
     def login(self,
-              next=DEFAULT,
-              onvalidation=DEFAULT,
-              onaccept=DEFAULT,
-              log=DEFAULT,
-              inline=False):
+              next = DEFAULT,
+              onvalidation = DEFAULT,
+              onaccept = DEFAULT,
+              log = DEFAULT,
+              inline = False, # Set to True to use an 'inline' variant of the style
+              lost_pw_link = True,
+              register_link = True,
+              ):
         """
             Overrides Web2Py's login() to use custom flash styles & utcnow
 
@@ -563,52 +565,81 @@ Thank you"""
         # Do we use our own login form, or from a central source?
         if settings.login_form == self:
 
-            # @ToDo: adapt bootstrap/style.css rules for login form
-            # elements to bootstrap formstyle, fix custom hacks for
-            # login form that rely on table3cols, then remove this:
-            formstyle_name = deployment_settings.ui.get("formstyle")
-            if isinstance(formstyle_name, basestring) and \
-                formstyle_name.startswith("bootstrap"):
-                formstyle = "table3cols"
-                
-            elif inline:
+            if inline:
                 formstyle = deployment_settings.get_ui_inline_formstyle()
-
             else:
                 formstyle = deployment_settings.get_ui_formstyle()
-                
+
             form = SQLFORM(utable,
-                           fields=[username, passfield],
-                           hidden=dict(_next=request.vars._next),
-                           showid=settings.showid,
-                           submit_button=T("Login"),
-                           delete_label=messages.delete_label,
-                           formstyle=formstyle,
-                           separator=settings.label_separator
+                           fields = [username, passfield],
+                           hidden = dict(_next=request.vars._next),
+                           showid = settings.showid,
+                           submit_button = T("Login"),
+                           delete_label = messages.delete_label,
+                           formstyle = formstyle,
+                           separator = settings.label_separator
                            )
-                           
+
+            # Identify form for CSS
+            form.add_class("auth_login")
+
+            # @ToDo: Probe formstyle rather than hardcode options here
+            formstyle_name = deployment_settings.ui.get("formstyle")
+            bootstrap = formstyle_name == "bootstrap"
+            foundation = formstyle_name == "foundation"
+            self_registration = deployment_settings.get_security_self_registration()
+            if self_registration and register_link:
+                if self_registration == "index":
+                    # Custom Registration page
+                    controller = "index"
+                else:
+                    # Default Registration page
+                    controller = "user"
+                register_link = A(T("Register for Account"),
+                                  _href=URL(f=controller, args="register"),
+                                  _id="register-btn",
+                                  _class="action-lnk",
+                                  )
+                if bootstrap:
+                    form[0][-1].append(register_link)
+                elif foundation:
+                    form[0][-1][0][1].append(register_link)
+                else:
+                    form[0][-1][0].append(register_link)
+
+            if lost_pw_link:
+                lost_pw_link = A(T("Lost Password"),
+                                 _href=URL(f="user", args="retrieve_password"),
+                                 _class="action-lnk",
+                                 )
+                if bootstrap:
+                    form[0][-1].append(lost_pw_link)
+                elif foundation:
+                    form[0][-1][0][1].append(lost_pw_link)
+                else:
+                    form[0][-1][0].append(lost_pw_link)
+
             if settings.remember_me_form:
                 # Add a new input checkbox "remember me for longer"
                 s3_addrow(form,
-                          XML("&nbsp;"),
-                          DIV(XML("&nbsp;"),
-                              INPUT(_type='checkbox',
+                          "",
+                          DIV(INPUT(_type='checkbox',
                                     _class='checkbox',
                                     _id="auth_user_remember",
                                     _name="remember",
                                     ),
-                              XML("&nbsp;&nbsp;"),
                               LABEL(messages.label_remember_me,
                                     _for="auth_user_remember",
                                     ),
                               ),
                           "",
                           formstyle,
-                          "auth_user_remember__row")
+                          "auth_user_remember__row",
+                          )
 
             if deployment_settings.get_auth_set_presence_on_login():
                 s3_addrow(form,
-                          XML(""),
+                          "",
                           INPUT(_id="auth_user_clientlocation",
                                 _name="auth_user_clientlocation",
                                 _style="display:none",
@@ -627,7 +658,8 @@ Thank you"""
                           captcha,
                           captcha.comment,
                           formstyle,
-                          "captcha__row")
+                          "captcha__row",
+                          )
 
             accepted_form = False
             if form.accepts(request.post_vars, session,
@@ -710,7 +742,7 @@ Thank you"""
                 # @ToDo: Complete Registration for new users
                 #form = Storage()
                 #form.vars = user
-                #self.s3_register(form)
+                #self.s3_user_register_onaccept(form)
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
@@ -740,6 +772,159 @@ Thank you"""
             return form
         else:
             redirect(next)
+
+    # -------------------------------------------------------------------------
+    def change_password(self,
+                        next=DEFAULT,
+                        onvalidation=DEFAULT,
+                        onaccept=DEFAULT,
+                        log=DEFAULT,
+                        ):
+        """
+            Returns a form that lets the user change password
+        """
+
+        if not self.is_logged_in():
+            redirect(self.settings.login_url,
+                     client_side=self.settings.client_side)
+
+        messages = self.messages
+        settings = self.settings
+        utable = settings.table_user
+        s = self.db(utable.id == self.user.id)
+
+        request = current.request
+        session = current.session
+        if next is DEFAULT:
+            next = self.get_vars_next() or settings.change_password_next
+        if onvalidation is DEFAULT:
+            onvalidation = settings.change_password_onvalidation
+        if onaccept is DEFAULT:
+            onaccept = settings.change_password_onaccept
+        if log is DEFAULT:
+            log = messages["change_password_log"]
+        passfield = settings.password_field
+        form = SQLFORM.factory(
+            Field("old_password", "password",
+                  label=messages.old_password,
+                  requires=utable[passfield].requires),
+            Field("new_password", "password",
+                  label=messages.new_password,
+                  requires=utable[passfield].requires),
+            Field("new_password2", "password",
+                  label=messages.verify_password,
+                  requires=[IS_EXPR(
+                    "value==%s" % repr(request.vars.new_password),
+                              messages.mismatched_password)]),
+            submit_button=messages.password_change_button,
+            hidden=dict(_next=next),
+            formstyle=current.deployment_settings.get_ui_formstyle(),
+            separator=settings.label_separator
+        )
+        form.add_class("auth_change_password")
+
+        if form.accepts(request, session,
+                        formname="change_password",
+                        onvalidation=onvalidation,
+                        hideerror=settings.hideerror):
+
+            if not form.vars["old_password"] == s.select(limitby=(0,1), orderby_on_limitby=False).first()[passfield]:
+                form.errors["old_password"] = messages.invalid_password
+            else:
+                d = {passfield: str(form.vars.new_password)}
+                s.update(**d)
+                session.confirmation = messages.password_changed
+                self.log_event(log, self.user)
+                callback(onaccept, form)
+                if not next:
+                    next = self.url(args=request.args)
+                else:
+                    next = replace_id(next, form)
+                redirect(next, client_side=settings.client_side)
+        return form
+        
+    # -------------------------------------------------------------------------
+    def request_reset_password(self,
+                               next=DEFAULT,
+                               onvalidation=DEFAULT,
+                               onaccept=DEFAULT,
+                               log=DEFAULT,
+                               ):
+        """
+            Returns a form to reset the user password
+        """
+
+        messages = self.messages
+        settings = self.settings
+        utable = settings.table_user
+        request = current.request
+        response = current.response
+        session = current.session
+        captcha = settings.retrieve_password_captcha or \
+                (settings.retrieve_password_captcha != False and settings.captcha)
+
+        if next is DEFAULT:
+            next = self.get_vars_next() or settings.request_reset_password_next
+        if not settings.mailer:
+            response.error = messages.function_disabled
+            return ""
+        if onvalidation is DEFAULT:
+            onvalidation = settings.reset_password_onvalidation
+        if onaccept is DEFAULT:
+            onaccept = settings.reset_password_onaccept
+        if log is DEFAULT:
+            log = messages["reset_password_log"]
+        #userfield = settings.login_userfield or "username" \
+        #    if "username" in utable.fields else "email"
+        userfield = "email"
+        #if userfield == "email":
+        utable.email.requires = [
+            IS_EMAIL(error_message=messages.invalid_email),
+            IS_IN_DB(self.db, utable.email,
+                     error_message=messages.invalid_email)]
+        #else:
+        #    utable.username.requires = [
+        #        IS_IN_DB(self.db, utable.username,
+        #                 error_message=messages.invalid_username)]
+        form = SQLFORM(utable,
+                       fields=[userfield],
+                       hidden=dict(_next=next),
+                       showid=settings.showid,
+                       submit_button=messages.password_reset_button,
+                       delete_label=messages.delete_label,
+                       formstyle=current.deployment_settings.get_ui_formstyle(),
+                       separator=settings.label_separator
+                       )
+        form.add_class("auth_reset_password")
+        if captcha:
+            addrow(form, captcha.label, captcha,
+                   captcha.comment, settings.formstyle, "captcha__row")
+        if form.accepts(request, session if self.csrf_prevention else None,
+                        formname="reset_password", dbio=False,
+                        onvalidation=onvalidation,
+                        hideerror=settings.hideerror):
+            user = table_user(**{userfield:form.vars.get(userfield)})
+            if not user:
+                session.error = messages["invalid_%s" % userfield]
+                redirect(self.url(args=request.args),
+                         client_side=settings.client_side)
+            elif user.registration_key in ("pending", "disabled", "blocked"):
+                session.warning = messages.registration_pending
+                redirect(self.url(args=request.args),
+                         client_side=settings.client_side)
+            if self.email_reset_password(user):
+                session.confirmation = messages.email_sent
+            else:
+                session.error = messages.unable_to_send_email
+            self.log_event(log, user)
+            callback(onaccept, form)
+            if not next:
+                next = self.url(args=request.args)
+            else:
+                next = replace_id(next, form)
+            redirect(next, client_side=settings.client_side)
+        # old_requires = table_user.email.requires
+        return form
 
     # -------------------------------------------------------------------------
     def login_user(self, user):
@@ -833,10 +1018,12 @@ Thank you"""
 
     # -------------------------------------------------------------------------
     def register(self,
-                 next=DEFAULT,
-                 onvalidation=DEFAULT,
-                 onaccept=DEFAULT,
-                 log=DEFAULT):
+                 next = DEFAULT,
+                 onvalidation = DEFAULT,
+                 onaccept = DEFAULT,
+                 log = DEFAULT,
+                 js_validation = True, # Set to False if using custom validation
+                 ):
         """
             Overrides Web2Py's register() to add new functionality:
                 - Checks whether registration is permitted
@@ -860,11 +1047,11 @@ Thank you"""
         T = current.T
 
         utable = self.settings.table_user
+        utablename = utable._tablename
         passfield = settings.password_field
 
         # S3: Don't allow registration if disabled
-        self_registration = deployment_settings.get_security_self_registration()
-        if not self_registration:
+        if not deployment_settings.get_security_self_registration():
             session.error = messages.registration_disabled
             redirect(URL(args=["login"]))
 
@@ -882,96 +1069,128 @@ Thank you"""
 
         labels, required = s3_mark_required(utable)
 
-        #formstyle = deployment_settings.get_ui_formstyle()
-        form = SQLFORM(utable, hidden=dict(_next=request.vars._next),
+        formstyle = deployment_settings.get_ui_formstyle()
+        form = SQLFORM(utable,
+                       hidden = dict(_next=request.vars._next),
                        labels = labels,
                        separator = "",
                        showid = settings.showid,
                        submit_button = T("Register"),
                        delete_label = messages.delete_label,
-                       #formstyle = formstyle
+                       formstyle = formstyle
                        )
+
+        # Identify form for CSS & JS Validation
+        form.add_class("auth_register")
+
+        if js_validation:
+            # Client-side Validation
+            self.s3_register_validation()
+
+        login_link = A(T("Login"),
+                       _href=URL(f="user", args="login"),
+                       _id="login-btn",
+                       _class="action-lnk",
+                       )
+
+        # @ToDo: Probe formstyle rather than hardcode options here
+        formstyle_name = deployment_settings.ui.get("formstyle")
+        bootstrap = formstyle_name == "bootstrap"
+        foundation = formstyle_name == "foundation"
+        if bootstrap:
+            form[0][-1].append(login_link)
+        elif foundation:
+            form[0][-1][0][1].append(login_link)
+        else:
+            form[0][-1][0].append(login_link)
 
         # Insert a Password-confirmation field
         for i, row in enumerate(form[0].components):
             item = row.element("input", _name=passfield)
             if item:
-                field_id = "%s_password_two" % utable._tablename
-                #row = formstyle(...)
-                form[0].insert(i + 1,
-                    TR(TD(LABEL("%s:" % messages.verify_password,
-                                _for="password_two",
-                                _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                          SPAN("*", _class="req"),
-                          _class="w2p_fl"),
-                       TD(INPUT(_name="password_two",
+                field_id = "%s_password_two" % utablename
+                s3_addrow(form,
+                          LABEL(DIV("%s:" % messages.verify_password,
+                                    SPAN("*", _class="req"),
+                                    _for="password_two",
+                                    _id=field_id + SQLFORM.ID_LABEL_SUFFIX,
+                                    ),
+                                ),
+                          INPUT(_name="password_two",
                                 _id=field_id,
                                 _type="password",
                                 requires=IS_EXPR("value==%s" % \
-                                repr(request.vars.get(passfield, None)),
+                                    repr(request.vars.get(passfield, None)),
                                 error_message=messages.mismatched_password)
                                 ),
-                          _class="w2p_fw"),
-                        TD("",
-                           _class="w2p_fc"),
-                        _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+                          "",
+                          formstyle,
+                          field_id + SQLFORM.ID_ROW_SUFFIX,
+                          position = i + 1,
+                          )
 
         # Add an opt in clause to receive emails depending on the deployment settings
         if deployment_settings.get_auth_opt_in_to_email():
-            field_id = "%s_opt_in" % utable._tablename
+            field_id = "%s_opt_in" % utablename
             comment = DIV(DIV(_class="tooltip",
                               _title="%s|%s" % (T("Mailing list"),
                                                 T("By selecting this you agree that we may contact you."))))
             checked = deployment_settings.get_auth_opt_in_default() and "selected"
-            form[0].insert(-1,
-                           TR(TD(LABEL("%s:" % T("Receive updates"),
-                                       _for="opt_in",
-                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                                 _class="w2p_fl"),
-                              TD(INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
-                                 _class="w2p_fw"),
-                              TD(comment,
-                                 _class="w2p_fc"),
-                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+            s3_addrow(form,
+                      LABEL("%s:" % T("Receive updates"),
+                            _for="opt_in",
+                            _id=field_id + SQLFORM.ID_LABEL_SUFFIX,
+                            ),
+                      INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
+                      comment,
+                      formstyle,
+                      field_id + SQLFORM.ID_ROW_SUFFIX,
+                      )
 
         # S3: Insert Home phone field into form
         if deployment_settings.get_auth_registration_requests_home_phone():
             for i, row in enumerate(form[0].components):
                 item = row.element("input", _name="email")
                 if item:
-                    field_id = "%s_home" % utable._tablename
-                    form[0].insert(i + 1,
-                                   TR(TD(LABEL("%s:" % T("Home Phone"),
-                                               _for="home",
-                                               _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                                         _class="w2p_fl"),
-                                      TD(INPUT(_name="home", _id=field_id),
-                                         _class="w2p_fw"),
-                                      TD(_class="w2p_fc"),
-                                   _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+                    field_id = "%s_home" % utablename
+                    s3_addrow(form,
+                              LABEL("%s:" % T("Home Phone"),
+                                    _for="home",
+                                    _id=field_id + SQLFORM.ID_LABEL_SUFFIX,
+                                    ),
+                              INPUT(_name="home", _id=field_id),
+                              "",
+                              formstyle,
+                              field_id + SQLFORM.ID_ROW_SUFFIX,
+                              position = i + 1,
+                              )
 
         # S3: Insert Mobile phone field into form
         if deployment_settings.get_auth_registration_requests_mobile_phone():
             for i, row in enumerate(form[0].components):
                 item = row.element("input", _name="email")
                 if item:
-                    field_id = "%s_mobile" % utable._tablename
+                    field_id = "%s_mobile" % utablename
                     if deployment_settings.get_auth_registration_mobile_phone_mandatory():
-                        comment = SPAN("*", _class="req")
+                        mandatory = SPAN("*", _class="req")
+                        comment = ""
                     else:
+                        mandatory = ""
                         comment = DIV(_class="tooltip",
                                       _title="%s|%s" % (deployment_settings.get_ui_label_mobile_phone(),
                                                         messages.help_mobile_phone))
-                    form[0].insert(i + 1,
-                                   TR(TD(LABEL("%s:" % deployment_settings.get_ui_label_mobile_phone(),
-                                               _for="mobile",
-                                               _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                                         _class="w2p_fl"),
-                                      TD(INPUT(_name="mobile", _id=field_id),
-                                         _class="w2p_fw"),
-                                      TD(comment,
-                                         _class="w2p_fc"),
-                                   _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+                    s3_addrow(form,
+                              LABEL("%s:" % deployment_settings.get_ui_label_mobile_phone(),
+                                    mandatory,
+                                    _for="mobile",
+                                    _id=field_id + SQLFORM.ID_LABEL_SUFFIX,
+                                    ),
+                              INPUT(_name="mobile", _id=field_id),
+                              comment,
+                              formstyle,
+                              field_id + SQLFORM.ID_ROW_SUFFIX,
+                              position = i + 1,
+                              )
 
         # S3: Insert Photo widget into form
         if deployment_settings.get_auth_registration_requests_image():
@@ -982,21 +1201,43 @@ Thank you"""
                                                 dict(gravatar = A("Gravatar",
                                                                   _target="top",
                                                                   _href="http://gravatar.com"))))
-            field_id = "%s_image" % utable._tablename
+            field_id = "%s_image" % utablename
             widget = SQLFORM.widgets["upload"].widget(current.s3db.pr_image.image, None)
-            form[0].insert(-1,
-                           TR(TD(LABEL("%s:" % label,
-                                       _for="image",
-                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                                 _class="w2p_fl"),
-                              TD(widget,
-                                 _class="w2p_fw"),
-                              TD(comment,
-                                 _class="w2p_fc"),
-                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+            s3_addrow(form,
+                      LABEL("%s:" % label,
+                            _for="image",
+                            _id=field_id + SQLFORM.ID_LABEL_SUFFIX,
+                            ),
+                      widget,
+                      comment,
+                      formstyle,
+                      field_id + SQLFORM.ID_ROW_SUFFIX,
+                      )
+
+        if deployment_settings.get_auth_terms_of_service():
+            field_id = "%s_tos" % utablename
+            label = T("I agree to the %(terms_of_service)s") % \
+                dict(terms_of_service=A(T("Terms of Service"),
+                                        _href=URL(c="default", f="tos"),
+                                        _target="_blank",
+                                        ))
+            label = XML("%s:" % label)
+            s3_addrow(form,
+                      LABEL(label,
+                            _for="tos",
+                            _id=field_id + SQLFORM.ID_LABEL_SUFFIX,
+                            ),
+                      INPUT(_name="tos",
+                            _id=field_id,
+                            _type="checkbox",
+                            ),
+                      "",
+                      formstyle,
+                      field_id + SQLFORM.ID_ROW_SUFFIX,
+                      )
 
         if settings.captcha != None:
-            form[0].insert(-1, TR("", settings.captcha, ""))
+            form[0].insert(-1, DIV("", settings.captcha, ""))
 
         utable.registration_key.default = key = str(uuid4())
 
@@ -1179,16 +1420,18 @@ Thank you"""
         if not self.is_logged_in():
             redirect(self.settings.login_url)
 
-        utable = self.settings.table_user
+        messages = self.messages
+        settings = self.settings
+        utable = settings.table_user
 
-        passfield = self.settings.password_field
+        passfield = settings.password_field
         utable[passfield].writable = False
 
         request = current.request
         session = current.session
-        settings = current.deployment_settings
+        deployment_settings = current.deployment_settings
 
-        if settings.get_auth_show_utc_offset():
+        if deployment_settings.get_auth_show_utc_offset():
             utable.utc_offset.readable = True
             utable.utc_offset.writable = True
 
@@ -1200,84 +1443,90 @@ Thank you"""
         if next == DEFAULT:
             next = request.get_vars._next \
                 or request.post_vars._next \
-                or self.settings.profile_next
+                or settings.profile_next
         if onvalidation == DEFAULT:
-            onvalidation = self.settings.profile_onvalidation
+            onvalidation = settings.profile_onvalidation
         if onaccept == DEFAULT:
-            onaccept = self.settings.profile_onaccept
+            onaccept = settings.profile_onaccept
         if log == DEFAULT:
-            log = self.messages.profile_log
+            log = messages.profile_log
         labels, required = s3_mark_required(utable)
 
         # If we have an opt_in and some post_vars then update the opt_in value
-        if settings.get_auth_opt_in_to_email() and request.post_vars:
-            opt_list = settings.get_auth_opt_in_team_list()
-            removed = []
-            selected = []
-            for opt_in in opt_list:
-                if opt_in in request.post_vars:
-                    selected.append(opt_in)
-                else:
-                    removed.append(opt_in)
-            db = current.db
-            s3db = current.s3db
-            ptable = s3db.pr_person
-            putable = s3db.pr_person_user
-            query = (putable.user_id == request.post_vars.id) & \
-                    (putable.pe_id == ptable.pe_id)
-            person_id = db(query).select(ptable.id, limitby=(0, 1)).first().id
-            db(ptable.id == person_id).update(opt_in = selected)
-
-            g_table = s3db["pr_group"]
-            gm_table = s3db["pr_group_membership"]
-            # Remove them from any team they are a member of in the removed list
-            for team in removed:
-                query = (g_table.name == team) & \
-                        (gm_table.group_id == g_table.id) & \
-                        (gm_table.person_id == person_id)
-                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
-                if gm_rec:
-                    db(gm_table.id == gm_rec.id).delete()
-            # Add them to the team (if they are not already a team member)
-            for team in selected:
-                query = (g_table.name == team) & \
-                        (gm_table.group_id == g_table.id) & \
-                        (gm_table.person_id == person_id)
-                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
-                if not gm_rec:
-                    query = (g_table.name == team)
-                    team_rec = db(query).select(g_table.id,
-                                                limitby=(0, 1)).first()
-                    # if the team doesn't exist then add it
-                    if team_rec == None:
-                        team_id = g_table.insert(name=team, group_type=5)
+        opt_in_to_email = deployment_settings.get_auth_opt_in_to_email()
+        if opt_into_email:
+            team_list = deployment_settings.get_auth_opt_in_team_list()
+            if request.post_vars:
+                removed = []
+                selected = []
+                for opt_in in team_list:
+                    if opt_in in request.post_vars:
+                        selected.append(opt_in)
                     else:
-                        team_id = team_rec.id
-                    gm_table.insert(group_id = team_id,
-                                    person_id = person_id)
+                        removed.append(opt_in)
+                db = current.db
+                s3db = current.s3db
+                ptable = s3db.pr_person
+                putable = s3db.pr_person_user
+                query = (putable.user_id == request.post_vars.id) & \
+                        (putable.pe_id == ptable.pe_id)
+                person_id = db(query).select(ptable.id, limitby=(0, 1)).first().id
+                db(ptable.id == person_id).update(opt_in = selected)
+
+                g_table = s3db["pr_group"]
+                gm_table = s3db["pr_group_membership"]
+                # Remove them from any team they are a member of in the removed list
+                for team in removed:
+                    query = (g_table.name == team) & \
+                            (gm_table.group_id == g_table.id) & \
+                            (gm_table.person_id == person_id)
+                    gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                    if gm_rec:
+                        db(gm_table.id == gm_rec.id).delete()
+                # Add them to the team (if they are not already a team member)
+                for team in selected:
+                    query = (g_table.name == team) & \
+                            (gm_table.group_id == g_table.id) & \
+                            (gm_table.person_id == person_id)
+                    gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                    if not gm_rec:
+                        query = (g_table.name == team)
+                        team_rec = db(query).select(g_table.id,
+                                                    limitby=(0, 1)).first()
+                        # if the team doesn't exist then add it
+                        if team_rec == None:
+                            team_id = g_table.insert(name=team, group_type=5)
+                        else:
+                            team_id = team_rec.id
+                        gm_table.insert(group_id = team_id,
+                                        person_id = person_id)
+
+        formstyle = deployment_settings.get_ui_formstyle()
         form = SQLFORM(utable,
                        self.user.id,
-                       fields = self.settings.profile_fields,
+                       fields = settings.profile_fields,
                        labels = labels,
                        hidden = dict(_next=next),
-                       showid = self.settings.showid,
-                       submit_button = self.messages.profile_save_button,
-                       delete_label = self.messages.delete_label,
-                       upload = self.settings.download_url,
-                       formstyle = "table3cols",
-                       #formstyle = self.settings.formstyle,
+                       showid = settings.showid,
+                       submit_button = messages.profile_save_button,
+                       delete_label = messages.delete_label,
+                       upload = settings.download_url,
+                       formstyle = formstyle,
                        separator = ""
                        )
-        if settings.get_auth_openid():
+
+        form.add_class("auth_profile")
+
+        if deployment_settings.get_auth_openid():
             from gluon.contrib.login_methods.openid_auth import OpenIDAuth
             openid_login_form = OpenIDAuth(self)
             form = DIV(form, openid_login_form.list_user_openids())
         if form.accepts(request, session,
                         formname="profile",
                         onvalidation=onvalidation,
-                        hideerror=self.settings.hideerror):
+                        hideerror=settings.hideerror):
             self.user.update(utable._filter_fields(form.vars))
-            session.flash = self.messages.profile_updated
+            session.flash = messages.profile_updated
             if log:
                 self.log_event(log % self.user)
             callback(onaccept, form)
@@ -1289,30 +1538,32 @@ Thank you"""
                 next = self.url(next.replace("[id]", str(form.vars.id)))
             redirect(next)
 
-        if settings.get_auth_opt_in_to_email():
+        if opt_into_email:
             T = current.T
             ptable = s3db.pr_person
             ltable = s3db.pr_person_user
-            opt_list = settings.get_auth_opt_in_team_list()
+            team_list = deployment_settings.get_auth_opt_in_team_list()
             query = (ltable.user_id == form.record.id) & \
                     (ltable.pe_id == ptable.pe_id)
             db_opt_in_list = db(query).select(ptable.opt_in,
                                               limitby=(0, 1)).first().opt_in
-            for opt_in in opt_list:
-                field_id = "%s_opt_in_%s" % (utable, opt_list)
+            for opt_in in team_list:
+                field_id = "%s_opt_in_%s" % (utable, team_list)
                 if opt_in in db_opt_in_list:
                     checked = "selected"
                 else:
                     checked = None
-                form[0].insert(-1,
-                               TR(TD(LABEL(T("Receive %(opt_in)s updates:") % \
-                                                dict(opt_in=opt_in),
-                                           _for="opt_in",
-                                           _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                                     _class="w2p_fl"),
-                                     INPUT(_name=opt_in, _id=field_id,
+                s3_addrow(form,
+                          LABEL(T("Receive %(opt_in)s updates:") % \
+                                                        dict(opt_in=opt_in),
+                                _for="opt_in",
+                                _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                          INPUT(_name=opt_in, _id=field_id,
                                            _type="checkbox", _checked=checked),
-                               _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+                          "",
+                          formstyle,
+                          field_id + SQLFORM.ID_ROW_SUFFIX,
+                          )
         return form
 
     # -------------------------------------------------------------------------
@@ -1660,7 +1911,7 @@ S3OptionsFilter({
                 # Store in case we get called again with same value
                 org_groups[name] = dict(id=id)
 
-    # =============================================================================
+    # -------------------------------------------------------------------------
     @staticmethod
     def s3_register_validation():
         """
@@ -1747,61 +1998,6 @@ S3OptionsFilter({
 
         # Call script after Global config done
         s3.jquery_ready.append('''s3_register_validation()''')
-
-    # =============================================================================
-    def s3_registration_form(self):
-        """
-            Build a form for Registration
-        """
-
-        T = current.T
-
-        # Build the Form
-        form = self.register()
-        form.attributes["_id"] = "regform"
-
-        if current.deployment_settings.get_auth_terms_of_service():
-            id = "tos__row"
-            label = T("I agree to the %(terms_of_service)s") % \
-                dict(terms_of_service=A(T("Terms of Service"),
-                                        _href=URL(c="default", f="tos"),
-                                        _target="_blank",
-                                        ))
-            label = XML("%s:" % label)
-            widget = INPUT(_name="tos",
-                           _id="tos",
-                           _type="checkbox",
-                           )
-            #formstyle = current.deployment_settings.get_ui_formstyle()
-            # Assume callable
-            #row = formstyle(id, label, widget, comment)
-            comment = ""
-            # Auth uses default formstyle currently
-            row = TR(TD(LABEL(label,
-                              _id="tos__label",
-                              _for="tos",
-                              ),
-                        _class="w2p_fl"),
-                     TD(widget,
-                        _class="w2p_fw"),
-                     TD(comment,
-                        _class="w2p_fc"),
-                     _id=id,
-                     )
-
-            form[0][-2].append(row)
-
-        # Insert shortcut to Login
-        form[0][-1][1].append(A(T("Login"),
-                                _href=URL(f="user", args="login"),
-                                _id="login-btn",
-                                _class="action-lnk"
-                                ))
-
-        # Client-side Validation
-        self.s3_register_validation()
-
-        return form
 
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):

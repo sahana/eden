@@ -1,7 +1,3 @@
-{{if self_registration:}}{{controller = "index" if self_registration == "index" else "user"}}
-{{login_form[0][-1][1].append(A(T("Register for Account"), _href=URL(f=controller, args="register"), _id="register-btn", _class="action-lnk"))}}
-{{pass}}
-{{login_form[0][-1][1].append(A(T("Lost Password"), _href=URL(f="user", args="retrieve_password"), _class="action-lnk"))}}
 <div class='form-container'>
 {{=login_form}}
 {{if auth.settings.facebook:}}

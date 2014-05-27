@@ -284,7 +284,7 @@ settings.gis.overview = False
 # Uncomment to hide the permalink control (we have our own saved maps functionality)
 settings.gis.permalink = False
 # Uncomment to disable the ability to add PoIs to the main map
-#settings.gis.pois = False
+settings.gis.pois = False
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
 # Uncomment to hide the Save control, or set to "float"

@@ -289,7 +289,7 @@ return false}})''' % (T("Please Select a Facility")))
 
         if self_registration:
             # Provide a Registration box on front page
-            register_form = auth.s3_registration_form()
+            register_form = auth.register()
             register_div = DIV(H3(T("Register")),
                                P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                         dict(sign_up_now=B(T("sign-up now"))))))
@@ -315,7 +315,6 @@ $('#login-btn').click(function(){
             s3.jquery_ready.append(register_script)
 
         # Provide a login box on front page
-        #request.args = ["login"]
         auth.messages.submit_button = T("Login")
         login_form = auth.login(inline=True)
         login_div = DIV(H3(T("Login")),
@@ -536,7 +535,7 @@ def user():
         if not self_registration:
             session.error = T("Registration not permitted")
             redirect(URL(f="index"))
-        form = register_form = auth.s3_registration_form()
+        form = register_form = auth.register()
 
     elif arg == "change_password":
         title = response.title = T("Change Password")
@@ -568,16 +567,6 @@ def user():
     if form:
         if s3.crud.submit_style:
             form[0][-1][1][0]["_class"] = s3.crud.submit_style
-        # @ToDo: already included in formstyle - remove
-        #        here once formstyle is supported?
-        elif settings.ui.formstyle == "bootstrap":
-            form[0][-1][1][0]["_class"] = "btn btn-primary"
-
-    # Use Custom Ext views
-    # Best to not use an Ext form for login: can't save username/password in browser & can't hit 'Enter' to submit!
-    #if request.args(0) == "login":
-    #    response.title = T("Login")
-    #    response.view = "auth/login.html"
 
     if settings.get_template() != "default":
         # Try a Custom View

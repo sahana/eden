@@ -2552,7 +2552,12 @@ class GIS(object):
             @ToDo: print.css
         """
 
+        # @ToDo: allow selection of map_id
+        map_id = "default_map"
+
         from selenium import webdriver
+        from selenium.common.exceptions import WebDriverException
+        from selenium.webdriver.support.ui import WebDriverWait
 
         request = current.request
         response = current.response
@@ -2583,8 +2588,17 @@ class GIS(object):
         url = "%s/%s/gis/index?config=%s" % (public_url, appname, config_id)
         driver.get(url)
 
-        # Wait for page to load
-        # Read S3.gis.maps[map_id].s3.loaded
+        # Wait for map to load
+        # @ToDo: Also need to catch layers (use throbber?)
+        def map_loaded(driver):
+            try:
+                return driver.execute_script('''return S3.gis.maps['%s'].s3.loaded;''' % map_id)
+            except WebDriverException:
+                return False
+
+        WebDriverWait(driver, 10).until(
+            map_loaded
+        )
 
         # Save the Output
         # @ToDo: Can we use StringIO instead of cluttering filesystem?

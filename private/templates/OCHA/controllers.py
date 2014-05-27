@@ -57,7 +57,7 @@ class index():
 
             if self_registration:
                 # Provide a Registration box on front page
-                register_form = auth.s3_registration_form()
+                register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
                                    P(XML(T("If you would like to add data, then please %(sign_up_now)s") % \
                                             dict(sign_up_now=B(T("sign-up now"))))))

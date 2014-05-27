@@ -126,11 +126,49 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
         });
 
-        // Set a flag to show that we've completed loading
-        S3.gis.maps[map_id].s3.loaded = true;
+        $.when(layersLoaded(map_id)).then(
+            function(status) {
+                // Success: Set a flag to show that we've completed loading
+                var gis = S3.gis;
+                S3.gis.maps[map_id].s3.loaded = true;
+            },
+            function(status) {
+                // Failed
+                s3_debug(status);
+            },
+            function(status) {
+                // Progress
+                s3_debug(status);
+            }
+        );
 
         // Return the map object
         return map;
+    };
+
+    /**
+     * Check that all Map layers are Loaded
+     */
+    var layersLoaded = function(map_id) {
+        var dfd = new jQuery.Deferred();
+        var layers_loading = S3.gis.maps[map_id].s3.layers_loading;
+
+        // Test every half-second
+        setTimeout(function working() {
+            if (layers_loading.length == 0) {
+                dfd.resolve('loaded');
+            } else if (dfd.state() === 'pending') {
+                // Notify progress
+                dfd.notify('waiting for Layers to load...');
+                // Loop
+                setTimeout(working, 500);
+            } else {
+                // Failed!?
+            }
+        }, 1);
+
+        // Return the Promise so caller can't change the Deferred
+        return dfd.promise();
     };
 
     /**

@@ -328,11 +328,6 @@ form#summary-filter-form
     color: #0088CC;
 }
 
-/* Register screen */
-#auth_user_org_group_id {
-    margin-left: 10px;
-}
-
 /* Contacts Page */
 .form-container #pr_person_sub_human_resourcehuman_resource__label {
     /* Hide the colon */

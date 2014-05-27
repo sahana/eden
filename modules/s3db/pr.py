@@ -2675,17 +2675,20 @@ class S3PersonIdentityModel(S3Model):
                           self.pr_person_id(label = T("Person"),
                                             ondelete="CASCADE"),
                           Field("type", "integer",
-                                label = T("ID type"),
-                                requires = IS_IN_SET(pr_id_type_opts,
-                                                     zero=None),
                                 default = 1,
+                                label = T("ID type"),
                                 represent = lambda opt: \
                                         pr_id_type_opts.get(opt,
-                                                            current.messages.UNKNOWN_OPT)),
+                                                            current.messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(pr_id_type_opts,
+                                                     zero=None),
+                                ),
                           Field("description",
-                               label = T("Description")),
+                                label = T("Description"),
+                                ),
                           Field("value",
-                               label = T("Number")),
+                                label = T("Number"),
+                                ),
                           s3_date("valid_from",
                                   label = T("Valid From"),
                                   future = 0,
@@ -2694,18 +2697,19 @@ class S3PersonIdentityModel(S3Model):
                                   label = T("Valid Until"),
                                   ),
                           Field("country_code", length=4,
-                                label=T("Country Code")),
+                                label = T("Country Code"),
+                                ),
                           Field("ia_name",
-                                label = T("Issuing Authority")),
+                                label = T("Issuing Authority"),
+                                ),
                           #Field("ia_subdivision"), # Name of issuing authority subdivision
                           #Field("ia_code"), # Code of issuing authority (if any)
                           s3_comments(),
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_IDENTITY = T("Add Identity")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_IDENTITY,
+            label_create = T("Add Identity"),
             title_display = T("Identity Details"),
             title_list = T("Identities"),
             title_update = T("Edit Identity"),
@@ -2716,13 +2720,14 @@ class S3PersonIdentityModel(S3Model):
             msg_list_empty = T("No Identities currently registered"))
 
         self.configure(tablename,
-                       deduplicate=self.pr_identity_deduplicate,
-                       list_fields=["id",
-                                    "type",
-                                    "value",
-                                    "country_code",
-                                    "ia_name"
-                                    ])
+                       deduplicate = self.pr_identity_deduplicate,
+                       list_fields = ["id",
+                                      "type",
+                                      "value",
+                                      "country_code",
+                                      "ia_name"
+                                      ],
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

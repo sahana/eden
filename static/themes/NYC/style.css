@@ -166,6 +166,12 @@ a.btn-primary:visited {
     padding: 0;
     margin: 0;
 }
+
+.form-container form.auth_login,
+.form-container form.auth_register {
+    margin: inherit;
+}
+
 b.red {
     /* If form is margin 0 then this needs to be too */
     margin: 0;

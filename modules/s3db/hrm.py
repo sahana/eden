@@ -5302,13 +5302,11 @@ def hrm_human_resource_controller(extra_filter=None):
             name = s3_fullname(person)
             pe_id = person.pe_id
 
-            # Get organisation resp. job title for header
+            comments = table.organisation_id.represent(record.organisation_id)
             if record.job_title_id:
                 comments = "%s, %s" % \
                            (table.job_title_id.represent(record.job_title_id),
                             comments)
-            else:
-                comments = table.organisation_id.represent(record.organisation_id)
 
             # Configure widgets
             # @todo: put into separate function

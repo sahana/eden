@@ -41,8 +41,8 @@ var s3_register_validation = function() {
 
     if (undefined != S3.whitelists) {
         // Check for Whitelists
-        $('#regform #auth_user_email').blur(function() {
-            var email = $('#regform #auth_user_email').val();
+        $('.auth_register #auth_user_email').blur(function() {
+            var email = $('.auth_register #auth_user_email').val();
             var domain = email.split('@')[1];
             if (undefined != S3.whitelists[domain]) {
                 $('#auth_user_organisation_id').val(S3.whitelists[domain]);
@@ -52,8 +52,12 @@ var s3_register_validation = function() {
         })
     }
 
+    var email_row = $('#auth_user_email__row');
+    var div_style = email_row.hasClass('control-group') // Bootstrap
+                     || email_row.hasClass('form-row'); // Foundation
+
     // Validate signup form on keyup and submit
-    $('#regform').validate({
+    $('.auth_register').validate({
         errorClass: 'req',
         rules: {
             first_name: {
@@ -99,10 +103,15 @@ var s3_register_validation = function() {
             tos: i18n.tos_required
         },
         errorPlacement: function(error, element) {
-            // Standard/DRRPP Formstyles: Place in Comment
-            error.appendTo(element.parent().next())
-            // Bootstrap Formstyle
-            //error.appendTo(element.parent().next())
+            if (div_style) {
+                // Bootstrap/Foundation
+                // Place immediately after widget
+                error.appendTo(element.parent())
+            } else {
+                // Default/DRRPP
+                // Place in comment
+                error.appendTo(element.parent().next())
+            }
         },
         submitHandler: function(form) {
             form.submit()

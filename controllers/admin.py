@@ -329,7 +329,6 @@ def user():
                 output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Create User"),
                                                                   _href=create_url)
                 return output
-            form.attributes["_id"] = "regform"
             # Assume formstyle callable
             id = "auth_user_password_two__row"
             label = "%s:" % T("Verify password")
