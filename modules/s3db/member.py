@@ -54,10 +54,7 @@ class S3MembersModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        person_id = self.pr_person_id
         organisation_id = self.org_organisation_id
-
-        NONE = current.messages["NONE"]
 
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
@@ -433,9 +430,9 @@ class S3MembersModel(S3Model):
         mtable = db.member_membership
 
         # Get the full record
-        id = form.vars.id
-        if id:
-            query = (mtable.id == id)
+        _id = form.vars.id
+        if _id:
+            query = (mtable.id == _id)
             record = db(query).select(mtable.id,
                                       mtable.person_id,
                                       mtable.organisation_id,
@@ -482,7 +479,6 @@ class S3MembersModel(S3Model):
                                 utable.site_id,
                                 limitby=(0, 1)).first()
         if user:
-            user_id = user.id
             data.owned_by_user = user.id
 
         if not data:
@@ -550,7 +546,6 @@ def member_rheader(r, tabs=[]):
         return None
 
     T = current.T
-    table = r.table
     resourcename = r.name
 
     # Tabs
@@ -560,9 +555,9 @@ def member_rheader(r, tabs=[]):
             #(T("Contacts"), "contact"),
             (T("Contacts"), "contacts"),
             ]
-    rheader_tabs = s3_rheader_tabs(r, tabs)
 
     if resourcename == "membership":
+        table = r.table
         ptable = current.s3db.pr_person
         query = (table.id == record.id) & \
                 (ptable.id == table.person_id)
@@ -572,23 +567,34 @@ def member_rheader(r, tabs=[]):
                                           ptable.last_name,
                                           limitby=(0, 1)).first()
         if person is not None:
+            rheader_tabs = s3_rheader_tabs(r, tabs)
             rheader = DIV(DIV(s3_avatar_represent(person.id,
                                                   "pr_person",
                                                   _class="fleft"),
-                              _style="padding-bottom:10px;"),
-                          TABLE(
-                            TR(TH(s3_fullname(person))),
-                         ), rheader_tabs)
+                              # @ToDo: Move to CSS
+                              _style="padding-bottom:10px",
+                              ),
+                          TABLE(TR(TH(s3_fullname(person))),
+                                ),
+                          rheader_tabs,
+                          )
         else:
             rheader = None
+
     elif resourcename == "person":
+        if current.deployment_settings.get_member_cv_tab():
+            tabs.append((T("CV"), "cv"))
+        rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(DIV(s3_avatar_represent(record.id,
                                               "pr_person",
                                               _class="fleft"),
-                          _style="padding-bottom:10px;"),
-                      TABLE(
-            TR(TH(s3_fullname(record))),
-            ), rheader_tabs)
+                          # @ToDo: Move to CSS
+                          _style="padding-bottom:10px",
+                          ),
+                      TABLE(TR(TH(s3_fullname(record))),
+                            ),
+                      rheader_tabs
+                      )
 
     return rheader
     

@@ -131,15 +131,20 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
         # submit unflag by default
         _submit = False
 
+        element = None
         if isinstance(controls, INPUT):
             controls.add_class("span4")
-            if controls["_type"] == "submit":
+            element = controls
+        elif hasattr(controls, "element"):
+            element = controls.element("input")
+        if element:
+            if element["_type"] == "submit":
                 # flag submit button
                 _submit = True
-                controls["_class"] = "btn btn-primary"
-            if controls["_type"] == "file":
-                controls["_class"] = "input-file"
-
+                element["_class"] = "btn btn-primary"
+            elif element["_type"] == "file":
+                element["_class"] = "input-file"
+                    
         # For password fields, which are wrapped in a CAT object.
         if isinstance(controls, CAT) and isinstance(controls[0], INPUT):
             controls[0].add_class("span4")
@@ -187,9 +192,11 @@ def formstyle_foundation(form, fields, *args, **kwargs):
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
-        if isinstance(widget, INPUT):
-            if widget["_type"] == "submit":
-                widget["_class"] = "small primary button"
+
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
 
         _class = "form-row row hide" if hidden else "form-row row"
         widget_col = DIV(label,
@@ -223,9 +230,10 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
 
     def render_row(row_id, label, widget, comment, hidden=False):
         
-        if isinstance(widget, INPUT):
-            if widget["_type"] == "submit":
-                widget["_class"] = "small primary button"
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
 
         if isinstance(label, LABEL):
             label.add_class("left inline")

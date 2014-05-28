@@ -107,6 +107,7 @@ class S3Config(Storage):
         self.L10n = Storage()
         self.log = Storage()
         self.mail = Storage()
+        self.member = Storage()
         self.msg = Storage()
         self.org = Storage()
         self.pr = Storage()
@@ -1873,6 +1874,7 @@ class S3Config(Storage):
     def get_hrm_cv_tab(self):
         """
             Whether Human Resources should consolidate tabs into 1x CV page:
+            * Awards
             * Education
             * Experience
             * Training
@@ -2067,7 +2069,21 @@ class S3Config(Storage):
         return self.irs.get("vehicle", False)
 
     # -------------------------------------------------------------------------
-    # Organisation
+    # Members
+    #
+    def get_member_cv_tab(self):
+        """
+            Whether Members should consolidate tabs into 1x CV page:
+            * Awards
+            * Education
+            * Experience
+            * Training
+            * Skills
+        """
+        return self.member.get("cv_tab", False)
+
+    # -------------------------------------------------------------------------
+    # Organisations
     #
     def get_org_autocomplete(self):
         """

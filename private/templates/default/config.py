@@ -398,6 +398,11 @@ settings.gis.geonames_username = "eden_test"
 #settings.event.types_hierarchical = True
 
 # -----------------------------------------------------------------------------
+# Members
+# Show a CV tab for Members
+#settings.member.cv_tab = True
+
+# -----------------------------------------------------------------------------
 # Persons
 # Uncomment to allow person imports to match even without email addresses 
 #settings.pr.import_update_requires_email = False
