@@ -47,7 +47,7 @@ from gluon.languages import lazyT
 from s3navigation import S3ScriptItem
 from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, S3MarkupStripper
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
-from s3widgets import S3DateWidget, S3DateTimeWidget
+from s3widgets import S3DateWidget, S3DateTimeWidget, S3MultiSelectWidget
 
 try:
     db = current.db
@@ -1096,6 +1096,8 @@ def s3_roles_permitted(name="roles_permitted", **attr):
                                                 T("If this record should be restricted then select which role(s) are permitted to access the record here.")))
     if "ondelete" not in attr:
         attr["ondelete"] = "RESTRICT"
+    if "widget" not in attr:
+        attr["widget"] = S3MultiSelectWidget()
 
     f = S3ReusableField(name, "list:reference auth_group",
                         **attr)

@@ -112,10 +112,7 @@ class S3ContentModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      s3_comments(),
-                     # Multiple Roles (@ToDo: Implement the restriction)
-                     s3_roles_permitted(readable = False,
-                                        writable = False
-                                        ),
+                     s3_roles_permitted(),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -210,10 +207,7 @@ class S3ContentModel(S3Model):
                      #      default=True,
                      #      label=T("Published")),
                      s3_comments(),
-                     # Multiple Roles (@ToDo: Implement the restriction)
-                     s3_roles_permitted(readable = False,
-                                        writable = False
-                                        ),
+                     s3_roles_permitted(),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -423,10 +417,7 @@ class S3ContentModel(S3Model):
                            label = T("Tag"),
                            ),
                      s3_comments(),
-                     # Multiple Roles (@ToDo: Implement the restriction)
-                     #s3_roles_permitted(readable = False,
-                     #                   writable = False
-                     #                   ),
+                     s3_roles_permitted(),
                      *s3_meta_fields())
 
         # CRUD Strings
