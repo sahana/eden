@@ -8,7 +8,7 @@
 import unittest
 from gluon.dal import Query
 from s3.s3utils import *
-from s3 import FS, S3Hierarchy, s3_uid
+from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_uid
 from lxml import etree
 
 # =============================================================================
@@ -1028,6 +1028,98 @@ class S3HierarchyTests(unittest.TestCase):
         expr = FS("vmfield").typeof(["other1", "other2"])
         result = expr(resource, row, virtual=True)
         self.assertFalse(result)
+
+    # -------------------------------------------------------------------------
+    def testHierarchyFilterTypeOf(self):
+        """ Test S3HierarchyFilter recognition of typeof queries """
+
+        uids = self.uids
+        resource = current.s3db.resource("test_hierarchy_reference")
+        
+        filter_widget = S3HierarchyFilter("test_hierarchy_id")
+
+        # Test with belongs on filter field
+        ids = str(uids["HIERARCHY1-1"])
+        get_vars = {"~.test_hierarchy_id__belongs": ids}
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set(ids)
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(values, [ids])
+
+        # Test with typeof on filter field
+        ids = str(uids["HIERARCHY1-1"])
+        get_vars = {"~.test_hierarchy_id__typeof": ids}
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
+                                                  "HIERARCHY1-1-1",
+                                                  "HIERARCHY1-1-2",
+                                                  ))
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(set(values), expected)
+
+        # Test with typeof on filter field, multiple values incl. None
+        ids = ",".join(str(_id) for _id in (uids["HIERARCHY1-1"],
+                                            uids["HIERARCHY2-1"],
+                                            None))
+        get_vars = {"~.test_hierarchy_id__typeof": ids}
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
+                                                  "HIERARCHY1-1-1",
+                                                  "HIERARCHY1-1-2",
+                                                  "HIERARCHY2-1",
+                                                  "HIERARCHY2-1-1",
+                                                  "HIERARCHY2-1-2",
+                                                  ))
+        expected.add(None)
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(set(values), expected)
+
+        # Test with typeof on field in lookup table
+        get_vars = {"~.test_hierarchy_id$name__typeof": "Type 1-1"}
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
+                                                  "HIERARCHY1-1-1",
+                                                  "HIERARCHY1-1-2",
+                                                  ))
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(set(values), expected)
+
+        # Test with typeof on field in lookup table, multiple values
+        get_vars = {"~.test_hierarchy_id$name__typeof": "Type 1-1,Type 2-1"}
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
+                                                  "HIERARCHY1-1-1",
+                                                  "HIERARCHY1-1-2",
+                                                  "HIERARCHY2-1",
+                                                  "HIERARCHY2-1-1",
+                                                  "HIERARCHY2-1-2",
+                                                  ))
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(set(values), expected)
+
+        # Test with typeof on field in lookup table, unresolvable
+        get_vars = {"~.test_hierarchy_id$name__typeof": "Type 1-3"}
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set()
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(set(values), expected)
+
+        # Test with typeof on field in lookup table, None
+        get_vars = {"~.test_hierarchy_id$name__typeof": "None"}
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set()
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(set(values), expected)
+
+        # Test preferrence of belongs in mixed queries
+        ids = str(uids["HIERARCHY1-1"])
+        get_vars = {"~.test_hierarchy_id__belongs": ids,
+                    "~.test_hierarchy_id$name__typeof": "Type 1-1",
+                    }
+        variable = filter_widget.variable(resource, get_vars)
+        expected = set(ids)
+        values = filter_widget._values(get_vars, variable)
+        self.assertEqual(values, [ids])
 
     # -------------------------------------------------------------------------
     def inspect_multi_query(self, query, field=None, conjunction=None, op=None):
