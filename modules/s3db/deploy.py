@@ -2000,7 +2000,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             for row in rows:
                 appraisals[row.assignment_id] = row.appraisal_id
             self.appraisals = appraisals
-            print self.appraisals
+
         return
 
     # -------------------------------------------------------------------------
