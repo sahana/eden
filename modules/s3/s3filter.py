@@ -53,7 +53,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3rest import S3Method
-from s3query import S3ResourceField, S3URLQuery
+from s3query import S3ResourceField, S3ResourceQuery, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget
@@ -1747,6 +1747,66 @@ class S3HierarchyFilter(S3FilterWidget):
         widget.add_class(self._class)
 
         return widget
+
+    # -------------------------------------------------------------------------
+    def variable(self, resource, get_vars=None):
+        """
+            Generate the name for the URL query variable for this
+            widget, detect alternative __typeof queries.
+
+            @param resource: the resource
+            @return: the URL query variable name (or list of
+                     variable names if there are multiple operators)
+        """
+
+        label, self.selector = self._selector(resource, self.field)
+
+        if not self.selector:
+            return None
+
+        if "label" not in self.opts:
+            self.opts["label"] = label
+
+        selector = self.selector
+        
+        if self.alternatives and get_vars is not None:
+            # Get the actual operator from get_vars
+            operator = self._operator(get_vars, self.selector)
+            if operator:
+                self.operator = operator
+
+        variable = self._variable(selector, self.operator)
+        
+        if not get_vars or not resource or variable in get_vars:
+            return variable
+
+        # Detect and resolve __typeof queries
+        BELONGS = current.db._adapter.BELONGS
+        resolve = S3ResourceQuery._resolve_hierarchy
+        selector = resource.prefix_selector(selector)
+        for key, value in get_vars.items():
+
+            if key.startswith(selector):
+                selectors, op, invert = S3URLQuery.parse_expression(key)
+            else:
+                continue
+            if op != "typeof" or len(selectors) != 1:
+                continue
+
+            rfield = resource.resolve_selector(selectors[0])
+            if rfield.field:
+                values = S3URLQuery.parse_value(value)
+                hierarchy, field, nodeset, none = resolve(rfield.field, values)
+                if field and (nodeset or none):
+                    if nodeset is None:
+                        nodeset = set()
+                    if none:
+                        nodeset.add(None)
+                    get_vars.pop(key, None)
+                    get_vars[variable] = [str(v) for v in nodeset]
+            break
+
+        return variable
 
 # =============================================================================
 class S3FilterForm(object):

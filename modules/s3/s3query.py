@@ -1280,10 +1280,53 @@ class S3ResourceQuery(object):
             @param r: the right operator
         """
 
+        hierarchy, field, nodeset, none = self._resolve_hierarchy(l, r)
+        if not hierarchy:
+            # Not a hierarchical query => use simple belongs
+            return self._query_belongs(l, r)
+        if not field:
+            # Field does not exist (=>skip subquery)
+            return None
+
+        # Construct the subquery
+        list_type = str(field.type)[:5] == "list:"
+        if nodeset:
+            if list_type:
+                q = (field.contains(list(nodeset)))
+            elif len(nodeset) > 1:
+                q = (field.belongs(nodeset))
+            else:
+                q = (field == tuple(nodeset)[0])
+        else:
+            q = None
+
+        if none:
+            # None needs special handling with older DAL versions
+            if not list_type:
+                if q is None:
+                    q = (field == None)
+                else:
+                    q |= (field == None)
+        if q is None:
+            # Values not resolvable (=subquery always fails)
+            q = field.belongs(set())
+
+        return q
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _resolve_hierarchy(cls, l, r):
+        """
+            Resolve the hierarchical lookup in a typeof-query
+
+            @param l: the left operator
+            @param r: the right operator
+        """
+        
         from s3hierarchy import S3Hierarchy
-        
+
         tablename = l.tablename
-        
+
         # Connect to the hierarchy
         hierarchy = S3Hierarchy(tablename)
         if hierarchy.config is None:
@@ -1297,11 +1340,10 @@ class S3ResourceQuery(object):
         list_type = str(l.type)[:5] == "list:"
         if hierarchy.config is None and not list_type:
             # No hierarchy configured and no list:reference
-            # => no need to resolve expression, can simply use belongs
-            return self._query_belongs(l, r)
+            return False, None, None, None
 
         field, keys = l, r
-        
+
         if not key:
 
             s3db = current.s3db
@@ -1315,7 +1357,7 @@ class S3ResourceQuery(object):
                 if list_type:
                     expr = fs.contains(r)
                 else:
-                    expr = self._query_belongs(l, r, field = fs)
+                    expr = cls._query_belongs(l, r, field = fs)
 
                 # Resolve filter expression into subquery
                 resource = s3db.resource(tablename)
@@ -1324,7 +1366,8 @@ class S3ResourceQuery(object):
                 else:
                     subquery = None
                 if not subquery:
-                    return None
+                    # Field doesn't exist
+                    return True, None, None, None
 
                 # Execute query and retrieve the lookup table IDs
                 DELETED = current.xml.DELETED
@@ -1333,14 +1376,10 @@ class S3ResourceQuery(object):
                 rows = current.db(subquery).select(table._id)
 
                 # Override field/keys
-                field = table._id
+                field = table[hierarchy.pkey.name]
                 keys = set([row[table._id.name] for row in rows])
 
-        list_type = str(field.type)[:5] == "list:"
-        
-        q = None
-        none = False
-        
+        nodeset, none = None, False
         if keys:
             # Lookup all descendant types from the hierarchy
             none = False
@@ -1360,30 +1399,15 @@ class S3ResourceQuery(object):
                 nodeset = hierarchy.findall(nodes, inclusive=True)
             else:
                 nodeset = nodes
-            if nodeset:
-                if list_type:
-                    q = (field.contains(list(nodeset)))
-                elif len(nodeset) > 1:
-                    q = (field.belongs(nodeset))
-                else:
-                    q = (field == tuple(nodeset)[0])
-                
+
         elif keys is None:
             none = True
 
-        if none:
-            if not list_type:
-                if q is None:
-                    q = (field == None)
-                else:
-                    q |= (field == None)
-        if q is None:
-            q = field.belongs(set())
-
-        return q
+        return True, field, nodeset, none
 
     # -------------------------------------------------------------------------
-    def _query_belongs(self, l, r, field=None):
+    @staticmethod
+    def _query_belongs(l, r, field=None):
         """
             Resolve BELONGS into a DAL expression (or S3ResourceQuery if
             field is an S3FieldSelector)
