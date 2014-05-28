@@ -2268,12 +2268,25 @@ class S3Compose(S3CRUD):
         """
 
         post_vars = current.request.post_vars
+        settings = current.deployment_settings
+
+        if settings.get_mail_default_subject():
+            system_name_short = settings.get_system_name_short() + ' - '
+        else:
+            system_name_short = ''
+
+        if settings.get_mail_auth_user_in_subject():
+            authenticated_user = current.auth.user.first_name + ' ' + current.auth.user.last_name + ' - '
+        else:
+            authenticated_user = ''
+
+        post_vars.subject = authenticated_user + system_name_short + post_vars.subject
         contact_method = post_vars.contact_method
 
         recipients = self.recipients
         if not recipients:
             if not post_vars.pe_id:
-                if contact_method != "TWITTER": 
+                if contact_method != "TWITTER":
                     current.session.error = current.T("Please enter the recipient(s)")
                     redirect(self.url)
                 else:
