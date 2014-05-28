@@ -6112,6 +6112,9 @@ def hrm_cv(r, **attr):
         elif r.controller == "deploy":
             controller = "deploy"
             vol = False
+        elif r.controller == "member":
+            controller = "member"
+            vol = False
         else:
             controller = "hrm"
             vol = False

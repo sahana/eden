@@ -1367,6 +1367,8 @@ def customise_pr_person_controller(**attr):
     elif root_org in (CVTL, PRC):
         settings.hrm.vol_active = vol_active
         settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
+        if root_org == CVTL:
+            settings.member.cv_tab = True
     elif root_org == VNRC:
         vnrc = True
         # Remove 'Commune' level for Addresses
@@ -1558,13 +1560,17 @@ def pr_rheader(r, vnrc):
         Custom rheader for vol/person for vnrc
     """
 
-    if vnrc and current.request.controller == "vol":
+    controller = current.request.controller
+    if vnrc and controller == "vol":
         # Simplify RHeader
         settings.hrm.vol_experience = None
 
-    s3db = current.s3db
-    s3db.hrm_vars()
-    return s3db.hrm_rheader(r)
+    if controller == "member":
+        return current.s3db.member_rheader(r)
+    else:
+        s3db = current.s3db
+        s3db.hrm_vars()
+        return s3db.hrm_rheader(r)
 
 # -----------------------------------------------------------------------------
 def customise_req_commit_controller(**attr):
