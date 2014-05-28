@@ -56,8 +56,8 @@ def shelter():
 
     table = s3db.cr_shelter
 
-    # Filter to open shelters by default (status=2)
-    s3base.s3_set_default_filter("~.status", [2, None], tablename = "cr_shelter")
+    # Filter to just Open shelters (status=2)
+    s3base.s3_set_default_filter("~.status", [2, None], tablename="cr_shelter")
 
     s3db.configure("cr_shelter",
                    # Go to People check-in for this shelter after creation
@@ -114,13 +114,19 @@ def shelter():
 
                     # Show a non blocking warning in case the people in the shelter are more than its capacity
                     if not r.method:
-                        cap_day = db(r.table.id == r.id).select(r.table.capacity_day).first().capacity_day
-                        pop_day = db(r.table.id == r.id).select(r.table.population_day).first().population_day
+                        record = db(table.id == r.id).select(table.capacity_day,
+                                                             table.population_day,
+                                                             table.capacity_night,
+                                                             table.population_night,
+                                                             limitby=(0, 1)
+                                                             ).first()
+                        cap_day = record.capacity_day
+                        pop_day = record.population_day
                         if (cap_day is not None) and (pop_day > cap_day):
                             response.warning = T("Warning: this shelter is full for daytime")
 
-                        cap_night = current.db(r.table.id == r.id).select(r.table.capacity_night).first().capacity_night
-                        pop_night = current.db(r.table.id == r.id).select(r.table.population_night).first().population_night
+                        cap_night = record.capacity_night
+                        pop_night = record.population_night
                         if (cap_night is not None) and (pop_night > cap_night):
                             response.warning = T("Warning: this shelter is full for the night")
 

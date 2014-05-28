@@ -393,6 +393,11 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.person = "person_id"
 
 # -----------------------------------------------------------------------------
+# Shelters
+# Uncomment to use a dynamic population estimation by calculations based on registrations  
+#settings.cr.shelter_population_dynamic = True
+
+# -----------------------------------------------------------------------------
 # Events
 # Make Event Types Hierarchical
 #settings.event.types_hierarchical = True
@@ -419,6 +424,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.pr.select_existing = False
 # Uncomment to prevent showing HR details in S3PersonAutocompleteWidget results
 #settings.pr.search_shows_hr_details = False
+# Uncomment to hide Emergency Contacts in Person Contacts page
+#settings.pr.show_emergency_contacts = False
 
 # -----------------------------------------------------------------------------
 # Organisations

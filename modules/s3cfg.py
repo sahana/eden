@@ -92,9 +92,11 @@ class S3Config(Storage):
         self.base = Storage()
         self.cap = Storage()
         self.cms = Storage()
+        self.cr = Storage()
         self.database = Storage()
         self.deploy = Storage()
         self.event = Storage()
+        self.evr = Storage()
         self.fin = Storage()
         # @ToDo: Move to self.ui
         self.frontpage = Storage()
@@ -1057,43 +1059,6 @@ class S3Config(Storage):
 
     def get_L10n_languages_readonly(self):
         return self.L10n.get("languages_readonly", True)
-    
-    def get_L10n_shelter_static_population(self):
-        """
-            It shows the "population" field in shelter creation. 
-        """
-        return self.L10n.get("static_shelter_population_estimation", True)
-    
-    def get_L10n_shelter_dynamic_population(self):
-        """
-            It shows all fields used for the automatic evaluation of current
-            shelter population. 
-            It shows: "capacity_day","capacity_night","available_capacity_day",
-            "available_capacity_night","population_day" and "population_night" fields.
-        """
-        return self.L10n.get("dynamic_shelter_population_estimation", False)
-    
-    def get_L10n_evr_show_emergency_contacts(self):
-        """
-            Shows evacuees emergency contacs as well as standard contacts
-        """ 
-        return self.L10n.get("evr_show_emergency_contacts",False)
-        
-    def get_L10n_evr_group_types(self):
-        """
-            Evacuees Group Types
-        """
-        T = current.T
-        return self.L10n.get("evr_group_types", {1: T("other"),
-                                                 2: T("Family"),
-                                                 3: T("Tourist group"),
-                                                 4: T("Society"),
-                                                 5: T("Company"),
-                                                 6: T("Convent"),
-                                                 7: T("Hotel"),
-                                                 8 :T("Hospital"),
-                                                 9 :T("Orphanage")
-                                                 })
 
     def get_L10n_religions(self):
         """
@@ -1783,13 +1748,20 @@ class S3Config(Storage):
         return self.cms.get("show_titles", False)
 
     # -------------------------------------------------------------------------
-    # Events
+    # Shelters
     #
-    def get_event_types_hierarchical(self):
+    def get_cr_shelter_population_dynamic(self):
         """
-            Whether Event Types are Hierarchical or not
+            Whether Shelter Population should be done manually (False)
+            or automatically based on the registrations (True)
+            and displaying all fields used by the automatic evaluation of current
+            shelter population:
+            "available_capacity_day",
+            "available_capacity_night",
+            "population_day",
+            "population_night".
         """
-        return self.event.get("types_hierarchical", False)
+        return self.cr.get("shelter_population_dynamic", False)
 
     # -------------------------------------------------------------------------
     # Deployments
@@ -1800,6 +1772,34 @@ class S3Config(Storage):
             e.g. 'Staff', 'Volunteer' (CERT), 'Member' (RDRT)
         """
         return self.deploy.get("hr_label", "Staff")
+
+    # -------------------------------------------------------------------------
+    # Events
+    #
+    def get_event_types_hierarchical(self):
+        """
+            Whether Event Types are Hierarchical or not
+        """
+        return self.event.get("types_hierarchical", False)
+
+    # -------------------------------------------------------------------------
+    # Evacuees
+    #
+    def get_evr_group_types(self):
+        """
+            Evacuees Group Types
+        """
+        T = current.T
+        return self.evr.get("group_types", {1: T("other"),
+                                            2: T("Family"),
+                                            3: T("Tourist group"),
+                                            4: T("Society"),
+                                            5: T("Company"),
+                                            6: T("Convent"),
+                                            7: T("Hotel"),
+                                            8 :T("Hospital"),
+                                            9 :T("Orphanage")
+                                            })
 
     # -------------------------------------------------------------------------
     # Hospital Registry
@@ -2326,6 +2326,12 @@ class S3Config(Storage):
         """
         return self.pr.get("search_shows_hr_details", True)
 
+    def get_pr_show_emergency_contacts(self):
+        """
+            Show emergency contacts as well as standard contacts in Person Contacts page
+        """ 
+        return self.pr.get("show_emergency_contacts", True)
+        
     # -------------------------------------------------------------------------
     # Proc
     #
@@ -2491,7 +2497,7 @@ class S3Config(Storage):
                                                        3: T("Normal"),
                                                        4: T("Low")
                                                        })
-  
+
     # -------------------------------------------------------------------------
     # Requests Management Settings
     #

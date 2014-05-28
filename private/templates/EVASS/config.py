@@ -149,12 +149,6 @@ settings.L10n.thousands_separator = "."
 settings.L10n.default_country_code = +39
 # Make last name in person/user records mandatory
 settings.L10n.mandatory_lastname = True
-# Use a static population estimation. Estimation of the shelter current population 
-# using a number.  
-settings.L10n.static_shelter_population_estimation = True
-# Use a dynamic population estimation. All values within related population fields 
-# are automatically computed during the evacuee shelter registration.
-settings.L10n.dynamic_shelter_population_estimation = False
 # Configure the list of Religions
 settings.L10n.religions = OrderedDict([("unknown", T("Unknown")),
                                        ("bahai", T("Bahai")),
@@ -165,20 +159,6 @@ settings.L10n.religions = OrderedDict([("unknown", T("Unknown")),
                                        ("muslim", T("Muslim")),
                                        ("other", T("other"))
                                        ])
-# Group Types.  
-# Evacuees group types
-settings.L10n.evr_group_types = {1: T("other"),
-                                 2: T("Family"),
-                                 3: T("Tourist group"),
-                                 4: T("Society"),
-                                 5: T("Company"),
-                                 6: T("Convent"),
-                                 7: T("Hotel"),
-                                 8: T("Hospital"),
-                                 9: T("Orphanage")
-                                 }
-# Show evacuees emergency contacts as well as "standard" contacts
-settings.L10n.evr_show_emergency_contacts = False
 # Uncomment this to Translate CMS Series Names
 #settings.L10n.translate_cms_series = True
 # Uncomment this to Translate Layer Names
@@ -349,6 +329,25 @@ settings.security.policy = 7
 #settings.cms.richtext = True
 # Uncomment to show tags in Newsfeed
 #settings.cms.show_tags = True
+
+# -----------------------------------------------------------------------------
+# Shelters
+# Uncomment to use a dynamic population estimation by calculations based on registrations  
+settings.cr.shelter_population_dynamic = True
+
+# -----------------------------------------------------------------------------
+# Evacuees
+# Group Types
+#settings.evr.group_types = {1: T("other"),
+#                            2: T("Family"),
+#                            3: T("Tourist group"),
+#                            4: T("Society"),
+#                            5: T("Company"),
+#                            6: T("Convent"),
+#                            7: T("Hotel"),
+#                            8: T("Hospital"),
+#                            9: T("Orphanage")
+#                            }
 
 # -----------------------------------------------------------------------------
 # Organisations
@@ -636,24 +635,16 @@ settings.project.activities = True
 # RSS feeds
 settings.frontpage.rss = [
     {"title": "RSS News - Dipartimento della Protezione Civile ",
-     # Trac timeline
      "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=12170&lang=it#"
-     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
     },
     {"title": "RSS Vigilanza Meteo - Dipartimento della Protezione Civile ",
-     # Trac timeline
      "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=23573&lang=it#"
-     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
     },
     {"title": "RSS Previsioni Meteo - Dipartimento della Protezione Civile ",
-     # Trac timeline
      "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=23575&lang=it#"
-     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
     },
     {"title": "RSS Comunicati Stampa - Dipartimento della Protezione Civile ",
-     # Trac timeline
      "url": "http://www.protezionecivile.gov.it/jcms/do/jprss/Rss/Feed/show.action?id=23577&lang=it#"
-     #"url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
     },
     {"title": "Twitter - Croce Rossa Italia",
      # @crocerossa
@@ -671,20 +662,20 @@ settings.frontpage.rss = [
 #     "url": "http://api2.socialmention.com/search?q=protezionecivile&t=all&f=rss"
 #    }
 ]
-#***********************************************************************
 
+# =============================================================================
 def customise_org_organisation_controller(**attr):
+
     table = current.s3db.org_organisation
     table.year.label = T("Year Founded")
     return attr
-#settings.ui.customise_org_organisation = customise_org_organisation_controller
+
 settings.customise_org_organisation_controller = customise_org_organisation_controller
 
 # -----------------------------------------------------------------------------
 def customise_pr_person_resource(r, tablename):
 
     s3db = current.s3db
-    
     table = r.resource.table
 
     # Disallow "unknown" gender and defaults to "male"
@@ -695,6 +686,9 @@ def customise_pr_person_resource(r, tablename):
     gender.default = 3
 
     if r.controller == "evr":
+        # Hide evacuees emergency contacts
+        settings.pr.show_emergency_contacts = False
+
         # Last name and date of birth mandatory in EVR module
         table.last_name.requires = IS_NOT_EMPTY(
                         error_message = T("Please enter a last name"))
@@ -746,7 +740,6 @@ def customise_pr_person_resource(r, tablename):
     ethnicity_opts = dict((v, T(v)) for v in ethnicity_opts)
 
     ethnicity = pdtable.ethnicity
-    ethnicity.readable = ethnicity.writable = True
     ethnicity.requires = IS_EMPTY_OR(IS_IN_SET(ethnicity_opts,
                                                sort=True))
     ethnicity.represent = S3Represent(options=ethnicity_opts,
@@ -758,8 +751,7 @@ def customise_pr_person_resource(r, tablename):
 
 settings.customise_pr_person_resource = customise_pr_person_resource
 
-# -----------------------------------------------------------------------------
-#===============================================================================
+# =============================================================================
 # def customise_cr_shelter_resource(r, tablename):
 #     
 #     field_static_population = current.s3db.cr_shelter.population
@@ -779,10 +771,28 @@ settings.customise_pr_person_resource = customise_pr_person_resource
 #     field_population_night.readable = True
 #     
 # settings.customise_cr_shelter_resource = customise_cr_shelter_resource
-#===============================================================================
+# =============================================================================
+def customise_pr_group_resource(r, tablename):
+
+    field = r.table.group_type
+    pr_group_types = {1 : T("Family"),
+                      2 : T("Tourist Group"),
+                      3 : T("Relief Team"),
+                      4 : T("other"),
+                      5 : T("Mailing Lists"),
+                      6 : T("Society"),
+                      }
+    field.represent = lambda opt: pr_group_types.get(opt, messages.UNKNOWN_OPT)
+    field.requires = IS_IN_SET(pr_group_types, zero=None)
+
+settings.customise_pr_group_resource = customise_pr_group_resource
+
+# -----------------------------------------------------------------------------
 def customise_event_event_resource(r, tablename):
-    event_exercise_table = current.s3db.event_event.exercise   
-    event_exercise_table.default = True
+
+    table = r.table
+    table.exercise.default = True
+    table.organisation_id.readable = table.organisation_id.writable = True
         
 settings.customise_event_event_resource = customise_event_event_resource
 

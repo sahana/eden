@@ -87,7 +87,6 @@ class S3EventModel(S3Model):
         crud_strings = s3.crud_strings
         define_table = self.define_table
         settings = current.deployment_settings
-        set_method = self.set_method
 
         messages = current.messages
         NONE = messages["NONE"]
@@ -189,13 +188,17 @@ class S3EventModel(S3Model):
                            ),
                      event_type_id(),
                      self.org_organisation_id(
-                                comment = DIV(_class="tooltip",
-                                               _title="%s|%s" % (T("Organization"),
-                                                                 T("The organization that manages this event")))),
+                        comment = DIV(_class="tooltip",
+                                       _title="%s|%s" % (T("Organization"),
+                                                         T("The organization managing this event"))),
+                        # Enable in the template if-required
+                        readable = False,
+                        writable = False,
+                        ),
                      Field("exercise", "boolean",
+                           default = False,
                            label = T("Exercise?"),
                            represent = lambda opt: "√" if opt else NONE,
-                           default = False,
                            #comment = DIV(_class="tooltip",
                            #              _title="%s|%s" % (T("Exercise"),
                                                            # Should!
@@ -357,9 +360,9 @@ class S3EventModel(S3Model):
                             event_event_impact = "event_id",
                             )
 
-        set_method("event", "event",
-                   method="dispatch",
-                   action=event_notification_dispatcher)
+        self.set_method("event", "event",
+                        method = "dispatch",
+                        action = event_notification_dispatcher)
 
         # ---------------------------------------------------------------------
         # Event Locations (link table)
@@ -665,6 +668,7 @@ class S3IncidentModel(S3Model):
                                       )
 
         # @ToDo: Move this workflow into Templates?
+        # - or useful to have good defaults
         if settings.has_module("project"):
             create_next_url = URL(args=["[id]", "task"])
         elif settings.has_module("hrm"):
@@ -733,8 +737,8 @@ class S3IncidentModel(S3Model):
                             )
 
         self.set_method("event", "incident",
-                   method="dispatch",
-                   action=event_notification_dispatcher)
+                        method = "dispatch",
+                        action = event_notification_dispatcher)
 
         # Pass names back to global scope (s3.*)
         return dict(event_incident_id = incident_id,
@@ -1664,14 +1668,17 @@ class S3EventShelterModel(S3Model):
         #   Link table for cr_shelter <> event_event
         tablename = "event_event_shelter"
         self.define_table(tablename,
-                          self.event_event_id(ondelete="CASCADE",
-                                              empty=False),
-                          self.cr_shelter_id(ondelete="CASCADE",
-                                             empty=False),
+                          self.event_event_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
+                          self.cr_shelter_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
                           *s3_meta_fields()
                           )
 
-        if current.request.function == "event":
+        function = current.request.function
+        if function == "event":
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("Add Shelter"),
                 title_display = T("Shelter Details"),
@@ -1685,7 +1692,7 @@ class S3EventShelterModel(S3Model):
                 msg_list_empty = T("No Shelters currently tagged to this event")
                 )
 
-        elif current.request.function == "shelter":
+        elif function == "shelter":
             current.response.s3.crud_strings[tablename] = Storage(
                 label_create = T("Associate Event"),
                 title_display = T("Event Details"),
@@ -1698,6 +1705,7 @@ class S3EventShelterModel(S3Model):
                 msg_record_deleted = T("Event removed"),
                 msg_list_empty = T("No Events currently tagged to this Shelter")
                 )
+
         # Pass names back to global scope (s3.*)
         return dict()
 
@@ -1741,9 +1749,7 @@ def event_notification_dispatcher(r, **attr):
             text += "\n************************************************\n"
 
             # URL to redirect to after message sent
-            url = URL(c="event",
-                      f="event",
-                      args=r.id)
+            url = URL(c="event", f="event", args=r.id)
 
         if r.name == "incident":
 
@@ -1756,11 +1762,12 @@ def event_notification_dispatcher(r, **attr):
             closed = record.closed
             
             if event_id != None:
-                queryEvent = (itable.id == event_id)
-                relatedEvent = current.db(queryEvent).select(etable.name).first()
-                eventName = relatedEvent.name
+                event = current.db(itable.id == event_id).select(etable.name,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
+                eventName = event.name
             else:
-                eventName = "Not Defined"
+                eventName = T("Not Defined")
 
             text += "************************************************"
             text += "\n%s " % T("Automatic Message")
@@ -1772,18 +1779,15 @@ def event_notification_dispatcher(r, **attr):
             text += "%s " % T("Closed? %s") % closed
             text += "\n************************************************\n"
 
-            url = URL(c="event",
-                      f="incident",
-                      args=r.id)
+            url = URL(c="event", f="incident", args=r.id)
 
-            # Create the form
-        opts = dict(
-                    type="SMS",
+        # Create the form
+        opts = dict(type="SMS",
                     # @ToDo: deployment_setting
                     subject = T("Deployment Request"),
                     message = message + text,
                     url = url,
-                )
+                    )
 
 #        query = (ctable.pe_id == id)
 #        recipients = current.db(query).select(ctable.pe_id)
@@ -1822,6 +1826,7 @@ def event_notification_dispatcher(r, **attr):
     else:
         raise HTTP(501, current.messages.BADMETHOD)
 
+#===============================================================================    
 def event_incident_list_layout(list_id, item_id, resource, rfields, record,
                                icon="incident"):
     """

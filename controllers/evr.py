@@ -11,8 +11,8 @@ if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 s3db.set_method("pr", "group",
-                method="add_members",
-                action=s3db.evr_AddGroupMembers)
+                method = "add_members",
+                action = s3db.evr_AddGroupMembers)
 
 # -----------------------------------------------------------------------------
 def index():
@@ -42,13 +42,12 @@ def person():
 
     # Custom Method for Contacts
     s3db.set_method("pr", "person",
-                    method="contacts",
-                    action=s3db.pr_contacts)
+                    method = "contacts",
+                    action = s3db.pr_contacts)
 
     def prep(r):
 
-        db = current.db
-        fiscal_code = current.s3db.evr_case.fiscal_code
+        fiscal_code = s3db.evr_case.fiscal_code
 
         if r.method == "update":
             fiscal_code.requires = None
@@ -56,17 +55,17 @@ def person():
             fiscal_code.requires = \
                     IS_EMPTY_OR(IS_NOT_IN_DB(db(db.evr_case.deleted != True),
                                              fiscal_code),
-                                null=''
+                                null=""
                                 )
 
-        r.resource.configure(list_fields=["id",
-                                          "first_name",
-                                          #"middle_name",
-                                          "last_name",
-                                          "gender",
-                                          "date_of_birth",
-                                          (T("Age"), "age"),
-                                          ])
+        r.resource.configure(list_fields = ["id",
+                                            "first_name",
+                                            #"middle_name",
+                                            "last_name",
+                                            "gender",
+                                            "date_of_birth",
+                                            (T("Age"), "age"),
+                                            ])
 
         if r.interactive and not r.component:
 
@@ -82,11 +81,11 @@ def person():
                               "identity.value",
                               "case.fiscal_code"
                               ],
-                              label=T("Name and/or ID"),
-                              comment=T("To search for a person, enter any of the "
-                                        "first, middle or last names and/or an ID "
-                                        "number of a person, separated by spaces. "
-                                        "You may use % as wildcard."),
+                              label = T("Name and/or ID"),
+                              comment = T("To search for a person, enter any of the "
+                                          "first, middle or last names and/or an ID "
+                                          "number of a person, separated by spaces. "
+                                          "You may use % as wildcard."),
                               ),
             ]
 
@@ -114,7 +113,8 @@ def person():
                                         "comments",
                                         )
             resource.configure(crud_form = crud_form,
-                               filter_widgets = filter_widgets)
+                               filter_widgets = filter_widgets,
+                               )
 
         elif r.representation in ("pdf", "xls"):
             # List fields
@@ -136,37 +136,38 @@ def person():
 
     return s3_rest_controller("pr", "person",
                               rheader = s3db.evr_rheader)
-    
+
 # -----------------------------------------------------------------------------
 def group():
     """
         REST controller to register families and other groups
     """
-    
-    evr_group_types = current.deployment_settings.get_L10n_evr_group_types()
+
+    evr_group_types = settings.get_evr_group_types()
 
     # Pre-process
     def prep(r):
         resource = r.resource
         if not r.component:
-            query = (s3base.S3FieldSelector("system") == False) & \
-                    (s3base.S3FieldSelector("group_type").belongs(evr_group_types.keys()))
+            FS = s3base.S3FieldSelector
+            query = (FS("system") == False) & \
+                    (FS("group_type").belongs(evr_group_types.keys()))
             resource.add_filter(query)
-            
+
             # Fields to be displayed in the group table
-            resource.configure(list_fields=["id",
-                                            "name",
-                                            "description",
-                                            "group_type",
-                                            "group_membership.person_id",
-                                            (T("Contact"), "contact.value")
-                                            ],
-                               # Redirect to member list when a new group
+            resource.configure(# Redirect to member list when a new group
                                # has been created
                                create_next = URL(f="group",
                                                  args=["[id]",
                                                        "group_membership"],
                                                  ),
+                               list_fields = ["id",
+                                              "name",
+                                              "description",
+                                              "group_type",
+                                              "group_membership.person_id",
+                                              (T("Contact"), "contact.value")
+                                              ],
                                )
 
             if r.interactive:
@@ -210,10 +211,10 @@ def group():
                 output["buttons"] = buttons
         return output
     s3.postp = postp
-    
+
     output = s3_rest_controller("pr", "group",
                                 rheader = s3db.evr_rheader)
     
     return output
-    
+
 # END =========================================================================

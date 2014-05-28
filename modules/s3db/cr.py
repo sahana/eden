@@ -95,7 +95,8 @@ class S3ShelterModel(S3Model):
                      Field("name", notnull=True,
                            label = NAME,
                            requires = IS_NOT_ONE_OF(db,
-                                                    "%s.name" % tablename)),
+                                                    "%s.name" % tablename),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -133,15 +134,16 @@ class S3ShelterModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         shelter_type_id = S3ReusableField("shelter_type_id", "reference %s" % tablename,
+                                          label = SHELTER_TYPE_LABEL,
+                                          ondelete = "RESTRICT",
+                                          represent = represent,
                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
                                                                   represent)),
-                                          represent = represent,
                                           comment=S3AddResourceLink(c="cr",
                                                                     f="shelter_type",
                                                                     label=ADD_SHELTER_TYPE),
-                                          ondelete = "RESTRICT",
-                                          label = SHELTER_TYPE_LABEL)
+                                          )
 
         # -------------------------------------------------------------------------
         # Shelter services
@@ -189,18 +191,18 @@ class S3ShelterModel(S3Model):
         
         shelter_service_id = S3ReusableField("shelter_service_id",
                                              "list:reference cr_shelter_service",
-                                             sortby="name",
+                                             label = SHELTER_SERVICE_LABEL,
+                                             ondelete = "RESTRICT",
+                                             represent = self.cr_shelter_service_multirepresent,
                                              requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db,
                                                                       "cr_shelter_service.id",
                                                                       self.cr_shelter_service_represent,
                                                                       multiple=True)),
-                                             represent = self.cr_shelter_service_multirepresent,
-                                             label = SHELTER_SERVICE_LABEL,
+                                             sortby = "name",
                                              comment = S3AddResourceLink(c="cr",
                                                                          f="shelter_service",
                                                                          label=ADD_SHELTER_SERVICE),
-                                             ondelete = "RESTRICT",
                                              widget = S3MultiSelectWidget(header=False,
                                                                           ),
                                              )
@@ -210,8 +212,7 @@ class S3ShelterModel(S3Model):
                            2 : T("Open")
                            }
         
-        static_population_estimation = current.deployment_settings.get_L10n_shelter_static_population()
-        dynamic_population_estimation = current.deployment_settings.get_L10n_shelter_dynamic_population()
+        dynamic = settings.get_cr_shelter_population_dynamic()
 
         tablename = "cr_shelter"
         define_table(tablename,
@@ -224,8 +225,8 @@ class S3ShelterModel(S3Model):
                      #      unique=True, label=T("Code")),
                      Field("name", notnull=True,
                            length=64,            # Mayon compatibility
+                           label = T("Shelter Name"),
                            requires = IS_NOT_EMPTY(),
-                           label = T("Shelter Name")
                            ),
                      self.org_organisation_id(
                          widget = org_widget,
@@ -235,115 +236,112 @@ class S3ShelterModel(S3Model):
                      self.gis_location_id(),
                      Field("phone",
                            label = T("Phone"),
-                           requires = IS_EMPTY_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires),
+                           ),
                      Field("email", "string",
-                           label = T("Email")
+                           label = T("Email"),
                            ),
                      self.pr_person_id(label = T("Contact Person / Camp Owner")),
                      #Static field
                      Field("population", "integer",
                            label = T("Estimated Population"),                    
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_EMPTY_OR(
-                                       IS_INT_IN_RANGE(0, 999999)),
-                           readable = static_population_estimation,
-                           writable = static_population_estimation,       
-                           represent=lambda v: \
-                                       IS_INT_AMOUNT.represent(v),
-                            comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("Current estimated population"),
-                                                            T("Current estimated population in shelter. Staff, Volunteers and Evacuees."))),            
+                                        IS_INT_IN_RANGE(0, 999999)),
+                           readable = not dynamic,
+                           writable = not dynamic,       
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Current estimated population"),
+                                                           T("Current estimated population in shelter. Staff, Volunteers and Evacuees."))),            
                            ),
                      Field("capacity_day", "integer",
-                           label = T("Evacuees Capacity (Day and Night)"),
-                           readable = dynamic_population_estimation,
-                           writable = dynamic_population_estimation,
-                           requires = IS_EMPTY_OR(
-                                      IS_INT_IN_RANGE(0, 999999)),
                            default = 0,
-                           represent=lambda v: \
-                                       IS_INT_AMOUNT.represent(v),
+                           label = T("Evacuees Capacity (Day and Night)"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, 999999)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Capacity (Day and Night)"),
                                                            T("Capacity of the shelter for people who need to stay both day and night"))),
                            ),
                      Field("capacity_night", "integer",
-                           label = T("Evacuees Capacity (Night only)"),
-                           readable = dynamic_population_estimation,
-                           writable = dynamic_population_estimation,
-                           requires = IS_EMPTY_OR(
-                                       IS_INT_IN_RANGE(0, 999999)),
                            default = 0,
-                           represent=lambda v: \
-                                       IS_INT_AMOUNT.represent(v),
+                           label = T("Evacuees Capacity (Night only)"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, 999999)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Capacity (Night only)"),
                                                            T("Capacity of the shelter for people who need to stay for night only"))),
                            ),
                      Field("available_capacity_day", "integer",
-                           label = T("Evacuees Available Capacity (Day and Night)"),
-                           requires = IS_EMPTY_OR(
-                                      IS_INT_IN_RANGE(0, 999999)),
-                           represent=lambda v: IS_INT_AMOUNT.represent(v),
-                           # Automatically updated
                            default = 0,
-                           readable = dynamic_population_estimation,
+                           label = T("Evacuees Available Capacity (Day and Night)"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, 999999)),
+                           readable = dynamic,
+                           # Automatically updated
                            writable = False,
                            ),
                      Field("available_capacity_night", "integer",
-                           label = T("Evacuees Available Capacity (Night only)"),
-                           requires = IS_EMPTY_OR(
-                                      IS_INT_IN_RANGE(0, 999999)),
-                           represent=lambda v: IS_INT_AMOUNT.represent(v),
-                           # Automatically updated
                            default = 0,
-                           readable = dynamic_population_estimation,
+                           label = T("Evacuees Available Capacity (Night only)"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(0, 999999)),
+                           readable = dynamic,
+                           # Automatically updated
                            writable = False,
                            ),
                      Field("population_day", "integer",
+                           default = 0,
                            label = T("Evacuees Current Population (Day and Night)"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_EMPTY_OR(
-                                      IS_INT_IN_RANGE(0, 999999)),
-                           represent=lambda v: IS_INT_AMOUNT.represent(v),
+                                        IS_INT_IN_RANGE(0, 999999)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Population (Day)"),
                                                            T("Number of evacuees registered in the shelter for day and night"))),
-                           # Autogenerated, should not be edited manually
-                           default = 0,
-                           readable = dynamic_population_estimation,
+                           readable = dynamic,
+                           # Automatically updated
                            writable = False
                            ),
                      Field("population_night", "integer",
+                           default = 0,
                            label = T("Evacuues Current Population (Night only)"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_EMPTY_OR(
-                                      IS_INT_IN_RANGE(0, 999999)),
-                           represent=lambda v: IS_INT_AMOUNT.represent(v),
+                                        IS_INT_IN_RANGE(0, 999999)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Population (Night)"),
                                                            T("Number of people registered in the shelter for night only"))),
-                           # Autogenerated, should not be edited manually
-                           default = 0,
-                           readable = dynamic_population_estimation,
+                           readable = dynamic,
+                           # Automatically updated
                            writable = False
                            ),
                      Field("status", "integer",
+                           label = T("Status"),
+                           represent = lambda opt: \
+                               cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
                                        IS_IN_SET(cr_shelter_opts)
                                        ),
-                           represent = lambda opt: \
-                               cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
-                           label = T("Status")),
+                           ),
                      Field("source",
+                           label = T("Source"),
                            readable = False,
                            writable = False,
-                           label = T("Source")),
+                           ),
                      s3_comments(),
                      Field("obsolete", "boolean",
+                           default = False,
                            label = T("Obsolete"),
                            represent = lambda opt: \
-                                       (opt and [T("Obsolete")] or [messages["NONE"]])[0],
-                           default = False,
+                            (opt and [T("Obsolete")] or [messages["NONE"]])[0],
                            readable = False,
-                           writable = False),
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         # CRUD strings
@@ -388,8 +386,14 @@ class S3ShelterModel(S3Model):
                          "shelter_type_id",
                          #"organisation_id",
                          "status",
-                         "population",
                          ]
+        if dynamic:
+            report_fields.extend(("population_day",
+                                  "population_night",
+                                  ))
+        else:
+            # Manual
+            report_fields.append("population")
 
         text_fields = ["name",
                        "code",
@@ -398,29 +402,24 @@ class S3ShelterModel(S3Model):
                        "organisation_id$acronym",
                        "location_id$name",
                        ]
-        if not (dynamic_population_estimation):
-            list_fields = ["id",
-                           "name",
-                           "status",
-                           "shelter_type_id",
-                           #"shelter_service_id",
-                           "population",
-                           "location_id$addr_street",
-                           #"person_id",
-                           ]
+
+        list_fields = ["id",
+                       "name",
+                       "status",
+                       "shelter_type_id",
+                       #"shelter_service_id",
+                       ]
+        if dynamic:
+            list_fields.extend(("capacity_day",
+                                "capacity_night",
+                                "population_day",
+                                "population_night",
+                                ))
         else:
-            list_fields = ["id",
-                           "name",
-                           "status",
-                           "shelter_type_id",
-                           #"shelter_service_id",
-                           "capacity_day",
-                           "capacity_night",
-                           "population_day",
-                           "population_night",
-                           "location_id$addr_street",
-                           #"person_id",
-                           ]
+            # Manual
+            list_fields.append("population")
+        list_fields.append("location_id$addr_street")
+        #list_fields.append("person_id")
 
         for level in levels:
             lfield = "location_id$%s" % level
@@ -433,42 +432,31 @@ class S3ShelterModel(S3Model):
 
         filter_widgets = [
                 S3TextFilter(text_fields,
-                             label=T("Name"),
-                             _class="filter-search",
+                             label = T("Name"),
+                             _class = "filter-search",
                              ),
                 S3OptionsFilter("shelter_type_id",
-                                label=T("Type"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                #cols=3,
-                                #hidden=True,
+                                label = T("Type"),
+                                #Doesn't translate
+                                #represent = "%(name)s",
                                 ),
                 S3LocationFilter("location_id",
-                                 label=T("Location"),
-                                 levels=levels,
-                                 widget="multiselect",
-                                 #cols=3,
-                                 #hidden=True,
+                                 label = T("Location"),
+                                 levels = levels,
                                  ),
                 S3OptionsFilter("status",
-                                label=T("Status"),
+                                label = T("Status"),
                                 options = cr_shelter_status_filter_opts,
-                                #represent="%(name)s",
-                                widget="multiselect",
-                                none=True,
-                                #hidden=True,
+                                none = True,
                                 ),
-                S3RangeFilter("available_capacity_night",
-                              label=T("Available Capacity (Night)"),
-                              #represent="%(name)s",
-                              #hidden=True,
-                              ),
-                S3RangeFilter("capacity_night",
-                              label=T("Total Capacity (Night)"),
-                              #represent="%(name)s",
-                              #hidden=True,
-                              ),
                 ]
+        if dynamic:
+            filter_widgets.append(S3RangeFilter("available_capacity_night",
+                                                label = T("Available Capacity (Night)"),
+                                                ))
+        filter_widgets.append(S3RangeFilter("capacity_night",
+                                            label = T("Total Capacity (Night)"),
+                                            ))
 
         configure(tablename,
                   deduplicate = self.cr_shelter_duplicate,
@@ -483,41 +471,41 @@ class S3ShelterModel(S3Model):
                                          cols="status",
                                          fact="count(name)",
                                          totals=True)
-                   ),
+                        ),
                   super_entity = ("org_site", "doc_entity", "pr_pentity"),
                   )
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
         shelter_id = S3ReusableField("shelter_id", "reference %s" % tablename,
+                                     label = SHELTER_LABEL,
+                                     ondelete = "RESTRICT",
+                                     represent = represent,
                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "cr_shelter.id",
                                                               represent,
                                                               sort=True)),
-                                     represent = represent,
-                                     ondelete = "RESTRICT",
-                                     comment=S3AddResourceLink(c="cr",
-                                                               f="shelter",
-                                                               label=ADD_SHELTER,
-                                                               title=SHELTER_LABEL,
-                                                               tooltip="%s (%s)." % (SHELTER_HELP,
-                                                                                    T("optional"))),
-                                     label = SHELTER_LABEL,
+                                     comment = S3AddResourceLink(c="cr",
+                                                                 f="shelter",
+                                                                 label=ADD_SHELTER,
+                                                                 title=SHELTER_LABEL,
+                                                                 tooltip="%s (%s)." % (SHELTER_HELP,
+                                                                                       T("optional"))),
                                      widget = S3AutocompleteWidget("cr", "shelter")
                                      )
 
         self.add_components(tablename,
-                            cr_shelter_status={"name": "status",
-                                               "joinby": "shelter_id",
-                                              },
-                            cr_shelter_registration="shelter_id",
-                            cr_shelter_allocation="shelter_id",
-                            event_event_shelter="shelter_id"
-                           )
+                            cr_shelter_allocation = "shelter_id",
+                            cr_shelter_registration = "shelter_id",
+                            cr_shelter_status = {"name": "status",
+                                                 "joinby": "shelter_id",
+                                                 },
+                            event_event_shelter = "shelter_id"
+                            )
 
         set_method("cr", "shelter",
-                   method="dispatch",
-                   action=cr_notification_dispatcher)
+                   method = "dispatch",
+                   action = cr_notification_dispatcher)
 
         # -------------------------------------------------------------------------
         # Shelter statuses
@@ -528,18 +516,18 @@ class S3ShelterModel(S3Model):
                      shelter_id(ondelete = "CASCADE"),
                      s3_date(),
                      Field("status", "integer",
+                           label = T("Status"),
+                           represent = lambda opt: \
+                               cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
                                        IS_IN_SET(cr_shelter_opts)
                                        ),
-                           represent = lambda opt: \
-                               cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
-                           label = T("Status")),
+                           ),
                      Field("population", "integer",
                            label = T("Population"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_EMPTY_OR(
                                        IS_INT_IN_RANGE(0, 999999)),
-                           represent=lambda v: \
-                                       IS_INT_AMOUNT.represent(v)
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -572,20 +560,26 @@ class S3ShelterModel(S3Model):
                 msg_record_deleted = T("Shelter Status deleted"),
                 msg_list_empty = T("No Shelter Statuses currently registered"))
 
+        # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
-        return Storage(
-                ADD_SHELTER = ADD_SHELTER,
-                SHELTER_LABEL = SHELTER_LABEL,
-                cr_shelter_id = shelter_id,
-            )
+        return dict(ADD_SHELTER = ADD_SHELTER,
+                    SHELTER_LABEL = SHELTER_LABEL,
+                    cr_shelter_id = shelter_id,
+                    )
 
-    # -----------------------------------------------------------------------------
-    def defaults(self):
-        #cr_shelter_id = S3ReusableField("shelter_id", "integer",
-        #                                readable=False,
-        #                                writable=False)
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """
+            Return safe defaults in case the model has been deactivated.
+        """
 
-        return
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(cr_shelter_id = lambda **attr: dummy("shelter_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -594,15 +588,17 @@ class S3ShelterModel(S3Model):
             After DB I/O
         """
 
-        s3db = current.s3db
-        # @ToDo: Update/Create a cr_shelter_status record
+        form_vars = form.vars
 
         # Update Affiliation, record ownership and component ownership
-        s3db.org_update_affiliations("cr_shelter", form.vars)
+        current.s3db.org_update_affiliations("cr_shelter", form_vars)
 
-        # Update population and available capacity
-        cr_update_shelter_population(form.vars.id)
-        
+        if current.deployment_settings.get_cr_shelter_population_dynamic():
+            # Update population and available capacity
+            cr_update_shelter_population(form_vars.id)
+
+        # @ToDo: Update/Create a cr_shelter_status record
+
         return
 
     # -------------------------------------------------------------------------
@@ -614,7 +610,7 @@ class S3ShelterModel(S3Model):
 
         # @ToDo: Update the cr_shelter record
         # Status & Population
-        pass
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -684,6 +680,7 @@ class S3ShelterModel(S3Model):
     def cr_shelter_service_multirepresent(shelter_service_ids):
         """
         """
+
         if not shelter_service_ids:
             return current.messages["NONE"]
 
@@ -769,54 +766,55 @@ class S3ShelterRegistrationModel(S3Model):
                           # The comment explains how to register a new person
                           # it should not be done in a popup
                           self.pr_person_id(
-                              comment=DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("Person"),
-                                                            T("Type the name of a registered person \
-                                                               or to add an unregistered person to this \
-                                                               shelter click on Evacuees")
-                                                            )
-                              )),
+                              comment = DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Person"),
+                                                              T("Type the name of a registered person \
+                                                                or to add an unregistered person to this \
+                                                                shelter click on Evacuees")
+                                                              )
+                                            ),
+                              ),
                           Field("day_or_night", "integer",
                                 label = T("Presence in the shelter"),
+                                represent = S3Represent(
+                                                options=cr_day_or_night_opts
+                                                ),
                                 requires = IS_IN_SET(cr_day_or_night_opts,
                                                      zero=None
                                                      ),
-                                represent = S3Represent(
-                                                options=cr_day_or_night_opts
-                                                )
-                                   ),
+                                ),
                           Field("registration_status", "integer",
                                 label = T("Status"),
+                                represent = S3Represent(
+                                                options=cr_registration_status_opts,
+                                                ),
                                 requires = IS_IN_SET(cr_registration_status_opts,
                                                      zero=None
                                                      ),
-                                represent = S3Represent(
-                                                options=cr_registration_status_opts,
-                                                )
                                 ),
                           s3_datetime("check_in_date",
                                       label = T("Check-in date"),
-                                      #empty=False,
-                                      default="now",
-                                      future=0
+                                      default = "now",
+                                      #empty = False,
+                                      future = 0,
                                       ),
                           s3_datetime("check_out_date",
-                                      label = T("Check-out date")
+                                      label = T("Check-out date"),
                                       ),
                           s3_comments(),
                           *s3_meta_fields())
 
         population_onaccept = lambda form: \
-                              self.shelter_population_onaccept(form,
-                                                        tablename="cr_shelter_registration")
+            self.shelter_population_onaccept(form,
+                                             tablename="cr_shelter_registration")
         configure(tablename,
-                  onaccept=population_onaccept,
-                  ondelete=population_onaccept,
+                  onaccept = population_onaccept,
+                  ondelete = population_onaccept,
                   )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
-        return {}
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -872,10 +870,11 @@ def cr_shelter_rheader(r, tabs=[]):
                         (T("People Registration"), "shelter_registration"),
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
-                        (T("Associated Events"), "event_shelter")
-                    ]
-                if current.deployment_settings.has_module("assess"):
-                    tabs.append((T("Assessments"), "rat"))
+                        (T("Events"), "event_shelter")
+                        ]
+                settings = current.deployment_settings
+                #if settings.has_module("assess"):
+                #    tabs.append((T("Assessments"), "rat"))
 
                 try:
                     tabs = tabs + s3db.req_tabs(r)
@@ -886,7 +885,7 @@ def cr_shelter_rheader(r, tabs=[]):
                 except:
                     pass
 
-                if current.deployment_settings.has_module("msg"):
+                if settings.has_module("msg"):
                     tabs.append((T("Send Notification"), "dispatch"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -894,20 +893,15 @@ def cr_shelter_rheader(r, tabs=[]):
             if r.name == "shelter":
                 location = r.table.location_id.represent(record.location_id)
 
-                rheader = DIV(TABLE(
-                                    TR(
-                                        TH("%s: " % T("Name")), record.name
-                                      ),
-                                    TR(
-                                        TH("%s: " % T("Location")), location
-                                      ),
+                rheader = DIV(TABLE(TR(TH("%s: " % T("Name")), record.name
+                                       ),
+                                    TR(TH("%s: " % T("Location")), location
+                                       ),
                                     ),
                               rheader_tabs)
             else:
-                rheader = DIV(TABLE(
-                                    TR(
-                                        TH("%s: " % T("Name")), record.name
-                                      ),
+                rheader = DIV(TABLE(TR(TH("%s: " % T("Name")), record.name
+                                       ),
                                     ),
                               rheader_tabs)
 
@@ -928,7 +922,7 @@ def cr_update_shelter_population(shelter_id):
 
     stable = s3db.cr_shelter
     atable = s3db.cr_shelter_allocation
-    rtable = s3db.cr_shelter_registration
+    rtable = db.cr_shelter_registration
 
     # Get the shelter record
     record = db(stable._id == shelter_id).select(stable.id,
@@ -1022,19 +1016,19 @@ def cr_notification_dispatcher(r, **attr):
         s_email = record.email
         s_status = record.status
 
-        if s_phone == '' or None:
-            s_phone = T('Not Defined')
-        if s_email == '' or None:
-            s_phone = T('Not Defined')
-        if s_status == '' or None:
-            s_status = T('Not Defined')
+        if s_phone in ("", None):
+            s_phone = T("Not Defined")
+        if s_email in ("", None):
+            s_phone = T("Not Defined")
+        if s_status in ("", None):
+            s_status = T("Not Defined")
         else:
             if s_status == 1:
-                s_status = 'Open'
+                s_status = "Open"
             elif s_status == 2:
-                s_status = 'Close'
+                s_status = "Close"
             else:
-                s_status = 'Unassigned Shelter Status'
+                s_status = "Unassigned Shelter Status"
 
         text += "************************************************"
         text += "\n%s " % T("Automatic Message")
@@ -1045,20 +1039,17 @@ def cr_notification_dispatcher(r, **attr):
         text += "\n%s " % T("Working Status: %s") % s_status 
         text += "\n************************************************\n"
 
-            # Encode the message as an OpenGeoSMS
-#           message = msg.prepare_opengeosms(record.location_id,
-#                                            code="ST",
-#                                            map="google",
-#                                            text=text)
+        # Encode the message as an OpenGeoSMS
+        #message = msg.prepare_opengeosms(record.location_id,
+        #                                 code="ST",
+        #                                 map="google",
+        #                                 text=text)
 
         # URL to redirect to after message sent
-        url = URL(c="cr",
-                  f="shelter",
-                  args=r.id)
+        url = URL(c="cr", f="shelter", args=r.id)
 
         # Create the form
-        opts = dict(
-                    type="SMS",
+        opts = dict(type="SMS",
                     # @ToDo: deployment_setting
                     subject = T("Deployment Request"),
                     message = message + text,

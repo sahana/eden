@@ -2,7 +2,7 @@
 
 """ Sahana Eden Evacuees Registry Model
 
-    @copyright: 2012-13 (c) Sahana Software Foundation
+    @copyright: 2014 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -47,25 +47,25 @@ class S3EVRCaseModel(S3Model):
 
         T = current.T
         db = current.db
+        define_table = self.define_table
+        person_id = self.pr_person_id
 
         # ---------------------------------------------------------------------
         # Case Data
         #
         tablename = "evr_case"
-        self.define_table(tablename,
-                          self.pr_person_id(ondelete="CASCADE"),
-                          Field("fiscal_code", "string",
-                                length=16,
-                                label=T("Fiscal Code"),
-                                comment=DIV(_class="tooltip",
-                                      _title="%s|%s" % (T("Fiscal Code"),
-                                                        T("Insert the fiscal \
-                                                        code with no spaces")
-                                                        )
-                                            ),
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     person_id(ondelete="CASCADE"),
+                     Field("fiscal_code", "string", length = 16,
+                           label = T("Fiscal Code"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Fiscal Code"),
+                                                           T("Insert the fiscal code with no spaces")
+                                                           )
+                                         ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # If fiscal code is present, it's unique
 #         fiscal_code = db.evr_case.fiscal_code
@@ -76,7 +76,8 @@ class S3EVRCaseModel(S3Model):
 #                                                )
 
         self.configure(tablename,
-                       onaccept=self.evr_case_onaccept)
+                       onaccept = self.evr_case_onaccept,
+                       )
 
         # ---------------------------------------------------------------------
         # Medical Details
@@ -128,10 +129,10 @@ class S3EVRCaseModel(S3Model):
         def med_multiopt_field(fieldname, options, label=None):
             """ Simple generator for option fields """
             return Field(fieldname, "list:integer",
-                         requires = IS_IN_SET(options, multiple = True),
+                         label = label,
                          represent = S3Represent(options = options,
                                                  multiple = True),
-                         label = label,
+                         requires = IS_IN_SET(options, multiple = True),
                          widget = S3MultiSelectWidget(filter = False,
                                                       selectedList = 3,
                                                       noneSelectedText = "Select",
@@ -153,114 +154,114 @@ class S3EVRCaseModel(S3Model):
                            }
 
         tablename = "evr_medical_details"
-        self.define_table(tablename,
-                          self.pr_person_id(),
-                          med_multiopt_field("therapy",
-                                             evr_therapy_opts,
-                                             label=T("Therapy"),
-                                            ),
-                          Field("therapy_comment"),
-                          Field("pregnancy", "boolean",
-                                label=T("Pregnancy"),
-                                ),
-                          med_multiopt_field("allergy",
-                                             evr_allergy_opts,
-                                             label=T("Allergies"),
-                                            ),
-                          Field("diet",
-                                label=T("Diet"),
-                                ),
-                          med_multiopt_field("disability",
-                                             evr_disability_opts,
-                                             label=T("Disabilities"),
-                                            ),
-                          Field("self_sufficient", "boolean",
-                                label=T("Self-Sufficient"),
-                                ),
-                          med_multiopt_field("aids_appliances",
-                                             evr_aids_appliances_opts,
-                                             label=T("Aids and Appliances"),
-                                            ),
-                          Field("declared_by_name",
-                                label=T("Declared by (Name)"),
-                                ),
-                          Field("declared_by_relationship", "integer",
-                                requires=IS_IN_SET(evr_source_opts,
-                                                   zero=None),
-                                label=T("Declared by (Relationship)"),
-                                represent=S3Represent(options=evr_source_opts),
-                                ),
-                          Field("declared_by_phone",
-                                label=T("Declared by (Phone)"),
-                                requires = IS_NULL_OR(IS_PHONE_NUMBER()),
-                                ),
-                          Field("declared_by_email",
-                                label=T("Declared by (Email)"),
-                                requires = IS_NULL_OR(IS_EMAIL()),
-                                ),
-                          Field("has_attendant", "boolean",
-                                label=T("Has Attendand"),
-                                ),
-                          Field("attendant_name",
-                                label=T("Attendant (Name)"),
-                                ),
-                          Field("attendant_phone",
-                                label=T("Attendant (Phone)"),
-                                requires = IS_NULL_OR(IS_PHONE_NUMBER()),
-                                ),
-                          Field("attendant_email",
-                                label=T("Attendant (Email)"),
-                                requires = IS_NULL_OR(IS_EMAIL()),
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     person_id(),
+                     med_multiopt_field("therapy",
+                                        evr_therapy_opts,
+                                        label = T("Therapy"),
+                                        ),
+                     Field("therapy_comment"),
+                     Field("pregnancy", "boolean",
+                           label = T("Pregnancy"),
+                           ),
+                     med_multiopt_field("allergy",
+                                        evr_allergy_opts,
+                                        label = T("Allergies"),
+                                        ),
+                     Field("diet",
+                           label = T("Diet"),
+                           ),
+                     med_multiopt_field("disability",
+                                        evr_disability_opts,
+                                        label = T("Disabilities"),
+                                        ),
+                     Field("self_sufficient", "boolean",
+                           label = T("Self-Sufficient"),
+                           ),
+                     med_multiopt_field("aids_appliances",
+                                        evr_aids_appliances_opts,
+                                        label = T("Aids and Appliances"),
+                                        ),
+                     Field("declared_by_name",
+                           label = T("Declared by (Name)"),
+                           ),
+                     Field("declared_by_relationship", "integer",
+                           label = T("Declared by (Relationship)"),
+                           represent=S3Represent(options=evr_source_opts),
+                           requires = IS_IN_SET(evr_source_opts,
+                                                zero=None),
+                           ),
+                     Field("declared_by_phone",
+                           label = T("Declared by (Phone)"),
+                           requires = IS_NULL_OR(IS_PHONE_NUMBER()),
+                           ),
+                     Field("declared_by_email",
+                           label = T("Declared by (Email)"),
+                           requires = IS_NULL_OR(IS_EMAIL()),
+                           ),
+                     Field("has_attendant", "boolean",
+                           label = T("Has Attendant"),
+                           ),
+                     Field("attendant_name",
+                           label = T("Attendant (Name)"),
+                           ),
+                     Field("attendant_phone",
+                           label = T("Attendant (Phone)"),
+                           requires = IS_NULL_OR(IS_PHONE_NUMBER()),
+                           ),
+                     Field("attendant_email",
+                           label = T("Attendant (Email)"),
+                           requires = IS_NULL_OR(IS_EMAIL()),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Socio-economic Background
         #
         tablename = "evr_background"
-        self.define_table(tablename,
-                          self.pr_person_id(),
-                          Field("legal_measure", "boolean",
-                                label=T("Legal measure / Home warrant")
-                                ),
-                          Field("social_welfare", "boolean",
-                                label=T("Social Welfare")
-                                ),
-                          Field("home_help", "boolean",
-                                label=T("Home Help")
-                                ),
-                          Field("interpreter", "boolean",
-                                label=T("Interpreter / Cultural Mediator")
-                                ),
-                          Field("distance_from_shelter", "integer",
-                                label=T("Distance from Shelter (km)")
-                                ),
-                          Field("job_lost_by_event", "boolean",
-                                label=T("Job lost by event")
-                                ),
-                          Field("car_available", "boolean",
-                                label=T("Car available")
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     person_id(),
+                     Field("legal_measure", "boolean",
+                           label = T("Legal measure / Home warrant")
+                           ),
+                     Field("social_welfare", "boolean",
+                           label = T("Social Welfare")
+                           ),
+                     Field("home_help", "boolean",
+                           label = T("Home Help")
+                           ),
+                     Field("interpreter", "boolean",
+                           label = T("Interpreter / Cultural Mediator")
+                           ),
+                     Field("distance_from_shelter", "integer",
+                           label = T("Distance from Shelter (km)")
+                           ),
+                     Field("job_lost_by_event", "boolean",
+                           label = T("Job lost by event")
+                           ),
+                     Field("car_available", "boolean",
+                           label = T("Car available")
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
     # -------------------------------------------------------------------------
     @staticmethod
     def evr_case_onaccept(form):
         """
-            @ToDo: this function needs to become a deployment_setting
             After DB I/O, check the correctness of fiscal code (ITALY)
+            @ToDo: The function should be made a deployment_setting when anyone else wishes to use this module
         """
 
         # Initialization
         fiscal_code = form.vars.fiscal_code.upper()
-        if fiscal_code == '':
+        if fiscal_code == "":
             return
         MALE = 3
-        CONSONANTS = 'BCDFGHJKLMNPQRSTVWXYZ'
-        VOWELS = 'AEIOU'
-        MONTHS = 'ABCDEHLMPRST'
+        CONSONANTS = "BCDFGHJKLMNPQRSTVWXYZ"
+        VOWELS = "AEIOU"
+        MONTHS = "ABCDEHLMPRST"
         T = current.T
 
         ptable = current.s3db.pr_person
@@ -268,7 +269,8 @@ class S3EVRCaseModel(S3Model):
         row = current.db(query).select(ptable.first_name,
                                        ptable.last_name,
                                        ptable.date_of_birth,
-                                       ptable.gender
+                                       ptable.gender,
+                                       limitby = (0, 1)
                                        ).first()
         name = row.first_name.upper()
         surname = row.last_name.upper()
@@ -289,7 +291,7 @@ class S3EVRCaseModel(S3Model):
                 vow += c
         chars = cons + vow
         if len(chars) < 3:
-            chars += ['X', 'X']
+            chars += ["X", "X"]
         if fiscal_code[:3] != chars[0:3].upper():
             current.response.warning = T("Warning: fiscal code isn't \
                                          consistent with personal data")
@@ -309,7 +311,7 @@ class S3EVRCaseModel(S3Model):
                     vow += c
             chars = cons + vow
             if len(chars) < 3:
-                chars += ['X', 'X']
+                chars += ["X", "X"]
         if fiscal_code[3:6] != chars[0:3].upper():
             current.response.warning = T("Warning: fiscal code isn't \
                                          consistent with personal data")
@@ -376,7 +378,7 @@ def evr_rheader(r):
 
         rheader_fields = [["first_name", "last_name"],
                           ["date_of_birth"],
-                         ]
+                          ]
 
         # Show profile picture in rheader
         itable = current.s3db.pr_image
@@ -391,7 +393,8 @@ def evr_rheader(r):
                           _height=60,
                           _title=T("No image available")),
                       _class="th",
-                      _href=URL(f="person", args=[r.id, "image", "create"]))
+                      _href=URL(f="person", args=[r.id, "image", "create"]),
+                      )
             
         return DIV(DIV(image, _style="float:left"),
                    S3ResourceHeader(rheader_fields, tabs)(r))
@@ -410,7 +413,7 @@ def evr_rheader(r):
 
         rheader_fields = [["name"],
                           ["description"],
-                         ]
+                          ]
 
         return S3ResourceHeader(rheader_fields, tabs)(r)
         
@@ -679,5 +682,5 @@ class evr_AddGroupMembers(S3Method):
 
                 response.headers["Content-Type"] = "application/json"
                 return items
-        
+
 # END =========================================================================

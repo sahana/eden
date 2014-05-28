@@ -992,23 +992,23 @@ class S3PersonModel(S3Model):
                        asset_asset = "assigned_to_id",
 
                        # Evacuee Registry
-                       evr_case={"joinby": "person_id",
-                                 "multiple": False,
-                                 },
-                       evr_medical_details={"joinby": "person_id",
-                                            "multiple": False,
-                                            },
-                       evr_background={"joinby": "person_id",
-                                       "multiple": False,
-                                       },
+                       evr_case = {"joinby": "person_id",
+                                   "multiple": False,
+                                   },
+                       evr_medical_details = {"joinby": "person_id",
+                                              "multiple": False,
+                                              },
+                       evr_background = {"joinby": "person_id",
+                                         "multiple": False,
+                                         },
 
                        # Shelter (Camp) Registry
-                       cr_shelter_registration={"joinby": "person_id",
-                                                # A person can be assigned to only one shelter
-                                                # @todo: when fully implemented this needs to allow
-                                                # multiple instances for tracking reasons
-                                                "multiple": False,
-                                                },
+                       cr_shelter_registration = {"joinby": "person_id",
+                                                  # A person can be assigned to only one shelter
+                                                  # @todo: when fully implemented this needs to allow
+                                                  # multiple instances for tracking reasons
+                                                  "multiple": False,
+                                                  },
                        )
 
         # ---------------------------------------------------------------------
@@ -1752,16 +1752,16 @@ class S3GroupModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
-        # Hard Coded Group types. Do not Remove! 
+        # Hard Coded Group types. Add/Comment entries, but don't remove! 
         #
         pr_group_types = {1 : T("Family"),
                           2 : T("Tourist Group"),
                           3 : T("Relief Team"),
                           4 : T("other"),
                           5 : T("Mailing Lists"),
-                          6 : T("Society"),
+                          #6 : T("Society"),
                           }
-       
+
         tablename = "pr_group"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
@@ -1834,12 +1834,12 @@ class S3GroupModel(S3Model):
             label = T("Team")
             add_label = T("Add Team")
             title = T("Create Team")
-            tooltip = T("Create a new Team.")
+            tooltip = T("Create a new Team")
         else:
             label = T("Group")
             add_label = crud_strings.pr_group.label_create
             title = T("Create Group")
-            tooltip = T("Create a new Group.")
+            tooltip = T("Create a new Group")
         represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    sortby = "name",
@@ -1861,15 +1861,15 @@ class S3GroupModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            pr_group_membership="group_id",
+                            pr_group_membership = "group_id",
                             
                             # Shelter (Camp) Registry
-                            cr_shelter_allocation={"joinby": "group_id",
-                                                    # A group can be assigned to only one shelter
-                                                    # @todo: when fully implemented this needs to allow
-                                                    # multiple instances for tracking reasons
-                                                    "multiple": False,
-                                                    },
+                            cr_shelter_allocation = {"joinby": "group_id",
+                                                     # A group can be assigned to only one shelter
+                                                     # @todo: when fully implemented this needs to allow
+                                                     # multiple instances for tracking reasons
+                                                     "multiple": False,
+                                                     },
                             )
 
         # ---------------------------------------------------------------------
@@ -1877,17 +1877,20 @@ class S3GroupModel(S3Model):
         #
         tablename = "pr_group_membership"
         define_table(tablename,
-                     group_id(label = T("Group"),
-                              empty = False,
-                              ondelete="CASCADE"),
-                     self.pr_person_id(label = T("Person"),
-                                       empty = False,
-                                       ondelete="CASCADE"),
+                     group_id(empty = False,
+                              label = T("Group"),
+                              ondelete = "CASCADE",
+                              ),
+                     self.pr_person_id(empty = False,
+                                       label = T("Person"),
+                                       ondelete = "CASCADE",
+                                       ),
                      Field("group_head", "boolean",
+                           default = False,
                            label = T("Group Head"),
-                           default=False,
                            represent = lambda group_head: \
-                                       (group_head and [T("yes")] or [""])[0]),
+                                       (group_head and [T("yes")] or [""])[0]
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2043,27 +2046,29 @@ class S3ContactModel(S3Model):
                                 represent = self.pr_pentity_represent,
                                 ),
                      Field("contact_method", length=32,
-                           requires = IS_IN_SET(contact_methods,
-                                                zero=None),
                            default = "SMS",
                            label = T("Contact Method"),
                            represent = lambda opt: \
-                                       contact_methods.get(opt, messages.UNKNOWN_OPT)),
+                                       contact_methods.get(opt, messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(contact_methods,
+                                                zero=None),
+                           ),
                      Field("contact_description",
-                           label = T("Contact description"),
+                           label = T("Contact Description"),
                            ),
                      Field("value", notnull=True,
                            label= T("Value"),
-                           requires = IS_NOT_EMPTY(),
                            represent = lambda v: v or messages["NONE"],
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("priority", "integer",
-                           label= T("Priority"),
                            default = 1,
+                           label = T("Priority"),
+                           requires = IS_IN_SET(range(1, 10)),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority"),
                                                            T("What order to be contacted in."))),
-                           requires = IS_IN_SET(range(1, 10))),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2101,17 +2106,21 @@ class S3ContactModel(S3Model):
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),
                      Field("name",
-                           label= T("Name")),
+                           label = T("Name"),
+                           ),
                      Field("relationship",
-                           label= T("Relationship")),
+                           label = T("Relationship"),
+                           ),
                      Field("phone",
                            label = T("Phone"),
-                           requires = IS_EMPTY_OR(s3_phone_requires)),
+                           requires = IS_EMPTY_OR(s3_phone_requires),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate=self.pr_emergency_deduplicate)
+                  deduplicate = self.pr_emergency_deduplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -4088,7 +4097,7 @@ class S3PersonDescription(S3Model):
             "Unspecified",
             "White"
         ]
-                       
+
         tablename = "pr_physical_description"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity",
@@ -4114,9 +4123,7 @@ class S3PersonDescription(S3Model):
                            ),
                      Field("ethnicity", length=64, # Mayon Compatibility
                            label = T("Ethnicity"),
-                           readable = False,
-                           requires=IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
-                           writable = False,
+                           #requires = IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
                            ),
                      # Height and weight
                      Field("height", "integer",
@@ -5021,10 +5028,8 @@ def pr_contacts(r, **attr):
                 ))
 
     # Emergency Contacts
-    
-    evr_emergency_contacts = current.deployment_settings.get_L10n_evr_show_emergency_contacts()
-    
-    if r.controller == "evr" and not evr_emergency_contacts:
+    show_emergency_contacts = current.deployment_settings.get_pr_show_emergency_contacts()
+    if not show_emergency_contacts:
         emergency_wrapper = ""
     else:
         etable = s3db.pr_contact_emergency
@@ -5067,7 +5072,8 @@ def pr_contacts(r, **attr):
     content = DIV(#address_wrapper,
                   contacts_wrapper,
                   emergency_wrapper,
-                  _class="contacts-wrapper")
+                  _class="contacts-wrapper",
+                  )
 
     # Add the javascript
     response = current.response
@@ -5089,7 +5095,7 @@ def pr_contacts(r, **attr):
     rheader = attr.get("rheader", None)
     if callable(rheader):
         rheader = rheader(r)
-    
+
     return dict(title = T("Contacts"),
                 rheader = rheader,
                 content = content,
