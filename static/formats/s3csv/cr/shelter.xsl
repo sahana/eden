@@ -112,8 +112,8 @@
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
             <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
-            <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
-
+			<data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+			
             <xsl:choose>
                 <xsl:when test="$Status='Closed'">
                     <data field="status">1</data>

@@ -990,6 +990,25 @@ class S3PersonModel(S3Model):
                                               },
                        # Assets
                        asset_asset = "assigned_to_id",
+
+                       # Evacuee Registry
+                       evr_case={"joinby": "person_id",
+                                 "multiple": False,
+                                 },
+                       evr_medical_details={"joinby": "person_id",
+                                            "multiple": False,
+                                            },
+                       evr_background={"joinby": "person_id",
+                                       "multiple": False,
+                                       },
+
+                       # Shelter (Camp) Registry
+                       cr_shelter_registration={"joinby": "person_id",
+                                                # A person can be assigned to only one shelter
+                                                # @todo: when fully implemented this needs to allow
+                                                # multiple instances for tracking reasons
+                                                "multiple": False,
+                                                },
                        )
 
         # ---------------------------------------------------------------------
@@ -1733,15 +1752,16 @@ class S3GroupModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
-        # Group
+        # Hard Coded Group types. Do not Remove! 
         #
         pr_group_types = {1 : T("Family"),
                           2 : T("Tourist Group"),
                           3 : T("Relief Team"),
                           4 : T("other"),
                           5 : T("Mailing Lists"),
+                          6 : T("Society"),
                           }
-
+       
         tablename = "pr_group"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
@@ -1836,11 +1856,20 @@ class S3GroupModel(S3Model):
                                                           represent,
                                                           filterby="system",
                                                           filter_opts=(False,))),
+                                   widget = S3AutocompleteWidget("pr", "group")
                                    )
 
         # Components
         self.add_components(tablename,
                             pr_group_membership="group_id",
+                            
+                            # Shelter (Camp) Registry
+                            cr_shelter_allocation={"joinby": "group_id",
+                                                    # A group can be assigned to only one shelter
+                                                    # @todo: when fully implemented this needs to allow
+                                                    # multiple instances for tracking reasons
+                                                    "multiple": False,
+                                                    },
                             )
 
         # ---------------------------------------------------------------------
@@ -2020,6 +2049,9 @@ class S3ContactModel(S3Model):
                            label = T("Contact Method"),
                            represent = lambda opt: \
                                        contact_methods.get(opt, messages.UNKNOWN_OPT)),
+                     Field("contact_description",
+                           label = T("Contact description"),
+                           ),
                      Field("value", notnull=True,
                            label= T("Value"),
                            requires = IS_NOT_EMPTY(),
@@ -2469,7 +2501,10 @@ class S3PersonImageModel(S3Model):
         image = pr_image_represent(image, size=size)
         url_small = URL(c="default", f="download", args=image)
 
-        return DIV(A(IMG(_src=url_small, _height=size[1]), _href=url_full))
+        return DIV(A(IMG(_src=url_small,
+                         _height=size[1]),
+                         _href=url_full,
+                         _class="th"))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4053,7 +4088,7 @@ class S3PersonDescription(S3Model):
             "Unspecified",
             "White"
         ]
-
+                       
         tablename = "pr_physical_description"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity",
@@ -4079,9 +4114,9 @@ class S3PersonDescription(S3Model):
                            ),
                      Field("ethnicity", length=64, # Mayon Compatibility
                            label = T("Ethnicity"),
-                           #readable = False,
-                           #requires = IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
-                           #writable = False,
+                           readable = False,
+                           requires=IS_EMPTY_OR(IS_IN_SET(pr_ethnicity_opts)),
+                           writable = False,
                            ),
                      # Height and weight
                      Field("height", "integer",
@@ -4869,7 +4904,6 @@ def pr_contacts(r, **attr):
     has_permission = current.auth.s3_has_permission
 
     person = r.record
-
     # Addresses
     # - removed since can't get Google Maps displaying in Location Selector when loaded async
     # - even when loaded into page before async load of map
@@ -4918,7 +4952,9 @@ def pr_contacts(r, **attr):
     # Contacts
     ctable = s3db.pr_contact
     query = (ctable.pe_id == person.pe_id)
+
     contacts = db(query).select(ctable.id,
+                                ctable.contact_description,
                                 ctable.value,
                                 ctable.contact_method,
                                 orderby=ctable.contact_method)
@@ -4969,10 +5005,15 @@ def pr_contacts(r, **attr):
         contacts_wrapper.append(H3(opts[contact_type]))
         for detail in details:
             id = detail.id
+            value = detail.value
+            description = detail.contact_description or ""
+            if description:
+                description = "%s, " % description
+
             (edit_btn, delete_btn) = action_buttons(ctable, id)
             contacts_wrapper.append(
                 P(
-                  SPAN(detail.value),
+                  SPAN(description, value),
                   edit_btn,
                   delete_btn,
                   _id="contact-%s" % id,
@@ -4980,40 +5021,47 @@ def pr_contacts(r, **attr):
                 ))
 
     # Emergency Contacts
-    etable = s3db.pr_contact_emergency
-    query = (etable.pe_id == person.pe_id) & \
-            (etable.deleted == False)
-    emergency = db(query).select(etable.id,
-                                 etable.name,
-                                 etable.relationship,
-                                 etable.phone)
+    
+    evr_emergency_contacts = current.deployment_settings.get_L10n_evr_show_emergency_contacts()
+    
+    if r.controller == "evr" and not evr_emergency_contacts:
+        emergency_wrapper = ""
+    else:
+        etable = s3db.pr_contact_emergency
+        query = (etable.pe_id == person.pe_id) & \
+                (etable.deleted == False)
 
-    emergency_wrapper = DIV(H2(T("Emergency Contacts")))
+        emergency = db(query).select(etable.id,
+                                     etable.name,
+                                     etable.relationship,
+                                     etable.phone)
 
-    if has_permission("create", etable):
-        add_btn = DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
-                      DIV(_id="emergency-add_throbber",
-                          _class="throbber hide"),
-                      _class="margin")
-        emergency_wrapper.append(add_btn)
+        emergency_wrapper = DIV(H2(T("Emergency Contacts")))
 
-    for contact in emergency:
-        name = contact.name or ""
-        if name:
-            name = "%s, " % name
-        relationship = contact.relationship or ""
-        if relationship:
-            relationship = "%s, "% relationship
-        id = contact.id
-        (edit_btn, delete_btn) = action_buttons(etable, id)
-        emergency_wrapper.append(
-            P(
-              SPAN("%s%s%s" % (name, relationship, contact.phone)),
-              edit_btn,
-              delete_btn,
-              _id="emergency-%s" % id,
-              _class="emergency",
-            ))
+        if has_permission("create", etable):
+            add_btn = DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
+                          DIV(_id="emergency-add_throbber",
+                              _class="throbber hide"),
+                          _class="margin")
+            emergency_wrapper.append(add_btn)
+
+        for contact in emergency:
+            name = contact.name or ""
+            if name:
+                name = "%s, " % name
+            relationship = contact.relationship or ""
+            if relationship:
+                relationship = "%s, " % relationship
+            id = contact.id
+            (edit_btn, delete_btn) = action_buttons(etable, id)
+            emergency_wrapper.append(
+                P(
+                  SPAN("%s%s%s" % (name, relationship, contact.phone)),
+                  edit_btn,
+                  delete_btn,
+                  _id="emergency-%s" % id,
+                  _class="emergency",
+                ))        
 
     # Overall content
     content = DIV(#address_wrapper,
@@ -5041,7 +5089,7 @@ def pr_contacts(r, **attr):
     rheader = attr.get("rheader", None)
     if callable(rheader):
         rheader = rheader(r)
-
+    
     return dict(title = T("Contacts"),
                 rheader = rheader,
                 content = content,

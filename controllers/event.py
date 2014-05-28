@@ -196,9 +196,13 @@ def event_rheader(r):
 
         if r.name == "event":
             # Event Controller
-            tabs = [(T("Event Details"), None)]
+            tabs = [(T("Event Details"), None),
+                    (T("Shelters"), "event_shelter")]
             #if settings.has_module("req"):
             #    tabs.append((T("Requests"), "req"))
+            if settings.has_module("msg"):
+                tabs.append((T("Send Notification"), "dispatch"))
+            
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             event = r.record
@@ -233,6 +237,8 @@ def event_rheader(r):
                 tabs.append((T("Assets"), "asset"))
             tabs.append((T("Facilities"), "site"))
             tabs.append((T("Map Configuration"), "config"))
+            if settings.has_module("msg"):
+                tabs.append((T("Send Notification"), "dispatch"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             record = r.record

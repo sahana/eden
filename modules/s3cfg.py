@@ -1057,6 +1057,43 @@ class S3Config(Storage):
 
     def get_L10n_languages_readonly(self):
         return self.L10n.get("languages_readonly", True)
+    
+    def get_L10n_shelter_static_population(self):
+        """
+            It shows the "population" field in shelter creation. 
+        """
+        return self.L10n.get("static_shelter_population_estimation", True)
+    
+    def get_L10n_shelter_dynamic_population(self):
+        """
+            It shows all fields used for the automatic evaluation of current
+            shelter population. 
+            It shows: "capacity_day","capacity_night","available_capacity_day",
+            "available_capacity_night","population_day" and "population_night" fields.
+        """
+        return self.L10n.get("dynamic_shelter_population_estimation", False)
+    
+    def get_L10n_evr_show_emergency_contacts(self):
+        """
+            Shows evacuees emergency contacs as well as standard contacts
+        """ 
+        return self.L10n.get("evr_show_emergency_contacts",False)
+        
+    def get_L10n_evr_group_types(self):
+        """
+            Evacuees Group Types
+        """
+        T = current.T
+        return self.L10n.get("evr_group_types", {1: T("other"),
+                                                 2: T("Family"),
+                                                 3: T("Tourist group"),
+                                                 4: T("Society"),
+                                                 5: T("Company"),
+                                                 6: T("Convent"),
+                                                 7: T("Hotel"),
+                                                 8 :T("Hospital"),
+                                                 9 :T("Orphanage")
+                                                 })
 
     def get_L10n_religions(self):
         """
@@ -1435,6 +1472,18 @@ class S3Config(Storage):
             - unless overridden by per-domain entries in auth_organsiation
         """
         return self.mail.get("approver", "useradmin@example.org")
+    
+    def get_mail_default_subject(self):
+        """
+            Use system_name_short as default email subject (Appended).
+        """
+        return self.mail.get("default_email_subject", False)
+
+    def get_mail_auth_user_in_subject(self):
+        """
+            Append name and surname of logged in user to email subject
+        """
+        return self.mail.get("mail.auth_user_in_email_subject", False)
 
     def get_mail_limit(self):
         """
@@ -2442,7 +2491,7 @@ class S3Config(Storage):
                                                        3: T("Normal"),
                                                        4: T("Low")
                                                        })
-
+  
     # -------------------------------------------------------------------------
     # Requests Management Settings
     #
