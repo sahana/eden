@@ -570,23 +570,9 @@ Thank you"""
             else:
                 formstyle = deployment_settings.get_ui_formstyle()
 
-            form = SQLFORM(utable,
-                           fields = [username, passfield],
-                           hidden = dict(_next=request.vars._next),
-                           showid = settings.showid,
-                           submit_button = T("Login"),
-                           delete_label = messages.delete_label,
-                           formstyle = formstyle,
-                           separator = settings.label_separator
-                           )
+            buttons = []
 
-            # Identify form for CSS
-            form.add_class("auth_login")
-
-            # @ToDo: Probe formstyle rather than hardcode options here
-            formstyle_name = deployment_settings.ui.get("formstyle")
-            bootstrap = formstyle_name == "bootstrap"
-            foundation = formstyle_name == "foundation"
+            # Self-registration action link
             self_registration = deployment_settings.get_security_self_registration()
             if self_registration and register_link:
                 if self_registration == "index":
@@ -600,24 +586,36 @@ Thank you"""
                                   _id="register-btn",
                                   _class="action-lnk",
                                   )
-                if bootstrap:
-                    form[0][-1].append(register_link)
-                elif foundation:
-                    form[0][-1][0][1].append(register_link)
-                else:
-                    form[0][-1][0].append(register_link)
+                buttons.append(register_link)
 
+            # Lost-password action link
             if lost_pw_link:
                 lost_pw_link = A(T("Lost Password"),
                                  _href=URL(f="user", args="retrieve_password"),
                                  _class="action-lnk",
                                  )
-                if bootstrap:
-                    form[0][-1].append(lost_pw_link)
-                elif foundation:
-                    form[0][-1][0][1].append(lost_pw_link)
-                else:
-                    form[0][-1][0].append(lost_pw_link)
+                buttons.append(lost_pw_link)
+
+            # If we have custom buttons, add submit button
+            if buttons:
+                submit_button = INPUT(_type="submit", _value=T("Login"))
+                buttons.insert(0, submit_button)
+            else:
+                buttons = None
+            
+            form = SQLFORM(utable,
+                           fields = [username, passfield],
+                           hidden = dict(_next=request.vars._next),
+                           showid = settings.showid,
+                           submit_button = T("Login"),
+                           delete_label = messages.delete_label,
+                           formstyle = formstyle,
+                           separator = settings.label_separator,
+                           buttons = buttons,
+                           )
+
+            # Identify form for CSS
+            form.add_class("auth_login")
 
             if settings.remember_me_form:
                 # Add a new input checkbox "remember me for longer"
