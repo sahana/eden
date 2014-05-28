@@ -4009,8 +4009,7 @@ S3OptionsFilter({
         sr = self.get_system_roles()
 
         if not hasattr(table, "_tablename"):
-            s3db = current.s3db
-            table = s3db[table]
+            table = current.s3db[table]
 
         policy = current.deployment_settings.get_security_policy()
 
@@ -4090,8 +4089,7 @@ S3OptionsFilter({
         sr = self.get_system_roles()
 
         if not hasattr(table, "_tablename"):
-            s3db = current.s3db
-            table = s3db[table]
+            table = current.s3db[table]
 
         policy = current.deployment_settings.get_security_policy()
 

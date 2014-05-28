@@ -129,8 +129,8 @@ class S3DocumentLibrary(S3Model):
                            uploadfolder = os.path.join(folder,
                                                        "uploads"),
                            autodelete = True,
-                           represent = lambda file: \
-                                       self.doc_file_represent(file, tablename),
+                           represent = lambda file, tn=tablename: \
+                                       self.doc_file_represent(file, tn),
                            ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation

@@ -1906,6 +1906,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         self.dcount = {}
         self.avgrat = {}
         self.deployed = set()
+        self.appraisals = {}
 
     # -------------------------------------------------------------------------
     def prep(self, resource, records):
@@ -1916,6 +1917,9 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             @param records: the records as returned from S3Resource.select
         """
 
+        db = current.db
+        s3db = current.s3db
+        
         tablename = resource.tablename
         if tablename == "deploy_response":
 
@@ -1937,8 +1941,6 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
             hr_ids = dcount.keys()
             if hr_ids:
-                db = current.db
-                s3db = current.s3db
 
                 # Number of previous deployments
                 table = s3db.deploy_assignment
@@ -1981,6 +1983,24 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 for row in rows:
                     avgrat[row[human_resource_id]] = row[average_rating]
                     
+        elif tablename == "deploy_assignment":
+
+            record_ids = set(record["_row"]["deploy_assignment.id"]
+                             for record in records)
+            
+            atable = s3db.hrm_appraisal
+            ltable = s3db.deploy_assignment_appraisal
+            query = (ltable.assignment_id.belongs(record_ids)) & \
+                    (ltable.deleted != True) & \
+                    (atable.id == ltable.appraisal_id)
+            rows = current.db(query).select(ltable.assignment_id,
+                                            ltable.appraisal_id,
+                                            )
+            appraisals = {}
+            for row in rows:
+                appraisals[row.assignment_id] = row.appraisal_id
+            self.appraisals = appraisals
+            print self.appraisals
         return
 
     # -------------------------------------------------------------------------
@@ -2018,8 +2038,8 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
         T = current.T
         pkey = str(resource._id)
-        record_id = record[pkey]
         raw = record["_row"]
+        record_id = raw[pkey]
 
         # Specific contents and workflow
         contents = workflow = None
@@ -2337,17 +2357,11 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                        )
 
             # Workflow actions
-            atable = s3db.hrm_appraisal
-            ltable = s3db.deploy_assignment_appraisal
-            query = (ltable.assignment_id == record_id) & \
-                    (atable.id == ltable.appraisal_id) & \
-                    (atable.deleted != True)
-            appraisal = current.db(query).select(atable.id,
-                                                 limitby=(0, 1)).first()
+            appraisal = self.appraisals.get(record_id)
             has_permission = current.auth.s3_has_permission
             person_id = raw["hrm_human_resource.person_id"]
             if appraisal and \
-               has_permission("update", atable, record_id=appraisal.id):
+               has_permission("update", "hrm_appraisal", record_id=appraisal.id):
                 # Appraisal already uploaded => edit
                 EDIT_APPRAISAL = T("Open Appraisal")
                 url = URL(c="deploy", f="person",
