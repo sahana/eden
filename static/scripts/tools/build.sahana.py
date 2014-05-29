@@ -265,7 +265,7 @@ def dojs(dogis = False, warnings = True):
     # Chat
     print "Compressing Chat"
     sourceDirectory = ".."
-    configFilename = "sahana.chat.js.cfg"
+    configFilename = "sahana.js.chat.cfg"
     outputFilename = "s3.chat.min.js"
     merged = mergejs.run(sourceDirectory,
                          None,
