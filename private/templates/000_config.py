@@ -25,6 +25,10 @@ FINISHED_EDITING_CONFIG_FILE = False
 # - note that you should restart your web2py after changing this setting
 settings.base.template = "default"
 
+# Enable Disable Chat Module  
+# Enter ip of the chat sever, refer http://eden.sahanafoundation.org/wiki/InstallationGuidelines/Chat
+#settings.base.chat_server = "127.0.0.1:7070" 
+
 # Database settings
 # Uncomment to use a different database, other than sqlite
 #settings.database.db_type = "postgres"

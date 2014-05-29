@@ -132,6 +132,12 @@ class S3Config(Storage):
         """
         return self.base.get("template", "default")
 
+    def get_chat_server(self):
+        """
+            Get the ip of the chat server if enabled or return False
+        """
+        return self.base.get("chat_server", False)
+
     def exec_template(self, path):
         """
             Execute the template
