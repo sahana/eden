@@ -951,11 +951,18 @@ class S3Config(Storage):
         """
         return self.gis.get("postcode_selector", True)
 
-    def get_gis_print_service(self):
+    def get_gis_print(self):
         """
-            URL for a Print Service
+            Should the Map display a Print control?
         """
-        return self.gis.get("print_service", "")
+        return self.gis.get("print_button", False) # Change to True once ready for prime-time
+
+    #def get_gis_print_service(self):
+    #    """
+    #        URL for an external Print Service (based on the MapFish plugin for GeoServer)
+    #         http://eden.sahanafoundation.org/wiki/BluePrint/GIS/Printing
+    #    """
+    #    return self.gis.get("print_service", "")
 
     def get_gis_save(self):
         """

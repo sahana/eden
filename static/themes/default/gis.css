@@ -396,6 +396,11 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     height: 20px !important;
     width: 20px !important;
 }
+.mappnlcntr .print {
+    background-image: url(../../img/silk/printer.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
 .mappnlcntr .save {
     background-image: url(../../img/ext/save.gif) !important;
     height: 20px !important;

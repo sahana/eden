@@ -2585,7 +2585,7 @@ class GIS(object):
         current.session._unlock(response)
 
         # Load the map
-        url = "%s/%s/gis/index?config=%s" % (public_url, appname, config_id)
+        url = "%s/%s/gis/map_viewing_client?print=1&config=%s" % (public_url, appname, config_id)
         driver.get(url)
 
         # Wait for map to load
@@ -5896,7 +5896,6 @@ class GIS(object):
                  scaleline = None,
                  zoomcontrol = None,
                  zoomWheelEnabled = True,
-                 print_tool = {},
                  mgrs = {},
                  window = False,
                  window_hide = False,
@@ -5979,11 +5978,6 @@ class GIS(object):
             @param permalink: Show the Permalink control (defaults to checking deployment_settings, which defaults to True)
             @param scaleline: Show the ScaleLine control (defaults to checking deployment_settings, which defaults to True)
             @param zoomcontrol: Show the Zoom control (defaults to checking deployment_settings, which defaults to True)
-            @param print_tool: Show a print utility (NB This requires server-side support: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting)
-                {"url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
-                 "mapTitle": string,       # Title for the Printed Map (optional)
-                 "subTitle": string        # subTitle for the Printed Map (optional)
-                }
             @param mgrs: Use the MGRS Control to select PDFs
                 {"name": string,           # Name for the Control
                  "url": string             # URL of PDF server
@@ -6033,7 +6027,6 @@ class GIS(object):
                    scaleline = scaleline,
                    zoomcontrol = zoomcontrol,
                    zoomWheelEnabled = zoomWheelEnabled,
-                   print_tool = print_tool,
                    mgrs = mgrs,
                    window = window,
                    window_hide = window_hide,
@@ -6360,6 +6353,20 @@ class MAP(DIV):
                 options["area"] = True
                 i18n["gis_area_message"] = T("The area is")
                 i18n["gis_area_tooltip"] = T("Measure Area: Click the points around the polygon & end with a double-click")
+
+            # Show Print control?
+            print_control = settings.get_gis_print()
+            if print_control:
+                # @ToDo: Use internal Printing or External Service
+                # http://eden.sahanafoundation.org/wiki/BluePrint/GIS/Printing
+                #print_service = settings.get_gis_print_service()
+                #if print_service:
+                #    print_tool = {"url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
+                #                  "mapTitle": string,       # Title for the Printed Map (optional)
+                #                  "subTitle": string        # subTitle for the Printed Map (optional)
+                #                  }
+                options["print"] = True
+                i18n["gis_print"] = T("Take a screenshot of the map which can be printed")
 
             # Show Save control?
             # e.g. removed within S3LocationSelectorWidget[2]

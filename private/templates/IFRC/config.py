@@ -98,24 +98,24 @@ def ifrc_realm_entity(table, row):
     # Default Foreign Keys (ordered by priority)
     default_fks = ("catalog_id",
                    "project_id",
-                   "project_location_id"
+                   "project_location_id",
                    )
 
     # Link Tables
-    realm_entity_link_table = dict(
-        project_task = Storage(tablename = "project_task_project",
-                               link_key = "task_id"
-                               )
-        )
-    if tablename in realm_entity_link_table:
-        # Replace row with the record from the link table
-        link_table = realm_entity_link_table[tablename]
-        table = s3db[link_table.tablename]
-        rows = db(table[link_table.link_key] == row.id).select(table.id,
-                                                               limitby=(0, 1))
-        if rows:
-            # Update not Create
-            row = rows.first()
+    #realm_entity_link_table = dict(
+    #    project_task = Storage(tablename = "project_task_project",
+    #                           link_key = "task_id"
+    #                           )
+    #    )
+    #if tablename in realm_entity_link_table:
+    #    # Replace row with the record from the link table
+    #    link_table = realm_entity_link_table[tablename]
+    #    table = s3db[link_table.tablename]
+    #    rows = db(table[link_table.link_key] == row.id).select(table.id,
+    #                                                           limitby=(0, 1))
+    #    if rows:
+    #        # Update not Create
+    #        row = rows.first()
 
     # Check if there is a FK to inherit the realm_entity
     realm_entity = 0

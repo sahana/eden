@@ -130,7 +130,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             function(status) {
                 // Success: Set a flag to show that we've completed loading
                 var gis = S3.gis;
-                S3.gis.maps[map_id].s3.loaded = true;
+                // Wait a little longer to allow tiles to render
+                setTimeout(function loaded() {
+                    S3.gis.maps[map_id].s3.loaded = true;
+                }, 500);
             },
             function(status) {
                 // Failed
@@ -3640,8 +3643,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             addNavigationControl(toolbar);
         }
 
+        // Print
+        if (options.print) {
+            toolbar.addSeparator();
+            addPrintButton(toolbar);
+        }
+
         // Save Viewport
         if (options.save && options.save != 'float') {
+            toolbar.addSeparator();
             addSaveButton(toolbar);
         }
         toolbar.addSeparator();
@@ -4361,6 +4371,32 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         toolbar.addButton(potlatchButton);
     };
 
+    // Print button on Toolbar to save a screenshot
+    var addPrintButton = function(toolbar) {
+        // Toolbar Button
+        var printButton = new Ext.Toolbar.Button({
+            iconCls: 'print',
+            tooltip: i18n.gis_print,
+            handler: function() {
+                // Save the configuration to a temporary
+                var config_id = saveConfig(toolbar.map, true);
+                // Take the screenshot
+                var url = S3.Ap.concat('/gis/screenshot/') + config_id;
+                window.open(url);
+                /*$.ajaxS3({
+                    //async: false,
+                    url: url,
+                    //dataType : 'json',
+                    success: function(data, status) {
+                        // Open the screenshot in a new tab
+                        
+                    }
+                });*/
+            }
+        });
+        toolbar.addButton(printButton);
+    };
+
     // Save button on Toolbar to save the Viewport settings
     var addSaveButton = function(toolbar) {
         // Toolbar Button
@@ -4371,28 +4407,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 saveConfig(toolbar.map);
             }
         });
-        toolbar.addSeparator();
         toolbar.addButton(saveButton);
     };
 
-    // Save throbber as floating DIV to see when map layers are loading
-    var addThrobber = function(map) {
-        var s3 = map.s3;
-        var map_id = s3.id;
-        if ($('#' + map_id + ' .layer_throbber').length) {
-            // We already have a Throbber
-            // (this happens when switching between full-screen & embedded)
-            return;
-        }
-        var div = '<div class="layer_throbber float hide';
-        if (s3.options.save) {
-            // Add save class so that we know to push throbber down below save button
-            div += ' save';
-        }
-        div += '"></div>';
-        $('#' + map_id).append(div);
-    };
-    
     // Save button as floating DIV to save the Viewport settings
     var addSavePanel = function(map) {
         var s3 = map.s3;
@@ -4420,7 +4437,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
     };
 
-    // Save Click Handler
+    // Save Click Handler for floating DIV
     var saveClickHandler = function(map) {
         var map_id = map.s3.id;
         $('#' + map_id + ' .map_save_panel').removeClass('off');
@@ -4433,7 +4450,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         nameConfig(map);
     };
 
-    // Name the Config
+    // Name the Config for floating DIV
     var nameConfig = function(map) {
         var s3 = map.s3;
         var map_id = s3.id;
@@ -4509,11 +4526,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
     };
 
-    // Save the Config
-    var saveConfig = function(map) {
+    // Save the Config (used by both Toolbar & Floating DIV)
+    var saveConfig = function(map, temp) {
         // Read current settings from map
         var state = getState(map);
-        var encode = Ext.util.JSON.encode;
+        // IE8+ https://en.wikipedia.org/wiki/JavaScript_Object_Notation#Native_encoding_and_decoding_in_browsers
+        //var encode = Ext.util.JSON.encode;
+        var encode = JSON.stringify;
         var layersStr = encode(state.layers);
         var pluginsStr = encode(state.plugins);
         var json_data = {
@@ -4528,22 +4547,28 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         if (options.pe_id) {
             json_data['pe_id'] = options.pe_id;
         }
-        var map_id = s3.id;
-        var name_input = $('#' + map_id + '_save');
-        var config_id = options.config_id;
-        if (name_input.length) {
-            // Floating Save Panel
-            json_data['name'] = name_input.val();
-            if (config_id) {
-                // Is this a new one or are we updating?
-                var update = !$('#' + map_id + ' .map_save_panel input[type="checkbox"]').prop('checked');
+        if (temp) {
+            var config_id;
+            var update = false;
+            json_data['temp'] = true;
+        } else {
+            var map_id = s3.id;
+            var name_input = $('#' + map_id + '_save');
+            var config_id = options.config_id;
+            if (name_input.length) {
+                // Floating Save Panel
+                json_data['name'] = name_input.val();
+                if (config_id) {
+                    // Is this a new one or are we updating?
+                    var update = !$('#' + map_id + ' .map_save_panel input[type="checkbox"]').prop('checked');
+                } else {
+                    var update = false;
+                }
+            } else if (config_id) {
+                var update = true;
             } else {
                 var update = false;
             }
-        } else if (config_id) {
-            var update = true;
-        } else {
-            var update = false;
         }
         // Use AJAX to send back
         var url;
@@ -4552,17 +4577,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             url = S3.Ap.concat('/gis/config.url/create');
         }
-        // @ToDo: Switch to jQuery
-        Ext.Ajax.request({
+        $.ajaxS3({
+            async: false,
             url: url,
-            method: 'POST',
-            // @ToDo: Make the return value visible to the user
-            success: function(response, opts) {
-                var obj = Ext.decode(response.responseText);
-                var id = obj.message.split('=', 2)[1];
-                if (id) {
+            type: 'POST',
+            data: json_data,
+            dataType : 'json',
+            success: function(data, status) {
+                config_id = data.id;
+                if (!temp && config_id) {
                     // Ensure that future saves are updates, not creates
-                    options.config_id = id;
+                    options.config_id = config_id;
                     // Change the browser URL (if-applicable)
                     if (history.pushState) {
                         // Browser supports URL changing without page refresh
@@ -4572,8 +4597,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             var pair = [];
                             for (var i=0; i < pairs.length; i++) {
                                 pair = pairs[i].split('=');
-                                if ((decodeURIComponent(pair[0]) == 'config') && decodeURIComponent(pair[1]) != id) {
-                                    pairs[i] = 'config=' + id;
+                                if ((decodeURIComponent(pair[0]) == 'config') && decodeURIComponent(pair[1]) != config_id) {
+                                    pairs[i] = 'config=' + config_id;
                                     var url = document.location.pathname + '?' + pairs.join('&');
                                     window.history.pushState({}, document.title, url);
                                     break;
@@ -4581,22 +4606,22 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             }
                         } else if ((document.location.pathname == S3.Ap.concat('/gis/index')) || (document.location.pathname == S3.Ap.concat('/gis/map_viewing_client'))) {
                             // Main map
-                            var url = document.location.pathname + '?config=' + id;
+                            var url = document.location.pathname + '?config=' + config_id;
                             window.history.pushState({}, document.title, url);
                         }
                     }
                     // Change the Menu link (if-applicable)
-                    var url = S3.Ap.concat('/gis/config/', id, '/layer_entity');
+                    var url = S3.Ap.concat('/gis/config/', config_id, '/layer_entity');
                     $('#gis_menu_config').attr('href', url);
                 }
-            },
-            params: json_data
+            }
         });
+        // Pass the created config_id back (e.g. for loading the screenshot)
+        return config_id;
     };
 
     // Get the State of the Map
-    // so that it can be Saved & Reloaded later
-    // @ToDo: so that it can be Saved for Printing
+    // so that it can be Saved & Reloaded later e.g. for Printing
     var getState = function(map) {
 
         // State stored a a JSON array
@@ -4649,6 +4674,24 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         return state;
     };
 
+    // Throbber as floating DIV to see when map layers are loading
+    var addThrobber = function(map) {
+        var s3 = map.s3;
+        var map_id = s3.id;
+        if ($('#' + map_id + ' .layer_throbber').length) {
+            // We already have a Throbber
+            // (this happens when switching between full-screen & embedded)
+            return;
+        }
+        var div = '<div class="layer_throbber float hide';
+        if (s3.options.save) {
+            // Add save class so that we know to push throbber down below save button
+            div += ' save';
+        }
+        div += '"></div>';
+        $('#' + map_id).append(div);
+    };
+    
     // MGRS Grid PDF Control
     // select an area on the map to download the grid's PDF to print off
     var addPdfControl = function(toolbar) {

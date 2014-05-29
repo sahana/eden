@@ -367,22 +367,30 @@ form#summary-filter-form
     width: 50px;
 }
 
-/* Map Borders*/
-div.map_save_button,
-div.map_save_panel,
-div.map_legend_tab,
-div.map_legend_panel,
-div.x-panel-body {
+/* Map */
+.map_home {
+    margin: -14px 0 0;
+}
+
+.map_save_button,
+.map_save_panel,
+.map_legend_tab,
+.map_legend_panel,
+.x-panel-body {
     border: 1px solid #B2B2B2;
 }
 
-div.map_legend_tab {
+.map_legend_tab {
     border-right: none;
     margin-right: -1px;
 }
 
-div.map_legend_panel {
+.map_legend_panel {
     margin-bottom: 30px;
+}
+
+.map_save_panel {
+    margin: 0;
 }
 
 /* Report */

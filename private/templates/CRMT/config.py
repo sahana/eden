@@ -122,7 +122,9 @@ settings.ui.export_formats = ["xls", "xml"]
 settings.ui.multiselect_widget = True
 
 # Set Map to fill the container
-settings.gis.map_width = 1170
+settings.gis.map_width = 1178
+# Set map to be able to open Census Data & still view root labels
+settings.gis.map_height = 816
 
 settings.base.youtube_id = [dict(id = "introduction",
                                  title = T("Introduction"),
@@ -287,6 +289,8 @@ settings.gis.permalink = False
 settings.gis.pois = False
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
+# Uncomment to hide the Print control
+settings.gis.print_button = True
 # Uncomment to hide the Save control, or set to "float"
 settings.gis.save = "float"
 # Uncomment to hide the GeoNames search box
