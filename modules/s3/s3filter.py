@@ -972,20 +972,14 @@ class S3LocationFilter(S3FilterWidget):
 
         # Which levels should we display?
         # Lookup the appropriate labels from the GIS configuration
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = OrderedDict()
         if "levels" in opts:
+            hierarchy = current.gis.get_location_hierarchy()
+            levels = OrderedDict()
             for level in opts["levels"]:
                 levels[level] = hierarchy.get(level, level)
         else:
-            if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                current.response.s3.gis.config.region_location_id:
-                try:
-                    del hierarchy["L0"]
-                except KeyError:
-                    pass
-            for level in hierarchy:
-                levels[level] = hierarchy.get(level, level)
+            levels = current.gis.get_relevant_hierarchy_levels(as_dict=True)
+            
         # Pass to data_element
         self.levels = levels
 
@@ -1218,10 +1212,7 @@ class S3LocationFilter(S3FilterWidget):
         if "levels" in self.opts:
             levels = self.opts.levels
         else:
-            levels = current.gis.get_location_hierarchy().keys()
-            if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                current.response.s3.gis.config.region_location_id:
-                levels.remove("L0")
+            levels = current.gis.get_relevant_hierarchy_levels()
 
         fields = ["%s$%s" % (fields, level) for level in levels]
         if resource:

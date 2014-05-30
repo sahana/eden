@@ -2272,15 +2272,8 @@ class S3AddressModel(S3Model):
             msg_list_empty = T("There is no address for this person yet. Add new address."))
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            try:
-                levels.remove("L0")
-            except ValueError:
-                # Already removed
-                pass
+        levels = current.gis.get_relevant_hierarchy_levels()
+        
         # Display in reverse order, like Addresses
         levels.reverse()
 

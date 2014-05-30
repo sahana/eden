@@ -1899,11 +1899,7 @@ class IS_LOCATION_SELECTOR2(Validator):
                 levels = self.levels
                 if not levels:
                     # Which levels of Hierarchy are we using?
-                    hierarchy = current.gis.get_location_hierarchy()
-                    levels = hierarchy.keys()
-                    if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                       s3.gis.config.region_location_id:
-                        levels.remove("L0")
+                    levels = current.gis.get_relevant_hierarchy_levels()
 
                 if level in levels:
                     # OK

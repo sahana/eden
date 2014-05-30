@@ -3940,14 +3940,7 @@ class S3LocationSelectorWidget2(FormWidget):
         levels = self.levels
         if not levels:
             # Which levels of Hierarchy are we using?
-            hierarchy = gis.get_location_hierarchy()
-            levels = hierarchy.keys()
-            if len(settings.get_gis_countries()) == 1 or \
-               s3.gis.config.region_location_id:
-                try:
-                    levels.remove("L0")
-                except ValueError:
-                    pass
+            levels = current.gis.get_relevant_hierarchy_levels()
 
         hide_lx = self.hide_lx
         show_address = self.show_address

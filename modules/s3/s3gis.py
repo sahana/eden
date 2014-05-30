@@ -1567,6 +1567,29 @@ class GIS(object):
             return all_levels
 
     # -------------------------------------------------------------------------
+    def get_relevant_hierarchy_levels(self, as_dict=False):
+        """
+            Get current location hierarchy levels relevant for the user
+        """
+
+        if as_dict:
+            levels = OrderedDict(self.get_location_hierarchy())
+            if len(current.deployment_settings.get_gis_countries()) == 1 or \
+                current.response.s3.gis.config.region_location_id:
+                levels.pop("L0", None)
+        else:
+            levels = self.get_location_hierarchy().keys()
+            if len(current.deployment_settings.get_gis_countries()) == 1 or \
+                current.response.s3.gis.config.region_location_id:
+                try:
+                    levels.remove("L0")
+                except ValueError:
+                    # Already removed
+                    pass
+
+        return levels
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def get_countries(key_type="id"):
         """

@@ -1177,11 +1177,7 @@ for(var p in d){cb=$('input[name="multiselect_post-cms_post_location_id-location
 if(!cb.prop('checked')){cb.click()}}}'''
         s3.jquery_ready.append(script)
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            levels.remove("L0")
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         for level in levels:
             lappend("location_id$%s" % level)
@@ -1265,11 +1261,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         location = record["cms_post.location_id"]
         if settings.get_cms_location_click_filters():
             # Which levels of Hierarchy are we using?
-            hierarchy = current.gis.get_location_hierarchy()
-            levels = hierarchy.keys()
-            if len(settings.get_gis_countries()) == 1 or \
-               current.response.s3.gis.config.region_location_id:
-                levels.remove("L0")
+            levels = current.gis.get_relevant_hierarchy_levels()
 
             data = {}
             for level in levels:

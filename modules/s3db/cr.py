@@ -376,12 +376,7 @@ class S3ShelterModel(S3Model):
                 msg_list_empty = T("No Shelters currently registered"))
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if "L0" in levels and \
-           (len(settings.get_gis_countries()) == 1 or \
-            s3.gis.config.region_location_id):
-            levels.remove("L0")
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         report_fields = ["name",
                          "shelter_type_id",
