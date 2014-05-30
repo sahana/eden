@@ -259,6 +259,8 @@ class GIS(object):
         self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
 
+        self.relevant_hierarchy_levels = None
+
     # -------------------------------------------------------------------------
     @staticmethod
     def gps_symbols():
@@ -1572,22 +1574,19 @@ class GIS(object):
             Get current location hierarchy levels relevant for the user
         """
 
-        if as_dict:
+        levels = self.relevant_hierarchy_levels
+
+        if not levels:
             levels = OrderedDict(self.get_location_hierarchy())
             if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                current.response.s3.gis.config.region_location_id:
+               current.response.s3.gis.config.region_location_id:
                 levels.pop("L0", None)
-        else:
-            levels = self.get_location_hierarchy().keys()
-            if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                current.response.s3.gis.config.region_location_id:
-                try:
-                    levels.remove("L0")
-                except ValueError:
-                    # Already removed
-                    pass
+            self.relevant_hierarchy_levels = levels
 
-        return levels
+        if not as_dict:
+            return levels.keys()
+        else:
+            return levels
 
     # -------------------------------------------------------------------------
     @staticmethod
