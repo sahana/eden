@@ -6596,12 +6596,26 @@ class S3Audit(object):
 
         table = self.table
         if not table:
-            # Auditing Disabled
+            # Don't Audit
             return True
 
         #if DEBUG:
         #    _debug("Audit %s: %s_%s record=%s representation=%s" % \
         #           (method, prefix, name, record, representation))
+
+        if method in ("list", "read"):
+            audit = current.deployment_settings.get_security_audit_read()
+        elif method in ("create", "update", "delete"):
+            audit = current.deployment_settings.get_security_audit_write()
+        else:
+            # Don't Audit
+            return True
+
+        if not audit:
+            # Don't Audit
+            return True
+
+        tablename = "%s_%s" % (prefix, name)
 
         if record:
             if isinstance(record, Row):
@@ -6628,92 +6642,81 @@ class S3Audit(object):
         else:
             record = None
 
-        now = datetime.datetime.utcnow()
-        tablename = "%s_%s" % (prefix, name)
-
-        settings = current.deployment_settings
-        audit_read = settings.get_security_audit_read()
-        if callable(audit_read):
-            audit_read = audit_read(method, tablename, form, record,
-                                    representation)
-        audit_write = settings.get_security_audit_write()
-        if callable(audit_write):
-            audit_write = audit_write(method, tablename, form, record,
-                                      representation)
+        if callable(audit):
+            audit = audit(method, tablename, form, record, representation)
+            if not audit:
+                # Don't Audit
+                return True
 
         if method in ("list", "read"):
-            if audit_read:
-                table.insert(timestmp = now,
-                             user_id = self.user_id,
-                             method = method,
-                             tablename = tablename,
-                             record_id = record,
-                             representation = representation,
-                             )
+            table.insert(timestmp = datetime.datetime.utcnow(),
+                         user_id = self.user_id,
+                         method = method,
+                         tablename = tablename,
+                         record_id = record,
+                         representation = representation,
+                         )
 
         elif method == "create":
-            if audit_write:
-                if form:
-                    form_vars = form.vars
-                    if not record:
-                        record = form_vars["id"]
-                    new_value = ["%s:%s" % (var, str(form_vars[var]))
-                                 for var in form_vars if form_vars[var]]
-                else:
-                    new_value = []
-                table.insert(timestmp = now,
-                             user_id = self.user_id,
-                             method = method,
-                             tablename = tablename,
-                             record_id = record,
-                             representation = representation,
-                             new_value = new_value,
-                             )
+            if form:
+                form_vars = form.vars
+                if not record:
+                    record = form_vars["id"]
+                new_value = ["%s:%s" % (var, str(form_vars[var]))
+                             for var in form_vars if form_vars[var]]
+            else:
+                new_value = []
+            table.insert(timestmp = datetime.datetime.utcnow(),
+                         user_id = self.user_id,
+                         method = method,
+                         tablename = tablename,
+                         record_id = record,
+                         representation = representation,
+                         new_value = new_value,
+                         )
 
         elif method == "update":
-            if audit_write:
-                if form:
-                    rvars = form.record
-                    if rvars:
-                        old_value = ["%s:%s" % (var, str(rvars[var]))
-                                     for var in rvars]
-                    else:
-                        old_value = []
-                    fvars = form.vars
-                    if not record:
-                        record = fvars["id"]
-                    new_value = ["%s:%s" % (var, str(fvars[var]))
-                                 for var in fvars]
+            if form:
+                rvars = form.record
+                if rvars:
+                    old_value = ["%s:%s" % (var, str(rvars[var]))
+                                 for var in rvars]
                 else:
-                    new_value = []
                     old_value = []
-                table.insert(timestmp = now,
-                             user_id = self.user_id,
-                             method = method,
-                             tablename = tablename,
-                             record_id = record,
-                             representation = representation,
-                             old_value = old_value,
-                             new_value = new_value,
-                             )
+                fvars = form.vars
+                if not record:
+                    record = fvars["id"]
+                new_value = ["%s:%s" % (var, str(fvars[var]))
+                             for var in fvars]
+            else:
+                new_value = []
+                old_value = []
+            table.insert(timestmp = datetime.datetime.utcnow(),
+                         user_id = self.user_id,
+                         method = method,
+                         tablename = tablename,
+                         record_id = record,
+                         representation = representation,
+                         old_value = old_value,
+                         new_value = new_value,
+                         )
 
         elif method == "delete":
-            if audit_write:
-                db = current.db
-                query = (db[tablename].id == record)
-                row = db(query).select(limitby=(0, 1)).first()
-                old_value = []
-                if row:
-                    old_value = ["%s:%s" % (field, row[field])
-                                 for field in row]
-                table.insert(timestmp = now,
-                             user_id = self.user_id,
-                             method = method,
-                             tablename = tablename,
-                             record_id = record,
-                             representation = representation,
-                             old_value = old_value,
-                             )
+            db = current.db
+            query = (db[tablename].id == record)
+            row = db(query).select(limitby=(0, 1)).first()
+            old_value = []
+            if row:
+                old_value = ["%s:%s" % (field, row[field])
+                             for field in row]
+            table.insert(timestmp = datetime.datetime.utcnow(),
+                         user_id = self.user_id,
+                         method = method,
+                         tablename = tablename,
+                         record_id = record,
+                         representation = representation,
+                         old_value = old_value,
+                         )
 
         return True
 

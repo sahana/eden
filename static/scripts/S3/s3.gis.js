@@ -133,7 +133,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 // Wait a little longer to allow tiles to render
                 setTimeout(function loaded() {
                     S3.gis.maps[map_id].s3.loaded = true;
-                }, 500);
+                }, 800);
             },
             function(status) {
                 // Failed
@@ -4378,7 +4378,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             iconCls: 'print',
             tooltip: i18n.gis_print,
             handler: function() {
-                // Save the configuration to a temporary
+                // Save the configuration to a temporary config
                 var config_id = saveConfig(toolbar.map, true);
                 // Take the screenshot
                 var url = S3.Ap.concat('/gis/screenshot/') + config_id;
@@ -4550,13 +4550,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         if (temp) {
             var config_id;
             var update = false;
-            json_data['temp'] = true;
+            json_data['temp'] = 1;
         } else {
             var map_id = s3.id;
             var name_input = $('#' + map_id + '_save');
             var config_id = options.config_id;
             if (name_input.length) {
                 // Floating Save Panel
+                json_data['hide'] = 1;
                 json_data['name'] = name_input.val();
                 if (config_id) {
                     // Is this a new one or are we updating?

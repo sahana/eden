@@ -2616,6 +2616,20 @@ class GIS(object):
                 redirect(URL(c="gis", f="index", vars={"config_id": config_id}))
 
         driver.save_screenshot(os.path.join(cachepath, "%s.png" % session_id))
+        driver.quit()
+
+        # If this was a temporary config for creating the screenshot, then delete it now
+        ctable = current.s3db.gis_config
+        set = current.db(ctable.id == config_id)
+        config = set.select(ctable.temp,
+                            limitby=(0, 1)
+                            ).first()
+        try:
+            if config.temp:
+                set.delete()
+        except:
+            # Record not found?
+            pass
 
         # Pass the result back to the User
         redirect(URL(c="static", f="cache", args=["png", "%s.png" % session_id]))

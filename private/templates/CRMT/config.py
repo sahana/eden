@@ -86,8 +86,7 @@ def audit_write(method, tablename, form, record, representation):
     if not current.auth.user:
         # Don't include prepop
         return False
-    if tablename in ("gis_config",
-                     "org_facility",
+    if tablename in ("org_facility",
                      "org_organisation",
                      "pr_filter",
                      "project_activity",
@@ -97,9 +96,12 @@ def audit_write(method, tablename, form, record, representation):
                      ):
         # Perform normal Audit
         return True
-    else:
-        # Don't Audit non user-visible resources
-        return False
+    elif tablename == "gis_config":
+        if form.vars.get("temp") != "1":
+            # Perform normal Audit
+            return True
+    # Don't Audit non user-visible resources
+    return False
 
 settings.security.audit_write = audit_write
 

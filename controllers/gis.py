@@ -83,10 +83,12 @@ def map_viewing_client():
         collapsed = True
         toolbar = False
         save = False
+        zoomcontrol = False
     else:
         collapsed = False
         toolbar = True
         save = settings.get_gis_save()
+        zoomcontrol = None
 
     map = define_map(window = True,
                      toolbar = toolbar,
@@ -94,6 +96,7 @@ def map_viewing_client():
                      closable = False,
                      maximizable = False,
                      save = save,
+                     zoomcontrol = zoomcontrol,
                      )
 
     response.title = T("Map Viewing Client")
@@ -108,6 +111,7 @@ def define_map(height = None,
                collapsed = False,
                maximizable = True,
                save = False,
+               zoomcontrol = None,
                ):
     """
         Define the main Situation Map
@@ -198,10 +202,11 @@ def define_map(height = None,
                        search = search,
                        toolbar = toolbar,
                        wms_browser = wms_browser,
-                       window = window,
+                       collapsed = collapsed,
                        closable = closable,
                        maximizable = maximizable,
-                       collapsed = collapsed,
+                       window = window,
+                       zoomcontrol = zoomcontrol,
                        )
 
     return map
@@ -821,6 +826,10 @@ def config_default(r, **attr):
 def config():
     """ RESTful CRUD controller """
 
+    # Filter out Temp configs
+    FS = s3base.S3FieldSelector
+    s3.filter = (FS("config.temp") == False)
+
     # Custom Methods to set as default
     set_method = s3db.set_method
     set_method(module, resourcename,
@@ -842,10 +851,11 @@ def config():
         if r.representation == "url":
             # Save from Map
             if r.method == "create" and \
-                 auth.is_logged_in():
-                pe_id = auth.user.pe_id
-                r.table.pe_id.default = pe_id
-                r.table.pe_type.default = 1
+               auth.is_logged_in():
+                table = r.table
+                table.pe_id.default = auth.user.pe_id
+                table.pe_type.default = 1
+                table.temp.writable = True
 
         elif r.interactive or r.representation == "aadata":
             if not r.component:
@@ -868,15 +878,15 @@ def config():
                     # Hide Exports
                     settings.ui.export_formats = []
                     # Filter Region & Default Configs
-                    table = r.table
-                    s3.filter = (table.region_location_id == None) & \
-                                (table.uuid != "SITE_DEFAULT")
+                    s3.filter = (FS("config.temp") == False) & \
+                                (FS("config.region_location_id") == None) & \
+                                (FS("config.uuid") != "SITE_DEFAULT")
                     list_fields = ["name",
                                    "pe_id",
                                    "pe_default",
                                    ]
                     CREATED_BY = T("Created By")
-                    field = table.pe_id
+                    field = r.table.pe_id
                     field.label = CREATED_BY
                     field.represent = s3db.pr_PersonEntityRepresent(show_label = False,
                                                                     show_type = False,
@@ -1042,6 +1052,7 @@ def config():
                 config_id = r.id
                 post_vars = request.post_vars
                 if post_vars.get("temp", False):
+                    # This is coming from a Print Screenshot
                     # Hide the message
                     try:
                         del result["message"]
@@ -1049,6 +1060,15 @@ def config():
                         pass
                     # Add the ID
                     result["id"] = config_id
+                    SEPARATORS = (",", ":")
+                    output["item"] = json.dumps(result, separators=SEPARATORS)
+                elif post_vars.get("hide", False):
+                    # This is coming from Save Panel
+                    # Hide the message
+                    try:
+                        del result["message"]
+                    except:
+                        pass
                     SEPARATORS = (",", ":")
                     output["item"] = json.dumps(result, separators=SEPARATORS)
                 # Process Layers
