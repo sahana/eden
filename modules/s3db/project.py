@@ -997,15 +997,7 @@ class S3ProjectActivityModel(S3Model):
         else:
             #create_next = URL(c="project", f="activity", args=["[id]"])
             # Which levels of Hierarchy are we using?
-            hierarchy = current.gis.get_location_hierarchy()
-            levels = hierarchy.keys()
-            if len(settings.get_gis_countries()) == 1 or \
-               s3.gis.config.region_location_id:
-                try:
-                    levels.remove("L0")
-                except ValueError:
-                    # Already removed
-                    pass
+            levels = current.gis.get_relevant_hierarchy_levels()
 
             filter_widgets.insert(0,
                 S3LocationFilter("location_id",
@@ -1735,15 +1727,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         )
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            try:
-                levels.remove("L0")
-            except ValueError:
-                # Already removed
-                pass
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         # Normally only used in Report
         filter_widgets = [
@@ -2540,15 +2524,7 @@ class S3ProjectLocationModel(S3Model):
         define_table = self.define_table
 
          # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            try:
-                levels.remove("L0")
-            except ValueError:
-                # Already removed
-                pass
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         # ---------------------------------------------------------------------
         # Project Location ('Community')

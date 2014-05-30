@@ -366,14 +366,7 @@ class S3RequestModel(S3Model):
             msg_list_empty = T("No Requests"))
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            try:
-                levels.remove("L0")
-            except:
-                pass
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         filter_widgets = [
             #S3TextFilter(["committer_id$first_name",

@@ -339,11 +339,7 @@ class S3StatsDemographicModel(S3Model):
             msg_record_deleted = T("Demographic Data deleted"),
             msg_list_empty = T("No demographic data currently defined"))
 
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(current.deployment_settings.get_gis_countries()) == 1 or \
-           current.response.s3.gis.config.region_location_id:
-            levels.remove("L0")
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         location_fields = ["location_id$%s" % level for level in levels]
 

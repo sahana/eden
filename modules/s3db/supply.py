@@ -1325,11 +1325,7 @@ class S3SupplyDistributionModel(S3Model):
             return years
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            levels.remove("L0")
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         # Normally only used in Report
         filter_widgets = [
