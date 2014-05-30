@@ -60,11 +60,6 @@ def project():
                                           ]
                            )
 
-        # Show activity name in tasks list
-        if component_name == "task":
-            list_fields = component.get_config("list_fields")
-            list_fields.insert(3, (T("Activity"), "activity.name"))
-
         # Filter human resource records if "group" in get_vars
         elif component_name == "human_resource":
             type_field = FS("human_resource.type")
