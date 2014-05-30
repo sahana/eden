@@ -2586,13 +2586,15 @@ class GIS(object):
 
         driver = webdriver.PhantomJS()
 
-        # Set the size of the browser
-        # @ToDo: Make Configurable
-        driver.set_window_size(1980, 1080)
+        # Set the size of the browser to match the map
+        settings = current.deployment_settings
+        height = settings.get_gis_map_height()
+        width = settings.get_gis_map_width()
+        driver.set_window_size(width, height)
 
         # Load the homepage
         # (Cookie needs to be set on same domain as it takes effect)
-        public_url = current.deployment_settings.get_base_public_url()
+        public_url = settings.get_base_public_url()
         appname = request.application
         url = "%s/%s" % (public_url, appname)
         driver.get(url)

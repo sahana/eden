@@ -291,7 +291,8 @@ settings.gis.permalink = False
 settings.gis.pois = False
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
-# Uncomment to hide the Print control
+# Uncomment to show the Print control:
+# http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
 settings.gis.print_button = True
 # Uncomment to hide the Save control, or set to "float"
 settings.gis.save = "float"

@@ -15,6 +15,7 @@ tweepy>=1.9
 xlrd>=0.7.1
 # Warning: Vulnerability unresolved dependency: numpy required for Vulnerability module support
 numpy>=1.6.2
+# Warning: S3GIS unresolved dependency: selenium required for Map printing support
 selenium>=2.23.0
 # Warning: S3Doc unresolved dependency: sunburnt required for Full-Text Search support
 sunburnt>=0.6
