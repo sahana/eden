@@ -85,7 +85,9 @@ class S3Hierarchy(object):
         self.__pkey = None
         self.__fkey = None
         self.__ckey = None
-        
+
+        self.__left = DEFAULT
+
     # -------------------------------------------------------------------------
     @property
     def theset(self):
@@ -162,6 +164,15 @@ class S3Hierarchy(object):
             self.__keys()
         return self.__fkey
 
+    # -------------------------------------------------------------------------
+    @property
+    def left(self):
+        """ The left join with the link table containing the foreign key """
+
+        if self.__left is DEFAULT:
+            self.__keys()
+        return self.__left
+        
     # -------------------------------------------------------------------------
     @property
     def ckey(self):
@@ -362,16 +373,17 @@ class S3Hierarchy(object):
             query = (table.deleted != True)
         else:
             query = (table.id > 0)
-        rows = current.db(query).select(*fields)
+        rows = current.db(query).select(left = self.left, *fields)
 
         self.__theset.clear()
         
         add = self.add
+        cfield = table[ckey]
         for row in rows:
-            n = row[pkey.name]
-            p = row[fkey.name]
+            n = row[pkey]
+            p = row[fkey]
             if ckey:
-                c = row[ckey]
+                c = row[cfield]
             else:
                 c = None
             add(n, parent_id=p, category=c)
@@ -406,12 +418,12 @@ class S3Hierarchy(object):
             parent, self.__ckey = config, None
 
         pkey = None
+        fkey = None
         if parent is None:
 
             # Assume self-reference
             pkey = table._id
 
-            fkey = None
             for field in table:
                 ftype = str(field.type)
                 if ftype[:9] == "reference":
@@ -422,7 +434,26 @@ class S3Hierarchy(object):
                         fkey = field
                         break
         else:
-            fkey = table[parent]
+            resource = s3db.resource(tablename)
+            rfield = resource.resolve_selector(parent)
+
+            if rfield.tname == resource.tablename:
+                fkey = rfield.field
+                self.__left = None
+            else:
+                alias = rfield.tname.split("_", 1)[1]
+                link = resource.links.get(alias)
+                if link:
+                    fkey = rfield.field
+                    
+                    # Construct left join
+                    linktable = link.table
+                    linked = link.linked
+                    query = (linktable[linked.lkey] == table[linked.pkey])
+                    DELETED = current.xml.DELETED
+                    if DELETED in linktable.fields:
+                        query &= (linktable[DELETED] != True)
+                    self.__left = linktable.on(query)
 
         if not fkey:
             # No parent field found

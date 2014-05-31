@@ -128,7 +128,7 @@ class S3HierarchyTests(unittest.TestCase):
     def tearDownClass(cls):
 
         db = current.db
-        db.test_hierarchy.drop()
+        db.test_hierarchy.drop(mode="cascade")
         db.test_hierarchy_reference.drop()
         db.test_nonhierarchy.drop()
 
@@ -1191,6 +1191,416 @@ class S3HierarchyTests(unittest.TestCase):
                         msg = "%s != %s" % (query, expected_query))
 
 # =============================================================================
+class S3LinkedHierarchyTests(unittest.TestCase):
+    """ Tests for linktable-based hierarchies """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        s3db.define_table("test_lhierarchy",
+                          Field("name"),
+                          Field("category"),
+                          Field("type"),
+                          *s3_uid())
+
+        s3db.define_table("test_lhierarchy_link",
+                          Field("parent_id", "reference test_lhierarchy"),
+                          Field("child_id", "reference test_lhierarchy"),
+                          *s3_uid())
+
+        # Component for import
+        s3db.add_components("test_lhierarchy",
+                            test_lhierarchy = {"name": "parent",
+                                                     "link": "test_lhierarchy_link",
+                                                     "joinby": "child_id",
+                                                     "key": "parent_id",
+                                                     },
+                            ),
+        
+
+        xmlstr = """
+<s3xml>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1">
+        <data field="name">Type 1</data>
+        <data field="category">Cat 0</data>
+        <data field="type">A</data>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-1">
+        <data field="name">Type 1-1</data>
+        <data field="category">Cat 1</data>
+        <data field="type">C</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-1-1">
+        <data field="name">Type 1-1-1</data>
+        <data field="category">Cat 2</data>
+        <data field="type">B</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-1-2">
+        <data field="name">Type 1-1-2</data>
+        <data field="category">Cat 2</data>
+        <data field="type">A</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-2">
+        <data field="name">Type 1-2</data>
+        <data field="category">Cat 1</data>
+        <data field="type">B</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-2-1">
+        <data field="name">Type 1-2-1</data>
+        <data field="category">Cat 2</data>
+        <data field="type">B</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-2"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-2-2">
+        <data field="name">Type 1-2-2</data>
+        <data field="category">Cat 2</data>
+        <data field="type">C</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-2"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2">
+        <data field="name">Type 2</data>
+        <data field="category">Cat 0</data>
+        <data field="type">B</data>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2-1">
+        <data field="name">Type 2-1</data>
+        <data field="category">Cat 1</data>
+        <data field="type">A</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY2"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2-1-1">
+        <data field="name">Type 2-1-1</data>
+        <data field="category">Cat 2</data>
+        <data field="type">C</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY2-1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2-1-2">
+        <data field="name">Type 2-1-2</data>
+        <data field="category">Cat 2</data>
+        <data field="type">D</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY2-1"/>
+        </resource>
+    </resource>
+</s3xml>
+"""
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        current.auth.override = True
+        resource = s3db.resource("test_lhierarchy")
+        resource.import_xml(xmltree)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+        db.test_lhierarchy_link.drop()
+        db.test_lhierarchy.drop()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+        db = current.db
+
+        if not hasattr(self, "rows"):
+            table = db.test_lhierarchy
+            linktable = db.test_lhierarchy_link
+            left = linktable.on(linktable.child_id == table.id)
+            rows = db(db.test_lhierarchy.id>0).select(table.id,
+                                                      table.uuid,
+                                                      table.category,
+                                                      linktable.child_id,
+                                                      linktable.parent_id,
+                                                      left=left)
+            self.rows = {}
+            self.links = {}
+            self.uids = {}
+            self.ids = {}
+            for row in rows:
+                record = row.test_lhierarchy
+                uid = record.uuid
+                self.rows[uid] = record
+                self.links[uid] = row.test_lhierarchy_link
+                self.uids[uid] = record.id
+                self.ids[record.id] = uid
+
+        current.s3db.configure("test_lhierarchy",
+                               hierarchy=("child_id:test_lhierarchy_link.parent_id",
+                                          "category"))
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testHierarchyConstruction(self):
+        """ Test hierarchy construction """
+
+        uids = self.uids
+
+        h = S3Hierarchy("test_lhierarchy")
+
+        roots = h.roots
+        self.assertEqual(len(roots), 2)
+        self.assertTrue(uids["LHIERARCHY1"] in roots)
+        self.assertTrue(uids["LHIERARCHY2"] in roots)
+
+        nodes = h.nodes
+        self.assertEqual(len(nodes), len(uids))
+        self.assertTrue(all(node_id in nodes for node_id in uids.values()))
+
+    # -------------------------------------------------------------------------
+    def testCategory(self):
+        """ Test node category lookup """
+
+        uids = self.uids
+        rows = self.rows
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+            category = h.category(uids[uid])
+            self.assertEqual(category, rows[uid].category)
+
+    # -------------------------------------------------------------------------
+    def testParent(self):
+        """ Test parent lookup """
+
+        uids = self.uids
+        rows = self.rows
+        links = self.links
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+            parent, category = h.parent(uids[uid], classify=True)
+            self.assertEqual(parent, links[uid].parent_id)
+            if parent:
+                parent_uid = self.ids[parent]
+                self.assertEqual(category, rows[parent_uid].category)
+
+    # -------------------------------------------------------------------------
+    def testChildren(self):
+        """ Test child node lookup """
+
+        uids = self.uids
+        links = self.links
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+            self.assertEqual(h.children(uids[uid]),
+                             set(link.child_id for link in links.values()
+                                               if link.parent_id == uids[uid]))
+
+    # -------------------------------------------------------------------------
+    def testPath(self):
+        """ Test node path lookup """
+
+        uids = self.uids
+        rows = self.rows
+
+        # Standard path from root
+        node = uids["LHIERARCHY2-1-2"]
+        h = S3Hierarchy("test_lhierarchy")
+        path = h.path(node)
+        self.assertEqual(path, [uids["LHIERARCHY2"],
+                                uids["LHIERARCHY2-1"],
+                                uids["LHIERARCHY2-1-2"]
+                                ])
+
+        # Path from category root
+        node = uids["LHIERARCHY1-1-1"]
+        path = h.path(node, category="Cat 1", classify=True)
+        classified = lambda uid: (uids[uid], rows[uid].category)
+        self.assertEqual(path, [classified("LHIERARCHY1-1"),
+                                classified("LHIERARCHY1-1-1"),
+                                ])
+
+        # Path of root
+        node = uids["LHIERARCHY2"]
+        path = h.path(node, category="Cat 1", classify=True)
+        classified = lambda uid: (uids[uid], rows[uid].category)
+        self.assertEqual(path, [classified("LHIERARCHY2")])
+
+    # -------------------------------------------------------------------------
+    def testRoot(self):
+        """ Test root node lookup """
+
+        uids = self.uids
+        rows = self.rows
+
+        # Top root
+        node = uids["LHIERARCHY1-1-1"]
+        h = S3Hierarchy("test_lhierarchy")
+        root = h.root(node)
+        self.assertEqual(root, uids["LHIERARCHY1"])
+
+        # Root by category
+        node = uids["LHIERARCHY2-1"]
+        root = h.root(node, classify=True)
+        self.assertEqual(root, (uids["LHIERARCHY2"], rows["LHIERARCHY2"].category))
+
+        # Root of root
+        node = uids["LHIERARCHY1"]
+        root = h.root(node)
+        self.assertEqual(root, uids["LHIERARCHY1"])
+
+        # None
+        root = h.root(None)
+        self.assertEqual(root, None)
+
+    # -------------------------------------------------------------------------
+    def testSiblings(self):
+        """ Test lookup of sibling nodes """
+
+        uids = self.uids
+        ids = self.ids
+        links = self.links
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+
+            parent = links[uid].parent_id
+            siblings = set(node for node, _uid in ids.items()
+                                if links[_uid].parent_id == parent)
+
+            self.assertEqual(h.siblings(uids[uid], inclusive=True), siblings)
+            siblings.discard(uids[uid])
+            self.assertEqual(h.siblings(uids[uid], inclusive=False), siblings)
+
+    # -------------------------------------------------------------------------
+    def testFindAll(self):
+        """ Test lookup of descendant nodes """
+
+        uids = self.uids
+
+        h = S3Hierarchy("test_lhierarchy")
+
+        root = uids["LHIERARCHY1"]
+        nodes = h.findall(root)
+        expected = ["LHIERARCHY1-1",
+                    "LHIERARCHY1-1-1",
+                    "LHIERARCHY1-1-2",
+                    "LHIERARCHY1-2",
+                    "LHIERARCHY1-2-1",
+                    "LHIERARCHY1-2-2",
+                    ]
+        self.assertEqual(nodes, set(uids[uid] for uid in expected))
+
+        root = uids["LHIERARCHY1"]
+        nodes = h.findall(root, inclusive=True)
+        expected = ["LHIERARCHY1",
+                    "LHIERARCHY1-1",
+                    "LHIERARCHY1-1-1",
+                    "LHIERARCHY1-1-2",
+                    "LHIERARCHY1-2",
+                    "LHIERARCHY1-2-1",
+                    "LHIERARCHY1-2-2",
+                    ]
+        self.assertEqual(nodes, set(uids[uid] for uid in expected))
+
+        root = uids["LHIERARCHY2"]
+        nodes = h.findall(root, category="Cat 1")
+        expected = ["LHIERARCHY2-1",
+                    ]
+        self.assertEqual(nodes, set(uids[uid] for uid in expected))
+
+        root = uids["LHIERARCHY1"]
+        nodes = h.findall(root, category="Cat 4")
+        self.assertEqual(nodes, set())
+
+    # -------------------------------------------------------------------------
+    def testFilteringLeafOnly(self):
+        """ Test filtering of the tree with leafonly=True """
+
+        uids = self.uids
+
+        h = S3Hierarchy("test_lhierarchy",
+                        filter = FS("type") == "D",
+                        leafonly = True)
+
+        # Check nodes
+        nodes = h.nodes
+        expected = ["LHIERARCHY2",
+                    "LHIERARCHY2-1",
+                    "LHIERARCHY2-1-2"]
+        self.assertEqual(len(nodes), len(expected))
+        self.assertTrue(all(uids[uid] in nodes for uid in expected))
+
+        # Check consistency
+        for node in nodes.values():
+            for child_id in node["s"]:
+                self.assertTrue(child_id in nodes)
+            parent_id = node["p"]
+            if parent_id:
+                self.assertTrue(parent_id in nodes)
+
+
+    # -------------------------------------------------------------------------
+    def testFilteringAnyNode(self):
+        """ Test filtering of the tree with leafonly=False """
+
+        uids = self.uids
+
+        h = S3Hierarchy("test_lhierarchy",
+                        filter = FS("type") == "C",
+                        leafonly = False)
+
+        # Check nodes
+        nodes = h.nodes
+        expected = ["LHIERARCHY1",
+                    "LHIERARCHY1-1",
+                    "LHIERARCHY1-2",
+                    "LHIERARCHY1-2-2",
+                    "LHIERARCHY2",
+                    "LHIERARCHY2-1",
+                    "LHIERARCHY2-1-1"]
+        self.assertEqual(len(nodes), len(expected))
+        self.assertTrue(all(uids[uid] in nodes for uid in expected))
+
+        # Check consistency
+        for node in nodes.values():
+            for child_id in node["s"]:
+                self.assertTrue(child_id in nodes)
+            parent_id = node["p"]
+            if parent_id:
+                self.assertTrue(parent_id in nodes)
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -1207,6 +1617,7 @@ if __name__ == "__main__":
 
     run_suite(
         S3HierarchyTests,
+        S3LinkedHierarchyTests,
     )
 
 # END ========================================================================
