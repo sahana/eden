@@ -253,7 +253,7 @@ class S3XML(S3Codec):
         self.error = None
 
         if args:
-            _args = dict([(k, "'%s'" % args[k]) for k in args])
+            _args = dict((k, "'%s'" % args[k]) for k in args)
         else:
             _args = None
             

@@ -3195,7 +3195,7 @@ class S3ImportJob():
                 query = ktable[UID].belongs(_uids)
                 records = db(query).select(ktable.id,
                                            ktable[UID])
-                id_map = dict([(r[UID], r.id) for r in records])
+                id_map = dict((r[UID], r.id) for r in records)
 
             if not uids:
                 # Anonymous reference: <resource> inside the element

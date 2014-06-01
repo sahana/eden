@@ -1595,8 +1595,8 @@ class S3CRUD(S3Method):
             # plain.html view for pagination to work properly!
             ajax_url = attr.get("list_ajaxurl", None)
             if not ajax_url:
-                vars = dict([(k,v) for k, v in r.get_vars.iteritems()
-                                   if k not in ("start", "limit")])
+                vars = dict((k,v) for k, v in r.get_vars.iteritems()
+                                  if k not in ("start", "limit"))
                 ajax_url = r.url(representation="dl", vars=vars)
                     
             # Render the list (even if empty => Ajax-section is required

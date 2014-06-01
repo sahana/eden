@@ -851,9 +851,9 @@ class S3SQLCustomForm(S3SQLForm):
                     component = rcomponents[alias]
                     mark_required = component.get_config("mark_required", [])
                     ctable = component.table
-                    sfields = dict([(n, (f.name, f.label))
-                                    for a, n, f in fields
-                                    if a == alias and n in ctable])
+                    sfields = dict((n, (f.name, f.label))
+                                   for a, n, f in fields
+                                   if a == alias and n in ctable)
                     slabels = s3_mark_required([ctable[n] for n in sfields],
                                                mark_required=mark_required,
                                                map_names=sfields)[0]
@@ -2612,7 +2612,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return None
         field = table[fieldname]
 
-        filter_fields = dict([(f["field"], f) for f in filterby])
+        filter_fields = dict((f["field"], f) for f in filterby)
         if fieldname not in filter_fields:
             return None
 

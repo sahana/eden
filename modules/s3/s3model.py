@@ -1066,15 +1066,15 @@ class S3Model(object):
             key = cls.super_key(s)
             shared = get_config(tablename, "%s_fields" % tn)
             if not shared:
-                shared = dict([(fn, fn)
-                               for fn in s.fields
-                               if fn != key and fn in table.fields])
+                shared = dict((fn, fn)
+                              for fn in s.fields
+                              if fn != key and fn in table.fields)
             else:
-                shared = dict([(fn, shared[fn])
-                               for fn in shared
-                               if fn != key and \
-                                  fn in s.fields and \
-                                  shared[fn] in table.fields])
+                shared = dict((fn, shared[fn])
+                              for fn in shared
+                              if fn != key and \
+                                 fn in s.fields and \
+                                 shared[fn] in table.fields)
             fields.extend(shared.values())
             fields.append(key)
             updates.append((tn, s, key, shared))

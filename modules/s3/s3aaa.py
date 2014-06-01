@@ -4696,8 +4696,8 @@ S3OptionsFilter({
                     query = (supertable[skey] == record[skey])
                 else:
                     continue
-                updates = dict([(f, data[f])
-                                for f in data if f in supertable.fields])
+                updates = dict((f, data[f])
+                               for f in data if f in supertable.fields)
                 if not updates:
                     continue
                 db(query).update(**updates)
@@ -7312,8 +7312,8 @@ class S3RoleManager(S3Method):
                 if tacls:
                     ptables = [acl.tablename for acl in tacls]
                 # Relevant ACLs
-                acls = dict([(acl.tablename, acl) for acl in records
-                                                if acl.tablename in ptables])
+                acls = dict((acl.tablename, acl) for acl in records
+                                                 if acl.tablename in ptables)
 
                 # Table header
                 thead = THEAD(TR(TH(T("Tablename")),

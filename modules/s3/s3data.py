@@ -1494,7 +1494,7 @@ class S3PivotTable(object):
         represent_method = self._represent_method
         cols_repr = represent_method(cols)
         rows_repr = represent_method(rows)
-        layers_repr = dict([(f, represent_method(f)) for f, m in layers])
+        layers_repr = dict((f, represent_method(f)) for f, m in layers)
 
         layer_label = None
         col_titles = []

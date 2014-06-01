@@ -3603,7 +3603,7 @@ class S3ProjectDRRModel(S3Model):
         T = current.T
 
         hfa_opts = project_hfa_opts()
-        hfa_opts = dict([(opt, "HFA %s" % opt) for opt in hfa_opts])
+        hfa_opts = dict((opt, "HFA %s" % opt) for opt in hfa_opts)
 
         tablename = "project_drr"
         self.define_table(tablename,
@@ -4590,7 +4590,7 @@ class S3ProjectTaskModel(S3Model):
                 (ltable.task_id == ttable.id) & \
                 (ltable.project_id == ptable.id)
         rows = db(query).select(ptable.id, ptable.name)
-        return dict([(row.id, row.name) for row in rows])
+        return dict((row.id, row.name) for row in rows)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4608,7 +4608,7 @@ class S3ProjectTaskModel(S3Model):
                 (ltable.task_id == ttable.id) & \
                 (ltable.activity_id == atable.id)
         rows = db(query).select(atable.id, atable.name)
-        return dict([(row.id, row.name) for row in rows])
+        return dict((row.id, row.name) for row in rows)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4626,7 +4626,7 @@ class S3ProjectTaskModel(S3Model):
                 (ltable.task_id == ttable.id) & \
                 (ltable.milestone_id == mtable.id)
         rows = db(query).select(mtable.id, mtable.name)
-        return dict([(row.id, row.name) for row in rows])
+        return dict((row.id, row.name) for row in rows)
 
     # -------------------------------------------------------------------------
     @staticmethod
