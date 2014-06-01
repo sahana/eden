@@ -145,18 +145,26 @@ def define_map(height = None,
            auth.s3_has_permission("create", s3db.gis_poi)
     if pois:
         if s3.debug:
-            script = "/%s/static/scripts/S3/s3.gis.pois.js" % appname
+            script = "/%s/static/scripts/S3/s3.gis.add_points.js" % appname
         else:
             script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
         s3.scripts.append(script)
-        # @ToDo: Allow multiple PoI layers
+        
+		#Passing enabled resources to the JS
+        poi_resources=settings.get_gis_poi_resources()
+        script= '''S3.gis.pois_resources=%s''' % poi_resources
+        s3.js_global.append(script)
+        
         ftable = s3db.gis_layer_feature
-        layer = db(ftable.name == "PoIs").select(ftable.layer_id,
-                                                 limitby=(0, 1)
-                                                 ).first()
-        if layer:
-            script = '''S3.gis.pois_layer=%s''' % layer.layer_id
-            s3.js_global.append(script)
+        for resources in poi_resources :
+            # @ToDo: Allow multiple PoI layers
+            # @ToDo: a Permissions check for which resources the current user *can* add resources for
+            # @ToDo: make a bulk call
+            resource_layer=resources.split('/')
+            layer = db(ftable.name == resource_layer[1]).select(ftable.layer_id,limitby=(0, 1)).first()
+            if layer:                
+                script = '''S3.gis.pois_layer=%s''' % layer.layer_id
+                s3.js_global.append(script)
 
     # @ToDo: Generalise with feature/tablename?
     poi = get_vars.get("poi", None)

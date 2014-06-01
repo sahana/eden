@@ -1,0 +1,122 @@
+{{import sys}}
+{{print >> sys.stderr, "In index.html"}}
+{{extend "layout.html"}}
+<div class="row home-top">
+  <div class="small-5 small-offset-1 columns">
+    {{if AUTHENTICATED not in session.s3.roles:}}
+    <div id='login_box' class='menu_box'>
+        {{if not self_registration or registered:}}
+        <div id='login_form'>
+            {{=login_div}}
+            {{include "auth/_login.html"}}
+        </div>
+        {{pass}}
+        {{if self_registration:}}
+        <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+            {{=register_div}}
+            {{include "auth/_register.html"}}
+        </div>
+        {{pass}}
+        {{if self_registration and not registered:}}
+        <div id='login_form' class='hide'>
+            {{=login_div}}
+            {{include "auth/_login.html"}}
+        </div>
+        {{pass}}
+    </div>
+    {{else:}}
+    <div class="menu_box">
+      <h4>Welcome to Crisis Map!</h4>
+      <!--
+      <p>
+         This is just a placeholder for some introductory text to
+         tell the user what to do next. We can place a lot of things
+         here, e.g. news feeds, diagrams or other info.
+      </p>
+      <p>
+         For now, we just have some buttons here to link directly to
+         the hot topics:
+      </p>
+      <div class="button-bar">
+        <ul class="button-group">
+            {{try:}}{{=shelter_list}}{{except:}}{{pass}}
+            {{try:}}{{=event_list}}{{except:}}{{pass}}
+        </ul>
+      </div>
+      -->
+	 <b> Add Incident Data<b/>
+      <div class="button-bar">
+        
+		<b><a href='{{=URL(c="event", f="incident", args="create")}}' class='button small'>{{=T("Add Incident")}}</a></b>
+		
+		<b><a href='{{=URL(c="gis", f="poi")}}' class='button small'>{{=T("Create POI")}}</a></b>
+           
+        
+      </div>
+	  
+	   <b> Planning<b/>
+      <div class="button-bar">
+        
+		<b><a href='{{=URL(c="req", f="req", args="create")}}' class='button small'>{{=T("Request support")}}</a></b>
+		
+		
+        
+      </div>
+	  
+	  View Reports
+      <div class="button-bar">
+        
+            <!--<li><a class="button button-home" href=#>Projects</a></li>-->
+          <b><a href='{{=URL(c="gis", f="poi", args="report")}}' class='button small'>{{=T("View Map Report")}}</a></b>
+           
+            
+           
+       
+      </div>
+      
+    </div>
+    {{pass}}
+  </div>
+  
+  <div class="small-5 small-offset-1 columns">
+   
+   
+  
+  </div>
+  
+  
+</div>
+<div class="row home-middle" data-equalizer-watch="">
+  <!--<div class="medium-7 medium-offset-1 columns">-->
+     <div class="panel" data-equalizer-watch="">
+        <p>
+            {{if settings.frontpage.rss:}}
+            <div id='feed-control'>
+                <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
+                {{pass}}
+            </div>        
+        </p>
+     <!--</div>-->
+  </div>
+  <!--
+  <div class="medium-2 columns">
+     <div class="panel" data-equalizer-watch="">
+       <h5>OTHER INFORMATION</h5>
+       <p>Well, we can come up with other useful details, or we can just remove these boxes.</p>
+     </div>
+  </div>
+  <div class="medium-2 columns">
+     <div class="panel" data-equalizer-watch="">
+       <h5>INLINE INFO</h5>
+       <p>We can also provide some inline information, e.g. statistics, or summary</p>
+     </div>
+  </div>
+  
+  <div class="medium-3 columns end">
+     <div class="panel" data-equalizer-watch="">
+       <h5>CONTACT</h5>
+       <p><a href="http://www.protezionecivile.it">Website: Civil Protection</a></p>
+     </div>
+  </div>
+ -->
+</div>
