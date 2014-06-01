@@ -3371,12 +3371,12 @@ class S3ProjectThemeModel(S3Model):
                     )
 
         configure(tablename,
-                  crud_form=crud_form,
-                  list_fields=["id",
-                               "name",
-                               (T("Sectors"), "theme_sector.sector_id"),
-                               "comments",
-                               ])
+                  crud_form = crud_form,
+                  list_fields = ["id",
+                                 "name",
+                                 (T("Sectors"), "theme_sector.sector_id"),
+                                 "comments",
+                                 ])
 
         # ---------------------------------------------------------------------
         # Theme <> Sector Link Table
@@ -3432,7 +3432,7 @@ class S3ProjectThemeModel(S3Model):
         )
 
         configure(tablename,
-                  deduplicate=self.project_theme_project_deduplicate,
+                  deduplicate = self.project_theme_project_deduplicate,
                   onaccept = self.project_theme_project_onaccept,
                   )
 
@@ -3467,7 +3467,7 @@ class S3ProjectThemeModel(S3Model):
         )
 
         configure(tablename,
-                  deduplicate=self.project_theme_activity_deduplicate,
+                  deduplicate = self.project_theme_activity_deduplicate,
                   #onaccept = self.project_theme_activity_onaccept,
                   )
 
@@ -3947,6 +3947,7 @@ class S3ProjectTaskModel(S3Model):
                                        )
 
         configure(tablename,
+                  deduplicate = self.project_milestone_duplicate,
                   orderby = "project_milestone.date",
                   )
 
@@ -4606,11 +4607,8 @@ class S3ProjectTaskModel(S3Model):
         query = (ttable.deleted == False) & \
                 (ltable.task_id == ttable.id) & \
                 (ltable.activity_id == atable.id)
-        opts = db(query).select(atable.name)
-        _dict = {}
-        for opt in opts:
-            _dict[opt.name] = opt.name
-        return _dict
+        rows = db(query).select(atable.id, atable.name)
+        return dict([(row.id, row.name) for row in rows])
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4627,11 +4625,8 @@ class S3ProjectTaskModel(S3Model):
         query = (ttable.deleted == False) & \
                 (ltable.task_id == ttable.id) & \
                 (ltable.milestone_id == mtable.id)
-        opts = db(query).select(mtable.name)
-        _dict = {}
-        for opt in opts:
-            _dict[opt.name] = opt.name
-        return _dict
+        rows = db(query).select(mtable.id, mtable.name)
+        return dict([(row.id, row.name) for row in rows])
 
     # -------------------------------------------------------------------------
     @staticmethod
