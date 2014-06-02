@@ -2432,12 +2432,6 @@ class S3ProjectHazardModel(S3Model):
                                     ondelete = "CASCADE",
                                     )
 
-        # Field settings for project_project.hazard field in friendly_string_from_field_query function
-        # - breaks Action Buttons, so moved to inside the fn which calls them
-        #table = db[tablename]
-        #table.id.represent = represent
-        #table.id.label = T("Hazard")
-
         # ---------------------------------------------------------------------
         # Projects <> Hazards Link Table
         #
@@ -3339,12 +3333,6 @@ class S3ProjectThemeModel(S3Model):
                                                           sort=True)),
                                    represent = represent,
                                    ondelete = "CASCADE")
-
-        # Field settings for project_project.theme field in friendly_string_from_field_query function
-        # - breaks Action Buttons, so moved to inside the fn which calls them
-        #table = db[tablename]
-        #table.id.represent = represent
-        #table.id.label = T("Theme")
 
         # Components
         add_components(tablename,

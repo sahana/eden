@@ -673,34 +673,35 @@ class mypage():
     """
         Custom page for a User to manage their Saved Search & Subscriptions
 
-        @todo: pr_saved_search no longer supported (S3Search deprecated)
+        @todo: SavedSearch deprecated,
+               re-implement with saved filters / S3Notify
     """
 
     def __call__(self):
         auth = current.auth
 
-        if not auth.is_logged_in():
-            response = current.response
-            request = current.request
-            T = current.T
+        #if not auth.is_logged_in():
+        response = current.response
+        request = current.request
+        T = current.T
 
-            view = path.join(request.folder, "private", "templates",
-                             THEME, "views", "mypage.html")
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP(404, "Unable to open Custom View: %s" % view)
+        view = path.join(request.folder, "private", "templates",
+                            THEME, "views", "mypage.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
-            response.title = T("My Page")
+        response.title = T("My Page")
 
-            return dict(
-                title=T("My Page"),
-            )
-        else:
-            person_id = auth.s3_logged_in_person()
-            redirect(URL(c="pr", f="person", args=[person_id, "saved_search"]))
+        return dict(
+            title=T("My Page"),
+        )
+        #else:
+        #    person_id = auth.s3_logged_in_person()
+        #    redirect(URL(c="pr", f="person", args=[person_id, "saved_search"]))
 
 # =============================================================================
 class organisations():
