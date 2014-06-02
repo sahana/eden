@@ -174,6 +174,7 @@
 'Add Category': 'カテゴリを追加',
 'Add Category<>Sub-Category<>Catalog Relation': 'Category<>Sub-Category<>Catalog 関係を追加',
 'Add Config': '設定を追加',
+'Add Contact': '連絡先を追加',
 'Add Contact Information': '連絡先情報を追加',
 'Add Credential': '証明書の追加',
 'Add Credentials': '証明書の追加',

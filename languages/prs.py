@@ -98,6 +98,7 @@
 'Add Branch Organization': 'نماینده گی موسسه را اضافه نمایید',
 'Add Certificate for Course': 'تصدیق نامه دوره را اضافه نمایید',
 'Add Certification': 'تصدیق را اضافه نمایید',
+'Add Contact': 'تماس را اضافه نمایید',
 'Add Contact Information': 'معلومات تماس را اضافه نمایید',
 'Add Credential': 'اعتبار نامه را اضافه نمایید',
 'Add Data to Theme Layer': 'معلومات را در بخش موضوع اضافه نمایید',

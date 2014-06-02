@@ -136,6 +136,7 @@
 'Add Certificate for Course': 'Kursbescheinigung hinzufügen',
 'Add Certification': 'Zertifizierung hinzufügen',
 'Add Competency': 'Befähigung hinzufügen',
+'Add Contact': 'Kontaktperson hinzufügen',
 'Add Contact Information': 'Kontaktinformation hinzufügen',
 'Add Credential': 'Berechtigungsnachweis hinzufügen',
 'Add Credentials': 'Berechtigungsnachweise hinzufügen',

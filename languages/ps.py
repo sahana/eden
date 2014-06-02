@@ -97,6 +97,7 @@
 'Add Branch Organization': 'اضافه کړی د موسسی څانګه',
 'Add Certificate for Course': 'اضافه کړی د کورس شهادت نامه',
 'Add Certification': 'اضافه کړی شهادت  ',
+'Add Contact': 'اضافه کړی اړیکه',
 'Add Contact Information': 'اضافه کړی د اړیکی معلمومات',
 'Add Credential': 'اضافه کړی د اعتبار لیک',
 'Add Data to Theme Layer': 'اضافه کړی معلومات د موضوع پاڼی ته',

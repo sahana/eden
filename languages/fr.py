@@ -179,6 +179,7 @@
 'Add Certification': 'Ajouter certification',
 'Add Competency': 'Ajouter compétences',
 'Add Config': 'Ajouter config',
+'Add Contact': 'Ajouter un contact',
 'Add Contact Information': "Ajouter d'informations de contact",
 'Add Course Certicate': 'Ajouter un certificat de cours',
 'Add Credential': "Ajouter données d'identification",

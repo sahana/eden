@@ -101,6 +101,7 @@
 'Add Branch Organization': 'शाखा संघ राख्नुहोस् ',
 'Add Certificate for Course': 'पाठ्यक्रम प्रमाणपत्र राख्नुहोस् ',
 'Add Certification': 'प्रमाणिकरण राख्नुहोस् ',
+'Add Contact': 'सम्पर्क राख्नुहोस् ',
 'Add Contact Information': 'सम्पर्क जानकारी राख्नुहोस् ',
 'Add Credential': 'कागजात राख्नुहोस् ',
 'Add Data to Theme Layer': 'स्वरूप (थिम) को तहमा आंकडा राख्नुहोस् ',

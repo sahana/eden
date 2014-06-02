@@ -890,6 +890,7 @@
 'Create & manage Distribution groups to receive Alerts': 'Kreirati & upravljati grupama distibucije za primanje znakova za uzbunu',
 'Create a group entry in the registry.': 'Kreiraj unosenje grupe u registar.',
 'Create Checklist': 'kreiraj spisak',
+'Create Contact': 'Dodaj kontakt',
 'Create Group Entry': 'Kreiraj grupni pristup',
 'Create Impact Assessment': 'Kreiraj procjenu udara',
 'Create Location': 'Create Location',

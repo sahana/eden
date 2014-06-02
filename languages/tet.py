@@ -26,6 +26,7 @@
 'Acronym': 'Lista Oragnizasaun',
 'Activate': 'Ativa',
 'Activity': 'Aktividade',
+'Add Contact': 'Aumenta kontaktu',
 'Add Contact Information': 'Aumenta informasaun kontaktu',
 'Add Document': 'Aumenta dukomentu',
 'Add Documents': 'Aumenta dokumentus',

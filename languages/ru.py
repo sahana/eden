@@ -136,6 +136,7 @@
 'Add Certificate for Course': 'Добавить курс Сертификата',
 'Add Certification': 'Добавить Сертификации',
 'Add Competency': 'Добавить компетентность',
+'Add Contact': 'Добавить контакт',
 'Add Contact Information': 'Добавление контактной информации',
 'Add Credential': 'Добавить новое разрешение',
 'Add Credentials': 'Добавить идентификационные данные',

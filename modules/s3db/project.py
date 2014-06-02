@@ -2751,10 +2751,9 @@ class S3ProjectLocationModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CONTACT = T("Create Contact")
         LIST_OF_CONTACTS = T("Community Contacts")
         crud_strings[tablename] = Storage(
-            label_create = ADD_CONTACT,
+            label_create = T("Add Contact"), # Better language for 'Select or Create'
             title_display = T("Contact Details"),
             title_list = T("Contacts"),
             title_update = T("Edit Contact Details"),
@@ -3667,74 +3666,82 @@ class S3ProjectDRRPPModel(S3Model):
                                                      )
                                 ),
                           Field("parent_project",
-                                represent = lambda v: v or NONE,
                                 label =  T("Name of a programme or another project which this project is implemented as part of"),
+                                represent = lambda v: v or NONE,
                                 #comment = DIV(_class="tooltip",
                                 #              _title="%s|%s" % (T("Parent Project"),
                                 #                                T("The parent project or programme which this project is implemented under"))),
                                 ), 
                           Field("duration", "integer",
+                                label = T("Duration (months)"),
                                 represent = lambda v: v or NONE,
-                                label = T("Duration (months)")),
+                                ),
                           Field("local_budget", "double",
                                 label = T("Total Funding (Local Currency)"),
                                 represent = lambda v: \
-                                    IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
+                                ),
                           s3_currency("local_currency",
                                       label = T("Local Currency"),
                                       requires = IS_IN_SET(local_currencies,
                                                            zero=None)
                                       ),
                           Field("activities", "text",
+                                label = T("Activities"),
                                 represent = lambda v: v or NONE,
-                                label = T("Activities")),
+                                ),
                           Field("rfa", "list:integer",
                                 label = T("RFA Priorities"),
+                                represent = lambda opt: \
+                                    self.opts_represent(opt, "RFA"),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_rfa_opts.keys(),
                                                       labels = ["RFA %s" % \
                                                                 rfa for rfa in project_rfa_opts.keys()],
                                                       multiple = True)),
-                                represent = lambda opt: \
-                                    self.opts_represent(opt, "RFA"),
                                 widget = S3GroupedOptionsWidget(help_field = project_rfa_opts,
                                                                 cols = 1,
                                                                 ),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("RFA Priorities"),
-                                                                T("Applicable to projects in Pacific countries only")))),
+                                                                T("Applicable to projects in Pacific countries only"))),
+                                ),
                           Field("pifacc", "list:integer",
                                 label = T("PIFACC Priorities"),
+                                represent = lambda opt: \
+                                    self.opts_represent(opt, "PIFACC"),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_pifacc_opts.keys(),
                                                       labels = ["PIFACC %s" % \
                                                                 pifacc for pifacc in project_pifacc_opts.keys()],
                                                       multiple = True)),
-                                represent = lambda opt: \
-                                    self.opts_represent(opt, "PIFACC"),
                                 widget = S3GroupedOptionsWidget(help_field = project_pifacc_opts,
                                                                 cols = 1,
                                                                 ),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("PIFACC Priorities"),
-                                                                T("Pacific Islands Framework for Action on Climate Change. Applicable to projects in Pacific countries only")))),
+                                                                T("Pacific Islands Framework for Action on Climate Change. Applicable to projects in Pacific countries only"))),
+                                ),
                           Field("jnap", "list:integer",
                                 label = T("JNAP Priorities"),
+                                represent = lambda opt: \
+                                    self.opts_represent(opt, "JNAP"),
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET(project_jnap_opts.keys(),
                                                       labels = ["JNAP %s" % \
                                                                 jnap for jnap in project_jnap_opts.keys()],
                                                       multiple = True)),
-                                represent = lambda opt: \
-                                    self.opts_represent(opt, "JNAP"),
                                 widget = S3GroupedOptionsWidget(help_field = project_jnap_opts,
                                                                 cols = 1,
                                                                 ),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("JNAP Priorities"),
-                                                                T("Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation. Applicable to Cook Islands only")))),
+                                                                T("Joint National Action Plan for Disaster Risk Management and Climate Change Adaptation. Applicable to Cook Islands only"))),
+                                ),
                           Field("L1", "list:integer",
                                 label = T("Cook Islands"),
+                                represent = S3Represent(lookup="gis_location",
+                                                        multiple=True),
                                 requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "gis_location.id",
                                                       S3Represent(lookup="gis_location"),
@@ -3743,8 +3750,6 @@ class S3ProjectDRRPPModel(S3Model):
                                                       not_filterby = "name",
                                                       not_filter_opts = ("Cook Islands",),
                                                       multiple=True)),
-                                represent = S3Represent(lookup="gis_location",
-                                                        multiple=True),
                                 widget = S3GroupedOptionsWidget(size = None, # do not group by letter
                                                                 cols = 4,
                                                                 ),
@@ -3756,14 +3761,16 @@ class S3ProjectDRRPPModel(S3Model):
                                 writable = False,
                                 ),
                           Field("focal_person",
+                                label = T("Focal Person"),
                                 represent = lambda v: v or NONE,
                                 requires = IS_NOT_EMPTY(),
-                                label = T("Focal Person")),
+                                ),
                           self.org_organisation_id(label = T("Organization")),
                           Field("email",
-                                requires=IS_EMPTY_OR(IS_EMAIL()),
+                                label = T("Email"),
                                 represent = lambda v: v or NONE,
-                                label = T("Email")),
+                                requires = IS_EMPTY_OR(IS_EMAIL()),
+                                ),
                           *s3_meta_fields())
 
         # CRUD Strings

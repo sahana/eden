@@ -142,6 +142,7 @@
 'Add Certificate for Course': 'Incluir Certificado de Curso',
 'Add Certification': 'Adicionar Certificação',
 'Add Competency': 'incluir competência',
+'Add Contact': 'Criar contato',
 'Add Contact Information': 'Incluir informações de contato',
 'Add Credential': 'Incluir referência',
 'Add Credentials': 'Incluir Referências',

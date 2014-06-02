@@ -134,6 +134,7 @@
 'Add Certificate for Course': 'certicate 코스 추가',
 'Add Certification': '인증 추가',
 'Add Competency': '능력 추가',
+'Add Contact': '연락처 추가',
 'Add Contact Information': '문의처 정보 추가',
 'Add Credential': '권한 정보 추가',
 'Add Credentials': '권한 정보 추가',

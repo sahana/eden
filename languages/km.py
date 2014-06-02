@@ -157,6 +157,7 @@
 'Add Branch Organization': 'បន្ថែម​សាខា​របស់​អង្គការ',
 'Add Certificate for Course': 'បន្ថែម​វិញ្ញាបនបត្រ​បញ្ជាក់វគ្គសិក្សា',
 'Add Certification': 'បន្ថែម​វិញ្ញាបនកម្ម',
+'Add Contact': 'បន្ថែម​ទំនាក់ទំនង',
 'Add Contact Information': 'បន្ថែម​ព័ត៌មាន​ទំនាក់ទំនង',
 'Add Credential': 'បន្ថែម​លិខិតសម្គាល់',
 'Add Data to Theme Layer': 'បន្ថែម​ទិន្នន័យ​ទៅ​ស្រទាប់​ស្បែក',

@@ -187,6 +187,7 @@
 'Add Certification': '新增認證',
 'Add Competency': '新增能力',
 'Add Config': '新增配置',
+'Add Contact': '新增聯絡人',
 'Add Contact Information': '新增聯絡資訊',
 'Add Course Certicate': '新增進程凭證',
 'Add Credential': '新增認證',
