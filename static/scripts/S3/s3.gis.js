@@ -82,15 +82,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         // Configure the Viewport
-        var bounds;
         var lat = options.lat;
         var lon = options.lon;
-        if (lat && lon) {
+        if ((lat != undefined) && (lon != undefined)) {
+            var bounds;
             var center = new OpenLayers.LonLat(lon, lat);
             center.transform(proj4326, projection_current);
         } else {
             // BBOX
-            bounds = OpenLayers.Bounds.fromArray(options.bbox);
+            var bounds = OpenLayers.Bounds.fromArray(options.bbox);
             var center = bounds.getCenterLonLat();
         }
         options.center = center;
