@@ -266,6 +266,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
 #settings.gis.mouse_position = "mgrs"
+# Uncomment to show the Navigation controls on the toolbar
+#settings.gis.nav_controls = True
 # Uncomment to hide the Overview map
 #settings.gis.overview = False
 # Uncomment to hide the permalink control
