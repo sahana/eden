@@ -139,23 +139,23 @@ class S3HRModel(S3Model):
             else:
                 group = "staff"
 
-        # =========================================================================
+        # =====================================================================
         # Departments
         #
         tablename = "hrm_department"
         define_table(tablename,
-                     Field("name",
-                           notnull=True,
-                           length=64,
-                           label=T("Name")),
+                     Field("name", notnull=True, length=64,
+                           label = T("Name"),
+                           ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
                      organisation_id(default = root_org,
                                      readable = is_admin,
                                      writable = is_admin,
                                      ),
-                     s3_comments(label=T("Description"),
-                                 comment=None),
+                     s3_comments(label = T("Description"),
+                                 comment = None,
+                                 ),
                      *s3_meta_fields())
 
         label_create = T("Create Department")
@@ -174,24 +174,26 @@ class S3HRModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         department_id = S3ReusableField("department_id", "reference %s" % tablename,
-                                sortby = "name",
-                                label = T("Department / Unit"),
-                                requires = IS_EMPTY_OR(
-                                            IS_ONE_OF(db, "hrm_department.id",
-                                                      represent,
-                                                      filterby="organisation_id",
-                                                      filter_opts=filter_opts)),
-                                represent = represent,
-                                comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
-                                                          f="department",
-                                                          label=label_create),
-                                ondelete = "SET NULL")
+            label = T("Department / Unit"),
+            ondelete = "SET NULL",
+            represent = represent,
+            requires = IS_EMPTY_OR(
+                        IS_ONE_OF(db, "hrm_department.id",
+                                  represent,
+                                  filterby="organisation_id",
+                                  filter_opts=filter_opts,
+                                  )),
+            sortby = "name",
+            comment = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                        f="department",
+                                        label=label_create),
+            )
 
         configure("hrm_department",
                   deduplicate = self.hrm_department_duplicate,
                   )
 
-        # =========================================================================
+        # =====================================================================
         # Job Titles (Mayon: StaffResourceType)
         #
         STAFF = settings.get_hrm_staff_label()
@@ -281,6 +283,8 @@ class S3HRModel(S3Model):
                 msg_record_deleted = T("Job Title deleted"),
                 msg_list_empty = T("Currently no entries in the catalog"))
 
+        represent = S3Represent(lookup=tablename, translate=True)
+
         if  org_dependent_job_titles:
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "hrm_job_title.id",
@@ -298,18 +302,17 @@ class S3HRModel(S3Model):
                                   not_filter_opts=not_filter_opts,
                                   ))
 
-        represent = S3Represent(lookup=tablename, translate=True)
         job_title_id = S3ReusableField("job_title_id", "reference %s" % tablename,
-            sortby = "name",
             label = label,
-            requires = requires,
-            represent = represent,
-            comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
-                                      f="job_title",
-                                      label=label_create,
-                                      title=label,
-                                      tooltip=tooltip),
             ondelete = "SET NULL",
+            represent = represent,
+            requires = requires,
+            sortby = "name",
+            comment = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                        f="job_title",
+                                        label=label_create,
+                                        title=label,
+                                        tooltip=tooltip),
             )
 
         configure("hrm_job_title",
@@ -317,7 +320,7 @@ class S3HRModel(S3Model):
                   onvalidation = self.hrm_job_title_onvalidation,
                   )
 
-        # =========================================================================
+        # =====================================================================
         # Human Resource
         #
         # People who are either Staff or Volunteers
@@ -674,7 +677,7 @@ class S3HRModel(S3Model):
         if settings.get_hrm_multiple_job_titles():
             add_components(tablename,
                            # Job Titles
-                           hrm_job_title_human_resource="human_resource_id",
+                           hrm_job_title_human_resource = "human_resource_id",
                            )
 
         crud_fields = ["organisation_id",
@@ -796,32 +799,32 @@ class S3HRModel(S3Model):
                   update_realm = True,
                   )
 
-        # =========================================================================
+        # =====================================================================
         # Job Titles <>  Human Resources link table
         #
         tablename = "hrm_job_title_human_resource"
         define_table(tablename,
-                     human_resource_id(
-                        empty = False,
-                        ondelete = "CASCADE",
-                        ),
-                     job_title_id(
-                        empty = False,
-                        ondelete = "CASCADE",
-                        ),
+                     human_resource_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     job_title_id(empty = False,
+                                  ondelete = "CASCADE",
+                                  ),
                      Field("main", "boolean",
                            default = True,
-                           represent = s3_yes_no_represent,
                            label = T("Main?"),
+                           represent = s3_yes_no_represent,
                            ),
-                     s3_date(label=T("Start Date")),
+                     s3_date(label = T("Start Date")),
                      s3_date("end_date",
-                             label=T("End Date")),
+                             label = T("End Date"),
+                             ),
                      s3_comments(),
                      *s3_meta_fields())
 
         configure("hrm_job_title_human_resource",
-                  onaccept=self.hrm_job_title_human_resource_onaccept)
+                  onaccept = self.hrm_job_title_human_resource_onaccept,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

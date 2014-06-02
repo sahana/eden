@@ -372,7 +372,7 @@ class S3Migration(object):
 
             elif db_engine == "postgres":
                 # http://www.postgresql.org/docs/9.3/static/sql-altertable.html
-                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey, ALTER TABLE hrm_programme_hours ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s ON DELETE %(ondelete)s;" % \
+                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey, ALTER TABLE %(tablename)s ADD CONSTRAINT %(tablename)s_%(fieldname)s_fkey FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s ON DELETE %(ondelete)s;" % \
                     dict(tablename=tablename, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
 
             try:
