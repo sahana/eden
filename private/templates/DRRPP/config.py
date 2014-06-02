@@ -795,7 +795,8 @@ def customise_pr_person_controller(**attr):
     """
         Customise pr_person controller
 
-        @todo: pr_saved_search no longer supported (S3Search deprecated)
+        @todo: SavedSearch deprecated,
+               re-implement with saved filters / S3Notify
     """
 
     s3db = current.s3db
@@ -806,40 +807,40 @@ def customise_pr_person_controller(**attr):
     current.response.s3.crud_strings.pr_person.title_display = T("My Page")
 
     # Customise saved search
-    table = s3db.pr_saved_search
-    table.url.label = T("Display Search")
-
-    def url_represent(url):
-        return TAG[""](
-                A(T("List"),
-                    _href = url,
-                    _class = "action-btn"
-                    ),
-                A(T("Matrix"),
-                    # @ToDo: Fix for S3Search deprecation
-                    _href = url.replace("search", "report"),
-                    _class = "action-btn"
-                    ),
-                A(T("Chart"),
-                    # @ToDo: Fix for S3Search deprecation
-                    _href = url.replace("search", "report?chart=breakdown%3Arows"),
-                    _class = "action-btn"
-                    ),
-                A(T("Map"),
-                    # @ToDo: Fix for S3Search deprecation
-                    _href = url.replace("project/search", "location/map"),
-                    _class = "action-btn"
-                    )
-                )
-    table.url.represent = url_represent
-
-    s3db.configure("pr_saved_search",
-                   list_fields = ["name",
-                                  "url",
-                                  ]
-                   )
-
-    attr["rheader"] = H3(T("Saved Searches"))
+    #table = s3db.pr_saved_search
+    #table.url.label = T("Display Search")
+    #
+    #def url_represent(url):
+    #    return TAG[""](
+    #            A(T("List"),
+    #                _href = url,
+    #                _class = "action-btn"
+    #                ),
+    #            A(T("Matrix"),
+    #                # @ToDo: Fix for S3Search deprecation
+    #                _href = url.replace("search", "report"),
+    #                _class = "action-btn"
+    #                ),
+    #            A(T("Chart"),
+    #                # @ToDo: Fix for S3Search deprecation
+    #                _href = url.replace("search", "report?chart=breakdown%3Arows"),
+    #                _class = "action-btn"
+    #                ),
+    #            A(T("Map"),
+    #                # @ToDo: Fix for S3Search deprecation
+    #                _href = url.replace("project/search", "location/map"),
+    #                _class = "action-btn"
+    #                )
+    #            )
+    #table.url.represent = url_represent
+    #
+    #s3db.configure("pr_saved_search",
+    #               list_fields = ["name",
+    #                              "url",
+    #                              ]
+    #               )
+    #
+    #attr["rheader"] = H3(T("Saved Searches"))
 
     return attr
 

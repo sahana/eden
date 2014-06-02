@@ -28,26 +28,6 @@ if request.is_local:
         else:
             # Anonymous request
             auth.s3_impersonate(None)
-    else:
-
-        # @todo: deprecate this:
-        search_subscription = get_vars.get("search_subscription", None)
-        if search_subscription:
-            # We're doing a request for a saved search
-            table = s3db.pr_saved_search
-            search = db(table.auth_token == search_subscription).select(table.pe_id,
-                                                                        limitby=(0, 1)
-                                                                        ).first()
-            if search:
-                # Impersonate user
-                user_id = auth.s3_get_user_id(pe_id=search.pe_id)
-
-                if user_id:
-                    # Impersonate the user who is subscribed to this saved search
-                    auth.s3_impersonate(user_id)
-                else:
-                    # Request is ANONYMOUS
-                    auth.s3_impersonate(None)
 
 # =============================================================================
 # Check Permissions & fail as early as we can

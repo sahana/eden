@@ -36,14 +36,12 @@ __all__ = ["S3ChannelModel",
            "S3RSSModel",
            "S3SMSModel",
            "S3SMSOutboundModel",
-           "S3MessageSubscriptionModel",
            "S3TropoModel",
            "S3TwilioModel",
            "S3TwitterModel",
            "S3TwitterSearchModel",
            "S3XFormsModel",
            "S3BaseStationModel",
-           "msg_search_subscription_notifications",
            ]
 
 from gluon import *
@@ -1372,67 +1370,6 @@ class S3SMSOutboundModel(S3Model):
         return dict()
 
 # =============================================================================
-class S3MessageSubscriptionModel(S3Model):
-    """
-        Handle Subscription
-        - currently this is just for Saved Searches
-
-        @ToDo: Deprecate (replaced by s3notify)
-    """
-
-    names = ["msg_subscription"]
-
-    def model(self):
-
-        T = current.T
-        auth = current.auth
-
-        # @ToDo: Use msg.CONTACT_OPTS
-        msg_subscription_mode_opts = {1:T("Email"),
-                                      #2:T("SMS"),
-                                      #3:T("Email and SMS")
-                                      }
-        # @ToDo: Move this to being a component of the Saved Search
-        #        (so that each search can have it's own subscription options)
-        # @ToDo: Make Conditional
-        # @ToDo: CRUD Strings
-        tablename = "msg_subscription"
-        self.define_table(tablename,
-                          Field("user_id", "integer",
-                                default = auth.user_id,
-                                requires = IS_NOT_IN_DB(current.db,
-                                                        "msg_subscription.user_id"),
-                                readable = False,
-                                writable = False
-                                ),
-                          Field("subscribe_mode", "integer",
-                                default = 1,
-                                represent = lambda opt: \
-                                    msg_subscription_mode_opts.get(opt, None),
-                                readable = False,
-                                requires = IS_IN_SET(msg_subscription_mode_opts,
-                                                     zero=None)
-                                ),
-                          Field("subscription_frequency",
-                                requires = IS_IN_SET(["daily",
-                                                        "weekly",
-                                                        "monthly"]),
-                                default = "daily",
-                                ),
-                          self.pr_person_id(label = T("Person"),
-                                            default = auth.s3_logged_in_person()),
-                          *s3_meta_fields())
-
-        self.configure("msg_subscription",
-                       list_fields = ["subscribe_mode",
-                                      "subscription_frequency",
-                                      ],
-                       )
-
-        # ---------------------------------------------------------------------
-        return dict()
-
-# =============================================================================
 class S3TropoModel(S3Model):
     """
         Tropo can be used to send & receive SMS, Twitter & XMPP
@@ -2150,163 +2087,5 @@ class S3BaseStationModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-# =============================================================================
-def msg_search_subscription_notifications(frequency):
-    """
-        Send Notifications for all Subscriptions
-        - run by Scheduler (models/tasks.py)
-
-        @ToDo: Deprecate - replaced by Notifications
-    """
-
-    s3db = current.s3db
-    table = s3db.pr_saved_search
-
-    if frequency not in dict(table.notification_frequency.requires.options()):
-        return
-
-    db = current.db
-    searches = db(table.notification_frequency == frequency).select()
-    if not searches:
-        return
-
-    import urlparse
-    from urllib import urlencode
-    from uuid import uuid4
-
-    try:
-        import json # try stdlib (Python 2.6)
-    except ImportError:
-        try:
-            import simplejson as json # try external module
-        except:
-            import gluon.contrib.simplejson as json # fallback to pure-Python module
-    loads = json.loads
-
-    from gluon.tools import fetch
-
-    msg = current.msg
-    settings = current.deployment_settings
-    public_url = settings.get_base_public_url()
-    system_name_short = settings.get_system_name_short()
-
-    def send(search, message):
-        if not message:
-            return
-        # Send the email
-        msg.send_by_pe_id(search.pe_id,
-                          subject="%s Search Notification %s" % \
-                            (system_name_short, search.name),
-                          message=message)
-
-    for search in searches:
-        # Fetch the latest records from the search
-
-        # search.url has no host
-        search_url = "%s%s" % (public_url, search.url)
-
-        # Create a temporary token for this search
-        # that will be used when impersonating users
-        auth_token = uuid4()
-        search.update_record(auth_token=auth_token)
-        # Commit so that when we request via http, then we'll see the change
-        db.commit()
-
-        # Parsed URL, break up the URL into its components
-        purl = list(urlparse.urlparse(search_url))
-
-        if search.notification_batch:
-            # Send all records in a single notification
-
-            # query string parameters to be added to the search URL
-            page_qs_parms = {
-                "search_subscription": auth_token,
-                "%s.modified_on__ge" % (search.resource_name): search.last_checked,
-                "format": "email",
-            }
-
-            # Turn the parameter list into a URL query string
-            page_qs = urlencode(page_qs_parms)
-
-            # Put the URL back together
-            page_url = urlparse.urlunparse(
-                [
-                    purl[0], # scheme
-                    purl[1], # netloc
-                    purl[2], # path
-                    purl[3], # params
-                    "&".join([purl[4], page_qs]), # query
-                    purl[5], # fragment
-                ]
-            )
-            message = fetch(page_url)
-
-            # Send the email
-            send(search, message)
-
-        else:
-            # Not batch
-
-            # query string parameters to be added to the search URL
-            page_qs_parms = {
-                "search_subscription": auth_token,
-                "%s.modified_on__ge" % (search.resource_name): search.last_checked,
-                "format": "json",
-            }
-
-            # Turn the parameter list into a URL query string
-            page_qs = urlencode(page_qs_parms)
-
-            # Put the URL back together
-            page_url = urlparse.urlunparse(
-                [
-                    purl[0], # scheme
-                    purl[1], # netloc
-                    purl[2], # path
-                    purl[3], # params
-                    "&".join([purl[4], page_qs]), # query
-                    purl[5], # fragment
-                ]
-            )
-            # Fetch the record list as json
-            json_string = fetch(page_url)
-
-            if json_string:
-                records = loads(json_string)
-
-                for record in records:
-                    email_qs = urlencode(
-                        {
-                            "search_subscription": auth_token,
-                            "format": "email",
-                            "%s.id__eq" % search.resource_name: record["id"],
-                        }
-                    )
-                    email_url = urlparse.urlunparse(
-                        [
-                            purl[0], # scheme
-                            purl[1], # netloc
-                            purl[2], # path
-                            purl[3], # params
-                            email_qs, # query
-                            purl[5], # fragment
-                        ]
-                    )
-
-                    message = fetch(email_url)
-
-                    # Send the email
-                    send(search, message)
-
-    # Update the saved searches to indicate they've just been checked
-    # & revoke the temporary token
-    query = (table.notification_frequency == frequency) & \
-            (table.deleted != True)
-    db(query).update(last_checked=datetime.datetime.utcnow(),
-                     auth_token=None,
-                     )
-    # Explictly commit
-    db.commit()
 
 # END =========================================================================

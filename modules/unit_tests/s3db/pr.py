@@ -13,8 +13,6 @@ from gluon.storage import Storage
 
 from lxml import etree
 
-from s3db.pr import S3SavedSearch
-
 # =============================================================================
 class PRTests(unittest.TestCase):
     """ PR Tests """
@@ -442,62 +440,6 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.person_id = None
 
 # =============================================================================
-class SavedSearchTests(unittest.TestCase):
-    """
-        Test the saved search validation and save functions
-    """
-    # -------------------------------------------------------------------------
-    def setUp(self):
-        s3db = current.s3db
-
-        ptable = s3db.pr_person
-        stable = s3db.pr_saved_search
-
-        person = Storage(
-            first_name = "Test",
-            last_name = "SavedSearch",
-        )
-        person_id = ptable.insert(**person)
-        person.update(id=person_id)
-        s3db.update_super(ptable, person)
-
-        self.person_id = person_id
-        self.pe_id = s3db.pr_get_pe_id(ptable, person_id)
-
-    # -------------------------------------------------------------------------
-    def testOnValidation(self):
-        f = S3SavedSearch.pr_saved_search_onvalidation
-
-    # -------------------------------------------------------------------------
-    def testFriendlyQuery(self):
-        app = current.request.application
-        f = S3SavedSearch.friendly_string_from_field_query
-
-        result = f(
-            "org_organisation",
-            "/%s/org/organisation/search?organisation.country__belongs=NZ" % app,
-        )
-        self.assertEqual(
-            "Home Country=New Zealand",
-            result,
-        )
-
-        result = f(
-            "org_organisation",
-            "/%s/org/organisation/search?parent.acronym%%7Cparent.name%%7Cacronym%%7Cname__like=%%2Atest%%2A" % app,
-        )
-        self.assertEqual(
-            "Acronym|Name|Acronym|Name=*test*",
-            result,
-        )
-
-    # -------------------------------------------------------------------------
-    def tearDown(self):
-        current.db.rollback()
-        self.pe_id = None
-        self.person_id = None
-
-# =============================================================================
 class ContactValidationTests(unittest.TestCase):
     """ Test validation of mobile phone numbers in pr_contact_onvalidation """
 
@@ -675,7 +617,6 @@ if __name__ == "__main__":
     run_suite(
         PRTests,
         PersonDeduplicateTests,
-        SavedSearchTests,
         ContactValidationTests,
     )
 

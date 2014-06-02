@@ -1934,12 +1934,6 @@ class S3OrganisationServiceModel(S3Model):
                                     ondelete = "CASCADE",
                                     )
 
-        # Field settings for org_organisation.service field in friendly_string_from_field_query function
-        # - breaks Action Buttons, so moved to inside the fn which calls them
-        #table = db[tablename]
-        #table.id.represent = represent
-        #table.id.label = T("Service")
-
         configure(tablename,
                   hierarchy = hierarchy,
                   )

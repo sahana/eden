@@ -152,31 +152,8 @@ def person():
                 ctable.organisation_id.writable = False
                 ctable.skill_id.comment = None
 
-            elif r.component_name == "saved_search":
-                if r.method == "load":
-                    if r.component_id:
-                        table = db.pr_saved_search
-                        record = db(table.id == r.component_id).select(table.url,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-                        if record:
-                            redirect(record.url)
-                        else:
-                            raise HTTP(404)
-
         return True
     s3.prep = prep
-
-    # def postp(r, output):
-        # if r.component_name == "saved_search" and r.method in (None, "search"):
-            # s3_action_buttons(r)
-            # s3.actions.append(
-                # dict(url=URL(args=r.args + ["[id]", "load"]),
-                     # label=str(T("Load")),
-                     # _class="action-btn")
-            # )
-        # return output
-    # s3.postp = postp
 
     s3db.configure("pr_group_membership",
                    list_fields=["id",
@@ -197,7 +174,6 @@ def person():
             (T("Journal"), "note"),
             (T("Skills"), "competency"),
             (T("Training"), "training"),
-            (T("Saved Searches"), "saved_search"),
             ]
 
     # Configuration tabs
@@ -473,7 +449,7 @@ def tooltip():
 # =============================================================================
 def filter():
     """
-        REST controller for new S3Filter saved searches
+        REST controller for saved filters
     """
 
     # Page length
@@ -497,14 +473,6 @@ def filter():
 
     output = s3_rest_controller()
     return output
-
-# -----------------------------------------------------------------------------
-def saved_search():
-    """
-        REST controller for old S3Search saved searches
-    """
-
-    return s3_rest_controller()
 
 # =============================================================================
 def human_resource():

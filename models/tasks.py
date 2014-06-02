@@ -283,21 +283,6 @@ if settings.has_module("msg"):
 
     tasks["msg_parse"] = msg_parse
 
-    # --------------------------------------------------------------------------
-    def msg_search_subscription_notifications(frequency, user_id=None):
-        """
-            Search Subscriptions & send Notifications.
-            @ToDo: Deprecate
-        """
-        if user_id:
-            auth.s3_impersonate(user_id)
-        # Run the Task & return the result
-        result = s3db.msg_search_subscription_notifications(frequency=frequency)
-        db.commit()
-        return result
-
-    tasks["msg_search_subscription_notifications"] = msg_search_subscription_notifications
-
     # -------------------------------------------------------------------------
     def notify_check_subscriptions(user_id=None):
         """
