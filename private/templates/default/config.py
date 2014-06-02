@@ -370,6 +370,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.use_button_glyphicons = True
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 #settings.ui.multiselect_widget = True
+# Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)
+#settings.ui.hierarchy_theme = "default"
 
 # -----------------------------------------------------------------------------
 # CMS

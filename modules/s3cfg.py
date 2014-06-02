@@ -1411,6 +1411,17 @@ class S3Config(Storage):
         """
         return self.ui.get("use_button_glyphicons", False)
 
+    def get_ui_hierarchy_theme(self):
+        """
+            Theme for the S3HierarchyWidget: folder, either relative to
+            static/styles/jstree (e.g. "default"), or relative to the
+            application (e.g. "static/styles/jstree/default")
+
+            @note: for right-to-left scripts, the theme folder is expected
+                   to be <themename>-rtl (e.g. "default-rtl")
+        """
+        return self.ui.get("hierarchy_theme", None)
+
     # =========================================================================
     # Messaging
     #

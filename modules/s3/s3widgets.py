@@ -4923,6 +4923,14 @@ class S3HierarchyWidget(FormWidget):
                        "leafonly": leafonly,
                        }
 
+        # Custom theme
+        theme = current.deployment_settings.get_ui_hierarchy_theme()
+        if theme and hasattr(theme, "rsplit"):
+            folder, theme = ([None] + theme.rsplit("/", 1))[-2:]
+            if folder:
+                widget_opts["themesFolder"] = folder
+            widget_opts["theme"] = theme
+
         script = '''$('#%(widget_id)s').hierarchicalopts(%(widget_opts)s)''' % \
                  {"widget_id": widget_id,
                   "widget_opts": json.dumps(widget_opts, separators=SEPARATORS),

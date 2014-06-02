@@ -25,7 +25,9 @@
             selectedText: 'selected',
             noOptionsText: 'No options available',
             multiple: true,
-            leafonly: true
+            leafonly: true,
+            themesFolder: 'static/styles/jstree',
+            theme: 'default'
         },
 
         _create: function() {
@@ -103,16 +105,15 @@
                 this._updateButtonText(selected);
             }
 
-            $.jstree._themes = S3.Ap.concat('/static/styles/jstree/');
+            var rtl,
+                theme;
+            $.jstree._themes = S3.Ap.concat('/', opts.themesFolder, '/');
             if ($('body').css('direction') == 'ltr') {
                 rtl = false;
+                theme = opts.theme;
             } else {
                 rtl = true;
-            }
-            if (rtl) {
-                theme = 'default-rtl';
-            } else {
-                theme = 'default';
+                theme = opts.theme + '-rtl';
             }
 
             var multiple = opts.multiple,
@@ -137,7 +138,7 @@
                     'two_state': !leafonly
                 },
                 'plugins': ['themes', 'html_data', 'ui', 'sort', 'checkbox']
-            })
+            });
 
             if (!multiple) {
                 var tree = this.tree;
@@ -305,7 +306,7 @@
                 widget._updateSelectedNodes();
             }).bind('uncheck_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
-            })
+            });
             
             button.bind('click' + namespace, function() {
                 if (!widget._isOpen) {
@@ -340,7 +341,7 @@
                 $(this).removeClass('ui-state-focus');
             });
             $(document).bind('mousedown' + namespace, function(event) {
-                var target = event.target
+                var target = event.target;
                 if (!tree.is(target) && !button.is(target) &&
                     tree.has(event.target).length === 0 &&
                     button.has(event.target).length === 0) {
