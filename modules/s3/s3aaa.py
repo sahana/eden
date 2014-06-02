@@ -1452,7 +1452,7 @@ Thank you"""
 
         # If we have an opt_in and some post_vars then update the opt_in value
         opt_in_to_email = deployment_settings.get_auth_opt_in_to_email()
-        if opt_into_email:
+        if opt_in_to_email:
             team_list = deployment_settings.get_auth_opt_in_team_list()
             if request.post_vars:
                 removed = []
@@ -1536,7 +1536,7 @@ Thank you"""
                 next = self.url(next.replace("[id]", str(form.vars.id)))
             redirect(next)
 
-        if opt_into_email:
+        if opt_in_to_email:
             T = current.T
             ptable = s3db.pr_person
             ltable = s3db.pr_person_user

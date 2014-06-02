@@ -370,11 +370,11 @@ def customise_project_project_controller(**attr):
         if r.interactive:
             is_deployment = False
 
+            stable = s3db.project_sector_project
+            otable = s3db.org_sector
+
             # Viewing details of project_project record
             if r.id:
-                stable = s3db.project_sector_project
-                otable = s3db.org_sector
-
                 query = (stable.project_id == r.id) & \
                         (otable.id == stable.sector_id)
                 rows = db(query).select(otable.name)
@@ -391,48 +391,62 @@ def customise_project_project_controller(**attr):
             if is_deployment:
                 s3db[tablename].name.label = T("Deployment Name")
                 s3.crud_strings[tablename] = Storage(
-                                    label_create = T("Create Deployment"),
-                                    title_display = T("Deployment Details"),
-                                    title_list = T("Deployments"),
-                                    title_update = T("Edit Deployment"),
-                                    title_report = T("Deployment Report"),
-                                    title_upload = T("Import Deployments"),
-                                    label_list_button = T("List Deployments"),
-                                    label_delete_button = T("Delete Deployment"),
-                                    msg_record_created = T("Deployment added"),
-                                    msg_record_modified = T("Deployment updated"),
-                                    msg_record_deleted = T("Deployment deleted"),
-                                    msg_list_empty = T("No Deployments currently registered"))
+                    label_create = T("Create Deployment"),
+                    title_display = T("Deployment Details"),
+                    title_list = T("Deployments"),
+                    title_update = T("Edit Deployment"),
+                    title_report = T("Deployment Report"),
+                    title_upload = T("Import Deployments"),
+                    label_list_button = T("List Deployments"),
+                    label_delete_button = T("Delete Deployment"),
+                    msg_record_created = T("Deployment added"),
+                    msg_record_modified = T("Deployment updated"),
+                    msg_record_deleted = T("Deployment deleted"),
+                    msg_list_empty = T("No Deployments currently registered")
+                )
 
                 # Bring back to the Deployments page if record deleted
                 var = {"sector.name": "None,Deployment"}
                 delete_next = URL(c="project", f="project", vars=var)
+
+                # Get sector_id for Deployment
+                query = (otable.name == "Deployment")
+                row = db(query).select(otable.id, limitby=(0, 1)).first()
             else:
                 # Bring back to the Projects page if record deleted
                 var = {"sector.name": "None,Project"}
                 delete_next = URL(c="project", f="project", vars=var)
+
+                # Get sector_id for Project
+                query = (otable.name == "Project")
+                row = db(query).select(otable.id, limitby=(0, 1)).first()
+
+            # Set the default sector
+            try:
+                stable.sector_id.default = row.id
+            except:
+                current.log.error("Pre-Populate",
+                                 "Sectors not prepopulated")
 
             # Modify the CRUD form
             from s3 import s3forms
             crud_form = s3forms.S3SQLCustomForm(
                     "organisation_id",
                     "name",
+                    "sector_project.sector_id",
                     "description",
                     "status_id",
                     "start_date",
                     "end_date",
                     "calendar",
                     "human_resource_id",
-                    s3forms.S3SQLInlineComponentCheckbox(
-                        "sector",
-                        label = T("Sectors"),
-                        field = "sector_id",
-                        cols = 4,
-                    ),
                     "budget",
                     "currency",
                     "comments",
                 )
+
+            # Remove Add Sector button
+            stable.sector_id.comment = None
 
             s3db.configure(tablename,
                             crud_form = crud_form,

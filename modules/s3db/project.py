@@ -405,7 +405,13 @@ class S3ProjectModel(S3Model):
                                      "actuate": "hide",
                                      },
                        # Format needed by S3Filter
-                       project_sector_project = "project_id",
+                       project_sector_project = (
+                                                 "project_id",
+                                                 {
+                                                  "joinby": "project_id",
+                                                  "multiple": False,
+                                                 },
+                                                ),
                        # Themes
                        project_theme = {"link": "project_theme_project",
                                         "joinby": "project_id",
