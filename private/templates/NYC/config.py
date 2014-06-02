@@ -406,15 +406,20 @@ def customise_org_organisation_controller(**attr):
             if not r.component:
                 from gluon.html import DIV, INPUT
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+                # activate hierarchical org_service:
+                #from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
                 crud_form = S3SQLCustomForm(
                     "name",
                     "acronym",
                     "organisation_type_id",
                     S3SQLInlineComponentMultiSelectWidget(
+                    # activate hierarchical org_service:
+                    #S3SQLInlineLink(
                         "service",
                         label = T("Services"),
                         field = "service_id",
-                        #cols = 4,
+                        # activate hierarchical org_service:
+                        #widget = "hierarchy",
                     ),
                     S3SQLInlineComponentMultiSelectWidget(
                         "group",
@@ -519,6 +524,8 @@ def customise_org_organisation_controller(**attr):
                 )
                 
                 from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
+                # activate hierarchical org_service:
+                #from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, S3HierarchyFilter
                 filter_widgets = [
                     S3TextFilter(["name", "acronym"],
                                  label = T("Name"),
@@ -538,6 +545,11 @@ def customise_org_organisation_controller(**attr):
                                     #label = T("Service"),
                                     #hidden = True,
                                     ),
+                    # activate hierarchical org_service:
+                    #S3HierarchyFilter("service_organisation.service_id",
+                    #                  #label = T("Service"),
+                    #                  #hidden = True,
+                    #                  ),
                     S3OptionsFilter("organisation_type_id",
                                     label = T("Type"),
                                     #hidden = True,
