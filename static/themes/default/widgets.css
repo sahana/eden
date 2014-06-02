@@ -594,11 +594,11 @@ ul.ui-autocomplete {
 
 /* Form Popup */
 body.popup {
+    background-color: #fbfbfb;
     min-width: auto;
     height: auto;
 }
 #popup {
-    background: #fff;
     max-width: 750px;
     width: 100%;
 }
@@ -609,7 +609,10 @@ body.popup {
     /* Form initially hidden until resized to fit modal */
     display: none;
 }
-
+#popup .form-container {
+    /* Ensure scrollbars are all on the Modal, not inside */
+    overflow: inherit;
+}
 #popup .control-group {
     padding-right: 20px;
 }
