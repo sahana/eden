@@ -1829,9 +1829,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     url: url,
                     format: format_geojson
                 }),
-                strategies: strategies,
                 // This gets picked up after mapPanel instantiates & copied to it's layerRecords
                 legendURL: marker_url,
+                // Variable zIndexing within a layer?
+                //rendererOptions: { zIndexing: true },
+                strategies: strategies,
                 styleMap: featureStyleMap,
                 // Used to Save State & locate Layer to Activate/Refresh
                 s3_layer_id: layer.id,
@@ -5077,13 +5079,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             strokeColor: '${stroke}',
             strokeWidth: '${strokeWidth}',
             strokeOpacity: '${strokeOpacity}',
-            graphicWidth: '${graphicWidth}',
             graphicHeight: '${graphicHeight}',
+            graphicWidth: '${graphicWidth}',
+            graphicName: '${graphicName}',
+            graphicOpacity: opacity,
             graphicXOffset: '${graphicXOffset}',
             graphicYOffset: '${graphicYOffset}',
-            graphicOpacity: opacity,
-            graphicName: '${graphicName}',
-            externalGraphic: '${externalGraphic}'
+            graphicZIndex: '${graphicZIndex}',
+            externalGraphic: '${externalGraphic}',
+            zIndex: '${zIndex}'
         };
         var styleOptions = {
             context: {
@@ -5375,9 +5379,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     return width || 2;
                 },
                 label: function(feature) {
-                    // Label For Unclustered Point
+                    // Label for Unclustered Point
                     var label;
-                    // Label For Clustered Point
+                    // Label for Clustered Point
                     if (feature.cluster) {
                         if (options.cluster_label && feature.attributes.count > 1) {
                             label = feature.attributes.count;
@@ -5395,6 +5399,32 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         }
                     }
                     return label || '';
+                },
+                zIndex: function(feature) {
+                    // @ToDo: Allow setting within Style
+                    if (feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                        // Point
+                        return 10;
+                    } else if (feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Line') {
+                        // Line
+                        return 5;
+                    } else {
+                        // Polygon
+                        return 0;
+                    }
+                },
+                graphicZIndex: function(feature) {
+                    // @ToDo: Allow setting within Style
+                    if (feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                        // Point
+                        return 10;
+                    } else if (feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Line') {
+                        // Line
+                        return 5;
+                    } else {
+                        // Polygon
+                        return 0;
+                    }
                 }
             }
         };
@@ -5442,9 +5472,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var styleRules = function(layer) {
         var style = layer.style;
         var rules = [];
-        var prop, rule, value, elseFilter, fill, fillOpacity, size,
-            externalGraphic, graphicHeight, graphicWidth,
-            graphicXOffset, graphicYOffset, strokeOpacity, strokeWidth;
+        var prop, rule, value, elseFilter, fill, fillOpacity,
+            point, externalGraphic, graphicHeight, graphicWidth,
+            line, strokeOpacity, strokeWidth, symbolizer;
         $.each(style, function(index, elem) {
             var options = {};
             if (undefined != elem.fallback) {
@@ -5479,26 +5509,21 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
             }
             if (undefined != elem.externalGraphic) {
-                externalGraphic = S3.Ap.concat('/static/' + elem.externalGraphic);
-                var image = new Image();
-                //image.onload = scaleImage;
-                image.src = externalGraphic;
-                graphicHeight = image.height;
-                graphicWidth = image.width;
-                graphicXOffset = -(graphicWidth / 2);
-                graphicYOffset = -graphicHeight;
+                point = true;
+                line = false;
+            } else if (undefined != elem.size) {
+                point = true;
+                line = false;
             } else {
-                externalGraphic = '';
-                graphicHeight = 1;
-                graphicWidth = 1;
-                graphicXOffset = -1;
-                graphicYOffset = -1;
+                point = false;
             }
             if (undefined != elem.fill) {
                 // Polygon/Point
+                line = false;
                 fill = '#' + elem.fill;
             } else if (undefined != elem.stroke) {
                 // LineString
+                line = true;
                 fill = '#' + elem.stroke;
             }
             if (undefined != elem.fillOpacity) {
@@ -5517,30 +5542,52 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 // Square better for Legend with Polygons
                 graphic = 'square';
             }
-            if (undefined != elem.size) {
-                size = elem.size;
-            } else {
-                size = 10;
-            }
             if (undefined != elem.strokeWidth) {
                 strokeWidth = elem.strokeWidth;
             } else {
                 strokeWidth = 2;
             }
-            options.symbolizer = {
-                externalGraphic: externalGraphic,
+            symbolizer = {
                 fillColor: fill, // Used for Legend on LineStrings
                 fillOpacity: fillOpacity,
                 strokeColor: fill,
                 strokeOpacity: strokeOpacity,
                 strokeWidth: strokeWidth,
-                graphicName: graphic,
-                graphicHeight: graphicHeight,
-                graphicWidth: graphicWidth,
-                graphicXOffset: graphicXOffset,
-                graphicYOffset: graphicYOffset,
-                pointRadius: size
+                graphicName: graphic
             };
+            if (point) {
+                if (undefined != elem.externalGraphic) {
+                    externalGraphic = S3.Ap.concat('/static/' + elem.externalGraphic);
+                    var image = new Image();
+                    //image.onload = scaleImage;
+                    image.src = externalGraphic;
+                    graphicHeight = image.height;
+                    graphicWidth = image.width;
+                    symbolizer.externalGraphic = externalGraphic;
+                    symbolizer.graphicHeight = graphicHeight;
+                    symbolizer.graphicWidth = graphicWidth;
+                    symbolizer.graphicXOffset = -(graphicWidth / 2);
+                    symbolizer.graphicYOffset = -graphicHeight;
+                }
+                symbolizer.pointRadius = elem.size || 10; // This size is used by the Renderer for the Legend
+                // Ensure that Points are always above Polygons and Lines
+                symbolizer.graphicZIndex = 10;
+                symbolizer.zIndex = 10;
+                // Hint to the Legend
+                symbolizer.Point = symbolizer;
+            } else if (line) {
+                // Ensure that Lines are always above Polygons (but below Points)
+                symbolizer.graphicZIndex = 5;
+                symbolizer.zIndex = 5;
+                // Hint to the Legend
+                symbolizer.Line = symbolizer;
+            } else {
+                // Polygon: default
+                //symbolizer.graphicZIndex = 0;
+                //symbolizer.zIndex = 0;
+                //symbolizer.Polygon = symbolizer;
+            }
+            options.symbolizer = symbolizer;
 
             rule = new OpenLayers.Rule(options);
             rules.push(rule);

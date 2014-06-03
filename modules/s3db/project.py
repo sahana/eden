@@ -5483,7 +5483,7 @@ class project_TaskRepresent(S3Represent):
                 else:
                     strfmt = "%(task)s"
 
-            output = strfmt % {"task": output,
+            output = strfmt % {"task": s3_unicode(output),
                                "project": self.project_represent(project_id),
                                }
                                

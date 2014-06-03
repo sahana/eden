@@ -30,7 +30,7 @@
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
          Cluster Attribute....string..........Layer Cluster Attribute: The attribute to use for clustering
          Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
-         Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2)
+         Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2, 0 to disable)
          Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
 
          Needs Importing twice:

@@ -522,7 +522,7 @@ def customise_pr_person_controller(**attr):
                         fields = [],
                         # Fields needed to load for Virtual Fields
                         extra_fields = ["user_id"],
-                        virtual_fields = ["org_group_id"],
+                        virtual_fields = [("", "org_group_id")],
                     ),
                     S3SQLInlineComponent(
                         "image",
