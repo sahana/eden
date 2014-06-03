@@ -34,7 +34,6 @@
                 <xsl:attribute name="value">
                     <xsl:value-of select="col[@field='is_template']"/>
                 </xsl:attribute>
-                <xsl:text>True</xsl:text>
             </data>
             <data field="template_title"><xsl:value-of select="col[@field='template_title']"/></data>
             <data field="template_settings"><xsl:text>{}</xsl:text></data>
