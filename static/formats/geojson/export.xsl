@@ -361,11 +361,11 @@
                     </xsl:attribute>
                 </geometry>
                 <properties>
-                    <xsl:call-template name="Properties">
-                        <xsl:with-param name="uuid">
+                    <xsl:call-template name="Properties"/>
+                        <!--<xsl:with-param name="uuid">
                             <xsl:value-of select="./@uuid"/>
                         </xsl:with-param>
-                    </xsl:call-template>
+                    </xsl:call-template>-->
                 </properties>
             </xsl:when>
             <xsl:when test="./map[1]/@wkt!='null'">
@@ -392,11 +392,11 @@
                     </coordinates>
                 </geometry>
                 <properties>
-                    <xsl:call-template name="Properties">
-                        <xsl:with-param name="uuid">
+                    <xsl:call-template name="Properties"/>
+                        <!--<xsl:with-param name="uuid">
                             <xsl:value-of select="./@uuid"/>
                         </xsl:with-param>
-                    </xsl:call-template>
+                    </xsl:call-template>-->
                 </properties>
             </xsl:when>
             <!-- xsl:otherwise skip -->
@@ -405,13 +405,14 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Properties">
-        <xsl:param name="uuid"/>
+        <!--<xsl:param name="uuid"/>-->
         <xsl:variable name="attributes" select="./map[1]/@attributes"/>
 
-        <id>
-            <!-- We want the Resource's UUID here, not the associated Location's or Site's -->
+        <!-- We don't need the UUID, so save bandwidth
+        <id>-->
+            <!-- We want the Resource's UUID here, not the associated Location's or Site's
             <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
-        </id>
+        </id>-->
         <xsl:if test="map[1]/@marker!=''">
             <marker>
                 <xsl:value-of select="map[1]/@marker"/>

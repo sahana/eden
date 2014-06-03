@@ -273,6 +273,18 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     bottom: 28px;
 }
 
+/* Tooltips */
+.gis_tooltip {
+    /* Need to over-ride the element.style */
+    opacity: 0.7 !important;
+}
+.gis_tooltip_content {
+    /*background-color: #ffffcb;*/
+    overflow: hidden;
+    padding: 3px;
+    margin: 10px;
+}
+
 /* Popups */
 .olPopup #plain {
     max-width: 450px;

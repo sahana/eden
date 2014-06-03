@@ -65,12 +65,12 @@
     width: 48px;
 }
 
-#activetooltip_GroupDiv {
-    background-color: #fff;
+.gis_tooltip div[id*="_GroupDiv"] {
+    /*background-color: #fff;
+    padding: 0 3px 0 0;*/
     border: 1px solid #aaa7a7;
     border-radius: 4px;
     font-size: 12px;
-    padding: 0 3px 0 0;
 }
 
 /* Toolbar */

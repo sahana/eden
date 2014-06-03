@@ -48,7 +48,7 @@
         // Collapse the LayerTree to give more space for the Popup
         gis.maps['default_map'].s3.westPanelContainer.collapse();
         // Create a popup with an iframe inside
-        gis.addPopup(feature, url, undefined, undefined, true);
+        gis.addPopup(feature, url, undefined, true);
     };
 
     /**

@@ -8,7 +8,6 @@
  *  Used by modules/s3/s3gis.py
  *
  *  based on /static/scripts/gis/openlayers/lib/OpenLayers.js
- *
  */
 
 /**
@@ -54,6 +53,10 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         }
         // OpenLayers
         var ol_files = [
+            /* List of files needs syncing with:
+                /static/scripts/gis/openlayers/lib/OpenLayers.js
+                /static/scripts/tools/sahana.js.ol.cfg
+            */
             'gis/openlayers/lib/OpenLayers/BaseTypes/Class.js',
             'gis/openlayers/lib/OpenLayers/Util.js',
             'gis/openlayers/lib/OpenLayers/Util/vendorPrefix.js',
@@ -70,6 +73,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/Kinetic.js',
             'gis/openlayers/lib/OpenLayers/Events.js',
             'gis/openlayers/lib/OpenLayers/Events/buttonclick.js',
+            'gis/openlayers/lib/OpenLayers/Events/featureclick.js',
             'gis/openlayers/lib/OpenLayers/Request.js',
             'gis/openlayers/lib/OpenLayers/Request/XMLHttpRequest.js',
             'gis/openlayers/lib/OpenLayers/Projection.js',
@@ -125,11 +129,11 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/Feature/Vector.js',
             'gis/openlayers/lib/OpenLayers/Handler.js',
             'gis/openlayers/lib/OpenLayers/Handler/Click.js',
-            'gis/openlayers/lib/OpenLayers/Handler/Hover.js',
+            //'gis/openlayers/lib/OpenLayers/Handler/Hover.js',
             'gis/openlayers/lib/OpenLayers/Handler/Point.js',
             'gis/openlayers/lib/OpenLayers/Handler/Path.js',
             'gis/openlayers/lib/OpenLayers/Handler/Polygon.js',
-            'gis/openlayers/lib/OpenLayers/Handler/Feature.js',
+            //'gis/openlayers/lib/OpenLayers/Handler/Feature.js',
             'gis/openlayers/lib/OpenLayers/Handler/Drag.js',
             'gis/openlayers/lib/OpenLayers/Handler/Pinch.js',
             'gis/openlayers/lib/OpenLayers/Handler/RegularPolygon.js',
@@ -164,7 +168,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/Control/ModifyFeature.js',
             'gis/openlayers/lib/OpenLayers/Control/ModifyFeature/BySegment.js',
             'gis/openlayers/lib/OpenLayers/Control/Panel.js',
-            'gis/openlayers/lib/OpenLayers/Control/SelectFeature.js',
+            //'gis/openlayers/lib/OpenLayers/Control/SelectFeature.js',
             'gis/openlayers/lib/OpenLayers/Control/NavigationHistory.js',
             'gis/openlayers/lib/OpenLayers/Control/Measure.js',
             'gis/openlayers/lib/OpenLayers/Control/WMSGetFeatureInfo.js',

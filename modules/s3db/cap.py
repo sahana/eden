@@ -280,17 +280,21 @@ class S3CAPModel(S3Model):
                      Field("status",
                            default = "Draft",
                            label = T("Status"),
-                           requires=IS_IN_SET(cap_alert_status_code_opts),
+                           requires = IS_IN_SET(cap_alert_status_code_opts),
                            ),
                      Field("msg_type",
                            label = T("Message Type"),
-                           requires=IS_IN_SET(cap_alert_msgType_code_opts),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(cap_alert_msgType_code_opts)
+                                      ),
                            ),
                      Field("source",
                            label = T("Source")),
                      Field("scope",
                            label = T("Scope"),
-                           requires=IS_IN_SET(cap_alert_scope_code_opts),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(cap_alert_scope_code_opts)
+                                        ),
                            ),
                      # Text decribing the restriction for scope=restricted
                      Field("restriction", "text",

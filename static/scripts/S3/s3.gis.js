@@ -12,6 +12,7 @@
  * - per-map configuration & objects are in S3.gis.maps[map_id].s3.xxx
  */
 S3.gis.maps = {}; // Array of all the maps in the page
+S3.gis.timeouts = {}; // Array of all the timeouts in the page
 S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
 
 // Configure OpenLayers
@@ -1341,14 +1342,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var s3 = map.s3;
         var options = s3.options;
 
-        // List of all map layers
-        s3.all_popup_layers = [];
-
         // List of folders for the LayerTree
         s3.dirs = [];
 
         // Counter to know whether there are layers still loading
         s3.layers_loading = [];
+
+        // List of layer names to exclude from Popups
+        s3.layers_nopopups = [];
 
         // @ToDo: Strategy to allow common clustering of multiple layers
         //s3.common_cluster_strategy = new OpenLayers.Strategy.AttributeClusterMultiple({
@@ -1698,7 +1699,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Used also by internal Feature Layers, Feature Queries, Feature Resources
     // & GeoRSS feeds
     var addGeoJSONLayer = function(map, layer) {
+        var s3 = map.s3;
         var name = layer.name;
+        if (layer.no_popups) {
+            s3.layers_nopopups.push(name);
+        }
         var url = layer.url;
         if (undefined != layer.refresh) {
             var refresh = layer.refresh;
@@ -1707,9 +1712,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ($.inArray(dir, map.s3.dirs) == -1) {
+            if ($.inArray(dir, s3.dirs) == -1) {
                 // Add this folder to the list of folders
-                map.s3.dirs.push(dir);
+                s3.dirs.push(dir);
             }
         } else {
             // Default folder
@@ -1812,7 +1817,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (cluster_threshold) {
             // Common Cluster Strategy for all layers
-            //map.s3.common_cluster_strategy
+            //s3.common_cluster_strategy
             strategies.push(new OpenLayers.Strategy.AttributeCluster({
                 attribute: cluster_attribute,
                 distance: cluster_distance,
@@ -1845,17 +1850,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         geojsonLayer.legendTitle = legendTitle;
         geojsonLayer.setVisibility(visibility);
         geojsonLayer.events.on({
-            'featureselected': onFeatureSelect,
-            'featureunselected': onFeatureUnselect,
+            // We use featureclick.js on Map instead
+            //'featureselected': onFeatureSelect,
+            //'featureunselected': onFeatureUnselect,
             'loadstart': layer_loadstart,
             'loadend': layer_loadend,
             'visibilitychanged': layer_visibilitychanged  
         });
         map.addLayer(geojsonLayer);
-        if (undefined == layer.no_popups) {
-            // Ensure Highlight & Popup Controls act on this layer
-            map.s3.all_popup_layers.push(geojsonLayer);
-        }
         // Ensure marker layers are rendered over other layers
         //map.setLayerIndex(geojsonLayer, 99);
     };
@@ -2120,15 +2122,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         );
         gpxLayer.setVisibility(visibility);
         gpxLayer.events.on({
-            'featureselected': onFeatureSelect,
-            'featureunselected': onFeatureUnselect,
+            // We use featureclick.js on Map instead
+            //'featureselected': onFeatureSelect,
+            //'featureunselected': onFeatureUnselect,
             'loadstart': layer_loadstart,
             'loadend': layer_loadend,
             'visibilitychanged': layer_visibilitychanged
         });
         map.addLayer(gpxLayer);
-        // Ensure Highlight & Popup Controls act on this layer
-        map.s3.all_popup_layers.push(gpxLayer);
     };
 
     // KML
@@ -2247,15 +2248,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         kmlLayer.setVisibility(visibility);
         kmlLayer.events.on({
-            'featureselected': onFeatureSelect,
-            'featureunselected': onFeatureUnselect,
+            // We use featureclick.js on Map instead
+            //'featureselected': onFeatureSelect,
+            //'featureunselected': onFeatureUnselect,
             'loadstart': layer_loadstart,
             'loadend': layer_loadend,
             'visibilitychanged': layer_visibilitychanged
         });
         map.addLayer(kmlLayer);
-        // Ensure Highlight & Popup Controls act on this layer
-        s3.all_popup_layers.push(kmlLayer);
     };
 
     // OpenStreetMap
@@ -2361,8 +2361,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 'visibilitychanged': layer_visibilitychanged
             });
             map.addLayer(layer);
-            // Ensure Highlight & Popup Controls act on this layer
-            map.s3.all_popup_layers.push(layer);
         }
         if (owm.city) {
             layer = new OpenLayers.Layer.Vector.OWMWeather(
@@ -2382,8 +2380,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 'visibilitychanged': layer_visibilitychanged
             });
             map.addLayer(layer);
-            // Ensure Highlight & Popup Controls act on this layer
-            map.s3.all_popup_layers.push(layer);
         }
     };
 
@@ -2603,16 +2599,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         // Put these in Global Scope & i18n the messages
         //function showSuccessMsg(){
-        //    showMsg("Transaction successfully completed");
+        //    showMsg('Transaction successfully completed');
         //}
         //function showFailureMsg(){
-        //    showMsg("An error occured while operating the transaction");
+        //    showMsg('An error occured while operating the transaction');
         //}
         // if Editable
         // Set up a save strategy
         //var saveStrategy = new OpenLayers.Strategy.Save();
-        //saveStrategy.events.register("success", '', showSuccessMsg);
-        //saveStrategy.events.register("failure", '', showFailureMsg);
+        //saveStrategy.events.register('success', '', showSuccessMsg);
+        //saveStrategy.events.register('failure', '', showFailureMsg);
 
         var wfsLayer = new OpenLayers.Layer.Vector(
             name, {
@@ -2638,15 +2634,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         wfsLayer.title = title;
         wfsLayer.setVisibility(visibility);
         wfsLayer.events.on({
-            'featureselected': onFeatureSelect,
-            'featureunselected': onFeatureUnselect,
+            // We use featureclick.js on Map instead
+            //'featureselected': onFeatureSelect,
+            //'featureunselected': onFeatureUnselect,
             'loadstart': layer_loadstart,
             'loadend': layer_loadend,
             'visibilitychanged': layer_visibilitychanged
         });
         map.addLayer(wfsLayer);
-        // Ensure Highlight & Popup Controls act on this layer
-        map.s3.all_popup_layers.push(wfsLayer);
     };
 
     // WMS
@@ -2968,92 +2963,49 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
     /* Popups */
     var addPopupControls = function(map) {
+        map.events.register('featureover', this, tooltipSelect);
+        map.events.register('featureout', this, tooltipUnselect);
+        map.events.register('featureclick', this, onFeatureSelect);
+    }
 
-        // Could also use static/themes/Vulnerability/js/FeatureDoubleClick.js
-        OpenLayers.Handler.FeatureS3 = OpenLayers.Class(OpenLayers.Handler.Feature, {
-            dblclick: function(evt) {
-                // Propagate Event to ensure we still zoom (not working)
-                //return !this.handle(evt);
-                //return true;
-                // Ensure that we still Zoom
-                this.map.zoomTo(this.map.zoom + 1, evt.xy);
-                return false;
-            },
-            CLASS_NAME: 'OpenLayers.Handler.FeatureS3'
-        });
-
-        var s3 = map.s3;
-        var all_popup_layers = s3.all_popup_layers;
-        // onClick Popup
-        var popupControl = new OpenLayers.Control.SelectFeature(
-            all_popup_layers, {
-                toggle: true
-                //multiple: true
-            }
-        );
-        popupControl.handlers.feature = new OpenLayers.Handler.FeatureS3(popupControl, popupControl.layer, popupControl.callbacks, {
-            geometryTypes: popupControl.geometryTypes
-        });
-        // onHover Tooltip
-        var highlightControl = new OpenLayers.Control.SelectFeature(
-            all_popup_layers, {
-                hover: true,
-                highlightOnly: true,
-                //renderIntent: 'temporary',
-                eventListeners: {
-                    featurehighlighted: tooltipSelect,
-                    featureunhighlighted: tooltipUnselect
-                }
-            }
-        );
-        map.addControl(highlightControl);
-        map.addControl(popupControl);
-        highlightControl.activate();
-        popupControl.activate();
-        // Allow access from global scope
-        s3.popupControl = popupControl;
-    };
-
-    // Supports highlightControl for All Vector Layers
+    // A Feature has been hovered over
     var tooltipSelect = function(event) {
         var feature = event.feature;
-        var map = feature.layer.map;
-        var map_id = map.s3.id;
-        S3.gis.maps[map_id].tooltipTimeout = setTimeout(function() {
+        var layer = feature.layer;
+        if (layer.name == 'OpenLayers.Handler.PointS3') {
+            // Don't do anything here when placing Points
+            return;
+        }
+        // Style the feature as highlighted
+        feature.renderIntent = 'select';
+        layer.drawFeature(feature);
+        var map = layer.map;
+        if (layer.name in map.s3.layers_nopopups) {
+            // Don't do anything more here when there aren't popups to show
+            return;
+        }
+        // Show a Tooltip (after a pause)
+        S3.gis.timeouts[feature.id] = setTimeout(function() {
             if (feature.cluster) {
                 // Cluster: no tooltip
             } else {
                 // Single Feature: show tooltip
-                // Ensure only 1 Tooltip Popup / map
-                var lastFeature = map.s3.lastFeature;
-                var tooltipPopup = map.s3.tooltipPopup;
-                //map.s3.selectedFeature = feature;
-                // if there is already an opened details window, don\'t draw the tooltip
-                if (feature.popup !== null) {
+                if (!feature.geometry) {
+                    // Bail
                     return;
                 }
-                // if there are other tooltips active, destroy them
-                if ((tooltipPopup !== null) && (tooltipPopup !== undefined)) {
-                    map.removePopup(tooltipPopup);
-                    tooltipPopup.destroy();
-                    if (lastFeature !== null) {
-                        delete lastFeature.popup;
-                    }
-                    tooltipPopup = null;
-                }
-                lastFeature = feature;
-                var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-                var attributes = feature.attributes;
-                var tooltip;
+                var attributes = feature.attributes,
+                    centerPoint = feature.geometry.getBounds().getCenterLonLat(),
+                    tooltip;
                 if (undefined != attributes.popup) {
                     // GeoJSON Feature Layers or Theme Layers
                     tooltip = attributes.popup;
                 } else if (undefined != attributes.name) {
                     // GeoJSON, GeoRSS or Legacy Features
                     tooltip = attributes.name;
-                } else if (undefined != feature.layer.title) {
+                } else if (undefined != layer.title) {
                     // KML or WFS
-                    var a = attributes[feature.layer.title];
+                    var a = attributes[layer.title];
                     var type = typeof a;
                     if ('object' == type) {
                         tooltip = a.value;
@@ -3062,50 +3014,75 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     }
                 }
                 if (tooltip) {
-                    tooltipPopup = new OpenLayers.Popup(
-                        'activetooltip',
+                    OpenLayers.Popup.Tooltip = OpenLayers.Class(OpenLayers.Popup, {
+                        displayClass: 'gis_tooltip',
+                        contentDisplayClass: 'gis_tooltip_content',
+                        CLASS_NAME: 'OpenLayers.Popup.Tooltip'
+                    });
+                    var tooltipPopup = new OpenLayers.Popup.Tooltip(
+                        feature.id + '_tooltip',
                         centerPoint,
                         new OpenLayers.Size(80, 12),
-                        tooltip,
-                        false
+                        tooltip
                     );
-                }
-                if ((tooltipPopup !== null) && (tooltipPopup !== undefined)) {
-                    // should be moved to CSS
+                    /* moved to CSS
                     tooltipPopup.contentDiv.style.backgroundColor = 'ffffcb';
                     tooltipPopup.contentDiv.style.overflow = 'hidden';
                     tooltipPopup.contentDiv.style.padding = '3px';
                     tooltipPopup.contentDiv.style.margin = '10px';
-                    tooltipPopup.closeOnMove = true;
+                    tooltipPopup.opacity = 0.7;*/
+                    //tooltipPopup.closeOnMove = true;
                     tooltipPopup.autoSize = true;
-                    tooltipPopup.opacity = 0.7;
                     feature.popup = tooltipPopup;
                     map.addPopup(tooltipPopup);
                 }
             }
         }, 500);
     };
+    /* Similar to onFeatureUnselect */
     var tooltipUnselect = function(event) {
         var feature = event.feature;
-        var map = feature.layer.map;
-        var map_id = map.s3.id;
-        // Prevent any pending tooltip from loading
-        clearTimeout(S3.gis.maps[map_id].tooltipTimeout);
-        // Close any open tooltip
-        if (feature !== null && feature.popup !== null) {
-            map.removePopup(feature.popup);
-            feature.popup.destroy();
-            delete feature.popup;
-            map.s3.tooltipPopup = null;
-            map.s3.lastFeature = null;
+        var layer = feature.layer;
+        var map = layer.map;
+        if (layer.name == 'OpenLayers.Handler.PointS3') {
+            // Don't do anything here when placing Points
+            return;
+        }
+        if (layer.name in map.s3.layers_nopopups && feature.popup.CLASS_NAME == 'OpenLayers.Popup.Tooltip') {
+            // Style the feature normally
+            feature.renderIntent = 'default';
+            layer.drawFeature(feature);
+            // Don't do anything more here when there aren't popups to show
+            return;
+        }
+        if (feature) {
+            // Prevent any pending tooltip for this feature from loading
+            clearTimeout(S3.gis.timeouts[feature.id]);
+            if (feature.popup) {
+                if (feature.popup.CLASS_NAME == 'OpenLayers.Popup.Tooltip') {
+                    // Style the feature normally
+                    feature.renderIntent = 'default';
+                    layer.drawFeature(feature);
+                    // Destroy any tooltip for this feature
+                    if (feature.popup) {
+                        map.removePopup(feature.popup);
+                        feature.popup.destroy();
+                    }
+                    delete feature.popup;
+                }
+            } else {
+                // Must have been a cluster
+                // Style the feature normally
+                feature.renderIntent = 'default';
+                layer.drawFeature(feature);
+            }
+            $('#' + feature.id + '_tooltip').remove();
         }
     };
 
     // Add a Popup to map
-    var addPopup = function(feature, url, contents, id, iframe) {
-        if (undefined == id) {
-            id = S3.uid();
-        }
+    var addPopup = function(feature, url, contents, iframe) {
+        var id = feature.id + '_popup';
         if (iframe) {
             if (url.indexOf('http://') === 0) {
                 // Use Proxy for remote popups
@@ -3221,17 +3198,40 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
     };
 
-    // Supports popupControl for All Vector Layers
+    // A Feature has been clicked
     var onFeatureSelect = function(event) {
-        // Unselect any previous selections
-        // @ToDo: setting to allow multiple popups at once
-        tooltipUnselect(event);
         var feature = event.feature;
-        var layer = feature.layer
-        var layer_type = layer.s3_layer_type;
+        var layer = feature.layer;
         var map = layer.map;
-        var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-        var popup_id = S3.uid();
+        var s3 = map.s3;
+        if (layer.name in s3.layers_nopopups) {
+            // Don't do anything here when placing Points or there aren't popups to show
+            return;
+        }
+        /*
+        if (feature.popup) {
+            // Close instead
+            onFeatureUnselect(event);
+            return;
+        }*/
+        var geometry = feature.geometry;
+        if (geometry.CLASS_NAME != 'OpenLayers.Geometry.Point') {
+            // If there is a Point feature also-firing then we shouldn't
+            for (var i=0, len=s3.clicking.length; i<len; ++i) {
+                if (s3.clicking[i].geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                    return;
+                }
+            }
+        }
+        // Close the tooltip
+        tooltipUnselect(event);
+        // Style the feature as highlighted
+        feature.renderIntent = 'select';
+        layer.drawFeature(feature);
+        var layer_type = layer.s3_layer_type;
+        var centerPoint = geometry.getBounds().getCenterLonLat();
+        //var popup_id = S3.uid();
+        var popup_id = feature.id + '_popup';
         if (undefined != layer.title) {
             // KML, WFS
             var titleField = layer.title;
@@ -3246,7 +3246,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Only display 1st 9 records
             //var length = Math.min(cluster.length, 9);
             var length = cluster.length;
-            var map_id = map.s3.id;
+            var map_id = s3.id;
             for (var i = 0; i < length; i++) {
                 var attributes = cluster[i].attributes;
                 if (undefined != attributes.popup) {
@@ -3288,7 +3288,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         title = attributes[titleField];
                     }
                     contents = '<h3>' + title + '</h3>';
-                    var body = feature.layer.body.split(' ');
+                    var body = layer.body.split(' ');
                     var label, row, value;
                     for (var j = 0; j < body.length; j++) {
                         type = typeof attributes[body[j]];
@@ -3390,36 +3390,41 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
             }
         }
-        var popup = addPopup(feature, popup_url, contents, popup_id);
+        var popup = addPopup(feature, popup_url, contents);
         if (data_link) {
             // call AJAX to get the linked data
             loadDetails(feature.attributes.data, data_id, popup);
         }
     };
 
-    // Supports popupControl for All Vector Layers
+    /* Similar to tooltipUnselect */
     var onFeatureUnselect = function(event) {
         var feature = event.feature;
-        if (feature.popup) {
-            feature.layer.map.removePopup(feature.popup);
-            feature.popup.destroy();
+        if (feature) {
+            var layer = feature.layer;
+            // Style the feature normally
+            feature.renderIntent = 'default';
+            if (layer) {
+                layer.drawFeature(feature);
+            }
+            // Destroy any popup for this feature
+            if (feature.popup) {
+                if (layer) {
+                    layer.map.removePopup(feature.popup);
+                }
+                feature.popup.destroy();
+            }
             delete feature.popup;
+            $('#' + feature.id + '_popup').remove();
+            if (layer && layer.name == i18n.gis_draft_layer) {
+                // Also destroy the feature
+                feature.destroy();
+            }
         }
     };
     var onPopupClose = function(event) {
-        var map = this.map;
         // Unselect the associated feature
-        if (this.feature) {
-            delete this.feature.popup;
-            map.s3.popupControl.unselect(this.feature);
-        }
-        // Close ALL popups
-        // inc orphaned Popups (e.g. from Refresh)
-        // @ToDo: Make this configurable to allow multiple popups open at once
-        //        - also see s3.popup.js
-        while (map.popups.length) {
-            map.removePopup(map.popups[0]);
-        }
+        onFeatureUnselect(this);
     };
 
     // Replace Cluster Popup contents with selected Feature Popup

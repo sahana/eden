@@ -70,15 +70,18 @@ function s3_popup_refresh_main_form() {
     if (typeof layer_id != 'undefined') {
         var maps = self.parent.S3.gis.maps
         if (typeof maps != 'undefined') {
-            layer_id = parseInt(layer_id);
             var map_id, map, layers, i, len, layer, found, strategies, j, jlen, strategy;
+            if (layer_id != 'undefined') {
+                layer_id = parseInt(layer_id);
+            }
+            var gis_draft_layer = self.parent.i18n.gis_draft_layer;
             for (map_id in maps) {
                 map = maps[map_id];
                 layers = map.layers;
                 for (i=0, len=layers.length; i < len; i++) {
                     layer = layers[i];
                     if (layer.s3_layer_id == layer_id) {
-                        found = true;
+                        // Refresh this layer
                         strategies = layer.strategies;
                         for (j=0, jlen=strategies.length; j < jlen; j++) {
                             strategy = strategies[j];
@@ -88,48 +91,15 @@ function s3_popup_refresh_main_form() {
                                 break;
                             }
                         }
-                        break;
-                    }
-                }
-                if (found) {
-                    if (document.location.pathname.indexOf('/create') != -1) {
-                        // Remove the Draft Feature & it's Popup
-                        var gis_draft_layer = self.parent.i18n.gis_draft_layer;
-                        for (i=0, len=layers.length; i < len; i++) {
-                            layer = layers[i];
-                            if (layer.name == gis_draft_layer) {
-                                var features = layer.features,
-                                    feature,
-                                    popup;
-                                for (j=features.length - 1; j >= 0; j--) {
-                                    feature = features[j];
-                                    popup = feature.popup;
-                                    map.removePopup(popup);
-                                    popup.destroy();
-                                    delete feature.popup;
-                                    feature.destroy();
-                                }
-                                break;
-                            }
-                        }
-                    } else {
-                        // Remove the Update Popup
-                        /* Not working - for some reason the feature loses its ref to the popup
-                        var features = layer.features,
-                            feature,
-                            popup;
-                        for (j=features.length - 1; j >= 0; j--) {
-                            feature = features[j];
-                            popup = feature.popup;
-                            if (popup) {
-                                map.removePopup(popup);
-                                popup.destroy();
-                                delete feature.popup;
-                            }
-                        } */
-                        // Close ALL popups
+                    } else if (layer.name == gis_draft_layer) {
+                        /* Close ALL popups */
                         while (map.popups.length) {
                             map.removePopup(map.popups[0]);
+                        }
+                        // Remove the Feature
+                        var features = layer.features;
+                        for (j=features.length - 1; j >= 0; j--) {
+                            features[j].destroy();
                         }
                     }
                 }
