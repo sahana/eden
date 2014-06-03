@@ -115,7 +115,18 @@
                 <xsl:value-of select="cap:language" />
             </data>
             <data field="category">
-                <xsl:value-of select="cap:category" />
+                <xsl:attribute name="value">
+                    <xsl:text>[</xsl:text>
+                    <xsl:for-each select="cap:category">
+                        <xsl:text>&quot;</xsl:text>
+                        <xsl:value-of select="."/>
+                        <xsl:text>&quot;</xsl:text>
+                        <xsl:if test="position()!=last()">
+                            <xsl:text>,</xsl:text>
+                        </xsl:if>
+                    </xsl:for-each>
+                    <xsl:text>]</xsl:text>
+                </xsl:attribute>
             </data>
             <data field="event">
                 <xsl:value-of select="cap:event" />
@@ -124,6 +135,9 @@
                 <xsl:value-of select="cap:response_type" />
             </data>
             <!-- @todo: priority -->
+            <data field="priority">
+                <xsl:value-of select="cap:priority" />
+            </data>
             <data field="urgency">
                 <xsl:value-of select="cap:urgency" />
             </data>

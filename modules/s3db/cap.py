@@ -499,7 +499,7 @@ class S3CAPModel(S3Model):
                             widget = S3MultiSelectWidget(),
                             ), # 0 or more allowed
                      Field("priority",
-                           requires=IS_IN_SET(cap_info_priority_opts),
+                           requires=IS_NULL_OR(IS_IN_SET(cap_info_priority_opts)),
                            ),
                      Field("urgency",
                            required=True,
