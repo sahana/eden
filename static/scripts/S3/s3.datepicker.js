@@ -32,16 +32,26 @@ $(document).ready(function() {
 S3.start_end_date = function(start_field, end_field) {
     // This gets overridden by the widget when done from prep
     // - need to instantiate from postp if we need this
-    var min = $('#' + start_field).datepicker('getDate');
-    if (min) {
-        $('#' + end_field).datepicker('option', 'minDate', min);
+    var start_field = $('#' + start_field);
+    if (!start_field.length) {
+        // e.g. field isn't readable
+        return;
     }
-    $('#' + start_field).change(function() {
-        var min = $('#' + start_field).datepicker('getDate');
-        $('#' + end_field).datepicker('option', 'minDate', min);
-        var curr = $('#' + end_field).datepicker('getDate');
+    var end_field = $('#' + end_field);
+    if (!end_field.length) {
+        // e.g. field isn't readable
+        return;
+    }
+    var min = start_field.datepicker('getDate');
+    if (min) {
+        end_field.datepicker('option', 'minDate', min);
+    }
+    start_field.change(function() {
+        var min = start_field.datepicker('getDate');
+        end_field.datepicker('option', 'minDate', min);
+        var curr = end_field.datepicker('getDate');
         if (curr && curr < min) {
-            $('#' + end_field).datepicker('setDate', min);
+            end_field.datepicker('setDate', min);
         }
     });
 };

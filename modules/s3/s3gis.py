@@ -2167,6 +2167,11 @@ class GIS(object):
             @param: resource - S3Resource instance (required)
         """
 
+        tablename = resource.tablename
+        if tablename == "gis_feature_query":
+            # Requires no special handling: XSLT uses normal fields
+            return dict()
+
         NONE = current.messages["NONE"]
         #if DEBUG:
         #    start = datetime.datetime.now()
@@ -2234,7 +2239,6 @@ class GIS(object):
             polygons = False
         
         table = resource.table
-        tablename = resource.tablename
         pkey = table._id.name
 
         markers = {}

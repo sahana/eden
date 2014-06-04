@@ -808,6 +808,11 @@ class S3XML(S3Codec):
         if format not in ("geojson", "georss", "gpx", "kml"):
             return
 
+        tablename = resource.tablename
+        if tablename == "gis_feature_query":
+            # Requires no special handling: XSLT uses normal fields
+            return dict()
+
         db = current.db
         gis = current.gis
         request = current.request
@@ -833,77 +838,8 @@ class S3XML(S3Codec):
 
         attr = map_data.attrib
         record_id = record.id
-        table = resource.table
-        tablename = resource.tablename
 
-        if len(tablename) > 19 and \
-           tablename.startswith("gis_layer_shapefile"):
-            # Shapefile data
-            if tablename in geojsons:
-                # These have been looked-up in bulk
-                geojson = geojsons[tablename].get(record_id, None)
-                if geojson:
-                    geometry = etree.SubElement(map_data, "geometry")
-                    geometry.set("value", geojson)
-                    if tablename in attributes:
-                        # Add Attributes
-                        #_attr = ""
-                        attrs = attributes[tablename][record_id]
-                        #for a in attrs:
-                        #    if _attr:
-                        #        _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
-                        #    else:
-                        #        _attr = "[%s]=[%s]" % (a, attrs[a])
-                        #if _attr:
-                        #    attr[ATTRIBUTE.attributes] = _attr
-                        if attrs:
-                            _attr = json.dumps(attrs, separators=SEPARATORS)
-                            attr[ATTRIBUTE.attributes] = _attr.replace('"', "|")
-            elif tablename in wkts:
-                # Nothing gets here currently
-                # tbc: KML Polygons (or we should also do these outside XSLT)
-                wkt = wkts[tablename][record_id]
-                # Convert the WKT in XSLT
-                attr[ATTRIBUTE.wkt] = wkt
-            else:
-                # Lookup record by record :/
-                query = (table._id == record_id)
-                #fields = []
-                #fappend = fields.append
-                #for f in table.fields:
-                #    if f not in ("id", "layer_id", "lat", "lon", "wkt"):
-                #        fappend(f)
-                if settings.get_gis_spatialdb():
-                    # Do the Simplify direct from the DB
-                    #fields.remove("the_geom")
-                    #_fields = [table[f] for f in fields]
-                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                           #*_fields,
-                                           limitby=(0, 1)).first()
-                    if row:
-                        # Convert the WKT in XSLT
-                        attr[ATTRIBUTE.wkt] = row.wkt
-                        # Locate the attributes
-                        #row = row[tablename]
-                else:
-                    # _fields = [table[f] for f in fields]
-                    row = db(query).select(table[WKTFIELD],
-                                           #*_fields,
-                                           limitby=(0, 1)).first()
-                    if row:
-                        wkt = row[WKTFIELD]
-                        if wkt:
-                            # Simplify the polygon to reduce download size
-                            # & also to work around the recursion limit in libxslt
-                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = gis.simplify(wkt)
-                            # Convert the WKT in XSLT
-                            attr[ATTRIBUTE.wkt] = wkt
-
-            # End: Shapefile data
-            return
-
-        elif tablename == "gis_location":
+        if tablename == "gis_location":
             if tablename in geojsons:
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
@@ -947,8 +883,10 @@ class S3XML(S3Codec):
                 wkt = wkts[tablename][record_id]
                 # Convert the WKT in XSLT
                 attr[ATTRIBUTE.wkt] = wkt
+
             else:
                 # Lookup record by record :/
+                table = resource.table
                 query = (table._id == record_id)
                 if settings.get_gis_spatialdb():
                     # Do the Simplify direct from the DB
@@ -988,6 +926,74 @@ class S3XML(S3Codec):
                 attr[ATTRIBUTE.sym] = symbol
 
             # End: tablename == "gis_location"
+            return
+
+        elif len(tablename) > 19 and \
+           tablename.startswith("gis_layer_shapefile"):
+            # Shapefile data
+            if tablename in geojsons:
+                # These have been looked-up in bulk
+                geojson = geojsons[tablename].get(record_id, None)
+                if geojson:
+                    geometry = etree.SubElement(map_data, "geometry")
+                    geometry.set("value", geojson)
+                    if tablename in attributes:
+                        # Add Attributes
+                        #_attr = ""
+                        attrs = attributes[tablename][record_id]
+                        #for a in attrs:
+                        #    if _attr:
+                        #        _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
+                        #    else:
+                        #        _attr = "[%s]=[%s]" % (a, attrs[a])
+                        #if _attr:
+                        #    attr[ATTRIBUTE.attributes] = _attr
+                        if attrs:
+                            _attr = json.dumps(attrs, separators=SEPARATORS)
+                            attr[ATTRIBUTE.attributes] = _attr.replace('"', "|")
+            elif tablename in wkts:
+                # Nothing gets here currently
+                # tbc: KML Polygons (or we should also do these outside XSLT)
+                wkt = wkts[tablename][record_id]
+                # Convert the WKT in XSLT
+                attr[ATTRIBUTE.wkt] = wkt
+            else:
+                # Lookup record by record :/
+                table = resource.table
+                query = (table._id == record_id)
+                #fields = []
+                #fappend = fields.append
+                #for f in table.fields:
+                #    if f not in ("id", "layer_id", "lat", "lon", "wkt"):
+                #        fappend(f)
+                if settings.get_gis_spatialdb():
+                    # Do the Simplify direct from the DB
+                    #fields.remove("the_geom")
+                    #_fields = [table[f] for f in fields]
+                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
+                                           #*_fields,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        # Convert the WKT in XSLT
+                        attr[ATTRIBUTE.wkt] = row.wkt
+                        # Locate the attributes
+                        #row = row[tablename]
+                else:
+                    # _fields = [table[f] for f in fields]
+                    row = db(query).select(table[WKTFIELD],
+                                           #*_fields,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        wkt = row[WKTFIELD]
+                        if wkt:
+                            # Simplify the polygon to reduce download size
+                            # & also to work around the recursion limit in libxslt
+                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                            wkt = gis.simplify(wkt)
+                            # Convert the WKT in XSLT
+                            attr[ATTRIBUTE.wkt] = wkt
+
+            # End: Shapefile data
             return
 
         # Normal Resources
