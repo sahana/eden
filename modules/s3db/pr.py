@@ -5538,12 +5538,14 @@ def pr_realm_users(realm, roles=None, role_types=OU):
         @note: role_types overrides roles
     """
 
-    auth = current.auth
     s3db = current.s3db
     atable = s3db.pr_affiliation
     rtable = s3db.pr_role
     ltable = s3db.pr_person_user
-    utable = auth.settings.table_user
+
+    auth_settings = current.auth.settings
+    utable = auth_settings.table_user
+    userfield = auth_settings.login_userfield
 
     if realm is None:
         query = (utable.deleted != True)
@@ -5566,12 +5568,9 @@ def pr_realm_users(realm, roles=None, role_types=OU):
                 (ltable.deleted != True) & \
                 (ltable.user_id == utable.id) & \
                 (utable.deleted != True)
-    rows = current.db(query).select(utable.id, utable.email)
+    rows = current.db(query).select(utable.id, utable[userfield])
     if rows:
-        if auth.settings.username_field:
-            return Storage([(row.id, row.username) for row in rows])
-        else:
-            return Storage([(row.id, row.email) for row in rows])
+        return Storage([(row.id, row[userfield]) for row in rows])
     else:
         return Storage()
 

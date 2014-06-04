@@ -168,7 +168,7 @@ class AuthS3(Auth):
         Auth.__init__(self, current.db)
 
         self.settings.lock_keys = False
-        self.settings.username_field = False
+        self.settings.login_userfield = "email"
         self.settings.lock_keys = True
 
         messages = self.messages
@@ -319,9 +319,10 @@ Thank you"""
             utable_fields += list(s3_uid())
             utable_fields += list(s3_timestamp())
 
-            if settings.username_field:
+            userfield = settings.login_userfield
+            if userfield != "email":
                 # Use username (not used by default in Sahana)
-                utable_fields.insert(2, Field("username", length=128,
+                utable_fields.insert(2, Field(userfield, length=128,
                                               default="",
                                               unique=True))
 
@@ -473,15 +474,10 @@ Thank you"""
                 - extended to understand session.s3.roles
         """
 
-        utable = self.settings.table_user
-
-        if self.settings.login_userfield:
-            userfield = self.settings.login_userfield
-        elif "username" in utable.fields:
-            userfield = "username"
-        else:
-            userfield = "email"
-        passfield = self.settings.password_field
+        settings = self.settings
+        utable = settings.table_user
+        userfield = settings.login_userfield
+        passfield = settings.password_field
         query = (utable[userfield] == username)
         user = current.db(query).select(limitby=(0, 1)).first()
         password = utable[passfield].validate(password)[0]
@@ -490,7 +486,7 @@ Thank you"""
                 user = Storage(utable._filter_fields(user, id=True))
                 current.session.auth = Storage(user=user,
                                                last_visit=current.request.now,
-                                               expiration=self.settings.expiration)
+                                               expiration=settings.expiration)
                 self.user = user
                 self.s3_set_roles()
                 return user
@@ -536,14 +532,9 @@ Thank you"""
         deployment_settings = current.deployment_settings
 
         utable = settings.table_user
-        if settings.login_userfield:
-            username = settings.login_userfield
-        elif "username" in utable.fields:
-            username = "username"
-        else:
-            username = "email"
-        old_requires = utable[username].requires
-        utable[username].requires = [IS_NOT_EMPTY(), IS_LOWER()]
+        userfield = settings.login_userfield
+        old_requires = utable[userfield].requires
+        utable[userfield].requires = [IS_NOT_EMPTY(), IS_LOWER()]
         passfield = settings.password_field
         try:
             utable[passfield].requires[-1].min_length = 0
@@ -604,7 +595,7 @@ Thank you"""
                 buttons = None
             
             form = SQLFORM(utable,
-                           fields = [username, passfield],
+                           fields = [userfield, passfield],
                            hidden = dict(_next=request.vars._next),
                            showid = settings.showid,
                            submit_button = T("Login"),
@@ -664,18 +655,18 @@ Thank you"""
                             formname="login", dbio=False,
                             onvalidation=onvalidation):
                 accepted_form = True
-                if username == "email":
+                if userfield == "email":
                     # Check for Domains which can use Google's SMTP server for passwords
                     # @ToDo: an equivalent email_domains for other email providers
                     gmail_domains = current.deployment_settings.get_auth_gmail_domains()
                     if gmail_domains:
                         from gluon.contrib.login_methods.email_auth import email_auth
-                        domain = form.vars[username].split("@")[1]
+                        domain = form.vars[userfield].split("@")[1]
                         if domain in gmail_domains:
                             settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
                 # Check for username in db
-                query = (utable[username] == form.vars[username])
+                query = (utable[userfield] == form.vars[userfield])
                 user = db(query).select(limitby=(0, 1)).first()
                 if user:
                     # user in db, check if registration pending or disabled
@@ -696,7 +687,7 @@ Thank you"""
                     user = None
                     for login_method in settings.login_methods:
                         if login_method != self and \
-                                login_method(request.vars[username],
+                                login_method(request.vars[userfield],
                                              request.vars[passfield]):
                             if not self in settings.login_methods:
                                 # do not store password in db
@@ -716,7 +707,7 @@ Thank you"""
                         # We're allowed to auto-register users from external systems
                         for login_method in settings.login_methods:
                             if login_method != self and \
-                                    login_method(request.vars[username],
+                                    login_method(request.vars[userfield],
                                                  request.vars[passfield]):
                                 if not self in settings.login_methods:
                                     # Do not store password in db
@@ -766,7 +757,7 @@ Thank you"""
                 if next and not next[0] == "/" and next[:4] != "http":
                     next = self.url(next.replace("[id]", str(form.vars.id)))
                 redirect(next)
-            utable[username].requires = old_requires
+            utable[userfield].requires = old_requires
             return form
         else:
             redirect(next)
@@ -872,18 +863,16 @@ Thank you"""
             onaccept = settings.reset_password_onaccept
         if log is DEFAULT:
             log = messages["reset_password_log"]
-        #userfield = settings.login_userfield or "username" \
-        #    if "username" in utable.fields else "email"
-        userfield = "email"
-        #if userfield == "email":
-        utable.email.requires = [
-            IS_EMAIL(error_message=messages.invalid_email),
-            IS_IN_DB(self.db, utable.email,
-                     error_message=messages.invalid_email)]
-        #else:
-        #    utable.username.requires = [
-        #        IS_IN_DB(self.db, utable.username,
-        #                 error_message=messages.invalid_username)]
+        userfield = settings.login_userfield
+        if userfield == "email":
+            utable.email.requires = [
+                IS_EMAIL(error_message=messages.invalid_email),
+                IS_IN_DB(self.db, utable.email,
+                         error_message=messages.invalid_email)]
+        else:
+            utable[userfield].requires = [
+                IS_IN_DB(self.db, utable[userfield],
+                         error_message=messages.invalid_username)]
         form = SQLFORM(utable,
                        fields=[userfield],
                        hidden=dict(_next=next),
@@ -1604,10 +1593,11 @@ Thank you"""
             last_name.notnull = True
             last_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty)
 
-        if settings.username_field:
-            utable.username.requires = IS_NOT_IN_DB(db,
-                                                    "%s.username" %
-                                                    utable._tablename)
+        userfield = settings.login_userfield
+        if userfield != "email":
+            utable[userfield].requires = \
+                IS_NOT_IN_DB(db, "%s.%s" % (utable._tablename,
+                                            userfield))
 
         email = utable.email
         email.label = T("Email") #messages.label_email
@@ -2959,16 +2949,14 @@ S3OptionsFilter({
             @param user_id: auth.user.id or auth.user.email
         """
 
-        utable = self.settings.table_user
+        settigns = self.settings
+        utable = settings.table_user
         query = None
         if not user_id:
             # Anonymous
             user = None
         elif isinstance(user_id, basestring) and not user_id.isdigit():
-            if self.settings.username_field:
-                query = (utable.username == user_id)
-            else:
-                query = (utable.email == user_id)
+            query = (utable[settings.login_userfield] == user_id)
         else:
             query = (utable.id == user_id)
 
@@ -2984,7 +2972,7 @@ S3OptionsFilter({
         session = current.session
         session.auth = Storage(user=user,
                                last_visit=current.request.now,
-                               expiration=self.settings.expiration)
+                               expiration=settings.expiration)
         self.s3_set_roles()
 
         if user:
@@ -7549,10 +7537,7 @@ class S3RoleManager(S3Method):
         session = current.session
         settings = auth.settings
 
-        if settings.username:
-            username = "username"
-        else:
-            username = "email"
+        userfield = settings.login_userfield
 
         output = dict()
 
@@ -7563,7 +7548,7 @@ class S3RoleManager(S3Method):
         if r.record:
             user = r.record
             user_id = r.id
-            user_name = user[username]
+            user_name = user[userfield]
 
             use_realms = auth.permission.entity_realm
             unassignable = [sr.ANONYMOUS, sr.AUTHENTICATED]
@@ -7781,10 +7766,7 @@ class S3RoleManager(S3Method):
         session = current.session
         settings = auth.settings
 
-        if settings.username:
-            username = "username"
-        else:
-            username = "email"
+        userfield = settings.login_userfield
 
         output = dict()
 
@@ -7820,7 +7802,7 @@ class S3RoleManager(S3Method):
                                         utable.id,
                                         utable.first_name,
                                         utable.last_name,
-                                        utable[username],
+                                        utable[userfield],
                                         orderby=utable.first_name)
                 entities = [row[mtable.pe_id] for row in rows]
                 if use_realms:
@@ -7877,7 +7859,7 @@ class S3RoleManager(S3Method):
                         trow.append(TD(name))
 
                         # Username
-                        uname = row[utable[username]]
+                        uname = row[utable[userfield]]
                         trow.append(TD(uname))
 
                         # Entity
@@ -7951,13 +7933,13 @@ class S3RoleManager(S3Method):
                 rows = db(query).select(utable.id,
                                         utable.first_name,
                                         utable.last_name,
-                                        utable[username])
+                                        utable[userfield])
                 if rows and assignable:
                     select_usr = SELECT(OPTION("",
                                             _value=None,
                                             _selected="selected"),
                                         _name="user_id")
-                    options = [("%s (%s %s)" % (row[username],
+                    options = [("%s (%s %s)" % (row[userfield],
                                                 row.first_name,
                                                 row.last_name),
                                 row.id) for row in rows]
@@ -8666,24 +8648,22 @@ class S3PersonRoleManager(S3EntityRoleManager):
             @return: dictionary with ID and username/email of the user account
         """
 
-        utable = current.auth.settings.table_user
+        settings = current.auth.settings
+        utable = settings.table_user
         ptable = current.s3db.pr_person_user
 
         pe_id = int(self.request.record.pe_id)
 
-        if current.auth.settings.username:
-            username = utable.username
-        else:
-            username = utable.email
+        userfield = settings.login_userfield
 
         query = (ptable.pe_id == pe_id) & \
                 (ptable.user_id == utable.id)
         record = current.db(query).select(utable.id,
-                                          username,
+                                          utable[userfield],
                                           limitby=(0, 1)).first()
 
         return dict(id=record.id,
-                    name=record[username]) if record else None
+                    name=record[utable[userfield]]) if record else None
 
     # -------------------------------------------------------------------------
     def get_foreign_object(self):
