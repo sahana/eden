@@ -2532,7 +2532,8 @@ class S3ProjectLocationModel(S3Model):
                      self.super_link("doc_id", "doc_entity"),
                      # Populated onaccept - used for map popups
                      Field("name",
-                           writable=False),
+                           writable = False,
+                           ),
                      self.project_project_id(),
                      # Enable in templates which desire this:
                      self.project_status_id(readable = False,
@@ -2700,45 +2701,45 @@ class S3ProjectLocationModel(S3Model):
         # Components
         add_components(tablename,
                        # Activity Types
-                       project_activity_type={"link": "project_activity_type_location",
-                                              "joinby": "project_location_id",
-                                              "key": "activity_type_id",
-                                              "actuate": "hide",
-                                              },
+                       project_activity_type = {"link": "project_activity_type_location",
+                                                "joinby": "project_location_id",
+                                                "key": "activity_type_id",
+                                                "actuate": "hide",
+                                                },
                        # Beneficiaries
-                       project_beneficiary="project_location_id",
+                       project_beneficiary = "project_location_id",
                        # Contacts
-                       pr_person={"name": "contact",
-                                  "link": "project_location_contact",
-                                  "joinby": "project_location_id",
-                                  "key": "person_id",
-                                  "actuate": "hide",
-                                  "autodelete": False,
-                                  },
+                       pr_person = {"name": "contact",
+                                    "link": "project_location_contact",
+                                    "joinby": "project_location_id",
+                                    "key": "person_id",
+                                    "actuate": "hide",
+                                    "autodelete": False,
+                                    },
                        # Distributions
-                       supply_distribution="project_location_id",
+                       supply_distribution = "project_location_id",
                        # Themes
-                       project_theme={"link": "project_theme_location",
-                                      "joinby": "project_location_id",
-                                      "key": "theme_id",
-                                      "actuate": "hide",
-                                      },
+                       project_theme = {"link": "project_theme_location",
+                                        "joinby": "project_location_id",
+                                        "key": "theme_id",
+                                        "actuate": "hide",
+                                        },
                       )
 
         # Reusable Field
         project_location_represent = project_LocationRepresent()
         project_location_id = S3ReusableField("project_location_id", "reference %s" % tablename,
+            label = LOCATION,
+            ondelete = "CASCADE",
+            represent = project_location_represent,
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "project_location.id",
                                   project_location_represent,
                                   updateable = True,
                                   sort=True)),
-            represent = project_location_represent,
-            label = LOCATION,
             comment = S3AddResourceLink(ADD_LOCATION,
                                         c="project", f="location",
                                         tooltip=LOCATION_TOOLTIP),
-            ondelete = "CASCADE"
             )
 
         # ---------------------------------------------------------------------
@@ -2748,10 +2749,10 @@ class S3ProjectLocationModel(S3Model):
         define_table(tablename,
                      project_location_id(),
                      self.pr_person_id(
-                        comment=None,
-                        requires=IS_ADD_PERSON_WIDGET2(),
-                        widget=S3AddPersonWidget2(controller="pr"),
-                     ),
+                        comment = None,
+                        requires = IS_ADD_PERSON_WIDGET2(),
+                        widget = S3AddPersonWidget2(controller="pr"),
+                        ),
                      *s3_meta_fields())
 
         # CRUD Strings
