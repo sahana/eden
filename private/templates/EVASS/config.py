@@ -131,10 +131,6 @@ settings.L10n.languages = OrderedDict([
 settings.L10n.default_language = "en"
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0100"
-settings.L10n.languages = OrderedDict([
-    ("en", "English"),
-    ("it", "Italiano"),
-])
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 #settings.L10n.time_format = T("%H:%M:%S")
 settings.L10n.date_format = T("%d/%m/%Y")
@@ -164,7 +160,7 @@ settings.L10n.religions = OrderedDict([("unknown", T("Unknown")),
 # Uncomment this to Translate Layer Names
 #settings.L10n.translate_gis_layer = True
 # Uncomment this to Translate Location Names
-#settings.L10n.translate_gis_location = True
+settings.L10n.translate_gis_location = True
 
 # Finance settings
 settings.fin.currency_default = "EUR"

@@ -291,17 +291,15 @@ class S3ProjectModel(S3Model):
         #report_fact_default = "theme.name"
 
         configure(tablename,
-                  super_entity = "doc_entity",
-                  filter_widgets = filter_widgets,
                   context = {"location": "location.location_id",
                              "organisation": "organisation_id",
                              },
-                  list_fields = list_fields,
-                  list_layout = project_project_list_layout,
                   create_next = create_next,
                   deduplicate = self.project_project_deduplicate,
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  list_layout = project_project_list_layout,
                   onaccept = self.project_project_onaccept,
-                  update_realm = True,
                   realm_components = ["human_resource",
                                       "task",
                                       "organisation",
@@ -327,7 +325,9 @@ class S3ProjectModel(S3Model):
                         totals=True
                     )
                   ),
-                 )
+                  super_entity = "doc_entity",
+                  update_realm = True,
+                  )
 
         # Reusable Field
         if use_codes:
@@ -422,38 +422,38 @@ class S3ProjectModel(S3Model):
 
         if multi_orgs:
             add_components(tablename,
-                           project_organisation=(# Organisations
-                                                 "project_id",
-                                                 # Donors
-                                                 {"name": "donor",
-                                                  "joinby": "project_id",
-                                                  "filterby": "role",
-                                                  # Works for IFRC & DRRPP:
-                                                  "filterfor": (3,),
-                                                 },
-                                                 # Partners
-                                                 {"name": "partner",
-                                                  "joinby": "project_id",
-                                                  "filterby": "role",
-                                                  # Works for IFRC & DRRPP:
-                                                  "filterfor": (2, 9),
-                                                 },
-                                                ),
+                           project_organisation = (# Organisations
+                                                   "project_id",
+                                                   # Donors
+                                                   {"name": "donor",
+                                                    "joinby": "project_id",
+                                                    "filterby": "role",
+                                                    # Works for IFRC & DRRPP:
+                                                    "filterfor": (3,),
+                                                    },
+                                                   # Partners
+                                                   {"name": "partner",
+                                                    "joinby": "project_id",
+                                                    "filterby": "role",
+                                                    # Works for IFRC & DRRPP:
+                                                    "filterfor": (2, 9),
+                                                    },
+                                                   ),
                           )
         # DRR
         if mode_drr:
             add_components(tablename,
-                           project_drr={"joinby": "project_id",
-                                        "multiple": False,
-                                       },
-                          )
+                           project_drr = {"joinby": "project_id",
+                                          "multiple": False,
+                                          },
+                           )
 
         # ---------------------------------------------------------------------
         # Project Human Resources
         #
         define_table("project_human_resource",
-                     project_id(empty=False),
-                     human_resource_id(empty=False),
+                     project_id(empty = False),
+                     human_resource_id(empty = False),
                      *s3_meta_fields()
                      )
 
@@ -472,7 +472,7 @@ class S3ProjectModel(S3Model):
         #
         return dict(project_project_id = project_id,
                     project_project_represent = project_represent,
-                   )
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
