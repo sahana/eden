@@ -67,11 +67,11 @@
     <span class='icon-bar'></span>
     <span class='icon-bar'></span>
    </button>
-   <a class='brand' href='/{{=appname}}/default/index'>
-    <img src="/{{=appname}}/static/themes/{{=theme}}/img/logo.png" style="width:55px;margin:0 0 -50px 0" alt=""/>
-    <h1 id="main-title">{{=settings.get_system_name_short()}}</h1></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
+     <li><a href='/{{=appname}}/default/index'>
+      <img id='logo' src='/{{=appname}}/static/themes/{{=theme}}/img/logo.png' alt=''/>
+     </a></li>
      <li><a href='/{{=appname}}/hrm/staff'> <i class='icon-news'></i> {{=T("Contributors")}}</a></li>
      <li><a href='/{{=appname}}/project/project?sector.name=None,Deployment'><i class='icon-check'></i> {{=T("Deployments")}}</a></li>
      <li><a href='/{{=appname}}/project/project?sector.name=None,Project'><i class='icon-project'></i> {{=T("Projects")}}</a></li>
@@ -79,33 +79,39 @@
      <li><a href='/{{=appname}}/org/organisation'><i class=' icon-globe'></i> {{=T("Disaster Organisations")}}</a></li>
     </ul>
     <ul class='nav pull-right'>
+     {{is_logged_in=auth.is_logged_in()}}
+     {{if is_logged_in:}}
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
-      <ul class='dropdown-menu'>{{is_logged_in=auth.is_logged_in()}}
-       {{get_vars = request.get_vars}}
-       {{language = response.s3.language}}
-       {{icon = {"tet":"icon-check"}.get(language, "icon-check-empty")}}
-       {{lang_vars = dict(_language="tet")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
-       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> Tetum</a></li>
-       {{icon = {"en":"icon-check"}.get(language, "icon-check-empty")}}
-       {{lang_vars = dict(_language="en")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
-       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> English</a></li>
-       <li class='divider'></li>
-       {{if is_logged_in and auth.s3_has_role("ADMIN"):}}
+      <ul class='dropdown-menu'>
+       {{if auth.s3_has_role("ADMIN"):}}
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        <li class='divider'></li>
        {{pass}}
-       {{if is_logged_in:}}
        <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
-       {{pass}}
-       {{if is_logged_in:}}
-       <li><a href='/{{=appname}}/default/index/subscriptions'><i class='icon-envelope'></i> {{=T("Notifications")}}</a></li>
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
        <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
-       {{else:}}
-       <li><a href='/{{=appname}}/default/user/login'><i class='icon-signin'></i> {{=T("Login")}}</a></li>
+      </ul>
+     </li>
+     {{else:}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-signin'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+       {{=auth.login(inline=True, lost_pw_link=False)}}
+      </ul>
+     </li>
+     {{pass}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+       {{languages = settings.L10n.languages}}
+       {{get_vars = request.get_vars}}
+       {{language = response.s3.language}}
+       {{for code, lang in languages.items():}}
+       {{icon = {code:"icon-check"}.get(language, "icon-check-empty")}}
+       {{lang_vars = dict(_language=code)}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
+       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> {{=lang}}</a></li>
        {{pass}}
       </ul>
      </li>
+
     </ul>
    </div>
   </div>

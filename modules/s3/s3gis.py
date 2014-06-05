@@ -6009,7 +6009,7 @@ class GIS(object):
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
-            @param legend: True: Show the GeoExt Legend panel, False: No Panel, "floating": New floating Legend Panel
+            @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param area: Show the Area tool on the Toolbar
             @param nav: Show the Navigation controls on the Toolbar

@@ -66,8 +66,8 @@ settings.auth.registration_organisation_default = "Sahana Software Foundation"
 settings.auth.always_notify_approver = True
 
 # Base settings
-settings.base.system_name = T("The Sahana Sunflower: A Community Portal")
-settings.base.system_name_short = T("Sunflower")
+settings.base.system_name = T("Sahana Sunflower: A Community Portal")
+settings.base.system_name_short = T("Sahana Sunflower")
 
 # Assign the new users the permission to read.
 settings.auth.registration_roles = {"organisation_id": ["PROJECT_READ"],
@@ -75,23 +75,29 @@ settings.auth.registration_roles = {"organisation_id": ["PROJECT_READ"],
 
 # L10n settings
 settings.L10n.languages = OrderedDict([
-    ("ar", "العربية"),
-    ("zh-cn", "中文 (简体)"),
-    ("zh-tw", "中文 (繁體)"),
-    ("en", "English"),
-    ("fr", "Français"),
-    ("de", "Deutsch"),
-    ("el", "ελληνικά"),
-    ("it", "Italiano"),
-    ("ja", "日本語"),
-    ("ko", "한국어"),
-    ("pt", "Português"),
-    ("pt-br", "Português (Brasil)"),
-    ("ru", "русский"),
-    ("es", "Español"),
-    ("tl", "Tagalog"),
-    ("ur", "اردو"),
-    ("vi", "Tiếng Việt"),
+   ("ar", "العربية"),
+   ("bs", "Bosanski"),
+   ("en", "English"),
+   ("fr", "Français"),
+   ("de", "Deutsch"),
+   ("el", "ελληνικά"),
+   ("es", "Español"),
+   ("it", "Italiano"),
+   ("ja", "日本語"),
+   ("km", "ភាសាខ្មែរ"),
+   ("ko", "한국어"),
+   ("ne", "नेपाली"),          # Nepali
+   ("prs", "دری"), # Dari
+   ("ps", "پښتو"), # Pashto
+   ("pt", "Português"),
+   ("pt-br", "Português (Brasil)"),
+   ("ru", "русский"),
+   ("tet", "Tetum"),
+   ("tl", "Tagalog"),
+   ("ur", "اردو"),
+   ("vi", "Tiếng Việt"),
+   ("zh-cn", "中文 (简体)"),
+   ("zh-tw", "中文 (繁體)"),
 ])
 # Default language for Language Toolbar (& GIS Locations in future)
 settings.L10n.default_language = "en"
@@ -311,6 +317,17 @@ settings.project.activities = True
 settings.project.milestones = True
 # Uncomment this to enable Sectors in projects
 settings.project.sectors = True
+# Uncomment this to use Projects for Activities & Tasks
+settings.project.projects = True
+# Uncomment this to enable Hazards in 3W projects
+settings.project.hazards = True
+# Uncomment this to enable Themes in 3W projects
+settings.project.themes = True
+# Uncomment this to use multiple Organisations per project
+settings.project.multiple_organisations = True
+
+# Enable the use of Organisation Branches
+settings.org.branches = True
 
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):
@@ -375,6 +392,7 @@ def customise_project_project_controller(**attr):
 
             # Viewing details of project_project record
             if r.id:
+                # Check if current record is Deployment
                 query = (stable.project_id == r.id) & \
                         (otable.id == stable.sector_id)
                 rows = db(query).select(otable.name)
@@ -387,6 +405,8 @@ def customise_project_project_controller(**attr):
             # Viewing Projects/Deployments Page
             if request_sector and "Deployment" in request_sector:
                 is_deployment = True
+
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
             if is_deployment:
                 s3db[tablename].name.label = T("Deployment Name")
@@ -412,6 +432,44 @@ def customise_project_project_controller(**attr):
                 # Get sector_id for Deployment
                 query = (otable.name == "Deployment")
                 row = db(query).select(otable.id, limitby=(0, 1)).first()
+
+                # Modify the CRUD form
+                crud_form = S3SQLCustomForm(
+                        "organisation_id",
+                        "name",
+                        "sector_project.sector_id",
+                        "description",
+                        "status_id",
+                        "start_date",
+                        "end_date",
+                        "calendar",
+                        S3SQLInlineComponent(
+                            "location",
+                            label = T("Countries"),
+                            fields = ["location_id"],
+                            orderby = "location_id$name",
+                            render_list = True
+                        ),
+                        S3SQLInlineLink(
+                            "hazard",
+                            label = T("Hazard"),
+                            field = "hazard_id",
+                        ),
+                        S3SQLInlineLink(
+                            "theme",
+                            label = T("Type"),
+                            field = "theme_id",
+                        ),
+                        "human_resource_id",
+                        "comments",
+                    )
+
+                location_id = s3db.project_location.location_id
+                # Limit to just Countries
+                location_id.requires = s3db.gis_country_requires
+                # Use dropdown, not AC
+                location_id.widget = None
+
             else:
                 # Bring back to the Projects page if record deleted
                 var = {"sector.name": "None,Project"}
@@ -421,29 +479,26 @@ def customise_project_project_controller(**attr):
                 query = (otable.name == "Project")
                 row = db(query).select(otable.id, limitby=(0, 1)).first()
 
+                # Modify the CRUD form
+                crud_form = S3SQLCustomForm(
+                        "organisation_id",
+                        "name",
+                        "sector_project.sector_id",
+                        "description",
+                        "status_id",
+                        "start_date",
+                        "end_date",
+                        "calendar",
+                        "human_resource_id",
+                        "comments",
+                    )
+
             # Set the default sector
             try:
                 stable.sector_id.default = row.id
             except:
                 current.log.error("Pre-Populate",
                                  "Sectors not prepopulated")
-
-            # Modify the CRUD form
-            from s3 import s3forms
-            crud_form = s3forms.S3SQLCustomForm(
-                    "organisation_id",
-                    "name",
-                    "sector_project.sector_id",
-                    "description",
-                    "status_id",
-                    "start_date",
-                    "end_date",
-                    "calendar",
-                    "human_resource_id",
-                    "budget",
-                    "currency",
-                    "comments",
-                )
 
             # Remove Add Sector button
             stable.sector_id.comment = None
