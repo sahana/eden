@@ -1639,6 +1639,12 @@ settings.project.organisation_roles = {
 # -----------------------------------------------------------------------------
 def customise_project_project_controller(**attr):
 
+    # Default Filter
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.organisation_id",
+                          user_org_default_filter,
+                          tablename = "project_project")
+
     s3db = current.s3db
     tablename = "project_project"
     # Load normal model
@@ -1649,8 +1655,8 @@ def customise_project_project_controller(**attr):
     # db = current.db
     # ttable = db.org_organisation_type
     # rows = db(ttable.deleted != True).select(ttable.id,
-                                             # ttable.name,
-                                             # )
+    #                                          ttable.name,
+    #                                          )
     # rc = []
     # not_rc = []
     # nappend = not_rc.append
@@ -1783,6 +1789,13 @@ S3OptionsFilter({
         #"currency",
         "comments",
     )
+
+    # Set the Host NS filter as Visible so that the default filter works
+    filter_widgets = s3db.get_config(tablename, "filter_widgets")
+    for widget in filter_widgets:
+        if widget.field == "organisation_id":
+            widget.opts.hidden = False
+            break
 
     s3db.configure(tablename,
                    crud_form = crud_form,
