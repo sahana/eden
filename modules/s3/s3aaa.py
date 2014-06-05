@@ -2949,7 +2949,7 @@ S3OptionsFilter({
             @param user_id: auth.user.id or auth.user.email
         """
 
-        settigns = self.settings
+        settings = self.settings
         utable = settings.table_user
         query = None
         if not user_id:

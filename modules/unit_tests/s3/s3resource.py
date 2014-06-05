@@ -63,13 +63,13 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         resource = current.s3db.resource("project_project")
         component = resource.components["task"]
         
-        rtable = resource.table
-        ltable = component.link.table
-        ctable = component.table
-        expected = (ltable.deleted != True) & \
-                   ((ltable.project_id == rtable.id) & \
-                    (ltable.task_id == ctable.id))
-
+        project_project = resource.table
+        project_task_project = component.link.table
+        project_task = component.table
+        expected = (((project_task_project.project_id == project_project.id) &
+                   (project_task_project.deleted != True)) &
+                   (project_task_project.task_id == project_task.id))
+                   
         join = component.get_join()
         self.assertEqual(str(join), str(expected))
 
@@ -1902,7 +1902,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                         ((org_test_office.organisation_id == org_organisation.id) &
                          (org_test_office.deleted != True)) &
                         (org_test_office.office_type_id == 5))
-        self.assertEqual(str(rfilter.get_left_joins()[0]), str(expected))
+        self.assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
         
         # ...and the effective query of the master contains the filter
         # and is using the correct alias
@@ -1912,16 +1912,19 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         self.assertEqual(str(resource.get_query()), str(expected))
 
         # Check the query of the component
-        expected = ((((org_test_office.deleted != True) &
+        component = resource.components["test"]
+        expected = (((org_test_office.deleted != True) &
                     (org_test_office.id > 0)) &
                     (((org_organisation.deleted != True) &
                     (org_organisation.id > 0)) &
-                    (org_test_office.name.lower().like("xyz%")))) &
-                    (((org_test_office.organisation_id == org_organisation.id) &
-                    (org_test_office.deleted != True)) &
-                    (org_test_office.office_type_id == 5)))
-        self.assertEqual(str(resource.components["test"].get_query()),
-                         str(expected))
+                    (org_test_office.name.lower().like("xyz%"))))
+        self.assertEqual(str(component.get_query()), str(expected))
+        
+        rfilter = component.rfilter
+        expected = org_organisation.on(
+                        (org_test_office.organisation_id == org_organisation.id) &
+                        (org_test_office.office_type_id == 5))
+        self.assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
         
         # Remove the component hook
         del current.model.components["org_organisation"]["test"]
@@ -2053,18 +2056,18 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         component = resource.components["email"]
         join = component.get_join()
-        expected = (((pr_person.deleted != True) &
-                    ((hrm_human_resource.person_id == pr_person.id) &
-                    (pr_person.pe_id == pr_email_contact.pe_id))) &
-                    (pr_email_contact.contact_method == "EMAIL"))
+        expected = (((hrm_human_resource.person_id == pr_person.id) &
+                   (pr_person.deleted != True)) &
+                   ((pr_person.pe_id == pr_email_contact.pe_id) &
+                   (pr_email_contact.contact_method == "EMAIL")))
         self.assertEqual(str(join), str(expected))
 
         component = resource.components["phone"]
         join = component.get_join()
-        expected = (((pr_person.deleted != True) &
-                    ((hrm_human_resource.person_id == pr_person.id) &
-                    (pr_person.pe_id == pr_phone_contact.pe_id))) &
-                    (pr_phone_contact.contact_method == "SMS"))
+        expected = (((hrm_human_resource.person_id == pr_person.id) &
+                   (pr_person.deleted != True)) &
+                   ((pr_person.pe_id == pr_phone_contact.pe_id) &
+                   (pr_phone_contact.contact_method == "SMS")))
         self.assertEqual(str(join), str(expected))
 
     # -------------------------------------------------------------------------

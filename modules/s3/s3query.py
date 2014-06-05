@@ -330,8 +330,8 @@ class S3FieldPath(object):
         self.ftype = None
         self.virtual = False
         self.colname = None
-        self.left = Storage()
-        self.join = Storage()
+
+        self.joins = {}
 
         self.distinct = False
         self.multiple = True
@@ -360,28 +360,25 @@ class S3FieldPath(object):
             # Resolve the tail
             op = tokens.pop(0)
             if tokens:
+                
                 if op == ".":
                     # head is a component or linktable alias, and tokens is
                     # a field expression in the component/linked table
                     if not resource:
                         resource = s3db.resource(table, components=[])
-                    ktable, j, l, m, d = self._resolve_alias(resource, head)
-                    if j is not None and l is not None:
-                        self.join[ktable._tablename] = j
-                        self.left[ktable._tablename] = l
+                    ktable, join, m, d = self._resolve_alias(resource, head)
                     self.multiple = m
                     self.distinct = d
-                    tail = S3FieldPath(None, ktable, tokens)
-
                 else:
                     # head is a foreign key in the current table and tokens is
                     # a field expression in the referenced table
-                    ktable, join, left = self._resolve_key(table, head)
-                    if join is not None and left is not None:
-                        self.join[ktable._tablename] = join
-                        self.left[ktable._tablename] = left
-                    tail = S3FieldPath(None, ktable, tokens)
+                    ktable, join = self._resolve_key(table, head)
                     self.distinct = True
+                    
+                if join is not None:
+                    self.joins[ktable._tablename] = join
+                tail = S3FieldPath(None, ktable, tokens)
+                
             else:
                 raise SyntaxError("trailing operator")
 
@@ -413,8 +410,7 @@ class S3FieldPath(object):
             self.distinct |= tail.distinct
             self.multiple |= tail.multiple
 
-            self.join.update(tail.join)
-            self.left.update(tail.left)
+            self.joins.update(tail.joins)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -471,11 +467,9 @@ class S3FieldPath(object):
                                     db_only=True)
 
         pkey = ktable[pkey] if pkey else ktable._id
+        join = [ktable.on(f == pkey)]
 
-        join = (f == pkey)
-        left = [ktable.on(join)]
-
-        return ktable, join, left
+        return ktable, join
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -501,7 +495,7 @@ class S3FieldPath(object):
 
         # Alias for this resource?
         if alias in ("~", resource.alias):
-            return resource.table, None, None, False, False
+            return resource.table, None, False, False
 
         multiple = True
         s3db = current.s3db
@@ -529,8 +523,7 @@ class S3FieldPath(object):
             component = components[alias]
 
             ktable = component.table
-            join = component.get_join()
-            left = component.get_left_join()
+            join = component._join()
             multiple = component.multiple
 
         elif alias in links:
@@ -539,8 +532,7 @@ class S3FieldPath(object):
             link = links[alias]
 
             ktable = link.table
-            join = link.get_join()
-            left = link.get_left_join()
+            join = link._join()
 
         elif "_" in alias:
 
@@ -599,15 +591,15 @@ class S3FieldPath(object):
                 pkey = table._id.name
 
             # Build join
-            join = (table[pkey] == ktable[fkey])
+            query = (table[pkey] == ktable[fkey])
             if DELETED in ktable.fields:
-                join &= ktable[DELETED] != True
-            left = [ktable.on(join)]
+                query &= ktable[DELETED] != True
+            join = [ktable.on(query)]
 
         else:
             raise SyntaxError("Invalid tablename: %s" % alias)
 
-        return ktable, join, left, multiple, True
+        return ktable, join, multiple, True
 
 # =============================================================================
 class S3ResourceField(object):
@@ -631,10 +623,12 @@ class S3ResourceField(object):
         self.fname = lf.fname
         self.colname = lf.colname
 
-        self.join = lf.join
-        self.left = lf.left
+        self._joins = lf.joins
+        
         self.distinct = lf.distinct
         self.multiple = lf.multiple
+
+        self._join = None
 
         self.field = lf.field
 
@@ -695,6 +689,37 @@ class S3ResourceField(object):
                (self.selector, self.label, self.tname, self.fname, self.ftype)
 
     # -------------------------------------------------------------------------
+    @property
+    def join(self):
+        """
+            Implicit join (Query) for this field, for backwards-compatibility
+        """
+
+        if self._join is not None:
+            return self._join
+            
+        join = self._join = {}
+        for tablename, joins in self._joins.items():
+            query = None
+            for expression in joins:
+                if query is None:
+                    query = expression.second
+                else:
+                    query &= expression.second
+            if query:
+                join[tablename] = query
+        return join
+            
+    # -------------------------------------------------------------------------
+    @property
+    def left(self):
+        """
+            The left joins for this field, for backwards-compability
+        """
+
+        return self._joins
+
+    # -------------------------------------------------------------------------
     def extract(self, row, represent=False, lazy=False):
         """
             Extract the value for this field from a row
@@ -751,19 +776,20 @@ class S3ResourceField(object):
             return value
 
 # =============================================================================
-class S3LeftJoins(object):
+class S3Joins(object):
+    """ Class to handle explicit joins """
 
     def __init__(self, tablename, joins=None):
         """
             Constructor
 
             @param tablename: the tablename
-            @param joins: list of left joins
+            @param joins: list of joins
         """
 
         self.tablename = tablename
         self.joins = {}
-        self.tables = []
+        self.tables = set()
 
         self.add(joins)
 
@@ -794,7 +820,7 @@ class S3LeftJoins(object):
                 if tname not in joins and \
                    tablename in tables(join.second):
                     joins[tname] = [join]
-        self.tables.append(key)
+        self.tables.add(key)
         return
 
     # -------------------------------------------------------------------------
@@ -815,45 +841,50 @@ class S3LeftJoins(object):
     # -------------------------------------------------------------------------
     def add(self, joins):
 
-        tablenames = []
+        tablenames = set()
         if joins:
             if not isinstance(joins, (list, tuple)):
                 joins = [joins]
             for join in joins:
                 tablename = join.first._tablename
                 self[tablename] = [join]
-                tablenames.append(tablename)
-        return tablenames
+                tablenames.add(tablename)
+        return list(tablenames)
 
     # -------------------------------------------------------------------------
     def extend(self, other):
 
-        if type(other) is S3LeftJoins:
-            append = self.tables.append
+        if type(other) is S3Joins:
+            add = self.tables.add
         else:
-            append = None
-        joins = self.joins if type(other) is S3LeftJoins else self
+            add = None
+        joins = self.joins if type(other) is S3Joins else self
         for tablename in other:
             if tablename not in self.joins:
                 joins[tablename] = other[tablename]
-                if append:
-                    append(tablename)
+                if add:
+                    add(tablename)
         return other.keys()
 
     # -------------------------------------------------------------------------
     def __repr__(self):
 
-        return "<S3LeftJoins %s>" % str([str(j) for j in self.as_list()])
+        return "<S3Joins %s>" % str([str(j) for j in self.as_list()])
 
     # -------------------------------------------------------------------------
-    def as_list(self, tablenames=None, aqueries=None):
+    def as_list(self, tablenames=None, exclude=None, aqueries=None):
 
         accessible_query = current.auth.s3_accessible_query
 
         if tablenames is None:
-            tablenames = set(self.tables)
+            tablenames = self.tables
         else:
             tablenames = set(tablenames)
+        if isinstance(exclude, S3Joins):
+            tablenames -= set(exclude.keys())
+        elif exclude:
+            tablenames -= set(exclude)
+            
 
         joins = self.joins
 
@@ -930,7 +961,7 @@ class S3LeftJoins(object):
         if head is not None:
             return [head] + cls.sort(r)
         else:
-            raise RuntimeError("circular left-join dependency")
+            raise RuntimeError("circular join dependency")
 
 # =============================================================================
 class S3ResourceQuery(object):
@@ -993,43 +1024,38 @@ class S3ResourceQuery(object):
             return S3ResourceQuery(self.NOT, self)
 
     # -------------------------------------------------------------------------
-    def joins(self, resource, left=False):
-        """
-            Get a Storage {tablename: join} for this query.
-
-            @param resource: the resource to resolve the query against
-            @param left: get left joins rather than inner joins
-        """
-
+    def _joins(self, resource, left=False):
+        
         op = self.op
         l = self.left
         r = self.right
 
         if op in (self.AND, self.OR):
-            ljoins, ld = l.joins(resource, left=left)
-            rjoins, rd = r.joins(resource, left=left)
-            ljoins = Storage(ljoins)
+            ljoins, ld = l._joins(resource, left=left)
+            rjoins, rd = r._joins(resource, left=left)
+            
+            ljoins = dict(ljoins)
             ljoins.update(rjoins)
+            
             return (ljoins, ld or rd)
+            
         elif op == self.NOT:
-            return l.joins(resource, left=left)
+            return l._joins(resource, left=left)
+
+        joins, distinct = {}, False
+
         if isinstance(l, S3FieldSelector):
             try:
                 rfield = l.resolve(resource)
-            except:
-                return (Storage(), False)
-            if rfield.distinct:
-                if left:
-                    return (rfield.left, True)
-                else:
-                    return (Storage(), True)
+            except (SyntaxError, AttributeError):
+                pass
             else:
-                if left:
-                    return (Storage(), False)
-                else:
-                    return (rfield.join, False)
-        return(Storage(), False)
+                distinct = rfield.distinct
+                if distinct and left or not distinct and not left:
+                    joins = rfield._joins
 
+        return(joins, distinct)
+        
     # -------------------------------------------------------------------------
     def fields(self):
         """ Get all field selectors involved with this query """
