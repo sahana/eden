@@ -103,6 +103,7 @@ class S3ChannelModel(S3Model):
                                 #label = T("Description"),
                                 ),
                           Field("enabled", "boolean",
+                                default = True,
                                 #label = T("Enabled?")
                                 #represent = s3_yes_no_represent,
                                 ),
@@ -166,7 +167,7 @@ class S3ChannelModel(S3Model):
                     msg_channel_poll = self.channel_poll,
                     )
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def channel_enable(tablename, channel_id):
         """
@@ -202,14 +203,14 @@ class S3ChannelModel(S3Model):
             return "Channel already enabled"
         else:
             current.s3task.schedule_task("msg_poll",
-                                         args=[tablename, channel_id],
-                                         period=300,  # seconds
-                                         timeout=300, # seconds
-                                         repeats=0    # unlimited
+                                         args = [tablename, channel_id],
+                                         period = 300,  # seconds
+                                         timeout = 300, # seconds
+                                         repeats = 0    # unlimited
                                          )
             return "Channel enabled"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def channel_enable_interactive(r, **attr):
         """
@@ -225,7 +226,7 @@ class S3ChannelModel(S3Model):
         fn = tablename.split("_", 1)[1]
         redirect(URL(f=fn))
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def channel_disable(tablename, channel_id):
         """
@@ -264,7 +265,7 @@ class S3ChannelModel(S3Model):
         else:
             return "Channel already disabled"
 
-    # -----------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     @staticmethod
     def channel_disable_interactive(r, **attr):
         """
@@ -303,7 +304,7 @@ class S3ChannelModel(S3Model):
                 current.s3db.msg_channel_enable(form.table._tablename,
                                                 form.vars.channel_id)
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def channel_poll(r, **attr):
         """
@@ -389,10 +390,11 @@ class S3MessageModel(S3Model):
                                 ),
                           Field("inbound", "boolean",
                                 default = False,
+                                label = T("Direction"),
                                 represent = lambda direction: \
                                             (direction and [T("In")] or \
                                                            [T("Out")])[0],
-                                label = T("Direction")),
+                                ),
                           )
 
         # @todo: make lazy_table
@@ -412,10 +414,11 @@ class S3MessageModel(S3Model):
         # Reusable Field
         message_represent = S3Represent(lookup=tablename, fields=["body"])
         message_id = S3ReusableField("message_id", "reference %s" % tablename,
+                                     ondelete = "RESTRICT",
+                                     represent = message_represent,
                                      requires = IS_EMPTY_OR(
                                         IS_ONE_OF_EMPTY(db, "msg_message.id")),
-                                     represent = message_represent,
-                                     ondelete = "RESTRICT")
+                                     )
 
         self.add_components(tablename,
                             msg_attachment = "message_id",
@@ -461,21 +464,24 @@ class S3MessageModel(S3Model):
                      # If set used instead of picking up from pe_id:
                      Field("address"),
                      Field("contact_method", length=32,
-                           requires = IS_IN_SET(MSG_CONTACT_OPTS,
-                                                zero=None),
                            default = "EMAIL",
                            label = T("Contact Method"),
                            represent = lambda opt: \
-                                       MSG_CONTACT_OPTS.get(opt, UNKNOWN_OPT)),
+                                       MSG_CONTACT_OPTS.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(MSG_CONTACT_OPTS,
+                                                zero=None),
+                           ),
                      opt_msg_status(),
                      # Used to loop through a PE to get it's members
                      Field("system_generated", "boolean",
-                           default=False),
+                           default = False,
+                           ),
                      # Give up if we can't send after MAX_RETRIES
                      Field("retries", "integer",
-                           default=MAX_SEND_RETRIES,
-                           readable=False,
-                           writable=False),
+                           default = MAX_SEND_RETRIES,
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         configure(tablename,
@@ -550,19 +556,22 @@ class S3EmailModel(S3ChannelModel):
                      Field("name"),
                      Field("description"),
                      Field("enabled", "boolean",
+                           default = True,
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
                      Field("server"),
                      Field("protocol",
                            requires = IS_IN_SET(["imap", "pop3"],
-                                                zero=None)),
+                                                zero=None),
+                           ),
                      Field("use_ssl", "boolean"),
                      Field("port", "integer"),
                      Field("username"),
                      Field("password", "password", length=64,
                            readable = False,
-                           requires=IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      # Set true to delete messages from the remote
                      # inbox after fetching them.
                      Field("delete_from_server", "boolean"),
@@ -574,16 +583,16 @@ class S3EmailModel(S3ChannelModel):
                   )
 
         set_method("msg", "email_channel",
-                   method="enable",
-                   action=self.msg_channel_enable_interactive)
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
 
         set_method("msg", "email_channel",
-                   method="disable",
-                   action=self.msg_channel_disable_interactive)
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
 
         set_method("msg", "email_channel",
-                   method="poll",
-                   action=self.msg_channel_poll)
+                   method = "poll",
+                   action = self.msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Email Messages: InBox & Outbox
@@ -612,15 +621,15 @@ class S3EmailModel(S3ChannelModel):
                            requires = IS_EMAIL()
                            ),
                      Field("raw", "text",
+                           label = T("Message Source"),
                            readable = False,
                            writable = False,
-                           label = T("Message Source")
                            ),
                      Field("inbound", "boolean",
                            default = False,
+                           label = T("Direction"),
                            represent = lambda direction: \
                                        (direction and [T("In")] or [T("Out")])[0],
-                           label = T("Direction")
                            ),
                      *s3_meta_fields())
 
@@ -667,6 +676,7 @@ class S3MCommonsModel(S3ChannelModel):
                      Field("name"),
                      Field("description"),
                      Field("enabled", "boolean",
+                           default = True,
                            #label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
@@ -750,6 +760,7 @@ class S3ParsingModel(S3Model):
                            label = T("Parser"),
                            ),
                      Field("enabled", "boolean",
+                           default = True,
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
@@ -917,10 +928,10 @@ class S3ParsingModel(S3Model):
             return "Parser already enabled"
         else:
             current.s3task.schedule_task("msg_parse",
-                                         args=[channel_id, function_name],
-                                         period=300,  # seconds
-                                         timeout=300, # seconds
-                                         repeats=0    # unlimited
+                                         args = [channel_id, function_name],
+                                         period = 300,  # seconds
+                                         timeout = 300, # seconds
+                                         repeats = 0    # unlimited
                                          )
             return "Parser enabled"
 
@@ -1042,6 +1053,7 @@ class S3RSSModel(S3ChannelModel):
                            label = T("Description"),
                            ),
                      Field("enabled", "boolean",
+                           default = True,
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
@@ -1050,7 +1062,7 @@ class S3RSSModel(S3ChannelModel):
                            requires = IS_URL(),
                            ),
                      s3_datetime(label = T("Last Polled"),
-                                 writable = False
+                                 writable = False,
                                  ),
                      Field("etag",
                            label = T("ETag"),
@@ -1071,16 +1083,16 @@ class S3RSSModel(S3ChannelModel):
                        )
 
         set_method("msg", "rss_channel",
-                   method="enable",
-                   action=self.msg_channel_enable_interactive)
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
 
         set_method("msg", "rss_channel",
-                   method="disable",
-                   action=self.msg_channel_disable_interactive)
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
 
         set_method("msg", "rss_channel",
-                   method="poll",
-                   action=self.msg_channel_poll)
+                   method = "poll",
+                   action = self.msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # RSS Feed Posts
@@ -1338,7 +1350,7 @@ class S3SMSOutboundModel(S3Model):
                            requires = IS_URL(),
                            ),
                      Field("parameters",
-                           default="user=yourusername&password=yourpassword&api_id=yourapiid", # Clickatell
+                           default = "user=yourusername&password=yourpassword&api_id=yourapiid", # Clickatell
                            #default = "campaign_id=yourid", # Mobile Commons
                            ),
                      Field("message_variable", "string",
@@ -1397,6 +1409,7 @@ class S3TropoModel(S3Model):
                      Field("name"),
                      Field("description"),
                      Field("enabled", "boolean",
+                           default = True,
                            #label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
@@ -1409,16 +1422,16 @@ class S3TropoModel(S3Model):
                        )
 
         set_method("msg", "tropo_channel",
-                   method="enable",
-                   action=self.msg_channel_enable_interactive)
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
 
         set_method("msg", "tropo_channel",
-                   method="disable",
-                   action=self.msg_channel_disable_interactive)
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
 
         set_method("msg", "tropo_channel",
-                   method="poll",
-                   action=self.msg_channel_poll)
+                   method = "poll",
+                   action = self.msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Tropo Scratch pad for outbound messaging
@@ -1462,6 +1475,7 @@ class S3TwilioModel(S3ChannelModel):
                      Field("name"),
                      Field("description"),
                      Field("enabled", "boolean",
+                           default = True,
                            #label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
@@ -1471,28 +1485,30 @@ class S3TwilioModel(S3ChannelModel):
                                "https://api.twilio.com/2010-04-01/Accounts"
                            ),
                      Field("account_sid", length=64,
-                           requires = IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("auth_token", "password", length=64,
                            readable = False,
-                           requires = IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       super_entity = "msg_channel",
                        onaccept = self.msg_channel_onaccept,
+                       super_entity = "msg_channel",
                        )
 
         set_method("msg", "twilio_channel",
-                   method="enable",
-                   action=self.msg_channel_enable_interactive)
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
 
         set_method("msg", "twilio_channel",
-                   method="disable",
-                   action=self.msg_channel_disable_interactive)
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
 
         set_method("msg", "twilio_channel",
-                   method="poll",
-                   action=self.msg_channel_poll)
+                   method = "poll",
+                   action = self.msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Twilio Message extensions
@@ -1536,6 +1552,7 @@ class S3TwitterModel(S3Model):
                      Field("name"),
                      Field("description"),
                      Field("enabled", "boolean",
+                           default = True,
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
@@ -1547,22 +1564,22 @@ class S3TwitterModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  super_entity = "msg_channel",
                   onaccept = self.msg_channel_onaccept,
                   #onvalidation = self.twitter_channel_onvalidation
+                  super_entity = "msg_channel",
                   )
 
         set_method("msg", "twitter_channel",
-                   method="enable",
-                   action=self.msg_channel_enable_interactive)
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
 
         set_method("msg", "twitter_channel",
-                   method="disable",
-                   action=self.msg_channel_disable_interactive)
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
 
         set_method("msg", "twitter_channel",
-                   method="poll",
-                   action=self.msg_channel_poll)
+                   method = "poll",
+                   action = self.msg_channel_poll)
 
         # ---------------------------------------------------------------------
         # Twitter Messages: InBox & Outbox
@@ -1572,7 +1589,7 @@ class S3TwitterModel(S3Model):
                      # Instance
                      self.super_link("message_id", "msg_message"),
                      self.msg_channel_id(),
-                     s3_datetime(default="now",
+                     s3_datetime(default = "now",
                                  label = T("Posted on"),
                                  ),
                      Field("body", length=140,
@@ -1580,8 +1597,8 @@ class S3TwitterModel(S3Model):
                            ),
                      Field("from_address", #notnull=True,
                            label = T("From"),
-                           requires = IS_NOT_EMPTY(),
                            represent = self.twitter_represent,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("to_address",
                            label = T("To"),
@@ -1589,10 +1606,10 @@ class S3TwitterModel(S3Model):
                            ),
                      Field("inbound", "boolean",
                            default = False,
+                           label = T("Direction"),
                            represent = lambda direction: \
                                        (direction and [T("In")] or \
                                                       [T("Out")])[0],
-                           label = T("Direction"),
                            ),
                      Field("msg_id", # Twitter Message ID
                            readable = False,
@@ -1601,16 +1618,16 @@ class S3TwitterModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
+                  list_fields = ["id",
+                                 #"priority",
+                                 #"category",
+                                 "body",
+                                 "from_address",
+                                 "date",
+                                 #"location_id",
+                                 ],
+                  #orderby = ~table.priority,
                   super_entity = "msg_message",
-                  #orderby=~table.priority,
-                  list_fields=["id",
-                               #"priority",
-                               #"category",
-                               "body",
-                               "from_address",
-                               "date",
-                               #"location_id",
-                               ],
                   )
 
         # ---------------------------------------------------------------------
@@ -1757,23 +1774,24 @@ class S3TwitterSearchModel(S3ChannelModel):
         represent = S3Represent(lookup=tablename, fields=["keywords"])
         search_id = S3ReusableField("search_id", "reference %s" % tablename,
                     label = T("Search Query"),
+                    ondelete = "CASCADE",
+                    represent = represent,
                     requires = IS_EMPTY_OR(
                                 IS_ONE_OF_EMPTY(db, "msg_twitter_search.id")
                                 ),
-                    represent = represent,
-                    ondelete = "CASCADE")
+                    )
 
         set_method("msg", "twitter_search",
-                   method="poll",
-                   action=self.twitter_search_poll)
+                   method = "poll",
+                   action = self.twitter_search_poll)
 
         set_method("msg", "twitter_search",
-                   method="keygraph",
-                   action=self.twitter_keygraph)
+                   method = "keygraph",
+                   action = self.twitter_keygraph)
 
         set_method("msg", "twitter_result",
-                   method="timeline",
-                   action=self.twitter_timeline)
+                   method = "timeline",
+                   action = self.twitter_timeline)
 
         # ---------------------------------------------------------------------
         # Twitter Search Results
@@ -1817,8 +1835,6 @@ class S3TwitterSearchModel(S3ChannelModel):
                      *s3_meta_fields())
 
         configure(tablename,
-                  super_entity = "msg_message",
-                  #orderby=~table.priority,
                   list_fields = [#"category",
                                  #"priority",
                                  "body",
@@ -1826,6 +1842,8 @@ class S3TwitterSearchModel(S3ChannelModel):
                                  "date",
                                  "location_id",
                                  ],
+                  #orderby=~table.priority,
+                  super_entity = "msg_message",
                   )
 
         # ---------------------------------------------------------------------
@@ -2008,12 +2026,13 @@ class S3BaseStationModel(S3Model):
                      self.super_link("site_id", "org_site"),
                      Field("name", notnull=True,
                            length=64, # Mayon Compatibility
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      Field("code", length=10, # Mayon compatibility
-                           label=T("Code"),
+                           label = T("Code"),
                            # Deployments that don't wants site codes can hide them
-                           #readable=False,
-                           #writable=False,
+                           #readable = False,
+                           #writable = False,
                            # @ToDo: Deployment Setting to add validator to make these unique
                            ),
                      self.org_organisation_id(

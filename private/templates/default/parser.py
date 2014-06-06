@@ -5,7 +5,7 @@
 
     Template-specific Message Parsers are defined here.
 
-    @copyright: 2012-13 (c) Sahana Software Foundation
+    @copyright: 2012-14 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -52,7 +52,7 @@ from s3.s3utils import soundex
 # =============================================================================
 class S3Parser(object):
     """
-       Message Parsing Template.
+       Message Parsing Template
     """
 
     # -------------------------------------------------------------------------
