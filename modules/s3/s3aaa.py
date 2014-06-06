@@ -290,6 +290,8 @@ Thank you"""
                       default=""),
                 Field("email", length=255, unique=True,
                       default=""),
+                Field("username", length=255, default="",
+                      readable=False, writable=False),
                 Field("language", length=16,
                       default = deployment_settings.get_L10n_default_language()),
                 Field("utc_offset", length=16,
@@ -1512,7 +1514,9 @@ Thank you"""
                         formname="profile",
                         onvalidation=onvalidation,
                         hideerror=settings.hideerror):
+            username = form.vars.email.replace("@","_")
             self.user.update(utable._filter_fields(form.vars))
+            current.db(utable.id == self.s3_logged_in_person()).update(username = username)
             session.flash = messages.profile_updated
             if log:
                 self.log_event(log % self.user)
@@ -2012,6 +2016,9 @@ S3OptionsFilter({
 
         form_vars = form.vars
         user_id = form_vars.id
+        email = form_vars.email
+        chat_username = email.replace("@","_")
+        db(utable.id == user_id).update(username = chat_username)
 
         if not user_id:
             return None
