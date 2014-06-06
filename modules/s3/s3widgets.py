@@ -4200,6 +4200,7 @@ class S3LocationSelectorWidget2(FormWidget):
             label = LABEL("%s:" % label, _for=id)
             widget = INPUT(_name="address",
                            _id=id,
+                           _class="string",
                            value=address,
                            )
             # @ToDo: Option to Flag this as required

@@ -75,6 +75,11 @@ textarea[class*="span"] {
     display: inline-block /*don't wrap help-block*/
 }
 
+.dropdown-menu > li > a:hover > [class^="icon-"],
+.dropdown-menu > li > a:hover > [class*=" icon-"] { 
+    background-image: none;
+}
+
 /* Web2Py styles Inputs as x-large, which don't match other form inputs */
 .input-xlarge {
     -moz-box-sizing: inherit;
@@ -356,8 +361,7 @@ body.rtl .form-horizontal .control-label {
 #delete-btn, 
 #edit-btn.btn.btn-primary,
 #show-add-btn {
-    padding: 1px 6px;
-    font-size: 10.5px;
+    padding: 2px 8px;
     -webkit-border-radius: 3px;
        -moz-border-radius: 3px;
             border-radius: 3px;
@@ -520,8 +524,6 @@ form.form-horizontal .map_wrapper {
 table.embeddedComponent {
     border: 0;
     display: inline-block;
-    margin-bottom: 10px;
-    margin-top: 1px;
     border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
@@ -544,7 +546,7 @@ table.embeddedComponent td {
 }
 
 table.embeddedComponent .add-row td {
-    padding-top: 5px;
+    padding: 0 10px 0 0;
 }
 .inline-add {
     background-image: url(../../img/bootstrap/add.png);

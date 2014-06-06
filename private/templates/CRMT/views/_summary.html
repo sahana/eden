@@ -10,6 +10,9 @@
   {{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}
  </div>
  <div id='filter-form' class='form-container'>
+  <label id='filter-form-title'>
+   {{=T("Filter")}}
+  </label>
   {{try:}}{{=filter_form}}{{except:}}{{pass}}
  </div>
 </div>
