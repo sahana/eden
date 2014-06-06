@@ -1921,7 +1921,47 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         s3db = current.s3db
         
         tablename = resource.tablename
-        if tablename == "deploy_response":
+        if tablename == "deploy_alert":
+
+            # Recipients, aggregated by region
+            record_ids = set(record["_row"]["deploy_alert.id"]
+                             for record in records)
+            
+            rtable = s3db.deploy_alert_recipient
+            htable = s3db.hrm_human_resource
+            otable = s3db.org_organisation
+            
+            left = [htable.on(htable.id==rtable.human_resource_id),
+                    otable.on(otable.id==htable.organisation_id)]
+                    
+            alert_id = rtable.alert_id
+            query = (alert_id.belongs(record_ids)) & \
+                    (rtable.deleted != True)
+                    
+            region_id = otable.region_id
+            number_of_recipients = htable.id.count()
+            rows = current.db(query).select(alert_id,
+                                            region_id,
+                                            number_of_recipients,
+                                            left=left,
+                                            groupby=[alert_id, region_id])
+
+            recipient_numbers = {}
+            for row in rows:
+                alert = row[alert_id]
+                if alert in recipient_numbers:
+                    recipient_numbers[alert].append(row)
+                else:
+                    recipient_numbers[alert] = [row]
+            self.recipient_numbers = recipient_numbers
+
+            # Representations of the region_ids
+            represent = otable.region_id.represent
+            represent.none = current.T("No Region")
+            region_ids = [row[region_id] for row in rows]
+            self.region_names = represent.bulk(region_ids)
+
+        elif tablename == "deploy_response":
 
             dcount = self.dcount
             avgrat = self.avgrat
@@ -2049,23 +2089,10 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             # Message subject as title
             subject = record["deploy_alert.subject"]
 
-            # Recipients, aggregated by region
-            rtable = s3db.deploy_alert_recipient
-            htable = s3db.hrm_human_resource
-            otable = s3db.org_organisation
-            left = [htable.on(htable.id==rtable.human_resource_id),
-                    otable.on(otable.id==htable.organisation_id)]
-            query = (rtable.alert_id == record_id) & \
-                    (rtable.deleted != True)
-            region = otable.region_id
-            rcount = htable.id.count()
-            rows = current.db(query).select(region,
-                                            rcount,
-                                            left=left,
-                                            groupby=region)
-
+            rows = self.recipient_numbers.get(record_id)
             total_recipients = 0
             if rows:
+                
                 # Labels
                 hr_label = current.deployment_settings.get_deploy_hr_label()
                 HR_LABEL = T(hr_label)
@@ -2075,17 +2102,21 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                     HRS_LABEL = HR_LABEL
                 elif hr_label == "Volunteer":
                     HRS_LABEL = T("Volunteers")
-                represent = otable.region_id.represent
-                regions = represent.bulk([row[region] for row in rows])
+                    
+                htable = s3db.hrm_human_resource
+                otable = s3db.org_organisation
+                region = otable.region_id
+                rcount = htable.id.count()
+                represent = region.represent
+                
+                region_names = self.region_names
+                
                 no_region = None
                 recipients = []
                 for row in rows:
                     # Region
                     region_id = row[region]
-                    if region_id:
-                        region_name = regions.get(region_id)
-                    else:
-                        region_name = T("No Region")
+                    region_name = represent(region_id)
                     region_filter = {
                         "recipient.human_resource_id$" \
                         "organisation_id$region_id__belongs": region_id
