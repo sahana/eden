@@ -777,13 +777,13 @@ class S3ResourceField(object):
 
 # =============================================================================
 class S3Joins(object):
-    """ Class to handle explicit joins """
+    """ A collection of joins """
 
     def __init__(self, tablename, joins=None):
         """
             Constructor
 
-            @param tablename: the tablename
+            @param tablename: the name of the master table
             @param joins: list of joins
         """
 
@@ -795,51 +795,85 @@ class S3Joins(object):
 
     # -------------------------------------------------------------------------
     def __iter__(self):
+        """
+            Iterate over the names of all joined tables in the collection
+        """
 
         return self.joins.__iter__()
 
     # -------------------------------------------------------------------------
-    def __getitem__(self, key):
+    def __getitem__(self, tablename):
+        """
+            Get the list of joins for a table
 
-        return self.joins.__getitem__(key)
+            @param tablename: the tablename
+        """
+
+        return self.joins.__getitem__(tablename)
 
     # -------------------------------------------------------------------------
-    def __setitem__(self, key, value):
+    def __setitem__(self, tablename, joins):
+        """
+            Update the joins for a table
 
-        tablename = self.tablename
-        joins = self.joins
+            @param tablename: the tablename
+            @param joins: the list of joins for this table
+        """
+
+        master = self.tablename
+        joins_dict = self.joins
+        
         tables = current.db._adapter.tables
 
-        joins[key] = value
-        if len(value) > 1:
-            for join in value:
+        joins_dict[tablename] = joins
+        if len(joins) > 1:
+            for join in joins:
                 try:
                     tname = join.first._tablename
                 except AttributeError:
                     tname = str(join.first)
-                if tname not in joins and \
-                   tablename in tables(join.second):
-                    joins[tname] = [join]
-        self.tables.add(key)
+                if tname not in joins_dict and \
+                   master in tables(join.second):
+                    joins_dict[tname] = [join]
+        self.tables.add(tablename)
         return
 
     # -------------------------------------------------------------------------
     def keys(self):
+        """
+            Get a list of names of all joined tables
+        """
 
         return self.joins.keys()
 
     # -------------------------------------------------------------------------
     def items(self):
+        """
+            Get a list of tuples (tablename, [joins]) for all joined tables
+        """
 
         return self.joins.items()
 
     # -------------------------------------------------------------------------
     def values(self):
+        """
+            Get a list of joins for all joined tables
+
+            @return: a nested list like [[join, join, ...], ...]
+        """
 
         return self.joins.values()
 
     # -------------------------------------------------------------------------
     def add(self, joins):
+        """
+            Add joins to this collection
+
+            @param joins: a join or a list/tuple of joins
+            
+            @return: the list of names of all tables for which joins have
+                     been added to the collection
+        """
 
         tablenames = set()
         if joins:
@@ -853,6 +887,14 @@ class S3Joins(object):
 
     # -------------------------------------------------------------------------
     def extend(self, other):
+        """
+            Extend this collection with the joins from another collection
+
+            @param other: the other collection (S3Joins), or a dict like
+                          {tablename: [join, join]}
+            @return: the list of names of all tables for which joins have
+                     been added to the collection
+        """
 
         if type(other) is S3Joins:
             add = self.tables.add
@@ -868,11 +910,38 @@ class S3Joins(object):
 
     # -------------------------------------------------------------------------
     def __repr__(self):
+        """
+            String representation of this collection
+        """
 
         return "<S3Joins %s>" % str([str(j) for j in self.as_list()])
 
     # -------------------------------------------------------------------------
     def as_list(self, tablenames=None, exclude=None, aqueries=None):
+        """
+            Return joins from this collection as list
+
+            @param tablenames: the names of the tables for which joins
+                               shall be returned, defaults to all tables
+                               in the collection. Dependencies will be
+                               included automatically (if available)
+            @param exclude: tables to exclude from tablenames, can be
+                            another S3Joins collection, or a list/tuple/set
+                            of tablenames, useful e.g. to prevent duplication
+                            of left joins as inner joins:
+                            join = inner_joins.as_list(exclude=left_joins)
+                            left = left_joins.as_list()
+            @param aqueries: dict of accessible-queries {tablename: query}
+                             to include in the joins; if there is no entry
+                             for a particular table, then it will be looked
+                             up from current.auth and added to the dict.
+                             To prevent differential authorization of a
+                             particular joined table, set {<tablename>: None}
+                             in the dict
+
+            @return: a list of joins, ordered by their interdependency, which
+                     can be used as join/left parameter of Set.select()
+        """
 
         accessible_query = current.auth.s3_accessible_query
 
