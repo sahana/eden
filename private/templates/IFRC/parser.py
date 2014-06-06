@@ -32,6 +32,8 @@
 
 __all__ = ["S3Parser"]
 
+import datetime
+
 from gluon import current
 
 from s3.s3parser import S3Parsing
@@ -44,9 +46,25 @@ class S3Parser(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def _parse_value(text, fieldname):
+        """
+            Parse a value from a piece of text
+        """
+
+        parts = text.split(":%s:" % fieldname, 1)
+        parts = parts[1].split(":", 1)
+        result = parts[0]
+        return result
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def parse_email(message):
         """
-            Parse Responses directed to the Deploy Module
+            Parse Responses
+                - reply to mails from the Monitor service
+                - parse mails directed to the Deploy Module
+
+            @ToDo: Use template for format of field/value encoding
         """
 
         db = current.db
@@ -61,26 +79,44 @@ class S3Parser(object):
                                                            ).first()
         if not record:
             return reply
+
         message_body = record.raw
         if not message_body:
             return reply
 
-        # Is this a Response to an Alert?
-        # @ToDo: Use template
-        if ":mission_id:" not in message_body:
+        # What type of message is this?
+        if ":run_id:" in message_body:
+            # Monitor Check
+
+            # Parse Mail
+            try:
+                run_id = S3Parser._parse_value(message_body, "run_id")
+                run_id = int(run_id)
+            except:
+                return reply
+            try:
+                to = S3Parser._parse_value(message_body, "reply_to")
+            except:
+                return reply
+
+            # Send Reply
+            now = datetime.datetime.utcnow().isoformat()
+            subject = "MONITOR REPLY: Mail Received and Parsed OK"
+            message = """Test message sent to %s from :run_id:%s: arrived fine & was parsed at %s.""" % \
+                (current.deployment_settings.get_base_public_url(), run_id, now)
+            result = current.msg.send_email(to,
+                                            subject,
+                                            message)
+
+        elif ":mission_id:" in message_body:
+            # Response to a Deployment Alert
+            pass
+        else:
+            # Don't know what this is
             return reply
 
-        parts = message_body.split(":mission_id:", 1)
         try:
-            parts = parts[1].split(":", 1)
-        except:
-            return reply
-
-        mission_id = parts[0]
-        if not mission_id:
-            return reply
-
-        try:
+            mission_id = S3Parser._parse_value(message_body, "mission_id")
             mission_id = int(mission_id)
         except:
             return reply
@@ -120,7 +156,7 @@ class S3Parser(object):
                     db(dtable.id == document_id).update(doc_id = doc_id)
 
         # @ToDo: Reply?
-        reply = None
+        #reply = ...
 
         return reply
 

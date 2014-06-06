@@ -251,9 +251,8 @@ S3OptionsFilter({
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ASSET = T("Create Asset")
         crud_strings[tablename] = Storage(
-            label_create = ADD_ASSET,
+            label_create = T("Create Asset"),
             title_display = T("Asset Details"),
             title_list =  T("Assets"),
             title_update = T("Edit Asset"),
@@ -267,16 +266,16 @@ S3OptionsFilter({
 
         # Reusable Field
         asset_id = S3ReusableField("asset_id", "reference %s" % tablename,
-                                   sortby="number",
+                                   label = T("Asset"),
+                                   ondelete = "CASCADE",
+                                   # @ToDo: migrate to S3Represent
+                                   represent = self.asset_represent,
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "asset_asset.id",
                                                           self.asset_represent,
                                                           sort=True)),
-                                   represent = self.asset_represent,
-                                   label = T("Asset"),
-                                   comment = S3AddResourceLink(c="asset", f="asset",
-                                    tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Create Asset'.")),
-                                   ondelete = "CASCADE")
+                                   sortby = "number",
+                                   )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -605,6 +604,8 @@ S3OptionsFilter({
     def asset_represent(id, row=None):
         """
             Represent an Asset
+
+            @ToDo: migrate to S3Represent
         """
 
         if row:

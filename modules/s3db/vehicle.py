@@ -47,7 +47,7 @@ class S3VehicleModel(S3Model):
     names = ["vehicle_vehicle",
              "vehicle_gps",
              "vehicle_vehicle_id",
-            ]
+             ]
 
     def model(self):
 
@@ -90,35 +90,42 @@ class S3VehicleModel(S3Model):
         tablename = "vehicle_vehicle"
         self.define_table(tablename,
                           Field("type",
-                                requires = IS_EMPTY_OR(IS_IN_SET(vehicle_type_opts)),
+                                label = T("Type"),
                                 represent = lambda opt: \
                                             vehicle_type_opts.get(opt, opt),
-                                label=T("Type")),
+                                requires = IS_EMPTY_OR(IS_IN_SET(vehicle_type_opts)),
+                                ),
                           Field("name",
-                                label=T("ID")), # often the License Plate
+                                comment = T("e.g. License Plate"),
+                                label = T("ID"),
+                                ),
                           asset_id(),
                           Field("gps",
-                                label=T("GPS ID")),
+                                label = T("GPS ID"),
+                                ),
                           Field("mileage", "integer",
-                                label=T("Current Mileage"),
-                                represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                                label = T("Current Mileage"),
+                                represent = lambda v, row=None: \
+                                    IS_INT_AMOUNT.represent(v),
+                                ),
                           Field("service_mileage", "integer",
-                                label=T("Service Due"),
-                                comment=T("Mileage"),
-                                represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                                comment = T("Mileage"),
+                                label = T("Service Due"),
+                                represent = lambda v, row=None: \
+                                    IS_INT_AMOUNT.represent(v),
+                                ),
                           s3_date("service_date",
-                                  label=T("Service Due")
+                                  label = T("Service Due"),
                                   ),
                           s3_date("insurance_date",
-                                  label=T("Insurance Renewal Due")
+                                  label = T("Insurance Renewal Due"),
                                   ),
                           s3_comments(),
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_VEHICLE_DETAILS = T("Create Vehicle Detail")
         crud_strings[tablename] = Storage(
-            label_create = ADD_VEHICLE_DETAILS,
+            label_create = T("Add Vehicle Details"),
             title_display = T("Vehicle Details"),
             title_list = T("Vehicles"),
             title_update = T("Edit Vehicle Details"),
@@ -129,15 +136,17 @@ class S3VehicleModel(S3Model):
             msg_record_deleted = T("Vehicle Details deleted"),
             msg_list_empty = T("No Vehicle Details currently defined"))
 
+        represent = S3Represent(lookup=tablename)
         vehicle_id = S3ReusableField("vehicle_id", "reference %s" % tablename,
-                                      requires = IS_EMPTY_OR(
+                                     label = T("Vehicle"),
+                                     ondelete = "RESTRICT",
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "vehicle_vehicle.id",
-                                                              "%(name)s")),
-                                      represent = lambda id: \
-                                        (id and [db.vehicle_vehicle[id].name] or [current.messages["NONE"]])[0],
-                                      label = T("Vehicle"),
-                                      ondelete = "RESTRICT")
+                                                              represent,
+                                                              )),
+                                     )
 
         # ---------------------------------------------------------------------
         # GPS records
@@ -149,15 +158,19 @@ class S3VehicleModel(S3Model):
         self.define_table(tablename,
                           asset_id(),
                           Field("lat",
-                                requires=IS_LAT(),
-                                label=T("Latitude")),
+                                label = T("Latitude"),
+                                requires = IS_LAT(),
+                                ),
                           Field("lon",
-                                requires=IS_LON(),
-                                label=T("Longitude")),
+                                label = T("Longitude"),
+                                requires = IS_LON(),
+                                ),
                           Field("direction",
-                                label=T("Direction")),
+                                label = T("Direction"),
+                                ),
                           Field("speed",
-                                label=T("Speed")),
+                                label = T("Speed"),
+                                ),
                           *s3_meta_fields())
 
         # CRUD strings
@@ -177,21 +190,20 @@ class S3VehicleModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    vehicle_vehicle_id = vehicle_id,
-                )
+        return dict(vehicle_vehicle_id = vehicle_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Return safe defaults for names in case the model is disabled """
 
-        vehicle_id = S3ReusableField("vehicle_id", "integer",
-                                     writable=False,
-                                     readable=False)
-        return Storage(
-                    vehicle_vehicle_id = vehicle_id,
-                )
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(vehicle_vehicle_id = lambda **attr: dummy("vehicle_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod

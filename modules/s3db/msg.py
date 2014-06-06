@@ -604,21 +604,21 @@ class S3EmailModel(S3ChannelModel):
                      # Instance
                      super_link("message_id", "msg_message"),
                      self.msg_channel_id(),
-                     s3_datetime(default="now"),
+                     s3_datetime(default = "now"),
                      Field("subject", length=78,    # RFC 2822
-                           label = T("Subject")
+                           label = T("Subject"),
                            ),
                      Field("body", "text",
-                           label = T("Message")
+                           label = T("Message"),
                            ),
                      Field("from_address", #notnull=True,
                            default = sender,
                            label = T("Sender"),
-                           requires = IS_EMAIL()
+                           requires = IS_EMAIL(),
                            ),
                      Field("to_address",
                            label = T("To"),
-                           requires = IS_EMAIL()
+                           requires = IS_EMAIL(),
                            ),
                      Field("raw", "text",
                            label = T("Message Source"),
