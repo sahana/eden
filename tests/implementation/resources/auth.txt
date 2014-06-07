@@ -9,21 +9,46 @@ ${UsernameField}    auth_user_email
 ${PasswordField}    auth_user_password
 
 *** Keywords ***
+
 Open Browser To Login Page
     [Documentation]  Open the browser at the login page
     Go To  ${LOGIN URL}
     Maximize Browser Window
-    Title Should Be  Login
+
+Check If Logged Out
+    [Documentation]  Checks if the user is logged out
+    Page should contain  Logout
+
+Login To Eden If Not Logged In
+    [Documentation]  Check if the user is logged in or not . If not
+    ...                      login using Login To Eden Helper and given email
+    ...                      and password
+    [Arguments]  ${email}  ${passwd}
+    ${status}  ${value} =  Run Keyword And Ignore Error  Check If Logged Out
+    Run Keyword if  '${status}' == 'FAIL'  Login To Eden  ${email}  ${passwd}
 
 Login To Eden
     [Documentation]  Open the browser and login to Eden with
-    ...              the configured username and password.
+    ...              the given username and password.
+    [Arguments]  ${email}  ${passwd}
     Open Browser To Login Page
-    Input Text      ${UsernameField}    ${VALID USER}
-    Input Text      ${PasswordField}    ${VALID PASSWORD}
-    Click Button  xpath=//input[@class='btn' and @value='Login']
-    Location Should Contain  ${HOMEPAGE}
+    Input Text  ${UsernameField}  ${email}
+    Input Text  ${PasswordField}  ${passwd}
+    Click Button  xpath=//input[contains(@class,"btn") and @type="submit"]
+    Should Show Confirmation  Logged in
+
+Self Register A New User
+    [Documentation]  Opens up, fills and submits the registration form
+    [Arguments]  ${fname}  ${lname}  ${email}  ${passwd}
+    Go To  http://${BASEURL}/default/user/register
+    Input Text  auth_user_first_name  ${fname}
+    Input Text  auth_user_last_name  ${lname}
+    Input Text  auth_user_email  ${email}
+    Input Text  auth_user_password  ${passwd}
+    Input Text  auth_user_password_two  ${passwd}
+    Click Button  xpath=//input[contains(@class,"btn") and @type="submit"]
 
 Logout From Eden
     [Documentation]  Logout from Eden
-    Go To  ${LOGOUT URL}
+    ${status}  ${value} =  Run Keyword And Ignore Error  Check If Logged Out
+    Run Keyword if  '${status}' == 'PASS'  Go To  ${LOGOUT URL}

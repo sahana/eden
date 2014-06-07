@@ -6,11 +6,20 @@ ${CONFIRMATION}     jquery=div.alert-success
 ${ERROR}            jquery=div.alert-error
 
 *** Keywords ***
+
 Should Show Confirmation
-    [Documentation]  Fails if no confirmation message is visible in the page
+    [Documentation]  Checks for the confirmation element and the message inside it (if given
+    ...                as an argument) n the page and fails if it is not present.
+    [Arguments]  @{message}
     Sleep  1s  Wait for message to render
     Page Should Contain Element  ${CONFIRMATION}  Confirmation message not shown
+    ${msg len} =  Get Length  ${message}
+    Run Keyword if  ${msg len} == 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
 
 Should Show Error
     [Documentation]  Fails if no error message is visible in the page
+    [Arguments]  @{message}
+    Sleep  1s  Wait for message to render
     Page Should Contain Element  ${ERROR}  Error message not shown
+    ${msg len} =  Get Length  ${message}
+    Run Keyword if  ${msg len} == 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
