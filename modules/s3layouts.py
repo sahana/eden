@@ -42,7 +42,6 @@ __all__ = ["S3MainMenuDefaultLayout",
            ]
 
 from gluon import *
-from gluon.storage import Storage
 from s3 import *
 
 # =============================================================================
