@@ -4258,7 +4258,7 @@ class S3ProjectTaskModel(S3Model):
                   )
 
         # Reusable field
-        represent = project_TaskRepresent()
+        represent = project_TaskRepresent(show_link=True)
         task_id = S3ReusableField("task_id", "reference %s" % tablename,
                                   label = T("Task"),
                                   sortby="name",
