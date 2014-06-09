@@ -207,7 +207,7 @@
             if (opts.child) {
                 url += '&child=' + opts.child;
             }
-            html += '<li><label class="ui-corner-all"><span><a class="s3_modal" target="top" href="' + url + '"><i>' + opts.label + '</i></a></span></label></li>';
+            html += '<li><a class="s3_modal" target="top" href="' + url + '"><label class="ui-corner-all"><span><i>' + opts.label + '</i></span></label></a></li>';
         }
 
         // insert into the DOM

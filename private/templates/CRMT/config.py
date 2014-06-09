@@ -1711,7 +1711,7 @@ def customise_vulnerability_evac_route_controller(**attr):
 
                 #table.hazard_id.comment = S3AddResourceLink(c="vulnerability",
                 #                                            f="hazard",
-                #                                            title=T("Add Hazard Type")),
+                #                                            title=T("Add Hazard Type"))
 
             # Custom Crud Form
             crud_form = S3SQLCustomForm(
