@@ -1002,8 +1002,7 @@ def customise_org_organisation_controller(**attr):
                         realms = auth.permission.permitted_realms("hrm_human_resource",
                                                                   method="create")
                         instance_types = auth.org_site_types
-                        hrtable.site_id.requires = IS_ONE_OF(current.db,
-                                                             "org_site.site_id",
+                        hrtable.site_id.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                                              label=s3db.org_site_represent,
                                                              orderby="org_site.name",
                                                              filterby="organisation_id",
@@ -1017,13 +1016,24 @@ def customise_org_organisation_controller(**attr):
                 # Custom Crud Form
                 from s3.s3widgets import S3MultiSelectWidget
                 s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
+                mtable = s3db.org_group_membership
+                mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
+                mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
+                                                              create=dict(c="org",
+                                                                          f="group_membership_status",
+                                                                          label="%s..." % T("Add New Status"),
+                                                                          parent="group_membership",
+                                                                          child="status_id"
+                                                                          ))
                 form_fields = [
                     "name",
                     "logo",
-                    S3SQLInlineComponentMultiSelectWidget(
-                        "group",
+                    S3SQLInlineComponent(
+                        "group_membership",
                         label = T("Coalition Member"),
-                        field = "group_id",
+                        fields = [("", "group_id"),
+                                  (T("Status of the Organization in the Coalition"), "status_id"),
+                                  ],
                     ),
                     S3SQLInlineComponentMultiSelectWidget(
                         "sector",

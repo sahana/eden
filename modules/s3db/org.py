@@ -1059,6 +1059,7 @@ class S3OrganisationGroupModel(S3Model):
 
     names = ["org_group",
              "org_group_membership",
+             "org_group_membership_status",
              "org_group_id",
              "org_group_represent",
              ]
@@ -1070,6 +1071,7 @@ class S3OrganisationGroupModel(S3Model):
 
         add_components = self.add_components
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
 
@@ -1080,25 +1082,26 @@ class S3OrganisationGroupModel(S3Model):
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
-                     Field("name", notnull=True, unique=True,
-                           length=128,
-                           label=T("Name")),
+                     Field("name", notnull=True, unique=True, length=128,
+                           label = T("Name"),
+                           ),
                      self.gis_location_id(
                          widget = S3LocationSelectorWidget2(
                                      #catalog_layers=True,
                                      polygons=True
                          )),
                      Field("website",
-                           label=T("Website"),
-                           requires=IS_EMPTY_OR(IS_URL()),
-                           represent=s3_url_represent),
+                           label = T("Website"),
+                           represent = s3_url_represent,
+                           requires = IS_EMPTY_OR(IS_URL()),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD Strings
         label = current.deployment_settings.get_org_groups()
         if label == "Coalition":
-            current.response.s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 label_create = T("Create Coalition"),
                 title_display = T("Coalition Details"),
                 title_list = T("Coalitions"),
@@ -1110,7 +1113,7 @@ class S3OrganisationGroupModel(S3Model):
                 msg_record_deleted = T("Coalition removed"),
                 msg_list_empty = T("No Coalitions currently recorded"))
         elif label == "Network":
-            current.response.s3.crud_strings[tablename] = Storage(
+            crud_strings[tablename] = Storage(
                 label_create = T("Create Network"),
                 title_display = T("Network Details"),
                 title_list = T("Networks"),
@@ -1135,42 +1138,82 @@ class S3OrganisationGroupModel(S3Model):
         represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    label = T(label),
-                                   sortby="name",
-                                   requires=IS_EMPTY_OR(
+                                   # Always links via Link Tables
+                                   ondelete = "CASCADE",
+                                   represent = represent,
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_group.id",
                                                           represent,
                                                           sort=True,
                                                           )),
-                                   represent=represent,
-                                   # Always links via Link Tables
-                                   ondelete="CASCADE",
+                                   sortby = "name",
                                    )
 
         # Components
         add_components(tablename,
-                       org_group_membership={"name": "membership",
-                                             "joinby": "group_id",
-                                             },
-                       org_organisation={"joinby": "group_id",
-                                         "key": "organisation_id",
-                                         "link": "org_group_membership",
-                                         "actuate": "replace",
-                                         },
-                       pr_group={"name": "pr_group",
-                                 "joinby": "org_group_id",
-                                 "key": "group_id",
-                                 "link": "org_group_team",
-                                 "actuate": "replace",
-                                 },
+                       org_group_membership = {"name": "membership",
+                                               "joinby": "group_id",
+                                               },
+                       org_organisation = {"joinby": "group_id",
+                                           "key": "organisation_id",
+                                           "link": "org_group_membership",
+                                           "actuate": "replace",
+                                           },
+                       pr_group = {"name": "pr_group",
+                                   "joinby": "org_group_id",
+                                   "key": "group_id",
+                                   "link": "org_group_team",
+                                   "actuate": "replace",
+                                   },
                        )
+
+        # ---------------------------------------------------------------------
+        # Group membership status
+        #
+        tablename = "org_group_membership_status"
+        define_table(tablename,
+                     Field("name", notnull=True, unique=True, length=128,
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields()
+                     )
+
+        crud_strings[tablename] = Storage(
+                label_create = T("Create Status"),
+                title_display = T("Status Details"),
+                title_list = T("Statuses"),
+                title_update = T("Edit Status"),
+                label_list_button = T("List Statuses"),
+                label_delete_button = T("Delete Status"),
+                msg_record_created = T("Status added"),
+                msg_record_modified = T("Status updated"),
+                msg_record_deleted = T("Status removed"),
+                msg_list_empty = T("No Statuses currently defined"))
+
+        represent = S3Represent(lookup=tablename)
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    label = T("Status"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "org_group_membership_status.id",
+                                                          represent,
+                                                          sort=True,
+                                                          )),
+                                    sortby = "name",
+                                    )
 
         # ---------------------------------------------------------------------
         # Group membership
         #
         tablename = "org_group_membership"
         define_table(tablename,
-                     group_id(),
-                     self.org_organisation_id(),
+                     group_id(empty = False),
+                     self.org_organisation_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
+                     status_id(),
                      *s3_meta_fields()
                      )
 
@@ -3428,9 +3471,9 @@ class S3OfficeModel(S3Model):
         #
         tablename = "org_office_type"
         define_table(tablename,
-                     Field("name", length=128,
-                           notnull=True, unique=True,
-                           label=T("Name")),
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -3450,32 +3493,33 @@ class S3OfficeModel(S3Model):
 
         represent = S3Represent(lookup=tablename, translate=True)
         office_type_id = S3ReusableField("office_type_id", "reference %s" % tablename,
-                            sortby="name",
-                            requires=IS_EMPTY_OR(
+                            label = T("Office Type"),
+                            ondelete = "SET NULL",
+                            represent = represent,
+                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_office_type.id",
                                                   represent,
                                                   sort=True
                                                   )),
-                            represent=represent,
-                            label=T("Office Type"),
-                            comment=S3AddResourceLink(c="org",
+                            sortby = "name",
+                            comment = S3AddResourceLink(c="org",
                                 f="office_type",
                                 label=ADD_OFFICE_TYPE,
                                 title=T("Office Type"),
                                 tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Office Type'.")),
-                            ondelete="SET NULL")
+                            )
 
         configure(tablename,
-                  deduplicate=self.office_type_duplicate,
+                  deduplicate = self.office_type_duplicate,
                   )
 
         # Components
         add_components(tablename,
                        # Tags
-                       org_office_type_tag={"name": "tag",
-                                            "joinby": "office_type_id",
-                                           },
-                      )
+                       org_office_type_tag = {"name": "tag",
+                                              "joinby": "office_type_id",
+                                              },
+                       )
 
         # ---------------------------------------------------------------------
         # Offices
@@ -3487,10 +3531,10 @@ class S3OfficeModel(S3Model):
                      super_link("site_id", "org_site"),
                      Field("name", notnull=True,
                            length=64, # Mayon Compatibility
-                           label=T("Name"),
+                           label = T("Name"),
                            ),
                      Field("code", length=10, # Mayon compatibility
-                           label=T("Code"),
+                           label = T("Code"),
                            # Deployments that don't wants office codes can hide them
                            #readable=False,
                            #writable=False,
@@ -3506,29 +3550,34 @@ class S3OfficeModel(S3Model):
                                     #writable = False,
                                     ),
                      self.gis_location_id(),
-                     Field("phone1", label=T("Phone 1"),
-                           requires=IS_EMPTY_OR(s3_phone_requires),
+                     Field("phone1",
+                           label = T("Phone 1"),
                            represent = lambda v: v or "",
+                           requires = IS_EMPTY_OR(s3_phone_requires),
                            ),
-                     Field("phone2", label=T("Phone 2"),
-                           requires=IS_EMPTY_OR(s3_phone_requires),
+                     Field("phone2",
+                           label = T("Phone 2"),
                            represent = lambda v: v or "",
+                           requires = IS_EMPTY_OR(s3_phone_requires),
                            ),
-                     Field("email", label=T("Email"),
-                           requires=IS_EMPTY_OR(IS_EMAIL()),
+                     Field("email",
+                           label = T("Email"),
                            represent = lambda v: v or "",
+                           requires = IS_EMPTY_OR(IS_EMAIL()),
                            ),
-                     Field("fax", label=T("Fax"),
-                           requires=IS_EMPTY_OR(s3_phone_requires),
+                     Field("fax",
+                           label = T("Fax"),
                            represent = lambda v: v or "",
+                           requires = IS_EMPTY_OR(s3_phone_requires),
                            ),
                      Field("obsolete", "boolean",
-                           label=T("Obsolete"),
-                           represent=lambda opt: \
+                           default = False,
+                           label = T("Obsolete"),
+                           represent = lambda opt: \
                                      (opt and [T("Obsolete")] or [messages["NONE"]])[0],
-                           default=False,
-                           readable=False,
-                           writable=False),
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -3636,13 +3685,13 @@ class S3OfficeModel(S3Model):
 
         if settings.get_org_summary():
             add_components(tablename,
-                           org_office_summary={"name": "summary",
-                                               "joinby": "office_id",
-                                              },
-                          )
+                           org_office_summary = {"name": "summary",
+                                                 "joinby": "office_id",
+                                                 },
+                           )
 
         # Pass names back to global scope (s3.*)
-        return dict(org_office_type_id=office_type_id,
+        return dict(org_office_type_id = office_type_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -3668,37 +3717,31 @@ class S3OfficeModel(S3Model):
             * Process injected fields
         """
 
-        vars = form.vars
+        form_vars = form.vars
 
         # Affiliation, record ownership and component ownership
-        org_update_affiliations("org_office", vars)
+        org_update_affiliations("org_office", form_vars)
 
         if current.deployment_settings.get_org_summary():
 
             db = current.db
-            id = vars.id
+            id = form_vars.id
             table = current.s3db.org_office_summary
             query = (table.office_id == id)
             existing = db(query).select(table.id,
                                         limitby=(0, 1)).first()
-            vars = current.request.post_vars
-            if "national_staff" in vars:
-                national_staff = vars.national_staff
-            else:
-                national_staff = None
-            if "international_staff" in vars:
-                international_staff = vars.international_staff
-            else:
-                international_staff = None
+            post_vars = current.request.post_vars
+            national_staff = post_vars.get("national_staff", None)
+            international_staff = post_vars.get("international_staff", None)
 
             if existing:
-                db(query).update(national_staff=national_staff,
-                                 international_staff=international_staff
+                db(query).update(national_staff = national_staff,
+                                 international_staff = international_staff
                                  )
             elif national_staff or international_staff:
-                table.insert(office_id=id,
-                             national_staff=national_staff,
-                             international_staff=international_staff
+                table.insert(office_id = id,
+                             national_staff = national_staff,
+                             international_staff = international_staff
                              )
 
     # ---------------------------------------------------------------------
@@ -3768,17 +3811,19 @@ class S3OfficeSummaryModel(S3Model):
         tablename = "org_office_summary"
         self.define_table(tablename,
                           Field("office_id",
-                                requires=IS_ONE_OF(current.db, "org_office.id",
-                                                    "%(name)s"),
-                                label=T("Office"),
-                                ondelete="CASCADE"
+                                label = T("Office"),
+                                ondelete = "CASCADE",
+                                requires = IS_ONE_OF(current.db, "org_office.id",
+                                                     "%(name)s"),
                                 ),
                           Field("national_staff", "integer", # national is a reserved word in Postgres
-                                requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
-                                label=T("# of National Staff")),
+                                label = T("# of National Staff"),
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
+                                ),
                           Field("international_staff", "integer",
-                                requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
-                                label=T("# of International Staff")),
+                                label = T("# of International Staff"),
+                                requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 9999)),
+                                ),
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
@@ -3807,8 +3852,12 @@ class S3OfficeTypeTagModel(S3Model):
         self.define_table(tablename,
                           self.org_office_type_id(),
                           # key is a reserved word in MySQL
-                          Field("tag", label=T("Key")),
-                          Field("value", label=T("Value")),
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 

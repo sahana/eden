@@ -38,6 +38,28 @@ def group():
     return s3_rest_controller(rheader = s3db.org_rheader)
 
 # -----------------------------------------------------------------------------
+def group_membership():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def group_membership_status():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def region():
     """ RESTful CRUD controller """
 

@@ -105,12 +105,12 @@ class S3DeploymentModel(S3Model):
                            represent = lambda v: s3_unicode(v) if v else NONE,
                            ),
                      Field("status", "integer",
-                           requires = IS_IN_SET(mission_status_opts),
+                           default = 2,
+                           label = T("Status"),
                            represent = lambda opt: \
                                        mission_status_opts.get(opt,
                                                                UNKNOWN_OPT),
-                           default = 2,
-                           label = T("Status"),
+                           requires = IS_IN_SET(mission_status_opts),
                            ),
                      # @todo: change into real fields written onaccept?
                      Field.Method("hrquantity",
@@ -161,14 +161,14 @@ class S3DeploymentModel(S3Model):
 
         # Profile
         list_layout = deploy_MissionProfileLayout()
-        alert_widget = dict(label="Alerts",
-                            insert=lambda r, list_id, title, url: \
+        alert_widget = dict(label = "Alerts",
+                            insert = lambda r, list_id, title, url: \
                                    A(title,
                                      _href=r.url(component="alert",
                                                  method="create"),
                                      _class="action-btn profile-add-btn"),
-                            label_create="New Alert",
-                            type="datalist",
+                            label_create = "New Alert",
+                            type = "datalist",
                             list_fields = ["modified_on",
                                            "mission_id",
                                            "message_id",
@@ -218,16 +218,16 @@ class S3DeploymentModel(S3Model):
             label_create = "Deploy New Volunteer"
 
         assignment_widget = dict(label = label,
-                                 insert=lambda r, list_id, title, url: \
+                                 insert = lambda r, list_id, title, url: \
                                         A(title,
                                           _href=r.url(component="assignment",
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
                                  label_create = label_create,
                                  tablename = "deploy_assignment",
-                                 type="datalist",
-                                 #type="datatable",
-                                 #actions=dt_row_actions,
+                                 type = "datalist",
+                                 #type = "datatable",
+                                 #actions = dt_row_actions,
                                  list_fields = [
                                      "human_resource_id$id",
                                      "human_resource_id$person_id",
@@ -354,12 +354,12 @@ class S3DeploymentModel(S3Model):
                                 show_link = True)
                                 
         mission_id = S3ReusableField("mission_id", "reference %s" % tablename,
+                                     label = T("Mission"),
+                                     ondelete = "CASCADE",
+                                     represent = represent,
                                      requires = IS_ONE_OF(db,
                                                           "deploy_mission.id",
                                                           represent),
-                                     represent = represent,
-                                     label = T("Mission"),
-                                     ondelete = "CASCADE",
                                      )
 
         # ---------------------------------------------------------------------
@@ -458,12 +458,12 @@ class S3DeploymentModel(S3Model):
 
         # Components
         add_components(tablename,
-                       hrm_appraisal={"name": "appraisal",
-                                      "link": "deploy_assignment_appraisal",
-                                      "joinby": "assignment_id",
-                                      "key": "appraisal_id",
-                                      "autodelete": False,
-                                     },
+                       hrm_appraisal = {"name": "appraisal",
+                                        "link": "deploy_assignment_appraisal",
+                                        "joinby": "assignment_id",
+                                        "key": "appraisal_id",
+                                        "autodelete": False,
+                                        },
                        )
 
         assignment_id = S3ReusableField("assignment_id",
@@ -475,7 +475,7 @@ class S3DeploymentModel(S3Model):
         #
         tablename = "deploy_assignment_appraisal"
         define_table(tablename,
-                     assignment_id(empty=False),
+                     assignment_id(empty = False),
                      Field("appraisal_id", self.hrm_appraisal),
                      *s3_meta_fields())
 
@@ -489,7 +489,7 @@ class S3DeploymentModel(S3Model):
         #
         tablename = "deploy_assignment_experience"
         define_table(tablename,
-                     assignment_id(empty=False),
+                     assignment_id(empty = False),
                      Field("experience_id", self.hrm_experience),
                      *s3_meta_fields())
 
@@ -514,9 +514,13 @@ class S3DeploymentModel(S3Model):
         """
             Safe defaults for model-global names in case module is disabled
         """
-        mission_id = S3ReusableField("mission_id", "integer",
-                                     readable=False, writable=False)
-        return dict(deploy_mission_id = mission_id)
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(deploy_mission_id = lambda **attr: dummy("mission_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -750,8 +754,8 @@ class S3DeploymentAlertModel(S3Model):
                            ),
                      Field("body", "text",
                            label = T("Message"),
-                           requires = IS_NOT_EMPTY(),
                            represent = lambda v: v or NONE,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      # Link to the Message once sent
                      message_id(readable=False),
@@ -794,15 +798,15 @@ class S3DeploymentAlertModel(S3Model):
 
         # Components
         add_components(tablename,
-                       deploy_alert_recipient={"name": "recipient",
-                                               "joinby": "alert_id",
-                                              },
-                       hrm_human_resource={"name": "select",
-                                           "link": "deploy_alert_recipient",
-                                           "joinby": "alert_id",
-                                           "key": "human_resource_id",
-                                           "autodelete": False,
-                                          },
+                       deploy_alert_recipient = {"name": "recipient",
+                                                 "joinby": "alert_id",
+                                                 },
+                       hrm_human_resource = {"name": "select",
+                                             "link": "deploy_alert_recipient",
+                                             "joinby": "alert_id",
+                                             "key": "human_resource_id",
+                                             "autodelete": False,
+                                             },
                        )
 
         # Custom method to send alerts
@@ -813,11 +817,12 @@ class S3DeploymentAlertModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename)
         alert_id = S3ReusableField("alert_id", "reference %s" % tablename,
+                                   label = T("Alert"),
+                                   ondelete = "CASCADE",
+                                   represent = represent,
                                    requires = IS_ONE_OF(db, "deploy_alert.id",
                                                         represent),
-                                   represent = represent,
-                                   label = T("Alert"),
-                                   ondelete = "CASCADE")
+                                   )
 
         # ---------------------------------------------------------------------
         # Recipients of the Alert
@@ -850,8 +855,8 @@ class S3DeploymentAlertModel(S3Model):
         define_table(tablename,
                      mission_id(),
                      human_resource_id(label = T(hr_label)),
-                     message_id(label=T("Message"),
-                                writable=False),
+                     message_id(label = T("Message"),
+                                writable = False),
                      s3_comments(),
                      *s3_meta_fields())
 

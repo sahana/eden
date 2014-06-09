@@ -4706,6 +4706,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                  multiple = True,
                  selectedList = 3,
                  noneSelectedText = "Select",
+                 create = None,
                  ):
         """
             Constructor
@@ -4724,6 +4725,12 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                                  selected")
             @param noneSelectedText: text to show on the widget button when no option is
                                      selected (automatic l10n, no T() required)
+            @param create: options to create a new record {c: 'controller',
+                                                           f: 'function',
+                                                           label: 'label',
+                                                           parent: 'parent', (optional: which function to lookup options from)
+                                                           child: 'child', (optional: which field to lookup options for)
+                                                           }
         """
                      
         self.filter = filter
@@ -4731,6 +4738,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         self.multiple = multiple
         self.selectedList = selectedList
         self.noneSelectedText = noneSelectedText
+        self.create = create
 
     def __call__(self, field, value, **attr):
 
@@ -4782,7 +4790,11 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         noneSelectedText = self.noneSelectedText
         if not isinstance(noneSelectedText, lazyT):
             noneSelectedText = T(noneSelectedText)
-        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s',multiple:%s})''' % \
+        if self.create:
+            create = ",create:%s" % json.dumps(self.create, separators=SEPARATORS)
+        else:
+            create = ""
+        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s',multiple:%s%s})''' % \
                  (selector,
                   T("All selected"),
                   T("# selected"),
@@ -4790,6 +4802,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                   self.selectedList,
                   noneSelectedText,
                   "true" if multiple_opt else "false",
+                  create
                   )
 
         if filter_opt:

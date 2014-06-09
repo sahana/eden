@@ -2040,10 +2040,10 @@ class S3HRSkillModel(S3Model):
         # Components
         add_components(tablename,
                        # Certificates
-                       hrm_course_certificate="course_id",
+                       hrm_course_certificate = "course_id",
                        # Job Titles
-                       hrm_course_job_title="course_id",
-                      )
+                       hrm_course_job_title = "course_id",
+                       )
 
         # =========================================================================
         # Training Events
@@ -2104,18 +2104,18 @@ class S3HRSkillModel(S3Model):
 
         represent = hrm_TrainingEventRepresent()
         training_event_id = S3ReusableField("training_event_id", "reference %s" % tablename,
-                                            sortby = "course_id",
                                             label = T("Training Event"),
+                                            ondelete = "RESTRICT",
+                                            represent = represent,
                                             requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "hrm_training_event.id",
                                                                   represent,
                                                                   #filterby="organisation_id",
                                                                   #filter_opts=filter_opts,
                                                                   )),
-                                            represent = represent,
+                                            sortby = "course_id",
                                             comment = S3AddResourceLink(f="training_event",
                                                                         label=ADD_TRAINING_EVENT),
-                                            ondelete = "RESTRICT",
                                             # Comment this to use a Dropdown & not an Autocomplete
                                             #widget = S3AutocompleteWidget("hrm", "training_event")
                                             )
@@ -2191,21 +2191,23 @@ class S3HRSkillModel(S3Model):
                      course_id(empty=False),
                      s3_datetime(),
                      s3_datetime("end_date",
-                                 label=T("End Date")),
+                                 label = T("End Date"),
+                                 ),
                      Field("hours", "integer",
-                           label=T("Hours")),
+                           label = T("Hours"),
+                           ),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
                      Field("grade", "integer",
                            label = T("Grade"),
+                           represent = lambda opt: \
+                                       hrm_performance_opts.get(opt, NONE),
                            # Default to pass/fail (can override to 5-levels in Controller)
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(hrm_pass_fail_opts,
                                                   zero=None)),
-                           represent = lambda opt: \
-                                       hrm_performance_opts.get(opt, NONE),
-                           readable=False,
-                           writable=False
+                           readable = False,
+                           writable = False,
                            ),
                      Field.Method("job_title", hrm_training_job_title),
                      Field.Method("organisation", hrm_training_organisation),
@@ -2319,11 +2321,12 @@ class S3HRSkillModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True,
                            length=128,   # Mayon Compatibility
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      organisation_id(default = root_org if filter_certs else None,
+                                     label = label,
                                      readable = is_admin or not filter_certs,
                                      writable = is_admin or not filter_certs,
-                                     label = label,
                                      widget = widget,
                                      ),
                      Field("expiry", "integer",
@@ -2347,8 +2350,9 @@ class S3HRSkillModel(S3Model):
         label_create = crud_strings[tablename].label_create
         represent = S3Represent(lookup=tablename)
         certificate_id = S3ReusableField("certificate_id", "reference %s" % tablename,
-                                         sortby = "name",
                                          label = T("Certificate"),
+                                         ondelete = "RESTRICT",
+                                         represent = represent,
                                          requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db,
                                                                   "hrm_certificate.id",
@@ -2356,12 +2360,12 @@ class S3HRSkillModel(S3Model):
                                                                   filterby="organisation_id" if filter_certs else None,
                                                                   filter_opts=filter_opts
                                                                   )),
-                                         represent = represent,
-                                         comment=S3AddResourceLink(f="certificate",
-                                                                   label=label_create,
-                                                                   title=label_create,
-                                                                   tooltip=T("Add a new certificate to the catalog.")),
-                                         ondelete = "RESTRICT")
+                                         sortby = "name",
+                                         comment = S3AddResourceLink(f="certificate",
+                                                                     label=label_create,
+                                                                     title=label_create,
+                                                                     tooltip=T("Add a new certificate to the catalog.")),
+                                         )
 
         if settings.get_hrm_use_skills():
             create_next = URL(f="certificate",
@@ -2389,19 +2393,22 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_certification"
         define_table(tablename,
-                     person_id(),
-                     certificate_id(),
+                     person_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     certificate_id(empty = False,
+                                    ),
                      Field("number",
-                           label=T("License Number"),
+                           label = T("License Number"),
                            ),
                      #Field("status", label=T("Status")),
                      s3_date(label = T("Expiry Date")),
                      Field("image", "upload",
-                           label=T("Scanned Copy"),
+                           autodelete = True,
+                           label = T("Scanned Copy"),
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(request.folder,
                                                        "uploads"),
-                           autodelete = True,
                            ),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
@@ -2452,8 +2459,12 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_certificate_skill"
         define_table(tablename,
-                     certificate_id(),
-                     skill_id(),
+                     certificate_id(empty = False,
+                                    ondelete = "CASCADE",
+                                    ),
+                     skill_id(empty = False,
+                              ondelete = "CASCADE",
+                              ),
                      competency_id(),
                      *s3_meta_fields())
 
@@ -2481,8 +2492,12 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_course_certificate"
         define_table(tablename,
-                     course_id(),
-                     certificate_id(),
+                     course_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     certificate_id(empty = False,
+                                    ondelete = "CASCADE",
+                                    ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -2501,12 +2516,16 @@ class S3HRSkillModel(S3Model):
         # =====================================================================
         # Course <> Job Titles link table
         #
-        # Show which coruses a person has done that are rleevant to specific job roles
+        # Show which courses a person has done that are relevant to specific job roles
         #
         tablename = "hrm_course_job_title"
         define_table(tablename,
-                     course_id(),
-                     job_title_id(),
+                     course_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     job_title_id(empty = False,
+                                  ondelete = "CASCADE",
+                                  ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

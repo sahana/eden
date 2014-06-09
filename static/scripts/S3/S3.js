@@ -74,7 +74,7 @@ S3.queryString = {
 
 S3.uid = function() {
     // Generate a random uid
-    // Used for Popups on Map & jQueryUI modals
+    // Used for jQueryUI modals and some Map popups
     // http://jsperf.com/random-uuid/2
     return (((+(new Date())) / 1000 * 0x10000 + Math.random() * 0xffff) >> 0).toString(16);
 };
@@ -126,15 +126,6 @@ S3.Utf8 = {
 };
 
 S3.addTooltips = function() {
-    // Popovers (Bootstrap themes only)
-    if (typeof($.fn.popover) != 'undefined') {
-        // Applies to elements created after $(document).ready
-        $('body').popover({
-            selector: '.s3-popover',
-            trigger: 'hover',
-            placement: 'left'
-        });
-    }
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
     $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
@@ -196,6 +187,20 @@ S3.addModals = function() {
                                          .on('click.S3Modal', function() {
         var title = this.title;
         var url = this.href;
+        var i = url.indexOf('caller=');
+        if (i != -1) {
+            // Lower the z-Index of the multiselect menu which opened us (if that's what we were opened from)
+            //$('.ui-multiselect-menu').css('z-index', 1049);
+            var caller = url.slice(i + 7);
+            i = url.indexOf('&');
+            if (i) {
+                caller = caller.slice(0, i - 1);
+            }
+            var select = $('#' + caller);
+            if (select.hasClass('multiselect-widget')) {
+                select.multiselect('close');
+            }
+        }
         var id = S3.uid();
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
         var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
@@ -1333,6 +1338,16 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
 
         // Event Handlers for the page
         S3.redraw();
+        
+        // Popovers (Bootstrap themes only)
+        if (typeof($.fn.popover) != 'undefined') {
+            // Applies to elements created after $(document).ready
+            $('body').popover({
+                selector: '.s3-popover',
+                trigger: 'hover',
+                placement: 'left'
+            });
+        }
 
         // Handle Page Resizes
         onResize();
