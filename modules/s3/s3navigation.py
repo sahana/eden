@@ -540,11 +540,10 @@ class S3NavigationItem(object):
         if layout is not None:
             if tag is None or tag in self.tags:
                 self.renderer = layout
-            # @ToDo: Fix undefined var 'tree'
-            if tree:
+            if recursive:
                 for c in self.components:
                     if tag is None or tag in c.tags:
-                        c.set_layout(layout, tree=tree, tag=tag)
+                        c.set_layout(layout, recursive=recursive, tag=tag)
         return
 
     # -------------------------------------------------------------------------
