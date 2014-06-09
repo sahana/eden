@@ -193,7 +193,7 @@ S3.addModals = function() {
             //$('.ui-multiselect-menu').css('z-index', 1049);
             var caller = url.slice(i + 7);
             i = url.indexOf('&');
-            if (i) {
+            if (i != -1) {
                 caller = caller.slice(0, i - 1);
             }
             var select = $('#' + caller);
