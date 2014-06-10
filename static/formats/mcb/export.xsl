@@ -103,7 +103,7 @@
                 &lt;p&gt;<xsl:value-of select="$description"/>&lt;/p&gt;
             </xsl:if>
             <xsl:if test="$source_url!=''">
-                &lt;p&gt;&lt;a href=&quot;<xsl:value-of select="$source_url"/>&quot;&gt;Link&lt;/a&gt;lt;/p&gt;
+                &lt;p&gt;&lt;a href=&quot;<xsl:value-of select="$source_url"/>&quot;&gt;Link&lt;/a&gt;&lt;/p&gt;
             </xsl:if>
         </Body>
     </xsl:template>
