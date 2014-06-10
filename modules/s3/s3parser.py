@@ -2,8 +2,8 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 """
-   This file imports the Message parsers from the core code
-   and links them with the respective parsing tasks defined in msg_parser
+   This file parses messages using functions defined in in the template's
+   parser.py
 
    @copyright: 2012-14 (c) Sahana Software Foundation
    @license: MIT
@@ -136,7 +136,7 @@ class S3Parsing(object):
     @staticmethod
     def is_session_alive(from_address):
         """
-            Check whether there is an alive sessions from the same sender
+            Check whether there is an alive session from the same sender
         """
 
         email = None

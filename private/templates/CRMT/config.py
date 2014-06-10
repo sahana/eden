@@ -122,6 +122,7 @@ settings.ui.update_label = "Update"
 settings.ui.export_formats = ["xls", "xml"]
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 settings.ui.multiselect_widget = True
+settings.ui.use_button_glyphicons = True
 
 # Set Map to fill the container
 settings.gis.map_width = 1178
@@ -437,7 +438,7 @@ def customise_pr_person_controller(**attr):
             if current.request.controller != "default":
                 # CRUD Strings
                 s3.crud_strings[tablename] = Storage(
-                    label_create = T("Create Contact"),
+                    label_create = T("Add"),
                     title_display = T("Contact Details"),
                     title_list = T("Contact Directory"),
                     title_update = T("Update Contact Details"),
@@ -451,7 +452,7 @@ def customise_pr_person_controller(**attr):
             # Custom Form (Read/Create/Update)
             from s3.s3fields import S3Represent
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-            if r.method in ("create", "update", "summary"):
+            if r.method in ("create", "update"):
                 # Custom Widgets/Validators
                 widgets = True
                 from s3.s3validators import IS_ONE_OF
@@ -627,6 +628,7 @@ def default_coalition_filter(selector, tablename=None):
 def customise_project_activity_controller(**attr):
 
     if "summary" in current.request.args:
+        settings.gis.toolbar = False
         from s3.s3utils import s3_set_default_filter
         s3_set_default_filter("activity_group.group_id",
                               default_coalition_filter,
@@ -1000,8 +1002,7 @@ def customise_org_organisation_controller(**attr):
                         realms = auth.permission.permitted_realms("hrm_human_resource",
                                                                   method="create")
                         instance_types = auth.org_site_types
-                        hrtable.site_id.requires = IS_ONE_OF(current.db,
-                                                             "org_site.site_id",
+                        hrtable.site_id.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                                              label=s3db.org_site_represent,
                                                              orderby="org_site.name",
                                                              filterby="organisation_id",
@@ -1015,13 +1016,30 @@ def customise_org_organisation_controller(**attr):
                 # Custom Crud Form
                 from s3.s3widgets import S3MultiSelectWidget
                 s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
+                mtable = s3db.org_group_membership
+                mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
+                #from s3layouts import S3AddResourceLink
+                #mtable.status_id.comment = S3AddResourceLink(c="org",
+                #                                             f="group_membership_status",
+                #                                             vars={"child": "status_id"},
+                #                                             title=T("Add New Status"))
+                mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
+                                                              # NB Has no permissions checks
+                                                              create=dict(c="org",
+                                                                          f="group_membership_status",
+                                                                          label=str(T("Add New Status")),
+                                                                          parent="group_membership",
+                                                                          child="status_id"
+                                                                          ))
                 form_fields = [
                     "name",
                     "logo",
-                    S3SQLInlineComponentMultiSelectWidget(
-                        "group",
+                    S3SQLInlineComponent(
+                        "group_membership",
                         label = T("Coalition Member"),
-                        field = "group_id",
+                        fields = [("", "group_id"),
+                                  (T("Status of the Organization in the Coalition"), "status_id"),
+                                  ],
                     ),
                     S3SQLInlineComponentMultiSelectWidget(
                         "sector",
@@ -1052,6 +1070,13 @@ def customise_org_organisation_controller(**attr):
                                         options = "TWITTER"
                                         )
                     ),
+                    # Not ready yet
+                    #S3SQLInlineComponent(
+                    #    "facility",
+                    #    label = T("Address"),
+                    #    fields = ["location_id",
+                    #              ],
+                    #),
                     "comments",
                 ]
                 if method not in ("create", "update", "summary"):
@@ -1092,19 +1117,19 @@ def customise_org_organisation_controller(**attr):
                         label = T("Organization's Contacts"),
                         fields = hr_fields,
                     ))
-                    form_fields.insert(6, S3SQLInlineComponent(
-                        "facility",
-                        label = T("Organization's Places"),
-                        fields = ["name", 
-                                  # Only fields within the table are supported
-                                  #"facility_type.facility_type_id",
-                                  "location_id",
-                                  ],
-                        # Fields needed to load for Virtual Fields
-                        extra_fields = ["site_id"],
-                        virtual_fields = [(T("Type"), "facility_types"),
-                                          ],
-                    ))
+                    #form_fields.insert(6, S3SQLInlineComponent(
+                    #    "facility",
+                    #    label = T("Organization's Places"),
+                    #    fields = ["name", 
+                    #              # Only fields within the table are supported
+                    #              #"facility_type.facility_type_id",
+                    #              "location_id",
+                    #              ],
+                    #    # Fields needed to load for Virtual Fields
+                    #    extra_fields = ["site_id"],
+                    #    virtual_fields = [(T("Type"), "facility_types"),
+                    #                      ],
+                    #))
 
                 crud_form = S3SQLCustomForm(*form_fields)
                 s3db.configure(tablename,
@@ -1229,6 +1254,7 @@ settings.base.import_callbacks = {"org_facility": {"onaccept": facility_onaccept
 def customise_org_facility_controller(**attr):
 
     if "summary" in current.request.args:
+        settings.gis.toolbar = False
         from s3.s3utils import s3_set_default_filter
         s3_set_default_filter("site_org_group.group_id",
                               default_coalition_filter,
@@ -1438,6 +1464,7 @@ settings.customise_org_facility_controller = customise_org_facility_controller
 def customise_stats_people_controller(**attr):
 
     if "summary" in current.request.args:
+        settings.gis.toolbar = False
         from s3.s3utils import s3_set_default_filter
         s3_set_default_filter("people_group.group_id",
                               default_coalition_filter,
@@ -1635,6 +1662,7 @@ settings.customise_stats_people_controller = customise_stats_people_controller
 def customise_vulnerability_evac_route_controller(**attr):
 
     if "summary" in current.request.args:
+        settings.gis.toolbar = False
         from s3.s3utils import s3_set_default_filter
         s3_set_default_filter("evac_route_group.group_id",
                               default_coalition_filter,
@@ -1696,7 +1724,7 @@ def customise_vulnerability_evac_route_controller(**attr):
 
                 #table.hazard_id.comment = S3AddResourceLink(c="vulnerability",
                 #                                            f="hazard",
-                #                                            title=T("Add Hazard Type")),
+                #                                            title=T("Add Hazard Type"))
 
             # Custom Crud Form
             crud_form = S3SQLCustomForm(
@@ -1784,6 +1812,7 @@ settings.customise_vulnerability_evac_route_controller = customise_vulnerability
 def customise_vulnerability_risk_controller(**attr):
 
     if "summary" in current.request.args:
+        settings.gis.toolbar = False
         from s3.s3utils import s3_set_default_filter
         s3_set_default_filter("risk_group.group_id",
                               default_coalition_filter,

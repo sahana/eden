@@ -76,11 +76,8 @@ class S3MainMenu(object):
         module = all_modules["default"]
         menu_modules.append(MM(module.name_nice, c="default", f="index"))
 
-        auth = current.auth
         # Modules to hide due to insufficient permissions
-        hidden_modules = auth.permission.hidden_modules()
-
-        has_role = auth.s3_has_role
+        hidden_modules = current.auth.permission.hidden_modules()
 
         # The Modules to display at the top level (in order)
         for module_type in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
@@ -425,7 +422,7 @@ class S3OptionsMenu(object):
     def assess(self):
         """ ASSESS Menu """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="assess")(
                     M("Building Assessments", f="building")(
@@ -551,11 +548,6 @@ class S3OptionsMenu(object):
     # -------------------------------------------------------------------------
     def cap(self):
         """ CAP menu """
-
-        T = current.T
-
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
 
         return M(c="cap")(
                     M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
@@ -1651,7 +1643,7 @@ class S3OptionsMenu(object):
                         M("Map", m="map"),
                         M("Report", m="report"),
                         M("Search All Requested Items", f="req_item",
-                          check=req_skills),
+                          check=req_items),
                         M("Search All Requested Skills", f="req_skill",
                           check=req_skills),
                     ),

@@ -744,8 +744,10 @@ class S3Msg(object):
                    cc=None,
                    bcc=None,
                    reply_to=None,
-                   sender="%(sender)s",
-                   encoding="utf-8"):
+                   sender=None,
+                   encoding="utf-8",
+                   #from_address=None,
+                   ):
         """
             Function to send Email
             - simple Wrapper over Web2Py's Email API
@@ -755,10 +757,14 @@ class S3Msg(object):
             return False
 
         settings = current.deployment_settings
+
         default_sender = settings.get_mail_sender()
         if not default_sender:
             current.log.warning("Email sending disabled until the Sender address has been set in models/000_config.py")
             return False
+
+        if not sender:
+            sender = default_sender
 
         limit = settings.get_mail_limit()
         if limit:
@@ -780,9 +786,11 @@ class S3Msg(object):
                                    cc=cc,
                                    bcc=bcc,
                                    reply_to=reply_to,
-                                   # @ToDo: Once more people have upgraded their web2py
-                                   #sender=sender,
-                                   encoding=encoding
+                                   sender=sender,
+                                   encoding=encoding,
+                                   # Added to Web2Py 2014-03-04
+                                   # - defaults to sender
+                                   #from_address=from_address,
                                    )
         if not result:
             current.session.error = current.mail.error
@@ -1282,6 +1290,19 @@ class S3Msg(object):
                     log_tweet(c, recipient, from_address)
 
         return True
+
+    #------------------------------------------------------------------------------
+    def post_to_facebook(self, post):
+        """
+            Posts a message on Facebook
+        """
+
+        import facebook
+        settings = current.deployment_settings.get_auth_facebook()
+        access_token = facebook.get_app_access_token(settings["id"],
+                                                     settings["secret"])
+        graph = facebook.GraphAPI(access_token)
+        graph.put_wall_post(post)
 
     # -------------------------------------------------------------------------
     def poll(self, tablename, channel_id):

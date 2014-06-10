@@ -4258,7 +4258,7 @@ class S3ProjectTaskModel(S3Model):
                   )
 
         # Reusable field
-        represent = project_TaskRepresent()
+        represent = project_TaskRepresent(show_link=True)
         task_id = S3ReusableField("task_id", "reference %s" % tablename,
                                   label = T("Task"),
                                   sortby="name",
@@ -6020,27 +6020,13 @@ def project_task_controller():
                            copyable = False,
                            listadd = False,
                            )
-            try:
-                # Add Project
-                list_fields = s3db.get_config(tablename,
-                                              "list_fields")
-                # Hide the Assignee column (always us)
-                try:
-                    list_fields.remove("pe_id")
-                except ValueError:
-                    # Already removed
-                    pass
-                # Hide the Status column (always 'assigned' or 'reopened')
-                try:
-                    list_fields.remove("status")
-                except ValueError:
-                    # Already removed
-                    pass
-                s3db.configure(tablename,
-                               list_fields = list_fields,
-                               )
-            except:
-                pass
+
+            # No need for assignee (always us) or status (always "assigned"
+            # or "reopened") in list fields:
+            list_fields = s3db.get_config(tablename, "list_fields")
+            if list_fields:
+                list_fields[:] = (fn for fn in list_fields
+                                     if fn not in ("pe_id", "status"))
 
         elif "project" in vars:
             # Show Open Tasks for this Project

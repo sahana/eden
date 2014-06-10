@@ -74,7 +74,7 @@ S3.queryString = {
 
 S3.uid = function() {
     // Generate a random uid
-    // Used for Popups on Map & jQueryUI modals
+    // Used for jQueryUI modals and some Map popups
     // http://jsperf.com/random-uuid/2
     return (((+(new Date())) / 1000 * 0x10000 + Math.random() * 0xffff) >> 0).toString(16);
 };
@@ -126,15 +126,6 @@ S3.Utf8 = {
 };
 
 S3.addTooltips = function() {
-    // Popovers (Bootstrap themes only)
-    if (typeof($.fn.popover) != 'undefined') {
-        // Applies to elements created after $(document).ready
-        $('body').popover({
-            selector: '.s3-popover',
-            trigger: 'hover',
-            placement: 'left'
-        });
-    }
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
     $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
@@ -167,26 +158,26 @@ S3.addTooltips = function() {
 // jQueryUI Modal Popups
 S3.addModals = function() {
     $('a.s3_add_resource_link').attr('href', function(index, attr) {
-        // Add the caller to the URL vars so that the popup knows which field to refresh/set
-        // Default formstyle
-        var caller = $(this).parents('tr').attr('id');
-        if (!caller) {
-            // DIV-based formstyle
-            caller = $(this).parent().parent().attr('id');
-        }
-        if (!caller) {
-            caller = $(this).parents('.form-row').attr('id');
-        }
-        if (!caller) {
-            // Bootstrap formstyle
-            caller = $(this).parents('.control-group').attr('id');
-        }
         var url_out = attr;
-        if (caller) {
-            caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
-                           .replace(/__row/, '');
-            // Avoid Duplicate callers
-            if (attr.indexOf('caller=') == -1) {
+        // Avoid Duplicate callers
+        if (attr.indexOf('caller=') == -1) {
+            // Add the caller to the URL vars so that the popup knows which field to refresh/set
+            // Default formstyle
+            var caller = $(this).parents('tr').attr('id');
+            if (!caller) {
+                // DIV-based formstyle
+                caller = $(this).parent().parent().attr('id');
+            }
+            if (!caller) {
+                caller = $(this).parents('.form-row').attr('id');
+            }
+            if (!caller) {
+                // Bootstrap formstyle
+                caller = $(this).parents('.control-group').attr('id');
+            }
+            if (caller) {
+                caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
+                               .replace(/__row/, '');
                 url_out = attr + '&caller=' + caller;
             }
         }
@@ -196,6 +187,21 @@ S3.addModals = function() {
                                          .on('click.S3Modal', function() {
         var title = this.title;
         var url = this.href;
+        var i = url.indexOf('caller=');
+        if (i != -1) {
+            var caller = url.slice(i + 7);
+            i = caller.indexOf('&');
+            if (i != -1) {
+                caller = caller.slice(0, i);
+            }
+            var select = $('#' + caller);
+            if (select.hasClass('multiselect-widget')) {
+                // Close the menu (otherwise this shows above the popup)
+                select.multiselect('close');
+                // Lower the z-Index
+                //select.css('z-index', 1049);
+            }
+        }
         var id = S3.uid();
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
         var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
@@ -1333,6 +1339,16 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
 
         // Event Handlers for the page
         S3.redraw();
+        
+        // Popovers (Bootstrap themes only)
+        if (typeof($.fn.popover) != 'undefined') {
+            // Applies to elements created after $(document).ready
+            $('body').popover({
+                selector: '.s3-popover',
+                trigger: 'hover',
+                placement: 'left'
+            });
+        }
 
         // Handle Page Resizes
         onResize();

@@ -125,8 +125,10 @@ class S3NavigationItem(object):
             @param r: the request to default to
 
             @param m: the URL method (will be appended to args)
-            @param p: the method to check authorization for (will not be appended to args)
-            @param t: the table concerned by this request (overrides c_f for auth)
+            @param p: the method to check authorization for
+                      (will not be appended to args)
+            @param t: the table concerned by this request
+                      (overrides c_f for auth)
 
             @param url: a URL to use instead of building one manually
                         - e.g. for external websites or mailto: links
@@ -377,8 +379,7 @@ class S3NavigationItem(object):
             by the renderer.
         """
 
-        auth = current.auth
-        has_role = auth.s3_has_role
+        has_role = current.auth.s3_has_role
 
         authorized = False
 
@@ -470,7 +471,7 @@ class S3NavigationItem(object):
         """ Check whether a tag is present in any item of the subtree """
 
         components = self.components
-        for i in self.components:
+        for i in components:
             if tag in i.tags or tag in i:
                 return 1
         return 0
@@ -539,10 +540,10 @@ class S3NavigationItem(object):
         if layout is not None:
             if tag is None or tag in self.tags:
                 self.renderer = layout
-            if tree:
+            if recursive:
                 for c in self.components:
                     if tag is None or tag in c.tags:
-                        c.set_layout(layout, tree=tree, tag=tag)
+                        c.set_layout(layout, recursive=recursive, tag=tag)
         return
 
     # -------------------------------------------------------------------------
@@ -1223,7 +1224,8 @@ class S3NavigationItem(object):
     # -------------------------------------------------------------------------
     def get_prev(self, **flags):
         """
-            Get the previous item in the parent's component list with these flags
+            Get the previous item in the parent's component list with these
+            flags
 
             @param flags: dictionary of flags
         """
@@ -1304,7 +1306,8 @@ class S3ComponentTabs(object):
 
         # Check whether there is a tab for this resource method (no component)
         mtab = r.component is None and \
-               [t.component for t in tabs if t.component == r.method] and True or False
+               [t.component for t in tabs if t.component == r.method] and \
+               True or False
 
         record_id = r.id
         if not record_id and r.record:
@@ -1313,7 +1316,6 @@ class S3ComponentTabs(object):
         for i in xrange(len(tabs)):
 
             tab = tabs[i]
-            title = tab.title
             component = tab.component
 
             vars_match = tab.vars_match(r)
@@ -1434,7 +1436,7 @@ class S3ComponentTab(object):
         tablename = None
         if "viewing" in get_vars:
             try:
-                tablename, record_id = get_vars["viewing"].split(".", 1)
+                tablename = get_vars["viewing"].split(".", 1)[0]
             except:
                 pass
 
@@ -1621,7 +1623,7 @@ class S3ResourceHeader:
                         if isinstance(f, str):
                             fn = f
                             if "." in fn:
-                                tn, fn = f.split(".", 1)
+                                fn = f.split(".", 1)[1]
                                 if fn not in table.fields or \
                                    fn not in record:
                                     continue
@@ -1637,7 +1639,8 @@ class S3ResourceHeader:
                             value = field.represent(value)
                     tr.append(TH("%s: " % label))
                     v = value
-                    if not isinstance(v, basestring) and not isinstance(value, A):
+                    if not isinstance(v, basestring) and \
+                       not isinstance(value, A):
                         try:
                             v = unicode(v)
                         except:

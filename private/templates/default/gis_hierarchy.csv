@@ -26,6 +26,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,NZ,Region,Territorial Authority,,,,
 ,PG,Province,District,LLG,Village,,
 ,PH,Region,Province,"City / Municipality",Barangay,,
+,SL,Province,District,Divisional Secretariat,Grama Niladhari,,
 ,TD,Region,Department,Sub-Prefecture,Canton,
 ,TJ,Province,District,Jamoat,Village,,
 ,TL,District,SubDistrict,Suco,Aldeia,,

@@ -299,14 +299,14 @@ function s3_popup_refresh_main_form() {
             });
             var output = [];
             count = 0;
-            for ( i = 0; i < append.length; i++ ) {
+            for (i = 0; i < append.length; i++) {
                 if (count === 0) {
                     // Start the row
                     output.push('<tr>');
                     // Add a cell
                     output.push(append[i]);
                     count++;
-                } else if ( count == (cols - 1) ) {
+                } else if (count == (cols - 1)) {
                     // Add a cell
                     output.push(append[i]);
                     // End the row
@@ -323,7 +323,7 @@ function s3_popup_refresh_main_form() {
             // Select the value we just added
             values.push(value_high);
             //selector.val(values).change();
-            for ( i = 0; i < values.length; i++ ) {
+            for (i = 0; i < values.length; i++) {
                 self.parent.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
             }
         }

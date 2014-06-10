@@ -1579,7 +1579,7 @@ S3.search = {};
 
         // Clear all filters
         $('.filter-clear').click(function() {
-            var form = $(this).closest('form.filter-form');
+            var form = $(this).closest('.filter-form');
             clearFilters(form);
         });
 
@@ -1591,7 +1591,7 @@ S3.search = {};
 
         // Filter-form submission
         $('.filter-submit').click(function() {
-            filterSubmit($(this).closest('form.filter-form'));
+            filterSubmit($(this).closest('.filter-form'));
         });
 
         // Advanced button

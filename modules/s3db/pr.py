@@ -326,9 +326,9 @@ class S3PersonEntity(S3Model):
         role_id = S3ReusableField("role_id", "reference %s" % tablename,
                                   label = T("Role"),
                                   ondelete = "CASCADE",
+                                  represent = pr_role_represent,
                                   requires = IS_ONE_OF(db, "pr_role.id",
                                                        pr_role_represent),
-                                  represent = pr_role_represent,
                                   )
 
         # ---------------------------------------------------------------------

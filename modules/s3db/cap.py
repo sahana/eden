@@ -329,10 +329,10 @@ class S3CAPModel(S3Model):
                      # @ToDo: Switch to using event_incident_type_id
                      Field("incidents", "list:string",
                            label = T("Incidents"),
-                           requires=IS_IN_SET(cap_incident_type_opts,
+                           requires=IS_EMPTY_OR(IS_IN_SET(cap_incident_type_opts,
                                               multiple = True,
                                               sort = True,
-                                              ),
+                                              )),
                            represent = S3Represent(options = cap_incident_type_opts,
                                                    multiple = True),
                            widget = S3MultiSelectWidget(),
@@ -503,7 +503,7 @@ class S3CAPModel(S3Model):
                             widget = S3MultiSelectWidget(),
                             ), # 0 or more allowed
                      Field("priority",
-                           requires=IS_IN_SET(cap_info_priority_opts),
+                           requires=IS_EMPTY_OR(IS_IN_SET(cap_info_priority_opts)),
                            ),
                      Field("urgency",
                            required=True,

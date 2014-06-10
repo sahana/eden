@@ -2880,7 +2880,7 @@ def poi():
                 if layer:
                     popup_edit_url = r.url(method="update",
                                            representation="popup",
-                                           vars={'refresh_layer':layer.layer_id},
+                                           vars={"refresh_layer":layer.layer_id},
                                            )
                 else:
                     popup_edit_url = r.url(method="update",

@@ -97,17 +97,29 @@ h2.summary {
     float: left;
 }
 
-.cms-edit {
-    /* Push above Summary Tabs */
-    z-index: 1001;
+#summary-common { 
+    margin-top: 10px;
 }
-.btn.summary-create {
+
+#list-btn-add {
     /* background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;*/
-    margin: 15px;
+    margin: 0 0 0 10px;
     padding: 4px 6px;
     float: left;
     /* Push above alert-space & Summary Tabs */
     position: relative;
+    z-index: 1001;
+}
+
+#summary-common #cms {
+    float: left;
+    margin-left: 20px;
+    line-height: 12px;
+    width: 50%;
+}
+
+.cms-edit {
+    /* Push above Summary Tabs */
     z-index: 1001;
 }
 
@@ -116,13 +128,6 @@ h2.summary {
 }
 .ui-tabs .ui-tabs-nav li {
     float: right;
-}
-
-#summary-common { 
-    float: left;
-    margin-top: 10px;
-    width: 70%;
-    line-height: 18px;
 }
 
 #summary-sections {
@@ -141,15 +146,14 @@ h2.summary {
     z-index: 1000; /* Push above alert-space */
 }
 
-
 #summary-tabs.ui-widget-content {
     width: 100%;
     float: left;
-    margin: -10px;
+    margin-top: -25px;
 }
 
 #summary-tabs #filter-form {
-    margin: 0 20px 0 40px; /* Needs to allow space for the Map's Zoom controls */
+    margin: 0 20px;
     position: absolute;
     top: 45px;
     width: auto;
@@ -183,6 +187,12 @@ h2.summary {
 #summary-tabs #map {
     border-radius: 5px;
     margin: 0;
+}
+
+/* Move zoom below filter */ 
+#summary-tabs #map div.olControlZoom {
+    left: 18px;
+    top: 108px;
 }
 
 #summary-2_filter {
@@ -222,7 +232,19 @@ select {
     margin-left: 10px;
 }
 
-/* Filter Forms */
+/* Filter Form */
+#filter-form-title {
+    margin: 0 0 0 7px;
+    padding: 0 3px;
+    font-size: 16px;
+    display: inline-block;
+    z-index: 1;
+    position: relative;
+    background-color: white;
+    border-radius: 5px;
+    float: left;
+}
+
 #filter-form td {
     border: none;
 }
@@ -290,17 +312,21 @@ button.ui-multiselect.ui-state-default.ui-corner-all {
 
 /* Filter Form */
 form.filter-form,
-form#summary-filter-form
- {
+form#summary-filter-form {
     float: left;
     background-color: rgba(255,255,255,0.8);
     padding: 5px 10px;
     border-radius: 5px;
+    margin-top: -10px;
 }
 
 .horiz_filter_form {
     float: left;
     margin-right: 15px;
+}
+
+.horiz_filter_form label {
+    margin: 2px 0;
 }
 
 .horiz_filter_form .filter-controls,

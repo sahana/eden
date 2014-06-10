@@ -195,10 +195,6 @@ if len(pop_list) > 0:
     if has_module("climate"):
         s3db.climate_first_run()
 
-    # CAP module
-    if has_module("cap"):
-        db.cap_alert.insert(template_title="Default", is_template=True)
-
     # Incident Reporting System
     if has_module("irs"):
         # Categories visible to ends-users by default

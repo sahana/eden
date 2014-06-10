@@ -393,6 +393,83 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <!-- quoteSplit: split a set of strings that are seperated with a space
+         and may or may not be enclosed within "".
+         eg: This is "a string" . 
+         output: ["This", "is", "a string"]
+
+         @param string: the string containing the input
+         @param inside_quotes: quotes on an inside string
+    -->
+    <xsl:template name="quoteSplit">
+        <xsl:param name="string"/>
+        
+        <xsl:param name="inside_quotes" select="false"/>
+        <xsl:variable name="normalized" select="normalize-space($string)"/>
+
+        <xsl:choose>
+            <xsl:when test="$normalized=''">
+                <xsl:value-of select="''"/>
+            </xsl:when>
+            <xsl:when test="contains($normalized, '&quot;')">
+                <xsl:variable name="head" select="substring-before($normalized, '&quot;')"/>
+                <xsl:variable name="tail" select="substring-after($normalized, '&quot;')"/>
+                <xsl:variable name="newhead">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$head"/>
+                        <xsl:with-param name="inside_quotes" select="$inside_quotes"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:variable name="newtail">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$tail"/>
+                        <xsl:with-param name="inside_quotes" select="not($inside_quotes)"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:choose>
+                    <xsl:when test="$newhead!='' and $newtail!=''">
+                        <xsl:value-of select="concat($newhead, ',', $newtail)"/>
+                    </xsl:when>
+                    <xsl:when test="$newhead!=''">
+                        <xsl:value-of select="$newhead"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$newtail"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
+            <xsl:when test="contains($normalized, ' ') and not($inside_quotes)">
+                <xsl:variable name="head" select="substring-before($normalized, ' ')"/>
+                <xsl:variable name="tail" select="substring-after($normalized, ' ')"/>
+                <xsl:variable name="newhead">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$head"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:variable name="newtail">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$tail"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:choose>
+                    <xsl:when test="$newhead!='' and $newtail!=''">
+                        <xsl:value-of select="concat($newhead, ',', $newtail)"/>
+                    </xsl:when>
+                    <xsl:when test="$newhead!=''">
+                        <xsl:value-of select="$newhead"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$newtail"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="concat('&quot;', $normalized, '&quot;')"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+    
+    <!-- ****************************************************************** -->
     <!-- Quote list: split a string with a list into its items and construct
          a new list with the same items quoted
 

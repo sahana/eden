@@ -1081,7 +1081,7 @@ class S3IRSResponseModel(S3Model):
                      ireport_id(),
                      asset_id(label = T("Vehicle"),
                               # Limit Vehicles to those which are not already assigned to an Incident
-                              requires=self.irs_vehicle_requires,
+                              requires = self.irs_vehicle_requires,
                               comment = S3AddResourceLink(
                                  c="vehicle",
                                  f="vehicle",
@@ -1089,9 +1089,9 @@ class S3IRSResponseModel(S3Model):
                                  tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
                               ),
                      s3_datetime("datetime",
-                                 label=T("Dispatch Time"),
-                                 default="now",
-                                 future=0,
+                                 default = "now",
+                                 future = 0,
+                                 label = T("Dispatch Time"),
                                  ),
                      self.super_link("site_id", "org_site",
                                      label = T("Fire Station"),
@@ -1099,7 +1099,8 @@ class S3IRSResponseModel(S3Model):
                                      # Populated from fire_station_vehicle
                                      #writable = True
                                      ),
-                     self.gis_location_id(label=T("Destination")),
+                     self.gis_location_id(label = T("Destination"),
+                                          ),
                      Field("closed",
                            # @ToDo: Close all assignments when Incident closed
                            readable=False,
