@@ -4731,6 +4731,10 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                                                            parent: 'parent', (optional: which function to lookup options from)
                                                            child: 'child', (optional: which field to lookup options for)
                                                            }
+            @ToDo: Complete the 'create' feature:
+                * Check User is allowed to create resources before rendering the option
+                * Ensure the Create option doesn't get filtered out when searching for items
+                * Style option to make it clearer that it's an Action item
         """
                      
         self.filter = filter

@@ -1018,10 +1018,16 @@ def customise_org_organisation_controller(**attr):
                 s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
                 mtable = s3db.org_group_membership
                 mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
+                #from s3layouts import S3AddResourceLink
+                #mtable.status_id.comment = S3AddResourceLink(c="org",
+                #                                             f="group_membership_status",
+                #                                             vars={"child": "status_id"},
+                #                                             title=T("Add New Status"))
                 mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
+                                                              # NB Has no permissions checks
                                                               create=dict(c="org",
                                                                           f="group_membership_status",
-                                                                          label="%s..." % T("Add New Status"),
+                                                                          label=str(T("Add New Status")),
                                                                           parent="group_membership",
                                                                           child="status_id"
                                                                           ))
@@ -1064,6 +1070,13 @@ def customise_org_organisation_controller(**attr):
                                         options = "TWITTER"
                                         )
                     ),
+                    # Not ready yet
+                    #S3SQLInlineComponent(
+                    #    "facility",
+                    #    label = T("Address"),
+                    #    fields = ["location_id",
+                    #              ],
+                    #),
                     "comments",
                 ]
                 if method not in ("create", "update", "summary"):
@@ -1104,19 +1117,19 @@ def customise_org_organisation_controller(**attr):
                         label = T("Organization's Contacts"),
                         fields = hr_fields,
                     ))
-                    form_fields.insert(6, S3SQLInlineComponent(
-                        "facility",
-                        label = T("Organization's Places"),
-                        fields = ["name", 
-                                  # Only fields within the table are supported
-                                  #"facility_type.facility_type_id",
-                                  "location_id",
-                                  ],
-                        # Fields needed to load for Virtual Fields
-                        extra_fields = ["site_id"],
-                        virtual_fields = [(T("Type"), "facility_types"),
-                                          ],
-                    ))
+                    #form_fields.insert(6, S3SQLInlineComponent(
+                    #    "facility",
+                    #    label = T("Organization's Places"),
+                    #    fields = ["name", 
+                    #              # Only fields within the table are supported
+                    #              #"facility_type.facility_type_id",
+                    #              "location_id",
+                    #              ],
+                    #    # Fields needed to load for Virtual Fields
+                    #    extra_fields = ["site_id"],
+                    #    virtual_fields = [(T("Type"), "facility_types"),
+                    #                      ],
+                    #))
 
                 crud_form = S3SQLCustomForm(*form_fields)
                 s3db.configure(tablename,

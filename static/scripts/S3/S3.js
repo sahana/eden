@@ -158,26 +158,26 @@ S3.addTooltips = function() {
 // jQueryUI Modal Popups
 S3.addModals = function() {
     $('a.s3_add_resource_link').attr('href', function(index, attr) {
-        // Add the caller to the URL vars so that the popup knows which field to refresh/set
-        // Default formstyle
-        var caller = $(this).parents('tr').attr('id');
-        if (!caller) {
-            // DIV-based formstyle
-            caller = $(this).parent().parent().attr('id');
-        }
-        if (!caller) {
-            caller = $(this).parents('.form-row').attr('id');
-        }
-        if (!caller) {
-            // Bootstrap formstyle
-            caller = $(this).parents('.control-group').attr('id');
-        }
         var url_out = attr;
-        if (caller) {
-            caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
-                           .replace(/__row/, '');
-            // Avoid Duplicate callers
-            if (attr.indexOf('caller=') == -1) {
+        // Avoid Duplicate callers
+        if (attr.indexOf('caller=') == -1) {
+            // Add the caller to the URL vars so that the popup knows which field to refresh/set
+            // Default formstyle
+            var caller = $(this).parents('tr').attr('id');
+            if (!caller) {
+                // DIV-based formstyle
+                caller = $(this).parent().parent().attr('id');
+            }
+            if (!caller) {
+                caller = $(this).parents('.form-row').attr('id');
+            }
+            if (!caller) {
+                // Bootstrap formstyle
+                caller = $(this).parents('.control-group').attr('id');
+            }
+            if (caller) {
+                caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
+                               .replace(/__row/, '');
                 url_out = attr + '&caller=' + caller;
             }
         }
@@ -189,16 +189,17 @@ S3.addModals = function() {
         var url = this.href;
         var i = url.indexOf('caller=');
         if (i != -1) {
-            // Lower the z-Index of the multiselect menu which opened us (if that's what we were opened from)
-            //$('.ui-multiselect-menu').css('z-index', 1049);
             var caller = url.slice(i + 7);
-            i = url.indexOf('&');
+            i = caller.indexOf('&');
             if (i != -1) {
-                caller = caller.slice(0, i - 1);
+                caller = caller.slice(0, i);
             }
             var select = $('#' + caller);
             if (select.hasClass('multiselect-widget')) {
+                // Close the menu (otherwise this shows above the popup)
                 select.multiselect('close');
+                // Lower the z-Index
+                //select.css('z-index', 1049);
             }
         }
         var id = S3.uid();
