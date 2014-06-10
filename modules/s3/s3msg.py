@@ -1294,14 +1294,13 @@ class S3Msg(object):
     #------------------------------------------------------------------------------
     def post_to_facebook(self, post):
         """
-            A function that posts on the facebook , taking post as the message
-            to be posted.
+            Posts a message on Facebook
         """
+
         import facebook
-        access=current.deployment_settings.get_auth_facebook()
-        Facebook_App_ID=access["id"]
-        Facebook_App_Secret=access["secret"]
-        access_token = facebook.get_app_access_token(Facebook_App_ID, Facebook_App_Secret)
+        settings = current.deployment_settings.get_auth_facebook()
+        access_token = facebook.get_app_access_token(settings["id"],
+                                                     settings["secret"])
         graph = facebook.GraphAPI(access_token)
         graph.put_wall_post(post)
 

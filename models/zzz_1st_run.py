@@ -194,7 +194,7 @@ if len(pop_list) > 0:
     # Climate Module
     if has_module("climate"):
         s3db.climate_first_run()
-        
+
     # Incident Reporting System
     if has_module("irs"):
         # Categories visible to ends-users by default
