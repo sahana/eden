@@ -39,6 +39,9 @@
         </s3xml>
     </xsl:template>
 
+    <!-- util -->
+    <xsl:include href="../xml/commons.xsl"/>
+
     <!-- key-value named template -->
     <xsl:template match="cap:alert/code|cap:eventCode|cap:parameter|cap:geocode">
         <xsl:if test="cap:valueName">
@@ -58,6 +61,7 @@
                 <xsl:value-of select="cap:identifier" />
             </xsl:attribute>
 
+            <data field="is_template">F</data>
             <data field="identifier">
                 <xsl:value-of select="cap:identifier" />
             </data>
@@ -100,10 +104,18 @@
             <data field="references">
                 <xsl:value-of select="cap:references" />
             </data>
+            <!-- ToDo
             <data field="incidents">
-                <xsl:value-of select="cap:incidents" />
+                <xsl:variable name="value">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="cap:incidents"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:attribute name="value">
+                    <xsl:value-of select="concat('[', $value, ']')"/>
+                </xsl:attribute>
             </data>
-
+            -->
             <xsl:apply-templates select="./cap:info" />
         </resource>
     </xsl:template>
@@ -115,15 +127,42 @@
                 <xsl:value-of select="cap:language" />
             </data>
             <data field="category">
-                <xsl:value-of select="cap:category" />
+                <xsl:attribute name="value">
+                    <xsl:text>[</xsl:text>
+                    <xsl:for-each select="cap:category">
+                        <xsl:text>&quot;</xsl:text>
+                        <xsl:value-of select="."/>
+                        <xsl:text>&quot;</xsl:text>
+                        <xsl:if test="position()!=last()">
+                            <xsl:text>,</xsl:text>
+                        </xsl:if>
+                    </xsl:for-each>
+                    <xsl:text>]</xsl:text>
+                </xsl:attribute>
             </data>
             <data field="event">
                 <xsl:value-of select="cap:event" />
             </data>
             <data field="response_type">
-                <xsl:value-of select="cap:response_type" />
+                <xsl:attribute name="value">
+                    <xsl:text>[</xsl:text>
+                    <xsl:for-each select="cap:response_type">
+                        <xsl:text>&quot;</xsl:text>
+                        <xsl:value-of select="."/>
+                        <xsl:text>&quot;</xsl:text>
+                        <xsl:if test="position()!=last()">
+                            <xsl:text>,</xsl:text>
+                        </xsl:if>
+                    </xsl:for-each>
+                    <xsl:text>]</xsl:text>
+                </xsl:attribute>
             </data>
             <!-- @todo: priority -->
+            <!--
+            <data field="priority">
+                <xsl:value-of select="cap:priority" />
+            </data>
+            -->
             <data field="urgency">
                 <xsl:value-of select="cap:urgency" />
             </data>
