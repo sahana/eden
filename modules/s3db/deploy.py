@@ -909,6 +909,12 @@ class S3DeploymentAlertModel(S3Model):
         alert_id = r.id
         if r.representation != "html" or not alert_id or r.component:
             raise HTTP(501, BADMETHOD)
+        
+        # Must have permission to update the alert in order to send it
+        authorised = current.auth.s3_has_permission("update", "deploy_alert",
+                                                    record_id = alert_id)
+        if not authorised:
+            r.unauthorised()
 
         T = current.T
         record = r.record
@@ -1088,11 +1094,15 @@ def deploy_rheader(r, tabs=[], profile=False):
         # List or Create form: rheader makes no sense here
         return None
 
+    has_permission = current.auth.s3_has_permission
     T = current.T
+        
     table = r.table
-    resourcename = r.name
+    tablename = r.tablename
 
     rheader = None
+    
+    resourcename = r.name
     if resourcename == "alert":
 
         alert_id = r.id
@@ -1103,7 +1113,9 @@ def deploy_rheader(r, tabs=[], profile=False):
         recipients = db(query).count()
 
         unsent = not r.record.message_id
-        if unsent:
+        authorised = has_permission("update", tablename, record_id=alert_id)
+        
+        if unsent and authorised:
             send_button = BUTTON(T("Send Alert"), _class="alert-send-btn")
             if recipients:
                 send_button.update(_onclick="window.location.href='%s'" %
@@ -1121,9 +1133,10 @@ def deploy_rheader(r, tabs=[], profile=False):
                    dict(number=recipients),
                  "recipient"),
                 ]
-        if unsent:
+        if unsent and authorised:
             # Insert tab to select recipients
             tabs.insert(1, (T("Select Recipients"), "select"))
+            
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(TR(TH("%s: " % table.mission_id.label),
@@ -1467,8 +1480,16 @@ def deploy_alert_select_recipients(r, **attr):
     """
 
     alert_id = r.id
-    if r.representation not in ("html", "aadata") or not alert_id or not r.component:
+    if r.representation not in ("html", "aadata") or \
+       not alert_id or \
+       not r.component:
         r.error(405, current.ERROR.BAD_METHOD)
+
+    # Must have permission to update the alert in order to add recipients
+    authorised = current.auth.s3_has_permission("update", "deploy_alert",
+                                                record_id = alert_id)
+    if not authorised:
+        r.unauthorised()
 
     T = current.T
     s3db = current.s3db
@@ -2091,6 +2112,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
         db = current.db
         s3db = current.s3db
+        has_permission = current.auth.s3_has_permission
 
         table = resource.table
         tablename = resource.tablename
@@ -2199,8 +2221,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
             # Workflow
             if not sent and total_recipients and \
-               current.auth.s3_has_permission("update", table,
-                                              record_id=record_id):
+               has_permission("update", table, record_id=record_id):
                 send = A(I(" ", _class="icon icon-envelope-alt"),
                          SPAN(T("Send this Alert"),
                               _class="card-action"),
@@ -2358,7 +2379,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                     _class="card-action"),
                                _class="action-lnk"
                              )
-                else:
+                elif has_permission("create", "deploy_assignment"):
                     mission_id = raw["deploy_response.mission_id"]
                     url = URL(f="mission",
                               args=[mission_id, "assignment", "create"],
@@ -2369,7 +2390,10 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                _href=url,
                                _class="action-lnk"
                              )
-                workflow = [deploy]
+                else:
+                    deploy = None
+                if deploy:
+                    workflow = [deploy]
 
         elif tablename == "deploy_assignment":
 
@@ -2408,7 +2432,6 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
             # Workflow actions
             appraisal = self.appraisals.get(record_id)
-            has_permission = current.auth.s3_has_permission
             person_id = raw["hrm_human_resource.person_id"]
             if appraisal and \
                has_permission("update", "hrm_appraisal", record_id=appraisal.id):
