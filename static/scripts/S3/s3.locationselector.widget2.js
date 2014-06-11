@@ -199,6 +199,13 @@
         // Form submission
         real_input.closest('form').submit(function() {
             // Client-side validation
+            if ((fieldname.slice(0, 4) == 'sub_') && (real_input.parent().parent().is(':hidden'))) {
+                // This is an Inline version which is hidden
+                // Disable the form fields to avoid conflicts
+                $(selector + '_L0,' + selector + '_L1,' + selector + '_L2,' + selector + '_L3,' + selector + '_L4,' + selector + '_L5,' + selector + '_address,' + selector + '_lat,' + selector + '_lon,' + selector + '_parent,' + selector + '_postcode,' + selector + '_wkt').prop('disabled', true);
+                // Ignore validation errors
+                return true;
+            }
             // Do we have a value to submit?
             var current_value = real_input.val();
             if (current_value) {
@@ -415,7 +422,11 @@
         if (id) {
             // Set this dropdown to this value
             // - this is being set from outside the dropdown, e.g. an update form or using a visible default location
-            $(selector + '_L' + level).val(id);
+            var dropdown = $(selector + '_L' + level);
+            dropdown.val(id);
+            if (dropdown.hasClass('multiselect')) {
+                dropdown.multiselect('refresh');
+            }
         } else {
             // Read the selected value from the dropdown
             id = parseInt($(selector + '_L' + level).val());
@@ -544,15 +555,15 @@
                     option = '<option value="' + _id + '"' + selected + '>' + location['n'] + '</option>';
                     select.append(option);
                 }
-                if (select.prop('multiple')) {
-                    select.multiselect({allSelectedText: i18n.allSelectedText,
-                                        selectedText: i18n.selectedText,
+                if (select.hasClass('multiselect')) {
+                    select.multiselect({//allSelectedText: i18n.allSelectedText,
+                                        //selectedText: i18n.selectedText,
                                         header: false,
                                         height: 300,
                                         minWidth: 0,
                                         selectedList: 3,
                                         noneSelectedText: $(selector + '_L' + level + ' option[value=""]').html(),
-                                        multiple:false
+                                        multiple: false
                                         });
                 }
                 if (len_values == 1) {
@@ -706,6 +717,11 @@
                 // Set the Parent field
                 var parent = lookupParent(fieldname);
                 parent_input.val(parent);
+            }
+            if (fieldname.slice(0, 4) == 'sub_') {
+                // This is an S3SQLInlineComponent
+                // Trigger a change
+                real_input.change();
             }
         }
     }

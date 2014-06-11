@@ -228,8 +228,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.display_L0 = True
 # Currently unused
 #settings.gis.display_L1 = False
-# Uncomemnt this to do deduplicate lookups on Imports via PCode (as alternative to Name)
-#settings.gis.lookup_pcode = True
+# Uncomment this to do deduplicate lookups on Imports via PCode (as alternative to Name)
+#settings.gis.lookup_code = "PCode"
 # Set this if there will be multiple areas in which work is being done,
 # and a menu to select among them is wanted.
 #settings.gis.menu = "Maps"

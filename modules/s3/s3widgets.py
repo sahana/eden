@@ -85,13 +85,6 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
-    from lxml import etree
-except ImportError:
-    import sys
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
-    raise
-
-try:
     from dateutil.relativedelta import relativedelta
 except ImportError:
     import sys
@@ -110,7 +103,6 @@ from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
-from s3export import S3Exporter
 from s3utils import *
 from s3validators import *
 
@@ -1181,10 +1173,10 @@ class S3ColorPickerWidget(FormWidget):
         s3 = current.response.s3
         app = current.request.application
 
-        min = "" if s3.debug else ".min"
+        _min = "" if s3.debug else ".min"
 
-        script = "/%s/static/scripts/spectrum%s.js" % (app, min)
-        style = "spectrum%s.css" % min
+        script = "/%s/static/scripts/spectrum%s.js" % (app, _min)
+        style = "spectrum%s.css" % _min
 
         if script not in s3.scripts:
             s3.scripts.append(script)
@@ -1195,7 +1187,8 @@ class S3ColorPickerWidget(FormWidget):
         s3.jquery_ready.append('''
 var sp_options=%s
 sp_options.change=function(color){this.value=color.toHex()}
-$('.color').spectrum(sp_options)''' % json.dumps(self.options, separators=SEPARATORS) if self.options else "")
+$('.color').spectrum(sp_options)''' % \
+    json.dumps(self.options, separators=SEPARATORS) if self.options else "")
 
         attr = self._attributes(field, {"_class": "color",
                                         "_value": value
@@ -3786,7 +3779,7 @@ i18n.gis_country_required="%s"''' % (country_snippet,
         else:
             wkt_input_row = ""
 
-         # Ensure that we don't insert duplicate scripts on validation errors
+        # Ensure that we don't insert duplicate scripts on validation errors
         s3.gis.location_selector_loaded = True
 
         # The overall layout of the components
@@ -3829,11 +3822,16 @@ class S3LocationSelectorWidget2(FormWidget):
 
         Limitations:
         * Doesn't support variable Levels by Country
+        * Doesn't support non-strict hierarchies
         * Doesn't allow creation of new Lx Locations
         * Doesn't allow selection of existing specific Locations
         * Doesn't support manual entry of LatLons
-        * Should support use in an InlineComponent (not urgent)
-        * Should support multiple on a page (not urgent)
+        * Use in an InlineComponent with multiple=False needs completing:
+            - Map is very narrow
+            - Validation errors cause issues
+            - Needs more testing
+        * Should support use in an InlineComponent with multiple=True
+        * Should support multiple on a page
     """
 
     def __init__(self,
@@ -3917,10 +3915,18 @@ class S3LocationSelectorWidget2(FormWidget):
         else:
             required = False
 
+        fieldname = str(field).replace(".", "_")
+
         # Main INPUT, will be hidden
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
+        if fieldname.startswith("sub_"):
+            # S3SQLInlineComponent
+            if "_class" in attr:
+                attr["_class"] = "%s inline-locationselector-widget" % attr["_class"]
+            else:
+                attr["_class"] = "inline-locationselector-widget"
 
         if request.controller == "appadmin":
             # Don't use this widget/validator in appadmin
@@ -3949,13 +3955,6 @@ class S3LocationSelectorWidget2(FormWidget):
         lines = self.lines
         polygons = self.polygons or lines
 
-        #bootstrap = settings.ui.formstyle == "bootstrap"
-        #if bootstrap:
-        #    # We need to make the HTML markup compliant with this CSS framework
-        #    # @ToDo: This should now be possible by calling the formstyle as-normal
-        #    # No need to test this formstyle as we know it up-front
-        #    tuple_rows = False
-        #else:
         # Test the formstyle
         formstyle = s3.crud.formstyle
         row = formstyle("test", "test", "test", "test")
@@ -4055,8 +4054,8 @@ class S3LocationSelectorWidget2(FormWidget):
                 for _level in _levels:
                     l = int(_level[1:])
                     if len(path) > l:
-                        id = path[l]
-                        values[_level] = int(id)
+                        _id = path[l]
+                        values[_level] = int(_id)
             else:
                 # Retrieve all records in the path to match them up to their Lx
                 rows = db(gtable.id.belongs(path)).select(gtable.id,
@@ -4074,7 +4073,6 @@ class S3LocationSelectorWidget2(FormWidget):
         L5 = values["L5"]
 
         # HTML Output
-        fieldname = str(field).replace(".", "_")
 
         # Parent INPUT field, will be hidden
         parent_input = INPUT(_name="parent",
@@ -4109,6 +4107,7 @@ class S3LocationSelectorWidget2(FormWidget):
         lowest_Lx = None
         if "L0" not in levels and \
            "L0" in _levels and L0:
+            lowest_Lx = "L0"
             # Have a hidden L0 input
             # - used for Geocoder & client-side validation
             L0_input = INPUT(_name="L0",
@@ -4122,6 +4121,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if "L1" not in levels and \
            "L1" in _levels and L1:
+            lowest_Lx = "L1"
             # Have a hidden L1 input
             # - used for Geocoder & client-side validation
             L1_input = INPUT(_name="L1",
@@ -4135,6 +4135,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if "L2" not in levels and \
            "L2" in _levels and L2:
+            lowest_Lx = "L2"
             # Have a hidden L2 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L2_input = INPUT(_name="L2",
@@ -4148,6 +4149,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if "L3" not in levels and \
            "L3" in _levels and L3:
+            lowest_Lx = "L3"
             # Have a hidden L3 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L3_input = INPUT(_name="L3",
@@ -4161,6 +4163,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if "L4" not in levels and \
            "L4" in _levels and L4:
+            lowest_Lx = "L4"
             # Have a hidden L4 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L4_input = INPUT(_name="L4",
@@ -4174,6 +4177,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if "L5" not in levels and \
            "L5" in _levels and L5:
+            lowest_Lx = "L5"
             # Have a hidden L5 input
             # - used for Geocoder & client-side validation & to attach Street Addresses to
             L5_input = INPUT(_name="L5",
@@ -4195,30 +4199,19 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if show_address:
             # Street Address
-            id = "%s_address" % fieldname
+            _id = "%s_address" % fieldname
             label = T("Street Address")
-            label = LABEL("%s:" % label, _for=id)
+            label = LABEL("%s:" % label, _for=_id)
             widget = INPUT(_name="address",
-                           _id=id,
+                           _id=_id,
                            _class="string",
                            value=address,
                            )
             # @ToDo: Option to Flag this as required
             #widget.add_class("required")
             hidden = not address
-            #if bootstrap:
-            #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-            #    # -> Elements moved via JS after page load
-            #    label.add_class("control-label")
-            #    widget.add_class("input-xlarge")
-            #    _controls = DIV(widget, _class="controls")
-            #    # Will unhide if dropdowns open accordingly
-            #    _class = "control-group hide"
-            #    address_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
-            #    address_label = ""
-            #else:
             comment = ""
-            address_row = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
+            address_row = formstyle("%s__row" % _id, label, widget, comment, hidden=hidden)
             if tuple_rows:
                 address_label = address_row[0]
                 address_row = address_row[1]
@@ -4230,27 +4223,16 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if show_postcode:
             # Postcode
-            id = "%s_postcode" % fieldname
+            _id = "%s_postcode" % fieldname
             label = settings.get_ui_label_postcode()
-            label = LABEL("%s:" % label, _for=id)
+            label = LABEL("%s:" % label, _for=_id)
             widget = INPUT(_name="postcode",
-                           _id=id,
+                           _id=_id,
                            value=postcode,
                            )
             hidden = not postcode
-            #if bootstrap:
-            #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-            #    # -> Elements moved via JS after page load
-            #    label.add_class("control-label")
-            #    widget.add_class("input-xlarge")
-            #    _controls = DIV(widget, _class="controls")
-            #    # Will unhide if dropdowns open accordingly
-            #    _class = "control-group hide"
-            #    postcode_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
-            #    postcode_label = ""
-            #else:
             comment = ""
-            postcode_row = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
+            postcode_row = formstyle("%s__row" % _id, label, widget, comment, hidden=hidden)
             if tuple_rows:
                 postcode_label = postcode_row[0]
                 postcode_row = postcode_row[1]
@@ -4312,10 +4294,10 @@ class S3LocationSelectorWidget2(FormWidget):
         hidden = True
         comment = ""
         for level in levels:
-            id = "%s_%s" % (fieldname, level)
-            lattr = {"_id" : id}
+            _id = "%s_%s" % (fieldname, level)
+            lattr = {"_id" : _id}
             if ui_multiselect_widget:
-                lattr["_multiple"] = "multiple"
+                lattr["_class"] = "multiselect"
             label = labels.get(level, level)
             noneSelectedText = T("Select %(location)s") % dict(location = label)
             widget = SELECT(OPTION(noneSelectedText,
@@ -4329,20 +4311,12 @@ class S3LocationSelectorWidget2(FormWidget):
                 if (int(level[1:]) + 1) not in levels:
                     # This is the highest level which is required
                     required = False
-            label = LABEL(label, _for=id)
-            throbber = DIV(_id="%s__throbber" % id,
+            label = LABEL(label, _for=_id)
+            throbber = DIV(_id="%s__throbber" % _id,
                            _class="throbber hide"
                            )
-            #if bootstrap:
-            #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
-            #    # -> Elements moved via JS after page load
-            #    label.add_class("control-label")
-            #    widget.add_class("input-xlarge")
-            #    _controls = DIV(widget, throbber, _class="controls")
-            #    row = DIV(label, _controls, _class="control-group hide", _id="%s__row" % id)
-            #    Lx_rows.append(row)
-            #else:
-            rows = formstyle("%s__row" % id, label, widget, comment, hidden=hidden)
+            widget = TAG[""](widget, throbber)
+            rows = formstyle("%s__row" % _id, label, widget, comment, hidden=hidden)
             if tuple_rows:
                 Lx_rows.append(rows[0])
                 Lx_rows.append(rows[1])
@@ -4538,11 +4512,11 @@ class S3LocationSelectorWidget2(FormWidget):
             global_append(script)
             script = '''i18n.select="%s"''' % T("Select")
             global_append(script)
-            if ui_multiselect_widget:
-                script = '''i18n.allSelectedText="%s"''' % T("All selected")
-                global_append(script)
-                script = '''i18n.selectedText="%s"''' % T("# selected")
-                global_append(script)
+            #if ui_multiselect_widget:
+            #    script = '''i18n.allSelectedText="%s"''' % T("All selected")
+            #    global_append(script)
+            #    script = '''i18n.selectedText="%s"''' % T("# selected")
+            #    global_append(script)
 
         # If we need to show the map since we have an existing lat/lon/wkt
         # then we need to launch the client-side JS as a callback to the MapJS loader

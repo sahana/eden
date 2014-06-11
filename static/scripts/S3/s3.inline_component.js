@@ -370,7 +370,8 @@ $(function() {
             element,
             input,
             text,
-            value;
+            value,
+            i;
         for (i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
             value = row[fieldname]['value'];
@@ -637,9 +638,10 @@ $(function() {
 
                 if (multiple) {
                     // Update read-row in the table, clear edit-row
-                    var read_row = '';
-                    var fields = data['fields'];
-                    var default_value;
+                    var read_row = '',
+                        fields = data['fields'],
+                        default_value,
+                        i;
                     for (i=0; i < fields.length; i++) {
                         var field = fields[i]['name'];
                         read_row += '<td>' + new_row[field]['text'] + '</td>';
@@ -993,6 +995,61 @@ $(function() {
         });
     };
 
+    // Used by S3LocationSelectorWidget2
+    var inline_locationselector_events = function() {
+        // Listen for changes on all Inline S3LocationSelectorWidget2s
+        $('.inline-locationselector-widget').change(function() {
+            var $this = $(this);
+            var names = $this.attr('id').split('_');
+            var formname = names[1];
+            // @ToDo: Handle multiple=True
+            // - add-row always visible
+            // - delete
+            // - represent
+            if ($('#add-row-' + formname).is(':visible')) {
+                // Don't do anything if we're in a Create row as we'll be processed on form submission
+                return;
+            }
+            var fieldname = names[4] + '_' + names[5];
+            // Read current data from real input
+            var data = inline_deserialize(formname);
+            var _data = data['data'],
+                new_value = $this.val(),
+                old_value,
+                item,
+                found = false;
+            for (var prop in _data) {
+                item = _data[prop];
+                if (item.hasOwnProperty(fieldname)) {
+                    found = true;
+                    old_value = item[fieldname].value;
+                    if (old_value) {
+                        old_value = old_value.toString();
+                    }
+                    break;
+                }
+            }
+            if (found && (new_value != old_value)) {
+                // Modify the Data
+                item[fieldname].value = new_value;
+                var represent = 'todo'; // Calculate represent from Street Address or lowest-Lx. Only needed when we support multiple=True
+                item[fieldname].text = represent;
+                item['_changed'] = true;
+            } else if (new_value) {
+                // Add a New Item
+                var item = {};
+                var represent = 'todo';
+                item[fieldname] = {'text': represent,
+                                   'value': new_value
+                                   };
+                item['_changed'] = true;
+                _data.push(item);
+            }
+            // Write data back to real input
+            inline_serialize(formname);
+        });
+    };
+
     $(document).ready(function() {
         if ($('.error_wrapper').length) {
             // Used by S3SQLInlineComponentCheckbox
@@ -1061,5 +1118,6 @@ $(function() {
         inline_button_events();
         inline_checkbox_events();
         inline_multiselect_events();
+        inline_locationselector_events();
     });
 });

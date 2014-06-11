@@ -6735,7 +6735,8 @@ class MAP(DIV):
         dumps = json.dumps
         s3 = current.response.s3
 
-        js_global_append = s3.js_global.append
+        js_global = s3.js_global
+        js_global_append = js_global.append
 
         i18n_dict = self.i18n
         i18n = []
@@ -6745,7 +6746,8 @@ class MAP(DIV):
             if line not in i18n:
                 i18n_append(line)
         i18n = '''\n'''.join(i18n)
-        js_global_append(i18n)
+        if i18n not in js_global:
+            js_global_append(i18n)
 
         globals_dict = self.globals
         js_globals = []
@@ -6754,7 +6756,8 @@ class MAP(DIV):
             if line not in js_globals:
                 js_globals.append(line)
         js_globals = '''\n'''.join(js_globals)
-        js_global_append(js_globals)
+        if js_globals not in js_global:
+            js_global_append(js_globals)
 
         scripts = s3.scripts
         script = URL(c="static", f="scripts/S3/s3.gis.loader.js")
@@ -6798,7 +6801,9 @@ class MAP(DIV):
                    callback = callback,
                    scripts = self.scripts
                    )
-        s3.jquery_ready.append(loader)
+        jquery_ready = s3.jquery_ready
+        if loader not in jquery_ready:
+            jquery_ready.append(loader)
 
         # Return the HTML
         return super(MAP, self).xml()

@@ -38,7 +38,14 @@ import hashlib
 import hmac
 import base64
 import requests
-import json
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 # Find a query string parser
 try:
@@ -46,11 +53,8 @@ try:
 except ImportError:
     from urlparse import parse_qs
 
-from . import version
-
-
-__version__ = version.__version__
-
+# https://github.com/pythonforfacebook/facebook-sdk
+__version__ = "1.0.0-alpha"
 
 class GraphAPI(object):
     """A client for the Facebook Graph API.

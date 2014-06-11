@@ -64,19 +64,10 @@ import re
 import time
 from datetime import datetime, timedelta
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 from gluon import *
 #from gluon import current
 #from gluon.dal import Field
 #from gluon.validators import IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
-from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import Validator
 
@@ -86,7 +77,6 @@ def translate(text):
     if text is None:
         return None
     elif isinstance(text, (str, unicode)):
-        from globals import current
         if hasattr(current, "T"):
             return str(current.T(text))
     return str(text)
@@ -1742,7 +1732,7 @@ class IS_LOCATION_SELECTOR2(Validator):
         if wkt:
             try:
                 from shapely.wkt import loads as wkt_loads
-                polygon = wkt_loads(wkt)
+                wkt_loads(wkt)
             except:
                 errors["wkt"] = current.T("WKT is Invalid!")
         if errors:
@@ -1782,11 +1772,11 @@ class IS_LOCATION_SELECTOR2(Validator):
                     for e in errors:
                         error = "%s\n%s" % (error, errors[e]) if error else errors[e]
                     return (parent, error)
-                id = table.insert(**feature)
-                feature.id = id
+                _id = table.insert(**feature)
+                feature.id = _id
                 # onaccept
                 current.gis.update_location_tree(feature)
-                return (id, None)
+                return (_id, None)
             else:
                 # Update existing Point
                 # Check that this is a valid location_id
@@ -1896,10 +1886,9 @@ class IS_LOCATION_SELECTOR2(Validator):
                         self.error_message or current.T("Invalid Location!"))
             level = location.level
             if level:
-                levels = self.levels
-                if not levels:
-                    # Which levels of Hierarchy are we using?
-                    levels = current.gis.get_relevant_hierarchy_levels()
+                # Which levels of Hierarchy are we using?
+                levels = self.levels or \
+                         current.gis.get_relevant_hierarchy_levels()
 
                 if level in levels:
                     # OK

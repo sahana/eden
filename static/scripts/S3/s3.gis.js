@@ -3204,7 +3204,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var layer = feature.layer;
         var map = layer.map;
         var s3 = map.s3;
-        if (layer.name in s3.layers_nopopups) {
+        if ((layer.name == 'OpenLayers.Handler.PointS3') || (layer.name in s3.layers_nopopups)) {
             // Don't do anything here when placing Points or there aren't popups to show
             return;
         }

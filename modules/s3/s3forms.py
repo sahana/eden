@@ -1081,10 +1081,10 @@ class S3SQLCustomForm(S3SQLForm):
                 subid = None
 
             # Accept the subrecord
-            accept_subid = self._accept(subid,
-                                        subdata,
-                                        alias=alias,
-                                        format=format)
+            self._accept(subid,
+                         subdata,
+                         alias=alias,
+                         format=format)
 
         # Accept components (e.g. Inline-Forms)
         for item in self.components:
@@ -1886,6 +1886,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if not multiple:
             # Mark to client-side JS that we should open Edit Row
             _class = "%s single" % _class
+        item = None
         for i in xrange(len(items)):
             has_rows = True
             item = items[i]
@@ -1934,7 +1935,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         _class = "edit-row inline-form hide"
         if required and has_rows:
             _class = "%s required" % _class
-        edit_row = self._render_item(table, None, fields,
+        edit_row = self._render_item(table, item, fields,
                                      editable=_editable,
                                      deletable=_deletable,
                                      readonly=False,
