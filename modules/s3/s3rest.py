@@ -563,6 +563,7 @@ class S3Request(object):
                 if self.vars is not None and count == 1:
                     self.resource.load()
                     self.record = self.resource._rows[0]
+                    self.id = self.record.id
                 else:
                     #current.session.error = current.ERROR.BAD_RECORD
                     redirect(URL(r=self, c=self.prefix, f=self.name))

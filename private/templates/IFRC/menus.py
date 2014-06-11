@@ -742,7 +742,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                         M("Settings",
                           c="deploy", f="email_channel",
-                        ),
+                          p="update", t="msg_email_channel",
+                          ),
                    ),
                    M("Deployments",
                      c="deploy", f="assignment", m="summary"
@@ -752,7 +753,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    ),
                    M("RDRT Members",
                      c="deploy", f="human_resource", m="summary")(
-                        M("Add Member", c="deploy", f="application", m="select"),
+                        M("Add Member",
+                          c="deploy", f="application", m="select",
+                          p="create", t="deploy_application",
+                          ),
                         M("Import Members", c="deploy", f="person", m="import"),
                    ),
                )

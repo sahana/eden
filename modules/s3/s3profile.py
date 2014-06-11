@@ -104,7 +104,7 @@ class S3Profile(S3CRUD):
         # Page Header
         header = get_config(tablename, "profile_header")
         if not header:
-            header = H2(title, _class="profile_header")
+            header = H2(title, _class="profile-header")
         elif callable(header):
             header = header(r)
 

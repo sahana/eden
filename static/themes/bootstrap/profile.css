@@ -2,7 +2,7 @@
 
 /* Profile Page */
 
-.profile_header {
+.profile-header {
     background-color: #f7f8f7;
     border: 1px solid #9e9b9b;
     border-radius: 4px;
@@ -12,12 +12,12 @@
     padding: 10px
 }
 
-.profile_header img.media-object {
+.profile-header img.media-object {
     float: left;
     padding-right: 10px;
 }
 
-.profile_header h2 {
+.profile-header h2 {
     padding: 10px;
     margin: 0;
     font-size: 25px;
@@ -28,16 +28,16 @@
     font-style: normal;
 }
 
-.profile_header .icon-edit {
+.profile-header .icon-edit {
     float: right;
 }
 
 @media (max-width: 480px) {
-    .profile_header h2 {
+    .profile-header h2 {
         padding: 10px 20px;
         font-size: 14px;
     }
-    .profile_header img.media-object {
+    .profile-header img.media-object {
         padding: 7px 10px 18px 5px;
     }
 }

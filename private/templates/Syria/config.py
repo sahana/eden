@@ -625,7 +625,7 @@ def customise_gis_location_controller(**attr):
                                        #_href=location_url,
                                        ),
                                      H2(settings.get_system_name()),
-                                     _class="profile_header",
+                                     _class="profile-header",
                                      )
                 s3db.configure("gis_location",
                                list_fields = list_fields,
@@ -911,7 +911,7 @@ def customise_org_organisation_controller(**attr):
                                                       #_href=org_url,
                                                       ),
                                                     H2(record.name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [contacts_widget,
                                                   map_widget,

@@ -1,9 +1,17 @@
 @charset "UTF-8";
 
+.pull-left {
+    float: left;
+}
+
 /* Profile Page */
 
 .profile-header {
     padding-bottom: 20px;
+}
+
+.profile-header .pull-left img {
+    margin-right: 10px;
 }
 
 .profile-header-label{
