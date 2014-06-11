@@ -610,7 +610,20 @@ class S3CAPModel(S3Model):
                            writable=False),
                      *s3_meta_fields())
 
-        # @ToDo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+                label_create = T("Create Resource"),
+                title_display = T("Alert Resource"),
+                title_list = T("Resources"),
+                title_update = T("Update Resource"),
+                title_upload = T("Import Resource(s)"),
+                subtitle_list = T("Listing of alert resource items"),
+                label_list_button = T("List Resources"),
+                label_delete_button = T("Delete Resource"),
+                msg_record_created = T("Alert resource created"),
+                msg_record_modified = T("Alert resource modified"),
+                msg_record_deleted = T("Alert resource deleted"),
+                msg_list_empty = T("No resources to show"))
 
         configure(tablename,
                   onaccept = update_alert_id(tablename),
@@ -638,7 +651,20 @@ class S3CAPModel(S3Model):
                      Field("ceiling", "integer"),
                      *s3_meta_fields())
 
-        # @ToDo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+                label_create = T("Create Area"),
+                title_display = T("Alert Area"),
+                title_list = T("Areas"),
+                title_update = T("Update Area"),
+                title_upload = T("Import Area(s)"),
+                subtitle_list = T("Listing of area items"),
+                label_list_button = T("List Areas"),
+                label_delete_button = T("Delete Area"),
+                msg_record_created = T("Alert Area created"),
+                msg_record_modified = T("Alert Area modified"),
+                msg_record_deleted = T("Alert Area deleted"),
+                msg_list_empty = T("No areas currently registered"))
 
         configure(tablename,
                   onaccept = update_alert_id(tablename),
