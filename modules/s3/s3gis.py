@@ -6572,9 +6572,9 @@ class MAP(DIV):
 
         zoomWheelEnabled = opts.get("zoomWheelEnabled", True)
         if not zoomWheelEnabled:
-            options["no_zoom_wheel"] = True
-
-        ########
+            options["no_zoom_wheel"] = True			
+			
+		########
         # Layers
         ########
 
