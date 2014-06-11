@@ -949,7 +949,17 @@ class S3PersonModel(S3Model):
         # Components
         add_components(tablename,
                        # Personal Data
-                       pr_identity = "person_id",
+                       pr_identity = (# All Identity Documents
+                                      {"name": "identity",
+                                       "joinby": "person_id",
+                                       },
+                                      # Passports in particular
+                                      {"name": "passport",
+                                       "joinby": "person_id",
+                                       "filterby": "type",
+                                       "filterfor": (1,),
+                                       },
+                                      ),
                        pr_education = "person_id",
                        pr_person_details = {"joinby": "person_id",
                                             "multiple": False,

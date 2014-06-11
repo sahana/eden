@@ -868,6 +868,7 @@ def customise_hrm_human_resource_controller(**attr):
     #    settings.org.site_label = "Office/Center"
 
     s3db = current.s3db
+    s3db.org_organisation.root_organisation.label = T("National Society")
 
     # Organisation needs to be an NS/Branch
     ns_only(s3db.hrm_human_resource.organisation_id,
@@ -892,6 +893,26 @@ def customise_hrm_human_resource_controller(**attr):
         elif vnrc:
             field = r.table.job_title_id
             field.readable = field.writable = False
+
+        if r.controller == "deploy":
+
+            # Custom list fields for RDRT
+            phone_label = settings.get_ui_label_mobile_phone()
+            list_fields = ["id",
+                           "person_id",
+                           "organisation_id$root_organisation",
+                           "type",
+                           "job_title_id",
+                           (T("Email"), "email.value"),
+                           (phone_label, "phone.value"),
+                           "person_id$gender",
+                           (T("Passport Number"), "person_id$passport.value"),
+                           (T("Passport Expires"), "person_id$passport.valid_until"),
+                           (T("Sectors"), "credential.job_title_id"),
+                           (T("Trainings"), "training.course_id"),
+                           # @todo: Languages (once implemented)
+                           ]
+            r.resource.configure(list_fields = list_fields)
 
         return True
     s3.prep = custom_prep
