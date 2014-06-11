@@ -43,7 +43,7 @@
     <xsl:include href="../xml/commons.xsl"/>
 
     <!-- key-value named template -->
-    <xsl:template match="cap:alert/code|cap:eventCode|cap:parameter|cap:geocode">
+    <xsl:template match="cap:alert/code|cap:eventCode|cap:parameter">
         <xsl:if test="cap:valueName">
             <xsl:text>{key: '</xsl:text>
             <xsl:value-of select="cap:valueName" />
@@ -224,7 +224,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="cap:resource">
-        <resource name="cap_info_resource">
+        <resource name="cap_resource">
             <data field="resource_desc">
                 <xsl:value-of select="cap:resourceDesc" />
             </data>
@@ -248,11 +248,12 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="cap:area">
-        <resource name="cap_info_area">
+        <resource name="cap_area">
             <data field="area_desc">
                 <xsl:value-of select="cap:areaDesc" />
             </data>
             <!-- polygon -->
+            <!--
             <data field="circle">
                 <xsl:value-of select="cap:circle" />
             </data>
@@ -263,13 +264,71 @@
                     <xsl:text>]</xsl:text>
                 </xsl:attribute>
             </data>
+            -->
             <data field="altitude">
                 <xsl:value-of select="cap:altitude" />
             </data>
             <data field="ceiling">
                 <xsl:value-of select="cap:ceiling" />
             </data>
+            <xsl:apply-templates select="cap:polygon" />
+            <xsl:apply-templates select="cap:circle" />
+            <xsl:apply-templates select="cap:geocode" />
          </resource>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <!-- Polygons and circles: conversion to WKT will be done in Python. -->
+    <xsl:template match="cap:polygon|cap:circle">
+        <resource name="cap_area_location">
+            <reference field="location_id" resource="gis_location">
+                <resource name="gis_location">
+                    <!-- Preserve unmodified polygon or circle text -->
+                    <resource name="gis_location_tag">
+                        <data field="tag">
+                            <xsl:text>cap_</xsl:text>
+                            <xsl:value-of select="local-name()" />
+                        </data>
+                        <data field="value">
+                            <xsl:value-of select="./text()" />
+                        </data>
+                    </resource>
+                </resource>
+            </reference>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Circles: conversion to WKT will be done in Python. -->
+    <xsl:template match="cap:circle">
+        <resource name="cap_area_location">
+            <reference field="location_id" resource="gis_location">
+                <resource name="gis_location">
+                    <!-- Preserve unmodified circle text -->
+                    <resource name="gis_location_tag">
+                        <data field="tag">
+                            <xsl:text>cap_circle</xsl:text>
+                        </data>
+                        <data field="value">
+                            <xsl:value-of select="./text()"/>
+                        </data>
+                    </resource>
+                </resource>
+            </reference>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Geocodes -->
+    <xsl:template match="cap:geocode">
+        <resource name="cap_area_tag">
+            <data field="tag">
+                <xsl:value-of select="cap:valueName" />
+            </data>
+            <data field="value">
+                <xsl:value-of select="cap:value" />
+            </data>
+        </resource>
+    </xsl:template>
+    
 </xsl:stylesheet>
