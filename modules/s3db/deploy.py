@@ -526,11 +526,16 @@ class S3DeploymentModel(S3Model):
     @staticmethod
     def add_button(r, widget_id=None, visible=True, **attr):
 
-        return A(S3Method.crud_string(r.tablename,
-                                      "label_create"),
-                 _href=r.url(method="create", id=0, vars={}),
-                 _class="action-btn",
-                 )
+        # Check permission only here, i.e. when the summary is
+        # actually being rendered:
+        if current.auth.s3_has_permission("create", r.tablename):
+            return A(S3Method.crud_string(r.tablename,
+                                          "label_create"),
+                     _href=r.url(method="create", id=0, vars={}),
+                     _class="action-btn",
+                     )
+        else:
+            return ""
                 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1140,12 +1145,14 @@ def deploy_rheader(r, tabs=[], profile=False):
             title = crud_string(r.tablename, "title_display")
             if record:
                 title = "%s: %s" % (title, record.name)
-                if profile:
+                edit_btn = ""
+                if profile and \
+                   current.auth.s3_has_permission("update",
+                                                  "deploy_mission",
+                                                  record_id=r.id):
                     crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(T("Edit"),
                                            _href=r.url(method="update"))
-                else:
-                    edit_btn = ""
 
                 label = lambda f, table=table, record=record, **attr: \
                                TH("%s: " % table[f].label, **attr)
@@ -1158,21 +1165,23 @@ def deploy_rheader(r, tabs=[], profile=False):
                                        value("location_id"),
                                        label("code"),
                                        value("code"),
-                                       edit_btn,
-                                    ),
+                                       ),
                                     TR(label("created_on"),
                                        value("created_on"),
                                        label("status"),
                                        value("status"),
-                                    ),
+                                       ),
                                     TR(label("comments"),
                                        value("comments",
                                              _class="mission-comments",
-                                             _colspan="6")
-                                    ),
+                                             _colspan="6",
+                                             ),
+                                       ),
                             ),
                             _class="mission-rheader"
                           )
+                if edit_btn:
+                    rheader[-1][0].append(edit_btn)
             else:
                 rheader = H2(title)
 
@@ -1261,6 +1270,11 @@ def deploy_apply(r, **attr):
         @todo: make workflow re-usable for manual assignments
     """
 
+    # Requires permission to create deploy_application
+    authorised = current.auth.s3_has_permission("create", "deploy_application")
+    if not authorised:
+        r.unauthorised()
+        
     T = current.T
     s3db = current.s3db
 
