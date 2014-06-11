@@ -917,7 +917,7 @@ class S3Joins(object):
         return "<S3Joins %s>" % str([str(j) for j in self.as_list()])
 
     # -------------------------------------------------------------------------
-    def as_list(self, tablenames=None, exclude=None, aqueries=None):
+    def as_list(self, tablenames=None, aqueries=None, prefer=None):
         """
             Return joins from this collection as list
 
@@ -925,12 +925,6 @@ class S3Joins(object):
                                shall be returned, defaults to all tables
                                in the collection. Dependencies will be
                                included automatically (if available)
-            @param exclude: tables to exclude from tablenames, can be
-                            another S3Joins collection, or a list/tuple/set
-                            of tablenames, useful e.g. to prevent duplication
-                            of left joins as inner joins:
-                            join = inner_joins.as_list(exclude=left_joins)
-                            left = left_joins.as_list()
             @param aqueries: dict of accessible-queries {tablename: query}
                              to include in the joins; if there is no entry
                              for a particular table, then it will be looked
@@ -938,6 +932,13 @@ class S3Joins(object):
                              To prevent differential authorization of a
                              particular joined table, set {<tablename>: None}
                              in the dict
+            @param prefer: If any table or any of its dependencies would be
+                           joined by this S3Joins collection, then skip this
+                           table here (and enforce it to be joined by the
+                           preferred collection), to prevent duplication of
+                           left joins as inner joins:
+                           join = inner_joins.as_list(prefer=left_joins)
+                           left = left_joins.as_list()
 
             @return: a list of joins, ordered by their interdependency, which
                      can be used as join/left parameter of Set.select()
@@ -949,25 +950,45 @@ class S3Joins(object):
             tablenames = self.tables
         else:
             tablenames = set(tablenames)
-        if isinstance(exclude, S3Joins):
-            tablenames -= set(exclude.keys())
-        elif exclude:
-            tablenames -= set(exclude)
             
-
+        skip = set()
+        if prefer:
+            preferred_joins = prefer.as_list(tablenames=tablenames)
+            for join in preferred_joins:
+                try:
+                    tname = join.first._tablename
+                except AttributeError:
+                    tname = str(join.first)
+                skip.add(tname)
+        tablenames -= skip
+        
         joins = self.joins
 
         # Resolve dependencies
         required_tables = set()
         get_tables = current.db._adapter.tables
         for tablename in tablenames:
-            if tablename not in joins or tablename == self.tablename:
+            if tablename not in joins or \
+               tablename == self.tablename or \
+               tablename in skip:
                 continue
-            required_tables.add(tablename)
-            for join in joins[tablename]:
-                dependencies = get_tables(join.second)
-                if dependencies:
-                    required_tables |= set(dependencies)
+
+            join_list = joins[tablename]
+            preferred = False
+            dependencies = set()
+            for join in join_list:
+                join_tables = set(get_tables(join.second))
+                if join_tables:
+                    if any((tname in skip for tname in join_tables)):
+                        preferred = True
+                    dependencies |= join_tables
+            if preferred:
+                skip.add(tablename)
+                skip |= dependencies
+                prefer.extend({tablename: join_list})
+            else:
+                required_tables.add(tablename)
+                required_tables |= dependencies
 
         # Collect joins
         joins_dict = {}

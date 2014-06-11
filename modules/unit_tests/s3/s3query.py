@@ -1780,6 +1780,41 @@ class URLQueryParserTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class JoinResolutionTests(unittest.TestCase):
+
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testPreferredSet(self):
+        """ Test resolution of duplicate inner/left joins """
+
+        s3db = current.s3db
+        ptable = s3db.project_project
+        ltable = s3db.project_task_project
+        ttable = s3db.project_task
+
+        ptable_join = ptable.on(ltable.project_id == ptable.id)
+        ltable_join = ltable.on(ltable.task_id == ttable.id)
+
+        # Define a set of inner joins for one table
+        ijoins = S3Joins("project_task")
+        ijoins.extend({"project_project": [ptable_join, ltable_join]})
+
+        # Define a sub-join of the inner joins as a left join
+        ljoins = S3Joins("project_task")
+        ljoins.extend({"project_task_project": [ltable_join]})
+
+        # Request joins for both tables from both sets, prefer the left joins
+        tablenames = ["project_project", "project_task_project"]
+        join = ijoins.as_list(tablenames=tablenames, prefer=ljoins)
+        left = ljoins.as_list(tablenames=tablenames)
+
+        # Joins should be moved to the left joins set
+        self.assertEqual(join, [])
+        self.assertEqual(len(left), 2)
+        # Mind the order! (must be ordered by dependency)
+        self.assertEqual(str(left[0]), str(ltable_join))
+        self.assertEqual(str(left[1]), str(ptable_join))
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -1800,6 +1835,7 @@ if __name__ == "__main__":
         ResourceFilterJoinTests,
         ResourceFilterQueryTests,
         ResourceContextFilterTests,
+        JoinResolutionTests,
 
         URLQueryParserTests,
 
