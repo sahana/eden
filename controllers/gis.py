@@ -150,18 +150,15 @@ def define_map(height = None,
             script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
         s3.scripts.append(script)
         
-		#Passing enabled resources to the JS
-        poi_resources=settings.get_gis_poi_resources()
-        script= '''S3.gis.pois_resources=%s''' % poi_resources
-        s3.js_global.append(script)
-        
+        # Pass enabled resources to the JS
+        poi_resources = settings.get_gis_poi_create_resources()        
+        script = '''S3.gis.pois_resources=%s''' % poi_resources
+        s3.js_global.append(script)        
         ftable = s3db.gis_layer_feature
-        for resources in poi_resources :
-            # @ToDo: Allow multiple PoI layers
+        for r in poi_resources :
             # @ToDo: a Permissions check for which resources the current user *can* add resources for
             # @ToDo: make a bulk call
-            resource_layer=resources.split('/')
-            layer = db(ftable.name == resource_layer[1]).select(ftable.layer_id,limitby=(0, 1)).first()
+            layer = db(ftable.name == r["layer"]).select(ftable.layer_id,limitby=(0, 1)).first()
             if layer:                
                 script = '''S3.gis.pois_layer=%s''' % layer.layer_id
                 s3.js_global.append(script)

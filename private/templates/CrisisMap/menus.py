@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import sys
-print >> sys.stderr, "In CrisisMap/menus.py........."
-
 from gluon import *
 from s3 import *
 from s3layouts import *

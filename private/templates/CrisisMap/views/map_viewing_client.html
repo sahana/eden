@@ -1,0 +1,14 @@
+{{extend "layout.html"}}
+<div class='map_home'>
+ <a href='{{=URL(f="map_viewing_client")}}' class='gis_fullscreen_map-btn'>{{=T("View Fullscreen Map")}}</a>
+ <div class="large-6 columns" id="map_resource_type">
+      <label>Choose Your Favorite</label>
+      <input type="radio" name="resource_type" value="POI" id="map_resource_type_POI" checked="checked"><label for="map_resource_type_POI">POI</label>
+      <input type="radio" name="resource_type" value="Incident" id="map_resource_type_Incident"><label for="map_resource_type_Incident">Incident</label>
+    
+    </div>
+ 
+ {{if not settings.get_gis_save():}}<a href='#' class='gis_print_map-btn'>{{="%s / %s" % (T("Print"), T("Share"))}}</a>{{pass}}
+ {{=XML(map)}}
+</div>
+ 

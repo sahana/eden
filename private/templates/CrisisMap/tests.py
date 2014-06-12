@@ -10,6 +10,7 @@
 
 from gluon import current
 
+#ToDo : Reduce the settings to minimal - start with minimal set & build up as-needed
 current.selenium_tests = ["CreateOrganisation",
                           "CreateOffice",
                           "CreateStaff",

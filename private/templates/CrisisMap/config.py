@@ -259,8 +259,6 @@ settings.gis.geocode_imported_addresses = "google"
 #settings.gis.overview = False
 # Uncomment to hide the permalink control
 #settings.gis.permalink = False
-# Uncomment to disable the ability to add PoIs to the main map
-#settings.gis.pois = False
 # PoIs to export in KML/OSM feeds from Admin locations
 #settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office"])
 # Uncomment to hide the Print control
@@ -284,8 +282,8 @@ settings.gis.geocode_imported_addresses = "google"
 #settings.gis.zoomcontrol = False
 # GeoNames username
 settings.gis.geonames_username = "CrisisMap"
-# Add a resource to enabl it's button to be directly added to the map, add controller/function of the resource to the array
-settings.gis.poi_create_resources = ["gis/poi", "event/event","event/incident"]
+# Add a resource to enable it's button to be directly added to the map
+settings.gis.poi_create_resources = [{"c":"gis","f":"poi","label":'T("Add PoI")',"tooltip":"Add PoI","layer":"PoIs","location":"toolbar"},{"c":"event","f":"incident_report","label":'T("Add Incident Report")',"tooltip":"Add Incident Report","layer":"Incident Reports","location":"menu"}]
 
 # Messaging Settings
 # If you wish to use a parser.py in another folder than "default"

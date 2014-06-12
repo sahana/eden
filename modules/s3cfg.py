@@ -942,7 +942,8 @@ class S3Config(Storage):
             List of resources (tablenames) to import/export as PoIs from Admin Locations
             - KML & OpenStreetMap formats
         """
-        return self.gis.get("poi_export_resources", ["cr_shelter", "hms_hospital", "org_office"])
+        return self.gis.get("poi_export_resources", 
+                            ["cr_shelter", "hms_hospital", "org_office"])
 
     def get_gis_postcode_selector(self):
         """
@@ -1038,10 +1039,9 @@ class S3Config(Storage):
         
     def get_gis_poi_create_resources(self):
         """
-            List of resources which can be directly added to the map
-           
+            List of resources which can be directly added to the map           
         """
-        return self.gis.get("poi_create_resources", ["gis/poi", "event/event","event/incident"])    
+        return self.gis.get("poi_create_resources", [])    
     
     # -------------------------------------------------------------------------
     # L10N Settings

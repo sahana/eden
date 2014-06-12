@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
-print >> sys.stderr, "In CrisisMap/Controllers.py"
-
 
 from os import path
 

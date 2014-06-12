@@ -36,7 +36,7 @@
      */
 	
 	var url;
-	var pointPlaced = function(feature,resource) {
+	var pointPlaced = function(feature, resource) {
         var gis = S3.gis;
         var proj4326 = gis.proj4326;
         // Read lat & lon
@@ -44,10 +44,9 @@
         var centerPoint = feature.geometry.getBounds().getCenterLonLat();
         centerPoint.transform(current_projection, proj4326);
         // Build URL for create form
-		if ( resource )
-		{ var resource_split = resource.split('/');
-		  var cntroller = resource_split[0];
-		  var fnction = resource_split[1];		  
+		if (resource) { 
+		  var cntroller = resource["c"];
+		  var fnction = resource["f"];		  
 		  url = S3.Ap.concat('/'+ cntroller +'/'+ fnction +'/create?refresh_layer=' + gis.pois_layer + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
 		  }	else {	
           url = S3.Ap.concat('/gis/poi/create?refresh_layer=' + gis.pois_layer + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
