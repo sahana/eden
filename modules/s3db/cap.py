@@ -610,7 +610,19 @@ class S3CAPModel(S3Model):
                            writable=False),
                      *s3_meta_fields())
 
-        # @ToDo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+                    label_create = T("Add Resource"),
+                    title_display = T("Alert Resource"),
+                    title_list = T("Resources"),
+                    title_update = T("Edit Resource"),
+                    subtitle_list = T("List Resources"),
+                    label_list_button = T("List Resources"),
+                    label_delete_button = T("Delete Resource"),
+                    msg_record_created = T("Resource added"),
+                    msg_record_modified = T("Resource updated"),
+                    msg_record_deleted = T("Resource deleted"),
+                    msg_list_empty = T("No resources currently defined for this alert"))
 
         configure(tablename,
                   onaccept = update_alert_id(tablename),
@@ -638,7 +650,19 @@ class S3CAPModel(S3Model):
                      Field("ceiling", "integer"),
                      *s3_meta_fields())
 
-        # @ToDo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+                    label_create = T("Add Area"),
+                    title_display = T("Alert Area"),
+                    title_list = T("Areas"),
+                    title_update = T("Edit Area"),
+                    subtitle_list = T("List Areas"),
+                    label_list_button = T("List Areas"),
+                    label_delete_button = T("Delete Area"),
+                    msg_record_created = T("Area added"),
+                    msg_record_modified = T("Area updated"),
+                    msg_record_deleted = T("Area deleted"),
+                    msg_list_empty = T("No areas currently defined for this alert"))
 
         configure(tablename,
                   onaccept = update_alert_id(tablename),
