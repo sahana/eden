@@ -2972,15 +2972,19 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var tooltipSelect = function(event) {
         var feature = event.feature;
         var layer = feature.layer;
-        if (layer.name == 'OpenLayers.Handler.PointS3') {
-            // Don't do anything here when placing Points
+        if (['OpenLayers.Handler.PointS3',
+             'OpenLayers.Handler.Path',
+             'OpenLayers.Handler.Polygon',
+             'OpenLayers.Handler.RegularPolygon'
+             ].indexOf(layer.name) != -1) {
+            // Don't do anything here when drawing features
             return;
         }
         // Style the feature as highlighted
         feature.renderIntent = 'select';
         layer.drawFeature(feature);
         var map = layer.map;
-        if (layer.name in map.s3.layers_nopopups) {
+        if (map.s3.layers_nopopups.indexOf(layer.name) != -1) {
             // Don't do anything more here when there aren't popups to show
             return;
         }
@@ -3044,11 +3048,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var feature = event.feature;
         var layer = feature.layer;
         var map = layer.map;
-        if (layer.name == 'OpenLayers.Handler.PointS3') {
-            // Don't do anything here when placing Points
+        if (['OpenLayers.Handler.PointS3',
+             'OpenLayers.Handler.Path',
+             'OpenLayers.Handler.Polygon',
+             'OpenLayers.Handler.RegularPolygon'
+             ].indexOf(layer.name) != -1) {
+            // Don't do anything here when drawing features
             return;
         }
-        if (layer.name in map.s3.layers_nopopups && feature.popup.CLASS_NAME == 'OpenLayers.Popup.Tooltip') {
+        if ((map.s3.layers_nopopups.indexOf(layer.name) != -1) && (feature.popup.CLASS_NAME == 'OpenLayers.Popup.Tooltip')) {
             // Style the feature normally
             feature.renderIntent = 'default';
             layer.drawFeature(feature);
@@ -3204,8 +3212,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var layer = feature.layer;
         var map = layer.map;
         var s3 = map.s3;
-        if ((layer.name == 'OpenLayers.Handler.PointS3') || (layer.name in s3.layers_nopopups)) {
-            // Don't do anything here when placing Points or there aren't popups to show
+        if ((['OpenLayers.Handler.PointS3',
+              'OpenLayers.Handler.Path',
+              'OpenLayers.Handler.Polygon',
+              'OpenLayers.Handler.RegularPolygon'
+              ].indexOf(layer.name) != -1) || (s3.layers_nopopups.indexOf(layer.name) != -1)) {
+            // Don't do anything here when drawing Features or there aren't popups to show
             return;
         }
         /*
