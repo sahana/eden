@@ -1734,7 +1734,6 @@
 'Create Projection': 'Kreiraj projekciju',
 'Create Question Meta-Data': 'Kreiraj metapodatke pitanja',
 'Create Rapid Assessment': 'Napravi brzu procjenu',
-'Create Reference Document': 'Kreiraj uputni dokument',
 'Create Report': 'Kreiraj izvještaj',
 'Create Repository': 'Kreiraj repozitorij',
 'Create Request': 'Kreiraj zahtjev',

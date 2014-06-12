@@ -284,7 +284,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
             return super(S3OptionsMenu, self).gis()
 
     # -------------------------------------------------------------------------
-    def hrm(self):
+    @staticmethod
+    def hrm():
         """ HRM Human Resource Management """
 
         session = current.session
@@ -424,7 +425,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.hrm()
     
     # -------------------------------------------------------------------------
-    def vol(self):
+    @staticmethod
+    def vol():
         """ Volunteer Management """
 
         auth = current.auth
@@ -570,7 +572,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    def inv(self):
+    @staticmethod
+    def inv():
         """ INV / Inventory """
 
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -691,7 +694,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.inv()
 
     # -------------------------------------------------------------------------
-    def irs(self):
+    @staticmethod
+    def irs():
         """ IRS Incident Reporting """
 
         return M()(
@@ -725,7 +729,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.irs()
 
     # -------------------------------------------------------------------------
-    def deploy(self):
+    @staticmethod
+    def deploy():
         """ RDRT Alerting and Deployments """
 
         return M()(M("Missions",

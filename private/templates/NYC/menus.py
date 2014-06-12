@@ -66,6 +66,8 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        AUTHENTICATED = current.session.s3.system_roles.AUTHENTICATED
+
         return [
             MM("News", c="cms", f="newsfeed", args="datalist",
                icon="icon-news"),
@@ -77,7 +79,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Request Supplies", f="req", m="create", vars={"type": 1}),
                 MM("Request People", f="req", m="create", vars={"type": 3})
             ),
-            MM("Locations", c="org", f="facility", m="summary")(
+            MM("Locations", c="org", f="facility", m="summary",
+               restrict=[AUTHENTICATED])(
                 MM("Facilities", c="org", f="facility", m="summary"),
                 MM("Create a Facility", c="org", f="facility", m="create")
             ),
@@ -85,8 +88,11 @@ class S3MainMenu(default.S3MainMenu):
                 MM("People", c="hrm", f="staff"),
                 MM("Groups", c="hrm", f="group"),
                 MM("Organizations", c="org", f="organisation"),
-                MM("Networks", c="org", f="group"),
                 #MM("People Registry", c="pr", f="index")
+            ),                
+            MM("Networks", c="org", f="group")(
+                MM("Networks", c="org", f="group"),
+                #MM("Organizations", c="org", f="organisation"),
             ),                
             MM("Resources", c="inv", f="index")(
                 MM("Assets", c="asset", f="asset"),
@@ -255,17 +261,28 @@ class S3OptionsMenu(default.S3OptionsMenu):
     """
 
     # -------------------------------------------------------------------------
-    def hrm(self):
+    @staticmethod
+    def hrm():
         """ HRM / Human Resources Management """
 
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
+        AUTHENTICATED = s3.system_roles.AUTHENTICATED
+        db = current.db
+        SUPER = lambda i: \
+            db(db.auth_group.uuid=="super").select(db.auth_group.id,
+                                                   limitby=(0, 1),
+                                                   cache=s3db.cache
+                                                   ).first().id
 
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
         def hrm_vars():
             if not s3.hrm:
-                current.s3db.hrm_vars()
+                if current.auth.is_logged_in():
+                    current.s3db.hrm_vars()
+                else:
+                    s3.hrm = Storage(mode="personal")
             return True
         manager_mode = lambda i: hrm_vars() and s3.hrm.mode is None
         personal_mode = lambda i: hrm_vars() and s3.hrm.mode is not None
@@ -279,59 +296,35 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M(settings.get_hrm_staff_label(), c="hrm", f="staff",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
                     M(teams, c="hrm", f="group",
-                      check=[manager_mode, use_teams])(
+                      check=[use_teams])(
                         M("Create", m="create"),
-                        #M("Search"),
-                    ),
-                    M("Facilities", c="org", f="facility", m="summary")(
-                        M("Create", m="create"),
-                        #M("Search", m="summary"),
-                        #M("Review/Approve New", m="review"),
-                        M("Import", m="import")
-                    ),
-                    M("Facility Types", c="org", f="facility_type",
-                      restrict=[ADMIN]
-                      )(
-                        M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Organizations", c="org", f="organisation")(
-                        M("Create", m="create"),
-                        #M("Search"),
+                        M("Create", m="create",
+                          restrict=[AUTHENTICATED]),
                         M("Review/Approve New", m="review"),
-                        M("Import", m="import")
+                        M("Import", m="import",
+                          restrict=[SUPER])
                     ),
                     M("Organization Types", c="org", f="organisation_type",
-                      restrict=[ADMIN]
-                      )(
+                      restrict=[ADMIN])(
                         M("Create", m="create"),
-                        #M("Search"),
-                    ),
-                    M("Networks", c="org", f="group",
-                      #restrict=[ADMIN]
-                      )(
-                        M("Create", m="create"),
-                        #M("Search"),
                     ),
                     #M("Department Catalog", c="hrm", f="department",
                     #  check=manager_mode)(
                     #    M("Create", m="create"),
-                    #    M("Search"),
                     #),
                     M("Job Title Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Skill Catalog", c="hrm", f="skill",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Personal Profile", c="hrm", f="person",
@@ -345,7 +338,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    def inv(self):
+    @staticmethod
+    def inv():
         """ INV / Inventory """
 
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -353,11 +347,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M()(
                     M("Facilities", c="inv", f="facility", m="summary")(
                         M("Create", m="create"),
-                        #M("Search", m="summary"),
                         M("Import", m="import")
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
-                        #M("Search"),
                         #M("Search Shipped Items", f="track_item"),
                         M("Stock Count", f="adj"),
                         #M("Kitting", f="kit"),
@@ -378,23 +370,19 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     #M(inv_recv_list, c="inv", f="recv")(
                     #    M("Create", m="create"),
-                    #    #M("Search"),
                     #),
                     M("Sent Shipments", c="inv", f="send")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Search Shipped Items", f="track_item"),
                     ),
                     M("Items", c="supply", f="item")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                 )
 
@@ -402,25 +390,51 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org(self):
         """ ORG / Organization Registry """
 
-        # Same as Human Resources
+        fn = current.request.function
+        if fn  == "group":
+            return M()(
+                    M("Networks", c="org", f="group")(
+                        M("Create", m="create"),
+                    ),
+                )
+        elif fn in ("facility", "facility_type"):
+            ADMIN = current.session.s3.system_roles.ADMIN
+            return M()(
+                   M("Facilities", c="org", f="facility", m="summary")(
+                        M("Create", m="create"),
+                        #M("Review/Approve New", m="review"),
+                        M("Import", m="import")
+                    ),
+                    M("Facility Types", c="org", f="facility_type",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
+                )
+        else:
+            # organisation, organisation_type or hrm
+            return self.hrm()
+
+    # -------------------------------------------------------------------------
+    def pr(self):
+        """ Person Registry """
+
         return self.hrm()
 
     # -------------------------------------------------------------------------
-    def project(self):
+    @staticmethod
+    def project():
         """ PROJECT / Project Tracking & Management """
 
-        menu = M(c="project")(
+        return M(c="project")(
                     M("Projects", f="project")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
                 )
 
-        return menu
-
     # -------------------------------------------------------------------------
-    def req(self):
+    @staticmethod
+    def req():
         """ REQ / Request Management """
 
         db = current.db
@@ -445,27 +459,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     #M("Priority Items", f="summary_option")(
                     #    M("Create", m="create"),
-                    #    M("Search"),
                     #),
                     M("Commitments", f="commit")(
-                        #M("Search")
                     ),
                     M("Sent Shipments", f="send")(
                         #M("Create", m="create"),
-                        #M("Search"),
                         #M("Search Shipped Items", f="track_item"),
                     ),
                     M("Items", c="supply", f="item",
                       restrict=[SUPER])(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Report", m="report"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[SUPER])(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                 )
 

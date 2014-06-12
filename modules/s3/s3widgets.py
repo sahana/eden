@@ -3827,7 +3827,6 @@ class S3LocationSelectorWidget2(FormWidget):
         * Doesn't allow selection of existing specific Locations
         * Doesn't support manual entry of LatLons
         * Use in an InlineComponent with multiple=False needs completing:
-            - Map is very narrow
             - Validation errors cause issues
             - Needs more testing
         * Should support use in an InlineComponent with multiple=True

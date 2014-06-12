@@ -76,8 +76,10 @@ class S3Config(Storage):
                     "pt": "%d/%m/%Y",
                     "pt-br": "%d/%m/%Y",
                     "ru": "%d.%m.%Y",
+                    #"si": "",
                     "sr": "%d.%m.%Y",
                     "sv": "%Y-%m-%d",
+                    "ta": "%d/%m/%Y",
                     #"tet": "",
                     #"tl": "",
                     #"ur": "",
@@ -1065,6 +1067,8 @@ class S3Config(Storage):
                                                        ("pt", "Português"),
                                                        ("pt-br", "Português (Brasil)"),
                                                        ("ru", "русский"),
+                                                       #("si", "සිංහල"),                # Sinhala
+                                                       #("ta", "தமிழ்"),               # Tamil
                                                        ("tl", "Tagalog"),
                                                        ("ur", "اردو"),
                                                        ("vi", "Tiếng Việt"),

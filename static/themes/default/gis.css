@@ -63,6 +63,10 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     padding-right: 2px;
 }
 
+.embeddedComponent .map_wrapper {
+    width: 100%;
+}
+
 .gis_coord_wrap .decimal {
     width: 174px;
 }

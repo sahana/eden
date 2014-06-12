@@ -133,4 +133,17 @@ class S3MenuDividerLayout(S3NavigationItem):
 # Shortcut
 SEP = S3MenuDividerLayout
 
+# =============================================================================
+#class S3MenuEmptyLayout(S3NavigationItem):
+#
+#    @staticmethod
+#    def layout(item):
+#
+#        items = item.render_components()
+#        return TAG[""](items)
+
+# -----------------------------------------------------------------------------
+# Shortcut
+#EMPTY = S3MenuEmptyLayout
+
 # END =========================================================================
