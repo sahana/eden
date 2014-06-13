@@ -971,8 +971,8 @@ class S3EventResourceModel(S3Model):
         super_link = self.super_link
 
         status_opts = {1: T("Available"),
-                       2: T("On Scene"),
-                       3: T("Responding"),
+                       2: T("Assigned"),
+                       3: T("En Route"),
                        }
 
         # ---------------------------------------------------------------------

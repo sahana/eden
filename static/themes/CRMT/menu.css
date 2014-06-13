@@ -2,13 +2,6 @@
 
 /* Main Navigation (S3MainMenu or modules menu) */
 
-.navbar .nav > li > a.home > img {
-    width: 29px;
-    height: 30px;
-}
-.navbar .nav > li > a.home  {
-    padding: 8px 5px;
-}
 .navbar .nav > li > a  {
     padding: 12px;
     font-size: 18px;

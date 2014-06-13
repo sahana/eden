@@ -75,11 +75,6 @@ textarea[class*="span"] {
     display: inline-block /*don't wrap help-block*/
 }
 
-.dropdown-menu > li > a:hover > [class^="icon-"],
-.dropdown-menu > li > a:hover > [class*=" icon-"] { 
-    background-image: none;
-}
-
 /* Web2Py styles Inputs as x-large, which don't match other form inputs */
 .input-xlarge {
     -moz-box-sizing: inherit;
@@ -141,18 +136,6 @@ div.dl {
     margin-left: 10px;
 }
 
-/* Match .btn.btn-primary */
-.delete-btn {
-    background-color: #006dcc;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    border-width: 1px;
-    border-radius: 4px 4px 4px 4px;
-    color: #fff;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-    line-height: 20px;
-    padding: 4px 12px;
-}
-
 /* Push down below Nav  */
 #alert-space {
     position: fixed;
@@ -191,6 +174,12 @@ a.btn.btn-primary.main-add {
     float: right;
     position: relative;
     top: 24px;
+}
+
+/* GeoNames Search Results */
+.x-combo-list h1 {
+    font: 12px tahoma,arial,helvetica,sans-serif;
+    margin: 0;
 }
 
 /* Add button on Updates page & Disaster selection screen */
@@ -256,6 +245,10 @@ a i.icon.icon-plus-sign.big-add:hover {
     -moz-box-shadow: 0 1px 1px #aaaaa7;
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
+}
+
+div.form-container {
+    margin-bottom: 0px;
 }
 
 div.form-container form.form-horizontal,
@@ -334,10 +327,16 @@ body.rtl .form-horizontal .control-label {
     margin-top: 5px;
 }
 
-.form-container .help-block div {
-    position: relative;
-    top: -8px;
-    margin-bottom: -12px;
+.s3_add_resource_link {
+    float: left;
+    margin: 8px 0 -8px 5px;
+}
+
+.form-container div.tooltip  {
+    float: left;
+    margin: 10px 0 -10px 5px;
+    background: url("../../img/help_on.gif") no-repeat scroll;
+    width: 20px;
 }
 
 /* Don't apply if s3.cancel=True */
@@ -352,10 +351,17 @@ body.rtl .form-horizontal .control-label {
     margin-right: -15px;
 }
 
+a.cancel-form-btn,
 #submit_record__row .btn-primary {
     padding: 5px 20px;
-    margin-left: 240px;
-    margin-right: 240px;
+    margin-left: 10px;
+    float: left;
+}
+
+a.cancel-form-btn {
+    margin-left: 40px;
+    margin-top: 6px;
+    text-decoration: none;
 }
 
 #delete-btn, 
@@ -367,7 +373,15 @@ body.rtl .form-horizontal .control-label {
             border-radius: 3px;
 }
 
-a.action-btn {
+/* Match .btn.btn-primary */
+a.cancel-form-btn,
+a.action-btn,
+a.delete-btn {
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-width: 1px;
+    border-radius: 4px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    line-height: 20px;
     display: inline-block;
     *display: inline;
     padding: 1px 6px;
@@ -377,11 +391,18 @@ a.action-btn {
     font-size: 10.5px;
     line-height: 20px;
     *line-height: 20px;
-    color: #333333;
-    text-align: center;
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     vertical-align: middle;
     cursor: pointer;
+}
+a.action-btn i.icon,
+a.delete-btn i.icon {
+    font-size: 13px;
+}
+
+a.action-btn {
+    text-align: center;
+    color: #333333;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     background-color: #f5f5f5;
     *background-color: #e6e6e6;
     background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
@@ -390,14 +411,8 @@ a.action-btn {
     background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
     background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
     background-repeat: repeat-x;
-    border: 1px solid #bbbbbb;
     *border: 0;
-    border-color: #e6e6e6 #e6e6e6 #bfbfbf;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
     border-bottom-color: #a2a2a2;
-    -webkit-border-radius: 4px;
-     -moz-border-radius: 4px;
-          border-radius: 4px;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
     *zoom: 1;
@@ -405,7 +420,7 @@ a.action-btn {
      -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
- 
+
 a.action-btn:hover {
     color: #333333;
     text-decoration: none;
@@ -419,11 +434,26 @@ a.action-btn:hover {
           transition: background-position 0.1s linear;
 }
 
+a.cancel-form-btn,
+a.delete-btn,
 #delete-btn {
     color: #ffffff;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-color: #da4f49;
     *background-color: #bd362f;
+}
+
+a.cancel-form-btn:hover,
+a.delete-btn:hover,
+#delete-btn:hover{
+    color: #ffffff;
+    background-color: #bd362f;
+    *background-color: #a9302a;
+}
+
+a.cancel-form-btn,
+#delete-btn {
+    font-size: 13px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-image: -moz-linear-gradient(top, #ee5f5b, #bd362f);
     background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ee5f5b), to(#bd362f));
     background-image: -webkit-linear-gradient(top, #ee5f5b, #bd362f);
@@ -434,12 +464,6 @@ a.action-btn:hover {
     border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffee5f5b', endColorstr='#ffbd362f', GradientType=0);
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
-}
-
-#delete-btn:hover{
-    color: #ffffff;
-    background-color: #bd362f;
-    *background-color: #a9302a;
 }
 
 /* Required Fields */
@@ -548,6 +572,7 @@ table.embeddedComponent td {
 table.embeddedComponent .add-row td {
     padding: 0 10px 0 0;
 }
+
 .inline-add {
     background-image: url(../../img/bootstrap/add.png);
 }
@@ -812,7 +837,7 @@ label.ui-corner-all span {
 #table-container tr.odd td {
     border: 1px solid #d9d8d8;
     border-left: none;
-    padding: 10px 10px 10px 7px;
+    padding: 7px 0 7px 5px;
     font-size: 13px;
 }
 

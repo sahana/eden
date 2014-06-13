@@ -330,7 +330,14 @@ class S3AddResourceLink(S3NavigationItem):
         if not item.authorized:
             return None
 
-        popup_link = A(item.label,
+
+        if current.deployment_settings.get_ui_use_button_glyphicons():
+            label = (I(" ", _class="icon-plus"),
+                      item.label)
+        else:
+            label = item.label
+
+        popup_link = A(label,
                        _href=item.url(format="popup"),
                        _class="s3_add_resource_link",
                        _id="%s_add" % item.function,
@@ -345,7 +352,7 @@ class S3AddResourceLink(S3NavigationItem):
         else:
             ttip = ""
 
-        return DIV(popup_link, ttip)
+        return TAG[""](popup_link, ttip)
 
     # -------------------------------------------------------------------------
     @staticmethod
