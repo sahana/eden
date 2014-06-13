@@ -1234,6 +1234,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     db = current.db
     s3db = current.s3db
     settings = current.deployment_settings
+    NONE = current.messages["NONE"]
 
     org_field = settings.get_cms_organisation()
     if org_field == "created_by$organisation_id":
@@ -1248,8 +1249,27 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         org_group_field = "cms_post_organisation_group.group_id"
 
     raw = record._row
-    series_id = raw["cms_post.series_id"]
     body = record["cms_post.body"]
+    
+    series_id = raw["cms_post.series_id"]
+
+    subtitle = []
+    for event_resource in ["event","incident"]:
+        label = record["event_post.%s_id" % event_resource]
+        if label and label != NONE:
+            link=URL(c="event",
+                     f=event_resource,
+                     args=[raw["event_post.%s_id" % event_resource],
+                          "profile"]
+                     )
+            subtitle.append(DIV(A(I( _class="icon icon-%s"  % event_resource),
+                                    label,
+                                    _href=link,
+                                    _target="_blank"),
+                                 _class="card-subtitle"))
+    if subtitle:
+        subtitle.append(body)
+        body = TAG[""](*subtitle)
 
     date = record["cms_post.date"]
     date = SPAN(date,

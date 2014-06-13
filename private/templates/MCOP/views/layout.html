@@ -67,9 +67,9 @@
     <span class='icon-bar'></span>
     <span class='icon-bar'></span>
    </button>
-   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/S3menu_logo.png" style="width:29px;margin:0 0 -20px 0" alt=""/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
+      <li><a class='home' href='/{{=appname}}/default/index'><img src='/{{=appname}}/static/img/sahanalarge_14.png' alt='Sahana'/></a></li>
       <li role='menuitem'><a href='/{{=appname}}/gis/index' tabindex='-1' class='menu-item'> <i class='icon-map'></i> {{=T("Map")}}</a></li>
       <li role='menuitem'><a href='/{{=appname}}/event/incident/summary' tabindex='-1' class='menu-item'> <i class='icon-incident'></i> {{=T("Incidents")}}</a></li>
       <li role='menuitem'><a href='/{{=appname}}/cms/post/datalist' tabindex='-1' class='menu-item'> <i class='icon-alert'></i> {{=T("Alerts")}}</a></li>
@@ -99,6 +99,8 @@
        <li><a href='/{{=appname}}/default/person'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
        <li><a href='/{{=appname}}/default/about'><i class='icon-info-sign'></i> {{=T("About")}}</a></li>
+       <li class='divider'></li>
+       <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
       </ul>
      </li>
      {{else:}}{{if request.controller == "default" and request.function == "user" or "login" in request.args:}} {{else:}}
