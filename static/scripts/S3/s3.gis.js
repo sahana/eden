@@ -3678,11 +3678,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             toolbar.addSeparator();
             //toolbar.add(selectButton);
             if (options.draw_feature) {
+                var menu_items= [];                    
                 var resource_array=S3.gis.pois_resources;
                 for (var i=0; i<resource_array.length ; i++)
-                    addCustomPointControl(map, toolbar, point_pressed,resource_array[i]);
-				//addPointControl(map, toolbar, point_pressed,"Incident");
-            }
+                    addCustomPointControl(map, toolbar, point_pressed,resource_array[i],menu_items);
+				//addPointControl(map, toolbar, point_pressed,"Incident"); 
+                if (menu_items.length>0)
+                    toolbar.add({
+                    text: "Add Resources",
+                    menu: new Ext.menu.Menu({items: menu_items})
+                        }); 
+            }            
             //toolbar.add(lineButton);
             if (options.draw_line) {
                 addLineControl(map, toolbar, line_pressed, true);
@@ -4145,7 +4151,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Add custom point controls to add new markers for different resources to the map
-    var addCustomPointControl = function(map, toolbar, active, resource) {
+    var addCustomPointControl = function(map, toolbar, active, resource, menu_items) {
         OpenLayers.Handler.PointS3 = OpenLayers.Class(OpenLayers.Handler.Point, {
             // Ensure that we propagate Double Clicks (so we can still Zoom)
             dblclick: function(evt) {
@@ -4177,8 +4183,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
 
         if (toolbar) {
-            // Toolbar Button
-            var pointButton = new GeoExt.Action({
+            // Toolbar Button 
+            if (resource["location"]=="toolbar") {
+                var pointButton = new GeoExt.Action({
                 control: control,
                 handler: function() {
                     if (pointButton.items[0].pressed) {
@@ -4196,8 +4203,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 pressed: active
             });
             toolbar.add(pointButton);
-            // Pass to Global scope for LocationSelectorWidget
-            map.s3.pointButton = pointButton;
+             // Pass to Global scope for LocationSelectorWidget
+            map.s3.pointButton = pointButton;  
+            } else {
+                var menuButton = new GeoExt.Action({
+                control: control,
+                handler: function() {
+                    if (menuButton.items[0].pressed) {
+                        $('.olMapViewport').addClass('crosshair');
+                    } else {
+                        $('.olMapViewport').removeClass('crosshair');
+                    }
+                },
+                iconCls: 'drawpoint-off',
+                map: map,
+                text: resource["tooltip"],
+            });
+            var newItem= new Ext.menu.CheckItem(menuButton);
+            menu_items.push(newItem);     
+             // Pass to Global scope for LocationSelectorWidget
+            map.s3.menuButton = menuButton;              
+           }
         } else {
             // Simply add straight to the map
             map.addControl(control);
@@ -4219,7 +4245,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             CLASS_NAME: 'OpenLayers.Handler.PointS3'
         });
 		
-		
         var draftLayer = map.s3.draftLayer;
         var control = new OpenLayers.Control.DrawFeature(draftLayer, OpenLayers.Handler.PointS3, {
             // custom Callback
@@ -4231,13 +4256,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     // Clear the one from the Current Location in S3LocationSelector
                     draftLayer.features[0].destroy();
                 }
-
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back					
-                    map.s3.pointPlaced(feature);
-					
+                    map.s3.pointPlaced(feature);					
                 }
-
                 // Prepare in case user selects a new point
                 map.s3.lastDraftFeature = feature;
             }
