@@ -3678,15 +3678,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             toolbar.addSeparator();
             //toolbar.add(selectButton);
             if (options.draw_feature) {
-                var menu_items= [];                    
-                var resource_array=S3.gis.pois_resources;
-                for (var i=0; i<resource_array.length ; i++)
+                var menu_items = [];                    
+                var resource_array = S3.gis.pois_resources;
+                for (var i=0; i < resource_array.length ; i++)
                     addCustomPointControl(map, toolbar, point_pressed,resource_array[i],menu_items);
 				//addPointControl(map, toolbar, point_pressed,"Incident"); 
-                if (menu_items.length>0)
+                if (menu_items.length > 0)
                     toolbar.add({
                     text: "Add Resources",
-                    menu: new Ext.menu.Menu({items: menu_items})
+                    menu: new Ext.menu.Menu({ items: menu_items })
                         }); 
             }            
             //toolbar.add(lineButton);
@@ -4184,7 +4184,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         if (toolbar) {
             // Toolbar Button 
-            if (resource["location"]=="toolbar") {
+            if (resource["location"] == "toolbar") {
                 var pointButton = new GeoExt.Action({
                 control: control,
                 handler: function() {
@@ -4217,9 +4217,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 },
                 iconCls: 'drawpoint-off',
                 map: map,
-                text: resource["tooltip"],
+                text: 'T(resource["label"])',
             });
-            var newItem= new Ext.menu.CheckItem(menuButton);
+            var newItem = new Ext.menu.CheckItem(menuButton);
             menu_items.push(newItem);     
              // Pass to Global scope for LocationSelectorWidget
             map.s3.menuButton = menuButton;              
