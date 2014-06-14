@@ -405,3 +405,9 @@ button.alert-send-btn:enabled {
 #asset_asset_sub_defaultitem__row #sub_defaultitem_defaultitem_i_quantity_edit_none {
     width: 35px;
 }
+
+/* Avatar Image div(eg:membership) */
+.avatar_img_div {
+padding-bottom:10px;
+}
+
