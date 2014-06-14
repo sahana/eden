@@ -427,7 +427,7 @@ class S3CAPModel(S3Model):
         ])
 
         cap_info_urgency_opts = OrderedDict([
-            ("Immediate", T("Respone action should be taken immediately")),
+            ("Immediate", T("Response action should be taken immediately")),
             ("Expected", T("Response action should be taken soon (within next hour)")),
             ("Future", T("Responsive action should be taken in the near future")),
             ("Past", T("Responsive action is no longer required")),
@@ -575,16 +575,18 @@ class S3CAPModel(S3Model):
                 msg_list_empty = T("No alert information to show"))
 
         info_id = S3ReusableField("info_id", "reference %s" % tablename,
-                                  sortby="identifier",
-                                  requires=IS_EMPTY_OR(
+                                  label = T("Alert Information"),
+                                  ondelete = "RESTRICT",
+                                  requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "cap_info.id",
                                                       self.info_represent)),
                                   represent = self.info_represent,
-                                  label = T("Alert Information"),
+                                  sortby = "identifier",
                                   comment = T("The alert information"),
-                                  ondelete = "RESTRICT")
+                                  )
 
         configure(tablename,
+                  create_next = URL(f="info", args=["[id]", "area"]),
                   onaccept = self.info_onaccept,
                   )
 
@@ -600,18 +602,28 @@ class S3CAPModel(S3Model):
         tablename = "cap_resource"
         define_table(tablename,
                      info_id(),
-                     alert_id(writable=False),
-                     Field("resource_desc", required=True),
-                     Field("mime_type", required=True),
+                     alert_id(writable = False),
+                     Field("resource_desc",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("mime_type",
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("size", "integer",
-                           writable = False),
+                           writable = False,
+                           ),
                      Field("uri",
-                           writable = False), # needs a special validation
+                           # needs a special validation
+                           writable = False,
+                           ),
                      Field("file", "upload"),
                      Field("deref_uri", "text",
-                           writable=False, readable=False),
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("digest",
-                           writable=False),
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -672,10 +684,11 @@ class S3CAPModel(S3Model):
         tablename = "cap_area"
         define_table(tablename,
                      info_id(),
-                     alert_id(writable=False),
-                     Field("area_desc",
+                     alert_id(writable = False),
+                     Field("name",
                            label = T("Area description"),
-                           required=True),
+                           required = True,
+                           ),
                      #Field("geocode", "text",
                      #      widget = S3KeyValueWidget(),
                      #      represent = S3KeyValueWidget.represent,
@@ -686,19 +699,42 @@ class S3CAPModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-                    label_create = T("Add Area"),
-                    title_display = T("Alert Area"),
-                    title_list = T("Areas"),
-                    title_update = T("Edit Area"),
-                    subtitle_list = T("List Areas"),
-                    label_list_button = T("List Areas"),
-                    label_delete_button = T("Delete Area"),
-                    msg_record_created = T("Area added"),
-                    msg_record_modified = T("Area updated"),
-                    msg_record_deleted = T("Area deleted"),
-                    msg_list_empty = T("No areas currently defined for this alert"))
+            label_create = T("Add Area"),
+            title_display = T("Alert Area"),
+            title_list = T("Areas"),
+            title_update = T("Edit Area"),
+            subtitle_list = T("List Areas"),
+            label_list_button = T("List Areas"),
+            label_delete_button = T("Delete Area"),
+            msg_record_created = T("Area added"),
+            msg_record_modified = T("Area updated"),
+            msg_record_deleted = T("Area deleted"),
+            msg_list_empty = T("No areas currently defined for this alert"))
+
+        crud_form = S3SQLCustomForm("name",
+                                    # Not yet working with default formstyle or multiple=True
+                                    #S3SQLInlineComponent(
+                                    #   "area_location",
+                                    #   name = "location",
+                                    #   label = "",
+                                    #   multiple = False,
+                                    #   fields = [("", "location_id")],
+                                    #   ),
+                                    S3SQLInlineComponent(
+                                       "area_tag",
+                                       name = "tag",
+                                       label = "",
+                                       fields = ["tag",
+                                                 "value",
+                                                 ],
+                                       ),
+                                    "altitude",
+                                    "ceiling",
+                                    )
 
         configure(tablename,
+                  create_next = URL(f="area", args=["[id]", "location"]),
+                  crud_form = crud_form,
                   onaccept = update_alert_id(tablename),
                   )
 
@@ -732,10 +768,10 @@ class S3CAPModel(S3Model):
         # as Dominic points out, onvalidate is really for validation, not
         # for constructing field values. So need to find out what the
         # proper callback is.
-        configure(tablename,
+        #configure(tablename,
         #          onvalidate = cap_area_onvalidate(tablename),
         #          xml_post_parse = cap_area_generate_wkt(...),
-                  )
+        #          )
 
         # ---------------------------------------------------------------------
         # Area Tags
@@ -762,24 +798,27 @@ class S3CAPModel(S3Model):
                      Field("area_id", "reference cap_area"),
                      # ToDo: Allow selecting from a dropdown list of pre-defined
                      # geocode system names.
-                     Field("tag", label=T("Geocode Name")),
+                     Field("tag",
+                           label = T("Geocode Name"),
+                           ),
                      # ToDo: Once the geocode system is selected, fetch a list
                      # of current values for that geocode system. Allow adding
                      # new values, e.g. with combo box menu.
-                     Field("value", label=T("Value")),
+                     Field("value",
+                           label = T("Value"),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
-        configure(tablename,
-                  #deduplicate = self.cap_area_tag_deduplicate,
-                  )
+        #configure(tablename,
+        #          deduplicate = self.cap_area_tag_deduplicate,
+        #          )
 
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return dict(
-            cap_alert_id = alert_id,
-            )
+        return dict(cap_alert_id = alert_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -978,10 +1017,10 @@ class S3CAPModel(S3Model):
         else:
             db = current.db
             table = db.cap_area
-            row = db(table.id == id).select(table.area_desc,
+            row = db(table.id == id).select(table.name,
                                             limitby=(0, 1)).first()
 
-        return row.area_desc
+        return row.name
 
 # =============================================================================
 def cap_info_labels():
@@ -1174,19 +1213,21 @@ def cap_area_rheader(r, tabs=[]):
             tabs = [
                     (T("Area"), None),
                     (T("Locations"), "area_location"),
-                    (T("Geocodes"), "area_tag"),
+                    #(T("Geocodes"), "area_tag"),
                    ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
             rheader = DIV(TABLE(
                               TR(TH("%s: " % T("Information")),
-                                  A(S3CAPModel.info_represent(item.info_id),
+                                 TD(A(S3CAPModel.info_represent(item.info_id),
                                       _href=URL(c="cap", f="info",
                                       args=[item.info_id, "update"])),
+                                    ),
                                 ),
                               TR(TH("%s: " % T("Area")),
-                                  A(S3CAPModel.area_represent(item.id, item),
+                                 TD(A(S3CAPModel.area_represent(item.id, item),
                                       _href=URL(c="cap", f="info",
                                       args=[item.id, "update"])),
+                                    ),
                                 ),
                               ),
                           rheader_tabs

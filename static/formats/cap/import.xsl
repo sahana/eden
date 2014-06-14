@@ -249,7 +249,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="cap:area">
         <resource name="cap_area">
-            <data field="area_desc">
+            <data field="name">
                 <xsl:value-of select="cap:areaDesc" />
             </data>
             <!-- polygon -->

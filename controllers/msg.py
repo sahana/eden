@@ -244,10 +244,10 @@ def sms_outbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   listadd=False,
-                   editable=False,
+                   #deletable = False,
+                   insertable = False,
+                   listadd = False,
+                   editable = False,
                    list_fields = ["id",
                                   "to_address",
                                   "body",
@@ -295,10 +295,10 @@ def twitter_outbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   listadd=False,
-                   editable=False,
+                   #deletable = False,
+                   insertable = False,
+                   listadd = False,
+                   editable = False,
                    list_fields = ["id",
                                   "to_address",
                                   "body",
@@ -335,9 +335,9 @@ def inbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   insertable = False,
+                   editable = False,
                    list_fields = ["id",
                                   "channel_id",
                                   "from_address",
@@ -439,9 +439,9 @@ def rss():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   insertable = False,
+                   editable = False,
                    list_fields = ["id",
                                   "body",
                                   ],
@@ -477,9 +477,9 @@ def sms_inbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   insertable = False,
+                   editable = False,
                    list_fields = ["id",
                                   "from_address",
                                   "body",
@@ -497,8 +497,8 @@ def twitter():
     """
 
     s3db.configure("msg_twitter",
-                   insertable=False,
-                   editable=False,
+                   insertable = False,
+                   editable = False,
                    list_fields = ["id",
                                   "from_address",
                                   "to_address",
@@ -535,8 +535,8 @@ def twitter_inbox():
     )
 
     s3db.configure(tablename,
-                   insertable=False,
-                   editable=False,
+                   insertable = False,
+                   editable = False,
                    list_fields = ["id",
                                   "from_address",
                                   "body",

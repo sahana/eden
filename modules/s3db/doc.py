@@ -109,9 +109,9 @@ class S3DocumentLibrary(S3Model):
         # Components
         doc_id = "doc_id"
         add_components(tablename,
-                       doc_document=doc_id,
-                       doc_image=doc_id,
-                      )
+                       doc_document = doc_id,
+                       doc_image = doc_id,
+                       )
 
         # ---------------------------------------------------------------------
         # Documents
