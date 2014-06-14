@@ -733,7 +733,7 @@ class S3CAPModel(S3Model):
                                     )
 
         configure(tablename,
-                  create_next = URL(f="area", args=["[id]", "location"]),
+                  create_next = URL(f="area", args=["[id]", "area_location"]),
                   crud_form = crud_form,
                   onaccept = update_alert_id(tablename),
                   )
