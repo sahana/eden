@@ -33,6 +33,8 @@ __all__ = ["S3CAPModel",
            "cap_alert_rheader",
            "cap_template_rheader",
            "cap_info_rheader",
+           "cap_area_rheader",
+           "cap_area_location_rheader",
            ]
 
 import datetime
@@ -54,6 +56,8 @@ class S3CAPModel(S3Model):
              "cap_info",
              "cap_resource",
              "cap_area",
+             "cap_area_location",
+             "cap_area_tag",
              ]
 
     def model(self):
@@ -631,6 +635,40 @@ class S3CAPModel(S3Model):
         # ---------------------------------------------------------------------
         # CAP info area segments
         #
+        # Each <area> can have multiple elements which are one of <polygon>,
+        # <circle>, or <geocode>.
+        # <polygon> and <circle> are explicit geometry elements.
+        # <geocode> is a key-value pair in which the key is a standard
+        # geocoding system like SAME, FIPS, ZIP, and the value is a defined
+        # value in that system. The region described by the <area> is the
+        # union of the areas described by the individual elements, but the
+        # CAP spec advises that, if geocodes are included, the concrete
+        # geometry elements should outline the area specified by the geocodes,
+        # as not all recipients will have access to the meanings of the
+        # geocodes. However, since geocodes are a compact way to describe an
+        # area, it may be that they will be used without accompanying geometry,
+        # so we should not count on having <polygon> or <circle>.
+        #
+        # Geometry elements are each represented by a gis_location record, and
+        # linked to the cap_area record via the cap_area_location link table.
+        # For the moment, <circle> objects are stored with the center in the
+        # gis_location's lat, lon, and radius (in km) as a tag "radius" and
+        # value. ToDo: Later, we will add CIRCLESTRING WKT.
+        #
+        # Geocode elements are currently stored as key value pairs in the
+        # cap_area record.
+        #
+        # <area> can also specify a minimum altitude and maximum altitude
+        # ("ceiling"). These are stored in explicit fields for now, but could
+        # be replaced by key value pairs, if it is found that they are rarely
+        # used.
+        #
+        # (An alternative would be to have cap_area link to a gis_location_group
+        # record. In that case, the geocode tags could be stored in the
+        # gis_location_group's overall gis_location element's tags. The altitude
+        # could be stored in the overall gis_location's elevation, with ceiling
+        # stored in a tag. We could consider adding a maximum elevation field.)
+
         tablename = "cap_area"
         define_table(tablename,
                      info_id(),
@@ -638,14 +676,10 @@ class S3CAPModel(S3Model):
                      Field("area_desc",
                            label = T("Area description"),
                            required=True),
-                     self.gis_location_id(
-                       widget = S3LocationSelectorWidget2(polygons=True)
-                     ),
-                     Field("circle"),
-                     Field("geocode", "text",
-                           widget = S3KeyValueWidget(),
-                           represent = S3KeyValueWidget.represent,
-                           default = settings.get_cap_geocodes),
+                     #Field("geocode", "text",
+                     #      widget = S3KeyValueWidget(),
+                     #      represent = S3KeyValueWidget.represent,
+                     #      default = settings.get_cap_geocodes),
                      Field("altitude", "integer"),
                      Field("ceiling", "integer"),
                      *s3_meta_fields())
@@ -668,9 +702,84 @@ class S3CAPModel(S3Model):
                   onaccept = update_alert_id(tablename),
                   )
 
+        # Components
+        add_components(tablename,
+                       cap_area_location = "area_id",
+                       cap_area_tag = "area_id",
+                       )
+
+        # ToDo: Use a widget tailored to entering <polygon> and <circle>.
+        # Want to be able to enter them by drawing on the map.
+        # Also want to allow selecting existing locations that have
+        # geometry, maybe with some filtering so the list isn't cluttered
+        # with irrelevant locations.
+        tablename = "cap_area_location"
+        define_table(tablename,
+                     Field("area_id", "reference cap_area"),
+                     self.gis_location_id(
+                         widget = S3LocationSelectorWidget2(polygons=True,
+                                                            show_map=True,
+                                                            show_address=False,
+                                                            show_postcode=False,
+                                                            ),
+                         ),
+                     )
+
+        # ToDo: When importing, we'll construct the WKT for locations in
+        # xml_post_parse. Right now, we have no support for CIRCULARSTRING,
+        # so will need to handle adding circle info when the location is
+        # added in the form as well. That can be done in onvalidate, but
+        # as Dominic points out, onvalidate is really for validation, not
+        # for constructing field values. So need to find out what the
+        # proper callback is.
+        configure(tablename,
+        #          onvalidate = cap_area_onvalidate(tablename),
+        #          xml_post_parse = cap_area_generate_wkt(...),
+                  )
+
+        # ---------------------------------------------------------------------
+        # Area Tags
+        # - Key-Value extensions
+        # - Used to hold for geocodes: key is the geocode system name, and
+        #   value is the specific value for this area.
+        # - Could store other values here as well, to avoid dedicated fields
+        #   in cap_area for rarely-used items like altitude and ceiling, but
+        #   would have to distinguish those from geocodes.
+        #
+        # ToDo: Provide a mechanism for pre-loading geocodes that are not tied
+        # to individual areas.
+        # ToDo: Allow sharing the key-value pairs. Cf. Ruby on Rails tagging
+        # systems such as acts-as-taggable-on, which has a single table of tags
+        # used by all classes. Each tag record has the class and field that the
+        # tag belongs to, as well as the tag string. We'd want tag and value,
+        # but the idea is the same: There would be a table with tag / value
+        # pairs, and individual cap_area, event_event, org_whatever records
+        # would link to records in the tag table. So we actually would not have
+        # duplicate tag value records as we do now.
+
+        tablename = "cap_area_tag"
+        define_table(tablename,
+                     Field("area_id", "reference cap_area"),
+                     # ToDo: Allow selecting from a dropdown list of pre-defined
+                     # geocode system names.
+                     Field("tag", label=T("Geocode Name")),
+                     # ToDo: Once the geocode system is selected, fetch a list
+                     # of current values for that geocode system. Allow adding
+                     # new values, e.g. with combo box menu.
+                     Field("value", label=T("Value")),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  #deduplicate = self.cap_area_tag_deduplicate,
+                  )
+
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return dict()
+        return dict(
+            cap_alert_id = alert_id,
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -855,6 +964,25 @@ class S3CAPModel(S3Model):
 
         return True
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def area_represent(id, row=None):
+        """
+            Represent an alert information area
+        """
+
+        if row:
+            pass
+        elif not id:
+            return current.messages["NONE"]
+        else:
+            db = current.db
+            table = db.cap_area
+            row = db(table.id == id).select(table.area_desc,
+                                            limitby=(0, 1)).first()
+
+        return row.area_desc
+
 # =============================================================================
 def cap_info_labels():
     """
@@ -930,7 +1058,7 @@ def cap_alert_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
-                                   A(S3CAPModel.alert_represent(item.id),
+                                   A(S3CAPModel.alert_represent(item.id, item),
                                      _href=URL(c="cap", f="alert",
                                                args=[item.id, "update"]))
                                   )
@@ -970,7 +1098,7 @@ def cap_template_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             rheader = DIV(TABLE(TR( TH("%s: " % T("Template")),
-                                    A(S3CAPModel.template_represent(item.id),
+                                    A(S3CAPModel.template_represent(item.id, item),
                                       _href=URL(c="cap", f="template",
                                                 args=[item.id, "update"]))
                                   )
@@ -1005,7 +1133,7 @@ def cap_info_rheader(r):
                                                    args=[item.alert_id, "update"])),
                                       ),
                                     TR(TH("%s: " % T("Info template")),
-                                       A(S3CAPModel.info_represent(item.id),
+                                       A(S3CAPModel.info_represent(item.id, item),
                                          _href=URL(c="cap", f="info",
                                                    args=[item.id, "update"])),
                                       )
@@ -1015,7 +1143,7 @@ def cap_info_rheader(r):
                              )
                 current.response.s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
             else:
-                tabs.insert(1, (T("Edit Area"), "area"))
+                tabs.insert(1, (T("Areas"), "area"))
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 table = r.table
 
@@ -1025,7 +1153,7 @@ def cap_info_rheader(r):
                                                    args=[item.alert_id, "update"])),
                                       ),
                                     TR(TH("%s: " % T("Information")),
-                                       A(S3CAPModel.info_represent(item.id),
+                                       A(S3CAPModel.info_represent(item.id, item),
                                          _href=URL(c="cap", f="info",
                                                    args=[item.id, "update"])),
                                       )
@@ -1033,6 +1161,58 @@ def cap_info_rheader(r):
                               rheader_tabs
                              )
             return rheader
+    return None
+
+# =============================================================================
+def cap_area_rheader(r, tabs=[]):
+    """ CAP area page headers """
+
+    if r.representation == "html":
+        item = r.record
+        if item:
+            T = current.T
+            tabs = [
+                    (T("Area"), None),
+                    (T("Locations"), "area_location"),
+                    (T("Geocodes"), "area_tag"),
+                   ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader = DIV(TABLE(
+                              TR(TH("%s: " % T("Information")),
+                                  A(S3CAPModel.info_represent(item.info_id),
+                                      _href=URL(c="cap", f="info",
+                                      args=[item.info_id, "update"])),
+                                ),
+                              TR(TH("%s: " % T("Area")),
+                                  A(S3CAPModel.area_represent(item.id, item),
+                                      _href=URL(c="cap", f="info",
+                                      args=[item.id, "update"])),
+                                ),
+                              ),
+                          rheader_tabs
+                         )
+            return rheader
+
+    return None
+
+# =============================================================================
+def cap_area_location_rheader(r, tabs=[]):
+    """ CAP area location page headers """
+
+    if r.representation == "html":
+        item = r.record
+        if item:
+            T = current.T
+            # We need the rheader only for the link back to the area.
+            rheader = DIV(TABLE(
+                              TR(TH("%s: " % T("Area")),
+                                  A(S3CAPModel.area_represent(item.area_id),
+                                      _href=URL(c="cap", f="area",
+                                      args=[item.area_id, "update"])),
+                                ),
+                         ))
+            return rheader
+
     return None
 
 # =============================================================================

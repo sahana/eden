@@ -270,6 +270,53 @@ def template():
     return output
 
 # -----------------------------------------------------------------------------
+def area():
+    """ REST controller for CAP area """
+
+    def postp(r, output):
+        if r.interactive and r.component and r.component_name == "area_location":
+            # Modify action button to open cap/area_location directly.
+            #read_url = URL(c="cap", f="area_location", args=["[id]"])
+            update_url = URL(c="cap", f="area_location", args=["[id]", "update"])
+            delete_url = URL(c="cap", f="area_location", args=["[id]", "delete"])
+            s3_action_buttons(r,
+                              update_url=update_url,
+                              delete_url=delete_url,
+                             )
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("cap", "area",
+                                rheader=s3db.cap_area_rheader)
+    return output
+
+# -----------------------------------------------------------------------------
+def area_location():
+    """ REST controller for CAP area location """
+
+    def prep(r):
+        if r.interactive:
+            # Don't allow changing the area_id.
+            altable = s3db.cap_area_location
+            afield = altable.area_id
+            afield.readable = False
+            afield.writable = False
+
+            # Hide the location hierarchy fields in the location widget.
+            #ltable = s3db.gis_location
+            #for f in ["L0", "L1", "L2", "L3", "L4", "L5"]:
+            #    field = ltable[f]
+            #    field.readable = False
+            #    field.writable = False
+            #    field.requires = None
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller("cap", "area_location",
+                                rheader=s3db.cap_area_location_rheader)
+    return output
+
+# -----------------------------------------------------------------------------
 def add_submit_button(form, name, value):
     """
         Append a submit button to a form
