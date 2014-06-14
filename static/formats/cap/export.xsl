@@ -341,7 +341,7 @@
     <!-- *********************** cap_area **************************** -->
     <xsl:template match="resource[@name='cap_area']">
         <area>
-            <areaDesc><xsl:value-of select="data[@field='area_desc']"/></areaDesc>
+            <areaDesc><xsl:value-of select="data[@field='name']"/></areaDesc>
             <xsl:if test="data[@field='altitude']!=''">
                 <altitude><xsl:value-of select="data[@name='altitude']"/></altitude>
             </xsl:if>

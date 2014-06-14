@@ -34,11 +34,11 @@ def info_prep(r):
     table = db.cap_info
     if r.representation == "html":
         if r.component:
-            if r.component_name == "cap_info":
+            if r.component_name == "info":
                 info_fields_comments()
-            elif r.component_name == "cap_area":
+            elif r.component_name == "area":
                 area_fields_comments()
-            elif r.component_name == "cap_resource":
+            elif r.component_name == "resource":
                 resource_fields_comments()
         elif r.tablename == "cap_info":
             info_fields_comments()
@@ -60,13 +60,15 @@ def info_prep(r):
     template_id = None
     if post_vars.get("language", False):
         if r.tablename == "cap_info":
+            # cap/info controller
             try:
                 template_id = db(table.id == r.id).select(table.template_info_id,
                                                           limitby=(0, 1)
                                                           ).first().template_info_id
             except AttributeError, KeyError:
                 pass
-        elif r.component and r.component.tablename == "cap_info":
+        elif r.component_name == "info":
+            # cap/x/info component tab
             try:
                 template_id = r.component.get_id()
                 # this will error out if component is not yet saved
@@ -81,6 +83,7 @@ def info_prep(r):
             locked_fields = [lf for lf in settings["locked"] if settings["locked"]]
             for lf in locked_fields:
                 post_vars[lf] = template[lf]
+
     return True
 
 # -----------------------------------------------------------------------------
@@ -88,10 +91,12 @@ def alert():
     """ REST controller for CAP alerts """
 
     def prep(r):
-        if r.id and s3db.cap_alert_is_template(r.id):
+        if r.id and r.record.is_template:
             redirect(URL(c="cap", f="template",
-                         args=request.args,
-                         vars=request.vars))
+                         args = request.args,
+                         vars = request.vars))
+        elif not r.id:
+            s3.filter = (s3db.cap_alert.is_template == False)
 
         if r.interactive:
             alert_fields_comments()
@@ -157,19 +162,24 @@ def alert():
 
             r.next = URL(c="cap", f="alert", args=[lastid, "info"])
 
-        if r.interactive and \
-           isinstance(output, dict) and "form" in output:
-            if not r.component:
-                fields = s3db.cap_info_labels()
-                jsobj = []
-                for f in fields:
-                    jsobj.append("'%s': '%s'" % (f, fields[f].replace("'", "\\'")))
-                s3.js_global.append('''i18n.cap_info_labels={%s}''' % ", ".join(jsobj))
-                form = output["form"]
-                form[0][-1][0][0].update(_value=T("Save and edit information"),
-                                         _name="edit_info")
-                form.update(_class="cap_alert_form")
-            set_priority_js()
+        if r.interactive:
+            if r.component_name == "info":
+                update_url = URL(f="info", args=["[id]"])
+                s3_action_buttons(r, update_url=update_url)
+
+            if isinstance(output, dict) and "form" in output:
+                if not r.component and r.method != "import":
+                    fields = s3db.cap_info_labels()
+                    jsobj = []
+                    for f in fields:
+                        jsobj.append("'%s': '%s'" % (f, fields[f].replace("'", "\\'")))
+                    s3.js_global.append('''i18n.cap_info_labels={%s}''' % ", ".join(jsobj))
+                    form = output["form"]
+                    # @ToDo: Support multiple formstyles
+                    form[0][-1][0][0].update(_value=T("Save and edit information"),
+                                             _name="edit_info")
+                    form.update(_class="cap_alert_form")
+                set_priority_js()
 
         return output
     s3.postp = postp
@@ -184,29 +194,35 @@ def info():
     s3.prep = info_prep
 
     def postp(r, output):
-        if r.representation == "html" and not r.component and "form" in output:
-            set_priority_js()
-            add_submit_button(output["form"], "add_language",
-                              T("Save and add another language..."))
+        if r.representation == "html":
+            if r.component_name == "area":
+                update_url = URL(f="area", args=["[id]"])
+                s3_action_buttons(r, update_url=update_url)
+
+            if not r.component and "form" in output:
+                set_priority_js()
+                add_submit_button(output["form"], "add_language",
+                                  T("Save and add another language..."))
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.cap_info_rheader)
+    output = s3_rest_controller(rheader = s3db.cap_info_rheader)
     return output
 
 # -----------------------------------------------------------------------------
 def template():
     """ REST controller for CAP templates """
 
+    atable = s3db.cap_alert
+    s3.filter = (atable.is_template == True)
+
     viewing = request.vars["viewing"]
     if viewing:
         table, id = viewing.strip().split(".")
         if table == "cap_alert":
             redirect(URL(c="cap", f="template", args=[id]))
-            return False
 
     def prep(r):
-        atable = db.cap_alert
         for f in ["identifier", "msg_type"]:
             field = atable[f]
             field.writable = False
@@ -266,7 +282,7 @@ def template():
     s3.postp = postp
 
     output = s3_rest_controller("cap", "alert",
-                                rheader=s3db.cap_template_rheader)
+                                rheader = s3db.cap_template_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -282,12 +298,12 @@ def area():
             s3_action_buttons(r,
                               update_url=update_url,
                               delete_url=delete_url,
-                             )
+                              )
         return output
     s3.postp = postp
 
     output = s3_rest_controller("cap", "area",
-                                rheader=s3db.cap_area_rheader)
+                                rheader = s3db.cap_area_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -313,7 +329,7 @@ def area_location():
     s3.prep = prep
 
     output = s3_rest_controller("cap", "area_location",
-                                rheader=s3db.cap_area_location_rheader)
+                                rheader = s3db.cap_area_location_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -415,23 +431,23 @@ def area_fields_comments():
     """
 
     table = db.cap_area
-    table.area_desc.comment = DIV(
+    table.name.comment = DIV(
           _class="tooltip",
           _title="%s|%s" % (
               T("The affected area of the alert message"),
               T("A text description of the affected area.")))
 
-    table.circle.comment = DIV(
-          _class="tooltip",
-          _title="%s|%s" % (
-              T("A point and radius delineating the affected area"),
-              T("The circular area is represented by a central point given as a coordinate pair followed by a radius value in kilometers.")))
+    # table.circle.comment = DIV(
+          # _class="tooltip",
+          # _title="%s|%s" % (
+              # T("A point and radius delineating the affected area"),
+              # T("The circular area is represented by a central point given as a coordinate pair followed by a radius value in kilometers.")))
 
-    table.geocode.comment = DIV(
-          _class="tooltip",
-          _title="%s|%s" % (
-              T("The geographic code delineating the affected area"),
-              T("Any geographically-based code to describe a message target area, in the form. The key is a user-assigned string designating the domain of the code, and the content of value is a string (which may represent a number) denoting the value itself (e.g., name='ZIP' and value='54321'). This should be used in concert with an equivalent description in the more universally understood polygon and circle forms whenever possible.")))
+    # table.geocode.comment = DIV(
+          # _class="tooltip",
+          # _title="%s|%s" % (
+              # T("The geographic code delineating the affected area"),
+              # T("Any geographically-based code to describe a message target area, in the form. The key is a user-assigned string designating the domain of the code, and the content of value is a string (which may represent a number) denoting the value itself (e.g., name='ZIP' and value='54321'). This should be used in concert with an equivalent description in the more universally understood polygon and circle forms whenever possible.")))
 
     table.altitude.comment = DIV(
           _class="tooltip",

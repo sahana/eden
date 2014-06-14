@@ -555,11 +555,12 @@ class S3OptionsMenu(object):
         """ CAP menu """
 
         return M(c="cap")(
-                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
-                        M("Create Alert", f="alert", m="create"),
+                    M("Alerts", f="alert")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
                     ),
-                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
-                        M("Create Template", f="template", m="create"),
+                    M("Templates", f="template")(
+                        M("Create", m="create"),
                     ),
                     #M("CAP Profile", f="profile")(
                     #    M("Edit profile", f="profile")

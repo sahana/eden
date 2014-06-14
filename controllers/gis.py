@@ -7,6 +7,9 @@
 module = request.controller
 resourcename = request.function
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # -----------------------------------------------------------------------------
 def index():
     """
@@ -580,7 +583,7 @@ def ldata():
                                                     f=int(l.parent),
                                                     )
 
-    script = '''n=%s\n''' % json.dumps(location_dict)
+    script = '''n=%s\n''' % json.dumps(location_dict, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return script
 
@@ -601,7 +604,7 @@ def hdata():
     if len(args) == 0:
         raise HTTP(400)
 
-    id = args[0]
+    _id = args[0]
 
     # @ToDo: Translate options using gis_hierarchy_name?
     #translate = settings.get_L10n_translate_gis_location()
@@ -612,7 +615,7 @@ def hdata():
 
     table = s3db.gis_hierarchy
     query = (table.deleted == False) & \
-            (table.location_id == id)
+            (table.location_id == _id)
     fields = [table.L1,
               table.L2,
               table.L3,
@@ -623,14 +626,14 @@ def hdata():
                            limitby=(0, 1)
                            ).first()
     if not row:
-        return ""
+        return '''var n'''
 
     hdict = {}
     for l in ["L1", "L2", "L3", "L4", "L5"]:
         if row[l]:
             hdict[int(l[1:])] = row[l]
 
-    script = '''n=%s\n''' % json.dumps(hdict)
+    script = '''n=%s\n''' % json.dumps(hdict, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return script
 
@@ -664,7 +667,7 @@ def s3_gis_location_parents(r, **attr):
                 _parents = {}
                 for parent in parents:
                     _parents[parent.level] = parent.id
-                output = json.dumps(_parents)
+                output = json.dumps(_parents, separators=SEPARATORS)
                 return output
             else:
                 raise HTTP(404, body=current.ERROR.NO_MATCH)
@@ -728,7 +731,7 @@ def l0():
     for key in location_hierarchy:
         result[key] = location_hierarchy[key]
 
-    output = json.dumps(result)
+    output = json.dumps(result, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return output
 
@@ -1060,7 +1063,6 @@ def config():
                         pass
                     # Add the ID
                     result["id"] = config_id
-                    SEPARATORS = (",", ":")
                     output["item"] = json.dumps(result, separators=SEPARATORS)
                 elif post_vars.get("hide", False):
                     # This is coming from Save Panel
@@ -1069,7 +1071,6 @@ def config():
                         del result["message"]
                     except:
                         pass
-                    SEPARATORS = (",", ":")
                     output["item"] = json.dumps(result, separators=SEPARATORS)
                 # Process Layers
                 ltable = s3db.gis_layer_config
@@ -1085,7 +1086,7 @@ def config():
                             form_vars.base = layer["base"]
                         form_vars.visible = layer.get("visible", False)
                         if "style" in layer:
-                            form_vars.style = json.dumps(layer["style"])
+                            form_vars.style = json.dumps(layer["style"], separators=SEPARATORS)
                         # Update or Insert?
                         query = (ltable.config_id == config_id) & \
                                 (ltable.layer_id == layer_id)
@@ -3097,7 +3098,7 @@ def geocode():
         # Not needed by S3LocationSelectorWidget2 as it downloads bounds with options
         results = "NotImplementedError"
 
-    results = json.dumps(results)
+    results = json.dumps(results, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return results
 
@@ -3123,7 +3124,7 @@ def geocode_r():
     results = gis.geocode_r(lat, lon)
 
     # Return the results
-    results = json.dumps(results)
+    results = json.dumps(results, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return results
 
@@ -3353,7 +3354,7 @@ def maps():
         # @ToDo: Read Metadata (no way of editing this yet)
 
         # Encode as JSON
-        output = json.dumps(output)
+        output = json.dumps(output, separators=SEPARATORS)
 
         # Output to browser
         response.headers["Content-Type"] = "application/json"
@@ -3435,7 +3436,7 @@ def maps():
         id = table.insert(lat=lat, lon=lon, zoom=zoom, layer_id=layers)
 
         # Return the ID of the saved record for the Bookmark
-        output = json.dumps(dict(id=id))
+        output = json.dumps(dict(id=id), separators=SEPARATORS)
         return output
 
     elif request.env.request_method == "PUT":
@@ -3519,7 +3520,7 @@ def maps():
         db(table.id == id).update(lat=lat, lon=lon, zoom=zoom, layer_id=layers)
 
         # Return the ID of the saved record for the Bookmark
-        output = json.dumps(dict(id=id))
+        output = json.dumps(dict(id=id), separators=SEPARATORS)
         return output
 
     # Abort - we shouldn't get here

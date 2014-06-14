@@ -88,7 +88,7 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="education_level" match="row"
-             use="concat(col[@field='Education Level)"/>
+             use="col[@field='Education Level']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">

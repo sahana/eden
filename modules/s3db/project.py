@@ -1605,6 +1605,7 @@ class S3ProjectBeneficiaryModel(S3Model):
 
     names = ["project_beneficiary_type",
              "project_beneficiary",
+             "project_beneficiary_activity",
              ]
 
     def model(self):
