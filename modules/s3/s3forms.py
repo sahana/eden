@@ -554,7 +554,14 @@ class S3SQLDefaultForm(S3SQLForm):
         """
             Process the form
 
-            @todo: describe arguments
+            @param form: FORM instance
+            @param vars: request POST variables
+            @param onvalidation: callback(function) upon successful form validation
+            @param onaccept: callback(function) upon successful form acceptance
+            @param link: component link
+            @param http: HTTP method
+            @param format: request extension
+
         """
 
         table = self.table
