@@ -482,7 +482,8 @@ class S3CAPModel(S3Model):
                            readable=False,
                            ),
                      Field("language",
-                           requires=IS_IN_SET(settings.get_cap_languages()),
+                           requires=IS_EMPTY_OR(
+                                    IS_IN_SET(settings.get_cap_languages())),
                            default="en",
                            ),
                      Field("category", "list:string",
@@ -762,16 +763,13 @@ class S3CAPModel(S3Model):
                      )
 
         # ToDo: When importing, we'll construct the WKT for locations in
-        # xml_post_parse. Right now, we have no support for CIRCULARSTRING,
-        # so will need to handle adding circle info when the location is
-        # added in the form as well. That can be done in onvalidate, but
-        # as Dominic points out, onvalidate is really for validation, not
-        # for constructing field values. So need to find out what the
-        # proper callback is.
-        #configure(tablename,
-        #          onvalidate = cap_area_onvalidate(tablename),
-        #          xml_post_parse = cap_area_generate_wkt(...),
-        #          )
+        # xml_post_parse. However, this is an action on the gis_location not
+        # the cap_area_location, so we'll add the xml_post_parse to
+        # gis_location in the cap_alert controller's prep, as it's not wanted
+        # for anything but CAP.
+        # ToDo: Right now, we have no support for CIRCULARSTRING, so will need
+        # to handle adding circle info when the location is added in the form
+        # as well.
 
         # ---------------------------------------------------------------------
         # Area Tags
