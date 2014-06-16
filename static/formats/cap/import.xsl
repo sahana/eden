@@ -337,9 +337,14 @@
     <!-- ****************************************************************** -->
     <xsl:template match="cap:area">
         <resource name="cap_area">
-            <xsl:if test="cap:areaDesc!=''">
-                <data field="area_desc">
+            <xsl:variable name="areaDesc">
+                <xsl:if test="cap:areaDesc!=''">
                     <xsl:value-of select="cap:areaDesc" />
+                </xsl:if>
+            </xsl:variable>
+            <xsl:if test="$areaDesc!=''">
+                <data field="name">
+                    <xsl:value-of select="$areaDesc" />
                 </data>
             </xsl:if>
             <xsl:if test="cap:altitude!=''">
@@ -352,36 +357,52 @@
                     <xsl:value-of select="cap:ceiling" />
                 </data>
             </xsl:if>
-            <xsl:apply-templates select="cap:polygon" />
-            <xsl:apply-templates select="cap:circle" />
+            <xsl:apply-templates select="cap:polygon">
+                <xsl:with-param name="name" select="$areaDesc"/>
+            </xsl:apply-templates>
+            <xsl:apply-templates select="cap:circle">
+                <xsl:with-param name="name" select="$areaDesc"/>
+            </xsl:apply-templates>
             <xsl:apply-templates select="cap:geocode" />
         </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Polygons and circles: conversion to WKT will be done in Python. -->
-    <xsl:template match="cap:polygon|cap:circle">
+    <!--
+        Polygons: These get converted in an xml_post_parse function, and are
+        passed in via a non-s3xml element.
+    -->
+
+    <xsl:template match="cap:polygon">
+        <xsl:param name="name" />
         <resource name="cap_area_location">
             <reference field="location_id" resource="gis_location">
                 <resource name="gis_location">
-                    <!-- Preserve unmodified polygon or circle text -->
-                    <resource name="gis_location_tag">
-                        <data field="tag">
-                            <xsl:text>cap_</xsl:text>
-                            <xsl:value-of select="local-name()" />
-                        </data>
-                        <data field="value">
-                            <xsl:value-of select="./text()" />
-                        </data>
-                    </resource>
+                    <cap_polygon>
+                        <xsl:value-of select="./text()" />
+                    </cap_polygon>
+                    <data field="gis_feature_type" value="3">Polygon</data>
+                    <!-- Only use a prefix of the name. -->
+                    <data field="name">
+                        <xsl:text>cap_polygon: </xsl:text>
+                        <xsl:value-of select="substring($name, 0, 40)"/>
+                        <xsl:text>...</xsl:text>
+                    </data>
                 </resource>
             </reference>
         </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Circles: conversion to WKT will be done in Python. -->
+    <!--
+        Circles: Currently there is no support for CIRCLESTRING in OpenLayers,
+        so we store the unmodified circle data in a gis_location_tag.
+        Eventually we hope to have CIRCULARSTRING support, so this does pass
+        through xml_post_parse, which currently only extracts the circle center
+        as the lat lon.
+    -->
     <xsl:template match="cap:circle">
+        <xsl:param name="name" />
         <resource name="cap_area_location">
             <reference field="location_id" resource="gis_location">
                 <resource name="gis_location">
@@ -394,6 +415,13 @@
                             <xsl:value-of select="./text()"/>
                         </data>
                     </resource>
+                    <data field="gis_feature_type" value="1">Point</data>
+                    <!-- Only use a prefix of the name. -->
+                    <data field="name">
+                        <xsl:text>cap_circle: </xsl:text>
+                        <xsl:value-of select="substring($name, 0, 40)"/>
+                        <xsl:text>...</xsl:text>
+                    </data>
                 </resource>
             </reference>
         </resource>

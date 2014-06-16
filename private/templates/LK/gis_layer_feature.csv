@@ -1,0 +1,9 @@
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Offices,All Active Offices,org,office,DRMP,office,Building,Office,"name,organisation_id",,~.obsolete=False,,,,False,,
+Projects,,project,location,DRMP,project,,Project,"name,location_id,multi_activity_type_id",,,,,,False,,,,
+Alerts,,cms,post,DRMP,,Danger Area,Alert,"body,date",age,~.series_id$name=Alert&~.expired=False,,"[{'prop':'age','cat':'1','label':'<2 days','externalGraphic':'img/markers/DRMP/Alert_Red.png'},{'prop':'age','cat':'2','label':'2-7 days','externalGraphic':'img/markers/DRMP/Alert_Yellow.png'},{'prop':'age','cat':'3','label':'>7 days','externalGraphic':'img/markers/DRMP/Alert_Green.png'}]",,False,,,
+Incidents,,cms,post,DRMP,,Danger Area,Incident,"body,date",age,~.series_id$name=Incident&~.expired=False,,"[{'prop':'age','cat':'1','label':'<2 days','externalGraphic':'img/markers/DRMP/Incident_Red.png'},{'prop':'age','cat':'2','label':'2-7 days','externalGraphic':'img/markers/DRMP/Incident_Yellow.png'},{'prop':'age','cat':'3','label':'>7 days','externalGraphic':'img/markers/DRMP/Incident_Green.png'}]",,False,,,
+Assessments,,cms,post,DRMP,assessment,Information,Assessment,body,,~.series_id$name=Assessment&~.expired=False,,,,False,,,,
+Activities,,cms,post,DRMP,activity,Information,Activity,body,,~.series_id$name=Activity&~.expired=False,,,,False,,,,
+Reports,,cms,post,DRMP,report,Information,Report,body,,~.series_id$name=Report&~.expired=False,,,,False,,,,
+Resources,,org,resource,DRMP,resource,,Resource,"location_id,parameter_id,value,comments",,,,,,False,,,,

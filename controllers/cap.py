@@ -97,9 +97,21 @@ def alert():
                          vars = request.vars))
         elif not r.id:
             s3.filter = (s3db.cap_alert.is_template == False)
+            s3.formats["cap"] = r.url() # .have added by JS
 
         if r.interactive:
             alert_fields_comments()
+
+            if not r.component and r.method != "import":
+                s3.crud.submit_style = "hide"
+                s3.crud.custom_submit = (("edit_info",
+                                          T("Save and edit information"),
+                                          "",
+                                          ),)
+
+        if r.method in ["create", "import"] and r.representation == "cap":
+            s3db.configure("gis_location",
+                           xml_post_parse = s3db.cap_gis_location_xml_post_parse)
 
         post_vars = request.post_vars
         if post_vars.get("edit_info", False):
@@ -179,9 +191,6 @@ def alert():
                         jsobj.append("'%s': '%s'" % (f, fields[f].replace("'", "\\'")))
                     s3.js_global.append('''i18n.cap_info_labels={%s}''' % ", ".join(jsobj))
                     form = output["form"]
-                    # @ToDo: Support multiple formstyles
-                    form[0][-1][0][0].update(_value=T("Save and edit information"),
-                                             _name="edit_info")
                     form.update(_class="cap_alert_form")
                 set_priority_js()
 
@@ -198,7 +207,17 @@ def info():
         - shouldn't ever be called
     """
 
-    s3.prep = info_prep
+    def prep(r):
+        result = info_prep(r)
+        if result:
+            if not r.component and r.representation == "html":
+                s3.crud.custom_submit = (("add_language",
+                                          T("Save and add another language..."),
+                                          "",
+                                          ),)
+            
+        return result
+    s3.prep = prep
 
     def postp(r, output):
         if r.representation == "html":
@@ -208,8 +227,7 @@ def info():
 
             if not r.component and "form" in output:
                 set_priority_js()
-                add_submit_button(output["form"], "add_language",
-                                  T("Save and add another language..."))
+
         return output
     s3.postp = postp
 
@@ -341,19 +359,6 @@ def area_location():
     output = s3_rest_controller("cap", "area_location",
                                 rheader = s3db.cap_rheader)
     return output
-
-# -----------------------------------------------------------------------------
-def add_submit_button(form, name, value):
-    """
-        Append a submit button to a form
-    """
-
-    form[0][-1][0].insert(1,
-                          TAG[""](" ",
-                                  INPUT(_type="submit", _name=name,
-                                        _value=value)))
-
-    return
 
 # -----------------------------------------------------------------------------
 def alert_fields_comments():

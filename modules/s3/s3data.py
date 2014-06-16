@@ -475,13 +475,13 @@ class S3DataTable(object):
             # In reverse-order of appearance due to float-right
             if "map" in formats and "map" in export_formats:
                 iconList.append(DIV(_class="export_map",
-                                    _onclick="S3.dataTables.formatRequest('map','%s','%s');" % (id, formats.map),
+                                    _onclick="S3.dataTables.formatRequest('map','%s','%s')" % (id, formats.map),
                                     _title=T("Show on Map"),
                                     ))
             if "kml" in export_formats:
                 if "kml" in formats:
                     iconList.append(DIV(_class="export_kml",
-                                        _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, formats.kml),
+                                        _onclick="S3.dataTables.formatRequest('kml','%s','%s')" % (id, formats.kml),
                                         _title=EXPORT % dict(format="KML"),
                                         ))
                 elif rfields:
@@ -491,37 +491,42 @@ class S3DataTable(object):
                     for r in rfields:
                         if r.fname in kml_list:
                             iconList.append(DIV(_class="export_kml",
-                                                _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, default_url),
+                                                _onclick="S3.dataTables.formatRequest('kml','%s','%s')" % (id, default_url),
                                                 _title=EXPORT % dict(format="KML"),
                                                 ))
                             break
+            if "cap" in formats and "cap" in export_formats:
+                iconList.append(DIV(_class="export_cap",
+                                    _onclick="S3.dataTables.formatRequest('cap','%s','%s')" % (id, formats.cap),
+                                    _title=EXPORT % dict(format="CAP"),
+                                    ))
             if "have" in formats and "have" in export_formats:
                 iconList.append(DIV(_class="export_have",
-                                    _onclick="S3.dataTables.formatRequest('have','%s','%s');" % (id, formats.have),
+                                    _onclick="S3.dataTables.formatRequest('have','%s','%s')" % (id, formats.have),
                                     _title=EXPORT % dict(format="HAVE"),
                                     ))
             if "xml" in export_formats:
                 url = formats.xml if formats.xml else default_url
                 iconList.append(DIV(_class="export_xml",
-                                    _onclick="S3.dataTables.formatRequest('xml','%s','%s');" % (id, url),
+                                    _onclick="S3.dataTables.formatRequest('xml','%s','%s')" % (id, url),
                                     _title=EXPORT % dict(format="XML"),
                                     ))
             if "rss" in export_formats:
                 url = formats.rss if formats.rss else default_url
                 iconList.append(DIV(_class="export_rss",
-                                    _onclick="S3.dataTables.formatRequest('rss','%s','%s');" % (id, url),
+                                    _onclick="S3.dataTables.formatRequest('rss','%s','%s')" % (id, url),
                                     _title=EXPORT % dict(format="RSS"),
                                     ))
             if "xls" in export_formats:
                 url = formats.xls if formats.xls else default_url
                 iconList.append(DIV(_class="export_xls",
-                                    _onclick="S3.dataTables.formatRequest('xls','%s','%s');" % (id, url),
+                                    _onclick="S3.dataTables.formatRequest('xls','%s','%s')" % (id, url),
                                     _title=EXPORT % dict(format="XLS"),
                                     ))
             if "pdf" in export_formats:
                 url = formats.pdf if formats.pdf else default_url
                 iconList.append(DIV(_class="export_pdf",
-                                    _onclick="S3.dataTables.formatRequest('pdf','%s','%s');" % (id, url),
+                                    _onclick="S3.dataTables.formatRequest('pdf','%s','%s')" % (id, url),
                                     _title=EXPORT % dict(format="PDF"),
                                     ))
 

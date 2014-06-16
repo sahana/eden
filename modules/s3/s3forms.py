@@ -152,7 +152,7 @@ class S3SQLForm(object):
             if isinstance(label, basestring):
                 label = current.T(label)
             button = INPUT(_type="submit",
-                           _class="crud-submit-button",
+                           _class="btn crud-submit-button",
                            _name=name,
                            _value=label)
             if _class:

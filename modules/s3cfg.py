@@ -1274,7 +1274,7 @@ class S3Config(Storage):
             - specify a list of export formats to restrict
         """
         return self.ui.get("export_formats",
-                           ["have", "kml", "map", "pdf", "rss", "xls", "xml"])
+                           ["cap", "have", "kml", "map", "pdf", "rss", "xls", "xml"])
 
     def get_ui_hide_report_filter_options(self):
         """
