@@ -5,7 +5,7 @@
 
          CAP Export Templates for S3XRC
 
-         Copyright (c) 2011 Sahana Software Foundation
+         Copyright (c) 2011-14 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -328,29 +328,43 @@
 
             <xsl:if test="data[@field='parameter']">
                 <xsl:call-template name="key-value-pairs">
-                    <xsl:with-param name="string"><xsl:value-of select="data[@field='parameter']"/>
+                    <xsl:with-param name="string">
+                        <xsl:value-of select="data[@field='parameter']"/>
                     </xsl:with-param>
                     <xsl:with-param name="arg">parameter</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
-            <xsl:apply-templates select="resource[@name='cap_resource']"/>
-            <xsl:apply-templates select="resource[@name='cap_area']"/>
+            <xsl:apply-templates select="../resource[@name='cap_area']">
+                <xsl:with-param name="info">
+                    <xsl:value-of select="@uuid"/>
+                </xsl:with-param>
+            </xsl:apply-templates>
+            <xsl:apply-templates select="../resource[@name='cap_resource']"/>
         </info>
     </xsl:template>
 
     <!-- *********************** cap_area **************************** -->
     <xsl:template match="resource[@name='cap_area']">
-        <area>
-            <areaDesc><xsl:value-of select="data[@field='name']"/></areaDesc>
-            <xsl:if test="data[@field='altitude']!=''">
-                <altitude><xsl:value-of select="data[@name='altitude']"/></altitude>
-            </xsl:if>
-            <xsl:if test="data[@field='ceiling']!=''">
-                <ceiling><xsl:value-of select="data[@name='ceiling']"/></ceiling>
-            </xsl:if>
-            <xsl:apply-templates select="resource[@name='cap_area_tag']" />
-            <xsl:apply-templates select="resource[@name='cap_area_location']//resource[@name='gis_location_tag']" />
-        </area>
+        <xsl:param name="info"/>
+        
+        <!-- Include all Areas within this Info & all that are global to the Alert -->
+        <xsl:choose>
+            <xsl:when test="reference[@field='info_id']/@uuid != $info">
+            </xsl:when>
+            <xsl:otherwise>
+                <area>
+                    <areaDesc><xsl:value-of select="data[@field='name']"/></areaDesc>
+                    <xsl:if test="data[@field='altitude']!=''">
+                        <altitude><xsl:value-of select="data[@name='altitude']"/></altitude>
+                    </xsl:if>
+                    <xsl:if test="data[@field='ceiling']!=''">
+                        <ceiling><xsl:value-of select="data[@name='ceiling']"/></ceiling>
+                    </xsl:if>
+                    <xsl:apply-templates select="resource[@name='cap_area_tag']" />
+                    <xsl:apply-templates select="resource[@name='cap_area_location']//resource[@name='gis_location_tag']" />
+                </area>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <!-- *********************** cap_area_tag ******************* -->

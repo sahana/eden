@@ -163,8 +163,12 @@ def alert():
             r.next = URL(c="cap", f="alert", args=[lastid, "info"])
 
         if r.interactive:
-            if r.component_name == "info":
-                update_url = URL(f="info", args=["[id]"])
+            #if r.component_name == "info":
+            #    update_url = URL(f="info", args=["[id]"])
+            #    s3_action_buttons(r, update_url=update_url)
+
+            if r.component_name == "area":
+                update_url = URL(f="area", args=["[id]"])
                 s3_action_buttons(r, update_url=update_url)
 
             if isinstance(output, dict) and "form" in output:
@@ -184,12 +188,15 @@ def alert():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader = s3db.cap_alert_rheader)
+    output = s3_rest_controller(rheader = s3db.cap_rheader)
     return output
 
 # -----------------------------------------------------------------------------
 def info():
-    """ REST controller for CAP info segments """
+    """
+        REST controller for CAP info segments
+        - shouldn't ever be called
+    """
 
     s3.prep = info_prep
 
@@ -206,7 +213,7 @@ def info():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader = s3db.cap_info_rheader)
+    output = s3_rest_controller(rheader = s3db.cap_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -282,7 +289,7 @@ def template():
     s3.postp = postp
 
     output = s3_rest_controller("cap", "alert",
-                                rheader = s3db.cap_template_rheader)
+                                rheader = s3db.cap_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -303,12 +310,15 @@ def area():
     s3.postp = postp
 
     output = s3_rest_controller("cap", "area",
-                                rheader = s3db.cap_area_rheader)
+                                rheader = s3db.cap_rheader)
     return output
 
 # -----------------------------------------------------------------------------
 def area_location():
-    """ REST controller for CAP area location """
+    """
+        REST controller for CAP area location
+        - shouldn't ever be called
+    """
 
     def prep(r):
         if r.interactive:
@@ -329,7 +339,7 @@ def area_location():
     s3.prep = prep
 
     output = s3_rest_controller("cap", "area_location",
-                                rheader = s3db.cap_area_location_rheader)
+                                rheader = s3db.cap_rheader)
     return output
 
 # -----------------------------------------------------------------------------
