@@ -109,6 +109,10 @@ def alert():
                                           "",
                                           ),)
 
+        if r.method in ["create", "import"] and r.representation == "cap":
+            s3db.configure("gis_location",
+                           xml_post_parse = s3db.cap_gis_location_xml_post_parse)
+
         post_vars = request.post_vars
         if post_vars.get("edit_info", False):
             tid = post_vars["template_id"]

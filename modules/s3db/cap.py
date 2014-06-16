@@ -31,6 +31,7 @@ __all__ = ["S3CAPModel",
            "cap_info_labels",
            "cap_alert_is_template",
            "cap_rheader",
+           "cap_gis_location_xml_post_parse",
            ]
 
 import datetime
@@ -711,10 +712,6 @@ class S3CAPModel(S3Model):
                            label = T("Area description"),
                            required = True,
                            ),
-                     #Field("geocode", "text",
-                     #      widget = S3KeyValueWidget(),
-                     #      represent = S3KeyValueWidget.represent,
-                     #      default = settings.get_cap_geocodes),
                      Field("altitude", "integer"),
                      Field("ceiling", "integer"),
                      *s3_meta_fields())
@@ -1187,18 +1184,17 @@ def update_alert_id(tablename):
             return
 
         # Look up from the info
+        db = current.db
+        table = db[tablename]
+        id = form_vars.id
+        if not id:
+            return
         info_id = form_vars.get("info_id", None)
         if not info_id:
             # Get the full record
-            _id = form_vars.id
-            if not _id:
-                return
-    
-            db = current.db
-            table = db[tablename]
-            item = db(table.id == _id).select(table.alert_id,
-                                              table.info_id,
-                                              limitby=(0, 1)).first()
+            item = db(table.id == id).select(table.alert_id,
+                                             table.info_id,
+                                             limitby=(0, 1)).first()
             try:
                 alert_id = item.alert_id
                 info_id = item.info_id
@@ -1218,8 +1214,69 @@ def update_alert_id(tablename):
             # Nothing we can do
             return
 
-        db(table.id == _id).update(alert_id = alert_id)
+        db(table.id == id).update(alert_id = alert_id)
 
     return func
+
+# =============================================================================
+def cap_gis_location_xml_post_parse(element, record):
+    """
+        Convert CAP polygon representation to WKT; extract circle lat lon.
+        Latitude and longitude in CAP are expressed as signed decimal values in
+        coordinate pairs:
+            latitude,longitude
+        The circle text consists of:
+            latitude,longitude radius
+        where the radius is in km.
+        Polygon text consists of a space separated sequence of at least 4
+        coordinate pairs where the first and last are the same.
+            lat1,lon1 lat2,lon2 lat3,lon3 ... lat1,lon1
+    """
+    # ToDo: Ought we set anything for the name of these locations?
+
+    cap_polygons = element.xpath("cap_polygon")
+    if cap_polygons:
+        cap_polygon_text = cap_polygons[0].text
+        # CAP polygons and WKT have opposite separator conventions:
+        # CAP has spaces between coordinate pairs and within pairs the
+        # coordinates are separated by comma, and vice versa for WKT.
+        # Unfortunately, CAP and WKT (as we use it) also have opposite
+        # orders of lat and lon. CAP has lat lon, WKT has lon lat.
+        # Both close the polygon by repeating the first point.
+        cap_points_text = cap_polygon_text.split()
+        cap_points = [cpoint.split(",") for cpoint in cap_points_text]
+        # @ToDo: Should we try interpreting all the points as decimal numbers,
+        # and failing validation if they're wrong?
+        wkt_points = ["%s %s" % (cpoint[1], cpoint[0]) for cpoint in cap_points]
+        wkt_polygon_text = "POLYGON ((%s))" % ", ".join(wkt_points)
+        record.wkt = wkt_polygon_text
+        return
+
+    #cap_tags = element.xpath("resource[@name='gis_location_tag']")
+    #cap_circle_tags = element.xpath("resource[@name='gis_location_tag']/data[@field='tag' and text()='cap_circle']")
+    cap_circle_values = element.xpath("resource[@name='gis_location_tag']/data[@field='tag' and text()='cap_circle']/../data[@field='value']")
+    #if cap_tags:
+    #if cap_circle_tags:
+    if cap_circle_values:
+        #cap_circle_tag = cap_tags[0].xpath("data[@field='tag']")
+        #cap_circle_tag = cap_circle.xpath("data[@field='tag' and text()='cap_circle']")
+        #if cap_circle_tag and cap_circle_tag.text == "cap_circle":
+        #if cap_circle_tag:
+            #cap_circle_values = cap_circle_tags[0].xpath("../data[@field='value']")
+            cap_circle_text = cap_circle_values[0].text
+            coords, radius = cap_circle_text.split()
+            lat, lon = coords.split(",")
+            try:
+                # If any of these fail to interpret as numbers, the circle was
+                # badly formatted. For now, we don't try to fail validation,
+                # but just don't set the lat, lon.
+                lat = float(lat)
+                lon = float(lon)
+            except ValueError:
+                return
+            record.lat = lat
+            record.lon = lon
+
+    return
 
 # END =========================================================================
