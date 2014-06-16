@@ -563,8 +563,7 @@ def member_rheader(r, tabs=[]):
             rheader = DIV(DIV(s3_avatar_represent(person.id,
                                                   "pr_person",
                                                   _class="fleft"),
-                              # @ToDo: Move to CSS
-                              _style="padding-bottom:10px",
+                              _class="avatar_img_div",
                               ),
                           TABLE(TR(TH(s3_fullname(person))),
                                 ),
@@ -580,9 +579,8 @@ def member_rheader(r, tabs=[]):
         rheader = DIV(DIV(s3_avatar_represent(record.id,
                                               "pr_person",
                                               _class="fleft"),
-                          # @ToDo: Move to CSS
-                          _style="padding-bottom:10px",
-                          ),
+                         _class="avatar_img_div", 
+                         ),
                       TABLE(TR(TH(s3_fullname(record))),
                             ),
                       rheader_tabs
