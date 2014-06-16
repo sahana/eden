@@ -1,6 +1,8 @@
 *** Settings ***
 Documentation     Test cases for hrm/staff
 Resource          ../../resources/main.txt
+Suite Setup       Start Testing
+Suite Teardown      End Testing
 
 *** Variables ***
 ${STAFF URL}            http://${BASEURL}/hrm/staff
@@ -11,6 +13,7 @@ ${FacilityFilter}       human_resource-hrm_human_resource_site_id-options-filter
 *** Test Cases ***
 
 Find Staff By Organization
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${STAFF URL}
     Open Advanced Filter Options
     Select From MultiSelect  ${OrganizationFilter}  Finnish Red Cross
@@ -19,6 +22,7 @@ Find Staff By Organization
     DataTable Row Should Contain  1  Organization  Finnish Red Cross
 
 Find Staff By Facility
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${STAFF URL}
     Open Advanced Filter Options
     Select From MultiSelect  ${FacilityFilter}  Ainaro Branch Office
