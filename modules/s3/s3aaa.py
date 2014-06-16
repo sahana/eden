@@ -722,11 +722,11 @@ Thank you"""
                     if inline:
                         # If inline, stay on the same page
                         next_url = URL(args=request.args,
-                                     vars=request.get_vars)
+                                       vars=request.get_vars)
                     else:
                         # If not inline, return to configured login page
                         next_url = self.url(args=request.args,
-                                          vars=request.get_vars)
+                                            vars=request.get_vars)
                     redirect(next_url)
         else:
             # Use a central authentication server

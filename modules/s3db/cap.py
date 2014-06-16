@@ -1184,17 +1184,19 @@ def update_alert_id(tablename):
             return
 
         # Look up from the info
+        _id = form_vars.id
+        if not _id:
+            return
+            
         db = current.db
         table = db[tablename]
-        id = form_vars.id
-        if not id:
-            return
+
         info_id = form_vars.get("info_id", None)
         if not info_id:
             # Get the full record
-            item = db(table.id == id).select(table.alert_id,
-                                             table.info_id,
-                                             limitby=(0, 1)).first()
+            item = db(table.id == _id).select(table.alert_id,
+                                              table.info_id,
+                                              limitby=(0, 1)).first()
             try:
                 alert_id = item.alert_id
                 info_id = item.info_id
@@ -1214,7 +1216,7 @@ def update_alert_id(tablename):
             # Nothing we can do
             return
 
-        db(table.id == id).update(alert_id = alert_id)
+        db(table.id == _id).update(alert_id = alert_id)
 
     return func
 
