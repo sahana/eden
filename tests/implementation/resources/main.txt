@@ -8,6 +8,7 @@ Resource          crud.txt
 Resource          filter.txt
 Resource          datatable.txt
 Resource          widgets.txt
+Resource          form.txt
 
 *** Variables ***
 ${DELAY}            0
@@ -28,7 +29,6 @@ Start Testing
     [Documentation]  Starts the test
     Run Keyword If  "${HTTP_PROXY}" != "" and "${BROWSER}" == "Firefox"  Start Browser With Proxy
     ...  ELSE  Start Browser
-    Login To Eden
     Set Selenium Speed  ${DELAY}
 
 End Testing
