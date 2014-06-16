@@ -312,7 +312,10 @@ def template():
 
 # -----------------------------------------------------------------------------
 def area():
-    """ REST controller for CAP area """
+    """
+        REST controller for CAP area
+        - shouldn't ever be called
+    """
 
     def postp(r, output):
         if r.interactive and r.component and r.component_name == "area_location":
