@@ -595,6 +595,12 @@ def email_inbox():
     def prep(r):
         if r.id:
             s3db.msg_attachment.document_id.label = ""
+        elif not r.method:
+            from s3 import s3_datatable_truncate
+            table.subject.represent = lambda string: \
+                                      s3_datatable_truncate(string, maxlength=40)
+            table.from_address.represent = lambda string: \
+                                           s3_datatable_truncate(string, maxlength=40)
         if r.component and r.component.alias == "select":
             if not r.method:
                 r.method = "select"
