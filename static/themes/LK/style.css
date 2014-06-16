@@ -1,0 +1,175 @@
+/* Stuff which is LK-specific */
+
+body {
+    padding-top: 90px;
+}
+
+#homepage-about h2 {
+    word-spacing: 61px;
+}
+
+#what-they-do img {
+    margin-top: -40px;
+}
+
+.export_xls {
+    background-image: url(img/icon-xls.png);
+}
+
+/* Main Map */
+.map_legend_panel  .x-panel-body {
+    max-width: 200px;
+}
+.gis_print_map-btn {
+    display: none;
+}
+
+#sub_filedocument_filedocument_i_file_edit_none,
+#sub_defaultevent_post_defaultevent_post_i_event_id_edit_none {
+    width: 206px !important;
+}
+
+#sub-defaultevent_post .label-row,
+#sub-defaultlocation .label-row,
+#sub-filedocument .label-row,
+#sub-partnerorganisation .label-row {
+    /* Hide the column titles since only 1 column
+        - this should be done server-side where-possible, but this isn't possible for Partner Orgs as same field as for Donors
+    */
+    display: none;
+}
+
+/* Contacts Page */
+
+/* Adjust Field Widths to match Titles/Data */
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none {
+    width: 140px !important;
+}
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_0 {
+    width: 250px;
+}
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_job_title_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_job_title_id_edit_0,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_site_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_site_id_edit_0 {
+    width: 120px;
+}
+#sub_phonecontact_phonecontact_i_value_edit_none,
+#sub_phonecontact_phonecontact_i_value_edit_0,
+#sub_emailcontact_emailcontact_i_value_edit_none,
+#sub_emailcontact_emailcontact_i_value_edit_0 {
+    width: 240px;
+}
+
+/* Projects Page */
+
+/* Dropdown with AddResourceLink takes up more vertical space than an INPUT so center the INPUTS
+    and the + button and throbber */
+
+#project_project_objectives,
+#project_project_description,
+#dummy_project_project_human_resource_id,
+#project_project_budget,
+#project_project_name,
+#project_project_organisation_id,
+#project_project_comments,
+#org_resource_comments  {
+    width: 300px !important;
+    padding: 4px;
+}
+
+#project_project_objectives{
+    height: 100px;
+}
+ 
+#sub_donororganisation_donororganisation_i_amount_edit_none {
+    width: 60px !important;
+    margin-left: 5px;
+    margin-top: -1px;
+    padding: 4px;
+}
+#project_project_human_resource_id_mobile_phone,
+#project_project_human_resource_id_email,
+#project_project_human_resource_id_full_name,
+#project_project_start_date,
+#project_project_end_date,
+#sub_defaultlocation_defaultlocation_i_location_id_edit_none  {
+    width: 280px !important;
+}
+
+#project_project_sub_partnerorganisation__row {
+    margin-top: 15px;
+}
+
+#sub_donororganisation_donororganisation_i_currency_edit_none,
+#sub_donororganisation_donororganisation_i_currency_edit_0,
+#sub_donororganisation_donororganisation_i_amount_edit_none,
+#sub_donororganisation_donororganisation_i_amount_edit_0,
+#add-partnerorganisation-none,
+#add-donororganisation-none,
+#throbber-partnerorganisation-none,
+#throbber-donororganisation-none {
+    position: relative;
+    top: -13px;
+    
+}
+
+/* Adjust Field Widths to match Titles/Data */
+
+#project_project_human_resource_id_organisation_id,
+#sub_partnerorganisation_partnerorganisation_i_organisation_id_edit_none,
+#sub_partnerorganisation_partnerorganisation_i_organisation_id_edit_0,
+#sub_donororganisation_donororganisation_i_organisation_id_edit_none,
+#sub_donororganisation_donororganisation_i_organisation_id_edit_0 {
+    width: 280px;
+}
+
+#sub_donororganisation_donororganisation_i_organisation_id_edit_none {
+    width: 150px;
+}
+
+#sub_donororganisation_donororganisation_i_amount_edit_none,
+#sub_donororganisation_donororganisation_i_amount_edit_0 {
+    width: 220px;
+}
+#sub_donororganisation_donororganisation_i_currency_edit_none,
+#sub_donororganisation_donororganisation_i_currency_edit_0 {
+    width: 70px;
+}
+
+/* For Read view, make the name into a Title */
+.item-container #project_project_name__row.control-group {
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+.item-container #project_project_name__row .controls {
+    text-align: left;
+    border-bottom: solid 1px #c9ccd0;
+    border-radius: 5px 5px 0 0;
+    text-transform: uppercase;
+    font-size: 18px;
+    background: rgba(255,255,255,1);
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	-moz-box-shadow: 0 1px 1px #aaaaa7;
+    -webkit-box-shadow: 0 1px 1px #aaaaa7;
+    box-shadow: 0 1px 1px #aaaaa7;
+    border: 1px solid #9e9b9b;
+    margin: -23px -1px 4px -10px;
+    padding: 7px 6px 7px 25px;
+}
+.item-container #project_project_name__label {
+    display: none;
+}
+
+/* Subscriptions Page */
+#subscription-form.form-horizontal {
+    border: 1px solid #b2b2b2;
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}

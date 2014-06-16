@@ -24,7 +24,7 @@ s3 = current.response.s3
 settings = current.deployment_settings
 
 """
-    Template settings for DRM Portal
+    Template settings for Sri Lanka SahanaCamp
 """
 
 datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -97,29 +97,50 @@ settings.auth.realm_entity = drmp_realm_entity
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["DRMP"]
+settings.base.prepopulate = ["LK"]
 
-settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System")
-settings.base.system_name_short = T("DRMIS")
+settings.base.system_name = T("Sri Lanka Disaster Risk Management Information System")
+settings.base.system_name_short = T("Sahana")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "DRMP"
+settings.base.theme = "LK"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
 # -----------------------------------------------------------------------------
+# Summary Pages
+settings.ui.summary = [#{"common": True,
+                       # "name": "cms",
+                       # "widgets": [{"method": "cms"}]
+                       # },
+                       {"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
+                        },
+                       {"name": "map",
+                        "label": "Map",
+                        "widgets": [{"method": "map", "ajax_init": True}],
+                        },
+                       {"name": "charts",
+                        "label": "Reports",
+                        "widgets": [{"method": "report", "ajax_init": True}]
+                        },
+                       ]
+
+# -----------------------------------------------------------------------------
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
-    ("tet", "Tetum"),
+    ("si", "සිංහල"),                # Sinhala
+    ("ta", "தமிழ்"),               # Tamil
 ])
 # Default Language
-settings.L10n.default_language = "tet"
+settings.L10n.default_language = "en"
 # Default timezone for users
-settings.L10n.utc_offset = "UTC +0900"
+settings.L10n.utc_offset = "UTC +0530"
 # Unsortable 'pretty' date format
 settings.L10n.date_format = "%d %b %Y"
 # Number formats (defaults to ISO 31-0)
@@ -131,7 +152,7 @@ settings.L10n.thousands_separator = ","
 settings.L10n.translate_cms_series = True
 
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["TL"]
+settings.gis.countries = ["LK"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -2263,9 +2284,9 @@ def customise_cms_post_controller(**attr):
                            (T("Disaster"), "event_post.event_id"),
                            (T("Type"), "series_id"),
                            (T("Details"), "body"),
-                           (T("District"), "location_id$L1"),
-                           (T("Sub-District"), "location_id$L2"),
-                           (T("Suco"), "location_id$L3"),
+                           (T("Province"), "location_id$L1"),
+                           (T("District"), "location_id$L2"),
+                           (T("Divisional Secretariat"), "location_id$L3"),
                            (T("Author"), "created_by"),
                            (T("Organization"), "created_by$organisation_id"),
                            ]
@@ -2526,7 +2547,7 @@ def customise_event_event_controller(**attr):
                     "closed",
                     S3SQLInlineComponent(
                         "event_location",
-                        label = T("District"),
+                        label = T("Province"),
                         multiple = False,
                         fields = ["location_id"],
                     ),
@@ -2593,15 +2614,15 @@ def customise_gis_location_controller(**attr):
             s3db = current.s3db
             table = s3db.gis_location
 
-            s3.crud_strings["gis_location"].title_list = T("Districts")
+            s3.crud_strings["gis_location"].title_list = T("Provinces")
 
             if r.method == "datalist":
-                # District selection page
+                # Province selection page
                 # 2-column datalist, 6 rows per page
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
-                # Just show L1s (Districts)
+                # Just show L1s (Provinces)
                 s3.filter = (table.level == "L1")
                 # Default 5 triggers an AJAX call, we should load all by default
                 s3.dl_pagelength = 13
@@ -3317,7 +3338,7 @@ def customise_org_resource_controller(**attr):
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False
             location_field = table.location_id
-            location_field.label = T("District")
+            location_field.label = T("Province")
 
             # Filter from a Profile page?
             # If so, then default the fields we know
@@ -3776,7 +3797,7 @@ def customise_project_project_controller(**attr):
                     ),
                     S3SQLInlineComponent(
                         "location",
-                        label = T("Districts"),
+                        label = T("Provinces"),
                         fields = ["location_id"],
                         orderby = "location_id$name",
                         render_list = True
@@ -3834,7 +3855,7 @@ def customise_project_project_controller(**attr):
             location_field.label = ""
             represent = S3Represent(lookup="gis_location")
             location_field.represent = represent
-            # Project Locations must be districts
+            # Project Locations must be L1s
             location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
                                                 represent,
                                                 sort = True,
@@ -3851,7 +3872,7 @@ def customise_project_project_controller(**attr):
             list_fields = ["name",
                            "organisation_id",
                            "human_resource_id",
-                           (T("Districts"), "location.location_id"),
+                           (T("Provinces"), "location.location_id"),
                            "start_date",
                            "end_date",
                            "budget",

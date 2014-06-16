@@ -1,0 +1,37 @@
+<footer id='page-footer'>
+ <div class='container'>
+  <div class='row'>
+   <div class='span3'>
+    <h3>{{=T("Site Links")}}</h3>
+    <ul>
+     <li><a href='/{{=appname}}/default/index/newsfeed'>{{=T("News Feed")}}</a></li>
+     <li><a href='/{{=appname}}/gis/index'>{{=T("Map")}}</a></li>
+     <li><a href='/{{=appname}}/org/resource'>{{=T("Resource Inventory")}}</a></li>
+     <li><a href='/{{=appname}}/project/project'>{{=T("Projects")}}</a></li>
+     <li><a href='/{{=appname}}/pr/person'>{{=T("Contact Directory")}}</a></li>
+    </ul>							
+   </div>
+   <div class='span3'>
+    <h3>{{=T("Support")}}</h3>
+    <ul>
+     <li><a href='http://drm.tl/eden/static/themes/DRMP/DRMIS User Manual - English.pdf'>{{="%s (%s)" % (T("User Manual"), "English")}}</a></li>
+     <li><a href='/{{=appname}}/default/index/glossary'>{{=T("Glossary")}}</a></li>
+     <li><a href='/{{=appname}}/default/contact'>{{=T("Contact Us")}}</a></li>
+     <li><a href='mailto:feedback@drm.tl'>{{=T("Feedback")}}</a></li>
+     <li><a href='/{{=appname}}/default/tos' target='_blank'>{{=T("Terms of Service")}}</a></li>
+     <!-- <li><a href='/{{=appname}}/default/privacy' target='_blank'>{{=T("Privacy Policy")}}</a></li>  -->
+    </ul>
+   </div>
+   <div class='span3'>
+    <h3>{{=T("Community")}}</h3>
+    <ul>
+     <li><a href='http://facebook.com' target='_blank'>{{=T("Facebook")}}</a></li>
+    </ul>
+   </div>
+   <div id='footer-partner-logos' class='span3 hide-on-mobile'></div>
+  </div>
+  <div id='footer-copyrights' class='clearfix pt4'>
+   <p class='pull-left extra-small'>&copy; Sahana Eden. {{=T("All Rights Reserved.")}}</p>
+  </div>
+ </div>
+</footer>

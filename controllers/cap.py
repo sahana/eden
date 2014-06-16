@@ -101,6 +101,13 @@ def alert():
         if r.interactive:
             alert_fields_comments()
 
+            if not r.component and r.method != "import":
+                s3.crud.submit_style = "hide"
+                s3.crud.custom_submit = (("edit_info",
+                                          T("Save and edit information"),
+                                          "",
+                                          ),)
+
         post_vars = request.post_vars
         if post_vars.get("edit_info", False):
             tid = post_vars["template_id"]
@@ -179,9 +186,6 @@ def alert():
                         jsobj.append("'%s': '%s'" % (f, fields[f].replace("'", "\\'")))
                     s3.js_global.append('''i18n.cap_info_labels={%s}''' % ", ".join(jsobj))
                     form = output["form"]
-                    # @ToDo: Support multiple formstyles
-                    form[0][-1][0][0].update(_value=T("Save and edit information"),
-                                             _name="edit_info")
                     form.update(_class="cap_alert_form")
                 set_priority_js()
 
@@ -198,7 +202,17 @@ def info():
         - shouldn't ever be called
     """
 
-    s3.prep = info_prep
+    def prep(r):
+        result = info_prep(r)
+        if result:
+            if not r.component and r.representation == "html":
+                s3.crud.custom_submit = (("add_language",
+                                          T("Save and add another language..."),
+                                          "",
+                                          ),)
+            
+        return result
+    s3.prep = prep
 
     def postp(r, output):
         if r.representation == "html":
@@ -208,8 +222,7 @@ def info():
 
             if not r.component and "form" in output:
                 set_priority_js()
-                add_submit_button(output["form"], "add_language",
-                                  T("Save and add another language..."))
+
         return output
     s3.postp = postp
 
@@ -341,19 +354,6 @@ def area_location():
     output = s3_rest_controller("cap", "area_location",
                                 rheader = s3db.cap_rheader)
     return output
-
-# -----------------------------------------------------------------------------
-def add_submit_button(form, name, value):
-    """
-        Append a submit button to a form
-    """
-
-    form[0][-1][0].insert(1,
-                          TAG[""](" ",
-                                  INPUT(_type="submit", _name=name,
-                                        _value=value)))
-
-    return
 
 # -----------------------------------------------------------------------------
 def alert_fields_comments():
