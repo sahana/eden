@@ -97,6 +97,7 @@ def alert():
                          vars = request.vars))
         elif not r.id:
             s3.filter = (s3db.cap_alert.is_template == False)
+            s3.formats["cap"] = r.url() # .have added by JS
 
         if r.interactive:
             alert_fields_comments()

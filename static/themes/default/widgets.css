@@ -282,6 +282,14 @@ textarea.richtext {
     float: right;
     background-repeat: no-repeat;
 }
+.export_cap_large {
+    background-image: url(../../img/icon-cap.jpg);
+    height: 36px;
+    width: 99px;
+}
+.export_cap {
+    background-image: url(../../img/cap_16.png);
+}
 .export_have {
     background-image: url(../../img/have_16.png);
 }

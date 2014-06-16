@@ -54,6 +54,7 @@ class S3CAPModel(S3Model):
              "cap_info_represent",
              "cap_resource",
              "cap_area",
+             "cap_area_represent",
              "cap_area_location",
              "cap_area_tag",
              ]
@@ -753,6 +754,8 @@ class S3CAPModel(S3Model):
                                     "ceiling",
                                     )
 
+        area_represent = S3Represent(lookup=tablename)
+
         configure(tablename,
                   create_next = URL(f="area", args=["[id]", "area_location"]),
                   crud_form = crud_form,
@@ -837,6 +840,7 @@ class S3CAPModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(cap_alert_id = alert_id,
                     cap_alert_represent = alert_represent,
+                    cap_area_represent = area_represent,
                     cap_info_represent = info_represent,
                     )
 
@@ -966,25 +970,6 @@ class S3CAPModel(S3Model):
 
         return True
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def area_represent(id, row=None):
-        """
-            Represent an alert information area
-        """
-
-        if row:
-            pass
-        elif not id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.cap_area
-            row = db(table.id == id).select(table.name,
-                                            limitby=(0, 1)).first()
-
-        return row.name
-
 # =============================================================================
 def cap_info_labels():
     """
@@ -1042,8 +1027,9 @@ def cap_rheader(r):
             s3db = current.s3db
             tablename = r.tablename
             if tablename == "cap_alert":
+                record_id = record.id
                 table = s3db.cap_info
-                query = (table.alert_id == record.id)
+                query = (table.alert_id == record_id)
                 row = current.db(query).select(table.id,
                                                limitby=(0, 1)).first()
                 if record.is_template:
@@ -1062,9 +1048,9 @@ def cap_rheader(r):
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Template")),
-                                           TD(A(S3CAPModel.template_represent(record.id, record),
+                                           TD(A(S3CAPModel.template_represent(record_id, record),
                                                 _href=URL(c="cap", f="template",
-                                                          args=[record.id, "update"]))),
+                                                          args=[record_id, "update"]))),
                                            ),
                                         ),
                                   rheader_tabs,
@@ -1085,11 +1071,17 @@ def cap_rheader(r):
 
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
+                    export_btn = A(DIV(_class="export_cap_large"),
+                                   _href=URL(c="cap", f="alert", args=["%s.cap" % record_id]),
+                                   _target="_blank",
+                                   )
+
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
-                                           TD(A(s3db.cap_alert_represent(record.id, record),
+                                           TD(A(s3db.cap_alert_represent(record_id, record),
                                                 _href=URL(c="cap", f="alert",
-                                                          args=[record.id, "update"]))),
+                                                          args=[record_id, "update"]))),
                                            ),
+                                        TR(export_btn)
                                         ),
                                   rheader_tabs,
                                   error
@@ -1113,7 +1105,7 @@ def cap_rheader(r):
                                                       args=[record.info_id, "update"]))),
                                        ),
                                     TR(TH("%s: " % T("Area")),
-                                       TD(A(S3CAPModel.area_represent(record.id, record),
+                                       TD(A(s3db.cap_area_represent(record.id, record),
                                             _href=URL(c="cap", f="area",
                                                       args=[record.id, "update"]))),
                                        ),
@@ -1125,7 +1117,7 @@ def cap_rheader(r):
                 # Shouldn't ever be called
                 # We need the rheader only for the link back to the area.
                 rheader = DIV(TABLE(TR(TH("%s: " % T("Area")),
-                                       TD(A(S3CAPModel.area_represent(record.area_id),
+                                       TD(A(s3db.cap_area_represent(record.area_id),
                                             _href=URL(c="cap", f="area",
                                                       args=[record.area_id, "update"]))),
                                        ),
