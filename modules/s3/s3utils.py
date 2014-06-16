@@ -529,6 +529,38 @@ def s3_truncate(text, length=48, nice=True):
         return text
 
 # =============================================================================
+def s3_datatable_truncate(string, maxlength=40):
+    """
+        Representation method to override the dataTables-internal truncation
+        of strings per field, like:
+
+        if not r.id and not r.method:
+            table.field.represent = lambda string: \
+                                    s3_datatable_truncate(string, maxlength=40)
+
+        @param string: the string
+        @param maxlength: the maximum string length
+
+        @note: the JS click-event will be attached by S3.datatables.js
+    """
+
+    if string and len(string) > maxlength:
+        _class = "dt-truncate"
+        return TAG[""](
+                DIV(SPAN(_class="ui-icon ui-icon-zoomin",
+                            _style="float:right"),
+                    XML(string[:37] + "&hellip;"),
+                    _class=_class),
+                DIV(SPAN(_class="ui-icon ui-icon-zoomout",
+                            _style="float:right"),
+                    string,
+                    _style="display:none",
+                    _class=_class),
+                )
+    else:
+        return string if string else ""
+
+# =============================================================================
 def s3_trunk8(selector=None, lines=None, less=None, more=None):
     """
         Intelligent client-side text truncation

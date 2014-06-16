@@ -158,12 +158,13 @@
         return -1;
     }
 
-    var toggleDiv = function(divId) {
-       $('#display' + divId).toggle();
-       $('#full' + divId).toggle();
-    }
-    // Pass to global scope to be accessible as an href in HTML
-    S3.dataTables.toggleDiv = toggleDiv;
+    var toggleCell = function() {
+        $(this).parent()
+               .toggle()
+               .siblings('.dt-truncate')
+               .toggle();
+        return false;
+    };
 
     var toggleRow = function(groupid) {
         var _sublevel = '.sublevel' + groupid.substr(6);
@@ -974,6 +975,7 @@
                         dt.fnDraw(false);
                     }
                 });
+                $('.ui-icon-zoomin, .ui-icon-zoomout').unbind('click.dtToggleCell');
             },
             'fnServerData': fnAjaxCallback[t],
             'fnRowCallback': function(nRow, aData, iDisplayIndex) {
@@ -1070,12 +1072,9 @@
                         continue;
                     }
                     if (aData[j].length > textDisplay[t][0]) {
-                        var uniqueid = '_' + t + iDisplayIndex + j;
-                        var icon = '<a href="javascript:S3.dataTables.toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomin" style="float:right"></a>';
-                        var display = '<div id="display' + uniqueid + '">' + icon + aData[j].substr(0, textDisplay[t][1]) + "&hellip;</div>";
-                        icon = '<a href="javascript:S3.dataTables.toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomout" style="float:right"></a>';
-                        display += '<div  style="display:none" id="full' + uniqueid + '">' + icon + aData[j] + "</div>";
-                        $('td:eq(' + tdposn + ')', nRow).html( display );
+                        var disp = '<div class="dt-truncate"><span class="ui-icon ui-icon-zoomin" style="float:right"></span>' + aData[j].substr(0, textDisplay[t][1]) + "&hellip;</div>";
+                        var full = '<div  style="display:none" class="dt-truncate"><span class="ui-icon ui-icon-zoomout" style="float:right"></span>' + aData[j] + "</div>";
+                        $('td:eq(' + tdposn + ')', nRow).html(disp+full);
                     }
                     // increment the count of the td tags (don't do this for groups)
                     tdposn++;
@@ -1085,6 +1084,7 @@
             'fnDrawCallback': function(oSettings) {
                 //var table = '#' + oSettings.nTable.id;
                 //var t = tableIdReverse(table);
+                $('.dt-truncate .ui-icon-zoomin, .dt-truncate .ui-icon-zoomout').bind('click.dtToggleCell', toggleCell);
                 bindButtons(t, tableConfig, fnActionCallBacks);
                 if (oSettings.aiDisplay.length === 0) {
                     return;
