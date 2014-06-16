@@ -1095,10 +1095,19 @@ def cap_rheader(r):
                                        _target="_blank",
                                        )
 
+                    table = s3db.cap_area
+                    query = (table.alert_id == record_id)
+                    row = current.db(query).select(table.id,
+                                                   limitby=(0, 1)).first()
+                    if row:
+                        # We have an Area, so we can add Locations
+                        location_tab = (T("Location"), "location")
+                    else:
+                        location_tab = ""
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
                             (T("Area"), "area"),
-                            (T("Location"), "location"),
+                            location_tab,
                             (T("Resource Files"), "resource"),
                             ]
 
@@ -1116,7 +1125,7 @@ def cap_rheader(r):
                                   )
 
             elif tablename == "cap_area":
-                
+                # Shouldn't ever be called
                 tabs = [(T("Area"), None),
                         (T("Locations"), "location"),
                         #(T("Geocodes"), "tag"),
