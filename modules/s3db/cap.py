@@ -35,9 +35,15 @@ __all__ = ["S3CAPModel",
            ]
 
 import datetime
+import urllib2          # Needed for quoting & error handling on fetch
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
 
 from gluon import *
 from gluon.storage import Storage
+from gluon.tools import fetch
 from ..s3 import *
 
 # =============================================================================
@@ -374,6 +380,10 @@ class S3CAPModel(S3Model):
                        cap_info = "alert_id",
                        cap_resource = "alert_id",
                        )
+
+        self.set_method("cap", "alert",
+                        method = "import_feed",
+                        action = CAPImportFeed())
 
         if crud_strings["cap_template"]:
             crud_strings[tablename] = crud_strings["cap_template"]
@@ -1346,5 +1356,111 @@ def cap_gis_location_xml_post_parse(element, record):
             record.lon = lon
 
     return
+
+# -----------------------------------------------------------------------------
+class CAPImportFeed(S3Method):
+    """
+        Import CAP alerts from a URL
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_method(r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.representation == "html":
+
+            T = current.T
+            request = current.request
+            response = current.response
+
+            title = T("Import from Feed URL")
+
+            # @ToDo: use Formstyle
+            form = FORM(
+                    TABLE(
+                        TR(TD(DIV(B("%s:" % T("URL")),
+                                  SPAN(" *", _class="req"))),
+                           TD(INPUT(_type="text", _name="url",
+                                    _id="url", _value="")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("User"))),
+                           TD(INPUT(_type="text", _name="user",
+                                    _id="user", _value="")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("Password"))),
+                           TD(INPUT(_type="text", _name="password",
+                                    _id="password", _value="")),
+                           TD(),
+                           ),
+                        TR(TD(B("%s: " % T("Ignore Errors?"))),
+                           TD(INPUT(_type="checkbox", _name="ignore_errors",
+                                    _id="ignore_errors")),
+                           TD(),
+                           ),
+                        TR(TD(),
+                           TD(INPUT(_type="submit", _value=T("Import"))),
+                           TD(),
+                           )
+                        )
+                    )
+
+            response.view = "create.html"
+            output = dict(title=title,
+                          form=form)
+
+            if form.accepts(request.vars, current.session):
+
+                form_vars = form.vars
+                url = form_vars.get("url", None)
+                if not url:
+                    response.error = T("URL is required")
+                    return output
+                # @ToDo:
+                username = form_vars.get("username", None)
+                password = form_vars.get("password", None)
+                try:
+                    file = fetch(url)
+                except urllib2.URLError:
+                    response.error = str(sys.exc_info()[1])
+                    return output
+                except urllib2.HTTPError:
+                    response.error = str(sys.exc_info()[1])
+                    return output
+
+                File = StringIO(file)
+                stylesheet = os.path.join(request.folder, "static", "formats",
+                                          "cap", "import.xsl")
+                xml = current.xml
+                tree = xml.parse(File)
+
+                resource = current.s3db.resource("cap_alert")
+                s3xml = xml.transform(tree, stylesheet_path=stylesheet,
+                                      name=resource.name)
+                try:
+                    resource.import_xml(s3xml,
+                                        ignore_errors=form_vars.get("ignore_errors", None))
+                except:
+                    response.error = str(sys.exc_info()[1])
+                else:
+                    import_count = resource.import_count
+                    if import_count:
+                        response.confirmation = "%s %s" % \
+                            (import_count,
+                             T("Alerts successfully imported."))
+                    else:
+                        response.information = T("No Alerts available.")
+
+            return output
+
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

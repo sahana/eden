@@ -203,7 +203,8 @@ def alert():
                 s3_action_buttons(r, update_url=update_url)
 
             if isinstance(output, dict) and "form" in output:
-                if not r.component and r.method != "import":
+                if not r.component and \
+                   r.method not in ("import", "import_feed"):
                     fields = s3db.cap_info_labels()
                     jsobj = []
                     for f in fields:
