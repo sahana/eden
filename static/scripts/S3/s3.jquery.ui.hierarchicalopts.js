@@ -27,7 +27,8 @@
             multiple: true,
             leafonly: true,
             themesFolder: 'static/styles/jstree',
-            theme: 'default'
+            theme: 'default',
+            htmlTitles: true
         },
 
         _create: function() {
@@ -122,7 +123,8 @@
             this.tree.jstree({
                 'core': {
                     animation: 100,
-                    rtl: rtl
+                    rtl: rtl,
+                    html_titles: opts.htmlTitles
                 },
                 'themes': {
                     'theme': theme,
