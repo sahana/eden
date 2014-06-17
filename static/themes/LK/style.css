@@ -1,5 +1,22 @@
 /* Stuff which is LK-specific */
 
+.auth_login #submit_record__row .btn-primary {
+    margin-left: -90px;
+}
+
+#register-btn.action-lnk {
+    display: none;
+}
+
+input.filter-search {
+    text-align: left;
+    width: 75%;
+}
+
+.side-filter select {
+    width: 100px;
+}
+
 body {
     padding-top: 90px;
 }
