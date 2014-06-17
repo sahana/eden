@@ -775,6 +775,7 @@
 'Create Location': 'Standort hinzufügen',
 'Create Map Configuration': 'Kartenkonfiguration hinzufügen',
 'Create Marker': 'Makierung hinzufügen',
+'Create Member': 'Mitglied hinzufügen',
 'Create Mobile Impact Assessment': 'Erstellen Sie Mobile Folgenabschätzung',
 'Create Office': 'Büro hinzufügen',
 'Create Organization': 'Organisation hinzufügen',

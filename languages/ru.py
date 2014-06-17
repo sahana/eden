@@ -786,6 +786,7 @@
 'Create Location': 'Добавить размещение',
 'Create Map Configuration': 'Добавить конфигурации отображения',
 'Create Marker': 'Добавить маркер',
+'Create Member': 'Добавить элемент',
 'Create Mobile Impact Assessment': 'Создание Мобильных оценки воздействия',
 'Create Office': 'Добавить офис',
 'Create Organization': 'Добавить организацию',

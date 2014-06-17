@@ -1707,6 +1707,7 @@
 'Create Mailing List': 'Kreiraj listu za slanje poruka',
 'Create Map Configuration': 'Kreiraj konfiguraciju mape',
 'Create Marker': 'Kreiraj marker',
+'Create Member': 'Kreiraj člana',
 'Create Milestone': 'Kreiraj prekretnicu',
 'Create Mobile Impact Assessment': 'Kreiraj mobilnu procjenu utjecaja',
 'Create Morgue': 'Kreiraj mrtvačnicu',

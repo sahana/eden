@@ -783,6 +783,7 @@
 'Create Location': 'Aggiungi ubicazione',
 'Create Map Configuration': 'Aggiungere Configurazione della Mappa',
 'Create Marker': 'Aggiungi Indicatore',
+'Create Member': 'Aggiungi Membro',
 'Create Mobile Impact Assessment': 'Creare valutazione di impatto mobile',
 'Create Office': 'Crea Ufficio',
 'Create Organization': 'Crea organizzazione',

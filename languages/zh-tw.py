@@ -1078,6 +1078,7 @@
 'Create Location': '新增位置',
 'Create Map Configuration': '新增對映配置',
 'Create Marker': '新增標記',
+'Create Member': '新增成員',
 'Create Mobile Impact Assessment': '建立行動式影响評估',
 'Create Office': '新增辦公室',
 'Create Organization': '新增組織',

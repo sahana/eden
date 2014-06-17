@@ -778,6 +778,7 @@
 'Create Location': '위치 추가',
 'Create Map Configuration': '맵 구성 추가',
 'Create Marker': '마커 추가',
+'Create Member': '회원 추가',
 'Create Mobile Impact Assessment': '모바일 영향 평가 작성',
 'Create Office': '추가 사무실',
 'Create Organization': '조직 추가',

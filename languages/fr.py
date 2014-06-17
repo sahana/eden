@@ -990,6 +990,7 @@
 'Create Location': 'Ajouter un emplacement',
 'Create Map Configuration': 'Ajouter une cartographie de configuration',
 'Create Marker': 'Ajouter un marqueur',
+'Create Member': 'Ajouter un membre',
 'Create Mobile Impact Assessment': "Créer l'évaluation de l'impact mobile",
 'Create Office': 'Ajouter un bureau',
 'Create Organization': 'Ajouter Organisation',

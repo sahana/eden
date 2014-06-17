@@ -199,6 +199,7 @@
 'Create Incident Report': 'Προσθήκη αναφοράς συμβάντος',
 'Create Incident': 'Προσθήκη νέου συμβάντος',
 'Create Marker': 'Προσθήκη νέου δείκτη',
+'Create Member': 'Προσθήκη μέλους',
 'Create Kit': 'Προσθήκη νέου Kit',
 'Create Office': 'Προσθήκη γραφείου',
 'Create Organization': 'Προσθήκη οργανισμού',

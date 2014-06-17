@@ -171,7 +171,7 @@ class S3MembersModel(S3Model):
                       *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Add Member"),
+            label_create = T("Create Member"),
             title_display = T("Member Details"),
             title_list = T("Members"),
             title_update = T("Edit Member"),

@@ -582,6 +582,7 @@
 'Create Mailing List': 'បន្ថែម​បញ្ជី​សំបុត្ររួម',
 'Create Map Configuration': 'បន្ថែម​ការ​កំណត់​រចនាសម្ព័ន្ធ​ផែនទី',
 'Create Marker': 'បន្ថែម​សញ្ញាសម្គាល់',
+'Create Member': 'បន្ថែមសមាជិកៃ',
 'Create Membership Type': 'ប​ន្ថែម​ប្រភេទ​សមាជិកភាព',
 'Create Milestone': 'បន្ថែម​ការ​វាស់វែង',
 'Create National Society': 'បន្ថែម​សង្គមជាតិ',

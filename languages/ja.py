@@ -927,6 +927,7 @@
 'Create Location': 'ロケーションを追加',
 'Create Map Configuration': '地図設定を追加',
 'Create Marker': 'マーカーを追加',
+'Create Member': 'メンバを追加',
 'Create Mobile Impact Assessment': '災害影響範囲アセスメントをモバイル端末から作成',
 'Create Office': 'オフィスを追加',
 'Create Organization': '団体を追加',

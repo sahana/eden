@@ -785,6 +785,7 @@
 'Create Location': '添加位置',
 'Create Map Configuration': '添加映射配置',
 'Create Marker': '添加标记',
+'Create Member': '添加成员',
 'Create Mobile Impact Assessment': '创建移动影响评估',
 'Create Office': '添加办公室',
 'Create Organization': '添加组织',
