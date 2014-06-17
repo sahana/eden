@@ -13,6 +13,7 @@ if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 from datetime import timedelta
+from gluon.tools import Crud
 
 # =============================================================================
 def index():
@@ -774,7 +775,8 @@ def comments():
         raise HTTP(400)
 
     table = s3db.cms_comment
-
+    crud = Crud(db)
+    
     # Form to add a new Comment
     table.post_id.default = post_id
     table.post_id.writable = table.post_id.readable = False
