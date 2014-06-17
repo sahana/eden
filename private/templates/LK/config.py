@@ -116,6 +116,11 @@ settings.ui.summary = [#{"common": True,
                        # "name": "cms",
                        # "widgets": [{"method": "cms"}]
                        # },
+
+                       {"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
@@ -3790,7 +3795,7 @@ def customise_project_project_controller(**attr):
                     "name",
                     S3SQLInlineComponentMultiSelectWidget(
                         "theme",
-                        label = T("Themes"),
+                        label = T("Type"),
                         field = "theme_id",
                         option_help = "comments",
                         cols = 3,
@@ -3871,11 +3876,11 @@ def customise_project_project_controller(**attr):
 
             list_fields = ["name",
                            "organisation_id",
-                           "human_resource_id",
+                           (T("Type"), "theme.name"),
                            (T("Provinces"), "location.location_id"),
                            "start_date",
                            "end_date",
-                           "budget",
+                           #"budget",
                            ]
 
             # Return to List view after create/update/delete (unless done via Modal)
@@ -3897,13 +3902,34 @@ def customise_project_project_controller(**attr):
                                 ),
                 S3OptionsFilter("location.location_id$L1",
                                 ),
-                S3OptionsFilter("partner.organisation_id",
-                                label = T("Partners"),
+                S3OptionsFilter("theme.name",
+                                label = T("Type")
                                 ),
-                S3OptionsFilter("donor.organisation_id",
-                                label = T("Donors"),
-                                )
+                #S3OptionsFilter("partner.organisation_id",
+                #                label = T("Partners"),
+                #                ),
+                #S3OptionsFilter("donor.organisation_id",
+                #                label = T("Donors"),
+                #                )
                 ]
+
+            report_fields = [(T("Type"), "theme.name"),
+                             "organisation_id",
+                             "location.location_id$L1",
+                             ]
+
+            report_options = Storage(
+                rows = report_fields,
+                cols = report_fields,
+                fact = [(T("Number of Projects"), "count(id)")],
+                defaults = Storage(rows = "theme.name",
+                                   cols = "location.location_id$L1",
+                                   fact = "count(id)",
+                                   totals = True,
+                                   chart = "barchart:rows",
+                                   table = "collapse",
+                                   )
+                )
 
             s3db.configure("project_project",
                            create_next = url_next,
@@ -3911,6 +3937,7 @@ def customise_project_project_controller(**attr):
                            delete_next = url_next,
                            filter_widgets = filter_widgets,
                            list_fields = list_fields,
+                           report_options = report_options,
                            update_next = url_next,
                            )
 
