@@ -1190,9 +1190,9 @@ class S3ResourceQuery(object):
 
         if op == self.AND:
             lq, lf = l.split(resource) \
-                     if isinstance(l, S3ResourceQuery) else l, None
+                     if isinstance(l, S3ResourceQuery) else (l, None)
             rq, rf = r.split(resource) \
-                     if isinstance(r, S3ResourceQuery) else r, None
+                     if isinstance(r, S3ResourceQuery) else (r, None)
             q = lq
             if rq is not None:
                 if q is not None:
@@ -1208,9 +1208,9 @@ class S3ResourceQuery(object):
             return q, f
         elif op == self.OR:
             lq, lf = l.split(resource) \
-                     if isinstance(l, S3ResourceQuery) else l, None
+                     if isinstance(l, S3ResourceQuery) else (l, None)
             rq, rf = r.split(resource) \
-                     if isinstance(r, S3ResourceQuery) else r, None
+                     if isinstance(r, S3ResourceQuery) else (r, None)
             if lf is not None or rf is not None:
                 return None, self
             else:
@@ -1823,15 +1823,20 @@ class S3ResourceQuery(object):
         l = self.left
         r = self.right
         if op == self.AND:
-            l = l.represent(resource)
-            r = r.represent(resource)
+            l = l.represent(resource) \
+                if isinstance(l, S3ResourceQuery) else str(l)
+            r = r.represent(resource) \
+                if isinstance(r, S3ResourceQuery) else str(r)
             return "(%s and %s)" % (l, r)
         elif op == self.OR:
-            l = l.represent(resource)
-            r = r.represent(resource)
+            l = l.represent(resource) \
+                if isinstance(l, S3ResourceQuery) else str(l)
+            r = r.represent(resource) \
+                if isinstance(r, S3ResourceQuery) else str(r)
             return "(%s or %s)" % (l, r)
         elif op == self.NOT:
-            l = l.represent(resource)
+            l = l.represent(resource) \
+                if isinstance(l, S3ResourceQuery) else str(l)
             return "(not %s)" % l
         else:
             if isinstance(l, S3FieldSelector):
