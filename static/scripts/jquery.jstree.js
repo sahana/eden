@@ -807,8 +807,13 @@
 					return obj.html();
 				}
 				else {
-					obj = obj.contents().filter(function() { return this.nodeType == 3; })[0];
-					return obj.nodeValue;
+                                        var textnodes = obj.contents().filter(function() {return this.nodeType == 3;});
+                                        if (textnodes) {
+                                            return textnodes[0].nodeValue;
+                                        } else {
+                                            // no text found in this item
+                                            return "";
+                                        }
 				}
 			},
 			set_text	: function (obj, val) {
