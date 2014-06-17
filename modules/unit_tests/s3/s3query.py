@@ -291,7 +291,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
-    def testGetQueryJoinsCombinationQuery(self):
+    def testGetQueryMixedQueryType(self):
         """ Test combinations of web2py Queries with S3ResourceQueries """
 
         s3db = current.s3db
@@ -321,10 +321,57 @@ class ResourceFilterJoinTests(unittest.TestCase):
         self.assertEqual(str(joins["org_organisation"][0]), str(expected))
         self.assertTrue(distinct)
 
+        # Test split and query
         qq, qf = q.split(resource)
-        self.assertEqual(qq.represent(resource), """((org_organisation.name == "test") and """
-                                                 """(project_project.name = 'test'))""")
         self.assertEqual(qf, None)
+        query = qq.query(resource)
+        expected = ((org_organisation.name == "test") & \
+                    (project_project.name == "test"))
+        self.assertEqual(str(query), str(expected))
+
+        # Test get_query
+        resource.add_filter(q)
+        query = resource.get_query()
+        expected = (((project_project.deleted != True) & \
+                     (project_project.id > 0)) & \
+                    ((org_organisation.name == "test") & \
+                     (project_project.name == "test")))
+        self.assertEqual(str(query), str(expected))
+        
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testGetQueryMixedQueryTypeVirtual(self):
+        """ Test combinations of web2py Queries with virtual field filter """
+
+        s3db = current.s3db
+
+        resource = s3db.resource("project_project")
+        q = (FS("virtualfield") == "test") & \
+            (resource.table.name == "test")
+
+        project_project = resource.table
+
+        # Test joins
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins, {})
+
+        # Test left joins
+        joins, distinct = q._joins(resource, left=True)
+        self.assertEqual(joins, {})
+
+        # Test split and query
+        qq, qf = q.split(resource)
+        expected = (project_project.name == "test")
+        self.assertEqual(str(qq), str(expected))
+        self.assertTrue(isinstance(qf, S3ResourceQuery))
+
+        # Test get_query
+        resource.add_filter(q)
+        query = resource.get_query()
+        expected =  (((project_project.deleted != True) & \
+                    (project_project.id > 0)) & \
+                    (project_project.name == "test"))
+        self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
