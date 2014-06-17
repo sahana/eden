@@ -269,7 +269,7 @@
             // Open the tree
 
             if (this._isOpen) {
-                this._close();
+                this.close();
             }
             
             var button = $(this.button);
