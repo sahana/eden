@@ -2832,6 +2832,7 @@ class S3FacilityModel(S3Model):
                            label = T("Name"),
                            ),
                      Field("code", length=10, # Mayon compatibility
+                           #notnull=True,
                            label = T("Code"),
                            # Deployments that don't wants office codes can hide them
                            #readable=False, writable=False,
