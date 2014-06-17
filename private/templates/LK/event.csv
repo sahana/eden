@@ -1,9 +1,5 @@
 Name,Type,Description,Exercise,Start Date,Closed,Country,L1,L2,L3
-"Flood Manufahi","Flood",,,,,,,,
-"Floods Same","Flood",,,"2006-12-24","True",,,,
-"Cyclone Simone","Cyclone",,,"2012-09-01","True",,,,
-"Drought Tibar","Drought",,,"2012-04-01","True",,,,
-"Dili Tsunami","Tsunami",,,"2012-05-01","True",,,,
-"Same Earthquake","Earthquake",,,"2012-06-01","True",,,,
-"Aileu Floods","Flood",,,"2012-07-01","True",,,,
-"Drought Zumalai","Drought",,,"2012-08-01","True",,,,
+Floods and Landslides,Flood,"Heavy rains have battered Sri Lanka since the middle of December 2012, causing floods and landslides, which killed 36 people and affected over 300,000 (Govt, 27 Dec 2012). As of 21 Dec, over 56,000 people sheltered in 171 evacuation centers; almost 1,500 houses were destroyed and more than 4,800 damaged",,2012-12-01,TRUE,LK,,,
+Drought,Drought,"By the end of October 2012, drought had affected an estimated 1.8 million people in Sri Lanka according. Since December 2011, for the second consecutive season, rainfall had been scanty. As a result, many of the water reservoirs dried up, and people living in the worst-hit remote rural areas didn't have access to safe drinking water. The arrival of rains in December 2012 relieved drought conditions in many areas, but thesubsequent flooding intensified the vulnerability of many poor living in the country’s hardest hit regions.",,2012-11-01,TRUE,LK,,,
+Severe Local Storm,Cyclone,"On 31 Mar 2012, a tornado accompanied by heavy winds, rain and hail hit zone 1 of Menik Farm, an IDP camp in Northern Sri Lanka. Out of a total of 1,200 shelters, 942 were damaged and over 20 people were injured. ",,2012-03-31,TRUE,LK,,,
+Flood,Flood,"Heavy rainfall on 1 Jun 2014 caused extensive flooding in western districts of Sri Lanka, killing 23 people and affecting an estimated 44,000 people. Kalutara, Colombo and Gampaha were worst hit. Over 17,000 people were displaced in Kalutara, and extensive damage to roads and bridges has hampered relief efforts. The Sri Lanka Red Cross Society has released emergency funds to support response activities.",,2014-06-01,,,,,
