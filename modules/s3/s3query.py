@@ -1121,8 +1121,14 @@ class S3ResourceQuery(object):
         r = self.right
 
         if op in (self.AND, self.OR):
-            ljoins, ld = l._joins(resource, left=left)
-            rjoins, rd = r._joins(resource, left=left)
+            if isinstance(l, S3ResourceQuery):
+                ljoins, ld = l._joins(resource, left=left)
+            else:
+                ljoins, ld = {}, False
+            if isinstance(r, S3ResourceQuery):
+                rjoins, rd = r._joins(resource, left=left)
+            else:
+                rjoins, rd = {}, False
             
             ljoins = dict(ljoins)
             ljoins.update(rjoins)
@@ -1130,7 +1136,10 @@ class S3ResourceQuery(object):
             return (ljoins, ld or rd)
             
         elif op == self.NOT:
-            return l._joins(resource, left=left)
+            if isinstance(l, S3ResourceQuery):
+                return l._joins(resource, left=left)
+            else:
+                return {}, False
 
         joins, distinct = {}, False
 

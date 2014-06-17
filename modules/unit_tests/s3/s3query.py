@@ -291,6 +291,38 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testGetQueryJoinsCombinationQuery(self):
+        """ Test combinations of web2py Queries with S3ResourceQueries """
+
+        s3db = current.s3db
+
+        resource = s3db.resource("project_project")
+        q = (FS("organisation_id$name") == "test") & \
+            (resource.table.name == "test")
+
+        # Test joins
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins.keys(), [])
+
+        # Test left joins
+        project_project = resource.table
+        project_task_project = s3db.project_task_project
+        project_task = s3db.project_task
+        org_organisation = s3db.org_organisation
+
+        expected = org_organisation.on(
+                        project_project.organisation_id == org_organisation.id)
+
+        joins, distinct = q._joins(resource, left=True)
+        self.assertEqual(joins.keys(), ["org_organisation"])
+
+        self.assertTrue(isinstance(joins["org_organisation"], list))
+        self.assertEqual(len(joins["org_organisation"]), 1)
+        self.assertEqual(str(joins["org_organisation"][0]), str(expected))
+        self.assertTrue(distinct)
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testGetFilterLeftJoins(self):
         """ Check list of left joins in resource filters """
 
