@@ -265,11 +265,11 @@
             return;
         },
 
-        open: function() {
+        openMenu: function() {
             // Open the tree
 
             if (this._isOpen) {
-                this.close();
+                this.closeMenu();
             }
             
             var button = $(this.button);
@@ -287,7 +287,7 @@
             $(this).trigger('open');
         },
 
-        close: function() {
+        closeMenu: function() {
             // Close the tree
             
             $(this.tree).hide();
@@ -312,9 +312,9 @@
             
             button.bind('click' + namespace, function() {
                 if (!widget._isOpen) {
-                    widget.open();
+                    widget.openMenu();
                 } else {
-                    widget.close();
+                    widget.closeMenu();
                 }
             }).bind('keyup' + namespace, function(event) {
                 event.preventDefault();
@@ -322,11 +322,11 @@
                     case 27: // esc
                     case 38: // up
                     case 37: // left
-                        widget.close();
+                        widget.closeMenu();
                         break;
                     case 39: // right
                     case 40: // down
-                        widget.open();
+                        widget.openMenu();
                         break;
                 }
             }).bind('mouseenter' + namespace, function() {
@@ -347,7 +347,7 @@
                 if (!tree.is(target) && !button.is(target) &&
                     tree.has(event.target).length === 0 &&
                     button.has(event.target).length === 0) {
-                    widget.close();
+                    widget.closeMenu();
                 }
             });
             return true;
