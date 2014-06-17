@@ -1,0 +1,2 @@
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Filter,Polygons,Style,Folder,Visible,Enabled
+Alerts,,cap,alert,US,alert,,Alert,name,"~.is_template=False",True,,,True,

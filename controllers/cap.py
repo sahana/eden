@@ -88,28 +88,47 @@ def info_prep(r):
 
 # -----------------------------------------------------------------------------
 def alert():
-    """ REST controller for CAP alerts """
+    """ REST controller for CAP Alerts and Components """
 
     def prep(r):
-        if r.id and r.record.is_template:
-            redirect(URL(c="cap", f="template",
-                         args = request.args,
-                         vars = request.vars))
-        elif not r.id:
-            s3.filter = (s3db.cap_alert.is_template == False)
+        if r.id:
+            if r.record.is_template:
+                redirect(URL(c="cap", f="template",
+                             args = request.args,
+                             vars = request.vars))
+        else:
+            s3.filter = (r.table.is_template == False)
             s3.formats["cap"] = r.url() # .have added by JS
 
         if r.interactive:
             alert_fields_comments()
 
-            if not r.component and r.method != "import":
-                s3.crud.submit_style = "hide"
-                s3.crud.custom_submit = (("edit_info",
-                                          T("Save and edit information"),
-                                          "",
-                                          ),)
+            if not r.component:
+                if r.method != "import":
+                    s3.crud.submit_style = "hide"
+                    s3.crud.custom_submit = (("edit_info",
+                                              T("Save and edit information"),
+                                              "",
+                                              ),)
+            elif r.component_name in ("area", "resource"):
+                # Limit to those for this Alert
+                r.component.table.info_id.requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(current.db, "cap_info.id",
+                                                                  s3db.cap_info_represent,
+                                                                  filterby="alert_id",
+                                                                  filter_opts=(r.id,),
+                                                                  ))
+            elif r.component_name == "location":
+                # Limit to those for this Alert
+                r.component.table.area_id.requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(current.db, "cap_area.id",
+                                                                  s3db.cap_area_represent,
+                                                                  filterby="alert_id",
+                                                                  filter_opts=(r.id,),
+                                                                  ))
+                
 
-        if r.method in ["create", "import"] and r.representation == "cap":
+        elif r.representation == "cap" and r.method in ["create", "import"]:
             s3db.configure("gis_location",
                            xml_post_parse = s3db.cap_gis_location_xml_post_parse)
 
@@ -184,7 +203,8 @@ def alert():
                 s3_action_buttons(r, update_url=update_url)
 
             if isinstance(output, dict) and "form" in output:
-                if not r.component and r.method != "import":
+                if not r.component and \
+                   r.method not in ("import", "import_feed"):
                     fields = s3db.cap_info_labels()
                     jsobj = []
                     for f in fields:
@@ -312,7 +332,10 @@ def template():
 
 # -----------------------------------------------------------------------------
 def area():
-    """ REST controller for CAP area """
+    """
+        REST controller for CAP area
+        - shouldn't ever be called
+    """
 
     def postp(r, output):
         if r.interactive and r.component and r.component_name == "area_location":
