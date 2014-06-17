@@ -2837,8 +2837,7 @@ class S3FacilityModel(S3Model):
                            # Deployments that don't wants office codes can hide them
                            #readable=False, writable=False,
                            represent = lambda v: v or NONE,
-                           unique=True,
-                           requires=IS_EMPTY_OR(IS_NOT_ONE_OF(db,"%s.code" % tablename)),
+                           unique = settings.get_org_is_code_unique(),
                            ),
                      self.org_organisation_id(widget=org_widget),
                      self.gis_location_id(),
@@ -3539,8 +3538,7 @@ class S3OfficeModel(S3Model):
                            # Deployments that don't wants office codes can hide them
                            #readable=False,
                            #writable=False,
-                           unique=True,
-                           requires=IS_EMPTY_OR(IS_NOT_ONE_OF(db,"%s.code" % tablename)),
+                           unique = settings.get_org_is_code_unique(),
                             ),
                      self.org_organisation_id(
                          requires = org_organisation_requires(required=True,

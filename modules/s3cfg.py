@@ -2282,6 +2282,12 @@ class S3Config(Storage):
             field.writable = enabled
 
         return enabled
+    
+    def get_org_is_code_unique(self):
+    """
+        Whether Code for Org Facility or Office is unique
+    """        
+        return self.org.get("is_code_unique",False)
 
     # -------------------------------------------------------------------------
     # Persons
