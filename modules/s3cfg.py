@@ -2285,13 +2285,13 @@ class S3Config(Storage):
 
     def get_org_office_code_unique(self):
         """
-            Whether Org office "code" is unique
+            Whether Org office code is unique
         """
         return self.org.get("office_code_unique",False)
 
     def get_org_facility_code_unique(self):
         """
-            Whether Org facility "code" is unique
+            Whether Org facility code is unique
         """
         return self.org.get("facility_code_unique",False)
 
