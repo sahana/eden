@@ -321,6 +321,11 @@ class ResourceFilterJoinTests(unittest.TestCase):
         self.assertEqual(str(joins["org_organisation"][0]), str(expected))
         self.assertTrue(distinct)
 
+        qq, qf = q.split(resource)
+        self.assertEqual(qq.represent(resource), """((org_organisation.name == "test") and """
+                                                 """(project_project.name = 'test'))""")
+        self.assertEqual(qf, None)
+
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
     def testGetFilterLeftJoins(self):
