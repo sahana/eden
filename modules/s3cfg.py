@@ -2283,11 +2283,17 @@ class S3Config(Storage):
 
         return enabled
     
-    def get_org_is_code_unique(self):
+    def get_org_office_code_unique(self):
     """
-        Whether Code for Org Facility or Office is unique
+        Whether Code for Org Office is unique
     """        
-        return self.org.get("is_code_unique",False)
+        return self.org.get("office_code_unique",False)
+
+    def get_org_facility_code_unique(self):
+    """
+        Whether Code for Org Facility is unique
+    """
+        return self.org.get("facility_code_unique",False)
 
     # -------------------------------------------------------------------------
     # Persons
