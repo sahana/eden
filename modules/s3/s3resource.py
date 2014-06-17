@@ -4178,10 +4178,15 @@ class S3ResourceFilter(object):
 
                 # Split DAL and virtual filters
                 self.rfltr, self.vfltr = transformed.split(resource)
-                
-            if self.rfltr:
-                # Add to query
-                query &= self.rfltr.query(self.resource)
+
+            # Add to query
+            rfltr = self.rfltr
+            if rfltr is not None:
+                if isinstance(rfltr, S3ResourceQuery):
+                    query &= rfltr.query(resource)
+                else:
+                    # Combination of virtual field filter and web2py Query
+                    query &= rfltr
 
         self.query = query
         return query
