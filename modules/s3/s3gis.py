@@ -1879,6 +1879,90 @@ class GIS(object):
         return output
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def get_polygon_from_bounds(bbox):
+        """
+            Given a gis_location record or a bounding box dict with keys
+            lon_min, lon_max, lat_min, lat_max, construct a WKT polygon with
+            points at the corners.
+        """
+
+        lon_min = bbox["lon_min"]
+        lon_max = bbox["lon_max"]
+        lat_min = bbox["lat_min"]
+        lat_max = bbox["lat_max"]
+        # Take the points in a counterclockwise direction.
+        points = [(lon_min, lat_min),
+                  (lon_min, lat_max),
+                  (lon_max, lat_max),
+                  (lon_min, lat_max),
+                  (lon_min, lat_min)]
+        pairs = ["%s %s" % (p[0], p[1]) for p in points]
+        wkt = "POLYGON ((%s))" % ", ".join(pairs)
+        return wkt
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_bounds_from_radius(lat, lon, radius):
+        """
+            Compute a bounding box given a Radius (in km) of a LatLon Location
+            
+            Note the order of the parameters.
+            
+            @return a dict containing the bounds with keys min_lon, max_lon,
+            min_lat, max_lat
+            
+            See:
+            http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
+        """
+
+        import math
+
+        radians = math.radians
+        degrees = math.degrees
+
+        MIN_LAT = radians(-90)     # -PI/2
+        MAX_LAT = radians(90)      # PI/2
+        MIN_LON = radians(-180)    # -PI
+        MAX_LON = radians(180)     #  PI
+
+        # Convert to radians for the calculation
+        r = float(radius) / RADIUS_EARTH
+        radLat = radians(lat)
+        radLon = radians(lon)
+
+        # Calculate the bounding box
+        minLat = radLat - r
+        maxLat = radLat + r
+
+        if (minLat > MIN_LAT) and (maxLat < MAX_LAT):
+            deltaLon = math.asin(math.sin(r) / math.cos(radLat))
+            minLon = radLon - deltaLon
+            if (minLon < MIN_LON):
+                minLon += 2 * math.pi
+            maxLon = radLon + deltaLon
+            if (maxLon > MAX_LON):
+                maxLon -= 2 * math.pi
+        else:
+            # Special care for Poles & 180 Meridian:
+            # http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
+            minLat = max(minLat, MIN_LAT)
+            maxLat = min(maxLat, MAX_LAT)
+            minLon = MIN_LON
+            maxLon = MAX_LON
+
+        # Convert back to degrees
+        minLat = degrees(minLat)
+        minLon = degrees(minLon)
+        maxLat = degrees(maxLat)
+        maxLon = degrees(maxLon)
+        
+        return dict(lat_min = minLat,
+                    lat_max = maxLat,
+                    lon_min = minLon,
+                    lon_max = maxLon)
+    
+    # -------------------------------------------------------------------------
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
             Returns Features within a Radius (in km) of a LatLon Location
@@ -1973,50 +2057,15 @@ class GIS(object):
 
             # @ToDo: Support optional Category (make this a generic filter?)
 
-            # shortcuts
-            radians = math.radians
-            degrees = math.degrees
-
-            MIN_LAT = radians(-90)     # -PI/2
-            MAX_LAT = radians(90)      # PI/2
-            MIN_LON = radians(-180)    # -PI
-            MAX_LON = radians(180)     #  PI
-
-            # Convert to radians for the calculation
-            r = float(radius) / RADIUS_EARTH
-            radLat = radians(lat)
-            radLon = radians(lon)
-
-            # Calculate the bounding box
-            minLat = radLat - r
-            maxLat = radLat + r
-
-            if (minLat > MIN_LAT) and (maxLat < MAX_LAT):
-                deltaLon = math.asin(math.sin(r) / math.cos(radLat))
-                minLon = radLon - deltaLon
-                if (minLon < MIN_LON):
-                    minLon += 2 * math.pi
-                maxLon = radLon + deltaLon
-                if (maxLon > MAX_LON):
-                    maxLon -= 2 * math.pi
-            else:
-                # Special care for Poles & 180 Meridian:
-                # http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
-                minLat = max(minLat, MIN_LAT)
-                maxLat = min(maxLat, MAX_LAT)
-                minLon = MIN_LON
-                maxLon = MAX_LON
-
-            # Convert back to degrees
-            minLat = degrees(minLat)
-            minLon = degrees(minLon)
-            maxLat = degrees(maxLat)
-            maxLon = degrees(maxLon)
-
+            bbox = get_bounds_from_radius(lat, lon, radius)
+            
             # shortcut
             locations = db.gis_location
 
-            query = (locations.lat > minLat) & (locations.lat < maxLat) & (locations.lon > minLon) & (locations.lon < maxLon)
+            query = (locations.lat > bbox["lat_min"]) & \
+                    (locations.lat < bbox["lat_max"]) & \
+                    (locations.lon > bbox["lon_min"]) & \
+                    (locations.lon < bbox["lon_max"])
             deleted = (locations.deleted == False)
             empty = (locations.lat != None) & (locations.lon != None)
             query = deleted & empty & query

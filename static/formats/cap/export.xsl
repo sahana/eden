@@ -381,18 +381,59 @@
     </xsl:template>
 
     <!-- *********************** cap_area_location ******************* -->
-    <!-- The actual data, formatted for CAP, is stored in location tags. -->
+    <!--
+        The actual data, formatted for CAP, is stored in location tags.
+        Each gis_location yields exactly one cap geometry element. Tags
+        cap_circle and cap_polygon are the definitive values. For locations
+        that did not have a circle or polygon, a fallback was constructed
+        from whatever information was available, e.g. the bounding box (as
+        a polygon) or the lat and lon or wkt point (as a zero-radius circle).
+        Those are added without wasting a db lookup to see if there was a
+        cap_circle. So we only use the fallback info if there was no actual
+        circle or polygon. cap_circle and cap_polygon should be mutually
+        exclusive, as we do not create or import a location that is both a
+        polygon and a circle. The circle and polygon fallbacks are mutually
+        exclusive as only one is constructed in xml_post_render.
+    -->
     <xsl:template match="resource[@name='cap_area_location']//resource[@name='gis_location_tag']">
-        <xsl:if test="./data[@field='tag']/text()='cap_polygon'">
-            <polygon>
-                <xsl:value-of select="./data[@field='value']/text()"/>
-            </polygon>
-        </xsl:if>
+        <!-- 
         <xsl:if test="./data[@field='tag']/text()='cap_circle'">
             <circle>
                 <xsl:value-of select="./data[@field='value']/text()"/>
             </circle>
         </xsl:if>
+        <xsl:if test="./data[@field='tag']/text()='cap_polygon'">
+            <polygon>
+                <xsl:value-of select="./data[@field='value']/text()"/>
+            </polygon>
+        </xsl:if>
+        -->
+        <xsl:choose>
+        <xsl:when test="./data[@field='tag']/text()='cap_circle'">
+            <circle>
+                <xsl:value-of select="./data[@field='value']/text()"/>
+            </circle>
+        </xsl:when>
+        <xsl:when test="./data[@field='tag']/text()='cap_polygon'">
+            <polygon>
+                <xsl:value-of select="./data[@field='value']/text()"/>
+            </polygon>
+        </xsl:when>
+        <xsl:otherwise>
+            <xsl:choose>
+            <xsl:when test="./data[@field='tag']/text()='cap_circle_fallback'">
+                <circle>
+                    <xsl:value-of select="./data[@field='value']/text()"/>
+                </circle>
+            </xsl:when>
+            <xsl:when test="./data[@field='tag']/text()='cap_polygon_fallback'">
+                <polygon>
+                    <xsl:value-of select="./data[@field='value']/text()"/>
+                </polygon>
+            </xsl:when>
+            </xsl:choose>
+        </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
     
     <!-- *********************** cap_resource ************************ -->
