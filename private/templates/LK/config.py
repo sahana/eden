@@ -49,14 +49,14 @@ settings.auth.registration_roles = {"organisation_id": ["USER"],
 
 # Terms of Service to be able to Register on the system
 # uses <template>/views/tos.html
-settings.auth.terms_of_service = True
+#settings.auth.terms_of_service = True
 
 settings.auth.show_utc_offset = False
 
 settings.auth.show_link = False
 
-settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ("org_organisation",)
+#settings.auth.record_approval = True
+#settings.auth.record_approval_required_for = ("org_organisation",)
 
 # -----------------------------------------------------------------------------
 # Security Policy
