@@ -1242,7 +1242,7 @@ def update_alert_id(tablename):
         table = db[tablename]
 
         if tablename == "cap_area_location":
-            area_id = form_vars.get("ares_id", None)
+            area_id = form_vars.get("area_id", None)
             if not area_id:
                 # Get the full record
                 item = db(table.id == _id).select(table.alert_id,
