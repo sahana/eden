@@ -1,0 +1,367 @@
+Demographic,Country,code,L1,L2,L3,Value,Date,Source
+Total Population,LK,,,,,20263723,2012-03-20,Census
+Total Population,LK,1,Western,,,5821710,2012-03-20,Census
+Total Population,LK,11,Western,Colombo,,2309809,2012-03-20,Census
+Total Population,LK,3,Western,Colombo,Colombo,318048,2012-03-20,Census
+Total Population,LK,30,Western,Colombo,Dehiwala-Mt.Lavinia,87834,2012-03-20,Census
+Total Population,LK,15,Western,Colombo,Hanwella,113477,2012-03-20,Census
+Total Population,LK,12,Western,Colombo,Homogama,236179,2012-03-20,Census
+Total Population,LK,11,Western,Colombo,Kaduwela,252057,2012-03-20,Census
+Total Population,LK,36,Western,Colombo,Kesbewa,244062,2012-03-20,Census
+Total Population,LK,6,Western,Colombo,Kolonnawa,190817,2012-03-20,Census
+Total Population,LK,21,Western,Colombo,Maharagama,195355,2012-03-20,Census
+Total Population,LK,33,Western,Colombo,Moratuwa,167160,2012-03-20,Census
+Total Population,LK,18,Western,Colombo,Padukka,65167,2012-03-20,Census
+Total Population,LK,31,Western,Colombo,Rathmalana,95162,2012-03-20,Census
+Total Population,LK,24,Western,Colombo,Sri Jayawardanapura Kotte,107508,2012-03-20,Census
+Total Population,LK,27,Western,Colombo,Thimbirigasyaya,236983,2012-03-20,Census
+Total Population,LK,12,Western,Gampaha,,2294641,2012-03-20,Census
+Total Population,LK,27,Western,Gampaha,Attanagalla,178816,2012-03-20,Census
+Total Population,LK,39,Western,Gampaha,Biyagama,186862,2012-03-20,Census
+Total Population,LK,9,Western,Gampaha,Divulapitiya,143871,2012-03-20,Census
+Total Population,LK,30,Western,Gampaha,Dompe,153137,2012-03-20,Census
+Total Population,LK,24,Western,Gampaha,Gampaha,196445,2012-03-20,Census
+Total Population,LK,21,Western,Gampaha,Ja-Ela,201154,2012-03-20,Census
+Total Population,LK,6,Western,Gampaha,Katana,233854,2012-03-20,Census
+Total Population,LK,36,Western,Gampaha,Kelaniya,134693,2012-03-20,Census
+Total Population,LK,33,Western,Gampaha,Mahara/Kadawatha,207230,2012-03-20,Census
+Total Population,LK,15,Western,Gampaha,Minuwangoda,178401,2012-03-20,Census
+Total Population,LK,12,Western,Gampaha,Mirigama,164166,2012-03-20,Census
+Total Population,LK,3,Western,Gampaha,Negombo,141676,2012-03-20,Census
+Total Population,LK,18,Western,Gampaha,Wattala,174336,2012-03-20,Census
+Total Population,LK,13,Western,Kalutara,,1217260,2012-03-20,Census
+Total Population,LK,33,Western,Kalutara,Agalawatta,36456,2012-03-20,Census
+Total Population,LK,6,Western,Kalutara,Bandaragama,108889,2012-03-20,Census
+Total Population,LK,24,Western,Kalutara,Beruwala,164507,2012-03-20,Census
+Total Population,LK,12,Western,Kalutara,Bulathsinhala,64635,2012-03-20,Census
+Total Population,LK,27,Western,Kalutara,Dodamgoda,63705,2012-03-20,Census
+Total Population,LK,9,Western,Kalutara,Horana,112441,2012-03-20,Census
+Total Population,LK,10,Western,Kalutara,Ingiriya,53645,2012-03-20,Census
+Total Population,LK,21,Western,Kalutara,Kalutara,159225,2012-03-20,Census
+Total Population,LK,15,Western,Kalutara,Madurawala,34245,2012-03-20,Census
+Total Population,LK,30,Western,Kalutara,Mathugama,81064,2012-03-20,Census
+Total Population,LK,18,Western,Kalutara,Millaniya,52078,2012-03-20,Census
+Total Population,LK,36,Western,Kalutara,Palindanuwara (Baduraliya),50382,2012-03-20,Census
+Total Population,LK,3,Western,Kalutara,Panadura,181724,2012-03-20,Census
+Total Population,LK,39,Western,Kalutara,Walallavita,54264,2012-03-20,Census
+Total Population,LK,2,Central,,,2558716,2012-03-20,Census
+Total Population,LK,21,Central,Kandy,,1369899,2012-03-20,Census
+Total Population,LK,9,Central,Kandy,Akurana,63195,2012-03-20,Census
+Total Population,LK,48,Central,Kandy,Delthota,30169,2012-03-20,Census
+Total Population,LK,42,Central,Kandy,Doluwa,49480,2012-03-20,Census
+Total Population,LK,54,Central,Kandy,Ganga Ihala Korale,54674,2012-03-20,Census
+Total Population,LK,33,Central,Kandy,Harispattuwa,88002,2012-03-20,Census
+Total Population,LK,34,Central,Kandy,Hatharaliyadda,29866,2012-03-20,Census
+Total Population,LK,30,Central,Kandy,Gangawata Korale,157330,2012-03-20,Census
+Total Population,LK,27,Central,Kandy,Kundasale,127278,2012-03-20,Census
+Total Population,LK,24,Central,Kandy,Medadumbara,60783,2012-03-20,Census
+Total Population,LK,21,Central,Kandy,Minipe,51577,2012-03-20,Census
+Total Population,LK,15,Central,Kandy,Panwila,26186,2012-03-20,Census
+Total Population,LK,57,Central,Kandy,Pasbage Korale,59662,2012-03-20,Census
+Total Population,LK,12,Central,Kandy,Pathadumbara,88599,2012-03-20,Census
+Total Population,LK,45,Central,Kandy,Pathahewaheta,58031,2012-03-20,Census
+Total Population,LK,6,Central,Kandy,Poojapitiya,57879,2012-03-20,Census
+Total Population,LK,3,Central,Kandy,Thumpane,37356,2012-03-20,Census
+Total Population,LK,18,Central,Kandy,Udadumbara,22408,2012-03-20,Census
+Total Population,LK,51,Central,Kandy,Udapalatha,91230,2012-03-20,Census
+Total Population,LK,39,Central,Kandy,Udunuwara,110232,2012-03-20,Census
+Total Population,LK,36,Central,Kandy,Yatinuwara,105962,2012-03-20,Census
+Total Population,LK,22,Central,Matale,,482229,2012-03-20,Census
+Total Population,LK,21,Central,Matale,Ambaganga Koralaya,15567,2012-03-20,Census
+Total Population,LK,6,Central,Matale,Dambulla,72082,2012-03-20,Census
+Total Population,LK,3,Central,Matale,Galewela,69715,2012-03-20,Census
+Total Population,LK,24,Central,Matale,Laggala-Pallegama,12087,2012-03-20,Census
+Total Population,LK,18,Central,Matale,Matale,74529,2012-03-20,Census
+Total Population,LK,9,Central,Matale,Naula,30652,2012-03-20,Census
+Total Population,LK,12,Central,Matale,Pallepola,29488,2012-03-20,Census
+Total Population,LK,30,Central,Matale,Rattota,51156,2012-03-20,Census
+Total Population,LK,33,Central,Matale,Ukuwela,67542,2012-03-20,Census
+Total Population,LK,27,Central,Matale,Wilgamuwa,29298,2012-03-20,Census
+Total Population,LK,15,Central,Matale,Yatawatta,30113,2012-03-20,Census
+Total Population,LK,23,Central,Nuwara Eliya,,706588,2012-03-20,Census
+Total Population,LK,15,Central,Nuwara Eliya,Ambagamuwa,203976,2012-03-20,Census
+Total Population,LK,6,Central,Nuwara Eliya,Hanguranketha,88055,2012-03-20,Census
+Total Population,LK,3,Central,Nuwara Eliya,Kotmale,100437,2012-03-20,Census
+Total Population,LK,12,Central,Nuwara Eliya,Nuwara Eliya,210968,2012-03-20,Census
+Total Population,LK,9,Central,Nuwara Eliya,Walapane,103152,2012-03-20,Census
+Total Population,LK,3,Southern,,,2464732,2012-03-20,Census
+Total Population,LK,31,Southern,Galle,,1058771,2012-03-20,Census
+Total Population,LK,45,Southern,Galle,Akmeemana,78051,2012-03-20,Census
+Total Population,LK,33,Southern,Galle,Ambalangoda,56783,2012-03-20,Census
+Total Population,LK,27,Southern,Galle,Baddegama,74732,2012-03-20,Census
+Total Population,LK,6,Southern,Galle,Balapitiya,67207,2012-03-20,Census
+Total Population,LK,3,Southern,Galle,Bentota,49733,2012-03-20,Census
+Total Population,LK,42,Southern,Galle,Bope-Poddala,50050,2012-03-20,Census
+Total Population,LK,12,Southern,Galle,Elpitiya,64418,2012-03-20,Census
+Total Population,LK,39,Southern,Galle,Galle Four Gravets,101159,2012-03-20,Census
+Total Population,LK,,Southern,Galle,Gonapinuwala,21686,2012-03-20,Census
+Total Population,LK,54,Southern,Galle,Habaraduwa,62095,2012-03-20,Census
+Total Population,LK,36,Southern,Galle,Hikkaduwa,101382,2012-03-20,Census
+Total Population,LK,51,Southern,Galle,Imaduwa,44703,2012-03-20,Census
+Total Population,LK,9,Southern,Galle,Karandeniya,62278,2012-03-20,Census
+Total Population,LK,24,Southern,Galle,Nagoda,53467,2012-03-20,Census
+Total Population,LK,21,Southern,Galle,Neluwa,28541,2012-03-20,Census
+Total Population,LK,15,Southern,Galle,Niyagama,35238,2012-03-20,Census
+Total Population,LK,18,Southern,Galle,Thawalama,32442,2012-03-20,Census
+Total Population,LK,30,Southern,Galle,Welivitiya-Divithura,29123,2012-03-20,Census
+Total Population,LK,48,Southern,Galle,Yakkalamulla,45683,2012-03-20,Census
+Total Population,LK,32,Southern,Matara,,809344,2012-03-20,Census
+Total Population,LK,18,Southern,Matara,Akuressa,52676,2012-03-20,Census
+Total Population,LK,15,Southern,Matara,Athuraliya,32173,2012-03-20,Census
+Total Population,LK,45,Southern,Matara,Devinuwara,47979,2012-03-20,Census
+Total Population,LK,48,Southern,Matara,Dickwella,54370,2012-03-20,Census
+Total Population,LK,30,Southern,Matara,Hakmana,31464,2012-03-20,Census
+Total Population,LK,27,Southern,Matara,Kamburupitiya,40803,2012-03-20,Census
+Total Population,LK,33,Southern,Matara,Kirinda-Puhulwella,20135,2012-03-20,Census
+Total Population,LK,6,Southern,Matara,Kotapola,63072,2012-03-20,Census
+Total Population,LK,32,Southern,Matara,Malimbada,34735,2012-03-20,Census
+Total Population,LK,42,Southern,Matara,Matara Four Gravets,114970,2012-03-20,Census
+Total Population,LK,12,Southern,Matara,Mulatiyana,49943,2012-03-20,Census
+Total Population,LK,9,Southern,Matara,Pasgoda,58869,2012-03-20,Census
+Total Population,LK,3,Southern,Matara,Pitabeddara,50827,2012-03-20,Census
+Total Population,LK,36,Southern,Matara,Thihagoda,33202,2012-03-20,Census
+Total Population,LK,39,Southern,Matara,Weligama,72511,2012-03-20,Census
+Total Population,LK,21,Southern,Matara,Welipitiya,51615,2012-03-20,Census
+Total Population,LK,33,Southern,Hambantota,,596617,2012-03-20,Census
+Total Population,LK,15,Southern,Hambantota,Ambalanthota,72664,2012-03-20,Census
+Total Population,LK,18,Southern,Hambantota,Angunakolapelessa,48010,2012-03-20,Census
+Total Population,LK,30,Southern,Hambantota,Beliatta,55743,2012-03-20,Census
+Total Population,LK,12,Southern,Hambantota,Hambantota,57053,2012-03-20,Census
+Total Population,LK,24,Southern,Hambantota,Katuwana,46548,2012-03-20,Census
+Total Population,LK,6,Southern,Hambantota,Lunugamvehera,31424,2012-03-20,Census
+Total Population,LK,27,Southern,Hambantota,Okewela,18919,2012-03-20,Census
+Total Population,LK,3,Southern,Hambantota,Sooriyawewa,43002,2012-03-20,Census
+Total Population,LK,33,Southern,Hambantota,Tangalle,71920,2012-03-20,Census
+Total Population,LK,9,Southern,Hambantota,Thissamaharama,67805,2012-03-20,Census
+Total Population,LK,,Southern,Hambantota,Walasmulla,42099,2012-03-20,Census
+Total Population,LK,21,Southern,Hambantota,Weeraketiya,41430,2012-03-20,Census
+Total Population,LK,4,Northern,,,1058762,2012-03-20,Census
+Total Population,LK,41,Northern,Jaffna,,583378,2012-03-20,Census
+Total Population,LK,42,Northern,Jaffna,Delft,3819,2012-03-20,Census
+Total Population,LK,3,Northern,Jaffna,Islands North (Kayts),9997,2012-03-20,Census
+Total Population,LK,39,Northern,Jaffna,Islands South (Velanai),16525,2012-03-20,Census
+Total Population,LK,36,Northern,Jaffna,Jaffna,50759,2012-03-20,Census
+Total Population,LK,4,Northern,Jaffna,Karainagar,9544,2012-03-20,Census
+Total Population,LK,33,Northern,Jaffna,Nallur,68048,2012-03-20,Census
+Total Population,LK,30,Northern,Jaffna,Thenmaradchi (Chavakachcheri),64685,2012-03-20,Census
+Total Population,LK,24,Northern,Jaffna,Vadamaradchi East (Muruthankerni),12738,2012-03-20,Census
+Total Population,LK,27,Northern,Jaffna,Vadamaradchi North (Point Pedro),47389,2012-03-20,Census
+Total Population,LK,21,Northern,Jaffna,Vadamaradchi South-West (Karaveddy),45628,2012-03-20,Census
+Total Population,LK,18,Northern,Jaffna,Valikamam East (Kopay),73298,2012-03-20,Census
+Total Population,LK,12,Northern,Jaffna,Valikamam North (Tellippalai),29546,2012-03-20,Census
+Total Population,LK,15,Northern,Jaffna,Valikamam South (Uduvil),52833,2012-03-20,Census
+Total Population,LK,9,Northern,Jaffna,Valikamam South-West (Sandilippai),52226,2012-03-20,Census
+Total Population,LK,6,Northern,Jaffna,Valikamam West (Chankanai),46343,2012-03-20,Census
+Total Population,LK,42,Northern,Mannar,,99051,2012-03-20,Census
+Total Population,LK,9,Northern,Mannar,Madhu,7631,2012-03-20,Census
+Total Population,LK,3,Northern,Mannar,Mannar Town,50937,2012-03-20,Census
+Total Population,LK,6,Northern,Mannar,Manthai West,14630,2012-03-20,Census
+Total Population,LK,15,Northern,Mannar,Musalai,8009,2012-03-20,Census
+Total Population,LK,12,Northern,Mannar,Nanaddan,17844,2012-03-20,Census
+Total Population,LK,43,Northern,Vavuniya,,171511,2012-03-20,Census
+Total Population,LK,9,Northern,Vavuniya,Vavuniya,117153,2012-03-20,Census
+Total Population,LK,3,Northern,Vavuniya,Vavuniya North,11518,2012-03-20,Census
+Total Population,LK,6,Northern,Vavuniya,Vavuniya South,13070,2012-03-20,Census
+Total Population,LK,12,Northern,Vavuniya,Vengalacheddiculam,29770,2012-03-20,Census
+Total Population,LK,44,Northern,Mullaitivu,,91947,2012-03-20,Census
+Total Population,LK,6,Northern,Mullaitivu,Mantai East,6929,2012-03-20,Census
+Total Population,LK,15,Northern,Mullaitivu,Maritimepattu,28909,2012-03-20,Census
+Total Population,LK,12,Northern,Mullaitivu,Oddusuddan,15658,2012-03-20,Census
+Total Population,LK,9,Northern,Mullaitivu,Puthukudiyiruppu,23770,2012-03-20,Census
+Total Population,LK,3,Northern,Mullaitivu,Thunukkai,9732,2012-03-20,Census
+Total Population,LK,,Northern,Mullaitivu,Welioya,6949,2012-03-20,Census
+Total Population,LK,45,Northern,Kilinochchi,,112875,2012-03-20,Census
+Total Population,LK,6,Northern,Kilinochchi,Kandavalai,23003,2012-03-20,Census
+Total Population,LK,9,Northern,Kilinochchi,Karachchi,61137,2012-03-20,Census
+Total Population,LK,3,Northern,Kilinochchi,Pachchilaipalli,8510,2012-03-20,Census
+Total Population,LK,12,Northern,Kilinochchi,Poonakary,20225,2012-03-20,Census
+Total Population,LK,5,Eastern,,,1551381,2012-03-20,Census
+Total Population,LK,51,Eastern,Batticaloa,,525142,2012-03-20,Census
+Total Population,LK,12,Eastern,Batticaloa,Eravur Pattu,75136,2012-03-20,Census
+Total Population,LK,15,Eastern,Batticaloa,Eravur Town,24632,2012-03-20,Census
+Total Population,LK,24,Eastern,Batticaloa,Kattankudy,40237,2012-03-20,Census
+Total Population,LK,9,Eastern,Batticaloa,Koralai Pattu,23317,2012-03-20,Census
+Total Population,LK,4,Eastern,Batticaloa,Koralai Pattu Central,25643,2012-03-20,Census
+Total Population,LK,3,Eastern,Batticaloa,Koralai Pattu North,21512,2012-03-20,Census
+Total Population,LK,10,Eastern,Batticaloa,Koralai Pattu South,26061,2012-03-20,Census
+Total Population,LK,6,Eastern,Batticaloa,Koralai Pattu West,22144,2012-03-20,Census
+Total Population,LK,18,Eastern,Batticaloa,Manmunai North,86028,2012-03-20,Census
+Total Population,LK,27,Eastern,Batticaloa,Manmunai Pattu,30583,2012-03-20,Census
+Total Population,LK,36,Eastern,Batticaloa,Manmunai South & Eruvil Pattu,60694,2012-03-20,Census
+Total Population,LK,30,Eastern,Batticaloa,Manmunai South West,24673,2012-03-20,Census
+Total Population,LK,21,Eastern,Batticaloa,Manmunai West,28392,2012-03-20,Census
+Total Population,LK,33,Eastern,Batticaloa,Porativu Pattu,36090,2012-03-20,Census
+Total Population,LK,52,Eastern,Ampara,,648057,2012-03-20,Census
+Total Population,LK,33,Eastern,Ampara,Addalachchenai,42165,2012-03-20,Census
+Total Population,LK,36,Eastern,Ampara,Akkaraipattu,39223,2012-03-20,Census
+Total Population,LK,39,Eastern,Ampara,Alayadiwembu,22411,2012-03-20,Census
+Total Population,LK,15,Eastern,Ampara,Ampara,43720,2012-03-20,Census
+Total Population,LK,42,Eastern,Ampara,Damana,38489,2012-03-20,Census
+Total Population,LK,3,Eastern,Ampara,Dehiattakandiya,59628,2012-03-20,Census
+Total Population,LK,34,Eastern,Ampara,Eragama,14373,2012-03-20,Census
+Total Population,LK,24,Eastern,Ampara,Kalmunai,44509,2012-03-20,Census
+Total Population,LK,23,Eastern,Ampara,Kalmunai Tamil Division,29713,2012-03-20,Census
+Total Population,LK,27,Eastern,Ampara,Karativu,16781,2012-03-20,Census
+Total Population,LK,51,Eastern,Ampara,Lahugala,8900,2012-03-20,Census
+Total Population,LK,9,Eastern,Ampara,Mahaoya,20715,2012-03-20,Census
+Total Population,LK,16,Eastern,Ampara,Navithanveli,18672,2012-03-20,Census
+Total Population,LK,30,Eastern,Ampara,Ninthavur,26329,2012-03-20,Census
+Total Population,LK,6,Eastern,Ampara,Padiyathalawa,18209,2012-03-20,Census
+Total Population,LK,48,Eastern,Ampara,Pothuvil,34749,2012-03-20,Census
+Total Population,LK,25,Eastern,Ampara,Sainthamarathu,25412,2012-03-20,Census
+Total Population,LK,18,Eastern,Ampara,Samanthurai,60596,2012-03-20,Census
+Total Population,LK,45,Eastern,Ampara,Thirukkovil,25187,2012-03-20,Census
+Total Population,LK,12,Eastern,Ampara,Uhana,58276,2012-03-20,Census
+Total Population,LK,53,Eastern,Trincomalee,,378182,2012-03-20,Census
+Total Population,LK,9,Eastern,Trincomalee,Gomarankadawela,7339,2012-03-20,Census
+Total Population,LK,21,Eastern,Trincomalee,Kantalai,46641,2012-03-20,Census
+Total Population,LK,24,Eastern,Trincomalee,Kinniya,64451,2012-03-20,Census
+Total Population,LK,6,Eastern,Trincomalee,Kuchaveli,33100,2012-03-20,Census
+Total Population,LK,12,Eastern,Trincomalee,Morawewa,7946,2012-03-20,Census
+Total Population,LK,27,Eastern,Trincomalee,Muttur,56379,2012-03-20,Census
+Total Population,LK,3,Eastern,Trincomalee,Padavi Sri Pura,11858,2012-03-20,Census
+Total Population,LK,30,Eastern,Trincomalee,Seruvila,13546,2012-03-20,Census
+Total Population,LK,18,Eastern,Trincomalee,Thampalakamam,28356,2012-03-20,Census
+Total Population,LK,15,Eastern,Trincomalee,Trincomalee Town & Gravets,97234,2012-03-20,Census
+Total Population,LK,33,Eastern,Trincomalee,Eachchilampattai,11332,2012-03-20,Census
+Total Population,LK,6,North Western,,,2370075,2012-03-20,Census
+Total Population,LK,61,North Western,Kurunegala,,1610299,2012-03-20,Census
+Total Population,LK,84,North Western,Kurunegala,Alawwa,63381,2012-03-20,Census
+Total Population,LK,12,North Western,Kurunegala,Ambanpola,22833,2012-03-20,Census
+Total Population,LK,49,North Western,Kurunegala,Bamunakotuwa,36023,2012-03-20,Census
+Total Population,LK,42,North Western,Kurunegala,Bingiriya,61976,2012-03-20,Census
+Total Population,LK,9,North Western,Kurunegala,Ehetuwewa,25695,2012-03-20,Census
+Total Population,LK,6,North Western,Kurunegala,Galgamuwa,54910,2012-03-20,Census
+Total Population,LK,33,North Western,Kurunegala,Ganewatta,39909,2012-03-20,Census
+Total Population,LK,3,North Western,Kurunegala,Giribawa,31320,2012-03-20,Census
+Total Population,LK,30,North Western,Kurunegala,Ibbagamuwa,84083,2012-03-20,Census
+Total Population,LK,39,North Western,Kurunegala,Kobeigane,35797,2012-03-20,Census
+Total Population,LK,15,North Western,Kurunegala,Kotawehera,21171,2012-03-20,Census
+Total Population,LK,69,North Western,Kurunegala,Kuliyapitiya East,53827,2012-03-20,Census
+Total Population,LK,72,North Western,Kurunegala,Kuliyapitiya West,77222,2012-03-20,Census
+Total Population,LK,54,North Western,Kurunegala,Kurunegala,80395,2012-03-20,Census
+Total Population,LK,24,North Western,Kurunegala,Mahawa,56985,2012-03-20,Census
+Total Population,LK,57,North Western,Kurunegala,Mallawapitiya,52398,2012-03-20,Census
+Total Population,LK,51,North Western,Kurunegala,Maspotha,34116,2012-03-20,Census
+Total Population,LK,60,North Western,Kurunegala,Mawathagama,65555,2012-03-20,Census
+Total Population,LK,81,North Western,Kurunegala,Narammala,55931,2012-03-20,Census
+Total Population,LK,21,North Western,Kurunegala,Nikaweratiya,40203,2012-03-20,Census
+Total Population,LK,45,North Western,Kurunegala,Panduwasnuwara,63492,2012-03-20,Census
+Total Population,LK,48,North Western,Kurunegala,Katupotha,32291,2012-03-20,Census
+Total Population,LK,78,North Western,Kurunegala,Pannala,123551,2012-03-20,Census
+Total Population,LK,87,North Western,Kurunegala,Polgahawela,64917,2012-03-20,Census
+Total Population,LK,27,North Western,Kurunegala,Polpithigama,75119,2012-03-20,Census
+Total Population,LK,18,North Western,Kurunegala,Rasnayakapura,21838,2012-03-20,Census
+Total Population,LK,63,North Western,Kurunegala,Rideegama,88076,2012-03-20,Census
+Total Population,LK,75,North Western,Kurunegala,Udubaddawa,51972,2012-03-20,Census
+Total Population,LK,36,North Western,Kurunegala,Wariyapola,61141,2012-03-20,Census
+Total Population,LK,66,North Western,Kurunegala,Weerambugedara,34172,2012-03-20,Census
+Total Population,LK,62,North Western,Puttalam,,759776,2012-03-20,Census
+Total Population,LK,24,North Western,Puttalam,Anamaduwa,38171,2012-03-20,Census
+Total Population,LK,30,North Western,Puttalam,Arachchikattuwa,40737,2012-03-20,Census
+Total Population,LK,33,North Western,Puttalam,Chilaw,62475,2012-03-20,Census
+Total Population,LK,48,North Western,Puttalam,Dankotuwa,62196,2012-03-20,Census
+Total Population,LK,3,North Western,Puttalam,Kalpitiya,86019,2012-03-20,Census
+Total Population,LK,9,North Western,Puttalam,Karuwalagaswewa,23376,2012-03-20,Census
+Total Population,LK,36,North Western,Puttalam,Madampe,47832,2012-03-20,Census
+Total Population,LK,21,North Western,Puttalam,Mahakumbukkadawala,18576,2012-03-20,Census
+Total Population,LK,39,North Western,Puttalam,Mahawewa,50628,2012-03-20,Census
+Total Population,LK,18,North Western,Puttalam,Mundalama,61374,2012-03-20,Census
+Total Population,LK,42,North Western,Puttalam,Nattandiya,62106,2012-03-20,Census
+Total Population,LK,12,North Western,Puttalam,Nawagattegama,14412,2012-03-20,Census
+Total Population,LK,27,North Western,Puttalam,Pallama,24379,2012-03-20,Census
+Total Population,LK,15,North Western,Puttalam,Puttalam,82041,2012-03-20,Census
+Total Population,LK,6,North Western,Puttalam,Vanathavilluwa,17399,2012-03-20,Census
+Total Population,LK,45,North Western,Puttalam,Wennappuwa,68055,2012-03-20,Census
+Total Population,LK,7,North Central,,,1259567,2012-03-20,Census
+Total Population,LK,71,North Central,Anuradhapura,,856232,2012-03-20,Census
+Total Population,LK,27,North Central,Anuradhapura,Galenbidunuwawe,46527,2012-03-20,Census
+Total Population,LK,63,North Central,Anuradhapura,Galnewa,34718,2012-03-20,Census
+Total Population,LK,24,North Central,Anuradhapura,Horowpothana,36714,2012-03-20,Census
+Total Population,LK,60,North Central,Anuradhapura,Ipalogama,38688,2012-03-20,Census
+Total Population,LK,21,North Central,Anuradhapura,Kahatagasdigiliya,40137,2012-03-20,Census
+Total Population,LK,6,North Central,Anuradhapura,Kebithigollewa,22227,2012-03-20,Census
+Total Population,LK,54,North Central,Anuradhapura,Kekirawa,58879,2012-03-20,Census
+Total Population,LK,12,North Central,Anuradhapura,Maha Vilachchiya,22183,2012-03-20,Census
+Total Population,LK,9,North Central,Anuradhapura,Medawachchiya,46743,2012-03-20,Census
+Total Population,LK,30,North Central,Anuradhapura,Mihintale,35160,2012-03-20,Census
+Total Population,LK,36,North Central,Anuradhapura,Nachchadoowa,25259,2012-03-20,Census
+Total Population,LK,39,North Central,Anuradhapura,Nochchiyagama,49730,2012-03-20,Census
+Total Population,LK,15,North Central,Anuradhapura,Nuwaragam Palatha Central,60828,2012-03-20,Census
+Total Population,LK,33,North Central,Anuradhapura,Nuwaragam Palatha East,69590,2012-03-20,Census
+Total Population,LK,3,North Central,Anuradhapura,Padaviya,22924,2012-03-20,Census
+Total Population,LK,66,North Central,Anuradhapura,Palagala,33740,2012-03-20,Census
+Total Population,LK,57,North Central,Anuradhapura,Palugaswewa,15557,2012-03-20,Census
+Total Population,LK,42,North Central,Anuradhapura,Rajanganaya,33434,2012-03-20,Census
+Total Population,LK,18,North Central,Anuradhapura,Rambewa,36426,2012-03-20,Census
+Total Population,LK,48,North Central,Anuradhapura,Thalawa,57663,2012-03-20,Census
+Total Population,LK,45,North Central,Anuradhapura,Thambuttegama,42143,2012-03-20,Census
+Total Population,LK,51,North Central,Anuradhapura,Thirappane,26962,2012-03-20,Census
+Total Population,LK,72,North Central,Polonnaruwa,,403335,2012-03-20,Census
+Total Population,LK,12,North Central,Polonnaruwa,Dimbulagala,79234,2012-03-20,Census
+Total Population,LK,18,North Central,Polonnaruwa,Elahera,43499,2012-03-20,Census
+Total Population,LK,3,North Central,Polonnaruwa,Hingurakgoda,63720,2012-03-20,Census
+Total Population,LK,9,North Central,Polonnaruwa,Lankapura,36424,2012-03-20,Census
+Total Population,LK,6,North Central,Polonnaruwa,Medirigiriya,64926,2012-03-20,Census
+Total Population,LK,15,North Central,Polonnaruwa,Thamankaduwa,82138,2012-03-20,Census
+Total Population,LK,10,North Central,Polonnaruwa,Welikanda,33394,2012-03-20,Census
+Total Population,LK,8,Uva,,,1259900,2012-03-20,Census
+Total Population,LK,81,Uva,Badulla,,811758,2012-03-20,Census
+Total Population,LK,21,Uva,Badulla,Badulla,74751,2012-03-20,Census
+Total Population,LK,33,Uva,Badulla,Bandarawela,65111,2012-03-20,Census
+Total Population,LK,36,Uva,Badulla,Ella,44763,2012-03-20,Census
+Total Population,LK,42,Uva,Badulla,Haldummulla,37482,2012-03-20,Census
+Total Population,LK,24,Uva,Badulla,Hali Ela,90179,2012-03-20,Census
+Total Population,LK,39,Uva,Badulla,Haputhale,48485,2012-03-20,Census
+Total Population,LK,12,Uva,Badulla,Kandaketiya,23189,2012-03-20,Census
+Total Population,LK,19,Uva,Badulla,Lunugala,31092,2012-03-20,Census
+Total Population,LK,3,Uva,Badulla,Mahiyanganaya,75327,2012-03-20,Census
+Total Population,LK,9,Uva,Badulla,Meegahakivula,19540,2012-03-20,Census
+Total Population,LK,18,Uva,Badulla,Passara,48576,2012-03-20,Census
+Total Population,LK,6,Uva,Badulla,Rideemaliyadda,51435,2012-03-20,Census
+Total Population,LK,15,Uva,Badulla,Soranathota,22495,2012-03-20,Census
+Total Population,LK,27,Uva,Badulla,Uva Paranagama,78899,2012-03-20,Census
+Total Population,LK,30,Uva,Badulla,Welimada,100434,2012-03-20,Census
+Total Population,LK,82,Uva,Moneragala,,448142,2012-03-20,Census
+Total Population,LK,18,Uva,Moneragala,Badalkumbura,39880,2012-03-20,Census
+Total Population,LK,3,Uva,Moneragala,Bibila,40132,2012-03-20,Census
+Total Population,LK,24,Uva,Moneragala,Buttala,52476,2012-03-20,Census
+Total Population,LK,27,Uva,Moneragala,Katharagama,18148,2012-03-20,Census
+Total Population,LK,6,Uva,Moneragala,Madulla,31188,2012-03-20,Census
+Total Population,LK,9,Uva,Moneragala,Medagama,35611,2012-03-20,Census
+Total Population,LK,15,Uva,Moneragala,Moneragala,49631,2012-03-20,Census
+Total Population,LK,33,Uva,Moneragala,Sewanagala,41639,2012-03-20,Census
+Total Population,LK,12,Uva,Moneragala,Siyambalanduwa,53059,2012-03-20,Census
+Total Population,LK,30,Uva,Moneragala,Thanamalwila,26608,2012-03-20,Census
+Total Population,LK,21,Uva,Moneragala,Wellawaya,59770,2012-03-20,Census
+Total Population,LK,9,Sabaragamuwa,,,1918880,2012-03-20,Census
+Total Population,LK,91,Sabaragamuwa,Ratnapura,,1082277,2012-03-20,Census
+Total Population,LK,30,Sabaragamuwa,Ratnapura,Ayagama,30584,2012-03-20,Census
+Total Population,LK,18,Sabaragamuwa,Ratnapura,Balangoda,81105,2012-03-20,Census
+Total Population,LK,3,Sabaragamuwa,Ratnapura,Eheliyagoda,70713,2012-03-20,Census
+Total Population,LK,27,Sabaragamuwa,Ratnapura,Elapatha,37606,2012-03-20,Census
+Total Population,LK,48,Sabaragamuwa,Ratnapura,Embilipitiya,133600,2012-03-20,Census
+Total Population,LK,42,Sabaragamuwa,Ratnapura,Godakawela,75885,2012-03-20,Census
+Total Population,LK,15,Sabaragamuwa,Ratnapura,Imbulpe,59283,2012-03-20,Census
+Total Population,LK,39,Sabaragamuwa,Ratnapura,Kahawaththa,43026,2012-03-20,Census
+Total Population,LK,33,Sabaragamuwa,Ratnapura,Kalawana,50968,2012-03-20,Census
+Total Population,LK,9,Sabaragamuwa,Ratnapura,Kiriella,32457,2012-03-20,Census
+Total Population,LK,51,Sabaragamuwa,Ratnapura,Kolonna,45709,2012-03-20,Census
+Total Population,LK,6,Sabaragamuwa,Ratnapura,Kuruwita,95280,2012-03-20,Census
+Total Population,LK,36,Sabaragamuwa,Ratnapura,Nivithigala,59973,2012-03-20,Census
+Total Population,LK,21,Sabaragamuwa,Ratnapura,Opanayaka,26531,2012-03-20,Census
+Total Population,LK,24,Sabaragamuwa,Ratnapura,Pelmadulla,89411,2012-03-20,Census
+Total Population,LK,12,Sabaragamuwa,Ratnapura,Ratnapura,119368,2012-03-20,Census
+Total Population,LK,45,Sabaragamuwa,Ratnapura,Weligepola,30778,2012-03-20,Census
+Total Population,LK,92,Sabaragamuwa,Kegalle,,836603,2012-03-20,Census
+Total Population,LK,9,Sabaragamuwa,Kegalle,Aranayaka,68147,2012-03-20,Census
+Total Population,LK,24,Sabaragamuwa,Kegalle,Bulathkohupitiya,46813,2012-03-20,Census
+Total Population,LK,30,Sabaragamuwa,Kegalle,Dehiovita,81441,2012-03-20,Census
+Total Population,LK,33,Sabaragamuwa,Kegalle,Deraniyagala,45479,2012-03-20,Census
+Total Population,LK,15,Sabaragamuwa,Kegalle,Galigamuwa,73942,2012-03-20,Census
+Total Population,LK,12,Sabaragamuwa,Kegalle,Kegalle,90494,2012-03-20,Census
+Total Population,LK,6,Sabaragamuwa,Kegalle,Mawanella,111307,2012-03-20,Census
+Total Population,LK,3,Sabaragamuwa,Kegalle,Rambukkana,82373,2012-03-20,Census
+Total Population,LK,21,Sabaragamuwa,Kegalle,Ruwanwella,63313,2012-03-20,Census
+Total Population,LK,18,Sabaragamuwa,Kegalle,Warakapola,112583,2012-03-20,Census
+Total Population,LK,27,Sabaragamuwa,Kegalle,Yatiyanthota,60711,2012-03-20,Census
