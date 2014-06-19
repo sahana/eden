@@ -553,6 +553,9 @@ class S3OptionsMenu(object):
                     M("Templates", f="template")(
                         M("Create", m="create"),
                     ),
+                    M("RSS Channels", c="msg", f="rss_channel")(
+                        M("Create", m="create"),
+                    ),
                     #M("CAP Profile", f="profile")(
                     #    M("Edit profile", f="profile")
                     #)
