@@ -25,6 +25,8 @@ settings = current.deployment_settings
 
 """
     Template settings for Sri Lanka SahanaCamp
+    - based on DRMP with stats_demographic_data added
+    - Auth settings are for Camp not Prod
 """
 
 datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -87,6 +89,19 @@ def drmp_realm_entity(table, row):
                     (otable.id == utable.organisation_id)
         org = db(query).select(otable.pe_id,
                                limitby=(0, 1)).first()
+        if org:
+            return org.pe_id
+
+    elif tablename == "org_office":
+        # Give the Office the Realm of the Organisation
+        otable = current.s3db.org_organisation
+        if "organisation_id" in row:
+            query = (otable.id == row.organisation_id)
+        else:
+            query = (table.id == row.id) & \
+                    (otable.id == table.organisation_id)
+        org = current.db(query).select(otable.pe_id,
+                                       limitby=(0, 1)).first()
         if org:
             return org.pe_id
 

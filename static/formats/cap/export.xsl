@@ -31,6 +31,8 @@
     *********************************************************************** -->
     <xsl:output method="xml" indent="yes"/>
 
+    <xsl:include href="../xml/commons.xsl"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <xsl:apply-templates select="s3xml"/>
@@ -41,10 +43,7 @@
         <xsl:apply-templates select="./resource[@name='cap_alert']"/>
     </xsl:template>
 
-    <!-- util -->
-    <xsl:include href="../xml/commons.xsl"/>
-
-    <!-- Utility template used by comma-seperated string templates below -->
+    <!-- Utility template used by comma-separated string templates below -->
     <xsl:template name="resource" match="//*" xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
