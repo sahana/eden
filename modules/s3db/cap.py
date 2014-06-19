@@ -635,6 +635,7 @@ class S3CAPModel(S3Model):
                      alert_id(writable = False,
                               ),
                      info_id(),
+                     self.super_link("doc_id", "doc_entity"),
                      Field("resource_desc",
                            requires = IS_NOT_EMPTY(),
                            ),
@@ -648,7 +649,7 @@ class S3CAPModel(S3Model):
                            # needs a special validation
                            writable = False,
                            ),
-                     Field("file", "upload"),
+                     #Field("file", "upload"),
                      Field("deref_uri", "text",
                            readable = False,
                            writable = False,
@@ -672,7 +673,24 @@ class S3CAPModel(S3Model):
                     msg_record_deleted = T("Resource deleted"),
                     msg_list_empty = T("No resources currently defined for this alert"))
 
+        # @todo: complete custom form
+        crud_form = S3SQLCustomForm(#"name",
+                                    "info_id",
+                                    "resource_desc",
+                                    S3SQLInlineComponent("image",
+                                                         label=T("Image"),
+                                                         fields=["file",
+                                                                 ],
+                                                         ),
+                                    S3SQLInlineComponent("document",
+                                                         label=T("Document"),
+                                                         fields=["file",
+                                                                 ],
+                                                         ),
+                                    )
         configure(tablename,
+                  super_entity = "doc_entity",
+                  crud_form = crud_form,
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
                   create_onaccept = update_alert_id(tablename),
                   )
