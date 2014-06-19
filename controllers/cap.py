@@ -128,9 +128,13 @@ def alert():
                                                                   ))
                 
 
-        elif r.representation == "cap" and r.method in ["create", "import"]:
+        elif r.representation == "cap":
+            # This is either importing from or exporting to cap format. Set both
+            # postprocessing hooks so we don't have to enumerate methods.
             s3db.configure("gis_location",
-                           xml_post_parse = s3db.cap_gis_location_xml_post_parse)
+                           xml_post_parse = s3db.cap_gis_location_xml_post_parse,
+                           xml_post_render = s3db.cap_gis_location_xml_post_render,
+                          )
 
         post_vars = request.post_vars
         if post_vars.get("edit_info", False):

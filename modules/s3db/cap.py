@@ -32,6 +32,7 @@ __all__ = ["S3CAPModel",
            "cap_alert_is_template",
            "cap_rheader",
            "cap_gis_location_xml_post_parse",
+           "cap_gis_location_xml_post_render",
            ]
 
 import datetime
@@ -1310,7 +1311,9 @@ def cap_gis_location_xml_post_parse(element, record):
         coordinate pairs where the first and last are the same.
             lat1,lon1 lat2,lon2 lat3,lon3 ... lat1,lon1
     """
-    # ToDo: Ought we set anything for the name of these locations?
+
+    # @ToDo: Extract altitude and ceiling from the enclosing <area>, and
+    # compute an elevation value to apply to all enclosed gis_locations.
 
     cap_polygons = element.xpath("cap_polygon")
     if cap_polygons:
@@ -1330,31 +1333,238 @@ def cap_gis_location_xml_post_parse(element, record):
         record.wkt = wkt_polygon_text
         return
 
-    #cap_tags = element.xpath("resource[@name='gis_location_tag']")
-    #cap_circle_tags = element.xpath("resource[@name='gis_location_tag']/data[@field='tag' and text()='cap_circle']")
     cap_circle_values = element.xpath("resource[@name='gis_location_tag']/data[@field='tag' and text()='cap_circle']/../data[@field='value']")
-    #if cap_tags:
-    #if cap_circle_tags:
     if cap_circle_values:
-        #cap_circle_tag = cap_tags[0].xpath("data[@field='tag']")
-        #cap_circle_tag = cap_circle.xpath("data[@field='tag' and text()='cap_circle']")
-        #if cap_circle_tag and cap_circle_tag.text == "cap_circle":
-        #if cap_circle_tag:
-            #cap_circle_values = cap_circle_tags[0].xpath("../data[@field='value']")
-            cap_circle_text = cap_circle_values[0].text
-            coords, radius = cap_circle_text.split()
-            lat, lon = coords.split(",")
-            try:
-                # If any of these fail to interpret as numbers, the circle was
-                # badly formatted. For now, we don't try to fail validation,
-                # but just don't set the lat, lon.
-                lat = float(lat)
-                lon = float(lon)
-            except ValueError:
-                return
-            record.lat = lat
-            record.lon = lon
+        cap_circle_text = cap_circle_values[0].text
+        coords, radius = cap_circle_text.split()
+        lat, lon = coords.split(",")
+        try:
+            # If any of these fail to interpret as numbers, the circle was
+            # badly formatted. For now, we don't try to fail validation,
+            # but just don't set the lat, lon.
+            lat = float(lat)
+            lon = float(lon)
+            radius = float(radius)
+        except ValueError:
+            return
+        record.lat = lat
+        record.lon = lon
+        # Add a bounding box for the given radius, if it is not zero.
+        if radius > 0.0:
+            bbox = current.gis.get_bounds_from_radius(lat, lon, radius)
+            record.lat_min = bbox["lat_min"]
+            record.lon_min = bbox["lon_min"]
+            record.lat_max = bbox["lat_max"]
+            record.lon_max = bbox["lon_max"]
 
+    return
+
+# =============================================================================
+def cap_gis_location_xml_post_render(element, record):
+    """
+        Convert Eden WKT polygon (and eventually circle) representation to
+        CAP format and provide them in the rendered s3xml.
+        
+        Not all internal formats have a parallel in CAP, but an effort is made
+        to provide a resonable substitute:
+        Polygons are supported.
+        Circles that were read in from CAP (and thus carry the original CAP
+            circle data) are supported.
+        Multipolygons are currently rendered as their bounding box.
+        Points are rendered as zero radius circles.
+
+        Latitude and longitude in CAP are expressed as signed decimal values in
+        coordinate pairs:
+            latitude,longitude
+        The circle text consists of:
+            latitude,longitude radius
+        where the radius is in km.
+        Polygon text consists of a space separated sequence of at least 4
+        coordinate pairs where the first and last are the same.
+            lat1,lon1 lat2,lon2 lat3,lon3 ... lat1,lon1
+    """
+
+    # @ToDo: Can we rely on gis_feature_type == 3 to tell if the location is a
+    # polygon, or is it better to look for POLYGON in the wkt? For now, check
+    # both.
+    # @ToDo: CAP does not support multipolygons.  Do we want to extract their
+    # outer polygon if passed MULTIPOLYGON wkt? For now, these are exported
+    # with their bounding box as the polygon.
+    # @ToDo: What if a point (gis_feature_type == 1) that is not a CAP circle
+    # has a non-point bounding box? Should it be rendered as a polygon for
+    # the bounding box?
+
+    try:
+        from lxml import etree
+    except:
+        # This won't fail, since we're in the middle of processing xml.
+        return
+
+    SubElement = etree.SubElement
+
+    s3xml = current.xml
+    TAG = s3xml.TAG
+    RESOURCE = TAG["resource"]
+    DATA = TAG["data"]
+    ATTRIBUTE = s3xml.ATTRIBUTE
+    NAME = ATTRIBUTE["name"]
+    FIELD = ATTRIBUTE["field"]
+    VALUE = ATTRIBUTE["value"]
+    
+    loc_tablename = "gis_location"
+    tag_tablename = "gis_location_tag"
+    tag_fieldname = "tag"
+    val_fieldname = "value"
+    polygon_tag = "cap_polygon"
+    circle_tag = "cap_circle"
+    fallback_polygon_tag = "cap_polygon_fallback"
+    fallback_circle_tag = "cap_circle_fallback"
+
+    def __cap_gis_location_add_polygon(element, cap_polygon_text, fallback=False):
+        """
+            Helper for cap_gis_location_xml_post_render that adds the CAP polygon
+            data to the current element in a gis_location_tag element.
+        """
+        # Make a gis_location_tag.
+        tag_resource = SubElement(element, RESOURCE)
+        tag_resource.set(NAME, tag_tablename)
+        tag_field = SubElement(tag_resource, DATA)
+        # Add tag and value children.
+        tag_field.set(FIELD, tag_fieldname)
+        if fallback:
+            tag_field.text = fallback_polygon_tag
+        else:
+            tag_field.text = polygon_tag
+        val_field = SubElement(tag_resource, DATA)
+        val_field.set(FIELD, val_fieldname)
+        val_field.text = cap_polygon_text
+
+    def __cap_gis_location_add_circle(element, lat, lon, radius, fallback=False):
+        """
+            Helper for cap_gis_location_xml_post_render that adds CAP circle
+            data to the current element in a gis_location_tag element.
+        """
+        # Make a gis_location_tag.
+        tag_resource = SubElement(element, RESOURCE)
+        tag_resource.set(NAME, tag_tablename)
+        tag_field = SubElement(tag_resource, DATA)
+        # Add tag and value children.
+        tag_field.set(FIELD, tag_fieldname)
+        if fallback:
+            tag_field.text = fallback_circle_tag
+        else:
+            tag_field.text = circle_tag
+        val_field = SubElement(tag_resource, DATA)
+        val_field.set(FIELD, val_fieldname)
+        # Construct a CAP circle string: latitude,longitude radius
+        cap_circle_text = "%s,%s %s" % (lat, lon, radius)
+        val_field.text = cap_circle_text
+
+    # Sort out the geometry case by wkt, CAP tags, gis_feature_type, bounds,...
+    # Check the two cases for CAP-specific locations first, as those will have
+    # definite export values. For others, we'll attempt to produce either a
+    # circle or polygon: Locations with a bounding box will get a box polygon,
+    # points will get a zero-radius circle.
+    
+    # Currently wkt is stripped out of gis_location records right here:
+    # https://github.com/flavour/eden/blob/master/modules/s3/s3resource.py#L1332
+    # https://github.com/flavour/eden/blob/master/modules/s3/s3resource.py#L1426
+    # https://github.com/flavour/eden/blob/master/modules/s3/s3resource.py#L3152
+    # Until we provide a way to configure that choice, this will not work for
+    # polygons.
+    wkt = record.get("wkt", None)
+
+    # WKT POLYGON: Although there is no WKT spec, according to every reference
+    # that deals with nested polygons, the outer, enclosing, polygon must be
+    # listed first. Hence, we extract only the first polygon, as CAP has no
+    # provision for nesting.
+    if wkt and wkt.startswith("POLYGON"):
+        # ToDo: Is it sufficient to test for adjacent (( to find the start of
+        # the polygon, or might there be whitespace between them?
+        start = wkt.find("((")
+        end = wkt.find(")")
+        if start >=0 and end >=0:
+            polygon_text = wkt[start + 2 : end]
+            points_text = polygon_text.split(",")
+            points = [p.split() for p in points_text]
+            cap_points_text = ["%s,%s" % (point[1], point[0]) for point in points]
+            cap_polygon_text = " ".join(cap_points_text)
+            __cap_gis_location_add_polygon(element, cap_polygon_text)
+            return
+        # Fall through if the wkt string was mal-formed.
+
+    # CAP circle stored in a gis_location_tag with tag = cap_circle.
+    # If there is a cap_circle tag, we don't need to do anything further, as
+    # export.xsl will use it. However, we don't know if there is a cap_circle
+    # tag...
+    #
+    # @ToDo: The export calls xml_post_render after processing a resource's
+    # fields, but before its components are added as children in the xml tree.
+    # If this were delayed til after the components were added, we could look
+    # there for the cap_circle gis_location_tag record. Since xml_post_parse
+    # isn't in use yet (except for this), maybe we could look at moving it til
+    # after the components?
+    #
+    # For now, with the xml_post_render before components: We could do a db
+    # query to check for a real cap_circle tag record, and not bother with
+    # creating fallbacks from bounding box or point...but we don't have to.
+    # Instead, just go ahead and add the fallbacks under different tag names,
+    # and let the export.xsl sort them out. This only wastes a little time
+    # compared to a db query.
+    
+    # ToDo: MULTIPOLYGON -- Can stitch together the outer polygons in the
+    # multipolygon, but would need to assure all were the same handedness.
+    
+    # The remaining cases are for locations that don't have either polygon wkt
+    # or a cap_circle tag.
+    
+    # Bounding box: Make a four-vertex polygon from the bounding box.
+    # This is a fallback, as if there is a circle tag, we'll use that.
+    lon_min = record.get("lon_min", None)
+    lon_max = record.get("lon_max", None)
+    lat_min = record.get("lat_min", None)
+    lat_max = record.get("lat_max", None)
+    if lon_min and lon_max and lat_min and lat_max and \
+       (lon_min != lon_max) and (lat_min != lat_max):
+        # Although there is no WKT requirement, arrange the points in
+        # counterclockwise order. Recall format is:
+        # lat1,lon1 lat2,lon2 ... latN,lonN, lat1,lon1
+        cap_polygon_text = \
+            "%(lat_min)s,%(lon_min)s %(lat_min)s,%(lon_max)s %(lat_max)s,%(lon_max)s %(lat_max)s,%(lon_min)s %(lat_min)s,%(lon_min)s" \
+            % {"lon_min": lon_min,
+               "lon_max": lon_max,
+               "lat_min": lat_min,
+               "lat_max": lat_max}
+        __cap_gis_location_add_polygon(element, cap_polygon_text, fallback=True)
+        return
+
+    # WKT POINT or location with lat, lon: This can be rendered as a
+    # zero-radius circle.
+    # Q: Do we put bounding boxes around POINT locations, and are they
+    # meaningful?
+    lat = record.get("lat", None)
+    lon = record.get("lon", None)
+    if not lat or not lon:
+        # Look for POINT.
+        if wkt and wkt.startswith("POINT"):
+            start = wkt.find("(")
+            end = wkt.find(")")
+            if start >=0 and end >=0:
+                point_text = wkt[start + 2 : end]
+                point = point_text.split()
+                try:
+                    lon = float(point[0])
+                    lat = float(point[1])
+                except ValueError:
+                    pass
+    if lat and lon:
+        # Add a (fallback) circle with zero radius.
+        __cap_gis_location_add_circle(element, lat, lon, 0, True)
+        return
+
+    # ToDo: Other WKT.
+
+    # Did not find anything to use. Presumably the area has a text description.
     return
 
 # -----------------------------------------------------------------------------
