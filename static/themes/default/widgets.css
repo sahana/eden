@@ -1586,3 +1586,9 @@ button.toggle-text {
 .video-header {
     padding-top: 50px;
 }
+
+/* Avatar Img div(eg:membership) */
+
+.avatar_img_div {
+padding-bottom: 10px;
+}
