@@ -160,7 +160,7 @@ def define_map(height = None,
             # @ToDo: make a bulk call
             layer = db(ftable.name == r["layer"]).select(ftable.layer_id,limitby=(0, 1)).first()
             if layer:                
-                script = '''S3.gis.pois_layer=%s''' % layer.layer_id
+                script = '''S3.gis.pois_layer[%s]=%s''' % (r["layer"],layer.layer_id)
                 s3.js_global.append(script)
 
     # @ToDo: Generalise with feature/tablename?
