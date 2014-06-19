@@ -2,8 +2,7 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <!-- **********************************************************************
-
-         CAP Export Templates for S3XRC
+         CAP Export Templates
 
          Copyright (c) 2011-14 Sahana Software Foundation
 
@@ -30,7 +29,6 @@
 
     *********************************************************************** -->
     <xsl:output method="xml" indent="yes"/>
-
     <xsl:include href="../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->
@@ -43,135 +41,25 @@
         <xsl:apply-templates select="./resource[@name='cap_alert']"/>
     </xsl:template>
 
-    <!-- Utility template used by comma-separated string templates below -->
-    <xsl:template name="resource" match="//*" xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
-        <xsl:param name="item"/>
-        <xsl:param name="arg"/>
-        <xsl:param name="last"/>
-
-        <xsl:choose>
-            <xsl:when test="$arg=''">
-                <xsl:choose>
-                    <xsl:when test="not($last)">
-                        <xsl:choose>
-                            <xsl:when test="contains($item, ' ')">
-                                <xsl:text>"</xsl:text>
-                                <xsl:value-of select="$item"/>
-                                <xsl:text>" </xsl:text>
-                             </xsl:when>
-                             <xsl:otherwise>
-                                <xsl:value-of select="$item"/>
-                                <xsl:text> </xsl:text>
-                             </xsl:otherwise>
-                         </xsl:choose>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:choose>
-                            <xsl:when test="contains($item, ' ')">
-                                <xsl:text>"</xsl:text>
-                                <xsl:value-of select="$item"/>
-                                <xsl:text>"</xsl:text>
-                             </xsl:when>
-                             <xsl:otherwise>
-                                <xsl:value-of select="$item"/>
-                             </xsl:otherwise>
-                         </xsl:choose>
-                     </xsl:otherwise>
-                </xsl:choose>
-            </xsl:when>
-
-            <xsl:when test="starts-with($arg, '`')">
-                <xsl:element name="{substring-after($arg, '`')}">
-                    <valueName><xsl:value-of select="substring-before($item, ':')"/></valueName>
-                    <value><xsl:value-of select="substring-after($item, ':')"/></value>
-                </xsl:element>
-            </xsl:when>
-
-            <xsl:otherwise>
-                <xsl:element name="{$arg}">
-                    <xsl:value-of select="$item"/>
-                </xsl:element>
-            </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
-    <!-- split a comma separated string into repeated nodes
-         for example "one, two, three" as string param and
-         "nodeName" as node-name param will result in:
-             <nodeName>one</nodeName>
-             <nodeName>two</nodeName>
-             <nodeName>three</nodeName>
-
-         @param string: the comma-separated string
-         @param node-name: the name of the node
-    -->
-    <xsl:template name="split-into-nodes">
-        <xsl:param name="string"/>
-        <xsl:param name="node-name"/>
-
-        <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="$string"/></xsl:with-param>
-            <xsl:with-param name="arg"><xsl:value-of select="$node-name"/></xsl:with-param>
-            <xsl:with-param name="listsep">,</xsl:with-param>
-        </xsl:call-template>
-
-    </xsl:template>
-
-    <!-- make comma separated string space delimited enclosing
-         items with space in them in double-quotes.
-
-         @param string: the comma-separated string
-    -->
-    <xsl:template name="make-space-delimited">
-        <xsl:param name="string"/>
-
-        <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="$string"/></xsl:with-param>
-            <xsl:with-param name="listsep">,</xsl:with-param>
-            <xsl:with-param name="arg"> </xsl:with-param>  <!-- Not used -->
-        </xsl:call-template>
-    </xsl:template>
-
-    <!-- convert a key-value pair field to <valueName> <value> pairs
-
-         @param string: the comma-separated string
-         @param arg: the name of the node to enclose these pairs in
-    -->
-    <xsl:template name="key-value-pairs">
-        <xsl:param name="string"/>
-        <xsl:param name="arg"/>
-
-        <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="$string"/></xsl:with-param>
-            <xsl:with-param name="listsep">,</xsl:with-param>
-            <xsl:with-param name="arg">
-                <xsl:text>`</xsl:text>
-                <xsl:value-of select="$arg"/>
-            </xsl:with-param>
-        </xsl:call-template>
-    </xsl:template>
-
-    <!-- add timezone to iso timestamp
-
-         @param time: the iso string without timezone
-    -->
-    <xsl:template name="add-timezone">
-        <xsl:param name="time"/>
-
-        <xsl:value-of select="$time"/>
-        <!-- our time is in UTC so we just append +00:00 -->
-        <xsl:text>+00:00</xsl:text>
-    </xsl:template>
-
-    <!-- *********************** cap_alert ******************************** -->
+    <!-- ****************************************************************** -->
+    <!-- cap_alert -->
     <xsl:template match="resource[@name='cap_alert']">
+    
         <alert xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
-            <identifier><xsl:value-of select="data[@field='identifier']"/></identifier>
-            <sender><xsl:value-of select="data[@field='sender']"/></sender>
+            <identifier>
+                <xsl:value-of select="data[@field='identifier']"/>
+            </identifier>
+
+            <!-- @todo: must not be empty -->
+            <sender>
+                <xsl:value-of select="data[@field='sender']"/>
+            </sender>
 
             <sent>
                 <xsl:call-template name="add-timezone">
                     <xsl:with-param name="time">
                         <xsl:choose>
+                            <!-- @todo: ISO Format -->
                             <xsl:when test="data[@field='sent']!=''">
                                 <xsl:value-of select="data[@field='sent']"/>
                             </xsl:when>
@@ -183,14 +71,20 @@
                 </xsl:call-template>
             </sent>
 
-            <status><xsl:value-of select="data[@field='status']"/></status>
-            <msgType><xsl:value-of select="data[@field='msg_type']"/></msgType>
-
+            <status>
+                <xsl:value-of select="data[@field='status']"/>
+            </status>
+            <msgType>
+                <xsl:value-of select="data[@field='msg_type']"/>
+            </msgType>
+            
             <xsl:if test="data[@field='source']!=''">
                 <source><xsl:value-of select="data[@field='source']"/></source>
             </xsl:if>
 
-            <scope><xsl:value-of select="data[@field='scope']"/></scope>
+            <scope>
+                <xsl:value-of select="data[@field='scope']"/>
+            </scope>
 
             <xsl:if test="data[@field='scope']='Restricted'">
                 <restriction><xsl:value-of select="data[@field='restriction']"/></restriction>
@@ -199,7 +93,8 @@
             <xsl:if test="data[@field='addresses']">
                 <addresses>
                     <xsl:call-template name="make-space-delimited">
-                        <xsl:with-param name="string"><xsl:value-of select="data[@field='addresses']"/>
+                        <xsl:with-param name="string">
+                            <xsl:value-of select="data[@field='addresses']"/>
                         </xsl:with-param>
                     </xsl:call-template>
                 </addresses>
@@ -207,7 +102,8 @@
 
             <xsl:if test="data[@field='codes']">
                 <xsl:call-template name="key-value-pairs">
-                    <xsl:with-param name="string"><xsl:value-of select="data[@field='codes']"/>
+                    <xsl:with-param name="string">
+                        <xsl:value-of select="data[@field='codes']"/>
                     </xsl:with-param>
                     <xsl:with-param name="arg">code</xsl:with-param>
                 </xsl:call-template>
@@ -220,7 +116,8 @@
             <xsl:if test="data[@field='incidents']">
                 <incidents>
                     <xsl:call-template name="make-space-delimited">
-                        <xsl:with-param name="string"><xsl:value-of select="data[@field='incidents']"/>
+                        <xsl:with-param name="string">
+                            <xsl:value-of select="data[@field='incidents']"/>
                         </xsl:with-param>
                     </xsl:call-template>
                 </incidents>
@@ -230,7 +127,8 @@
         </alert>
     </xsl:template>
 
-    <!-- *********************** cap_info ********************************* -->
+    <!-- ****************************************************************** -->
+    <!-- cap_info -->
     <xsl:template match="resource[@name='cap_info']">
         <info xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
             <xsl:if test="data[@field='language']!=''">
@@ -333,42 +231,41 @@
                     <xsl:with-param name="arg">parameter</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
-            <xsl:apply-templates select="../resource[@name='cap_area']">
-                <xsl:with-param name="info">
-                    <xsl:value-of select="@uuid"/>
-                </xsl:with-param>
-            </xsl:apply-templates>
-            <xsl:apply-templates select="../resource[@name='cap_resource']"/>
+            <xsl:variable name="uuid" select="@uuid"/>
+
+            <!-- Areas -->
+            <xsl:apply-templates select="../resource[@name='cap_area']
+                                                    [reference[@field='info_id' and @uuid=$uuid]]"/>
+
+            <!-- Resources -->
+            <xsl:apply-templates select="../resource[@name='cap_resource']
+                                                    [reference[@field='info_id' and @uuid=$uuid]]"/>
         </info>
     </xsl:template>
 
-    <!-- *********************** cap_area **************************** -->
+    <!-- ****************************************************************** -->
+    <!-- cap_area -->
     <xsl:template match="resource[@name='cap_area']">
-        <xsl:param name="info"/>
         
         <!-- Include all Areas within this Info & all that are global to the Alert -->
-        <xsl:choose>
-            <xsl:when test="reference[@field='info_id']/@uuid != $info">
-            </xsl:when>
-            <xsl:otherwise>
-                <area>
-                    <areaDesc><xsl:value-of select="data[@field='name']"/></areaDesc>
-                    <xsl:if test="data[@field='altitude']!=''">
-                        <altitude><xsl:value-of select="data[@name='altitude']"/></altitude>
-                    </xsl:if>
-                    <xsl:if test="data[@field='ceiling']!=''">
-                        <ceiling><xsl:value-of select="data[@name='ceiling']"/></ceiling>
-                    </xsl:if>
-                    <xsl:apply-templates select="resource[@name='cap_area_tag']" />
-                    <xsl:apply-templates select="resource[@name='cap_area_location']//resource[@name='gis_location_tag']" />
-                </area>
-            </xsl:otherwise>
-        </xsl:choose>
+        <area>
+            <areaDesc><xsl:value-of select="data[@field='name']"/></areaDesc>
+            <xsl:if test="data[@field='altitude']!=''">
+                <altitude><xsl:value-of select="data[@name='altitude']"/></altitude>
+            </xsl:if>
+            <xsl:if test="data[@field='ceiling']!=''">
+                <ceiling><xsl:value-of select="data[@name='ceiling']"/></ceiling>
+            </xsl:if>
+            <xsl:apply-templates select="resource[@name='cap_area_tag']" />
+            <xsl:apply-templates select="resource[@name='cap_area_location']//resource[@name='gis_location_tag']" />
+        </area>
     </xsl:template>
 
-    <!-- *********************** cap_area_tag ******************* -->
+    <!-- ****************************************************************** -->
+    <!-- cap_area_tag -->
     <!-- These are key value pairs used for geocodes. -->
     <xsl:template match="resource[@name='cap_area_tag']">
+    
         <geocode>
             <valueName>
                 <xsl:value-of select="data[@field='tag']" />
@@ -379,7 +276,8 @@
         </geocode>
     </xsl:template>
 
-    <!-- *********************** cap_area_location ******************* -->
+    <!-- ****************************************************************** -->
+    <!-- cap_area_location -->
     <!--
         The actual data, formatted for CAP, is stored in location tags.
         Each gis_location yields exactly one cap geometry element. Tags
@@ -435,7 +333,8 @@
         </xsl:choose>
     </xsl:template>
     
-    <!-- *********************** cap_resource ************************ -->
+    <!-- ****************************************************************** -->
+    <!-- cap_resource -->
     <xsl:template match="resource[@name='cap_resource']">
         <resource>
             <resourceDesc><xsl:value-of select="data[@field='resource_desc']"/></resourceDesc>
@@ -457,4 +356,134 @@
             </xsl:if>
         </resource>
     </xsl:template>
+    
+    <!-- ****************************************************************** -->
+    <!-- Utility template used by comma-separated string templates below -->
+    <xsl:template name="resource" match="//*" xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
+        <xsl:param name="item"/>
+        <xsl:param name="arg"/>
+        <xsl:param name="last"/>
+
+        <xsl:choose>
+            <xsl:when test="$arg=''">
+                <xsl:choose>
+                    <xsl:when test="not($last)">
+                        <xsl:choose>
+                            <xsl:when test="contains($item, ' ')">
+                                <xsl:text>"</xsl:text>
+                                <xsl:value-of select="$item"/>
+                                <xsl:text>" </xsl:text>
+                             </xsl:when>
+                             <xsl:otherwise>
+                                <xsl:value-of select="$item"/>
+                                <xsl:text> </xsl:text>
+                             </xsl:otherwise>
+                         </xsl:choose>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:choose>
+                            <xsl:when test="contains($item, ' ')">
+                                <xsl:text>"</xsl:text>
+                                <xsl:value-of select="$item"/>
+                                <xsl:text>"</xsl:text>
+                             </xsl:when>
+                             <xsl:otherwise>
+                                <xsl:value-of select="$item"/>
+                             </xsl:otherwise>
+                         </xsl:choose>
+                     </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
+
+            <xsl:when test="starts-with($arg, '`')">
+                <xsl:element name="{substring-after($arg, '`')}">
+                    <valueName><xsl:value-of select="substring-before($item, ':')"/></valueName>
+                    <value><xsl:value-of select="substring-after($item, ':')"/></value>
+                </xsl:element>
+            </xsl:when>
+
+            <xsl:otherwise>
+                <xsl:element name="{$arg}">
+                    <xsl:value-of select="$item"/>
+                </xsl:element>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- split a comma separated string into repeated nodes
+         for example "one, two, three" as string param and
+         "nodeName" as node-name param will result in:
+             <nodeName>one</nodeName>
+             <nodeName>two</nodeName>
+             <nodeName>three</nodeName>
+
+         @param string: the comma-separated string
+         @param node-name: the name of the node
+    -->
+    <xsl:template name="split-into-nodes">
+        <xsl:param name="string"/>
+        <xsl:param name="node-name"/>
+
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$string"/></xsl:with-param>
+            <xsl:with-param name="arg"><xsl:value-of select="$node-name"/></xsl:with-param>
+            <xsl:with-param name="listsep">,</xsl:with-param>
+        </xsl:call-template>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- make comma separated string space delimited enclosing
+         items with space in them in double-quotes.
+
+         @param string: the comma-separated string
+    -->
+    <xsl:template name="make-space-delimited">
+        <xsl:param name="string"/>
+
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list">
+                <xsl:value-of select="$string"/>
+            </xsl:with-param>
+            <xsl:with-param name="listsep">,</xsl:with-param>
+            <xsl:with-param name="arg"> </xsl:with-param>  <!-- Not used -->
+        </xsl:call-template>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- convert a key-value pair field to <valueName> <value> pairs
+
+         @param string: the comma-separated string
+         @param arg: the name of the node to enclose these pairs in
+    -->
+    <xsl:template name="key-value-pairs">
+        <xsl:param name="string"/>
+        <xsl:param name="arg"/>
+
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list">
+                <xsl:value-of select="$string"/>
+            </xsl:with-param>
+            <xsl:with-param name="listsep">,</xsl:with-param>
+            <xsl:with-param name="arg">
+                <xsl:text>`</xsl:text>
+                <xsl:value-of select="$arg"/>
+            </xsl:with-param>
+        </xsl:call-template>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- add timezone to iso timestamp
+
+         @param time: the iso string without timezone
+    -->
+    <xsl:template name="add-timezone">
+        <xsl:param name="time"/>
+
+        <xsl:value-of select="$time"/>
+        <!-- our time is in UTC so we just append +00:00 -->
+        <xsl:text>+00:00</xsl:text>
+    </xsl:template>
+
 </xsl:stylesheet>

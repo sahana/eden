@@ -280,6 +280,7 @@ class S3CAPModel(S3Model):
                      Field("sender",
                            label = T("Sender"),
                            default = self.generate_sender,
+                           # @todo: can not be empty in alerts (validator!)
                            ),
                      s3_datetime("sent",
                                  default = "now",
