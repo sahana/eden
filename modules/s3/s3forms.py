@@ -341,14 +341,16 @@ class S3SQLDefaultForm(S3SQLForm):
         # Cancel button
         if not readonly and s3.cancel:
             T = current.T
-            if settings.submit_button:
-                submit_label = T(settings.submit_button)
-            else:
-                submit_label = T("Save")
-            submit_button = INPUT(_type="submit",
-                                  _value=submit_label)
-            if settings.submit_style:
-                submit_button.add_class(settings.submit_style)
+            if not settings.custom_submit:
+                if settings.submit_button:
+                    submit_label = T(settings.submit_button)
+                else:
+                    submit_label = T("Save")
+                submit_button = INPUT(_type="submit",
+                                    _value=submit_label)
+                if settings.submit_style:
+                    submit_button.add_class(settings.submit_style)
+                buttons = [submit_button]
 
             cancel = s3.cancel
             cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
@@ -363,7 +365,7 @@ class S3SQLDefaultForm(S3SQLForm):
                 s3.jquery_ready.append(script % cancel)
             else:
                 cancel_button.update(_href=s3.cancel)
-            buttons = [submit_button, cancel_button]
+            buttons.append(cancel_button)
 
         # Generate the form
         if record is None:
