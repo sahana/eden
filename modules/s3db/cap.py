@@ -65,6 +65,7 @@ class S3CAPModel(S3Model):
              "cap_area_represent",
              "cap_area_location",
              "cap_area_tag",
+             "cap_info_category_opts",
              ]
 
     def model(self):
@@ -247,6 +248,21 @@ class S3CAPModel(S3Model):
             ("Restricted", T("Restricted - to users with a known operational requirement (described in restriction)")),
             ("Private", T("Private - only to specified addresses (mentioned as recipients)"))
         ])
+        # CAP info categories
+        cap_info_category_opts = OrderedDict([
+            ("Geo", T("Geophysical (inc. landslide)")),
+            ("Met", T("Meteorological (inc. flood)")),
+            ("Safety", T("General emergency and public safety")),
+            ("Security", T("Law enforcement, military, homeland and local/private security")),
+            ("Rescue", T("Rescue and recovery")),
+            ("Fire", T("Fire suppression and rescue")),
+            ("Health", T("Medical and public health")),
+            ("Env", T("Pollution and other environmental")),
+            ("Transport", T("Public and private transportation")),
+            ("Infra", T("Utility, telecommunication, other non-transport infrastructure")),
+            ("CBRNE", T("Chemical, Biological, Radiological, Nuclear or High-Yield Explosive threat or attack")),
+            ("Other", T("Other events")),
+        ])
 
         tablename = "cap_alert"
         define_table(tablename,
@@ -363,6 +379,17 @@ class S3CAPModel(S3Model):
                          label = T("Search"),
                          comment = T("Search for an Alert by sender, incident, headline or event."),
                          ),
+            S3OptionsFilter("info.category",
+                            label = T("Category"),
+                            options = cap_info_category_opts,
+                            ),
+            S3LocationFilter("location.location_id",
+                             label = T("Location(s)"),
+                             # options = gis.get_countries().keys(),
+                             ),
+            S3OptionsFilter("info.language",
+                            label = T("Language"),
+                            ),
             ]
 
         configure(tablename,
@@ -422,21 +449,6 @@ class S3CAPModel(S3Model):
         # ---------------------------------------------------------------------
         # CAP info segments
         #
-        cap_info_category_opts = OrderedDict([
-            ("Geo", T("Geophysical (inc. landslide)")),
-            ("Met", T("Meteorological (inc. flood)")),
-            ("Safety", T("General emergency and public safety")),
-            ("Security", T("Law enforcement, military, homeland and local/private security")),
-            ("Rescue", T("Rescue and recovery")),
-            ("Fire", T("Fire suppression and rescue")),
-            ("Health", T("Medical and public health")),
-            ("Env", T("Pollution and other environmental")),
-            ("Transport", T("Public and private transportation")),
-            ("Infra", T("Utility, telecommunication, other non-transport infrastructure")),
-            ("CBRNE", T("Chemical, Biological, Radiological, Nuclear or High-Yield Explosive threat or attack")),
-            ("Other", T("Other events")),
-        ])
-
         cap_info_responseType_opts = OrderedDict([
             ("Shelter", T("Shelter - Take shelter in place or per instruction")),
             ("Evacuate", T("Evacuate - Relocate as instructed in the instruction")),
@@ -899,6 +911,7 @@ class S3CAPModel(S3Model):
                     cap_alert_represent = alert_represent,
                     cap_area_represent = area_represent,
                     cap_info_represent = info_represent,
+                    cap_info_category_opts = cap_info_category_opts
                     )
 
     # -------------------------------------------------------------------------
