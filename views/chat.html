@@ -1,5 +1,8 @@
+{{if auth.is_logged_in():}}
 {{chat_server = settings.get_chat_server()}}
 {{if chat_server:}} 
+{{chat_jid = auth.user.username}}
+{{chat_pass = auth.user.password}}
 {{if s3.debug:}}
 {{main_css = "<link href='/%s/static/styles/plugins/converse.css' rel='stylesheet' type='text/css'/>" % appname}}
 {{s3.scripts.append(URL(c="static", f="scripts", args=["converse.min.js"]))}}
@@ -8,6 +11,11 @@
 {{main_css = "<link href='/%s/static/styles/plugins/converse.min.css' rel='stylesheet' type='text/css'/>" % appname}}
 {{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.chat.min.js"]))}}
 {{pass}}
-{{s3.js_global.append('''S3.chat_url="%s"\n$('link:first').before("%s")''' % ("http://"+str(chat_server+"/http-bind/"),main_css))}}
+{{s3.js_global.append('''S3.chat_url="http://%s:%s/http-bind/"\n$('link:first').before("%s")''' % (chat_server["ip"], chat_server["port"], main_css))}}
+{{s3.js_global.append('''S3.chat_jid="%s"\nS3.chat_password="%s"''' % (chat_jid, chat_pass))}}
 <div id="conversejs"></div>
+{{s3.jquery_ready.append('''$('#converse-login')[0][0].value="%s@%s"''' % (chat_jid, chat_server["name"]))}}
+{{s3.jquery_ready.append('''$('#converse-login')[0][1].value="%s"''' % (chat_pass))}}
+{{s3.jquery_ready.append('''$('#converse-login')[0][2].click()''')}}
+{{pass}}
 {{pass}}
