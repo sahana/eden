@@ -52,9 +52,18 @@ class S3Parser(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def parse_email(message):
+        """
+            Parse Email Messages into the CAP Module
+        """
+
+        pass
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def parse_rss(message):
         """
-            Parse Feeds into the CAP Module
+            Parse RSS Feeds into the CAP Module
         """
 
         db = current.db
@@ -66,7 +75,7 @@ class S3Parser(object):
                                                                    table.body,
                                                                    table.date,
                                                                    table.location_id,
-                                                                   table.tags,
+                                                                   #table.tags,
                                                                    table.author,
                                                                    limitby=(0, 1)
                                                                    ).first()
@@ -86,7 +95,7 @@ class S3Parser(object):
                                   ).first()
 
         channel_id = record.channel_id
-        tags = record.tags
+        #tags = record.tags
 
         author = record.author
         if author:

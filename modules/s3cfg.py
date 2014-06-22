@@ -1673,7 +1673,7 @@ class S3Config(Storage):
         """
 
         return self.cap.get("languages", OrderedDict([("ar", "العربية"),
-                                                      ("en-us", "English"),
+                                                      ("en-US", "English"),
                                                       ("es", "Español"),
                                                       ("fr", "Français"),
                                                       ("pt", "Português"),

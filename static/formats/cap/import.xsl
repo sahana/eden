@@ -1,6 +1,6 @@
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:cap = "urn:oasis:names:tc:emergency:cap:1.2">
+  xmlns:cap="urn:oasis:names:tc:emergency:cap:1.2">
 
     <!-- **********************************************************************
 
@@ -32,15 +32,14 @@
     *********************************************************************** -->
     <xsl:output method="xml" indent="yes"/>
 
+    <xsl:include href="../xml/commons.xsl"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
             <xsl:apply-templates select="cap:alert"/>
         </s3xml>
     </xsl:template>
-
-    <!-- util -->
-    <xsl:include href="../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="cap:alert">
@@ -369,6 +368,55 @@
 
     <!-- ****************************************************************** -->
     <!--
+        Circles: Currently there is no support for CIRCLESTRING in OpenLayers,
+        so we store the unmodified circle data in a gis_location_tag.
+        Eventually we hope to have CIRCULARSTRING support, so this does pass
+        through xml_post_parse, which currently only extracts the circle center
+        as the lat lon.
+    -->
+    <xsl:template match="cap:circle">
+        <xsl:param name="name" />
+        <xsl:variable name="value">
+            <xsl:value-of select="./text()"/>
+        </xsl:variable>
+        <xsl:variable name="radius">
+            <xsl:value-of select="substring-after($value, ' ')"/>
+        </xsl:variable>
+
+        <resource name="cap_area_location">
+            <reference field="location_id" resource="gis_location">
+                <resource name="gis_location">
+                    <data field="gis_feature_type" value="1">Point</data>
+                    <data field="name">
+                        <xsl:choose>
+                            <xsl:when test="string-length($name) > 128">
+                                <!-- Truncate -->
+                                <xsl:value-of select="substring($name, 0, 124)"/>
+                                <xsl:text>...</xsl:text>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="$name"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </data>
+                    <data field="lat">
+                        <xsl:value-of select="substring-before($value, ',')"/>
+                    </data>
+                    <data field="lon">
+                        <xsl:value-of select="substring-after(substring-before($value, ' '), ',')"/>
+                    </data>
+                    
+                    <data field="radius">
+                        <!-- Radius comes in as km, so convert to m -->
+                        <xsl:value-of select="number($radius) * 0.001"/>
+                    </data>
+                </resource>
+            </reference>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!--
         Polygons: These get converted in an xml_post_parse function, and are
         passed in via a non-s3xml element.
     -->
@@ -378,15 +426,28 @@
         <resource name="cap_area_location">
             <reference field="location_id" resource="gis_location">
                 <resource name="gis_location">
-                    <cap_polygon>
-                        <xsl:value-of select="./text()" />
-                    </cap_polygon>
                     <data field="gis_feature_type" value="3">Polygon</data>
                     <!-- Only use a prefix of the name. -->
                     <data field="name">
-                        <xsl:text>cap_polygon: </xsl:text>
-                        <xsl:value-of select="substring($name, 0, 40)"/>
-                        <xsl:text>...</xsl:text>
+                        <xsl:choose>
+                            <xsl:when test="string-length($name) > 128">
+                                <!-- Truncate -->
+                                <xsl:value-of select="substring($name, 0, 124)"/>
+                                <xsl:text>...</xsl:text>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="$name"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </data>
+                    <data field="wkt">
+                        <xsl:text>POLYGON((</xsl:text>
+                        <xsl:call-template name="Points">
+                            <xsl:with-param name="points">
+                                <xsl:value-of select="."/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                        <xsl:text>))</xsl:text>
                     </data>
                 </resource>
             </reference>
@@ -394,37 +455,40 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!--
-        Circles: Currently there is no support for CIRCLESTRING in OpenLayers,
-        so we store the unmodified circle data in a gis_location_tag.
-        Eventually we hope to have CIRCULARSTRING support, so this does pass
-        through xml_post_parse, which currently only extracts the circle center
-        as the lat lon.
-    -->
-    <xsl:template match="cap:circle">
-        <xsl:param name="name" />
-        <resource name="cap_area_location">
-            <reference field="location_id" resource="gis_location">
-                <resource name="gis_location">
-                    <!-- Preserve unmodified circle text -->
-                    <resource name="gis_location_tag">
-                        <data field="tag">
-                            <xsl:text>cap_circle</xsl:text>
-                        </data>
-                        <data field="value">
-                            <xsl:value-of select="./text()"/>
-                        </data>
-                    </resource>
-                    <data field="gis_feature_type" value="1">Point</data>
-                    <!-- Only use a prefix of the name. -->
-                    <data field="name">
-                        <xsl:text>cap_circle: </xsl:text>
-                        <xsl:value-of select="substring($name, 0, 40)"/>
-                        <xsl:text>...</xsl:text>
-                    </data>
-                </resource>
-            </reference>
-        </resource>
+    <xsl:template name="Points">
+        <xsl:param name="points"/>
+        <xsl:choose>
+            <xsl:when test="contains($points,' ')">
+                <xsl:variable name="point" select="substring-before($points,' ')"/>
+                <xsl:variable name="remainder" select="normalize-space(substring-after($points,' '))"/>
+                <xsl:call-template name="Point">
+                    <xsl:with-param name="point">
+                        <xsl:value-of select="$point"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+                <xsl:text>,</xsl:text>
+                <xsl:call-template name="Points">
+                    <xsl:with-param name="points">
+                        <xsl:value-of select="$remainder"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="Point">
+                    <xsl:with-param name="point">
+                        <xsl:value-of select="$points"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Point">
+        <xsl:param name="point"/>
+        <xsl:variable name="lat" select="substring-before($point,',')"/>
+        <xsl:variable name="lon" select="substring-after($point,',')"/>
+        <xsl:value-of select="concat($lon,' ',$lat)"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->

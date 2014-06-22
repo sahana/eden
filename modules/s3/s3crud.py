@@ -514,7 +514,7 @@ class S3CRUD(S3Method):
         view = self._view(r, "listadd.html")
         output = XML(response.render(view, output))
         return output
-            
+
     # -------------------------------------------------------------------------
     def read(self, r, **attr):
         """

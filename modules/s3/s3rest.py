@@ -429,7 +429,7 @@ class S3Request(object):
 
         if method and custom_action:
             handler = custom_action
-            
+
         if http == "GET":
             if not method:
                 if resource.count() == 1:
@@ -438,21 +438,21 @@ class S3Request(object):
                     method = "list"
             transform = self.transformable()
             handler = self.get_handler(method, transform=transform)
-            
+
         elif http == "PUT":
             transform = self.transformable(method="import")
             handler = self.get_handler(method, transform=transform)
-            
+
         elif http == "POST":
             transform = self.transformable(method="import")
             return self.get_handler(method, transform=transform)
-                
+
         elif http == "DELETE":
             if method:
                 return self.get_handler(method)
             else:
                 return self.get_handler("delete")
-                
+
         else:
             return None
 
@@ -1206,7 +1206,7 @@ class S3Request(object):
 
         stylesheet = self.stylesheet(method=method, skip_error=True)
 
-        if self.representation != "xml" and not stylesheet:
+        if not stylesheet and self.representation != "xml":
             return False
         else:
             return True

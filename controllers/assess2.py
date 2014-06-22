@@ -1763,9 +1763,9 @@ def rat_tables():
                 return None
             else:
                 # Other formats?
-                raise HTTP(501, body=ERROR.BAD_FORMAT)
+                raise HTTP(501, ERROR.BAD_FORMAT)
         else:
-            raise HTTP(501, body=ERROR.BAD_METHOD)
+            raise HTTP(501, ERROR.BAD_METHOD)
 
 
     s3db.set_method("assess", "rat",

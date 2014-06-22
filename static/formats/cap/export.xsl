@@ -1,5 +1,6 @@
 <xsl:stylesheet version="1.0"
-  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns="urn:oasis:names:tc:emergency:cap:1.2">
 
     <!-- **********************************************************************
          CAP Export Templates
@@ -45,7 +46,7 @@
     <!-- cap_alert -->
     <xsl:template match="resource[@name='cap_alert']">
     
-        <alert xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
+        <alert>
             <identifier>
                 <xsl:value-of select="data[@field='identifier']"/>
             </identifier>
@@ -130,7 +131,7 @@
     <!-- ****************************************************************** -->
     <!-- cap_info -->
     <xsl:template match="resource[@name='cap_info']">
-        <info xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
+        <info>
             <xsl:if test="data[@field='language']!=''">
                 <language><xsl:value-of select="data[@field='language']"/></language>
             </xsl:if>
@@ -234,30 +235,53 @@
             <xsl:variable name="uuid" select="@uuid"/>
 
             <!-- Areas -->
-            <xsl:apply-templates select="../resource[@name='cap_area']
-                                                    [reference[@field='info_id' and @uuid=$uuid]]"/>
+            <!-- Include all Areas within this Info & all that are global to the Alert -->
+            <xsl:apply-templates select="../resource[@name='cap_area'][reference[@field='info_id' and @uuid=$uuid]]|
+                                         ../resource[@name='cap_area'][not(reference[@field='info_id'])]"/>
 
             <!-- Resources -->
-            <xsl:apply-templates select="../resource[@name='cap_resource']
-                                                    [reference[@field='info_id' and @uuid=$uuid]]"/>
+            <!-- Include all Resources within this Info & all that are global to the Alert -->
+            <xsl:apply-templates select="../resource[@name='cap_resource'][reference[@field='info_id' and @uuid=$uuid]]|
+                                         ../resource[@name='cap_resource'][not(reference[@field='info_id'])]"/>
         </info>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <!-- cap_area -->
     <xsl:template match="resource[@name='cap_area']">
-        
-        <!-- Include all Areas within this Info & all that are global to the Alert -->
+        <xsl:variable name="altitude">
+            <xsl:value-of select="data[@name='altitude']" />
+        </xsl:variable>
+        <xsl:variable name="elevation">
+            <!-- @ToDo: Fix -->
+            <xsl:value-of select="../resource[@name='cap_area_location']/resource[@name='gis_location']/data[@field='elevation']" />
+        </xsl:variable>
+        <xsl:variable name="area_uuid" select="@uuid"/>
+
         <area>
             <areaDesc><xsl:value-of select="data[@field='name']"/></areaDesc>
-            <xsl:if test="data[@field='altitude']!=''">
-                <altitude><xsl:value-of select="data[@name='altitude']"/></altitude>
-            </xsl:if>
-            <xsl:if test="data[@field='ceiling']!=''">
-                <ceiling><xsl:value-of select="data[@name='ceiling']"/></ceiling>
-            </xsl:if>
+            <xsl:choose>
+                <!-- Use the info altitude if-available -->
+                <xsl:when test="$altitude!=''">
+                    <altitude><xsl:value-of select="$altitude"/></altitude>
+                    <xsl:if test="data[@field='ceiling']!=''">
+                        <ceiling><xsl:value-of select="data[@name='ceiling']"/></ceiling>
+                    </xsl:if>
+                </xsl:when>
+                <xsl:when test="$elevation!=''">
+                    <altitude><xsl:value-of select="$elevation"/></altitude>
+                </xsl:when>
+            </xsl:choose>
             <xsl:apply-templates select="resource[@name='cap_area_tag']" />
+            <xsl:for-each select="../resource[@name='cap_area_location'][reference[@field='area_id' and @uuid=$area_uuid]]/reference[@field='location_id']">
+                <xsl:variable name="location_uuid">
+                    <xsl:value-of select="@uuid" />
+                </xsl:variable>
+                <xsl:apply-templates select="//resource[@name='gis_location' and @uuid=$location_uuid]" />
+            </xsl:for-each>
+            <!--
             <xsl:apply-templates select="resource[@name='cap_area_location']//resource[@name='gis_location_tag']" />
+            -->
         </area>
     </xsl:template>
 
@@ -278,7 +302,132 @@
 
     <!-- ****************************************************************** -->
     <!-- cap_area_location -->
-    <!--
+    <xsl:template match="resource[@name='gis_location']">
+        <xsl:variable name="radius">
+            <xsl:value-of select="data[@field='radius']" />
+        </xsl:variable>
+        <xsl:variable name="wkt">
+            <xsl:value-of select="data[@field='wkt']/@value" />
+        </xsl:variable>
+        <xsl:choose>
+            <xsl:when test="$radius!=''">
+                <!-- Circle -->
+                <xsl:variable name="lat">
+                    <xsl:value-of select="data[@field='lat']" />
+                </xsl:variable>
+                <xsl:variable name="lon">
+                    <xsl:value-of select="data[@field='lon']" />
+                </xsl:variable>
+                <circle>
+                    <!-- Convert radius from m to km -->
+                    <xsl:value-of select="concat($lat, ',', $lon, ' ', $radius * 1000)"/>
+                </circle>
+            </xsl:when>
+            <xsl:when test="starts-with($wkt,'&#34;POLYGON')">
+                <!-- Polygon -->
+                <polygon>
+                    <xsl:call-template name="Polygon">
+                        <xsl:with-param name="polygon">
+                            <xsl:value-of select="normalize-space(substring-after($wkt,'POLYGON'))"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </polygon>
+            </xsl:when>
+        </xsl:choose>
+    </xsl:template>
+    
+    <!-- ****************************************************************** -->
+    <xsl:template name="Polygon">
+        <xsl:param name="polygon"/>
+        <!-- Strip outer parentheses -->
+        <xsl:variable name="rings" select="concat(substring-before(substring-after($polygon,'('),'))'),')')"/>
+        <xsl:call-template name="Rings">
+            <xsl:with-param name="rings">
+                <xsl:value-of select="$rings"/>
+            </xsl:with-param>
+        </xsl:call-template>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Rings">
+        <xsl:param name="rings"/>
+        <xsl:choose>
+            <xsl:when test="contains($rings,'),(')">
+                <xsl:variable name="ring" select="substring-before($rings,',(')"/>
+                <xsl:variable name="remainder" select="normalize-space(substring-after($rings,'),'))"/>
+                <xsl:call-template name="LineString">
+                    <xsl:with-param name="linestring">
+                        <xsl:value-of select="$ring"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+                <xsl:text>, </xsl:text>
+                <xsl:call-template name="Rings">
+                    <xsl:with-param name="rings">
+                        <xsl:value-of select="$remainder"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="LineString">
+                    <xsl:with-param name="linestring">
+                        <xsl:value-of select="$rings"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="LineString">
+        <xsl:param name="linestring"/>
+        <!-- Strip outer parentheses -->
+        <xsl:variable name="points" select="substring-before(substring-after($linestring,'('),')')"/>
+        <xsl:call-template name="Points">
+            <xsl:with-param name="points">
+                <xsl:value-of select="$points"/>
+            </xsl:with-param>
+        </xsl:call-template>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Points">
+        <xsl:param name="points"/>
+        <xsl:choose>
+            <xsl:when test="contains($points,',')">
+                <xsl:variable name="point" select="substring-before($points,',')"/>
+                <xsl:variable name="remainder" select="normalize-space(substring-after($points,','))"/>
+                <xsl:call-template name="Point">
+                    <xsl:with-param name="point">
+                        <xsl:value-of select="$point"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+                <xsl:text> </xsl:text>
+                <xsl:call-template name="Points">
+                    <xsl:with-param name="points">
+                        <xsl:value-of select="$remainder"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="Point">
+                    <xsl:with-param name="point">
+                        <xsl:value-of select="$points"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Point">
+        <xsl:param name="point"/>
+        <xsl:variable name="lon" select="substring-before($point,' ')"/>
+        <xsl:variable name="lat" select="substring-after($point,' ')"/>
+        <xsl:value-of select="concat($lat,',',$lon)"/>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- OLD:
         The actual data, formatted for CAP, is stored in location tags.
         Each gis_location yields exactly one cap geometry element. Tags
         cap_circle and cap_polygon are the definitive values. For locations
@@ -293,31 +442,17 @@
         exclusive as only one is constructed in xml_post_render.
     -->
     <xsl:template match="resource[@name='cap_area_location']//resource[@name='gis_location_tag']">
-        <!-- 
-        <xsl:if test="./data[@field='tag']/text()='cap_circle'">
-            <circle>
-                <xsl:value-of select="./data[@field='value']/text()"/>
-            </circle>
-        </xsl:if>
-        <xsl:if test="./data[@field='tag']/text()='cap_polygon'">
-            <polygon>
-                <xsl:value-of select="./data[@field='value']/text()"/>
-            </polygon>
-        </xsl:if>
-        -->
         <xsl:choose>
-        <xsl:when test="./data[@field='tag']/text()='cap_circle'">
-            <circle>
-                <xsl:value-of select="./data[@field='value']/text()"/>
-            </circle>
-        </xsl:when>
-        <xsl:when test="./data[@field='tag']/text()='cap_polygon'">
-            <polygon>
-                <xsl:value-of select="./data[@field='value']/text()"/>
-            </polygon>
-        </xsl:when>
-        <xsl:otherwise>
-            <xsl:choose>
+            <xsl:when test="./data[@field='tag']/text()='cap_circle'">
+                <circle>
+                    <xsl:value-of select="./data[@field='value']/text()"/>
+                </circle>
+            </xsl:when>
+            <xsl:when test="./data[@field='tag']/text()='cap_polygon'">
+                <polygon>
+                    <xsl:value-of select="./data[@field='value']/text()"/>
+                </polygon>
+            </xsl:when>
             <xsl:when test="./data[@field='tag']/text()='cap_circle_fallback'">
                 <circle>
                     <xsl:value-of select="./data[@field='value']/text()"/>
@@ -328,11 +463,9 @@
                     <xsl:value-of select="./data[@field='value']/text()"/>
                 </polygon>
             </xsl:when>
-            </xsl:choose>
-        </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
-    
+
     <!-- ****************************************************************** -->
     <!-- cap_resource -->
     <xsl:template match="resource[@name='cap_resource']">
@@ -356,10 +489,10 @@
             </xsl:if>
         </resource>
     </xsl:template>
-    
+
     <!-- ****************************************************************** -->
     <!-- Utility template used by comma-separated string templates below -->
-    <xsl:template name="resource" match="//*" xmlns = "urn:oasis:names:tc:emergency:cap:1.2">
+    <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
         <xsl:param name="last"/>

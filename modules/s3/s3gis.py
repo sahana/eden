@@ -5622,28 +5622,38 @@ class GIS(object):
 
         if form_vars.get("gis_feature_type", None) == "1":
             # Point
-            if (form_vars.lon is None and form_vars.lat is None) or \
-               (form_vars.lon == "" and form_vars.lat == ""):
+            lat = form_vars.get("lat", None)
+            lon = form_vars.get("lon", None)
+            if (lon is None and lat is None) or \
+               (lon == "" and lat == ""):
                 # No Geometry available
                 # Don't clobber existing records (e.g. in Prepop)
                 #form_vars.gis_feature_type = "0"
                 # Cannot create WKT, so Skip
                 return
-            elif form_vars.lat is None or form_vars.lat == "":
+            elif lat is None or lat == "":
                 # Can't just have lon without lat
                 form.errors["lat"] = messages.lat_empty
-            elif form_vars.lon is None or form_vars.lon == "":
+            elif lon is None or lon == "":
                 form.errors["lon"] = messages.lon_empty
             else:
                 form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
-                if "lon_min" not in form_vars or form_vars.lon_min is None:
-                    form_vars.lon_min = form_vars.lon
-                if "lon_max" not in form_vars or form_vars.lon_max is None:
-                    form_vars.lon_max = form_vars.lon
-                if "lat_min" not in form_vars or form_vars.lat_min is None:
-                    form_vars.lat_min = form_vars.lat
-                if "lat_max" not in form_vars or form_vars.lat_max is None:
-                    form_vars.lat_max = form_vars.lat
+                radius = form_vars.get("radius", None)
+                if radius:
+                    bbox = GIS.get_bounds_from_radius(lat, lon, radius)
+                    form_vars.lat_min = bbox["lat_min"]
+                    form_vars.lon_min = bbox["lon_min"]
+                    form_vars.lat_max = bbox["lat_max"]
+                    form_vars.lon_max = bbox["lon_max"]
+                else:
+                    if "lon_min" not in form_vars or form_vars.lon_min is None:
+                        form_vars.lon_min = lon
+                    if "lon_max" not in form_vars or form_vars.lon_max is None:
+                        form_vars.lon_max = lon
+                    if "lat_min" not in form_vars or form_vars.lat_min is None:
+                        form_vars.lat_min = lat
+                    if "lat_max" not in form_vars or form_vars.lat_max is None:
+                        form_vars.lat_max = lat
 
         elif form_vars.get("wkt", None):
             # Parse WKT for LineString, Polygon, etc

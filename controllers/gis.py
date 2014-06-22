@@ -656,7 +656,7 @@ def s3_gis_location_parents(r, **attr):
         # @ToDo
         output = dict()
         #return output
-        raise HTTP(501, body=current.ERROR.BAD_FORMAT)
+        raise HTTP(501, ERROR.BAD_FORMAT)
 
     elif r.representation == "json":
 
@@ -670,12 +670,12 @@ def s3_gis_location_parents(r, **attr):
                 output = json.dumps(_parents, separators=SEPARATORS)
                 return output
             else:
-                raise HTTP(404, body=current.ERROR.NO_MATCH)
+                raise HTTP(404, ERROR.NO_MATCH)
         else:
-            raise HTTP(404, body=current.ERROR.BAD_RECORD)
+            raise HTTP(404, ERROR.BAD_RECORD)
 
     else:
-        raise HTTP(501, body=current.ERROR.BAD_FORMAT)
+        raise HTTP(501, ERROR.BAD_FORMAT)
 
 # -----------------------------------------------------------------------------
 def l0():

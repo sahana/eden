@@ -455,7 +455,7 @@
     <xsl:template name="Attribute">
         <xsl:param name="attribute"/>
 
-        <xsl:variable name="key" select="substring-before(substring-after(substring-before($attribute,':'),'|'),'|')"/>
+        <xsl:variable name="key" select="w(substring-after(substring-before($attribute,':'),'|'),'|')"/>
         <xsl:variable name="value" select="substring-after($attribute,':')"/>
         <xsl:choose>
             <xsl:when test="contains($value,'|')">

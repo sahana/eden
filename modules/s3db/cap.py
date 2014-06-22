@@ -748,8 +748,8 @@ class S3CAPModel(S3Model):
                            label = T("Area description"),
                            required = True,
                            ),
-                     Field("altitude", "integer"),
-                     Field("ceiling", "integer"),
+                     Field("altitude", "integer"), # Feet above Sea-level in WGS84 (Specific or Minimum is using a range)
+                     Field("ceiling", "integer"), # Feet above Sea-level in WGS84 (Maximum)
                      *s3_meta_fields())
 
         # CRUD Strings

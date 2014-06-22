@@ -127,14 +127,13 @@ def alert():
                                                                   filter_opts=(r.id,),
                                                                   ))
                 
-
-        elif r.representation == "cap":
-            # This is either importing from or exporting to cap format. Set both
-            # postprocessing hooks so we don't have to enumerate methods.
-            s3db.configure("gis_location",
-                           xml_post_parse = s3db.cap_gis_location_xml_post_parse,
-                           xml_post_render = s3db.cap_gis_location_xml_post_render,
-                          )
+        #elif r.representation == "cap":
+        #    # This is either importing from or exporting to cap format. Set both
+        #    # postprocessing hooks so we don't have to enumerate methods.
+        #    s3db.configure("gis_location",
+        #                   xml_post_parse = s3db.cap_gis_location_xml_post_parse,
+        #                   xml_post_render = s3db.cap_gis_location_xml_post_render,
+        #                   )
 
         post_vars = request.post_vars
         if post_vars.get("edit_info", False):
@@ -183,7 +182,7 @@ def alert():
                                        # Don't copy this: make an
                                        # Ajax call instead
                                        "template_settings",
-                                      ))
+                                       ))
                 fields = [itable[f] for f in itable.fields
                                     if f not in unwanted_fields]
                 rows = db(itable.alert_id == alert.template_id).select(*fields)
@@ -202,9 +201,9 @@ def alert():
             #    update_url = URL(f="info", args=["[id]"])
             #    s3_action_buttons(r, update_url=update_url)
 
-            if r.component_name == "area":
-                update_url = URL(f="area", args=["[id]"])
-                s3_action_buttons(r, update_url=update_url)
+            #if r.component_name == "area":
+            #    update_url = URL(f="area", args=["[id]"])
+            #    s3_action_buttons(r, update_url=update_url)
 
             if isinstance(output, dict) and "form" in output:
                 if not r.component and \
@@ -267,9 +266,9 @@ def template():
 
     viewing = request.vars["viewing"]
     if viewing:
-        table, id = viewing.strip().split(".")
+        table, _id = viewing.strip().split(".")
         if table == "cap_alert":
-            redirect(URL(c="cap", f="template", args=[id]))
+            redirect(URL(c="cap", f="template", args=[_id]))
 
     def prep(r):
         for f in ["identifier", "msg_type"]:
