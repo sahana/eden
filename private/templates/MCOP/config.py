@@ -21,11 +21,14 @@ settings = current.deployment_settings
 
 """
     Puget Sound Common Maritime Operating Picture (MCOP) 
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
 """
+
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["MCOP", "demo/users"]
+
+settings.base.system_name = T("Sahana: Puget Sound Common Maritime Operating Picture (MCOP)")
+settings.base.system_name_short = T("Sahana")
 
 # =============================================================================
 # System Settings
@@ -55,13 +58,6 @@ settings.auth.show_link = False
 # Security Policy
 settings.security.policy = 5 # Apply Controller, Function and Table ACLs
 settings.security.map = True
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["MCOP"]
-
-settings.base.system_name = T("Sahana: Puget Sound Common Maritime Operating Picture (MCOP)")
-settings.base.system_name_short = T("Sahana")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)

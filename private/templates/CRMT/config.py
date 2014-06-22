@@ -20,6 +20,13 @@ settings = current.deployment_settings
     Template settings for Community Resilience Mapping Tool
 """
 
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["CRMT", "demo/users"]
+
+settings.base.system_name = T("Community Resilience Mapping Tool")
+settings.base.system_name_short = T("CRMT")
+
 # =============================================================================
 # US Settings
 # -----------------------------------------------------------------------------
@@ -104,13 +111,6 @@ def audit_write(method, tablename, form, record, representation):
     return False
 
 settings.security.audit_write = audit_write
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["CRMT"]
-
-settings.base.system_name = T("Community Resilience Mapping Tool")
-settings.base.system_name_short = T("CRMT")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)

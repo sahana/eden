@@ -23,11 +23,18 @@ T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
 
+datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+
 """
     Template settings for DRM Portal
 """
 
-datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["DRMP", "demo/users"]
+
+settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System")
+settings.base.system_name_short = T("DRMIS")
 
 # =============================================================================
 # System Settings
@@ -94,13 +101,6 @@ def drmp_realm_entity(table, row):
     return 0
 
 settings.auth.realm_entity = drmp_realm_entity
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["DRMP"]
-
-settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System")
-settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)

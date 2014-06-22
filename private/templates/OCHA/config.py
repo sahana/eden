@@ -18,7 +18,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["OCHA"]
+settings.base.prepopulate = ["OCHA", "demo/users"]
 
 settings.base.system_name = T("Who What Where")
 settings.base.system_name_short = T("3W")

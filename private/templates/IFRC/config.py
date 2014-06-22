@@ -19,6 +19,13 @@ settings = current.deployment_settings
     Template settings for IFRC
 """
 
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ("IFRC", "IFRC/Train")
+
+settings.base.system_name = T("Resource Management System")
+settings.base.system_name_short = T("RMS")
+
 # =============================================================================
 # System Settings
 # -----------------------------------------------------------------------------
@@ -170,13 +177,6 @@ def ifrc_realm_entity(table, row):
     return realm_entity
 
 settings.auth.realm_entity = ifrc_realm_entity
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ("IFRC", "IFRC_Train")
-
-settings.base.system_name = T("Resource Management System")
-settings.base.system_name_short = T("RMS")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)

@@ -24,6 +24,13 @@ settings = current.deployment_settings
     Template settings for CSN
 """
 
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["CSN", "demo/users"]
+
+settings.base.system_name = T("Community Stakeholder Network")
+settings.base.system_name_short = T("CSN")
+
 # =============================================================================
 # US Settings
 # -----------------------------------------------------------------------------
@@ -70,13 +77,6 @@ settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = False
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["CSN"]
-
-settings.base.system_name = T("Community Stakeholder Network")
-settings.base.system_name_short = T("CSN")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)

@@ -19,6 +19,13 @@ settings = current.deployment_settings
     UN OCHA Regional Office of Caucasus and Central Asia (ROCCA) Humanitarian Data Platform Template settings
 """
 
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["OCHAROCCA", "demo/users"]
+
+settings.base.system_name = T("OCHA Regional Office of Caucasus and Central Asia (ROCCA) Humanitarian Data Platform")
+settings.base.system_name_short = T("Humanitarian Data Platform")
+
 # Levels for the LocationSelector
 gis_levels = ("L0", "L1", "L2", "L3")
 
@@ -50,13 +57,6 @@ settings.auth.show_link = False
 # Security Policy
 settings.security.policy = 5 # Apply Controller, Function and Table ACLs
 settings.security.map = True
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["OCHAROCCA"]
-
-settings.base.system_name = T("OCHA Regional Office of Caucasus and Central Asia (ROCCA) Humanitarian Data Platform")
-settings.base.system_name_short = T("Humanitarian Data Platform")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)

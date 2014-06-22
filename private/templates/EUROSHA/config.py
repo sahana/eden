@@ -18,7 +18,7 @@ T = current.T
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["EUROSHA"]
+settings.base.prepopulate = ["EUROSHA", "demo/users"]
 
 settings.base.system_name = T("EUROSHA Humanitarian Data Registry")
 settings.base.system_name_short = T("EUROSHA")

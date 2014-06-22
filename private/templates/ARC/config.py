@@ -14,10 +14,28 @@ settings = current.deployment_settings
 T = current.T
 
 """
-    Template settings for ARC
+    Template settings for American Red Cross
 """
+
 # =============================================================================
 # System Settings
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["ARC", "demo/users"]
+
+settings.base.system_name = T("Resource Management System")
+settings.base.system_name_short = T("RMS")
+
+# -----------------------------------------------------------------------------
+# Theme (folder to use for views/layout.html)
+settings.base.theme = "ARC"
+settings.base.xtheme = "IFRC/xtheme-ifrc.css"
+settings.gis.map_height = 600
+settings.gis.map_width = 854
+# Display Resources recorded to Admin-Level Locations on the map
+# @ToDo: Move into gis_config?
+settings.gis.display_L0 = True
+
 # -----------------------------------------------------------------------------
 # Authorization Settings
 settings.auth.registration_requires_approval = True
@@ -160,23 +178,6 @@ def ifrc_realm_entity(table, row):
 
     return realm_entity
 settings.auth.realm_entity = ifrc_realm_entity
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["ARC"]
-
-settings.base.system_name = T("Resource Management System")
-settings.base.system_name_short = T("RMS")
-
-# -----------------------------------------------------------------------------
-# Theme (folder to use for views/layout.html)
-settings.base.theme = "ARC"
-settings.base.xtheme = "IFRC/xtheme-ifrc.css"
-settings.gis.map_height = 600
-settings.gis.map_width = 854
-# Display Resources recorded to Admin-Level Locations on the map
-# @ToDo: Move into gis_config?
-settings.gis.display_L0 = True
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings

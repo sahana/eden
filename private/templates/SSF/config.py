@@ -18,7 +18,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["SSF"]
+settings.base.prepopulate = ["SSF", "demo/users"]
 
 # Theme
 settings.base.theme = "SSF"

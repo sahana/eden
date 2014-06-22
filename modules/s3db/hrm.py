@@ -846,7 +846,9 @@ class S3HRModel(S3Model):
                                 readable = False,
                                 writable = False)
 
-        return dict(hrm_human_resource_id = lambda **attr: dummy("human_resource_id"),
+        return dict(hrm_department_id = lambda **attr: dummy("department_id"),
+                    hrm_job_title_id = lambda **attr: dummy("job_title_id"),
+                    hrm_human_resource_id = lambda **attr: dummy("human_resource_id"),
                     )
 
     # -------------------------------------------------------------------------

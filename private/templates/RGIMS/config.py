@@ -21,7 +21,7 @@ settings.base.system_name = "Relief Goods Inventory & Monitoring System"
 settings.base.system_name_short = "RGIMS"
 
 # Pre-Populate
-settings.base.prepopulate = ["RGIMS"]
+settings.base.prepopulate = ["RGIMS", "demo/users"]
 
 # Theme
 settings.base.theme = "RGIMS"

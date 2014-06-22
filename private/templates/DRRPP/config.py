@@ -14,13 +14,13 @@ T = current.T
 settings = current.deployment_settings
 
 """
-    Template settings for DRRPP
+    Template settings for DRR Project Portal
 """
 # =============================================================================
 # Base Deployment Settings
 
 # Pre-Populate
-settings.base.prepopulate = ["DRRPP"]
+settings.base.prepopulate = ["DRRPP", "demo/users"]
 
 settings.base.system_name = T("DRR Project Portal")
 settings.base.system_name_short = T("DRRPP")
