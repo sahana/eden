@@ -62,11 +62,10 @@
                     <data field="type">4</data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <!-- Both -->
-                    <data field="type">3</data>
+                    <!-- Default -->
                 </xsl:otherwise>
             </xsl:choose>
-            
+
             <!-- Link to Organisation to filter lookup lists -->
             <xsl:if test="$OrgName!=''">
                 <reference field="organisation_id" resource="org_organisation">

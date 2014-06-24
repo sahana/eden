@@ -366,9 +366,6 @@ def form_style(self, xfields):
 
 # -----------------------------------------------------------------------------
 def customise_project_project_controller(**attr):
-    """
-        Customise project_project controller
-    """
 
     db = current.db
     s3db = current.s3db
@@ -381,8 +378,8 @@ def customise_project_project_controller(**attr):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
-        else:
-            result = True
+            if not result:
+                return False
 
         if r.interactive:
             is_deployment = False
@@ -480,35 +477,34 @@ def customise_project_project_controller(**attr):
                 row = db(query).select(otable.id, limitby=(0, 1)).first()
 
                 # Modify the CRUD form
-                crud_form = S3SQLCustomForm(
-                        "organisation_id",
-                        "name",
-                        "sector_project.sector_id",
-                        "description",
-                        "status_id",
-                        "start_date",
-                        "end_date",
-                        "calendar",
-                        "human_resource_id",
-                        "comments",
-                    )
+                crud_form = S3SQLCustomForm("organisation_id",
+                                            "name",
+                                            "sector_project.sector_id",
+                                            "description",
+                                            "status_id",
+                                            "start_date",
+                                            "end_date",
+                                            "calendar",
+                                            "human_resource_id",
+                                            "comments",
+                                            )
 
             # Set the default sector
             try:
                 stable.sector_id.default = row.id
             except:
                 current.log.error("Pre-Populate",
-                                 "Sectors not prepopulated")
+                                  "Sectors not prepopulated")
 
             # Remove Add Sector button
             stable.sector_id.comment = None
 
             s3db.configure(tablename,
-                            crud_form = crud_form,
-                            delete_next = delete_next,
-                            )
+                           crud_form = crud_form,
+                           delete_next = delete_next,
+                           )
 
-        return result
+        return True
 
     s3.prep = custom_prep
 
@@ -516,6 +512,7 @@ def customise_project_project_controller(**attr):
 
 settings.customise_project_project_controller = customise_project_project_controller
 
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled

@@ -41,14 +41,13 @@ class index(S3CustomController):
         # Set the marker
         mtable = s3db.gis_marker
         query = (mtable.name == "sunflower") | (mtable.name == "contributor")
-        markers = db(query).select(
-                            mtable.name,
-                            mtable.image,
-                            mtable.height,
-                            mtable.width,
-                            cache=s3db.cache,
-                            limitby=(0, 2)
-                            )
+        markers = db(query).select(mtable.name,
+                                   mtable.image,
+                                   mtable.height,
+                                   mtable.width,
+                                   cache=s3db.cache,
+                                   limitby=(0, 2)
+                                   )
 
         project_marker = None
         contributor_marker = None
@@ -59,55 +58,47 @@ class index(S3CustomController):
             if marker.name == "contributor":
                 contributor_marker = marker
 
-        layers = [
-                  {"name"      : T("Deployments"),
+        layers = [{"name"      : T("Deployments"),
                    "id"        : "deployments",
                    "tablename" : "project_location",
                    "url"       : project_url,
                    "active"    : True,
                    "marker"    : project_marker,
-                  },
+                   },
                   {"name"      : T("Contributors"),
                    "id"        : "contributors",
                    "tablename" : "pr_address",
                    "url"       : contributor_url,
                    "active"    : True,
                    "marker"    : contributor_marker,
-                  },
-                 ]
+                   },
+                  ]
 
-        output["map"] = current.gis.show_map(
-                            collapsed = True,
-                            feature_resources = layers,
-                            legend="float",
-                            )
+        output["map"] = current.gis.show_map(collapsed = True,
+                                             feature_resources = layers,
+                                             legend="float",
+                                             )
 
         s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
         feed_control = "".join(('''
 function LoadFeeds(){
  var feeds=[
-  {
-   title:'Tasks',
+  {title:'Tasks',
    url:\'''', settings.base.public_url, '''/''', request.application, '''/project/task.rss?task.status=2,3,4,11'
   },
-  {
-   title:'Tickets',
+  {title:'Tickets',
    url:'http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&max=50&daysback=90&format=rss'
   },
-  {
-   title:'Wiki',
+  {title:'Wiki',
    url:'http://eden.sahanafoundation.org/timeline?changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss'
   },
-  {
-   title:'Github',
+  {title:'Github',
    url:'https://github.com/flavour/eden/commits/master.atom'
   },
-  {
-   title:'Twitter',
+  {title:'Twitter',
    url:'http://www.rssitfor.me/getrss?name=@SahanaFOSS'
   },
-  {
-   title:'Blog',
+  {title:'Blog',
    url:'http://sahanafoundation.org/feed/?cat=33,39'
   }
  ];
