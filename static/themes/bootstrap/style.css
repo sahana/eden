@@ -248,7 +248,7 @@ a i.icon.icon-plus-sign.big-add:hover {
 }
 
 div.form-container {
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
 
 div.form-container form.form-horizontal,
@@ -479,7 +479,7 @@ http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ 
     margin-left: 7px; */
     margin-top: 5px;
     /* This pushed it 'out of the way' on NYC so not easy to see (CRMT just pads it down a little, still looking worse, DRMP looks awful with this)
-    float: left;
+    float: right;
     margin-right: 7px;*/
     font-size: 12px;
 }

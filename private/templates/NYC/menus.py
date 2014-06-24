@@ -91,7 +91,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("People Registry", c="pr", f="index")
             ),                
             MM("Networks", c="org", f="group")(
-                MM("Networks", c="org", f="group"),
+                #MM("Networks", c="org", f="group"),
                 #MM("Organizations", c="org", f="organisation"),
             ),                
             MM("Resources", c="inv", f="index")(

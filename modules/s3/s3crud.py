@@ -2279,7 +2279,7 @@ class S3CRUD(S3Method):
                 else:
                     label = crud_string(tablename, "label_list_button")
                     _href = url(method="",
-                                id=0,
+                                id=r.id if r.component else 0,
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
@@ -2357,11 +2357,9 @@ class S3CRUD(S3Method):
             @param attr: attributes for the link (default: {"_class":"action-btn"})
         """
 
-        settings = current.deployment_settings
-
         link = dict(attr)
         link.update(label=str(label), url=url)
-        if icon and settings.get_ui_use_button_glyphicons():
+        if icon and current.deployment_settings.get_ui_use_button_glyphicons():
             link.update(icon=icon)
         if "_class" not in link:
             link.update(_class="action-btn")
@@ -2466,7 +2464,8 @@ class S3CRUD(S3Method):
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn",
                                      icon=icon, 
-                                     restrict=restrict)
+                                     restrict=restrict,
+                                     )
             else:
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn",
@@ -2479,7 +2478,8 @@ class S3CRUD(S3Method):
                 copy_url = URL(args = args + ["copy"])
             s3crud.action_button(labels.COPY, 
                                  copy_url,
-                                 icon="copy")
+                                 icon="copy",
+                                 )
 
         # Append custom actions
         if custom_actions:

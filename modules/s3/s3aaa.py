@@ -594,8 +594,6 @@ Thank you"""
             if buttons:
                 submit_button = INPUT(_type="submit", _value=T("Login"))
                 buttons.insert(0, submit_button)
-            else:
-                buttons = None
             
             form = SQLFORM(utable,
                            fields = [userfield, passfield],

@@ -753,8 +753,9 @@ def customise_org_group_controller(**attr):
         return result
     s3.prep = custom_prep
 
-    # Allow components with components (such as org/group) to breakout from tabs
-    attr["native"] = True
+    if current.auth.s3_logged_in():
+        # Allow components with components (such as org/group) to breakout from tabs
+        attr["native"] = True
 
     return attr
 

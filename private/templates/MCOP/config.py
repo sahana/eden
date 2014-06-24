@@ -243,8 +243,8 @@ def customise_cms_post_resource(r, tablename):
     """
 
     s3 = current.response.s3
-    s3db = current.s3db
     db = current.db
+    s3db = current.s3db
     table = s3db.cms_post
 
     s3.dl_pagelength = 12
@@ -282,9 +282,9 @@ def customise_cms_post_resource(r, tablename):
     #table.series_id.label = T("Type")
     stable = s3db.cms_series
     try:
-        series_id = current.db(stable.name == "Alert").select(stable.id,
-                                                              limitby=(0, 1)
-                                                              ).first().id
+        series_id = db(stable.name == "Alert").select(stable.id,
+                                                      limitby=(0, 1)
+                                                      ).first().id
         table.series_id.default = series_id
     except:
         # No suitable prepop
@@ -313,10 +313,9 @@ def customise_cms_post_resource(r, tablename):
         # Coming from Profile page
         # Default location to Incident Location
         itable = s3db.event_incident
-        incident = db(itable == incident_id 
-                      ).select(itable.location_id,
-                               limitby=(0,1)
-                               ).first()
+        incident = db(itable == incident_id).select(itable.location_id,
+                                                    limitby=(0, 1)
+                                                    ).first()
         if incident:
             table.location_id.default = incident.location_id
         
@@ -887,22 +886,22 @@ def customise_org_resource_resource(r, tablename):
         But runs before prep
     """
 
-    s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.org_resource
-
     if r.interactive:
-        s3.crud_strings["org_resource"] = Storage(
-                    label_create = T("Add"),
-                    title_display = T("Inventory Resource"),
-                    title_list = T("Resource Inventory"),
-                    title_update = T("Edit Inventory Resource"),
-                    label_list_button = T("Resource Inventory"),
-                    label_delete_button = T("Delete Inventory Resource"),
-                    msg_record_created = T("Inventory Resource added"),
-                    msg_record_modified = T("Inventory Resource updated"),
-                    msg_record_deleted = T("Inventory Resource deleted"),
-                    msg_list_empty = T("No Resources in Inventory"))
+        s3 = current.response.s3
+        s3db = current.s3db
+        table = s3db.org_resource
+
+        s3.crud_strings[tablename] = Storage(
+            label_create = T("Add"),
+            title_display = T("Inventory Resource"),
+            title_list = T("Resource Inventory"),
+            title_update = T("Edit Inventory Resource"),
+            label_list_button = T("Resource Inventory"),
+            label_delete_button = T("Delete Inventory Resource"),
+            msg_record_created = T("Inventory Resource added"),
+            msg_record_modified = T("Inventory Resource updated"),
+            msg_record_deleted = T("Inventory Resource deleted"),
+            msg_list_empty = T("No Resources in Inventory"))
         
         location_field = table.location_id
         # Filter from a Profile page?
@@ -948,10 +947,9 @@ def customise_org_resource_resource(r, tablename):
         # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
         s3.cancel = URL(c="org", f="resource")
 
-    return True
-
 settings.customise_org_resource_resource = customise_org_resource_resource
 
+# -----------------------------------------------------------------------------
 def customise_event_resource_resource(r, tablename):
     """
         Customise org_resource resource
@@ -961,27 +959,20 @@ def customise_event_resource_resource(r, tablename):
         But runs before prep
     """
 
-    s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.org_resource
-
     if r.interactive:
-        s3.crud_strings["event_resource"] = Storage(
-                    label_create = T("Add"),
-                    title_display = T("Resource Responding"),
-                    title_list = T("Resources Responding"),
-                    title_update = T("Edit Resource Responding"),
-                    label_list_button = T("Resources Responding"),
-                    label_delete_button = T("Delete Resource Responding"),
-                    msg_record_created = T("Resource Responding added"),
-                    msg_record_modified = T("Resource Responding updated"),
-                    msg_record_deleted = T("Resource Responding deleted"),
-                    msg_list_empty = T("No Resources Responding"))
-
-    return True
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add"),
+            title_display = T("Resource Responding"),
+            title_list = T("Resources Responding"),
+            title_update = T("Edit Resource Responding"),
+            label_list_button = T("Resources Responding"),
+            label_delete_button = T("Delete Resource Responding"),
+            msg_record_created = T("Resource Responding added"),
+            msg_record_modified = T("Resource Responding updated"),
+            msg_record_deleted = T("Resource Responding deleted"),
+            msg_list_empty = T("No Resources Responding"))
 
 settings.customise_event_resource_resource = customise_event_resource_resource
-
 
 # -----------------------------------------------------------------------------
 # Tasks (project_task)
@@ -1089,16 +1080,17 @@ def customise_project_task_resource(r, tablename):
                                                    ))
 
     if (r.method == None or r.method == "update") and r.record.source_url:
-        #Task imported from Wrike
-        #crud_fields.insert(0,"source_url")
+        # Task imported from Wrike
+        # - lock all fields which should only be edited within Wrike
+        #crud_fields.insert(0, "source_url")
         current.s3db.event_task.incident_id.writable = False
         for fieldname in ["source_url",
                           "status",
-                           "priority",
-                           "name",
-                           "description",
-                           "pe_id",
-                           "date_due"]:
+                          "priority",
+                          "name",
+                          "description",
+                          "pe_id",
+                          "date_due"]:
             table[fieldname].writable = False
 
     crud_form = S3SQLCustomForm(*crud_fields)

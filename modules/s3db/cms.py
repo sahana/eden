@@ -1250,23 +1250,23 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     body = record["cms_post.body"]
-    
     series_id = raw["cms_post.series_id"]
 
     subtitle = []
-    for event_resource in ["event","incident"]:
+    for event_resource in ["event", "incident"]:
         label = record["event_post.%s_id" % event_resource]
         if label and label != NONE:
-            link=URL(c="event",
-                     f=event_resource,
+            link=URL(c="event", f=event_resource,
                      args=[raw["event_post.%s_id" % event_resource],
                           "profile"]
                      )
-            subtitle.append(DIV(A(I( _class="icon icon-%s"  % event_resource),
-                                    label,
-                                    _href=link,
-                                    _target="_blank"),
-                                 _class="card-subtitle"))
+            subtitle.append(DIV(A(I(_class="icon icon-%s" % event_resource),
+                                  label,
+                                  _href=link,
+                                  _target="_blank",
+                                  ),
+                                _class="card-subtitle"
+                                ))
     if subtitle:
         subtitle.append(body)
         body = TAG[""](*subtitle)

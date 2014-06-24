@@ -6432,7 +6432,7 @@ class MAP(DIV):
                     # Presence of username turns feature on in s3.gis.js
                     options["geonames"] = geonames_username
                     # Presence of label adds support JS in Loader
-                    i18n["gis_search"] = T("Search for a location")
+                    i18n["gis_search"] = T("Search location in Geonames")
                     #i18n["gis_search_no_internet"] = T("Geonames.org search requires Internet connectivity!")
 
             # Show NAV controls?
