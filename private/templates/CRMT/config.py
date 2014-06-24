@@ -204,12 +204,12 @@ current.response.menu = menu
 # -----------------------------------------------------------------------------
 # Summary Pages
 settings.ui.summary = [{"common": True,
-                        "name": "cms",
-                        "widgets": [{"method": "cms"}]
-                        },
-                       {"common": True,
                         "name": "add",
                         "widgets": [{"method": "create"}],
+                        },
+                       {"common": True,
+                        "name": "cms",
+                        "widgets": [{"method": "cms"}]
                         },
                        {"name": "table",
                         "label": "Table",
@@ -674,6 +674,7 @@ def customise_project_activity_controller(**attr):
             s3.crud_strings[tablename].title_update = T("Update Activities")
             table.date.label = T("Date")
             table.name.label = T("Activity Name")
+            table.comments.label = T("Description")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             # Custom Form (Read/Create/Update inc embedded Summary)
@@ -725,8 +726,13 @@ def customise_project_activity_controller(**attr):
                     name = "file",
                     label = T("Files"),
                     fields = [("", "file"),
-                              #"comments",
                               ],
+                    comment =  DIV(_class="tooltip",
+                                   _title="%s|%s" % 
+                                          (T("Files"),
+                                           T("Upload Photos, Promotional Material, Documents or Reports related to the Activity")
+                                           )
+                                   )
                 ),
                 "comments",
             )
@@ -1541,7 +1547,7 @@ def customise_stats_people_controller(**attr):
             #table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                label_create = T("Add People"),
+                label_create = T("Add"),
                 title_display = T("People Details"),
                 title_list = T("People"),
                 title_update = T("Update People"),
@@ -1884,7 +1890,7 @@ def customise_vulnerability_risk_controller(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
-                label_create = T("Create Hazard"),
+                label_create = T("Add"),
                 title_display = T("Hazard Details"),
                 title_list = T("Hazards"),
                 title_update = T("Update Hazard"),

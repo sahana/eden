@@ -71,8 +71,7 @@ h2 i {
 }
 
 #org_facility_organisation_id__row .help-block div{
-    top: 0;
-    margin-bottom: 12px;
+    margin-bottom: -16px;
 }
 
 /* Main Map */
@@ -93,19 +92,37 @@ h2 i {
 }
 
 /* Summary Page */
-h2.summary {
+h2 {
     float: left;
-}
-
-#summary-common { 
-    margin-top: 10px;
+    margin-right: 15px;
 }
 
 #list-btn-add {
-    /* background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;*/
-    margin: 0 0 0 10px;
-    padding: 4px 6px;
+    margin-top: 15px;
     float: left;
+}
+
+#show-add-btn {
+    margin-bottom: 10px;
+}
+
+#list-add h3 {
+    padding: 7px 15px;
+    text-align: left;
+}
+
+#map {
+    float:left;
+}
+
+#list-add,
+#filter-form,
+#table-container,
+.form-container {
+    clear: both;
+}
+
+#summary-common {
     /* Push above alert-space & Summary Tabs */
     position: relative;
     z-index: 1001;
@@ -119,8 +136,9 @@ h2.summary {
 }
 
 .cms-edit {
-    /* Push above Summary Tabs */
-    z-index: 1001;
+    float: right;
+    margin-top: -25px;
+}
 }
 
 .ui-tabs {
@@ -306,11 +324,19 @@ button.ui-multiselect.ui-state-default.ui-corner-all:hover {
     *background: #d9d9d9;
 }
 
-button.ui-multiselect.ui-state-default.ui-corner-all {
-    margin-bottom: 10px;
+/* Filter Form */
+#filter-form-title {
+    margin: 0 0 0 7px;
+    padding: 0 3px;
+    font-size: 16px;
+    display: inline-block;
+    z-index: 1;
+    position: relative;
+    background-color: white;
+    border-radius: 5px;
+    float: left;
 }
 
-/* Filter Form */
 form.filter-form,
 form#summary-filter-form {
     float: left;
@@ -389,13 +415,26 @@ form#summary-filter-form {
     margin-top: -20px;
 } */
 
+#sub-filedocument {
+    float: left;
+}
+
+#project_activity_sub_filedocument__row .tooltip {
+    margin-top: -3px; 
+}
+
 #sub_defaultresource_defaultresource_i_value_edit_none {
     width: 50px;
 }
 
+
+#sub_defaultsite_org_group_defaultsite_org_group_i_status_edit_none {
+    width: 270px;
+}
+
 /* Map */
 .map_home {
-    margin: -14px 0 0;
+    margin: 0;
 }
 
 .map_save_button,
@@ -416,7 +455,7 @@ form#summary-filter-form {
 }
 
 .map_save_panel {
-    margin: 0;
+    margin-top: 10px;
 }
 
 /* Report */

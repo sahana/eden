@@ -98,10 +98,15 @@ h3 {
 
 .header {
     background: url('../../img/semi_white_75.png');
+    margin: 0px;
 }
 
 .header .intro {
     padding: 10px 15px;
+}
+
+.header .intro a {
+    color: #37518b;
 }
 
 .intro p,
@@ -130,14 +135,23 @@ div.link {
     margin-bottom: 15px;
 }
 
-div.link:hover h3,
-div.link:hover a {
-    color: #182640;
+.link:hover h3,
+.link:hover a,
+.links a:hover {
+    color: #37518b;
     text-decoration:none;
+}
+
+.links a:hover h3 {
+    color: inherit;
 }
 
 .homepage .dl {
     padding: 5px 2px;
+}
+
+.dl-empty {
+    clear: both;
 }
 
 .thumbnail {
@@ -188,26 +202,25 @@ div.link:hover a {
 
 /***********************************************/
 
-/* Needs fixing - test profile page
-h2, #list-btn-add {
-    float: left
-} */
-
-.summary-heading {
+h2 {
     float: left;
-}
-
-.summary-create {
-    float: left;
-    margin: 12px 0 0 18px;
+    margin-right: 15px;
 }
 
 #list-btn-add {
-    margin: 15px 0 0 15px;
+    margin-top: 15px;
+}
+
+#show-add-btn {
+    margin-bottom: 10px;
+}
+
+#map {
+    float:left;
 }
 
 #list-add,
-#summary-common,
+#filter-form,
 #table-container,
 .form-container {
     clear: both;
@@ -247,6 +260,15 @@ h2, #list-btn-add {
     margin-bottom: 5px;
 }
 
+.media .card-subtitle {
+    font-size: 12px;
+    font-style: italic;
+    margin: -4px 0 4px;
+}
+.media .card-subtitle a:hover{
+    text-decoration: none;
+}
+
 /* @ToDo: Move to default/tasks.css ? */
 .task_priority,
 .task_name,
@@ -275,4 +297,56 @@ h2, #list-btn-add {
 }
 .dl-1-cols {
     width: 96%;
+}
+
+.s3_add_resource_link,
+.action-lnk {
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    line-height: 20px;
+    display: inline-block;
+    *display: inline;
+    padding: 1px 6px;
+    *margin-left: .3em;
+    margin-right: -2px;
+    font-size: 13px;
+    line-height: 20px;
+    *line-height: 20px;
+    vertical-align: middle;
+    cursor: pointer;
+    text-align: center;
+    color: #333333;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    background-color: #f5f5f5;
+    *background-color: #e6e6e6;
+    background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
+    background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+    background-repeat: repeat-x;
+    border-bottom-color: #a2a2a2;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    *zoom: 1;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+     -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.s3_add_resource_link:hover,
+.action-lnk:hover {
+    color: #333333;
+    text-decoration: none;
+    background-color: #e6e6e6;
+    *background-color: #d9d9d9;
+    /* Buttons in IE7 don't get borders, so darken on hover */
+    background-position: 0 -15px;
+    -webkit-transition: background-position 0.1s linear;
+     -moz-transition: background-position 0.1s linear;
+       -o-transition: background-position 0.1s linear;
+          transition: background-position 0.1s linear;
 }

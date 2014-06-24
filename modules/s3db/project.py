@@ -6540,7 +6540,8 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     if source_url:
         source_btn =  A(I(" ", _class="icon icon-link"),
                        _title=source_url,
-                       _href=source_url
+                       _href=source_url,
+                       _target="_blank"
                        )
     else:
         source_btn = ""

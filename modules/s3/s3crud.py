@@ -2348,7 +2348,7 @@ class S3CRUD(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def action_button(label, url, **attr):
+    def action_button(label, url, icon=None, **attr):
         """
             Add a link to response.s3.actions
 
@@ -2357,8 +2357,12 @@ class S3CRUD(S3Method):
             @param attr: attributes for the link (default: {"_class":"action-btn"})
         """
 
+        settings = current.deployment_settings
+
         link = dict(attr)
         link.update(label=str(label), url=url)
+        if icon and settings.get_ui_use_button_glyphicons():
+            link.update(icon=icon)
         if "_class" not in link:
             link.update(_class="action-btn")
 
@@ -2430,7 +2434,8 @@ class S3CRUD(S3Method):
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
-                                 _class="action-btn edit"
+                                 _class="action-btn edit",
+                                 icon = "edit",
                                  )
         else:
             if not read_url:
@@ -2439,11 +2444,12 @@ class S3CRUD(S3Method):
             s3crud.action_button(labels.READ, read_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
-                                 _class="action-btn read"
+                                 _class="action-btn read",
                                  )
 
         # Delete-action
         if deletable and has_permission("delete", table):
+            icon = "trash"
             if not delete_url:
                 delete_url = URL(args = args + ["delete"],
                                  vars = get_vars)
@@ -2458,16 +2464,22 @@ class S3CRUD(S3Method):
                     if row_id:
                         rappend(str(row_id))
                 s3crud.action_button(labels.DELETE, delete_url,
-                                     _class="delete-btn", restrict=restrict)
+                                     _class="delete-btn",
+                                     icon=icon, 
+                                     restrict=restrict)
             else:
                 s3crud.action_button(labels.DELETE, delete_url,
-                                     _class="delete-btn")
+                                     _class="delete-btn",
+                                     icon=icon,
+                                     )
 
         # Copy-action
         if copyable and has_permission("create", table):
             if not copy_url:
                 copy_url = URL(args = args + ["copy"])
-            s3crud.action_button(labels.COPY, copy_url)
+            s3crud.action_button(labels.COPY, 
+                                 copy_url,
+                                 icon="copy")
 
         # Append custom actions
         if custom_actions:

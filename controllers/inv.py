@@ -152,7 +152,7 @@ def index2():
                                  )
                 custom_actions = [dict(label=str(T("Warehouse")),
                                   _class="action-icon",
-                                  icon="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
+                                  img="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
                                   url=URL(c="inv", f="warehouse",
                                           args=["[id]", "update"]
                                           )

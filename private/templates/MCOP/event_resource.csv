@@ -1,3 +1,3 @@
 Incident,Organisation,Resource Type,Country,L1,L2,L3,L4,Name,Quantity,Status,Date,Comments
-Train derailment,Tacoma Fire Department,Engineers,US,Washington,Pierce,Tacoma,,Engineering Team,,Responding,2014-04-02 10:00,
-Train derailment,Tacoma Fire Department,Vehicles,US,Washington,Pierce,Tacoma,,Crane,,Responding,2014-04-02 10:00,
+Train derailment,Tacoma Fire Department,Engineers,US,Washington,Pierce,Tacoma,,Engineering Team,,En Route,2014-04-02 10:00,
+Train derailment,Tacoma Fire Department,Vehicles,US,Washington,Pierce,Tacoma,,Crane,,Available,2014-04-02 10:00,

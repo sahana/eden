@@ -1007,7 +1007,13 @@
                             }
                             var c = action._class;
                             var label = S3.Utf8.decode(action.label);
+                            var title = label;
                             re = /%5Bid%5D/g;
+                            if (action.icon) {
+                                label = '<i class="icon icon-' + action.icon + '" alt="' + label + '"></i>';
+                            } else if (action.img) {
+                                label = '<img src="' + action.icon + '" alt="' + label + '">';
+                            }
                             if (action._onclick) {
                                 var oc = Actions[i]._onclick.replace(re, action_id);
                                 Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
@@ -1017,16 +1023,10 @@
                                     fnActionCallBacks.push([action_id, S3ActionCallBack]);
                                 }
                             } else if (action.url) {
-                                if (action.icon) {
-                                    label = '<img src="' + action.icon + '" alt="' + label + '" title="' + label + '">';
-                                }
                                 var url = action.url.replace(re, action_id);
-                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + label + '">' + label + '</a>' + '&nbsp;';
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + title + '">' + label + '</a>' + '&nbsp;';
                             } else {
-                                if (action.icon) {
-                                    label = '<img src="' + action.icon + '" alt="' + label + '" title="' + label + '">';
-                                }
-                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + label + '">' + label + '</a>' + '&nbsp;';
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + title + '">' + label + '</a>' + '&nbsp;';
                             }
                         } // end of loop through for each row Action for this table
                     } // end of if there are to be Row Actions for this table
