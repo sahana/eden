@@ -30,3 +30,5 @@
 "HR_READ","HR Reader","Can see all HR records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","hrm","certificate",,"READ",,,,
 "PROJECT_EDIT","Projects Editor","Can see/edit all Project records belonging to this Organisation & all it's Facilities. Cannot control access permissions.","project",,,"ALL",,,,
 "PROJECT_READ","Projects Reader","Can see all Project records belonging to this Organisation & all it's Facilities. Cannot edit any records or control access permissions.","project",,,"READ",,,,
+"CONTRIBUTOR","Community Member","","project",,,"ALL",,,,
+"CONTRIBUTOR","Community Member","","org",,,"ALL",,,,
