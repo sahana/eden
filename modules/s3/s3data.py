@@ -1803,6 +1803,7 @@ class S3PivotTable(object):
                     cols:
                     total:
                 },
+                method: <aggregation method>,
                 cells: [rows[cols]],
                 rows: [rows[index, value, label, total]],
                 cols: [cols[index, value, label, total]],
@@ -2039,6 +2040,7 @@ class S3PivotTable(object):
         output = {"rows": orows,
                   "cols": ocols,
                   "cells": ocells,
+                  "method": method,
                   "lookup": lookup if lookup else None,
                   "total": self._totals(self.totals, [layer]),
                   "nodata": None if not self.empty else str(T("No data available"))}
