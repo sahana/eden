@@ -890,8 +890,8 @@
                             try {
                                 var row_data = rows[item.dataIndex][3],
                                     col_data = cols[item.seriesIndex][3];
-                                var filter = [[rows_selector, row_data ? row_data : "None"],
-                                              [cols_selector, col_data ? col_data : "None"]];
+                                var filter = [[rows_selector, row_data ? row_data : 'None'],
+                                              [cols_selector, col_data ? col_data : 'None']];
                             }
                             catch(e) {
                                 return;

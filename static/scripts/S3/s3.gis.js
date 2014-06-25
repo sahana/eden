@@ -3219,6 +3219,20 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
               ].indexOf(layer.name) != -1) || (s3.layers_nopopups.indexOf(layer.name) != -1)) {
             // Don't do anything here when drawing Features or there aren't popups to show
             return;
+        } else if (layer.s3_layer_type == 'openweathermap') {
+            // Use std onSelect instead of the custom one
+            //layer.options.onSelect(event);
+            var html = layer.options.getPopupHtml(feature.attributes.station);
+            var popup = new OpenLayers.Popup('Popup',
+                                             feature.geometry.getBounds().getCenterLonLat(), 
+                                             new OpenLayers.Size(layer.options.popupX, layer.options.popupY),
+                                             html,
+                                             'Station',
+                                             false);
+            feature.popup = popup;
+            popup.feature = feature;
+            map.addPopup(popup, true);
+            return;
         }
         /*
         if (feature.popup) {
@@ -3414,6 +3428,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var feature = event.feature;
         if (feature) {
             var layer = feature.layer;
+            /*
+            if (layer.s3_layer_type == 'openweathermap') {
+                // Use std onUnselect instead of the custom one
+                layer.options.onUnselect(event);
+                return;
+            }*/
             // Style the feature normally
             feature.renderIntent = 'default';
             if (layer) {
