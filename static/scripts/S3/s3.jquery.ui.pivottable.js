@@ -41,7 +41,9 @@
 
             autoSubmit: 1000,
             thousandSeparator: ' ',
-            thousandGrouping: '3'
+            thousandGrouping: '3',
+            minTickSize: null,
+            precision: null
         },
 
         _create: function() {
@@ -57,7 +59,8 @@
         _init: function() {
             // Update widget options
             
-            var $el = $(this.element);
+            var $el = $(this.element),
+                opts = this.options;
 
             this.data = null;
             this.table = null;
@@ -80,22 +83,22 @@
             }
 
             // Hide the form or parts of it?
-            if (!this.options.renderFilter && !this.options.renderOptions) {
+            if (!opts.renderFilter && !opts.renderOptions) {
                 $el.find('.pt-form-container').hide();
             } else {
                 var widget_id = $el.attr('id');
-                if (this.options.renderOptions) {
+                if (opts.renderOptions) {
                     $('#' + widget_id + '-options').show();
-                    if (this.options.collapseOptions) {
+                    if (opts.collapseOptions) {
                         $('#' + widget_id + '-options legend').siblings().toggle();
                         $('#' + widget_id + '-options legend').children().toggle();
                     }
                 } else {
                     $('#' + widget_id + '-options').hide();
                 }
-                if (this.options.renderFilter) {
+                if (opts.renderFilter) {
                     $('#' + widget_id + '-filters').show();
-                    if (this.options.collapseFilter) {
+                    if (opts.collapseFilter) {
                         $('#' + widget_id + '-filters legend').siblings().toggle();
                         $('#' + widget_id + '-filters legend').children().toggle();
                     }
@@ -105,18 +108,25 @@
             }
 
             // Hide the pivot table?
-            if (this.options.collapseTable) {
+            if (opts.collapseTable) {
                 this.table_options.hidden = true;
                 $el.find('.pt-table').hide();
                 $el.find('.pt-show-table').show();
                 $el.find('.pt-hide-table').hide();
             }
 
-            // Define thousandFormatter function
-            var re = new RegExp('\\B(?=(\\d{' + this.options.thousandGrouping + '})+(?!\\d))','g');
-            var thousandSeparator = this.options.thousandSeparator;
-            this.options.thousandFormatter = function(number) {
-                return number.toString().replace(re, thousandSeparator);
+            // Define number formatter
+            opts.numberFormatter = function(number) {
+
+                var decimals = opts.precision;
+                var n = decimals || decimals == 0 ? number.toFixed(decimals) : number.toString();
+                
+                n = n.split('.');
+                var n1 = n[0],
+                    n2 = n.length > 1 ? '.' + n[1] : '';
+                var re = new RegExp('\\B(?=(\\d{' + opts.thousandGrouping + '})+(?!\\d))', 'g');
+                n1 = n1.replace(re, opts.thousandSeparator);
+                return n1 + n2;
             };
 
             // Render all initial contents
@@ -144,11 +154,16 @@
             if (pivotdata.length) {
                 data = JSON.parse($(pivotdata).first().val());
             }
+
             if (!data) {
                 data = {empty: true};
                 // Show the empty section
                 $el.find('.pt-hide-table').hide();
                 $el.find('.pt-show-table').hide();
+            } else if (data.method == 'count') {
+                // Charts should show integers if method is 'count'
+                this.options.precision = 0;
+                this.options.minTickSize = 1;
             }
             this.data = data;
 
@@ -160,7 +175,6 @@
                 $el.find('.pt-hide-table').hide();
                 $el.find('.pt-show-table').hide();
                 this._renderChart();
-
             } else {
                 this._renderTable();
                 this._renderChartOptions();
@@ -669,7 +683,10 @@
                         // Rotate labels with jquery.flot.tickrotor.js:
                         // rotateTicks: 135
                     },
-                   yaxis: { tickFormatter: this.options.thousandFormatter }
+                    yaxis: {
+                        tickFormatter: this.options.numberFormatter,
+                        minTickSize: this.options.minTickSize
+                    }
                 }
             );
             // jquery.flot.tickrotor.js doesn't hide the original labels:
@@ -815,7 +832,8 @@
                     },
                     xaxis: {
                         max: xmax * 1.1,
-                        tickFormatter: this.options.thousandFormatter
+                        tickFormatter: this.options.numberFormatter,
+                        minTickSize: this.options.minTickSize
                     },
                     grid: {
                         hoverable: true,
