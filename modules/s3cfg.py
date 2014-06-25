@@ -134,12 +134,6 @@ class S3Config(Storage):
         """
         return self.base.get("template", "default")
 
-    def get_chat_server(self):
-        """
-            Get the ip of the chat server if enabled or return False
-        """
-        return self.base.get("chat_server", False)
-
     def exec_template(self, path):
         """
             Execute the template
@@ -148,7 +142,6 @@ class S3Config(Storage):
         from gluon.restricted import restricted
         code = read_file(path)
         restricted(code, layer=path)
-        return
 
     # -------------------------------------------------------------------------
     # Theme
@@ -565,6 +558,12 @@ class S3Config(Storage):
             Should we use CDNs (Content Distribution Networks) to serve some common CSS/JS?
         """
         return self.base.get("cdn", False)
+
+    def get_chat_server(self):
+        """
+            Get the ip of the chat server if enabled or return False
+        """
+        return self.base.get("chat_server", False)
 
     def get_base_session_memcache(self):
         """

@@ -1996,6 +1996,7 @@ S3OptionsFilter({
         # Call script after Global config done
         s3.jquery_ready.append('''s3_register_validation()''')
 
+    # -------------------------------------------------------------------------
     def auth_user_onaccept(self, email, user_id):
         db = current.db
         if self.settings.login_userfield != "username":

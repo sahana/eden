@@ -227,19 +227,6 @@ select {
     display: none;
 }
 
-/* Hide the colons for Location Selectors before JS can hide */
-.form-container #org_facility_location_id__label,
-.form-container #project_activity_location_id__label,
-.form-container #stats_people_location_id__label,
-.form-container #vulnerability_evac_route_location_id__label,
-.form-container #vulnerability_risk_location_id__label {
-    display: none;
-}
-/* But show in Map Popups */
-#plain #org_facility_location_id__label {
-    display: block;
-}
-
 [id$=map_icon__row] div.controls{
     float: left;
 }
@@ -380,12 +367,6 @@ form#summary-filter-form {
     color: #0088CC;
 }
 
-/* Contacts Page */
-.form-container #pr_person_sub_human_resourcehuman_resource__label {
-    /* Hide the colon */
-    display: none;
-}
-
 /* Adjust Field Widths to match Titles/Data */
 #sub_defaultactivity_organisation_defaultactivity_organisation_i_organisation_id_edit_none,
 #sub_defaultactivity_organisation_defaultactivity_organisation_i_organisation_id_edit_0 {
@@ -408,12 +389,13 @@ form#summary-filter-form {
     width: 240px;
 }
 
-/* Organisations/Places Forms
-#sub_defaulthuman_resource_defaulthuman_resource_i_person_id_edit_none,
-#sub_defaulthuman_resource_defaulthuman_resource_i_site_id_edit_none,
-#sub_defaultresource_defaultresource_i_value_edit_none {
-    margin-top: -20px;
-} */
+/* Organisations */
+#org_organisation_sub_defaultfacility__label {
+    width: 0;
+}
+#sub-defaultfacility {
+    margin-left: -170px;
+}
 
 #sub-filedocument {
     float: left;

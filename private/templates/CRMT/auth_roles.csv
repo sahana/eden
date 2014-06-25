@@ -41,7 +41,7 @@ AUTHENTICATED,Authenticated,,,,pr_image,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,pr_person,,READ|CREATE,READ|UPDATE,,,,
 AUTHENTICATED,Authenticated,,event,,,,READ|CREATE|UPDATE,ALL,,,,
 AUTHENTICATED,Authenticated,,org,,,,READ|CREATE|UPDATE,ALL,,,,
-,Authenticated,,org,organisation,,,READ|CREATE|UPDATE|REVIEW|APPROVE,ALL,,,,When authenticated users create orgs they are auto-approved
+AUTHENTICATED,Authenticated,,org,organisation,,,READ|CREATE|UPDATE|REVIEW|APPROVE,ALL,,,,When authenticated users create orgs they are auto-approved
 AUTHENTICATED,Authenticated,,,,org_facility,,READ|CREATE|UPDATE,ALL,,,,Needed for Impersonated Import
 AUTHENTICATED,Authenticated,,,,org_facility_type,,READ|CREATE|UPDATE,ALL,,,,Needed for Impersonated Import
 AUTHENTICATED,Authenticated,,,,org_site_facility_type,,READ|CREATE|UPDATE,ALL,,,,Needed for Impersonated Import

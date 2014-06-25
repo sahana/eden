@@ -4802,6 +4802,9 @@ def source_url_field():
 
 # =============================================================================
 def gis_layer_folder():
+    """
+        @ToDo: Move this to gis_layer_config to allow the same layer to be in different folders in different configs
+    """
     T = current.T
     FOLDER = T("Folder")
     return S3ReusableField("dir", length=64,
@@ -4813,6 +4816,9 @@ def gis_layer_folder():
 
 # =============================================================================
 def gis_opacity():
+    """
+        @ToDo: Move this to gis_layer_config as it's really a part of the style
+    """
     T = current.T
     OPACITY = T("Opacity")
     return S3ReusableField("opacity", "double",

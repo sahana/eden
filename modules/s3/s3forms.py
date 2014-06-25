@@ -846,8 +846,10 @@ class S3SQLCustomForm(S3SQLForm):
                     if f.required:
                         flabels = s3_mark_required([f], mark_required=[f])[0]
                         labels[f.name] = flabels[f.name]
-                    else:
+                    elif f.label:
                         labels[f.name] = "%s:" % f.label
+                    else:
+                        labels[f.name] = ""
 
         if readonly:
             # Strip all comments

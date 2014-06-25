@@ -7,6 +7,7 @@ Outreach (Community Data),,project,activity,CRMT,activity,,,name,,activity_type.
 Meetings (Community Data),,project,activity,CRMT,activity,,,name,,activity_type.name=Meetings,,,,Activities,False,,30,,
 Community Events (Community Data),,project,activity,CRMT,activity,,,name,,activity_type.name=Community Events,,,,Activities,False,,30,,
 Evacuation Routes (Community Data),,vulnerability,evac_route,CRMT,evac_route,,,name,,,,True,,Evacuation,False,,30,,
+Organizations (Community Data),,org,organisation,CRMT,organization,Building,Organization,name,,,,True,,Organizations,False,,30,,
 Arts and Recreation (Community Data),,org,facility,CRMT,arts,Building,Place,name,,facility_type.name__typeof=Arts and Recreation,,,,,False,,30,,
 Communications (Community Data),,org,facility,CRMT,communications,Building,Place,name,,facility_type.name__typeof=Communications,True,,,,False,,30,,
 Community Groups (Community Data),,org,facility,CRMT,people,Building,Place,name,,facility_type.name__typeof=Community Groups,,,,,False,,30,,

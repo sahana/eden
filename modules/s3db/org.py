@@ -418,6 +418,8 @@ class S3OrganisationModel(S3Model):
 
         utablename = auth.settings.table_user_name
         configure(tablename,
+                  context = {"location": "site.location_id",
+                             },
                   deduplicate = self.organisation_duplicate,
                   filter_widgets = filter_widgets,
                   list_fields = ["id",

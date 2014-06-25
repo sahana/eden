@@ -1115,6 +1115,7 @@ def enable_layer(r, **attr):
     """
         Enable a Layer
             designed to be a custom method called by an action button
+        @ToDo: Make this call an API function which can then also be used by CLI scripts (like msg_channel_enable)
     """
 
     if r.component_name != "layer_entity":
@@ -1133,6 +1134,7 @@ def disable_layer(r, **attr):
     """
         Disable a Layer
             designed to be a custom method called by an action button in config/layer_entity
+        @ToDo: Make this call an API function which can then also be used by CLI scripts (like msg_channel_disable)
     """
 
     if r.component_name != "layer_entity":
