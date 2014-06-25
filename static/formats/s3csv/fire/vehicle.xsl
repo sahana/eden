@@ -65,7 +65,7 @@
         <xsl:call-template name="Asset"/>
 
         <resource name="fire_station_vehicle">
-            <reference field="vehicle_id" resource="vehicle_vehicle">
+            <reference field="vehicle_id" resource="transport_vehicle">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$VehicleName"/>
                 </xsl:attribute>
@@ -87,7 +87,7 @@
                                                       col[@field='Type'], '-',
                                                       col[@field='Number'])"/>
 
-        <resource name="vehicle_vehicle">
+        <resource name="transport_vehicle">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$VehicleName"/>
             </xsl:attribute>

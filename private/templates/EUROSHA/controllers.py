@@ -37,7 +37,7 @@ class index():
                     #["col1", T("Staff"), "hrm", "staff"],
                     #["col1", T("Volunteers"), "vol", "volunteer"],
                     ["col1", T("Projects"), "project", "project"],
-                    ["col1", T("Vehicles"), "vehicle", "vehicle"],
+                    ["col1", T("Vehicles"), "transport", "vehicle"],
                     ["col2", T("Assets"), "asset", "asset"],
                     ["col2", T("Inventory Items"), "inv", "inv_item"],
                     #["facility", T("Facilities"), "org", "facility"],

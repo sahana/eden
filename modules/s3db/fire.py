@@ -176,7 +176,7 @@ class S3FireStationModel(S3Model):
         organisation_id = self.org_organisation_id
         human_resource_id = self.hrm_human_resource_id
         ireport_id = self.irs_ireport_id
-        vehicle_id = self.vehicle_vehicle_id
+        vehicle_id = self.transport_vehicle_id
 
         add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
@@ -258,7 +258,7 @@ class S3FireStationModel(S3Model):
 
         # Components
         add_components(tablename,
-                       vehicle_vehicle={"link": "fire_station_vehicle",
+                       transport_vehicle={"link": "fire_station_vehicle",
                                         "joinby": "station_id",
                                         "key": "vehicle_id",
                                         "actuate": "replace",
@@ -473,7 +473,7 @@ class S3FireStationModel(S3Model):
 
             s3db = current.s3db
             dtable = s3db.irs_ireport_vehicle
-            vtable = s3db.vehicle_vehicle
+            vtable = s3db.transport_vehicle
             stable = s3db.fire_station_vehicle
 
             query = (stable.station_id == station_id) & \

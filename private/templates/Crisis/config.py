@@ -148,10 +148,9 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 5,
         )),
-    # Vehicle depends on Assets
-    ("vehicle", Storage(
-            name_nice = T("Vehicles"),
-            #description = "Manage Vehicles",
+    # Vehicle part of Transport module
+    ("transport", Storage(
+            name_nice = T("Transport"),
             restricted = True,
             module_type = 10,
         )),

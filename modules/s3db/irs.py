@@ -578,7 +578,7 @@ class S3IRSModel(S3Model):
 
         settings = current.deployment_settings
 
-        if settings.has_module("fire") and settings.has_module("vehicle"):
+        if settings.has_module("fire") and settings.has_module("transport"):
             pass
         else:
             # Not supported!
@@ -607,7 +607,7 @@ class S3IRSModel(S3Model):
         table = s3db.irs_ireport_vehicle
         stable = s3db.org_site
         atable = s3db.asset_asset
-        vtable = s3db.vehicle_vehicle
+        vtable = s3db.transport_vehicle
         ftable = s3db.fire_station
         fvtable = s3db.fire_station_vehicle
         for type in types:
@@ -1069,7 +1069,7 @@ class S3IRSResponseModel(S3Model):
                                "reply",
                               ])
 
-        if not settings.has_module("vehicle"):
+        if not settings.has_module("transport"):
             return Storage()
 
         # ---------------------------------------------------------------------
@@ -1083,7 +1083,7 @@ class S3IRSResponseModel(S3Model):
                               # Limit Vehicles to those which are not already assigned to an Incident
                               requires = self.irs_vehicle_requires,
                               comment = S3AddResourceLink(
-                                 c="vehicle",
+                                 c="transport",
                                  f="vehicle",
                                  label=T("Add Vehicle"),
                                  tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
@@ -1133,7 +1133,7 @@ class S3IRSResponseModel(S3Model):
                                                       filter_opts=(1,),
                                                       sort=True)),
                               comment = S3AddResourceLink(
-                              c="vehicle",
+                              c="transport",
                               f="vehicle",
                               label=T("Add Vehicle"),
                               tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
