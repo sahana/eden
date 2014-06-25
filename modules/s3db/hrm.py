@@ -695,7 +695,7 @@ class S3HRModel(S3Model):
                          "person_id",
                          "person_id$gender",
                          "job_title_id",
-                         (T("Training"), "person_id$training.course_id"),
+                         (T("Training"), "training.course_id"),
                          "location_id$L1",
                          "location_id$L2",
                          ]
@@ -769,9 +769,9 @@ class S3HRModel(S3Model):
                     fact = report_fields,
                     methods = ["count", "list"],
                     defaults = Storage(
-                        rows = "human_resource.organisation_id",
-                        cols = "human_resource.person_id$training.course_id",
-                        fact = "human_resource.person_id",
+                        rows = "organisation_id",
+                        cols = "training.course_id",
+                        fact = "person_id",
                         aggregate = "count")
                     ),
                   # Default summary

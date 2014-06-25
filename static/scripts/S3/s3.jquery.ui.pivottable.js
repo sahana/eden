@@ -554,6 +554,7 @@
                 var item = data[i];
                 if (!item[1]) {
                     items.push({
+                        index: item[0],
                         label: item[4],
                         data: item[2],
                         key: item[3]
@@ -613,8 +614,10 @@
                 if (selector) {
                     $(chart).bind('plotclick', function(event, pos, item) {
                         if (item) {
+                            var data = items[item.seriesIndex];
                             try {
-                                var filter = [[selector, items[item.seriesIndex]['key']]];
+                                var fvar = data.index == '__other__' ? selector + '__belongs' : selector;
+                                var filter = [[fvar, data.key]];
                             }
                             catch(e) {
                                 return;
@@ -642,6 +645,7 @@
                 var item = data[i];
                 if (!item[1]) {
                     items.push({
+                        index: item[0],
                         label: item[4],
                         data: [[idx+1, item[2]]],
                         key: item[3]
@@ -719,8 +723,10 @@
                 if (selector) {
                     $(chart).bind('plotclick', function(event, pos, item) {
                         if (item) {
+                            var data = items[item.seriesIndex];
                             try {
-                                var filter = [[selector, items[item.seriesIndex]['key']]];
+                                var fvar = data.index == '__other__' ? selector + '__belongs' : selector;
+                                var filter = [[fvar, data.key]];
                             }
                             catch(e) {
                                 return;
@@ -882,8 +888,10 @@
                     $(chart).bind('plotclick', function(event, pos, item) {
                         if (item) {
                             try {
-                                var filter = [[rows_selector, rows[item.dataIndex][3]],
-                                              [cols_selector, cols[item.seriesIndex][3]]];
+                                var row_data = rows[item.dataIndex][3],
+                                    col_data = cols[item.seriesIndex][3];
+                                var filter = [[rows_selector, row_data ? row_data : "None"],
+                                              [cols_selector, col_data ? col_data : "None"]];
                             }
                             catch(e) {
                                 return;

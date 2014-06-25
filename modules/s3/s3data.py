@@ -1876,8 +1876,8 @@ class S3PivotTable(object):
                 rtail = self._tail(rows, maxrows, least=least, method=hmethod)
             self._sortdim(rows, rfields[rows_dim])
             if rtail[1] is not None:
-                rows.append((OTHER, rtail[1], Storage(value=None, text=others)))
-            #row_indices = [i[0] for i in rows]
+                rows.append((OTHER, rtail[1], Storage(value=rtail[0],
+                                                      text=others)))
 
             # Group and sort the cols
             is_numeric = None
@@ -1896,8 +1896,8 @@ class S3PivotTable(object):
                 ctail = self._tail(cols, maxcols, least=least, method=hmethod)
             self._sortdim(cols, rfields[cols_dim])
             if ctail[1] is not None:
-                cols.append((OTHER, ctail[1], Storage(value=None, text=others)))
-            #col_indices = [i[0] for i in cols]
+                cols.append((OTHER, ctail[1], Storage(value=ctail[0],
+                                                      text=others)))
 
             rothers = rtail[0] or []
             cothers = ctail[0] or []
@@ -1955,8 +1955,11 @@ class S3PivotTable(object):
 
             for rindex, rtotal, rtitle in rows:
                 orow = []
-                rval = s3_unicode(rtitle.value) \
-                       if rtitle.value is not None and rindex != OTHER else None
+                rval = rtitle.value
+                if rindex == OTHER and isinstance(rval, list):
+                    rval = ",".join(s3_unicode(v) for v in rval)
+                elif rval is not None:
+                    rval = s3_unicode(rval)
                 if represent:
                     rappend((rindex,
                              rindex in rothers,
@@ -2021,8 +2024,11 @@ class S3PivotTable(object):
                                  "items": items,
                                  "value": value})
                     if ctotals:
-                        cval = s3_unicode(ctitle.value) \
-                               if ctitle.value is not None and cindex != OTHER else None
+                        cval = ctitle.value
+                        if cindex == OTHER and isinstance(cval, list):
+                            cval = ",".join(s3_unicode(v) for v in cval)
+                        elif cval is not None:
+                            cval = s3_unicode(cval)
                         if represent:
                             cappend((cindex,
                                      cindex in cothers,
