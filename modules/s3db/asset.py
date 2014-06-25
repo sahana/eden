@@ -114,7 +114,7 @@ class S3AssetModel(S3Model):
 
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
-        vehicle = settings.has_module("vehicle")
+        vehicle = settings.has_module("transport") and settings.has_module("asset")
 
         # Shortcuts
         add_components = self.add_components
@@ -388,8 +388,8 @@ S3OptionsFilter({
                        asset_group = "asset_id",
                        asset_item = "asset_id",
                        asset_log = "asset_id",
-                       vehicle_gps = "asset_id",
-                       vehicle_vehicle = {"joinby": "asset_id",
+                       transport_vehicle_gps = "asset_id",
+                       transport_vehicle = {"joinby": "asset_id",
                                           "multiple": False,
                                           },
                        )
@@ -1003,7 +1003,7 @@ def asset_rheader(r):
             if record.type == ASSET_TYPE_VEHICLE:
                 tabs = [(T("Asset Details"), None, {"native": True}),
                         (T("Vehicle Details"), "vehicle"),
-                        (T("GPS Data"), "gps")]
+                        (T("GPS Data"), "vehicle_gps")]
             else:
                 tabs = [(T("Edit Details"), None)]
             #elif record.type == s3.asset.ASSET_TYPE_RADIO:
@@ -1016,7 +1016,7 @@ def asset_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
 
-            if current.request.controller == "vehicle":
+            if current.request.controller == "transport":
                 func = "vehicle"
             else:
                 func = "asset"

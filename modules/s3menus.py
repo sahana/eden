@@ -1652,6 +1652,10 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="transport")(
+                    M("Vehicles", f="vehicle")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                    ),
                     M("Airports", f="airport")(
                         M("Create", m="create"),
                         M("Map", m="map"),
@@ -1661,18 +1665,6 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Map", m="map"),
                         M("Import", m="import", restrict=[ADMIN]),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def vehicle():
-        """ VEHICLE / Vehicle Tracking """
-
-        return M(c="vehicle")(
-                    M("Vehicles", f="vehicle")(
-                        M("Create", m="create"),
-                        M("Map", m="map"),
                     ),
                     M("Vehicle Types", f="item")(
                         M("Create", m="create"),

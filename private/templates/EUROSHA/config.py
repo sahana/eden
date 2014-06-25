@@ -35,7 +35,8 @@ settings.auth.registration_requires_approval = True
 settings.auth.registration_requests_organisation = True
 
 settings.auth.role_modules = OrderedDict([
-        ("transport", "Airports and Seaports"),
+        # Vehicles part of Transport module
+        ("transport", "Airports, Seaports and Vehicles"),
         ("hms", "Hospitals"),
         ("org", "Organizations, Offices, and Facilities"),
         ("inv", "Warehouses"),
@@ -43,7 +44,6 @@ settings.auth.role_modules = OrderedDict([
         ("vol", "Volunteers"),
         ("project", "Projects"),
         #("asset", "Assets"),
-        #("vehicle", "Vehicles"),
     ])
 
 # L10n settings
@@ -539,13 +539,6 @@ settings.modules = OrderedDict([
     #        #description = "Recording and Assigning Assets",
     #        restricted = True,
     #        module_type = 5,
-    #    )),
-    # Vehicle depends on Assets
-    #("vehicle", Storage(
-    #        name_nice = T("Vehicles"),
-    #        #description = "Manage Vehicles",
-    #        restricted = True,
-    #        module_type = 6,
     #    )),
     ("project", Storage(
             name_nice = T("Projects"),

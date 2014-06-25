@@ -35,7 +35,7 @@ settings.auth.registration_requires_approval = True
 settings.auth.registration_requests_organisation = True
 
 #settings.auth.role_modules = OrderedDict([
-#        ("transport", "Airports and Seaports"),
+#        ("transport", "Airports, Seaports and Vehicles"),
 #        ("hms", "Hospitals"),
 #        ("org", "Organizations, Offices, and Facilities"),
 #        ("inv", "Warehouses"),
@@ -43,7 +43,6 @@ settings.auth.registration_requests_organisation = True
 #        ("vol", "Volunteers"),
 #        ("project", "Projects"),
 #        #("asset", "Assets"),
-#        #("vehicle", "Vehicles"),
 #    ])
 
 # L10n settings

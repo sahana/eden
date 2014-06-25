@@ -860,13 +860,6 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 5,
     )),
-    # Vehicle depends on Assets
-    ("vehicle", Storage(
-        name_nice = T("Vehicles"),
-        #description = "Manage Vehicles",
-        restricted = True,
-        module_type = 10,
-    )),
     ("req", Storage(
         name_nice = T("Requests"),
         #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",

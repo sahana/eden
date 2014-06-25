@@ -220,7 +220,7 @@ class S3SupplyModel(S3Model):
         # Item Category
         #
         asset = settings.has_module("asset")
-        vehicle = settings.has_module("vehicle")
+        vehicle = settings.has_module("transport") and asset
 
         item_category_represent = supply_ItemCategoryRepresent()
         item_category_represent_nocodes = \
@@ -325,7 +325,7 @@ S3OptionsFilter({
             """
             # If there is a tracking number check that it is unique within the org
             if not (form.vars.code or form.vars.name):
-                error = form.errors
+                errors = form.errors
                 errors.code = errors.name = T("An Item Category must have a Code OR a Name.")
 
         configure(tablename,

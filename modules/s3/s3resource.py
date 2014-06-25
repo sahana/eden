@@ -57,7 +57,7 @@ except ImportError:
 
 from gluon import current
 from gluon.http import HTTP
-from gluon.html import TAG
+from gluon.html import TAG, A
 from gluon.validators import IS_EMPTY_OR
 from gluon.dal import Row, Rows, Table, Field, Expression
 from gluon.storage import Storage

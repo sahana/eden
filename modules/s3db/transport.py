@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3TransportModel",
+		   "S3VehicleModel",
            ]
 
 from gluon import *
@@ -394,5 +395,202 @@ class S3TransportModel(S3Model):
         """
 
         current.s3db.org_update_affiliations("transport_seaport", form.vars)
+
+# =============================================================================
+class S3VehicleModel(S3Model):
+    """
+        Vehicle Management Functionality
+
+        http://eden.sahanafoundation.org/wiki/BluePrint/Vehicle
+    
+    """
+
+    names = ["transport_vehicle",
+             "transport_vehicle_gps",
+             "transport_vehicle_id",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        asset_id = self.asset_asset_id
+
+        crud_strings = current.response.s3.crud_strings
+
+        # These are Porto-specific Types
+        # @ToDo: Move to database table to allow prepop for different deployments
+        vehicle_type_opts = {
+            "VSAT": T("Rescue Vehicle Tactical Assistance"),
+            "VLCI": T("Fire Fighter Light Vehicle"),
+            "ABTD": T("Patient Transportation Ambulance"),
+            "ABSC": T("Rescue Ambulance"),
+            "VUCI": T("Fire Fighter Urban Vehicle"),
+            "VTTU": T("Urban Tank Tactical Vehicle"),
+            "VCOT": T("Command Tactical Operational Vehicle"),
+            "VFCI": T("Fire Fighter Forest Vehicle"),
+            "VE30": T("Ladder Vehicle 30"),
+            "VTPT": T("Person Transportation Tactical Vehicle"),
+            "VTTR": T("Rural Tank Tactical Vehicle"),
+            "VTTF": T("Forest Tank Tactical Vehicle"),
+            "VECI": T("Fire Fighter Special Vehicle"),
+            "VRCI": T("Fire Fighter Rural Vehicle"),
+            "MOTA": T("Motorcycle"),
+            "VTPG": T("General Person Transportation Vehicle"),
+            "VTGC": T("Big Capacity Tank Vehicle"),
+            "ABTM": T("Doolie Transportation Ambulance"),
+            "VOPE": T("Specific Operations Vehicle"),
+            "VETA": T("Technical Support Vehicle"),
+            "VPME": T("Special Multirisk Protection Vehicle"),
+            "VAME": T("Scubadiving Support Vehicle"),
+            "VAPA": T("Alimentary Support Vehicle"),
+        }
+
+        # Vehicles are a component of Assets
+        tablename = "transport_vehicle"
+        self.define_table(tablename,
+                          Field("type",
+                                label = T("Type"),
+                                represent = lambda opt: \
+                                            vehicle_type_opts.get(opt, opt),
+                                requires = IS_EMPTY_OR(IS_IN_SET(vehicle_type_opts)),
+                                ),
+                          Field("name",
+                                comment = T("e.g. License Plate"),
+                                label = T("ID"),
+                                ),
+                          asset_id(),
+                          Field("gps",
+                                label = T("GPS ID"),
+                                ),
+                          Field("mileage", "integer",
+                                label = T("Current Mileage"),
+                                represent = lambda v, row=None: \
+                                    IS_INT_AMOUNT.represent(v),
+                                ),
+                          Field("service_mileage", "integer",
+                                comment = T("Mileage"),
+                                label = T("Service Due"),
+                                represent = lambda v, row=None: \
+                                    IS_INT_AMOUNT.represent(v),
+                                ),
+                          s3_date("service_date",
+                                  label = T("Service Due"),
+                                  ),
+                          s3_date("insurance_date",
+                                  label = T("Insurance Renewal Due"),
+                                  ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Vehicle Details"),
+            title_display = T("Vehicle Details"),
+            title_list = T("Vehicles"),
+            title_update = T("Edit Vehicle Details"),
+            label_list_button = T("List Vehicle Details"),
+            label_delete_button = T("Delete Vehicle Details"),
+            msg_record_created = T("Vehicle Details added"),
+            msg_record_modified = T("Vehicle Details updated"),
+            msg_record_deleted = T("Vehicle Details deleted"),
+            msg_list_empty = T("No Vehicle Details currently defined"))
+
+        represent = S3Represent(lookup=tablename)
+        vehicle_id = S3ReusableField("vehicle_id", "reference %s" % tablename,
+                                     label = T("Vehicle"),
+                                     ondelete = "RESTRICT",
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db,
+                                                              "%s.id" % tablename,
+                                                              represent,
+                                                              )),
+                                     )
+
+        # ---------------------------------------------------------------------
+        # GPS records
+        # - designed to be pulled in automatically, not entered manually
+        #
+        # @ToDo: Move these to gis.py - nothing here is vehicle-specific
+        #
+        tablename = "transport_vehicle_gps"
+        self.define_table(tablename,
+                          asset_id(),
+                          Field("lat",
+                                label = T("Latitude"),
+                                requires = IS_LAT(),
+                                ),
+                          Field("lon",
+                                label = T("Longitude"),
+                                requires = IS_LON(),
+                                ),
+                          Field("direction",
+                                label = T("Direction"),
+                                ),
+                          Field("speed",
+                                label = T("Speed"),
+                                ),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        ADD_GPS = T("Create GPS data")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_GPS,
+            title_display = T("GPS data"),
+            title_list = T("GPS data"),
+            title_update = T("Edit GPS data"),
+            label_list_button = T("List GPS data"),
+            label_delete_button = T("Delete GPS data"),
+            msg_record_created = T("GPS data added"),
+            msg_record_modified = T("GPS data updated"),
+            msg_record_deleted = T("GPS data deleted"),
+            msg_list_empty = T("No GPS data currently registered"))
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict(transport_vehicle_id = vehicle_id,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Return safe defaults for names in case the model is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(transport_vehicle_id = lambda **attr: dummy("vehicle_id"),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def transport_vehicle_gps_onaccept(form):
+        """
+            Set the current location from the latest GPS record
+        """
+
+        vars = form.vars
+        lat = vars.lat
+        lon = vars.lon
+        if lat is not None and lon is not None:
+            # Lookup the Asset Code
+            db = current.db
+            table = db.asset_asset
+            vehicle = db(table.id == vars.id).select(table.number,
+                                                     limitby=(0, 1)).first()
+            if vehicle:
+                name = vehicle.number
+            else:
+                name = "vehicle_%i" % vars.id
+            # Insert a record into the locations table
+            ltable = db.gis_location
+            location = ltable.insert(name=name, lat=lat, lon=lon)
+            # Set the Current Location of the Asset to this Location
+            # @ToDo: Currently we set the Base Location as Mapping doesn't support S3Track!
+            db(table.id == vars.id).update(location_id=location)
 
 # END =========================================================================
