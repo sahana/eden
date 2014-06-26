@@ -23,3 +23,16 @@ Should Show Error
     Page Should Contain Element  ${ERROR}  Error message not shown
     ${msg len} =  Get Length  ${message}
     Run Keyword if  ${msg len} >= 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
+
+Run On Templates
+    [Documentation]  Run if the current template is in the argument
+    ...            USAGE: To apply it at a suite level, add it to start testing.
+    ...             To apply it at at a test level, add it at begining of the test
+    [Arguments]  @{Template List}
+    Should Contain  ${Template List}  ${TEMPLATE}  The test does not run on the current template
+
+Do Not Run on Templates
+    [Documentation]  Do not run if the current template is in the argument
+    ...             USAGE : Similar to Run on Templates
+    [Arguments]  @{Template List}
+    Should Not Contain  ${Template List}  ${TEMPLATE}  The test does not run on the current template

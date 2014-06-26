@@ -1,4 +1,4 @@
-# Configuration file for FunctionalTests of RobotEden
+# Configuration file for EdenTest
 
 # The server name, e.g. "localhost:8000"
 SERVER = "localhost:8000"
@@ -14,3 +14,8 @@ VALID_PASSWORD = "testing"
 HTTP_PROXY = ""
 # No Proxy (exemptions for HTTP Proxy)
 NO_PROXY = "localhost, 127.0.0.1"
+# Set Selenium Delay
+DELAY = 0
+#EdenTest requires admin permissions on the server being tested
+ADMIN_EMAIL = "admin@example.com"
+ADMIN_PASSWORD = "testing"
