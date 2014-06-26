@@ -1332,6 +1332,8 @@ def update_alert_id(tablename):
 # =============================================================================
 def cap_gis_location_xml_post_parse(element, record):
     """
+        UNUSED - done in XSLT
+
         Convert CAP polygon representation to WKT; extract circle lat lon.
         Latitude and longitude in CAP are expressed as signed decimal values in
         coordinate pairs:
@@ -1389,11 +1391,11 @@ def cap_gis_location_xml_post_parse(element, record):
             record.lat_max = bbox["lat_max"]
             record.lon_max = bbox["lon_max"]
 
-    return
-
 # =============================================================================
 def cap_gis_location_xml_post_render(element, record):
     """
+        UNUSED - done in XSLT
+
         Convert Eden WKT polygon (and eventually circle) representation to
         CAP format and provide them in the rendered s3xml.
         

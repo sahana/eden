@@ -275,6 +275,7 @@ class S3XML(S3Codec):
             except:
                 e = sys.exc_info()[1]
                 self.error = e
+                current.log.error(e)
                 return None
         else:
             # Error parsing the XSL stylesheet

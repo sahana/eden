@@ -2179,6 +2179,18 @@ class S3Config(Storage):
         """
         return self.org.get("facility_types_hierarchical", False)
 
+    def get_org_organisation_types_hierarchical(self):
+        """
+            Whether Organisation Types are Hierarchical or not
+        """
+        return self.org.get("organisation_types_hierarchical", False)
+
+    def get_org_organisation_types_multiple(self):
+        """
+            Whether Organisation Types are Multiple or not
+        """
+        return self.org.get("organisation_types_multiple", False)
+
     def get_org_groups(self):
         """
             Whether to support Organisation Groups or not

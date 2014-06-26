@@ -56,8 +56,8 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
+from gluon.html import A, TAG
 from gluon.http import HTTP
-from gluon.html import TAG
 from gluon.validators import IS_EMPTY_OR
 from gluon.dal import Row, Rows, Table, Field, Expression
 from gluon.storage import Storage

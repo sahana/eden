@@ -4735,8 +4735,14 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             attr["_class"] = "multiselect-widget"
 
         multiple_opt = self.multiple
-        w = MultipleOptionsWidget if multiple_opt else OptionsWidget
-        widget = TAG[""](w.widget(field, value, **attr), requires = field.requires)
+        if multiple_opt:
+            w = MultipleOptionsWidget
+        else:
+            w = OptionsWidget
+            if value:
+                value = str(value[0])
+        widget = TAG[""](w.widget(field, value, **attr),
+                         requires = field.requires)
 
         # Filter and header for multiselect options list
         filter_opt = self.filter 

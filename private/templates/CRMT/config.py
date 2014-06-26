@@ -344,6 +344,10 @@ settings.hrm.teams = False
 #
 # Make Facility Types Hierarchical
 settings.org.facility_types_hierarchical = True
+# Make Organisation Types Hierarchical
+settings.org.organisation_types_hierarchical = True
+# Make Organisation Types Multiple
+settings.org.organisation_types_multiple = True
 # Enable the use of Organisation Groups
 settings.org.groups = "Coalition"
 # Set the label for Sites
@@ -916,7 +920,7 @@ def customise_org_organisation_controller(**attr):
             table.name.label = T("Organization Name")
 
             if method in ("summary", "report"):
-                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                from s3.s3filter import S3OptionsFilter, S3TextFilter, S3HierarchyFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "group_membership.group_id",
                                                 "sector_organisation.sector_id",
@@ -937,6 +941,10 @@ def customise_org_organisation_controller(**attr):
                                                   label = T("Service"),
                                                   header = True,
                                                   ),
+                                  S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
+                                                    label = T("Type of Organization"),
+                                                    #multiple = False,
+                                                    )
                                   ]
 
                 s3.crud_strings.org_organisation.title_report = T("Organization Matrix")
