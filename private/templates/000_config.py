@@ -65,6 +65,9 @@ settings.base.migrate = True
 # ?debug=1
 settings.base.debug = False
 
+# Uncomment this to prevent automated test runs from remote
+# settings.base.allow_testing = False
+
 # Configure the log level ("DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"), None = turn off logging
 #settings.log.level = "WARNING"
 # Uncomment to prevent writing log messages to the console (sys.stderr)
@@ -144,7 +147,7 @@ settings.frontpage.rss = [
 #settings.base.chat_server = { "ip": "127.0.0.1",
 #        "port": 7070,
 #        "name": "servername"
-#        } 
+#        }
 
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
 # NB Needs to be publically-accessible URL for querying via client JS

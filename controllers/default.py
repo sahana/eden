@@ -652,7 +652,7 @@ def person():
     # CRUD pre-process
     def prep(r):
         if r.method in ("options", "validate"):
-            return True        
+            return True
         if r.interactive and r.method != "import":
             # Load default model to override CRUD Strings
             tablename = "pr_person"
@@ -844,7 +844,7 @@ def person():
             #(T("My Subscriptions"), "subscription"),
             (T("My Maps"), "config"),
             ]
-    
+
     output = s3_rest_controller("pr", "person",
                                 rheader = lambda r: \
                                     s3db.pr_rheader(r, tabs=tabs))
@@ -852,7 +852,7 @@ def person():
 
 # -----------------------------------------------------------------------------
 def group():
-    """ 
+    """
         RESTful CRUD controller
         - needed when group add form embedded in default/person
         - only create method is allowed, when opened in a inline form.
@@ -875,12 +875,12 @@ def group():
 
 # -----------------------------------------------------------------------------
 def skill():
-    """ 
+    """
         RESTful CRUD controller
         - needed when skill add form embedded in default/person
         - only create method is allowed, when opened in a inline form.
     """
-    
+
     # Check if it is called from a inline form
     if auth.permission.format != "popup":
         return ""
@@ -1205,5 +1205,35 @@ def audit():
     """
 
     return s3_rest_controller("s3", "audit")
+
+def get_settings():
+    """
+       Function to respond to get requests
+    """
+
+    if not auth.s3_has_role("ADMIN") and settings.get_base_allow_testing():
+        auth.permission.format = None
+        auth.permission.fail()
+    else:
+        arg = request.args(0)
+        if arg == "deployment_settings":
+            asked = request.args[1:]
+
+            return_settings = {}
+
+            for setting in asked:
+                func_name = "get_%s" % setting
+                function = getattr(settings, func_name)
+                # eg value of function - settings.get_template()
+                try:
+                    value = function()
+                except TypeError:
+                    continue
+
+                return_settings[setting] = value
+
+            return response.json(return_settings)
+
+        raise(HTTP("404", "Invalid/Missing argument"))
 
 # END =========================================================================
