@@ -229,7 +229,7 @@ class S3Config(Storage):
         return self.auth.get("hmac_key", "akeytochange")
 
     def get_auth_password_min_length(self):
-        """ 
+        """
             To set the Minimum Password Length
         """
         return self.auth.get("password_min_length", int(4))
@@ -260,7 +260,7 @@ class S3Config(Storage):
             - False to disable self-registration
             - True to use the default registration page at default/user/register
             - "index" to use a cyustom registration page defined in private/templates/<template>/controllers.py
-            
+
         """
         return self.security.get("self_registration", True)
     def get_auth_registration_requires_verification(self):
@@ -311,7 +311,7 @@ class S3Config(Storage):
     def get_auth_registration_mobile_phone_mandatory(self):
         " Make the selection of Mobile Phone Mandatory during registration "
         return self.auth.get("registration_mobile_phone_mandatory", False)
-    
+
     def get_auth_registration_requests_organisation(self):
         " Have the registration form request the Organisation "
         return self.auth.get("registration_requests_organisation", False)
@@ -520,6 +520,13 @@ class S3Config(Storage):
         """
         return self.base.get("debug", False)
 
+    def get_base_allow_testing(self):
+        """
+            Allow testing of Eden using EdenTest
+        """
+
+        return self.base.get("allow_testing", True)
+
     def get_base_migrate(self):
         """ Whether to allow Web2Py to migrate the SQL database to the new structure """
         return self.base.get("migrate", True)
@@ -527,7 +534,7 @@ class S3Config(Storage):
     def get_base_fake_migrate(self):
         """ Whether to have Web2Py create the .table files to match the expected SQL database structure """
         return self.base.get("fake_migrate", False)
-        
+
     def get_base_prepopulate(self):
         """ Whether to prepopulate the database &, if so, which set of data to use for this """
         base = self.base
@@ -571,7 +578,7 @@ class S3Config(Storage):
     def get_base_solr_url(self):
         """
             URL to connect to solr server
-        """    
+        """
         return self.base.get("solr_url", False)
 
     def get_import_callback(self, tablename, callback):
@@ -632,7 +639,7 @@ class S3Config(Storage):
             line number, function name), useful for diagnostics
         """
         return self.log.get("caller_info", False)
-        
+
     # -------------------------------------------------------------------------
     # Database settings
     def get_database_type(self):
@@ -797,7 +804,7 @@ class S3Config(Storage):
         return self.gis.get("geoserver_username", "admin")
     def get_gis_geoserver_password(self):
         return self.gis.get("geoserver_password", "")
-        
+
     def get_gis_getfeature_control(self):
         """
             Whether the map should have a WMS GetFeatureInfo control
@@ -958,14 +965,14 @@ class S3Config(Storage):
                               "location": "button",     # Location to access from
                               },
                               ]
-                            ) 
+                            )
 
     def get_gis_poi_export_resources(self):
         """
             List of resources (tablenames) to import/export as PoIs from Admin Locations
             - KML & OpenStreetMap formats
         """
-        return self.gis.get("poi_export_resources", 
+        return self.gis.get("poi_export_resources",
                             ["cr_shelter", "hms_hospital", "org_office"])
 
     def get_gis_postcode_selector(self):
@@ -1264,7 +1271,7 @@ class S3Config(Storage):
         setting = self.ui.get("formstyle", "default")
 
         formstyles = self.FORMSTYLE
-        
+
         if isinstance(setting, basestring):
             inline_formstyle_name = "%s_inline" % setting
             if inline_formstyle_name in formstyles:
@@ -1311,7 +1318,7 @@ class S3Config(Storage):
 
     def get_ui_iframe_opens_full(self):
         """
-            Open links in IFrames should open a full page in a new tab 
+            Open links in IFrames should open a full page in a new tab
         """
         return self.ui.get("iframe_opens_full", False)
 
@@ -1325,7 +1332,7 @@ class S3Config(Storage):
         """
             Label for attachments tab
         """
-        return current.T(self.ui.get("label_attachments", "Attachments"))    
+        return current.T(self.ui.get("label_attachments", "Attachments"))
 
     def get_ui_label_camp(self):
         """ 'Camp' instead of 'Shelter'? """
@@ -1397,7 +1404,7 @@ class S3Config(Storage):
             settings.ui.summary = [
                 {
                     "name": "table",    # the section name
-                    
+
                     "label": "Table",   # the section label, will
                                         # automatically be translated
 
@@ -1465,7 +1472,7 @@ class S3Config(Storage):
             to retry forever.
         """
         return self.msg.get("max_send_retries", 9)
-    
+
     # -------------------------------------------------------------------------
     # Mail settings
     def get_mail_server(self):
@@ -1494,7 +1501,7 @@ class S3Config(Storage):
             - unless overridden by per-domain entries in auth_organsiation
         """
         return self.mail.get("approver", "useradmin@example.org")
-    
+
     def get_mail_default_subject(self):
         """
             Use system_name_short as default email subject (Appended).
@@ -1562,7 +1569,7 @@ class S3Config(Storage):
         """
 
         return self.msg.get("require_international_phone_numbers", True)
-    
+
     # =========================================================================
     # Search
 
@@ -2148,7 +2155,7 @@ class S3Config(Storage):
 
     def get_inv_send_type_default(self):
         """
-            Which Shipment type is default 
+            Which Shipment type is default
         """
         return self.inv.get("send_type_default", 0)
 
@@ -2431,9 +2438,9 @@ class S3Config(Storage):
     def get_pr_show_emergency_contacts(self):
         """
             Show emergency contacts as well as standard contacts in Person Contacts page
-        """ 
+        """
         return self.pr.get("show_emergency_contacts", True)
-        
+
     # -------------------------------------------------------------------------
     # Proc
     #
