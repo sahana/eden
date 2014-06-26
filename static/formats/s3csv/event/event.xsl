@@ -325,6 +325,7 @@
         <xsl:param name="SubType"/>
         <xsl:param name="SubSubType"/>
 
+        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
         <resource name="event_event_type">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
