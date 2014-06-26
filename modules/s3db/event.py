@@ -271,9 +271,9 @@ class S3EventModel(S3Model):
             filter_widgets = [S3OptionsFilter("event_type_id",
                                               label = T("Type"),
                                               multiple = False,
-                                              options = lambda: \
-                                                get_s3_filter_opts("event_event_type",
-                                                                   translate = True)
+                                              #options = lambda: \
+                                              #  get_s3_filter_opts("event_event_type",
+                                              #                     translate = True)
                                               ),
                               ]
 

@@ -12,7 +12,9 @@
 
          all of the following are for the branch, unless the branch field is empty:
          Acronym.................org_organisation.acronym
-         Type....................org_organisation$organisation_type_id
+         Type....................org_organisation$organisation_type_id or org_organisation_type.parent
+         SubType.................org_organisation$organisation_type_id or org_organisation_type.parent
+         SubSubType..............org_organisation$organisation_type_id
          Sectors.................org_sector_organisation$sector_id
          Services................org_service_organisation$service_id
          Region..................org_organisation.region_id
@@ -31,19 +33,35 @@
     <xsl:include href="../../xml/countries.xsl"/>
     <xsl:include href="../../xml/commons.xsl"/>
 
+    <xsl:variable name="OrgTypePrefix" select="'OrgType:'"/>
+
     <!-- Indexes for faster processing -->
-    <xsl:key name="organisation_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="region" match="row" use="col[@field='Region']"/>
+    <xsl:key name="type" match="row" use="concat(col[@field='Type'], '/',
+                                                 col[@field='SubType'], '/',
+                                                 col[@field='SubSubType'])"/>
 
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
             <!-- Organisation Types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_type',
-                                                                       col[@field='Type'])[1])]">
-                <xsl:call-template name="OrganisationType" />
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
+                                                                   concat(col[@field='Type'], '/',
+                                                                          col[@field='SubType'], '/',
+                                                                          col[@field='SubSubType']))[1])]">
+                <xsl:call-template name="OrganisationType">
+                    <xsl:with-param name="Type">
+                         <xsl:value-of select="col[@field='Type']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubType">
+                         <xsl:value-of select="col[@field='SubType']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubSubType">
+                         <xsl:value-of select="col[@field='SubSubType']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Regions -->
@@ -92,6 +110,15 @@
 
         <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
         <xsl:variable name="Services" select="col[@field='Services']/text()"/>
+        <xsl:variable name="Type">
+            <xsl:value-of select="col[@field='Type']"/>
+        </xsl:variable>
+        <xsl:variable name="SubType">
+            <xsl:value-of select="col[@field='SubType']"/>
+        </xsl:variable>
+        <xsl:variable name="SubSubType">
+            <xsl:value-of select="col[@field='SubSubType']"/>
+        </xsl:variable>
 
         <!-- Create the Organisation/Branch -->
         <resource name="org_organisation">
@@ -120,12 +147,28 @@
                 <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
             </xsl:if>
             
-            <xsl:if test="col[@field='Type']!=''">
-                <reference field="organisation_type_id" resource="org_organisation_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('OrgType:', col[@field='Type'])"/>
-                    </xsl:attribute>
-                </reference>
+            <!-- Link to Organisation Type -->
+            <xsl:if test="$Type!=''">
+                <resource name="org_organisation_organisation_type">
+                    <reference field="organisation_type_id" resource="org_organisation_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:choose>
+                                <xsl:when test="$SubSubType!=''">
+                                    <!-- Hierarchical Type with 3 levels -->
+                                    <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                                </xsl:when>
+                                <xsl:when test="$SubType!=''">
+                                    <!-- Hierarchical Type with 2 levels -->
+                                    <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType)"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <!-- Simple Type -->
+                                    <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
             </xsl:if>
 
             <xsl:if test="col[@field='Country']!=''">
@@ -236,14 +279,43 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="OrganisationType">
-        <xsl:if test="col[@field='Type']!=''">
+        <xsl:param name="Type"/>
+        <xsl:param name="SubType"/>
+        <xsl:param name="SubSubType"/>
+
+        <resource name="org_organisation_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Type"/></data>
+        </resource>
+        <xsl:if test="$SubType!=''">
             <resource name="org_organisation_type">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('OrgType:', col[@field='Type'])"/>
+                    <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType)"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="col[@field='Type']"/></data>
+                <data field="name"><xsl:value-of select="$SubType"/></data>
+                <reference field="parent" resource="org_organisation_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
+                    </xsl:attribute>
+                </reference>
             </resource>
         </xsl:if>
+        <xsl:if test="$SubSubType!=''">
+            <resource name="org_organisation_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$SubSubType"/></data>
+                <reference field="parent" resource="org_organisation_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType)"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

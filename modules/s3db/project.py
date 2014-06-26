@@ -3195,7 +3195,7 @@ class S3ProjectSectorModel(S3Model):
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("New Sector"),
+            label_create = T("Add Sector"),
             title_display = T("Sector"),
             title_list = T("Sectors"),
             title_update = T("Edit Sector"),
@@ -3382,7 +3382,7 @@ class S3ProjectThemeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("New Sector"),
+            label_create = T("Add Sector"),
             title_display = T("Sector"),
             title_list = T("Sectors"),
             title_update = T("Edit Sector"),

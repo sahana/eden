@@ -724,26 +724,25 @@ def partners():
     """
 
     # @ToDo: This could need to be a deployment setting
-    get_vars["organisation.organisation_type_id$name"] = \
+    get_vars["organisation_type.name"] = \
         "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency"
 
     # Load model
     table = s3db.org_organisation
 
     # Modify CRUD Strings
-    ADD_PARTNER = T("Add Partner Organization")
     s3.crud_strings.org_organisation = Storage(
-        label_create=ADD_PARTNER,
-        title_display=T("Partner Organization Details"),
-        title_list=T("Partner Organizations"),
-        title_update=T("Edit Partner Organization"),
-        title_upload=T("Import Partner Organizations"),
-        label_list_button=T("List Partner Organizations"),
-        label_delete_button=T("Delete Partner Organization"),
-        msg_record_created=T("Partner Organization added"),
-        msg_record_modified=T("Partner Organization updated"),
-        msg_record_deleted=T("Partner Organization deleted"),
-        msg_list_empty=T("No Partner Organizations currently registered")
+        label_create = T("Create Partner Organization"),
+        title_display = T("Partner Organization Details"),
+        title_list = T("Partner Organizations"),
+        title_update = T("Edit Partner Organization"),
+        title_upload = T("Import Partner Organizations"),
+        label_list_button = T("List Partner Organizations"),
+        label_delete_button = T("Delete Partner Organization"),
+        msg_record_created = T("Partner Organization added"),
+        msg_record_modified = T("Partner Organization updated"),
+        msg_record_deleted = T("Partner Organization deleted"),
+        msg_list_empty = T("No Partner Organizations currently registered")
         )
 
     return s3db.org_organisation_controller()

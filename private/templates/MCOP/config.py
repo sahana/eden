@@ -485,8 +485,6 @@ def customise_event_incident_resource(r, tablename):
                       S3OptionsFilter("organisation_id",
                                       represent = "%(name)s",
                                       ),
-                      #S3OptionsFilter("project_organisation.organisation_id$organisation_type_id",
-                      #                ),
                       ]
 
     url_next = URL(c="event", f="incident", args=["[id]", "profile"])
@@ -700,10 +698,16 @@ def customise_org_organisation_resource(r, tablename):
             msg_record_deleted = T("Stakeholder deleted"),
             msg_list_empty = T("No Stakeholders currently registered"))
 
-        from s3.s3forms import S3SQLCustomForm
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm("id",
                                     "name",
-                                    "organisation_type_id",
+                                    S3SQLInlineLink(
+                                        "organisation_type",
+                                        field = "organisation_type_id",
+                                        label = T("Type"),
+                                        multiple = False,
+                                        #widget = "hierarchy",
+                                    ),
                                     "logo",
                                     "phone",
                                     "website",
@@ -727,7 +731,7 @@ def customise_org_organisation_resource(r, tablename):
                                             "comments",
                                             ],
                                           label = T("Search")),
-                              S3OptionsFilter("organisation_type_id",
+                              S3OptionsFilter("organisation_organisation_type.organisation_type_id",
                                               label = T("Type"),
                                               ),
                               ]

@@ -45,7 +45,6 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
@@ -1621,12 +1620,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
         fname = self._formname(separator = "_")
         field = Field(fname, "text",
                       comment = options.get("comment", None),
-                      label = label,
-                      widget = self,
                       default = self.extract(resource, None),
+                      label = label,
                       represent = self.represent,
-                      requires = self.parse,
                       required = options.get("required", False),
+                      requires = self.parse,
+                      widget = self,
                       )
 
         return (self, None, field)
@@ -2747,7 +2746,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
 
             @param resource: the resource the record belongs to
             @param record_id: the record ID
-            
+
             @return: list of component record IDs this record is
                      linked to via the link table
         """
@@ -2755,28 +2754,34 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         self.resource = resource
         component, link = self.get_link()
 
-        values = []
         if record_id:
             rkey = component.rkey
             rows = link.select([rkey], as_rows=True)
             if rows:
                 rkey = str(link.table[rkey])
                 values = [row[rkey] for row in rows]
+            else:
+                values = []
+        else:
+            # Use default
+            values = [link.table[self.options.field].default]
+
         return values
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
         """
-            Widget renderer, currently supports groupedopts (default) and
-            multiselect widgets (hierarchy planned).
+            Widget renderer, currently supports multiselect (default), hierarchy
+            and groupedopts widgets.
 
             @param field: the input field
             @param value: the value to populate the widget
             @param attributes: attributes for the widget
-            
+
             @return: the widget
         """
 
+        options = self.options
         component, link = self.get_link()
 
         # Field dummy
@@ -2784,7 +2789,6 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                               type = link.table[component.rkey].type)
 
         # Widget type
-        options = self.options
         widget = options.get("widget")
         if widget != "hierarchy":
             # Get the selectable entries for the widget and construct
@@ -2830,6 +2834,12 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         # Render the widget
         attr = dict(attributes)
         attr["_id"] = field.name
+        if not link.table[options.field].writable:
+            _class = attr.get("_class", None)
+            if _class:
+                attr["_class"] = "%s hide" % _class
+            else:
+                attr["_class"] = "hide"
         widget = w(dummy_field, value, **attr)
 
         # Append the attached script to jquery_ready

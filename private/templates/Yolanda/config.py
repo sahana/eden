@@ -17,7 +17,7 @@ from s3.s3query import FS
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent
 from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
 T = current.T
 s3 = current.response.s3
@@ -2366,7 +2366,7 @@ def customise_org_organisation_controller(**attr):
                                                 "comments",
                                                 ],
                                               label = T("Search")),
-                                  S3OptionsFilter("organisation_type_id",
+                                  S3OptionsFilter("organisation_organisation_type.organisation_type_id",
                                                   label = T("Type"),
                                                   ),
                                   ]
@@ -2389,7 +2389,13 @@ def customise_org_organisation_controller(**attr):
 
             s3_sql_custom_fields = ["id",
                                     "name",
-                                    "organisation_type_id",
+                                    S3SQLInlineLink(
+                                        "organisation_type",
+                                        field = "organisation_type_id",
+                                        label = T("Type"),
+                                        multiple = False,
+                                        #widget = "hierarchy",
+                                    ),
                                     "country",
                                      S3SQLInlineComponentMultiSelectWidget(
                                          "sector",
@@ -3243,7 +3249,7 @@ def customise_project_activity_controller(**attr):
                           S3OptionsFilter("activity_organisation.organisation_id",
                                           represent = "%(name)s",
                                           ),
-                          S3OptionsFilter("activity_organisation.organisation_id$organisation_type_id",
+                          S3OptionsFilter("activity_organisation.organisation_id$organisation_organisation_type.organisation_type_id",
                                           # Doesn't support translation
                                           #represent = "%(name)s",
                                           ),

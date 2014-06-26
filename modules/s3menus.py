@@ -1488,7 +1488,6 @@ class S3OptionsMenu(object):
                  ),
                  M("Partner Organizations",  f="partners")(
                     M("Create", m="create"),
-                    #M("Search"),
                     M("Import", m="import", p="create"),
                  ),
                  M("Activity Types", f="activity_type",
