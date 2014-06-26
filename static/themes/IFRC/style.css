@@ -405,3 +405,13 @@ button.alert-send-btn:enabled {
 #asset_asset_sub_defaultitem__row #sub_defaultitem_defaultitem_i_quantity_edit_none {
     width: 35px;
 }
+
+/* Hierarchy widgets: normally auto-expanded, but org hierarchy
+   has too many root nodes, so we need to limit height somehow.
+   This conflicts with bootstrap popovers, therefore made
+   theme-specific here:
+*/
+.s3-hierarchy-tree.jstree {
+    max-height: 360px;
+    overflow-y: auto;
+}

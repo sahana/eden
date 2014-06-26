@@ -372,7 +372,8 @@ def ns_only(f, required = True, branches = True, updateable=True):
         not_filterby = "id"
         not_filter_opts = branches
 
-    represent = current.s3db.org_OrganisationRepresent(parent=parent)
+    organisation_represent = current.s3db.org_OrganisationRepresent
+    represent = organisation_represent(parent=parent)
     f.represent = represent
 
     from s3.s3validators import IS_ONE_OF
@@ -389,10 +390,28 @@ def ns_only(f, required = True, branches = True, updateable=True):
         from gluon import IS_EMPTY_OR
         requires = IS_EMPTY_OR(requires)
     f.requires = requires
-    # Dropdown not Autocomplete
-    f.widget = None
+    
+    if parent:
+        # Use hierarchy-widget
+        from s3 import FS, S3HierarchyWidget
+        node_represent = organisation_represent(parent=False)
+        node_filter = (FS("organisation_type_id") == type_id)
+        f.widget = S3HierarchyWidget(lookup="org_organisation",
+                                     filter=node_filter,
+                                     represent=node_represent,
+                                     multiple=False,
+                                     leafonly=False,
+                                     )
+        # @todo: Dynamic update of HierarchyWidget not supported yet
+        #        => hide the add-resource link until fixed
+        skip_add_resource_link = True
+    else:
+        # Dropdown not Autocomplete
+        f.widget = None
+        skip_add_resource_link = False
+        
     # Comment
-    if Admin or s3_has_role("ORG_ADMIN"):
+    if (Admin or s3_has_role("ORG_ADMIN")) and not skip_add_resource_link:
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
         from s3.s3navigation import S3ScriptItem

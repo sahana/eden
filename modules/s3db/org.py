@@ -347,19 +347,49 @@ class S3OrganisationModel(S3Model):
             msg_record_deleted=T("Organization deleted"),
             msg_list_empty=T("No Organizations currently registered"))
 
+        # Default widget
         if settings.get_org_autocomplete():
             help = messages.AUTOCOMPLETE_HELP
-            org_widget = S3OrganisationAutocompleteWidget()
+            default_widget = S3OrganisationAutocompleteWidget()
         else:
             help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Create Organization'.")
-            org_widget = None
+            default_widget = None
+        org_widgets = {"default": default_widget}
+
+        # Representation for foreign keys
+        org_organisation_represent = org_OrganisationRepresent()
+
+        # Fields for text filter
+        text_fields = ["name",
+                       "acronym",
+                       "comments",
+                       ]
+
+        if settings.get_org_branches():
+
+            # Additional text filter fields for branches
+            text_fields.extend(("parent.name",
+                                "parent.acronym",
+                                ))
+            text_comment = T("You can search by name, acronym, comments or parent name or acronym.")
+            
+            # Hierarchy configuration and widget
+            configure(tablename,
+                      # link table alias (organisation_branch) is ambiguous here
+                      # => need to specify the full join
+                      hierarchy="branch_id:org_organisation_branch.organisation_id")
+            org_widgets["hierarchy"] = S3HierarchyWidget(lookup="org_organisation",
+                                                         represent=org_organisation_represent,
+                                                         multiple=False,
+                                                         leafonly=False,
+                                                         )
+        else:
+            text_comment = T("You can search by name, acronym or comments")
 
         organisation_comment = S3AddResourceLink(c="org", f="organisation",
                                                  label=ADD_ORGANIZATION,
                                                  title=ADD_ORGANIZATION,
                                                  tooltip=help)
-
-        org_organisation_represent = org_OrganisationRepresent()
 
         from_organisation_comment = S3AddResourceLink(c="org",
                                                       f="organisation",
@@ -368,6 +398,7 @@ class S3OrganisationModel(S3Model):
                                                       title=ADD_ORGANIZATION,
                                                       tooltip=help)
 
+        # Reusable field
         auth = current.auth
         organisation_id = S3ReusableField("organisation_id", "reference %s" % tablename,
                                           comment = organisation_comment,
@@ -378,20 +409,8 @@ class S3OrganisationModel(S3Model):
                                           represent = org_organisation_represent,
                                           requires = org_organisation_requires(),
                                           sortby = "name",
-                                          widget = org_widget,
+                                          widgets = org_widgets,
                                           )
-
-        text_fields = ["name",
-                       "acronym",
-                       "comments",
-                       ]
-        if settings.get_org_branches():
-            text_fields.extend(("parent.name",
-                                "parent.acronym",
-                                ))
-            text_comment = T("You can search by name, acronym, comments or parent name or acronym.")
-        else:
-            text_comment = T("You can search by name, acronym or comments")
 
         filter_widgets = [
             S3TextFilter(text_fields,

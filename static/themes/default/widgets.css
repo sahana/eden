@@ -1511,6 +1511,12 @@ body.rtl label.ui-corner-all span {
 .s3-hierarchy-tree.jstree {
     border: 1px solid #ccc;
     padding: 2px 3px 4px 3px;
+/*  @todo: make this work - currently overflow:auto conflicts with
+           bootstrap popovers (because they are inside the box and
+           become inaccessible when overflowing)
+*/
+/*  max-height: 360px;
+    overflow-y: auto;*/
 }
 
 /* Saved Filters Page - Inline Editor for Filter Titles */

@@ -385,6 +385,9 @@ class S3Resource(object):
             link.actuate = component.actuate
             link.autodelete = component.autodelete
             link.multiple = component.multiple
+            # @todo: possible ambiguity if the same link is used
+            #        in multiple components (e.g. filtered or 3-way),
+            #        need a better aliasing mechanism here
             self.links[link.name] = link
 
         self.components[alias] = component
