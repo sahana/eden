@@ -1,4 +1,4 @@
-# Configuration file for FunctionalTests of RobotEden
+# Configuration file for EdenTest
 
 # The server name, e.g. "localhost:8000"
 SERVER = "localhost:8000"
@@ -14,3 +14,9 @@ VALID_PASSWORD = "testing"
 HTTP_PROXY = ""
 # No Proxy (exemptions for HTTP Proxy)
 NO_PROXY = "localhost, 127.0.0.1"
+# Set Selenium Delay
+DELAY = 0
+# Path to web2py.py relative to eden eg: "../../web2py.py"
+WEB2PY = "../../web2py.py"
+#Path to Eden relative to web2py.py like "applications/eden"
+EDEN_PATH = "applications/eden"
