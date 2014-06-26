@@ -152,14 +152,27 @@ def define_map(height = None,
         else:
             script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
         s3.scripts.append(script)
-        # @ToDo: Allow multiple PoI layers
+        # Pass enabled resources to the JS
+        import json
+        poi_resources = settings.get_gis_poi_create_resources()
+        SEPARATORS = (",", ":")
+        i = 0
+        for r in poi_resources :
+            poi_resources[i]["label"] = s3_unicode(r["label"])
+            poi_resources[i]["tooltip"] = s3_unicode(r["tooltip"])
+            i = i+1 
+        script = '''S3.gis.pois_resources=%s''' % json.dumps(poi_resources, separators=SEPARATORS)
+        s3.js_global.append(script)
         ftable = s3db.gis_layer_feature
-        layer = db(ftable.name == "PoIs").select(ftable.layer_id,
-                                                 limitby=(0, 1)
-                                                 ).first()
-        if layer:
-            script = '''S3.gis.pois_layer=%s''' % layer.layer_id
-            s3.js_global.append(script)
+        layer_id_array = dict()
+        for r in poi_resources :
+            # @ToDo: a Permissions check for which resources the current user *can* add resources for
+            # @ToDo: make a bulk call
+            layer = db(ftable.name == r["layer"]).select(ftable.layer_id,limitby=(0, 1)).first()
+            if layer:                
+                layer_id_array[r["layer"]] = layer.layer_id              
+        script = '''S3.gis.pois_layer=%s''' % json.dumps(layer_id_array, separators=SEPARATORS)
+        s3.js_global.append(script)
 
     # @ToDo: Generalise with feature/tablename?
     poi = get_vars.get("poi", None)
