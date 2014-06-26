@@ -193,6 +193,10 @@
   /* Used for User Profile */
   content: "\f007";
 }
+.icon-book:before {
+  /* Used for HRM profile */
+  content: "\f02d";
+}
 .icon-wrench:before {
   /* Used for Resource Inventory */
   content: "\f0ad";

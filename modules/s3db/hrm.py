@@ -5391,6 +5391,13 @@ def hrm_human_resource_controller(extra_filter=None):
                                # Default renderer:
                                #list_layout = s3db.doc_document_list_layout,
                                )
+            education_widget = dict(label = "Education",
+                                    label_create = "Add Education",
+                                    type = "datalist",
+                                    tablename = "pr_education",
+                                    filter = FS("person_id") == person_id,
+                                    icon = "icon-book",
+                                    )
             profile_widgets = [contacts_widget,
                                address_widget,
                                skills_widget,
@@ -5401,6 +5408,8 @@ def hrm_human_resource_controller(extra_filter=None):
                                
             if deploy:
                 profile_widgets.insert(2, credentials_widget)
+                if settings.get_hrm_use_education():
+                    profile_widgets.insert(-1, education_widget)
 
             # Configure resource
             s3db.configure("hrm_human_resource",
