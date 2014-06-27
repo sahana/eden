@@ -1,3 +1,4 @@
 Name,Description,URL,Symbology,Marker,Enabled,Visible,Folder,Image
-"Floods","Dartmouth Flood Observatory","http://www.gdacs.org/xml/rssfl.xml",US,flood,False,False,,"gdas:gfds_image"
-"Volcanoes","USGS: US recent","http://volcano.wr.usgs.gov/rss/vhpcaprss.xml",US,volcano,False,False,,
+"Fires (US)","InciWeb","http://inciweb.nwcg.gov/feeds/rss/incidents/",US,fire,False,False,Incidents,
+"Floods","Dartmouth Flood Observatory","http://www.gdacs.org/xml/rssfl.xml",US,flood,False,False,Incidents,"gdas:gfds_image"
+"Volcanoes","USGS: US recent","http://volcano.wr.usgs.gov/rss/vhpcaprss.xml",US,volcano,False,False,Incidents,

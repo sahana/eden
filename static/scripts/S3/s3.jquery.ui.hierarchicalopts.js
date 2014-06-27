@@ -9,6 +9,7 @@
  * requires: jQuery JStree 1.0
  * 
  * status: experimental
+ * @todo: Ajax-refresh, dynamic insertion of nodes via add-popups
  * 
  */
 
