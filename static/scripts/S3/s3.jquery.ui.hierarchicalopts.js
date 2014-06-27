@@ -1,25 +1,31 @@
 /**
  * jQuery UI HierarchicalOpts Widget for S3HierarchyFilter
- * 
- * @copyright: 2013-14 (c) Sahana Software Foundation
- * @license: MIT
  *
- * requires: jQuery 1.9.1+
- * requires: jQuery UI 1.10 widget factory
- * requires: jQuery JStree 1.0
+ * @copyright 2013-14 (c) Sahana Software Foundation
+ * @license MIT
+ *
+ * @requires jQuery 1.9.1+
+ * @requires jQuery UI 1.10 widget factory
+ * @requires jQuery jstree 1.0
  * 
- * status: experimental
- * @todo: Ajax-refresh, dynamic insertion of nodes via add-popups
+ * @todo Migrate to jsTree 3.x
+ * @todo Ajax-refresh, dynamic insertion of nodes via add-popups
  * 
  */
-
 (function($, undefined) {
 
     var hierarchicaloptsID = 0;
 
+    /**
+     * HierarchicalOpts widget
+     */
     $.widget('s3.hierarchicalopts', {
 
-        // Default options
+        /**
+         * Default options
+         *
+         * @todo document options
+         */
         options: {
             selected: null,
             noneSelectedText: 'Select',
@@ -32,8 +38,11 @@
             htmlTitles: true
         },
 
+        /**
+         * Create the widget
+         */
         _create: function() {
-            // Create the widget
+            
             var el = $(this.element),
                 opts = this.options;
 
@@ -65,13 +74,19 @@
             this._isOpen = false;
         },
 
+        /**
+         * Update the widget options
+         */
         _init: function() {
-            // Update widget options
+            
             this.refresh();
         },
 
+        /**
+         * Remove generated elements & reset other changes
+         */
         _destroy: function() {
-            // Remove generated elements & reset other changes
+
             $.Widget.prototype.destroy.call(this);
             
             this._unbindEvents();
@@ -82,8 +97,11 @@
                         .show();
         },
 
+        /**
+         * Redraw contents
+         */
         refresh: function() {
-            // Re-draw contents
+
             this._unbindEvents();
 
             var opts = this.options;
@@ -123,6 +141,7 @@
 
             this.tree.jstree({
                 'core': {
+                    check_callback: true,
                     animation: 100,
                     rtl: rtl,
                     html_titles: opts.htmlTitles
@@ -161,8 +180,11 @@
             this._bindEvents();
         },
 
-        _updateSelectedNodes: function(data) {
-            // Get all selected nodes and store the result in the hidden input
+        /**
+         * Get all selected nodes and store the result in the hidden input
+         */
+        _updateSelectedNodes: function() {
+
 
             var old_selected = this.input.val();
             if (old_selected) {
@@ -209,8 +231,12 @@
             return true;
         },
 
+        /**
+         * Update the button text with the number of selected items
+         *
+         * @param {Array} selected_ids - the HTML element IDs of the currently selected nodes
+         */
         _updateButtonText: function(selected_ids) {
-            // Update the button text with the number of selected items
 
             var text = null,
                 options = this.options;
@@ -235,8 +261,12 @@
             this.buttonText.text(text);
         },
 
+        /**
+         * Check particular nodes (used by setCurrentFilters)
+         *
+         * @param {Array} values - the nodeIDs of the nodes to select
+         */
         set: function(values) {
-            // Check particular nodes (used by setCurrentFilters)
 
             this.tree.jstree('uncheck_all');
             if (values) {
@@ -247,8 +277,12 @@
             }
         },
 
+        /**
+         * Get all checked nodes (used by getCurrentFilters)
+         *
+         * @returns {Array} the nodeIDs of the currently selected nodes
+         */
         get: function() {
-            // Get all checked nodes (used by getCurrentFilters)
 
             var value = this.input.val();
             if (value) {
@@ -258,16 +292,20 @@
             }
         },
 
+        /**
+         * Uncheck all nodes (used by clearFilters)
+         */
         reset: function() {
-            // Uncheck all nodes (used by clearFilters)
 
             this.tree.jstree('uncheck_all');
             this._updateSelectedNodes();
             return;
         },
 
+        /**
+         * Open the tree (triggers 'open'-event)
+         */
         openMenu: function() {
-            // Open the tree
 
             if (this._isOpen) {
                 this.closeMenu();
@@ -282,23 +320,66 @@
                 left: pos.left,
                 minWidth: button.outerWidth() - 8,
                 'z-index': 999999
-            }).show();
+            }).show().jstree('set_focus');
             this._isOpen = true;
             button.addClass('ui-state-active');
             $(this).trigger('open');
         },
 
+        /**
+         * Close the tree (triggers 'close'-event)
+         */
         closeMenu: function() {
-            // Close the tree
             
-            $(this.tree).hide();
+            $(this.tree).hide().jstree('unset_focus');
             this._isOpen = false;
             $(this.button).removeClass('ui-state-active');
             $(this).trigger('close');
         },
 
+        /**
+         * Add a new node
+         *
+         * @param {Number} parent - the parent nodeID
+         * @param {Number} id - the new nodeID
+         * @param {String} title - the node title
+         * @param {bool} check - check the node after adding it
+         */
+        addNode: function(parent, id, title, check) {
+
+            var tree = this.tree,
+                treeID = this.treeID;
+            var parentID = parent ? '#' + treeID + '-' + parent : -1,
+                nodeID = treeID + '-' + id;
+
+            // Insert the node
+            tree.jstree('create_node', parentID, "last", {
+                // Title of the new node
+                data: title,
+                attr: {
+                    // HTML attributes of the new node
+                    id: nodeID,
+                    rel: 'leaf'
+                },
+                state: 'open'
+            }, false, false);
+            
+            if (parent) {
+                // Update the parent relationship
+                $(parentID).attr({rel: 'parent'});
+                // Open the parent
+                tree.jstree('open_node', parentID);
+            }
+            if (check) {
+                // Check the node if so requested
+                tree.jstree('check_node', '#' + nodeID);
+            }
+        },
+
+        /**
+         * Bind events to generated elements (after refresh)
+         */
         _bindEvents: function() {
-            // Bind events to generated elements (after refresh)
 
             var widget = this,
                 tree = $(this.tree),
@@ -309,8 +390,11 @@
                 widget._updateSelectedNodes();
             }).bind('uncheck_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
+            }).bind("open_node.jstree", function (event, data) {
+                if((data.inst._get_parent(data.rslt.obj)).length) {
+                    data.inst.open_node(data.inst._get_parent(data.rslt.obj), false, true);
+                }
             });
-            
             button.bind('click' + namespace, function() {
                 if (!widget._isOpen) {
                     widget.openMenu();
@@ -353,9 +437,11 @@
             });
             return true;
         },
-        
+
+        /**
+         * Unbind events (before refresh)
+         */
         _unbindEvents: function() {
-            // Unbind events (before refresh)
 
             var tree = $(this.tree),
                 button = $(this.button),
@@ -363,7 +449,8 @@
 
             tree.unbind('check_node.jstree')
                 .unbind('uncheck_node.jstree')
-                .unbind('loaded.jstree');
+                .unbind('loaded.jstree')
+                .unbind('open_node.jstree');
 
             $(this.button).unbind(namespace);
             $(document).unbind(namespace);
