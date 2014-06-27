@@ -342,6 +342,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
         # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
         return
 
+    # Filter by type
     ltable = db.org_organisation_organisation_type
     rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
     filter_opts = [row.organisation_id for row in rows]
@@ -350,8 +351,6 @@ def ns_only(f, required=True, branches=True, updateable=True):
     s3_has_role = auth.s3_has_role
     Admin = s3_has_role("ADMIN")
     if branches:
-        not_filterby = None
-        not_filter_opts = None
         if Admin:
             parent = True
         else:
@@ -371,11 +370,11 @@ def ns_only(f, required=True, branches=True, updateable=True):
     else:
         # Keep the represent function as simple as possible
         parent = False
+        # Exclude branches
         btable = current.s3db.org_organisation_branch
-        rows = db(btable.deleted != True).select(btable.branch_id)
-        branches = [row.branch_id for row in rows]
-        not_filterby = "id"
-        not_filter_opts = branches
+        rows = db((btable.deleted != True) &
+                  (btable.branch_id.belongs(filter_opts))).select(btable.branch_id)
+        filter_opts = list(set(filter_opts) - set(row.branch_id for row in rows))
 
     organisation_represent = current.s3db.org_OrganisationRepresent
     represent = organisation_represent(parent=parent)
@@ -384,10 +383,8 @@ def ns_only(f, required=True, branches=True, updateable=True):
     from s3.s3validators import IS_ONE_OF
     requires = IS_ONE_OF(db, "org_organisation.id",
                          represent,
-                         filterby = "organisation_type_id",
+                         filterby = "id",
                          filter_opts = filter_opts,
-                         not_filterby = not_filterby,
-                         not_filter_opts = not_filter_opts,
                          updateable = updateable,
                          orderby = "org_organisation.name",
                          sort = True)
@@ -395,12 +392,15 @@ def ns_only(f, required=True, branches=True, updateable=True):
         from gluon import IS_EMPTY_OR
         requires = IS_EMPTY_OR(requires)
     f.requires = requires
-    
+
     if parent:
         # Use hierarchy-widget
         from s3 import FS, S3HierarchyWidget
+        # No need for parent in represent (it's a hierarchy view)
         node_represent = organisation_represent(parent=False)
-        node_filter = (FS("organisation_type_id") == type_id)
+        # Filter by type
+        node_filter = (FS("organisation_organisation_type.organisation_type_id") == type_id)
+        # No need to exclude branches (we wouldn't be here if we didn't use branches)
         f.widget = S3HierarchyWidget(lookup="org_organisation",
                                      filter=node_filter,
                                      represent=node_represent,
@@ -416,7 +416,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
         skip_add_resource_link = False
 
     # Comment
-    if Admin or s3_has_role("ORG_ADMIN"):
+    if (Admin or s3_has_role("ORG_ADMIN")) and not skip_add_resource_link:
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
         from s3.s3navigation import S3ScriptItem

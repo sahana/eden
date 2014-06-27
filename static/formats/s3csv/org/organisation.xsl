@@ -283,6 +283,7 @@
         <xsl:param name="SubType"/>
         <xsl:param name="SubSubType"/>
 
+        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
         <resource name="org_organisation_type">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
