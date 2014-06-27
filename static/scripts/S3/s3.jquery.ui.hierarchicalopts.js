@@ -4,9 +4,9 @@
  * @copyright 2013-14 (c) Sahana Software Foundation
  * @license MIT
  *
- * @requires jQuery 1.9.1+
- * @requires jQuery UI 1.10 widget factory
- * @requires jQuery jstree 1.0
+ * requires jQuery 1.9.1+
+ * requires jQuery UI 1.10 widget factory
+ * requires jQuery jstree 1.0
  * 
  * @todo Migrate to jsTree 3.x
  * @todo Ajax-refresh, dynamic insertion of nodes via add-popups
