@@ -4255,9 +4255,13 @@ class S3LocationSelectorWidget2(FormWidget):
         rows = db(query).select(*fields,
                                 limitby=(0, limit)
                                 )
+
+        if not rows:
+            current.log.critical("Location hierarchy not found - check prepop settings/files!")
+                                
         hdict = {}
         labels = {}
-        if L0:
+        if L0 and rows:
             for row in rows:
                 if row.uuid == "SITE_DEFAULT":
                     d = hdict["d"] = {}
@@ -4282,7 +4286,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 if level == "L0":
                     labels["L0"] = current.messages.COUNTRY
                 else:
-                    v = row[level]
+                    v = row[level] if row else str(level)
                     d[int(level[1:])] = v
                     labels[level] = v
 
