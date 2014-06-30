@@ -1120,9 +1120,9 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        _vars = r.get_vars
-        if "field" in _vars:
-            items = _vars["field"]
+        get_vars = r.get_vars
+        if "field" in get_vars:
+            items = get_vars["field"]
             if not isinstance(items, (list, tuple)):
                 items = [items]
             fields = []
@@ -1133,33 +1133,43 @@ class S3Request(object):
                     add_fields(f)
         else:
             fields = None
-        only_last = False
-        if "only_last" in _vars:
-            only_last = _vars["only_last"]
-        show_uids = False
-        if "show_uids" in _vars:
-            v = _vars["show_uids"]
-            if isinstance(v, (list, tuple)):
-                v = v[-1]
-            if v.lower() == "true":
-                show_uids = True
-        component = r.component_name
+
+        if "hierarchy" in get_vars:
+            hierarchy = get_vars["hierarchy"].lower() not in ("false", "0")
+        else:
+            hierarchy = False
+            
+        if "only_last" in get_vars:
+            only_last = get_vars["only_last"].lower() not in ("false", "0")
+        else:
+            only_last = False
+            
+        if "show_uids" in get_vars:
+            show_uids = get_vars["show_uids"].lower() not in ("false", "0")
+        else:
+            show_uids = False
+
         representation = r.representation
         if representation == "xml":
-            output = r.resource.export_options(component=component,
-                                               fields=fields,
-                                               show_uids=show_uids)
+            only_last = False
+            as_json = False
             content_type = "text/xml"
         elif representation == "s3json":
-            output = r.resource.export_options(component=component,
-                                               fields=fields,
-                                               only_last=only_last,
-                                               as_json=True)
+            show_uids = False
+            as_json = True
             content_type = "application/json"
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
-        response = current.response
-        response.headers["Content-Type"] = content_type
+
+        component = r.component_name
+        output = r.resource.export_options(component=component,
+                                           fields=fields,
+                                           show_uids=show_uids,
+                                           only_last=only_last,
+                                           hierarchy=hierarchy,
+                                           as_json=as_json)
+            
+        current.response.headers["Content-Type"] = content_type
         return output
 
     # -------------------------------------------------------------------------

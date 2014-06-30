@@ -2744,21 +2744,22 @@ class S3Resource(object):
                        fields=None,
                        only_last=False,
                        show_uids=False,
+                       hierarchy=False,
                        as_json=False):
         """
             Export field options of this resource as element tree
 
             @param component: name of the component which the options are
-                requested of, None for the primary table
+                              requested of, None for the primary table
             @param fields: list of names of fields for which the options
-                are requested, None for all fields (which have options)
+                           are requested, None for all fields (which have
+                           options)
             @param as_json: convert the output into JSON
-            @param only_last: Obtain the latest record (performance bug fix,
-                timeout at s3_tb_refresh for non-dropdown form fields)
+            @param only_last: obtain only the latest record
         """
 
         if component is not None:
-            c = self.components.get(component, None)
+            c = self.components.get(component)
             if c:
                 tree = c.export_options(fields=fields,
                                         only_last=only_last,
@@ -2766,33 +2767,74 @@ class S3Resource(object):
                                         as_json=as_json)
                 return tree
             else:
+                # If we get here, we've been called from the back-end,
+                # otherwise the request would have failed during parse.
+                # So it's safe to raise an exception:
                 raise AttributeError
         else:
             if as_json and only_last and len(fields) == 1:
-                db = current.db
-                component_tablename = "%s_%s" % (self.prefix, self.name)
-                field = db[component_tablename][fields[0]]
-                req = field.requires
-                if isinstance(req, IS_EMPTY_OR):
-                    req = req.other
+                # Identify the field
+                default = {"option":[]}
+                try:
+                    field = self.table[fields[0]]
+                except AttributeError:
+                    # Can't raise an exception here as this goes
+                    # directly to the client
+                    return json.dumps(default)
+
+                # Check that the validator has a lookup table
+                requires = field.requires
+                if not isinstance(requires, (list, tuple)):
+                    requires = [requires]
+                requires = requires[0]
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
                 from s3validators import IS_LOCATION
-                if not isinstance(req, (IS_ONE_OF, IS_LOCATION)):
-                    raise RuntimeError, "not isinstance(req, IS_ONE_OF)"
-                kfield = db[req.ktable][req.kfield]
-                rows = db().select(kfield,
-                                   orderby=~kfield,
-                                   limitby=(0, 1))
-                res = []
-                for row in rows:
-                    val = row[req.kfield]
+                if not isinstance(requires, (IS_ONE_OF, IS_LOCATION)):
+                    # Can't raise an exception here as this goes
+                    # directly to the client
+                    return json.dumps(default)
+
+                # Identify the lookup table
+                db = current.db
+                lookuptable = requires.ktable
+                lookupfield = db[lookuptable][requires.kfield]
+
+                # Fields to extract
+                fields = [lookupfield]
+                h = None
+                if hierarchy:
+                    from s3hierarchy import S3Hierarchy
+                    h = S3Hierarchy(lookuptable)
+                    if not h.config:
+                        h = None
+                    elif h.pkey.name != lookupfield.name:
+                        # Also extract the node key for the hierarchy
+                        fields.append(k.pkey)
+
+                # Get the latest record
+                # NB: this assumes that the lookupfield is auto-incremented
+                row = db().select(orderby=~lookupfield,
+                                  limitby=(0, 1),
+                                  *fields).first()
+
+                # Represent the value and generate the output JSON
+                if row:
+                    value = row[lookupfield]
                     if field.represent:
-                        represent = field.represent(val)
+                        represent = field.represent(value)
                     else:
-                        represent = s3_unicode(val)
+                        represent = s3_unicode(value)
                     if isinstance(represent, A):
                         represent = represent.components[0]
-                    res.append({"@value": val, "$": represent})
-                return json.dumps({'option': res})
+                        
+                    item = {"@value": value, "$": represent}
+                    if h:
+                        item["@parent"] = h.parent(row[h.pkey])
+                    result = [item]
+                else:
+                    result = []
+                return json.dumps({'option': result})
 
             xml = current.xml
             tree = xml.get_options(self.prefix,
@@ -4168,7 +4210,7 @@ class S3ResourceFilter(object):
             return self.query
             
         resource = self.resource
-        
+
         query = reduce(lambda x, y: x & y, self.queries, self.mquery)
         if self.filters:
             if self.transformed is None:
