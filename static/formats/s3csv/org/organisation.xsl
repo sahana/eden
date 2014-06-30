@@ -17,6 +17,10 @@
          SubSubType..............org_organisation$organisation_type_id
          Sectors.................org_sector_organisation$sector_id
          Services................org_service_organisation$service_id
+         OR
+         Service.................org_organisation$service_id or org_service.parent
+         SubService..............org_organisation$service_id or org_service.parent
+         SubSubService...........org_organisation$service_id or org_service.parent
          Region..................org_organisation.region_id
          Country.................org_organisation.country (ISO Code)
          Website.................org_organisation.website
@@ -34,10 +38,14 @@
     <xsl:include href="../../xml/commons.xsl"/>
 
     <xsl:variable name="OrgTypePrefix" select="'OrgType:'"/>
+    <xsl:variable name="ServicePrefix" select="'Service:'"/>
 
     <!-- Indexes for faster processing -->
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="region" match="row" use="col[@field='Region']"/>
+    <xsl:key name="service" match="row" use="concat(col[@field='Service'], '/',
+                                                    col[@field='SubService'], '/',
+                                                    col[@field='SubSubService'])"/>
     <xsl:key name="type" match="row" use="concat(col[@field='Type'], '/',
                                                  col[@field='SubType'], '/',
                                                  col[@field='SubSubType'])"/>
@@ -60,6 +68,24 @@
                     </xsl:with-param>
                     <xsl:with-param name="SubSubType">
                          <xsl:value-of select="col[@field='SubSubType']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Services -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('service',
+                                                                   concat(col[@field='Service'], '/',
+                                                                          col[@field='SubService'], '/',
+                                                                          col[@field='SubSubService']))[1])]">
+                <xsl:call-template name="OrganisationService">
+                    <xsl:with-param name="Service">
+                         <xsl:value-of select="col[@field='Service']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubService">
+                         <xsl:value-of select="col[@field='SubService']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="SubSubService">
+                         <xsl:value-of select="col[@field='SubSubService']"/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
@@ -110,6 +136,15 @@
 
         <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
         <xsl:variable name="Services" select="col[@field='Services']/text()"/>
+        <xsl:variable name="Service">
+            <xsl:value-of select="col[@field='Service']"/>
+        </xsl:variable>
+        <xsl:variable name="SubService">
+            <xsl:value-of select="col[@field='SubService']"/>
+        </xsl:variable>
+        <xsl:variable name="SubSubService">
+            <xsl:value-of select="col[@field='SubSubService']"/>
+        </xsl:variable>
         <xsl:variable name="Type">
             <xsl:value-of select="col[@field='Type']"/>
         </xsl:variable>
@@ -164,6 +199,30 @@
                                 <xsl:otherwise>
                                     <!-- Simple Type -->
                                     <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
+            <!-- Link to Organisation Service (when Hierarchical + Single per Row) -->
+            <xsl:if test="$Service!=''">
+                <resource name="org_service_organisation">
+                    <reference field="service_id" resource="org_service">
+                        <xsl:attribute name="tuid">
+                            <xsl:choose>
+                                <xsl:when test="$SubSubService!=''">
+                                    <!-- Hierarchical Service with 3 levels -->
+                                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService, '/', $SubSubService)"/>
+                                </xsl:when>
+                                <xsl:when test="$SubService!=''">
+                                    <!-- Hierarchical Service with 2 levels -->
+                                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <!-- Simple Service -->
+                                    <xsl:value-of select="concat($ServicePrefix, $Service)"/>
                                 </xsl:otherwise>
                             </xsl:choose>
                         </xsl:attribute>
@@ -229,6 +288,7 @@
                 </xsl:call-template>
             </xsl:if>
 
+            <!-- Services(when non-hierarchical + Multi per Row -->
             <xsl:if test="$Services!=''">
                 <xsl:call-template name="splitList">
                     <xsl:with-param name="list" select="$Services"/>
@@ -274,6 +334,48 @@
             </xsl:if>
 
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="OrganisationService">
+        <xsl:param name="Service"/>
+        <xsl:param name="SubService"/>
+        <xsl:param name="SubSubService"/>
+
+        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
+        <resource name="org_service">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($ServicePrefix, $Service)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Service"/></data>
+        </resource>
+        <xsl:if test="$SubService!=''">
+            <resource name="org_service">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$SubService"/></data>
+                <reference field="parent" resource="org_service">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($ServicePrefix, $Service)"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
+        <xsl:if test="$SubSubService!=''">
+            <resource name="org_service">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService, '/', $SubSubService)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$SubSubService"/></data>
+                <reference field="parent" resource="org_service">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($ServicePrefix, $Service, '/', $SubService)"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

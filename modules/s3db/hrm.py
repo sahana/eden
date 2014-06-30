@@ -2244,8 +2244,7 @@ class S3HRSkillModel(S3Model):
                          _class="filter-search",
                          ),
             S3OptionsFilter("person_id$human_resource.organisation_id",
-                            # Doesn't support translations
-                            #represent="%(name)s",
+                            represent = "%(name)s",
                             ),
             S3LocationFilter("person_id$location_id",
                              levels = levels,
@@ -2414,8 +2413,8 @@ class S3HRSkillModel(S3Model):
                            ),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
-                     organisation_id(label = T("Confirming Organization"),
-                                     comment = None,
+                     organisation_id(comment = None,
+                                     label = T("Confirming Organization"),
                                      widget = widget,
                                      writable = False,
                                      ),
@@ -2996,21 +2995,21 @@ def hrm_training_onaccept(form):
 
     # Deletion and update have a different format
     try:
-        id = form.vars.id
+        _id = form.vars.id
         delete = False
     except:
-        id = form.id
+        _id = form.id
         delete = True
 
     # Get the full record
     db = current.db
     table = db.hrm_training
-    record = db(table.id == id).select(table.person_id,
-                                       table.course_id,
-                                       table.date,
-                                       table.hours,
-                                       table.deleted_fk,
-                                       limitby=(0, 1)).first()
+    record = db(table.id == _id).select(table.person_id,
+                                        table.course_id,
+                                        table.date,
+                                        table.hours,
+                                        table.deleted_fk,
+                                        limitby=(0, 1)).first()
 
     if delete:
         deleted_fks = json.loads(record.deleted_fk)
@@ -3029,9 +3028,9 @@ def hrm_training_onaccept(form):
                                limitby=(0, 1)).first()
 
         if vol and vol.type == 2:
-             # Update Hours
+            # Update Hours
             ptable = s3db.hrm_programme_hours
-            query = (ptable.training_id == id)
+            query = (ptable.training_id == _id)
             if delete:
                 resource = s3db.resource("hrm_programme_hours", filter=query)
                 # Automatically propagates to Active Status
@@ -3049,26 +3048,27 @@ def hrm_training_onaccept(form):
                     if date != exists.date or \
                        hours != exists.hours:
                         db(query).update(date=date, hours=hours)
-                        id = exists.id
+                        _id = exists.id
                     else:
                         # Nothing to propagate
-                        id = None
+                        _id = None
                 else:
-                    id = ptable.insert(training_id = id,
-                                       person_id = person_id,
-                                       date = date,
-                                       hours = hours,
-                                       training = True)
-                if id:
+                    _id = ptable.insert(training_id = _id,
+                                        person_id = person_id,
+                                        date = date,
+                                        hours = hours,
+                                        training = True)
+                if _id:
                     # Propagate to Active Status
                     form = Storage()
                     form.vars = Storage()
-                    form.vars.id = id
+                    form.vars.id = _id
                     hrm_programme_hours_onaccept(form)
 
     # Update Certifications
     ctable = db.hrm_certification
     cctable = db.hrm_course_certificate
+    _ctable = db.hrm_certificate
 
     # Drop all existing certifications which came from trainings
     # - this is a lot easier than selective deletion.
@@ -3079,23 +3079,23 @@ def hrm_training_onaccept(form):
     # Figure out which certifications we're _supposed_ to have.
     query = (table.person_id == person_id) & \
             (table.course_id == cctable.course_id) & \
-            (cctable.certificate_id == db.hrm_certificate.id)
-    trainings = db(query).select()
+            (cctable.certificate_id == _ctable.id)
+    trainings = db(query).select(_ctable.id)
 
     # Add these certifications back in.
     hrm_certification_onaccept = s3db.hrm_certification_onaccept
     form = Storage()
     form.vars = Storage()
-    vars = form.vars
+    form_vars = form.vars
     for training in trainings:
-        id = ctable.update_or_insert(
-                person_id=person_id,
-                certificate_id=training["hrm_certificate"].id,
-                comments="Added by training",
-                from_training=True
-            )
+        _id = ctable.update_or_insert(
+                person_id = person_id,
+                certificate_id = training.id,
+                comments = "Added by training",
+                from_training = True
+                )
         # Propagate to Skills
-        vars.id = id
+        form_vars.id = _id
         hrm_certification_onaccept(form)
 
 # =============================================================================
@@ -3434,7 +3434,7 @@ class S3HRProgrammeModel(S3Model):
 
         root_org = auth.root_org()
 
-        # =========================================================================
+        # =====================================================================
         # Progammes
         # - not sure yet whether this will map to 'Project' or 'Activity' in future
         #
@@ -3478,19 +3478,20 @@ class S3HRProgrammeModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
-                                sortby = "name",
-                                label = T("Program"),
-                                requires = IS_EMPTY_OR(
-                                            IS_ONE_OF(db, "hrm_programme.id",
-                                                      represent,
-                                                      filterby="organisation_id",
-                                                      filter_opts=filter_opts)),
-                                represent = represent,
-                                comment=S3AddResourceLink(f="programme",
-                                                          label=label_create,
-                                                          title=label_create,
-                                                          tooltip=T("Add a new program to the catalog.")),
-                                ondelete = "SET NULL")
+            label = T("Program"),
+            ondelete = "SET NULL",
+            represent = represent,
+            requires = IS_EMPTY_OR(
+                        IS_ONE_OF(db, "hrm_programme.id",
+                                  represent,
+                                  filterby="organisation_id",
+                                  filter_opts=filter_opts)),
+            sortby = "name",
+            comment = S3AddResourceLink(f="programme",
+                                        label=label_create,
+                                        title=label_create,
+                                        tooltip=T("Add a new program to the catalog.")),
+            )
 
         configure(tablename,
                   deduplicate = self.hrm_programme_duplicate,
@@ -3498,12 +3499,12 @@ class S3HRProgrammeModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            hrm_programme_hours={"name": "person",
-                                                 "joinby": "programme_id",
-                                                 },
+                            hrm_programme_hours = {"name": "person",
+                                                   "joinby": "programme_id",
+                                                   },
                             )
 
-        # =========================================================================
+        # =====================================================================
         # Programmes <> Persons Link Table
         #
         tablename = "hrm_programme_hours"
@@ -3516,22 +3517,23 @@ class S3HRProgrammeModel(S3Model):
                      self.hrm_job_title_id(),
                      s3_date(future=0),
                      Field("hours", "double",
-                           label=T("Hours")),
+                           label = T("Hours"),
+                           ),
                      # Training records are auto-populated
                      Field("training", "boolean",
+                           default = False,
                            label = T("Type"),
-                           default=False,
                            represent = lambda opt: \
                                        T("Training") if opt else T("Work"),
-                           writable=False,
+                           writable = False,
                            ),
                      Field("training_id", self.hrm_training,
                            label = T("Course"),
                            represent = hrm_TrainingRepresent(),
-                           writable=False,
+                           writable = False,
                            ),
                      Field.Method("month", hrm_programme_hours_month),
-                     s3_comments(comment=None),
+                     s3_comments(comment = None),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -3590,9 +3592,6 @@ class S3HRProgrammeModel(S3Model):
                              },
                   extra_fields = ["date"],
                   filter_widgets = filter_widgets,
-                  onaccept = hrm_programme_hours_onaccept,
-                  ondelete = hrm_programme_hours_onaccept,
-                  orderby = "hrm_programme_hours.date desc",
                   list_fields = ["id",
                                  "training",
                                  "programme_id",
@@ -3601,6 +3600,9 @@ class S3HRProgrammeModel(S3Model):
                                  "date",
                                  "hours",
                                  ],
+                  onaccept = hrm_programme_hours_onaccept,
+                  ondelete = hrm_programme_hours_onaccept,
+                  orderby = "hrm_programme_hours.date desc",
                   report_options = report_options,
                   )
 

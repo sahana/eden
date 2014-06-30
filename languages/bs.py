@@ -532,6 +532,7 @@
 'Add Section': 'Dodaj sekciju',
 'Add Sector': 'Dodaj sektor',
 'Add Sender Site.': 'Dodaj lokaciju pošiljaoca.',
+'Add Service': 'Dodaj usluga',
 'Add Service Profile': 'Dodaj profil usluga',
 'Add Setting': 'Dodaj Postavke',
 'Add Shelter': 'Dodaj sklonište',

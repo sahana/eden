@@ -423,6 +423,7 @@ def customise_org_organisation_controller(**attr):
                         label = T("Services"),
                         field = "service_id",
                         # activate hierarchical org_service:
+                        #leafonly = False,
                         #widget = "hierarchy",
                     ),
                     S3SQLInlineComponentMultiSelectWidget(

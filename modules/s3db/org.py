@@ -2085,9 +2085,8 @@ class S3OrganisationServiceModel(S3Model):
             hierarchy = None
 
         # CRUD Strings
-        ADD_SERVICE = T("Create Service")
         crud_strings[tablename] = Storage(
-            label_create = ADD_SERVICE,
+            label_create = T("Create Service"),
             title_display = T("Service Details"),
             title_list = T("Services"),
             title_update = T("Edit Service"),
@@ -2101,15 +2100,15 @@ class S3OrganisationServiceModel(S3Model):
 
         # Reusable Field
         service_id = S3ReusableField("service_id", "reference %s" % tablename,
-                                    label = T("Services"),
-                                    ondelete = "CASCADE",
-                                    represent = represent,
-                                    requires = IS_EMPTY_OR(
+                                     label = T("Services"),
+                                     ondelete = "CASCADE",
+                                     represent = represent,
+                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_service.id",
                                                           represent,
                                                           sort=True)),
-                                    sortby = "name",
-                                    )
+                                     sortby = "name",
+                                     )
 
         configure(tablename,
                   hierarchy = hierarchy,
@@ -2127,11 +2126,10 @@ class S3OrganisationServiceModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("New Service"),
+            label_create = T("Add Service"),
             title_display = T("Service"),
             title_list = T("Services"),
             title_update = T("Edit Service"),
-            title_upload = T("Import Service data"),
             label_list_button = T("List Services"),
             msg_record_created = T("Service added to Organization"),
             msg_record_modified = T("Service updated"),

@@ -4775,15 +4775,15 @@ class S3ResourceData(object):
         self.rfields = dfields
         self.numrows = 0 if totalrows is None else totalrows
         self.ids = ids
-        
+
         if groupby or as_rows:
             # Just store the rows, no further queries or extraction
             self.rows = rows
-            
+
         elif not rows:
             # No rows found => empty list
             self.rows = []
-            
+
         else:
             # Extract the data from the master rows
             records = self.extract(rows,
@@ -4814,7 +4814,7 @@ class S3ResourceData(object):
             results = {}
 
             field_data = self.field_data
-            effort = self.effort
+            #effort = self.effort
             NONE = current.messages["NONE"]
 
             render = self.render

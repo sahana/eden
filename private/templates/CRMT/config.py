@@ -345,9 +345,11 @@ settings.hrm.teams = False
 # Make Facility Types Hierarchical
 settings.org.facility_types_hierarchical = True
 # Make Organisation Types Hierarchical
-settings.org.organisation_types_hierarchical = True
+#settings.org.organisation_types_hierarchical = True
 # Make Organisation Types Multiple
-settings.org.organisation_types_multiple = True
+#settings.org.organisation_types_multiple = True
+# Make Services Hierarchical
+settings.org.services_hierarchical = True
 # Enable the use of Organisation Groups
 settings.org.groups = "Coalition"
 # Set the label for Sites
@@ -937,14 +939,14 @@ def customise_org_organisation_controller(**attr):
                                                   label = T("Sector"),
                                                   header = True,
                                                   ),
-                                  S3OptionsFilter("service_organisation.service_id",
-                                                  label = T("Service"),
-                                                  header = True,
-                                                  ),
-                                  S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
-                                                    label = T("Type of Organization"),
-                                                    #multiple = False,
-                                                    )
+                                  S3HierarchyFilter("service_organisation.service_id",
+                                                    label = T("Service"),
+                                                    header = True,
+                                                    ),
+                                  #S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
+                                  #                  label = T("Type of Organization"),
+                                  #                  #multiple = False,
+                                  #                  )
                                   ]
 
                 s3.crud_strings.org_organisation.title_report = T("Organization Matrix")
@@ -978,7 +980,7 @@ def customise_org_organisation_controller(**attr):
                                filter_widgets = filter_widgets,
                                report_options = report_options,
                                # No Map for Organisations
-                               summary = [s for s in settings.ui.summary if s["name"] != "map"],
+                               #summary = [s for s in settings.ui.summary if s["name"] != "map"],
                                )
 
             if not current.auth.is_logged_in():
@@ -994,7 +996,7 @@ def customise_org_organisation_controller(**attr):
 
             elif method in ("read", "create", "update", "summary"):
                 # Custom Form (Read/Create/Update inc embedded Summary)
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
 
                 ftable = s3db.org_facility
                 ftable.name.default = "TEMP" # replace in form postprocess
@@ -1089,10 +1091,12 @@ def customise_org_organisation_controller(**attr):
                         label = T("Sectors"),
                         field = "sector_id",
                     ),
-                    S3SQLInlineComponentMultiSelectWidget(
+                    S3SQLInlineLink(
                         "service",
                         label = T("Services"),
                         field = "service_id",
+                        leafonly = False,
+                        widget = "hierarchy",
                     ),
                     S3SQLInlineComponent(
                         "resource",
