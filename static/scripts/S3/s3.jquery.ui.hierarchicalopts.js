@@ -361,7 +361,6 @@
                     id: nodeID,
                     rel: 'leaf'
                 },
-                state: 'open'
             }, false, false);
             
             if (parent) {

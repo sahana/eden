@@ -201,7 +201,7 @@ function s3_popup_refresh_main_form() {
     // URL to retrieve the Options list for the field of the master resource
     var opt_url = S3.Ap.concat('/' + caller_prefix + '/' + parent_resource + '/options.s3json?field=' + child_resource);
 
-    // Dropdown or Autocomplete
+    // Identify the widget type (Dropdown, Checkboxes, Hierarchy or Autocomplete)
     var selector = self.parent.$('#' + caller);
     s3_debug('selector', selector);
     var inline = (caller.substring(0, 4) == 'sub_');
@@ -209,6 +209,8 @@ function s3_popup_refresh_main_form() {
     var has_dummy = (dummy.val() != undefined);
     s3_debug('has_dummy', has_dummy);
     var checkboxes = selector.hasClass('checkboxes-widget-s3');
+    var hierarchy_widget = selector.hasClass('s3-hierarchy-input');
+    
     var append;
     if (checkboxes) {
         // The number of columns
@@ -222,6 +224,9 @@ function s3_popup_refresh_main_form() {
         //var has_dummy = (dummy.val() != undefined);
         if (dropdown) {
             append = [];
+        } else if (hierarchy_widget) {
+            // Request hierarchy information for widget
+            opt_url += '&hierarchy=1&only_last=1';
         } else {
             // Return only current record if field is autocomplete
             opt_url += '&only_last=1';
@@ -240,11 +245,16 @@ function s3_popup_refresh_main_form() {
                 represent = '';
             }
             if (dropdown) {
+                // Add new option
                 append.push(["<option value='", value, "'>", represent, "</option>"].join(''));
             } else if (checkboxes) {
                 id = 'id_' + child_resource + '-' + count;
                 append.push(["<td><input id='", id, "' name='", child_resource, "' value='", value, "' type='checkbox'><label for='", id, "'>", represent, "</label></td>"].join(''));
                 count++;
+            } else if (hierarchy_widget) {
+                // Add new node
+                parent = this['@parent'];
+                selector.parent().hierarchicalopts('addNode', parent, value, represent, true);
             }
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber
             numeric_value = (+value);

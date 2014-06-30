@@ -2821,7 +2821,12 @@ class S3Resource(object):
                 # Represent the value and generate the output JSON
                 if row:
                     value = row[lookupfield]
-                    if field.represent:
+                    widget = field.widget
+                    if hasattr(widget, "represent") and widget.represent:
+                        # Prefer the widget's represent as options.json
+                        # is usually called to Ajax-update the widget
+                        represent = widget.represent(value)
+                    elif field.represent:
                         represent = field.represent(value)
                     else:
                         represent = s3_unicode(value)
