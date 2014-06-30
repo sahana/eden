@@ -1377,6 +1377,7 @@ class S3CRUD(S3Method):
             dtargs["dt_pagination"] = dt_pagination
             dtargs["dt_displayLength"] = display_length
             dtargs["dt_base_url"] = r.url(method="", vars={})
+            dtargs["dt_permalink"] = r.url()
             datatable = dt.html(totalrows,
                                 displayrows,
                                 id=list_id,

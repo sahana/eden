@@ -2693,6 +2693,138 @@ class ResourceDeleteTests(unittest.TestCase):
         #raise NotImplementedError
 
 # =============================================================================
+class LinkDeletionTests(unittest.TestCase):
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        # Define master table
+        s3db.define_table("link_master",
+                          *s3_meta_fields())
+                          
+        # Define component table
+        s3db.define_table("link_component",
+                          *s3_meta_fields())
+                          
+        # Define link table
+        s3db.define_table("link_link",
+                          Field("master_id", "reference link_master"),
+                          Field("component_id", "reference link_component"),
+                          *s3_meta_fields())
+
+        # Define link table component
+        s3db.add_components("link_master",
+                            link_component = {"link": "link_link",
+                                              "joinby": "master_id",
+                                              "key": "component_id",
+                                              "actuate": "hide"
+                                              },
+                            )
+
+        current.db.commit()
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        # Drop test tables
+        db = current.db
+        db.link_link.drop()
+        db.link_master.drop()
+        db.link_component.drop()
+
+        current.db.commit()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        db = current.db
+
+        # Create records
+        table = db.link_master
+        self.master = table.insert()
+
+        table = db.link_component
+        self.component1 = table.insert()
+        self.component2 = table.insert()
+
+        table = db.link_link
+        self.link1 = table.insert(master_id = self.master,
+                                  component_id = self.component1)
+        self.link2 = table.insert(master_id = self.master,
+                                  component_id = self.component2)
+
+        db.commit()
+        current.auth.override = True
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        db = current.db
+
+        # Delete all records
+        db(db.link_link._id>0).delete()
+        db(db.link_master._id>0).delete()
+        db(db.link_component._id>0).delete()
+        db.commit()
+
+    # -------------------------------------------------------------------------
+    def testLinkDeletion(self):
+        """ Test deletion of link table entry """
+
+        db = current.db
+        resource = current.s3db.resource("link_master")
+
+        # Filter for a particular component record
+        query = FS("component.id") == self.component1
+        resource.add_filter(query)
+        
+        link = resource.links["link"]
+
+        # Test resolution of field selector
+        rfield = link.resolve_selector("component.id")
+        msg = "Link table could not resolve component field selector"
+        self.assertNotEqual(rfield.field, None, msg=msg)
+        self.assertEqual(rfield.colname, "link_component.id", msg=msg)
+
+        # Delete the link
+        result = link.delete()
+
+        # Should delete exactly one link
+        self.assertEqual(result, 1)
+
+        # Should have deleted the link for component1, but not for component2
+        table = db.link_link
+        row = db((table.component_id == self.component1) & \
+                 (table.deleted != True)).select(table.id,
+                                                 limitby=(0, 1)).first()
+        self.assertEqual(row, None,
+                         msg = "Link not deleted")
+
+        row = db((table.component_id == self.component2) & \
+                 (table.deleted != True)).select(table.id,
+                                                 limitby=(0, 1)).first()
+        self.assertNotEqual(row, None,
+                            msg = "Unrelated link deleted")
+
+        # The component records should still be available
+        table = db.link_component
+        row = db((table.id == self.component1) & \
+                 (table.deleted != True)).select(table.id,
+                                                 limitby=(0, 1)).first()
+        self.assertNotEqual(row, None,
+                            msg = "Component record deleted instead of just unlinking it")
+        
+        row = db((table.id == self.component2) & \
+                 (table.deleted != True)).select(table.id,
+                                                 limitby=(0, 1)).first()
+        self.assertNotEqual(row, None,
+                            msg = "Unrelated component record deleted")
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -2735,6 +2867,7 @@ if __name__ == "__main__":
         ResourceExportTests,
         ResourceImportTests,
         ResourceFilteredComponentTests,
+        LinkDeletionTests,
     )
 
 # END ========================================================================

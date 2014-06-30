@@ -399,24 +399,20 @@ def ns_only(f, required=True, branches=True, updateable=True):
         # No need for parent in represent (it's a hierarchy view)
         node_represent = organisation_represent(parent=False)
         # Filter by type
+        # (no need to exclude branches - we wouldn't be here if we didn't use branches)
         node_filter = (FS("organisation_organisation_type.organisation_type_id") == type_id)
-        # No need to exclude branches (we wouldn't be here if we didn't use branches)
         f.widget = S3HierarchyWidget(lookup="org_organisation",
                                      filter=node_filter,
                                      represent=node_represent,
                                      multiple=False,
                                      leafonly=False,
                                      )
-        # @todo: Dynamic update of HierarchyWidget not supported yet
-        #        => hide the add-resource link until fixed
-        skip_add_resource_link = True
     else:
         # Dropdown not Autocomplete
         f.widget = None
-        skip_add_resource_link = False
 
     # Comment
-    if (Admin or s3_has_role("ORG_ADMIN")) and not skip_add_resource_link:
+    if (Admin or s3_has_role("ORG_ADMIN")):
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
         from s3.s3navigation import S3ScriptItem
@@ -1258,6 +1254,11 @@ def customise_org_organisation_controller(**attr):
                     r.table.country.label = T("Country")
                     from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
                     crud_form = S3SQLCustomForm(
+                        S3SQLInlineLink(
+                            "parent",
+                            field = "organisation_id",
+                            multiple = False,
+                        ),
                         "name",
                         "acronym",
                         S3SQLInlineLink(

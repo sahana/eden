@@ -270,7 +270,7 @@ textarea.richtext {
     font-weight: bold;
 }
 
-.list_formats {
+.dt-export-options {
     float: right;
     padding-top: 5px;
 }

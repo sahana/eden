@@ -1549,7 +1549,17 @@ class S3OptionsFilter(S3FilterWidget):
         # Make sure the selected options are in the available options
         # (not possible if we have a fixed options dict)
         if options is None and values:
-            for val in values:
+            numeric = rfield.ftype in ("integer", "id") or \
+                      rfield.ftype[:9] == "reference"
+            for _val in values:
+                if numeric:
+                    try:
+                        val = int(_val)
+                    except ValueError:
+                        # not valid for this field type => skip
+                        continue
+                else:
+                    val = _val
                 if val not in opt_keys and \
                    (not isinstance(val, (int, long)) or not str(val) in opt_keys):
                     opt_keys.append(val)
