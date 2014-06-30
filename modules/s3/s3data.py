@@ -456,15 +456,8 @@ class S3DataTable(object):
             query = "&".join("%s=%s" % (k, v) for k, v in get_vars.items())
             default_url = "%s?%s" % (default_url, query)
 
-        div = DIV(_id = "%s_list_formats" % id, # Used by s3.filter.js to update URLs
-                  _class = "list_formats")
-        if permalink is not None:
-            link = A(T("Link to this result"),
-                     _href=permalink,
-                     _class="permalink")
-            div.append(link)
-            div.append(" | ")
-
+        div = SPAN(_id = "%s_list_formats" % id, # Used by s3.filter.js to update URLs
+                   _class = "list_formats")
         export_formats = current.deployment_settings.get_ui_export_formats()
         if export_formats:
             div.append("%s:" % current.T("Export as"))
@@ -533,7 +526,15 @@ class S3DataTable(object):
             for icon in iconList:
                 div.append(icon)
 
-        return div
+        output = DIV(_class="dt-export-options")
+        if permalink is not None:
+            link = A(T("Link to this result"),
+                     _href=permalink,
+                     _class="permalink")
+            output.append(link)
+            output.append(" | ")
+        output.append(div)
+        return output
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -742,6 +743,13 @@ class S3DataTable(object):
         # Wrap the table in a form and add some data in hidden fields
         form = FORM(_class="dt-wrapper")
         if not s3.no_formats and len(html) > 0:
+            # @todo: always *render* both export options and permalink,
+            #        even if the initial table is empty, so that
+            #        Ajax-update can unhide them once there are results
+            # @todo: move export-format update into fnDrawCallback
+            # @todo: poor UX with onclick-JS, better to render real
+            #        links which can be bookmarked, and then update them
+            #        in fnDrawCallback
             permalink = attr.get("dt_permalink", None)
             base_url = attr.get("dt_base_url", None)
             form.append(S3DataTable.listFormats(id, rfields,

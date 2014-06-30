@@ -895,6 +895,9 @@ S3.search = {};
                 // Refresh Data
                 dt.fnReloadAjax(target_data['ajaxurl']);
                 // Update Export Formats
+                // @todo: poor UX with onclick-activated links (can't be bookmarked),
+                //        make real links, move update into fnDrawCallback
+                //        (see also s3data.py in this regard)
                 var $this,
                     s,
                     parts;
@@ -902,9 +905,9 @@ S3.search = {};
                     $this = $(this);
                     s = $this.attr('onclick');
                     parts = s.split("','");
-                    url = parts[2].split("');")[0];
+                    url = parts[2].split("')")[0];
                     url = filterURL(url, queries);
-                    parts[2] = url + "');";
+                    parts[2] = url + "')";
                     s = parts.join("','");
                     $this.attr('onclick', s);
                 });
@@ -1472,6 +1475,9 @@ S3.search = {};
                     var dt = t.dataTable();
                     dt.fnReloadAjax(dt_ajaxurl[target_id]);
                     // Update Export Formats
+                    // @todo: poor UX with onclick-activated links (can't be bookmarked),
+                    //        make real links, move update into fnDrawCallback
+                    //        (see also s3data.py in this regard)
                     var $this,
                         s,
                         parts;
@@ -1479,9 +1485,9 @@ S3.search = {};
                         $this = $(this);
                         s = $this.attr('onclick');
                         parts = s.split("','");
-                        url = parts[2].split("');")[0];
+                        url = parts[2].split("')")[0];
                         url = filterURL(url, queries);
-                        parts[2] = url + "');";
+                        parts[2] = url + "')";
                         s = parts.join("','");
                         $this.attr('onclick', s);
                     });
