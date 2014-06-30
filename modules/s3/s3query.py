@@ -498,8 +498,19 @@ class S3FieldPath(object):
             return resource.table, None, False, False
 
         multiple = True
-        s3db = current.s3db
+        
+        linked = resource.linked
+        if linked and linked.alias == alias:
+            
+            # It's the linked table
+            linktable = resource.table
 
+            ktable = linked.table
+            join = [ktable.on(ktable[linked.fkey] == linktable[linked.rkey])]
+
+            return ktable, join, multiple, True
+
+        s3db = current.s3db
         tablename = resource.tablename
 
         # Try to attach the component
@@ -516,17 +527,8 @@ class S3FieldPath(object):
 
         components = resource.components
         links = resource.links
-        linked = resource.linked
 
-        if linked and linked.alias == alias:
-
-            # It's the linked table
-            linktable = resource.table
-
-            ktable = linked.table
-            join = [ktable.on(ktable[linked.fkey] == linktable[linked.rkey])]
-
-        elif alias in components:
+        if alias in components:
 
             # Is a component
             component = components[alias]
