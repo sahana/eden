@@ -2764,6 +2764,7 @@ class S3Resource(object):
                 tree = c.export_options(fields=fields,
                                         only_last=only_last,
                                         show_uids=show_uids,
+                                        hierarchy=hierarchy,
                                         as_json=as_json)
                 return tree
             else:
@@ -2835,17 +2836,17 @@ class S3Resource(object):
                         
                     item = {"@value": value, "$": represent}
                     if h:
-                        item["@parent"] = h.parent(row[h.pkey])
+                        item["@parent"] = str(h.parent(row[h.pkey]))
                     result = [item]
                 else:
                     result = []
                 return json.dumps({'option': result})
 
             xml = current.xml
-            tree = xml.get_options(self.prefix,
-                                   self.name,
+            tree = xml.get_options(self.table,
+                                   fields=fields,
                                    show_uids=show_uids,
-                                   fields=fields)
+                                   hierarchy=hierarchy)
 
             if as_json:
                 return xml.tree2json(tree, pretty_print=False,
@@ -4819,7 +4820,6 @@ class S3ResourceData(object):
             results = {}
 
             field_data = self.field_data
-            #effort = self.effort
             NONE = current.messages["NONE"]
 
             render = self.render

@@ -57,7 +57,7 @@ from gluon.storage import Storage
 
 from s3codec import S3Codec
 from s3fields import S3RepresentLazy
-from s3utils import s3_get_foreign_key, s3_unicode, S3MarkupStripper, s3_validate, s3_represent_value
+from s3utils import s3_get_foreign_key, s3_unicode, s3_strip_markup, s3_validate, s3_represent_value
 
 ogetattr = object.__getattribute__
 
@@ -174,6 +174,7 @@ class S3XML(S3Codec):
         marker_url="marker_url",
         marker_height="marker_height",
         marker_width="marker_width",
+        parent="parent",
         popup="popup",          # for GIS Feature Layers/Queries
         popup_url="popup_url",  # for map popups
         sym="sym",              # for GPS
@@ -1641,123 +1642,162 @@ class S3XML(S3Codec):
     # Data model helpers ======================================================
     #
     @classmethod
-    def get_field_options(cls, table, fieldname, parent=None, show_uids=False):
+    def get_field_options(cls,
+                          table,
+                          fieldname,
+                          parent=None,
+                          show_uids=False,
+                          hierarchy=False):
         """
             Get options of a field as <select>
 
-            @param table: the table
-            @param fieldname: the fieldname
+            @param table: the Table
+            @param fieldname: the Field name
             @param parent: the parent element in the tree
+            @param show_uids: include UUIDs in foreign key options
+            @param hierarchy: include parent ID in foreign key options (if
+                              the lookup table is hierarchical)
         """
 
-        options = []
-        if fieldname in table.fields:
+        # Get the field options
+        options = None
+        try:
             field = table[fieldname]
+        except AttributeError:
+            pass
+        else:
             requires = field.requires
-            if not isinstance(requires, (list, tuple)):
-                requires = [requires]
             if requires:
-                r = requires[0]
-                if isinstance(r, IS_EMPTY_OR):
-                    r = r.other
+                if not isinstance(requires, (list, tuple)):
+                    requires = [requires]
+                requires = requires[0]
+                if isinstance(requires, IS_EMPTY_OR):
+                    requires = requires.other
                 try:
-                    options = r.options()
-                except:
+                    options = requires.options()
+                except AttributeError:
                     pass
 
         TAG = cls.TAG
         if options:
+            
             ATTRIBUTE = cls.ATTRIBUTE
+            UID = cls.UID
+            
             SubElement = etree.SubElement
+
+            # Create the <select> element
             if parent is not None:
                 select = SubElement(parent, TAG.select)
             else:
                 select = etree.Element(TAG.select)
+
+            # Set name and id attributes for the <select> element
             select.set(ATTRIBUTE.name, fieldname)
-            select.set(ATTRIBUTE.id,
-                       "%s_%s" % (table._tablename, fieldname))
+            select.set(ATTRIBUTE.id, "%s_%s" % (table._tablename, fieldname))
 
-            uids = Storage()
-            if show_uids:
-                ftype = str(field.type)
-                if ftype[:9] == "reference":
-                    ktablename = ftype[10:]
-                    try:
-                        ktable = current.s3db[ktablename]
-                    except:
-                        pass
-                    else:
-                        ids = [o[0] for o in options]
-                        if ids and cls.UID in ktable.fields:
-                            query = ktable._id.belongs(ids)
-                            rows = current.db(query).select(ktable._id, ktable[cls.UID])
-                            uids = Storage((str(r[ktable._id.name]), r[cls.UID])
-                                        for r in rows)
+            # Extract uids and parents if required
+            uids = {}
+            parents = {}
+            if show_uids or hierarchy:
 
-            _XML = etree.XML
+                ids = set(int(o[0]) for o in options if str(o[0]).isdigit())
+                ktablename, key = s3_get_foreign_key(field, m2m=False)[:2]
+                try:
+                    ktable = current.s3db[ktablename]
+                except AttributeError:
+                    pass
+                else:
+                    if show_uids:
+                        query = ktable[key].belongs(ids)
+                        rows = current.db(query).select(ktable[key],
+                                                        ktable[UID])
+                        for row in rows:
+                            uids[str(row[key])] = row[UID]
+                    if hierarchy:
+                        from s3hierarchy import S3Hierarchy
+                        h = S3Hierarchy(ktablename)
+                        if h.config:
+                            for _id in ids:
+                                parents[str(_id)] = h.parent(_id)
+
+            # Build the XML
             OPTION = TAG.option
             VALUE = ATTRIBUTE.value
-            for (value, text) in options:
-                if show_uids and str(value) in uids:
-                    uid = uids[str(value)]
-                else:
-                    uid = None
-                value = s3_unicode(value)
-                try:
-                    markup = _XML(s3_unicode(text))
-                    text = markup.xpath(".//text()")
-                    if text:
-                        text = " ".join(text)
-                    else:
-                        text = ""
-                except:
-                    pass
-                text = s3_unicode(text)
+            PARENT = ATTRIBUTE.parent
+
+            for value, text in options:
+
+                # Create <option> element
                 option = SubElement(select, OPTION)
-                option.set(VALUE, value)
-                if uid:
-                    option.set(cls.UID, uid)
-                option.text = text
+                option.text = s3_unicode(s3_strip_markup(text))
+                
+                attr = option.attrib
+
+                # Add value-attribute
+                value = s3_unicode(value)
+                attr[VALUE] = value
+
+                # Add uuid-attribute, if required
+                if show_uids and value in uids:
+                    uid = uids[value]
+                    if uid:
+                        attr[UID] = uid
+
+                # Add parent-attribute, if required
+                if hierarchy and value in parents:
+                    p = parents[value]
+                    if p:
+                        attr[PARENT] = str(p)
+                
         elif parent is not None:
-            return None
+            select = None
+            
         else:
-            return etree.Element(TAG.select)
+            select = etree.Element(TAG.select)
 
         return select
 
     # -------------------------------------------------------------------------
-    def get_options(self, prefix, name, fields=None, show_uids=False):
+    def get_options(self,
+                    table,
+                    fields=None,
+                    show_uids=False,
+                    hierarchy=False):
         """
             Get options of option fields in a table as <select>s
 
             @param prefix: the application prefix
             @param name: the resource name (without prefix)
             @param fields: optional list of fieldnames
+            @param show_uids: include UIDs in foreign key options
+            @param hierarchy: include parent IDs in foreign key options (if
+                              the lookup table is hierarchical)
         """
 
-        db = current.db
-        tablename = "%s_%s" % (prefix, name)
-        table = db.get(tablename, None)
+        if fields:
+            if not isinstance(fields, (list, tuple, set)):
+                fields = [fields]
+            if len(fields) == 1:
+                # Single field: omit the outer <options> element
+                return self.get_field_options(table,
+                                              fields[0],
+                                              show_uids=show_uids,
+                                              hierarchy=hierarchy,
+                                              )
 
         options = etree.Element(self.TAG.options)
 
-        if fields:
-            if not isinstance(fields, (list, tuple)):
-                fields = [fields]
-            if len(fields) == 1:
-                return(self.get_field_options(table, fields[0],
-                                              show_uids=show_uids))
-
         if table:
-            options.set(self.ATTRIBUTE.resource, tablename)
+            options.set(self.ATTRIBUTE.resource, table._tablename)
             get_field_options = self.get_field_options
             for f in table.fields:
-                if fields and f not in fields:
-                    continue
-                select = get_field_options(table, f,
-                                           parent=options,
-                                           show_uids=show_uids)
-
+                if not fields or f in fields:
+                    get_field_options(table, f,
+                                      parent=options,
+                                      show_uids=show_uids,
+                                      hierarchy=hierarchy,
+                                      )
         return options
 
     # -------------------------------------------------------------------------
@@ -1833,12 +1873,7 @@ class S3XML(S3Codec):
                     if comment:
                         comment = s3_unicode(comment)
                     if comment and "<" in comment:
-                        try:
-                            stripper = S3MarkupStripper()
-                            stripper.feed(comment)
-                            comment = stripper.stripped()
-                        except Exception:
-                            current.log.error(sys.exc_info()[1])
+                        comment = s3_strip_markup(comment)
                     if comment:
                         set_attribute(ATTRIBUTE.comment, comment)
         return fields

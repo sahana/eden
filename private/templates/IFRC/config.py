@@ -1254,11 +1254,6 @@ def customise_org_organisation_controller(**attr):
                     r.table.country.label = T("Country")
                     from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
                     crud_form = S3SQLCustomForm(
-                        S3SQLInlineLink(
-                            "parent",
-                            field = "organisation_id",
-                            multiple = False,
-                        ),
                         "name",
                         "acronym",
                         S3SQLInlineLink(
