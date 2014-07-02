@@ -311,10 +311,11 @@
                 this.closeMenu();
             }
             
-            var button = $(this.button);
+            var tree = $(this.tree),
+                button = $(this.button);
             var pos = button.offset();
-            
-            $(this.tree).css({
+
+            tree.css({
                 position: 'absolute',
                 top: pos.top + button.outerHeight(),
                 left: pos.left,
@@ -323,6 +324,14 @@
             }).show().jstree('set_focus');
             this._isOpen = true;
             button.addClass('ui-state-active');
+
+            // Close the menu automatically on mouseleave after click
+            var self = this;
+            tree.one('click.hierarchicalopts', function() {
+                $(this).one('mouseleave.hierarchicalopts', function() {
+                    self.closeMenu();
+                });
+            });
             $(this).trigger('open');
         },
 
