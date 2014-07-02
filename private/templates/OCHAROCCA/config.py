@@ -80,6 +80,7 @@ settings.L10n.languages = OrderedDict([
     #("ru", "Russian"),
     #("tg",  "Tajik"),
     #("tk",  "Turkmen"),
+    #("uk", "Ukrainian"),
     #("uz", "Uzbek"),
 ])
 # Default Language
@@ -108,7 +109,7 @@ settings.gis.countries = ["AM",
                           "KG",
                           "TJ",
                           "TM",
-                          "UA"
+                          "UA",
                           "UZ",
                           ]
 
@@ -191,12 +192,12 @@ current.response.menu = [
      "f": "data",
      "icon": "signal",
      },
-#    {"name": T("Stakeholders"),
-#     "c": "org", 
-#     "f": "organisation",
-#     "icon": "sitemap",
-#     "count": 0
-#     },
+    #{"name": T("Stakeholders"),
+    # "c": "org", 
+    # "f": "organisation",
+    # "icon": "sitemap",
+    # "count": 0
+    # },
     {"name": T("Disasters"),
      "c": "event", 
      "f": "event",
@@ -275,15 +276,15 @@ def customise_gis_location_controller(**attr):
                                             "filterfor": ("PCode",),
                                             },
                         gis_location_lat_lon_source = {"name": "lat_lon_source",
-                                            "joinby": "location_id",
-                                            "filterby": "tag",
-                                            "filterfor": ("LatLon Source",),
-                                            },
+                                                       "joinby": "location_id",
+                                                       "filterby": "tag",
+                                                       "filterfor": ("LatLon Source",),
+                                                       },
                         gis_location_lat_lon_date = {"name": "lat_lon_date",
-                                            "joinby": "location_id",
-                                            "filterby": "tag",
-                                            "filterfor": ("LatLon Date",),
-                                            },
+                                                     "joinby": "location_id",
+                                                     "filterby": "tag",
+                                                     "filterfor": ("LatLon Date",),
+                                                     },
                         )
 
     from s3.s3widgets import S3MultiSelectWidget
@@ -376,12 +377,12 @@ def customise_gis_location_resource(r, tablename):
                 #title_display = T("Disaster Details"),
                 title_list = T("Locations")
                 )
-            #Remove level column & filter
-            list_fields = s3db.get_config("gis_location","list_fields")
-            list_fields.remove("level")
-            filter_widgets = s3db.get_config("gis_location", 
-                                             "filter_widgets")
 
+            # Remove level column & filter
+            list_fields = s3db.get_config("gis_location", "list_fields")
+            list_fields.remove("level")
+
+            filter_widgets = s3db.get_config("gis_location", "filter_widgets")
             # NB Fragile: dependent on filters defined in gis/location controller
             filter_widgets.pop(1)
 
@@ -534,6 +535,7 @@ def customise_event_event_resource(r, tablename):
 
 settings.customise_event_event_resource = customise_event_event_resource
 
+# -----------------------------------------------------------------------------
 def represent_year(date):
     if date:
         return date.strftime("%Y")
@@ -549,10 +551,7 @@ def customise_stats_demographic_data_resource(r, tablename):
         But runs before prep
     """
 
-    s3db = current.s3db
-    db = current.db
     table = r.table
-
     table.date.label = T("Year")
     table.date.represent = represent_year
 

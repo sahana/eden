@@ -561,7 +561,7 @@ class S3Config(Storage):
 
     def get_chat_server(self):
         """
-            Get the ip of the chat server if enabled or return False
+            Get the IP:port of the chat server if enabled or return False
         """
         return self.base.get("chat_server", False)
 
