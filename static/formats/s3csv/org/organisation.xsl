@@ -386,37 +386,39 @@
         <xsl:param name="SubSubType"/>
 
         <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
-        <resource name="org_organisation_type">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Type"/></data>
-        </resource>
-        <xsl:if test="$SubType!=''">
+        <xsl:if test="$Type!=''">
             <resource name="org_organisation_type">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType)"/>
+                    <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubType"/></data>
-                <reference field="parent" resource="org_organisation_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
-                    </xsl:attribute>
-                </reference>
+                <data field="name"><xsl:value-of select="$Type"/></data>
             </resource>
-        </xsl:if>
-        <xsl:if test="$SubSubType!=''">
-            <resource name="org_organisation_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$SubSubType"/></data>
-                <reference field="parent" resource="org_organisation_type">
+            <xsl:if test="$SubType!=''">
+                <resource name="org_organisation_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType)"/>
                     </xsl:attribute>
-                </reference>
-            </resource>
+                    <data field="name"><xsl:value-of select="$SubType"/></data>
+                    <reference field="parent" resource="org_organisation_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgTypePrefix, $Type)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+            <xsl:if test="$SubSubType!=''">
+                <resource name="org_organisation_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$SubSubType"/></data>
+                    <reference field="parent" resource="org_organisation_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($OrgTypePrefix, $Type, '/', $SubType)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </xsl:if>
 
     </xsl:template>
