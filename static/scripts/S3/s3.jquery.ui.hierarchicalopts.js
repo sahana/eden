@@ -360,7 +360,7 @@
                     // HTML attributes of the new node
                     id: nodeID,
                     rel: 'leaf'
-                },
+                }
             }, false, false);
             
             if (parent) {
