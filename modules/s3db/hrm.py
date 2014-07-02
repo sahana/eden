@@ -1533,6 +1533,7 @@ class S3HRSkillModel(S3Model):
              "hrm_course",
              "hrm_course_certificate",
              "hrm_course_job_title",
+             "hrm_course_sector",
              "hrm_course_id",
              "hrm_skill_id",
              "hrm_multi_skill_id",
@@ -1595,7 +1596,8 @@ class S3HRSkillModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, unique=True,
                            length=64,
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1615,21 +1617,22 @@ class S3HRSkillModel(S3Model):
         label_create = crud_strings[tablename].label_create
         represent = S3Represent(lookup=tablename)
         skill_type_id = S3ReusableField("skill_type_id", "reference %s" % tablename,
-                            sortby = "name",
-                            label = T("Skill Type"),
-                            default=self.skill_type_default,
-                            readable=skill_types,
-                            writable=skill_types,
-                            requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "hrm_skill_type.id",
-                                                  represent
-                                                  )),
-                            represent = represent,
-                            comment=S3AddResourceLink(f="skill_type",
-                                                      label=label_create,
-                                                      title=label_create,
-                                                      tooltip=T("Add a new skill type to the catalog.")),
-                            ondelete = "RESTRICT")
+            default = self.skill_type_default,
+            label = T("Skill Type"),
+            ondelete = "RESTRICT",
+            readable = skill_types,
+            writable = skill_types,
+            represent = represent,
+            requires = IS_EMPTY_OR(
+                        IS_ONE_OF(db, "hrm_skill_type.id",
+                                  represent
+                                  )),
+            sortby = "name",
+            comment=S3AddResourceLink(f="skill_type",
+                                      label=label_create,
+                                      title=label_create,
+                                      tooltip=T("Add a new skill type to the catalog.")),
+            )
 
         configure(tablename,
                   deduplicate = self.hrm_skill_type_duplicate,
@@ -1644,7 +1647,8 @@ class S3HRSkillModel(S3Model):
                      skill_type_id(empty=False),
                      Field("name", notnull=True, unique=True,
                            length=64,    # Mayon compatibility
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1677,33 +1681,33 @@ class S3HRSkillModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         skill_id = S3ReusableField("skill_id", "reference %s" % tablename,
-                                   sortby = "name",
                                    label = T("Skill"),
+                                   ondelete = "SET NULL",
+                                   represent = represent,
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "hrm_skill.id",
                                                           represent,
                                                           sort=True
                                                           )),
-                                   represent = represent,
+                                   sortby = "name",
                                    comment = skill_help,
-                                   ondelete = "SET NULL",
                                    widget = widget
                                    )
 
         multi_skill_represent = S3Represent(lookup=tablename,
                                             multiple=True)
         multi_skill_id = S3ReusableField("skill_id", "list:reference hrm_skill",
-                                         sortby = "name",
                                          label = T("Skills"),
+                                         ondelete = "SET NULL",
+                                         represent = multi_skill_represent,
                                          requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "hrm_skill.id",
                                                                   represent,
                                                                   sort=True,
                                                                   multiple=True
                                                                   )),
-                                         represent = multi_skill_represent,
+                                         sortby = "name",
                                          #comment = skill_help,
-                                         ondelete = "SET NULL",
                                          widget = S3MultiSelectWidget(header="",
                                                                       selectedList=3),
                                          )
@@ -1715,7 +1719,7 @@ class S3HRSkillModel(S3Model):
         # Components
         add_components(tablename,
                        # Requests
-                       req_req_skill="skill_id",
+                       req_req_skill = "skill_id",
                        )
 
         # =====================================================================
@@ -1737,8 +1741,8 @@ class S3HRSkillModel(S3Model):
                            label = T("Name"),
                            ),
                      Field("priority", "integer",
-                           label = T("Priority"),
                            default = 1,
+                           label = T("Priority"),
                            requires = IS_INT_IN_RANGE(1, 10),
                            widget = S3SliderWidget(1, 9),
                            comment = DIV(_class="tooltip",
@@ -1762,17 +1766,18 @@ class S3HRSkillModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         competency_id = S3ReusableField("competency_id", "reference %s" % tablename,
-                                        sortby = "priority",
                                         label = T("Competency"),
+                                        ondelete = "RESTRICT",
+                                        represent = represent,
                                         requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "hrm_competency_rating.id",
                                                               represent,
                                                               orderby="hrm_competency_rating.priority desc",
                                                               sort=True)),
-                                        represent = represent,
+                                        sortby = "priority",
                                         comment = self.competency_rating_comment(),
-                                        ondelete = "RESTRICT")
+                                        )
 
         configure("hrm_competency_rating",
                   deduplicate = self.hrm_competency_rating_duplicate,
@@ -1844,7 +1849,8 @@ class S3HRSkillModel(S3Model):
         #table = define_table(tablename,
         #                     Field("name", notnull=True, unique=True,
         #                           length=32,    # Mayon compatibility
-        #                           label=T("Name")),
+        #                           label = T("Name"),
+        #                           ),
         #                     job_title_id(),
         #                     skill_id(),
         #                     competency_id(),
@@ -1854,7 +1860,8 @@ class S3HRSkillModel(S3Model):
         #                           widget = S3SliderWidget(1, 9),
         #                           comment = DIV(_class="tooltip",
         #                                         _title="%s|%s" % (T("Priority"),
-        #                                                           T("Priority from 1 to 9. 1 is most preferred.")))),
+        #                                                           T("Priority from 1 to 9. 1 is most preferred.")))
+        #                           ),
         #                     s3_comments(),
         #                     *s3_meta_fields())
 
@@ -1873,12 +1880,13 @@ class S3HRSkillModel(S3Model):
         #label_create = crud_strings[tablename].label_create
         #represent = S3Represent(lookup=tablename)
         #skill_group_id = S3ReusableField("skill_provision_id", "reference %s" % tablename,
-        #                           sortby = "name",
         #                           label = T("Skill Provision"),
+        #                           ondelete = "SET NULL",
+        #                           represent = represent,
         #                           requires = IS_EMPTY_OR(IS_ONE_OF(db,
         #                                                           "hrm_skill_provision.id",
         #                                                           represent)),
-        #                           represent = represent,
+        #                           sortby = "name",
         #                           comment = DIV(A(label_create,
         #                                           _class="s3_add_resource_link",
         #                                           _href=URL(f="skill_provision",
@@ -1889,7 +1897,7 @@ class S3HRSkillModel(S3Model):
         #                                         DIV(_class="tooltip",
         #                                             _title="%s|%s" % (label_create,
         #                                                               T("Add a new skill provision to the catalog.")))),
-        #                           ondelete = "SET NULL")
+        #                           )
 
 
         # =====================================================================
@@ -1937,12 +1945,12 @@ class S3HRSkillModel(S3Model):
                                      ),
                      Field("performance_rating", "integer",
                            label = T("Performance Rating"),
-                           # Default to pass/fail (can override to 5-levels in Controller)
-                           # @ToDo: Build this onaccept of hrm_appraisal
-                           requires = IS_EMPTY_OR(IS_IN_SET(hrm_pass_fail_opts)),
                            represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 UNKNOWN_OPT),
+                           # Default to pass/fail (can override to 5-levels in Controller)
+                           # @ToDo: Build this onaccept of hrm_appraisal
+                           requires = IS_EMPTY_OR(IS_IN_SET(hrm_pass_fail_opts)),
                            ),
                      s3_date("start_date",
                              default = "now",
@@ -1982,9 +1990,12 @@ class S3HRSkillModel(S3Model):
         #
         tablename = "hrm_course"
         define_table(tablename,
-                     Field("code"),
+                     Field("code", length=64,
+                           label = T("Code"),
+                           ),
                      Field("name", length=128, notnull=True,
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
                      organisation_id(default = root_org,
@@ -2019,16 +2030,16 @@ class S3HRSkillModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         course_id = S3ReusableField("course_id", "reference %s" % tablename,
-                                    sortby = "name",
                                     label = T("Course"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "hrm_course.id",
                                                           represent,
                                                           filterby="organisation_id",
                                                           filter_opts=filter_opts)),
-                                    represent = represent,
+                                    sortby = "name",
                                     comment = course_help,
-                                    ondelete = "RESTRICT",
                                     # Comment this to use a Dropdown & not an Autocomplete
                                     #widget = S3AutocompleteWidget("hrm", "course")
                                     )
@@ -2045,6 +2056,14 @@ class S3HRSkillModel(S3Model):
                        hrm_course_certificate = "course_id",
                        # Job Titles
                        hrm_course_job_title = "course_id",
+                       # Sectors
+                       org_sector = {"link": "hrm_course_sector",
+                                     "joinby": "course_id",
+                                     "key": "sector_id",
+                                     "actuate": "hide",
+                                     },
+                       # Format for filter_widget
+                       hrm_course_sector = "course_id",
                        )
 
         # =========================================================================
@@ -2056,7 +2075,7 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_training_event"
         define_table(tablename,
-                     course_id(empty=False),
+                     course_id(empty = False),
                      organisation_id(label = T("Organized By")),
                      self.super_link("site_id", "org_site",
                                      label = site_label,
@@ -2351,22 +2370,22 @@ class S3HRSkillModel(S3Model):
         label_create = crud_strings[tablename].label_create
         represent = S3Represent(lookup=tablename)
         certificate_id = S3ReusableField("certificate_id", "reference %s" % tablename,
-                                         label = T("Certificate"),
-                                         ondelete = "RESTRICT",
-                                         represent = represent,
-                                         requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db,
-                                                                  "hrm_certificate.id",
-                                                                  represent,
-                                                                  filterby="organisation_id" if filter_certs else None,
-                                                                  filter_opts=filter_opts
-                                                                  )),
-                                         sortby = "name",
-                                         comment = S3AddResourceLink(f="certificate",
-                                                                     label=label_create,
-                                                                     title=label_create,
-                                                                     tooltip=T("Add a new certificate to the catalog.")),
-                                         )
+             label = T("Certificate"),
+             ondelete = "RESTRICT",
+             represent = represent,
+             requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db,
+                                      "hrm_certificate.id",
+                                      represent,
+                                      filterby="organisation_id" if filter_certs else None,
+                                      filter_opts=filter_opts
+                                      )),
+             sortby = "name",
+             comment = S3AddResourceLink(f="certificate",
+                                         label=label_create,
+                                         title=label_create,
+                                         tooltip=T("Add a new certificate to the catalog.")),
+             )
 
         if settings.get_hrm_use_skills():
             create_next = URL(f="certificate",
@@ -2527,6 +2546,21 @@ class S3HRSkillModel(S3Model):
                      job_title_id(empty = False,
                                   ondelete = "CASCADE",
                                   ),
+                     *s3_meta_fields())
+
+        # =====================================================================
+        # Course <> Sectors link table
+        #
+        # Show which courses a person has done that are relevant to specific sectors
+        #
+        tablename = "hrm_course_sector"
+        define_table(tablename,
+                     course_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     self.org_sector_id(empty = False,
+                                        ondelete = "CASCADE",
+                                        ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

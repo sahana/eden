@@ -810,11 +810,42 @@ settings.customise_hrm_certificate_controller = customise_hrm_certificate_contro
 # -----------------------------------------------------------------------------
 def customise_hrm_course_controller(**attr):
 
+    s3db = current.s3db
+    table = s3db.hrm_course
+    tablename = "hrm_course"
+
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.hrm_course.organisation_id,
+    ns_only(table.organisation_id,
             required = False,
             branches = False,
             )
+
+    # Different settings for different NS
+    root_org = current.auth.root_org_name()
+    if root_org == VNRC:
+        # Keep things simple
+        return attr
+
+    list_fields = ["code",
+                   "name",
+                   "organisation_id",
+                   (T("Sectors"), "course_sector.sector_id"),
+                   ]
+
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
+    crud_form = S3SQLCustomForm("code",
+                                "name",
+                                "organisation_id",
+                                S3SQLInlineLink("sector",
+                                                field = "sector_id",
+                                                label = T("Sectors"),
+                                                ),
+                                )
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   list_fields = list_fields,
+                   )
 
     return attr
 
@@ -1270,7 +1301,9 @@ def customise_org_organisation_controller(**attr):
                         "logo",
                         "comments",
                         )
-                    s3db.configure("org_organisation", crud_form=crud_form)
+                    s3db.configure("org_organisation",
+                                   crud_form = crud_form,
+                                   )
 
         return result
     s3.prep = custom_prep
