@@ -808,7 +808,7 @@ label.ui-corner-all span {
     clear: none;
 }
 
-.list_formats {
+.dt-export-options {
     margin-right: 20px;
     top: 10px;
     font-size: 12px;
