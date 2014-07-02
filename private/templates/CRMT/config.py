@@ -907,6 +907,7 @@ def customise_org_organisation_controller(**attr):
                            #"facility.location_id$addr_postcode",
                            (T("Sectors"), "sector_organisation.sector_id"),
                            (T("Services"), "service_organisation.service_id"),
+                           "phone",
                            "website",
                            "comments",
                            ]
@@ -994,9 +995,12 @@ def customise_org_organisation_controller(**attr):
                                crud_form = crud_form,
                                )
 
-            elif method in ("read", "create", "update", "summary"):
+            elif method in ("read", "create", "update", "summary", "import"):
                 # Custom Form (Read/Create/Update inc embedded Summary)
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
+
+                # Allow free-text in Phone
+                table.phone.requires = None
 
                 ftable = s3db.org_facility
                 ftable.name.default = "TEMP" # replace in form postprocess
@@ -1076,58 +1080,60 @@ def customise_org_organisation_controller(**attr):
                                                                           parent="group_membership",
                                                                           child="status_id"
                                                                           ))
-                form_fields = [
-                    "name",
-                    "logo",
-                    S3SQLInlineComponent(
-                        "group_membership",
-                        label = T("Coalition Member"),
-                        fields = [("", "group_id"),
-                                  ("", "status_id"),
-                                  ],
-                    ),
-                    S3SQLInlineComponentMultiSelectWidget(
-                        "sector",
-                        label = T("Sectors"),
-                        field = "sector_id",
-                    ),
-                    S3SQLInlineLink(
-                        "service",
-                        label = T("Services"),
-                        field = "service_id",
-                        leafonly = False,
-                        widget = "hierarchy",
-                    ),
-                    S3SQLInlineComponent(
-                        "resource",
-                        label = T("Organization's Resources"),
-                        fields = ["parameter_id", 
-                                  "value",
-                                  "comments",
-                                  ],
-                    ),
-                    "website",
-                    S3SQLInlineComponent(
-                        "contact",
-                        name = "twitter",
-                        label = T("Twitter"),
-                        multiple = False,
-                        fields = [("", "value")],
-                        filterby = dict(field = "contact_method",
-                                        options = "TWITTER"
-                                        )
-                    ),
-                    # Not fully ready yet
-                    S3SQLInlineComponent(
-                        "facility",
-                        #label = T("Address"),
-                        label = "",
-                        fields = [("", "location_id"),
-                                  ],
-                        multiple = False,
-                    ),
-                    "comments",
-                ]
+
+                form_fields = ["name",
+                               "logo",
+                               S3SQLInlineComponent(
+                                    "group_membership",
+                                    label = T("Coalition Member"),
+                                    fields = [("", "group_id"),
+                                              ("", "status_id"),
+                                              ],
+                                    ),
+                               S3SQLInlineComponentMultiSelectWidget(
+                                    "sector",
+                                    label = T("Sectors"),
+                                    field = "sector_id",
+                                    ),
+                               S3SQLInlineLink(
+                                    "service",
+                                    label = T("Services"),
+                                    field = "service_id",
+                                    leafonly = False,
+                                    widget = "hierarchy",
+                                    ),
+                               S3SQLInlineComponent(
+                                    "resource",
+                                    label = T("Organization's Resources"),
+                                    fields = ["parameter_id", 
+                                              "value",
+                                              "comments",
+                                              ],
+                                    ),
+                               "phone",
+                               "website",
+                               S3SQLInlineComponent(
+                                    "contact",
+                                    name = "twitter",
+                                    label = T("Twitter"),
+                                    multiple = False,
+                                    fields = [("", "value")],
+                                    filterby = dict(field = "contact_method",
+                                                    options = "TWITTER"
+                                                    )
+                                    ),
+                               # Not fully ready yet
+                               S3SQLInlineComponent(
+                                    "facility",
+                                    #label = T("Address"),
+                                    label = "",
+                                    fields = [("", "location_id"),
+                                              ],
+                                    multiple = False,
+                                    ),
+                               "comments",
+                               ]
+
                 if method not in ("create", "update", "summary"):
                     hrtable = s3db.hrm_human_resource
                     hrtable.person_id.widget = None
@@ -1139,6 +1145,7 @@ def customise_org_organisation_controller(**attr):
                                  #"email",
                                  #"phone",
                                  ]
+
                     #if method not in ["create", "update"]:
                     #    hr_fields.insert(1, "site_id")
                     #    if method == "update":
@@ -1366,10 +1373,13 @@ def customise_org_facility_controller(**attr):
 
             # Custom Form (Read/Create/Update inc embedded Summary)
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
-            if method in ("create", "update", "summary"):
+            if method in ("create", "update", "summary", "import"):
                 # Custom Widgets/Validators
                 from s3.s3validators import IS_LOCATION_SELECTOR2
                 from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+
+                # Allow free-text in Phone
+                table.phone1.requires = None
 
                 field = table.location_id
                 field.label = "" # Gets replaced by widget
@@ -1386,45 +1396,45 @@ def customise_org_facility_controller(**attr):
                 s3db.org_site_org_group.group_id.widget = S3MultiSelectWidget(multiple=False)
 
             # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "name",
-                S3SQLInlineLink(
-                    "facility_type",
-                    label = T("Type of Place"),
-                    field = "facility_type_id",
-                    widget = "hierarchy",
-                ),
-                "organisation_id",
-                S3SQLInlineComponent(
-                    "site_org_group",
-                    label = T("Coalition"),
-                    fields = [("", "group_id")],
-                    multiple = False,
-                ),
-                "location_id",
-                #S3SQLInlineComponent(
-                #    "human_resource",
-                #    label = T("Place's Contacts"),
-                #    fields = ["person_id",
-                #              #"job_title_id",
-                #              #"email",
-                #              #"phone",
-                #              ],
-                #),
-                # Can't have Components of Components Inline, so just use simple fields
-                "contact",
-                "phone1",
-                "email",
-                S3SQLInlineComponent(
-                    "document",
-                    name = "file",
-                    label = T("Files"),
-                    fields = [("", "file"),
-                              #"comments",
-                              ],
-                ),
-                "comments",
-            )
+            crud_form = S3SQLCustomForm("name",
+                                        S3SQLInlineLink(
+                                            "facility_type",
+                                            label = T("Type of Place"),
+                                            field = "facility_type_id",
+                                            widget = "hierarchy",
+                                            ),
+                                        "organisation_id",
+                                        S3SQLInlineComponent(
+                                            "site_org_group",
+                                            label = T("Coalition"),
+                                            fields = [("", "group_id")],
+                                            multiple = False,
+                                            ),
+                                        "location_id",
+                                        #S3SQLInlineComponent(
+                                        #    "human_resource",
+                                        #    label = T("Place's Contacts"),
+                                        #    fields = ["person_id",
+                                        #              #"job_title_id",
+                                        #              #"email",
+                                        #              #"phone",
+                                        #              ],
+                                        #),
+                                        # Can't have Components of Components Inline, so just use simple fields
+                                        "contact",
+                                        "phone1",
+                                        "email",
+                                        S3SQLInlineComponent(
+                                            "document",
+                                            name = "file",
+                                            label = T("Files"),
+                                            fields = [("", "file"),
+                                                      #"comments",
+                                                      ],
+                                            ),
+                                        "comments",
+                                        )
+
             s3db.configure(tablename,
                            crud_form = crud_form,
                            )
