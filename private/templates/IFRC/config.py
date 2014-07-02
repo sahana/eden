@@ -946,6 +946,29 @@ def customise_hrm_human_resource_controller(**attr):
 
         if r.controller == "deploy":
 
+            # Custom profile widgets for hrm_competency ("skills"):
+            from s3 import FS
+            subsets = (("Computer", "Computer Skills"),
+                       ("Language", "Language Skills"),
+                       )
+            widgets = []
+            profile_widgets = r.resource.get_config("profile_widgets")
+            while profile_widgets:
+                widget = profile_widgets.pop(0)
+                if widget["tablename"] == "hrm_competency":
+                    for skill_type, label in subsets:
+                        query = widget["filter"] & \
+                                (FS("skill_id$skill_type_id$name") == skill_type)
+                        new_widget = dict(widget)
+                        new_widget["label"] = label
+                        new_widget["filter"] = query
+                        widgets.append(new_widget)
+                    break
+                else:
+                    widgets.append(widget)
+            if profile_widgets:
+                widgets.extend(profile_widgets)
+            
             # Custom list fields for RDRT
             phone_label = settings.get_ui_label_mobile_phone()
             list_fields = ["id",
@@ -962,8 +985,9 @@ def customise_hrm_human_resource_controller(**attr):
                            (T("Trainings"), "training.course_id"),
                            # @todo: Languages (once implemented)
                            ]
-            r.resource.configure(list_fields = list_fields)
-
+            r.resource.configure(list_fields = list_fields,
+                                 profile_widgets = widgets,
+                                 )
         return True
     s3.prep = custom_prep
 
