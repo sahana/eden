@@ -1,5 +1,5 @@
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<a href='{{=URL(args="import")}}' class='btn btn-primary summary-create' type='button'><i class='icon-plus'></i> {{=T("Import")}}</a>
+<a href='{{=URL(args="import")}}' id='show-add-btn' class='btn btn-primary summary-import' type='button'><i class='icon-plus'></i> {{=T("Import")}}</a>
 <div id='summary-common'>
  {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
  <div id='filter-form' class='form-container'>

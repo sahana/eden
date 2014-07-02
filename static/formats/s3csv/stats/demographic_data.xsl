@@ -14,6 +14,7 @@
          Demo:XXXX......................required.....demographic.name (Demographic = XX in column name, value = cell in row. Multiple allowed)
 
          Date...........................optional.....demographic_data.date
+         Year...........................optional.....demographic_data.date
          Source.........................optional.....doc_document.name
          Source URL.....................optional.....doc_document.url
          Country........................optional.....gis_location.L0
@@ -181,6 +182,7 @@
 
         <xsl:variable name="value" select="col[@field='Value']"/>
         <xsl:variable name="date" select="col[@field='Date']"/>
+        <xsl:variable name="year" select="col[@field='Year']"/>
         <xsl:variable name="source" select="col[@field='Source']"/>
         <xsl:variable name="location">
             <xsl:call-template name="LocationUid"/>
@@ -227,7 +229,14 @@
                             <xsl:value-of select="$tuid"/>
                         </xsl:with-param>
                         <xsl:with-param name="date">
-                            <xsl:value-of select="$date"/>
+                            <xsl:choose>
+	                            <xsl:when test="$date!=''">
+	                                <xsl:value-of select="$date"/>
+	                            </xsl:when>
+	                            <xsl:otherwise>
+	                                <xsl:value-of select="$year"/>
+	                            </xsl:otherwise>
+                            </xsl:choose>
                         </xsl:with-param>
                         <xsl:with-param name="source">
                             <xsl:value-of select="$source"/>
