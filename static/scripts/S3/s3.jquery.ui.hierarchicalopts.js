@@ -340,7 +340,10 @@
          */
         closeMenu: function() {
             
-            $(this.tree).hide().jstree('unset_focus');
+            $(this.tree).hide()
+                        .jstree('unset_focus')
+                        .unbind('click.hierarchicalopts')
+                        .unbind('mouseleave.hierarchicalopts');
             this._isOpen = false;
             $(this.button).removeClass('ui-state-active');
             $(this).trigger('close');
@@ -396,6 +399,10 @@
 
             tree.bind('check_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
+                if (!widget.options.multiple) {
+                    // Close the menu immediately
+                    widget.closeMenu();
+                }
             }).bind('uncheck_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
             }).bind("open_node.jstree", function (event, data) {
