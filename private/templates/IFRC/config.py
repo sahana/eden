@@ -1892,49 +1892,88 @@ def customise_project_beneficiary_resource(r, tablename):
     """
 
     if r.interactive and r.component:
-        # Assume that we are a component of the Project
+        if r.tablename == "project_project":
+            # We are a component of the Project
+            project_id = r.id
+        elif r.tablename == "project_location":
+            # We are a component of the Project Location
+            project_id = r.record.project_id
+        else:
+            # Unknown!
+            return
 
         db = current.db
         s3db = current.s3db
 
         # Filter Activity Type by Sector
         ltable = s3db.project_sector_project
-        rows = db(ltable.project_id == r.id).select(ltable.sector_id)
+        rows = db(ltable.project_id == project_id).select(ltable.sector_id)
         sectors = [row.sector_id for row in rows]
         ltable = s3db.project_activity_type_sector
         rows = db(ltable.sector_id.belongs(sectors)).select(ltable.activity_type_id)
         filteropts = [row.activity_type_id for row in rows]
 
+        def postprocess(form):
+            # Update project_location.activity_type
+            beneficiary_id = form.vars.get("id", None)
+            table = db.project_beneficiary
+            row = db(table.id == beneficiary_id).select(table.project_location_id,
+                                                        limitby = (0, 1)
+                                                        ).first()
+            if not row:
+                return
+            project_location_id = row.project_location_id
+            if not project_location_id:
+                return
+            ltable = db.project_beneficiary_activity_type
+            row = db(ltable.beneficiary_id == beneficiary_id).select(ltable.activity_type_id,
+                                                                     limitby = (0, 1)
+                                                                     ).first()
+            if not row:
+                return
+            activity_type_id = row.activity_type_id
+            ltable = s3db.project_activity_type_location
+            query = (ltable.project_location_id == project_location_id) & \
+                    (ltable.activity_type_id == activity_type_id)
+            exists = db(query).select(ltable.id,
+                                      limitby = (0, 1)
+                                      ).first()
+            if not exists:
+                ltable.insert(project_location_id = project_location_id,
+                              activity_type_id = activity_type_id,
+                              )
+
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
-        crud_form = S3SQLCustomForm(
-            #"project_id",
-            "project_location_id",
-            S3SQLInlineLink("activity_type",
-                            field = "activity_type_id",
-                            filterby = "id",
-                            options = filteropts,
-                            label = T("Activity Type"),
-                            multiple = False,
-                            #widget = "hierarchy",
-                            ),
-            "parameter_id",
-            "value",
-            "date",
-            "end_date",
-            "comments",
-            )
+        crud_form = S3SQLCustomForm(#"project_id",
+                                    "project_location_id",
+                                    S3SQLInlineLink("activity_type",
+                                                    field = "activity_type_id",
+                                                    filterby = "id",
+                                                    options = filteropts,
+                                                    label = T("Activity Type"),
+                                                    multiple = False,
+                                                    ),
+                                    "parameter_id",
+                                    "value",
+                                    "date",
+                                    "end_date",
+                                    "comments",
+                                    postprocess = postprocess,
+                                    )
 
         s3db.configure(tablename,
                        crud_form = crud_form,
                        )
+
     elif not r.component:
         # Report
         from s3.s3filter import S3OptionsFilter
         resource = r.resource
         filter_widgets = resource.get_config("filter_widgets")
-        filter_widgets.insert(1, S3OptionsFilter("beneficiary_activity_type.activity_type_id",
-                                                 label = T("Activity Type"),
-                                                 ))
+        filter_widgets.insert(1,
+            S3OptionsFilter("beneficiary_activity_type.activity_type_id",
+                            label = T("Activity Type"),
+                            ))
         report_options = resource.get_config("report_options")
         report_options.rows.append("beneficiary_activity_type.activity_type_id")
         # Same object so would be added twice

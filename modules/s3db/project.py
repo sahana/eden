@@ -1959,8 +1959,6 @@ class S3ProjectBeneficiaryModel(S3Model):
     def project_beneficiary_onaccept(form):
         """
             Update project_beneficiary project & location from project_location_id
-
-            @ToDo: Update project_activity_type?
         """
 
         db = current.db
