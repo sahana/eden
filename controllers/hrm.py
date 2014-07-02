@@ -164,7 +164,8 @@ def staff():
                            "person_id$middle_name",
                            "person_id$last_name",
                            ] + list_fields
-            s3db.configure(tablename, list_fields=list_fields)
+            s3db.configure(tablename,
+                           list_fields = list_fields)
         return True
     s3.prep = prep
 

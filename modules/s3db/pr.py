@@ -713,11 +713,12 @@ class S3PersonModel(S3Model):
                           3: T("male"),
                           }
         pr_gender = S3ReusableField("gender", "integer",
-                                    requires = IS_IN_SET(pr_gender_opts, zero=None),
                                     default = 1,
                                     label = T("Sex"),
                                     represent = lambda opt: \
-                                                pr_gender_opts.get(opt, UNKNOWN_OPT))
+                                                pr_gender_opts.get(opt, UNKNOWN_OPT),
+                                    requires = IS_IN_SET(pr_gender_opts, zero=None),
+                                    )
 
         pr_impact_tags = {1: T("injured"),
                           2: T("displaced"),
@@ -790,7 +791,7 @@ class S3PersonModel(S3Model):
                                          _title="%s|%s" % (T("Local Name"),
                                                            T("Name of the person in local language and script (optional)."))),
                            ),
-                     pr_gender(label = T("Sex")),
+                     pr_gender(),
                      s3_date("date_of_birth",
                              label = T("Date of Birth"),
                              future = 0,

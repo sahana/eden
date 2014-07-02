@@ -157,6 +157,7 @@
 'Activity Type': "Type d'activité",
 'Activity Updated': 'activité mise à jour',
 'Activity': 'Activité',
+'Add Activity Type': "Ajouter un type d'activité",
 'Add Address': 'Ajouter une adresse',
 'Add Aid Request': "Ajouter une demande d'assistance",
 'Add Alternative Item': 'Ajouter un élément alternatif',

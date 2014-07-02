@@ -120,6 +120,7 @@
 'Activity Type': '活动类型',
 'Activity Updated': '更新的活动',
 'Activity': '活动',
+'Add Activity Type': '添加活动类型',
 'Add Address': '添加地址',
 'Add Alternative Item': '添加备用项目',
 'Add Assessment Summary': '添加评估摘要',

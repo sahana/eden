@@ -121,6 +121,7 @@
 'Activity Type': 'Тип операции',
 'Activity Updated': 'Действие Обновлено',
 'Activity': 'деятельность',
+'Add Activity Type': 'Добавить тип работы',
 'Add Address': 'Добавить адрес',
 'Add Alternative Item': 'Добавить альтернативной элемент',
 'Add Assessment Summary': 'Добавить суммарную оценку',

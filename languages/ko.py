@@ -119,6 +119,7 @@
 'Activity Type': '활동 유형',
 'Activity Updated': '갱신된 활동',
 'Activity': '활동',
+'Add Activity Type': '추가 활동 유형',
 'Add Address': '주소 추가',
 'Add Alternative Item': '대체 항목 추가',
 'Add Assessment Summary': '추가 평가 요약',

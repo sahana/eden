@@ -5277,6 +5277,7 @@ def hrm_human_resource_controller(extra_filter=None):
     """
 
     T = current.T
+    db = current.db
     s3db = current.s3db
     s3 = current.response.s3
     settings = current.deployment_settings
@@ -5317,6 +5318,7 @@ def hrm_human_resource_controller(extra_filter=None):
                            ]
             if deploy:
                 list_fields.append("course_id$course_job_title.job_title_id")
+
             s3db.configure("hrm_training",
                            list_fields = list_fields,
                            )
@@ -5340,7 +5342,6 @@ def hrm_human_resource_controller(extra_filter=None):
 
             # Get the person's full name for header, and pe_id for
             # context filtering
-            db = current.db
             table = r.table
             record = r.record
             person_id = record.person_id
@@ -5576,9 +5577,9 @@ def hrm_human_resource_controller(extra_filter=None):
                 if deploy:
                     # Delete the Application, not the HR
                     atable = s3db.deploy_application
-                    app = current.db(atable.human_resource_id == r.id).select(atable.id,
-                                                                              limitby=(0, 1)
-                                                                              ).first()
+                    app = db(atable.human_resource_id == r.id).select(atable.id,
+                                                                      limitby=(0, 1)
+                                                                      ).first()
                     if not app:
                         current.session.error = "Cannot find Application to delete!"
                         redirect(URL(args="summary"))
@@ -5593,7 +5594,7 @@ def hrm_human_resource_controller(extra_filter=None):
                 # Don't use AddPersonWidget here
                 from gluon.sqlhtml import OptionsWidget
                 field = r.table.person_id
-                field.requires = IS_ONE_OF(current.db, "pr_person.id",
+                field.requires = IS_ONE_OF(db, "pr_person.id",
                                            label = field.represent)
                 field.widget = OptionsWidget.widget
             elif r.id:
@@ -5603,6 +5604,50 @@ def hrm_human_resource_controller(extra_filter=None):
                         }
                 redirect(URL(f="person",
                              vars=vars))
+
+        elif r.representation == "xls" and not r.component:
+            # Export format should match Import format as far as possible
+            # @ToDo: Handle XLS wrappers with e.g. localised field names
+            # @ToDo: Vary for Staff / Volunteers
+            # @ToDo: DRY with routines in controllers/hrm & controllers/vol
+            r.table.organisation_id.represent = \
+                s3db.org_OrganisationRepresent(acronym=False, parent=False)
+            r.table.site_id.represent = s3db.org_SiteRepresent(show_type=False)
+            # @ToDo: Get NONE as "" working
+            current.messages["NONE"] = ""
+            list_fields = [("Type", "type"),
+                           ("First Name", "person_id$first_name"),
+                           ("Middle Name", "person_id$middle_name"),
+                           ("Last Name", "person_id$last_name"),
+                           ("Job Title", "job_title_id"),
+                           # @ToDo: Organisation or Branch (using custom Represent options)
+                           #("Organisation", "organisation_id$parent"),
+                           #("Branch", "organisation_id"),
+                           ("Organisation", "organisation_id"),
+                           ("Department", "department_id"),
+                           ("Office", "site_id"),
+                           ("Facility Type", "site_id$instance_type"),
+                           ("Staff ID", "code"),
+                           ("Email", "email.value"),
+                           ("Mobile Phone", "phone.value"),
+                           ("Sex", "person_id$gender"),
+                           ("DOB", "person_id$date_of_birth"),
+                           ("Start Date", "start_date"),
+                           ("End Date", "end_date"), # Not reimported
+                           ("Status", "status"),
+                           ("Essential", "essential"), # Not reimported
+                           ]
+            if settings.get_hrm_use_trainings():
+                list_fields.append(("Trainings", "person_id$training.course_id"))
+            if settings.get_hrm_use_certificates():
+                # @ToDo: Make Importable
+                list_fields.append(("Certificates", "person_id$certification.certificate_id"))
+            if settings.get_hrm_vol_experience() in ("programme", "both"):
+                # @ToDo: Make Importable
+                list_fields.append(("Programs", "person_id$hours.programme_id"))
+            list_fields.append(("Comments", "comments"))
+            r.resource.configure(list_fields = list_fields)
+
         return True
     s3.prep = prep
 
@@ -7026,124 +7071,101 @@ def hrm_human_resource_filters(resource_type=None,
 
     # Type filter (only if not pre-filtered)
     if not resource_type in ("staff", "volunteer"):
-        append_filter(
-            S3OptionsFilter("type",
-                            label = T("Type"),
-                            options = hrm_type_opts,
-                            cols = 2,
-                            hidden = True,
-                            )
-        )
+        append_filter(S3OptionsFilter("type",
+                                      label = T("Type"),
+                                      options = hrm_type_opts,
+                                      cols = 2,
+                                      hidden = True,
+                                      ))
 
     # Region filter (only if using regions in template)
     if settings.get_org_regions():
         if settings.get_org_regions_hierarchical():
-            append_filter(
-                S3HierarchyFilter("organisation_id$region_id",
-                                  label = T("Region"),
-                                  hidden = True,
-                                  )
-            )
+            append_filter(S3HierarchyFilter("organisation_id$region_id",
+                                            label = T("Region"),
+                                            hidden = True,
+                                            ))
         else:
-            append_filter(
-                S3OptionsFilter("organisation_id$region_id",
-                                label = T("Region"),
-                                hidden = True,
-                                )
-            )
+            append_filter(S3OptionsFilter("organisation_id$region_id",
+                                          label = T("Region"),
+                                          hidden = True,
+                                          ))
 
     # Organisation filter (always)
-    append_filter(
-        S3OptionsFilter("organisation_id",
-                        filter = True,
-                        header = "",
-                        #hidden = True,
-                        )
-    )
+    append_filter(S3OptionsFilter("organisation_id",
+                                  filter = True,
+                                  header = "",
+                                  #hidden = True,
+                                  ))
 
     # Location filter (always)
-    append_filter(
-        S3LocationFilter("location_id",
-                         label = T("Location"),
-                         hidden = True,
-                         )
-    )
+    append_filter(S3LocationFilter("location_id",
+                                   label = T("Location"),
+                                   hidden = True,
+                                   ))
 
     # Active Filter / Programme filter (volunteer only)
     if module == "vol" or resource_type == "volunteer":
         vol_active = settings.get_hrm_vol_active()
         if vol_active:
             # Active filter
-            append_filter(
-                S3OptionsFilter("details.active",
-                                label = T("Active?"),
-                                cols = 2, #3,
-                                options = {True: T("Yes"),
-                                           False: T("No"),
-                                           #None: T("Unknown"),
-                                           },
-                                hidden = True,
-                                #none = True,
-                                )
-            )
+            append_filter(S3OptionsFilter("details.active",
+                                          label = T("Active?"),
+                                          cols = 2, #3,
+                                          options = {True: T("Yes"),
+                                                     False: T("No"),
+                                                     #None: T("Unknown"),
+                                                     },
+                                          hidden = True,
+                                          #none = True,
+                                          ))
         vol_experience = settings.get_hrm_vol_experience()
         if vol_experience in ("programme", "both"):
             # Programme filter
-            append_filter(
-                S3OptionsFilter("person_id$hours.programme_id",
-                                label = T("Program"),
-                                options = lambda: \
-                                    get_s3_filter_opts("hrm_programme", org_filter=True),
-                                hidden = True,
-                                )
-            )
+            append_filter(S3OptionsFilter("person_id$hours.programme_id",
+                                          label = T("Program"),
+                                          options = lambda: \
+                                            get_s3_filter_opts("hrm_programme",
+                                                               org_filter=True),
+                                          hidden = True,
+                                          ))
 
     else:
         # Site filter (staff only)
-        filter_widgets.append(
-            S3OptionsFilter("site_id",
-                            hidden = True,
-                            )
-        )
+        filter_widgets.append(S3OptionsFilter("site_id",
+                                              hidden = True,
+                                              ))
 
     if module == "deploy":
         # Deployment-specific filters
 
         # Job title filter
-        append_filter(
-            S3OptionsFilter("credential.job_title_id",
-                            # @ToDo: deployment_setting for label (this is RDRT-specific)
-                            #label = T("Credential"),
-                            label = T("Sector"),
-                            hidden = True,
-                            )
-        )
+        append_filter(S3OptionsFilter("credential.job_title_id",
+                                      # @ToDo: deployment_setting for label (this is RDRT-specific)
+                                      #label = T("Credential"),
+                                      label = T("Sector"),
+                                      hidden = True,
+                                      ))
 
         # Last-deployment-date filter
-        append_filter(
-            S3DateFilter("human_resource_id:deploy_assignment.start_date",
-                         label = T("Deployed"),
-                         hide_time = True,
-                         hidden = True,
-                         )
-        )
+        append_filter(S3DateFilter("human_resource_id:deploy_assignment.start_date",
+                                   label = T("Deployed"),
+                                   hide_time = True,
+                                   hidden = True,
+                                   ))
 
         # Last-response-date filter
-        append_filter(
-            S3DateFilter("human_resource_id:deploy_response.created_on",
-                         label = T("Responded"),
-                         hide_time = True,
-                         hidden = True,
-                         )
-        )
+        append_filter(S3DateFilter("human_resource_id:deploy_response.created_on",
+                                   label = T("Responded"),
+                                   hide_time = True,
+                                   hidden = True,
+                                   ))
 
     # Training filter (always)
-    append_filter(
-        S3OptionsFilter("training.course_id",
-                        label = T("Training"),
-                        hidden = True,
-                        ),
-    )
+    append_filter(S3OptionsFilter("training.course_id",
+                                  label = T("Training"),
+                                  hidden = True,
+                                  ))
 
     # Group (team) membership filter
     teams = settings.get_hrm_teams()
@@ -7152,12 +7174,10 @@ def hrm_human_resource_filters(resource_type=None,
             teams = "Team"
         elif teams == "Groups":
             teams = "Group"
-        append_filter(
-            S3OptionsFilter("group_membership.group_id",
-                            label = T(teams),
-                            hidden = True,
-                            )
-            )
+        append_filter(S3OptionsFilter("group_membership.group_id",
+                                      label = T(teams),
+                                      hidden = True,
+                                      ))
 
     return filter_widgets
     

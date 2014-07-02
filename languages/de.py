@@ -121,6 +121,7 @@
 'Activity Type': 'Aktionstyp',
 'Activity Updated': 'Aktion aktualisiert',
 'Activity': 'Aktivität',
+'Add Activity Type': 'Aktivitätstyp hinzufügen',
 'Add Address': 'Adresse hinzufügen',
 'Add Alternative Item': 'Alternative Artikel hinzufügen',
 'Add Assessment Summary': 'Zusammenfassung der Bewertung hinzufügen',

@@ -1134,12 +1134,16 @@ class S3ProjectActivityModel(S3Model):
         #
         tablename = "project_activity_activity_type"
         define_table(tablename,
-                     activity_id(empty=False),
-                     self.project_activity_type_id(empty=False),
+                     activity_id(empty = False,
+                                 ondelete = "CASCADE",
+                                 ),
+                     self.project_activity_type_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("New Activity Type"),
+            label_create = T("Add Activity Type"),
             title_display = T("Activity Type"),
             title_list = T("Activity Types"),
             title_update = T("Edit Activity Type"),
@@ -1286,18 +1290,19 @@ class S3ProjectActivityTypeModel(S3Model):
         # Reusable Fields
         represent = S3Represent(lookup=tablename, translate=True)
         activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
-                                           sortby = "name",
+                                           label = T("Activity Type"),
+                                           ondelete = "SET NULL",
+                                           represent = represent,
                                            requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "project_activity_type.id",
                                                                   represent,
                                                                   sort=True)),
-                                           represent = represent,
-                                           label = T("Activity Type"),
+                                           sortby = "name",
                                            comment = S3AddResourceLink(title=ADD_ACTIVITY_TYPE,
                                                                        c="project",
                                                                        f="activity_type",
                                                                        tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Create Activity Type'.")),
-                                           ondelete = "SET NULL")
+                                           )
 
         if current.deployment_settings.get_project_sectors():
             # Component (for Custom Form)
@@ -1330,9 +1335,13 @@ class S3ProjectActivityTypeModel(S3Model):
         #
         tablename = "project_activity_type_sector"
         define_table(tablename,
-                     activity_type_id(empty=False),
-                     self.org_sector_id(label="",
-                                        empty=False),
+                     activity_type_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     self.org_sector_id(label = "",
+                                        empty = False,
+                                        ondelete = "CASCADE",
+                                        ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -1340,8 +1349,12 @@ class S3ProjectActivityTypeModel(S3Model):
         #
         tablename = "project_activity_type_location"
         define_table(tablename,
-                     activity_type_id(empty=False),
-                     self.project_location_id(empty=False),
+                     activity_type_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     self.project_location_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                      *s3_meta_fields())
         
         # ---------------------------------------------------------------------
@@ -1349,12 +1362,16 @@ class S3ProjectActivityTypeModel(S3Model):
         #
         tablename = "project_activity_type_project"
         define_table(tablename,
-                     activity_type_id(empty=False),
-                     self.project_project_id(empty=False),
+                     activity_type_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     self.project_project_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("New Activity Type"),
+            label_create = T("Add Activity Type"),
             title_display = T("Activity Type"),
             title_list = T("Activity Types"),
             title_update = T("Edit Activity Type"),
@@ -1396,8 +1413,12 @@ class S3ProjectActivityOrganisationModel(S3Model):
         #
         tablename = "project_activity_organisation"
         define_table(tablename,
-                     project_activity_id(empty=False),
-                     self.org_organisation_id(empty=False),
+                     project_activity_id(empty = False,
+                                         ondelete = "CASCADE",
+                                         ),
+                     self.org_organisation_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -1422,8 +1443,12 @@ class S3ProjectActivityOrganisationModel(S3Model):
         #
         tablename = "project_activity_group"
         define_table(tablename,
-                     project_activity_id(empty=False),
-                     self.org_group_id(empty=False),
+                     project_activity_id(empty = False,
+                                         ondelete = "CASCADE",
+                                         ),
+                     self.org_group_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
                      *s3_meta_fields())
 
         configure(tablename,
@@ -1497,8 +1522,12 @@ class S3ProjectActivitySectorModel(S3Model):
         #
         tablename = "project_sector_activity"
         self.define_table(tablename,
-                          self.org_sector_id(empty=False),
-                          self.project_activity_id(empty=False),
+                          self.org_sector_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
+                          self.project_activity_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
                           *s3_meta_fields())
 
         self.configure(tablename,
@@ -1606,6 +1635,7 @@ class S3ProjectBeneficiaryModel(S3Model):
     names = ["project_beneficiary_type",
              "project_beneficiary",
              "project_beneficiary_activity",
+             "project_beneficiary_activity_type",
              ]
 
     def model(self):
@@ -1670,9 +1700,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                      super_link("data_id", "stats_data"),
                      # Link Fields
                      # populated automatically
-                     self.project_project_id(readable=False,
-                                             writable=False),
-                     self.project_location_id(comment=None),
+                     self.project_project_id(readable = False,
+                                             writable = False,
+                                             ),
+                     self.project_location_id(comment = None),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
@@ -1846,18 +1877,51 @@ class S3ProjectBeneficiaryModel(S3Model):
                 T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
             )
 
+        self.add_components(tablename,
+                            # Activity Types
+                            project_activity_type = {"link": "project_beneficiary_activity_type",
+                                                     "joinby": "beneficiary_id",
+                                                     "key": "activity_type_id",
+                                                     "actuate": "hide",
+                                                     },
+                            # Format for OptionsFilter
+                            project_beneficiary_activity_type = "beneficiary_id",
+                            )
+        
         # ---------------------------------------------------------------------
         # Beneficiary <> Activity Link Table
         #
         tablename = "project_beneficiary_activity"
         define_table(tablename,
-                     self.project_activity_id(),
-                     beneficiary_id(),
+                     self.project_activity_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
+                     beneficiary_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                      #s3_comments(),
                      *s3_meta_fields())
 
         configure(tablename,
                   deduplicate = self.project_beneficiary_activity_deduplicate,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Beneficiary <> Activity Type Link Table
+        #
+        tablename = "project_beneficiary_activity_type"
+        define_table(tablename,
+                     self.project_activity_type_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
+                     beneficiary_id(empty = False,
+                                    ondelete = "CASCADE",
+                                    ),
+                     #s3_comments(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = self.project_beneficiary_activity_type_deduplicate,
                   )
 
         # Pass names back to global scope (s3.*)
@@ -1895,6 +1959,8 @@ class S3ProjectBeneficiaryModel(S3Model):
     def project_beneficiary_onaccept(form):
         """
             Update project_beneficiary project & location from project_location_id
+
+            @ToDo: Update project_activity_type?
         """
 
         db = current.db
@@ -1946,11 +2012,33 @@ class S3ProjectBeneficiaryModel(S3Model):
         data = item.data
         parameter_id = data.get("parameter_id", None)
         activity_id = data.get("activity_id", None)
-        # Match beneficiary by type and project_location
+        # Match beneficiary by type and activity
         if parameter_id and activity_id:
             table = item.table
             query = (table.parameter_id == parameter_id) & \
                     (table.activity_id == activity_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_beneficiary_activity_type_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_beneficiary_activity_type":
+            return
+
+        data = item.data
+        parameter_id = data.get("parameter_id", None)
+        activity_type_id = data.get("activity_type_id", None)
+        # Match beneficiary by type and activity_type
+        if parameter_id and activity_type_id:
+            table = item.table
+            query = (table.parameter_id == parameter_id) & \
+                    (table.activity_type_id == activity_type_id)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
@@ -2038,8 +2126,8 @@ class S3ProjectCampaignModel(S3Model):
                                       ondelete = "CASCADE")
 
         add_components(tablename,
-                       project_campaign_message="campaign_id",
-                      )
+                       project_campaign_message = "campaign_id",
+                       )
 
         # ---------------------------------------------------------------------
         # Project Campaign Message
@@ -2339,17 +2427,17 @@ class S3ProjectFrameworkModel(S3Model):
         represent = S3Represent(lookup=tablename)
         framework_id = S3ReusableField("framework_id", "reference %s" % tablename,
                                        label = ORGANISATION,
+                                       ondelete = "CASCADE",
+                                       represent = represent,
                                        requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "project_framework.id",
                                                               represent
                                                               )),
-                                       represent = represent,
-                                       ondelete = "CASCADE",
                                        )
 
         self.add_components(tablename,
-                            project_framework_organisation="framework_id",
-                           )
+                            project_framework_organisation = "framework_id",
+                            )
 
         # ---------------------------------------------------------------------
         # Project Framework Organisations
@@ -2943,9 +3031,8 @@ class S3ProjectOrganisationModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PROJECT_ORG = T("Add Organization to Project")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_PROJECT_ORG,
+            label_create = T("Add Organization to Project"),
             title_display = T("Project Organization Details"),
             title_list = T("Project Organizations"),
             title_update = T("Edit Project Organization"),
@@ -3121,11 +3208,13 @@ class S3ProjectOutputModel(S3Model):
                                                  )
                             ),
                           Field("name",
+                                label = T("Output"),
                                 represent = lambda v: v or NONE,
-                                label = T("Output")),
+                                ),
                           Field("status",
+                                label = T("Status"),
                                 represent = lambda v: v or NONE,
-                                label = T("Status")),
+                                ),
                           *s3_meta_fields())
 
         # CRUD Strings
@@ -3188,8 +3277,12 @@ class S3ProjectSectorModel(S3Model):
         #
         tablename = "project_sector_project"
         self.define_table(tablename,
-                          self.org_sector_id(empty=False),
-                          self.project_project_id(empty=False),
+                          self.org_sector_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
+                          self.project_project_id(empty = False,
+                                                  ondelete = "CASCADE",
+                                                  ),
                           *s3_meta_fields()
                           )
 
@@ -3331,34 +3424,35 @@ class S3ProjectThemeModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
         theme_id = S3ReusableField("theme_id", "reference %s" % tablename,
                                    label = T("Theme"),
-                                   sortby = "name",
+                                   ondelete = "CASCADE",
+                                   represent = represent,
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "project_theme.id",
                                                           represent,
                                                           sort=True)),
-                                   represent = represent,
-                                   ondelete = "CASCADE")
+                                   sortby = "name",
+                                   )
 
         # Components
         add_components(tablename,
                        # Projects
-                       project_theme_project="theme_id",
+                       project_theme_project = "theme_id",
                        # Sectors
-                       project_theme_sector="theme_id",
+                       project_theme_sector = "theme_id",
                        # For Sync Filter
-                       org_sector={"link": "project_theme_sector",
-                                   "joinby": "theme_id",
-                                   "key": "sector_id",
-                                  },
-                      )
+                       org_sector = {"link": "project_theme_sector",
+                                     "joinby": "theme_id",
+                                     "key": "sector_id",
+                                     },
+                       )
 
         crud_form = S3SQLCustomForm(
                         "name",
                         # Project Sectors
                         S3SQLInlineComponent(
                             "theme_sector",
-                            label=T("Sectors to which this Theme can apply"),
-                            fields=["sector_id"],
+                            label = T("Sectors to which this Theme can apply"),
+                            fields = ["sector_id"],
                         ),
                         "comments"
                     )
@@ -3369,16 +3463,21 @@ class S3ProjectThemeModel(S3Model):
                                  "name",
                                  (T("Sectors"), "theme_sector.sector_id"),
                                  "comments",
-                                 ])
+                                 ],
+                  )
 
         # ---------------------------------------------------------------------
         # Theme <> Sector Link Table
         #
         tablename = "project_theme_sector"
         define_table(tablename,
-                     theme_id(empty=False),
-                     self.org_sector_id(label="",
-                                        empty=False),
+                     theme_id(empty = False,
+                              ondelete = "CASCADE",
+                              ),
+                     self.org_sector_id(label = "",
+                                        empty = False,
+                                        ondelete = "CASCADE",
+                                        ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -3399,12 +3498,16 @@ class S3ProjectThemeModel(S3Model):
         #
         tablename = "project_theme_project"
         define_table(tablename,
-                     theme_id(empty=False),
-                     self.project_project_id(empty=False),
+                     theme_id(empty = False,
+                              ondelete = "CASCADE",
+                              ),
+                     self.project_project_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
                      # % breakdown by theme (sector in IATI)
                      Field("percentage", "integer",
-                           label = T("Percentage"),
                            default = 0,
+                           label = T("Percentage"),
                            requires = IS_INT_IN_RANGE(0, 101),
                            readable = theme_percentages,
                            writable = theme_percentages,
@@ -3412,7 +3515,7 @@ class S3ProjectThemeModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("New Theme"),
+            label_create = T("Add Theme"),
             title_display = T("Theme"),
             title_list = T("Themes"),
             title_update = T("Edit Theme"),
@@ -3434,8 +3537,12 @@ class S3ProjectThemeModel(S3Model):
         #
         tablename = "project_theme_activity"
         define_table(tablename,
-                     theme_id(empty=False),
-                     self.project_activity_id(empty=False),
+                     theme_id(empty = False,
+                              ondelete = "CASCADE",
+                              ),
+                     self.project_activity_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                      # % breakdown by theme (sector in IATI)
                      #Field("percentage", "integer",
                      #      label = T("Percentage"),
@@ -3469,12 +3576,16 @@ class S3ProjectThemeModel(S3Model):
         #
         tablename = "project_theme_location"
         define_table(tablename,
-                     theme_id(empty=False),
-                     self.project_location_id(empty=False),
+                     theme_id(empty = False,
+                              ondelete = "CASCADE",
+                              ),
+                     self.project_location_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                      # % breakdown by theme (sector in IATI)
                      Field("percentage", "integer",
-                           label = T("Percentage"),
                            default = 0,
+                           label = T("Percentage"),
                            requires = IS_INT_IN_RANGE(0, 101),
                            readable = theme_percentages,
                            writable = theme_percentages,
@@ -4262,16 +4373,17 @@ class S3ProjectTaskModel(S3Model):
         represent = project_TaskRepresent(show_link=True)
         task_id = S3ReusableField("task_id", "reference %s" % tablename,
                                   label = T("Task"),
-                                  sortby="name",
+                                  ondelete = "CASCADE",
+                                  represent = represent,
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "project_task.id",
                                                           represent)),
-                                  represent = represent,
+                                  sortby = "name",
                                   comment = S3AddResourceLink(c="project",
                                                               f="task",
                                                               title=ADD_TASK,
                                                               tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
-                                  ondelete = "CASCADE")
+                                  )
 
         # Representation with project name, for time log form
         project_task_represent_w_project = project_TaskRepresent(show_project=True)
@@ -4361,13 +4473,17 @@ class S3ProjectTaskModel(S3Model):
         #
         tablename = "project_task_project"
         define_table(tablename,
-                     task_id(),
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
                      project_id(
-                     # Override requires so that update access to the projects isn't required
-                     requires = IS_ONE_OF(db, "project_project.id",
-                                          self.project_project_represent
-                                          )
-                      ),
+                        empty = False,
+                        ondelete = "CASCADE",
+                        # Override requires so that update access to the projects isn't required
+                        requires = IS_ONE_OF(db, "project_project.id",
+                                             self.project_project_represent
+                                             )
+                        ),
                       *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -4376,8 +4492,12 @@ class S3ProjectTaskModel(S3Model):
         # Tasks <> Activities
         tablename = "project_task_activity"
         define_table(tablename,
-                     task_id(),
-                     self.project_activity_id(),
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     self.project_activity_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -4386,8 +4506,12 @@ class S3ProjectTaskModel(S3Model):
         # Tasks <> Milestones
         tablename = "project_task_milestone"
         define_table(tablename,
-                     task_id(),
-                     milestone_id(),
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     milestone_id(empty = False,
+                                  ondelete = "CASCADE",
+                                  ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -4408,7 +4532,9 @@ class S3ProjectTaskModel(S3Model):
                                         IS_ONE_OF(db, "project_comment.id"
                                        )),
                            ),
-                     task_id(),
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
                      Field("body", "text", notnull=True,
                            label = T("Comment"),
                            ),
@@ -4452,9 +4578,8 @@ class S3ProjectTaskModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_TIME = T("Log Time Spent")
         crud_strings[tablename] = Storage(
-            label_create = ADD_TIME,
+            label_create = T("Log Time Spent"),
             title_display = T("Logged Time Details"),
             title_list = T("Logged Time"),
             title_update = T("Edit Logged Time"),
@@ -5080,16 +5205,26 @@ class S3ProjectTaskHRMModel(S3Model):
         # Link Tasks <> Human Resources
         tablename = "project_task_human_resource"
         define_table(tablename,
-                     task_id(),
-                     self.hrm_human_resource_id(),
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     self.hrm_human_resource_id(empty = False,
+                                                # @ToDo: Flag that there are open Tasks Assigned
+                                                ondelete = "CASCADE",
+                                                ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Link Tasks <> Job Roles
         tablename = "project_task_job_title"
         define_table(tablename,
-                     task_id(),
-                     self.hrm_job_title_id(),
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     self.hrm_job_title_id(empty = False,
+                                           # @ToDo: Flag that there are open Tasks Assigned
+                                           ondelete = "CASCADE",
+                                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -5115,8 +5250,12 @@ class S3ProjectTaskIReportModel(S3Model):
         #
         tablename = "project_task_ireport"
         self.define_table(tablename,
-                          self.project_task_id(),
-                          self.irs_ireport_id(),
+                          self.project_task_id(empty = False,
+                                               ondelete = "CASCADE",
+                                               ),
+                          self.irs_ireport_id(empty = False,
+                                              ondelete = "CASCADE",
+                                              ),
                           *s3_meta_fields())
 
         self.configure(tablename,

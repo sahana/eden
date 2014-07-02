@@ -175,6 +175,7 @@
 'Activity Type': 'Tipo de actividad',
 'Activity Updated': 'Actividad actualizada',
 'Activity': 'Actividad',
+'Add Activity Type': 'Añadir Tipo de Actividad',
 'Add Address': 'Añadir Dirección',
 'Add Aid Request': 'Añadir Solicitud de Ayuda',
 'Add Alternative Item': 'Añadir elemento alternativo',

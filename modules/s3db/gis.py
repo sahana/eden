@@ -5229,7 +5229,7 @@ class gis_LocationRepresent(S3Represent):
             # @ToDo: Support translate=True
             if level == "L0":
                 represent = "%s (%s)" % (name, current.messages.COUNTRY)
-            elif level in ["L1", "L2", "L3", "L4", "L5"]:
+            elif level in ("L1", "L2", "L3", "L4", "L5"):
                 # Lookup the hierarchy for labels
                 s3db = current.s3db
                 htable = s3db.gis_hierarchy
@@ -5273,15 +5273,17 @@ class gis_LocationRepresent(S3Represent):
                     else:
                         # Not yet been built, so do it now
                         path = current.gis.update_location_tree(row)
-                    # @ToDo: Assumes no missing levels in PATH
                     path = path.split("/")
-                    parent_level = "L%s" % (len(path) - 2)
-                    parent_name = row[parent_level]
-                    if parent_name:
-                        if represent:
-                            represent = "%s, %s" % (represent, parent_name)
-                        else:
-                            represent = parent_name
+                    path_len = len(path)
+                    if path_len > 1:
+                        # @ToDo: Assumes no missing levels in PATH
+                        parent_level = "L%s" % (path_len - 2)
+                        parent_name = row[parent_level]
+                        if parent_name:
+                            if represent:
+                                represent = "%s, %s" % (represent, parent_name)
+                            else:
+                                represent = parent_name
                 if not represent:
                     represent = name or "ID: %s" % row.id
 

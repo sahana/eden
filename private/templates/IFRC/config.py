@@ -359,7 +359,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
             user = auth.user
             if user:
                 realms = user.realms
-                delegations = user.delegations
+                #delegations = user.delegations
                 if realms:
                     parent = True
                 else:
@@ -767,21 +767,21 @@ def poi_marker_fn(record):
 
     db = current.db
     table = db.gis_poi_type
-    type = db(table.id == record.poi_type_id).select(table.name,
-                                                     limitby=(0, 1)
-                                                     ).first()
-    if type:
-        marker = type.name.lower().replace(" ", "_")\
-                                  .replace("_cccm", "_CCCM")\
-                                  .replace("_nfi_", "_NFI_")\
-                                  .replace("_ngo_", "_NGO_")\
-                                  .replace("_wash", "_WASH")
+    ptype = db(table.id == record.poi_type_id).select(table.name,
+                                                      limitby=(0, 1)
+                                                      ).first()
+    if ptype:
+        marker = ptype.name.lower().replace(" ", "_")\
+                                   .replace("_cccm", "_CCCM")\
+                                   .replace("_nfi_", "_NFI_")\
+                                   .replace("_ngo_", "_NGO_")\
+                                   .replace("_wash", "_WASH")
         marker = "OCHA/%s_40px.png" % marker
     else:
         # Fallback
         marker = "marker_red.png"
 
-    return Storage(image=marker)
+    return Storage(image = marker)
 
 # -----------------------------------------------------------------------------
 def customise_gis_poi_resource(r, tablename):
@@ -944,6 +944,14 @@ def customise_hrm_human_resource_controller(**attr):
             field = r.table.job_title_id
             field.readable = field.writable = False
 
+        if not vnrc:
+            from s3.s3filter import S3OptionsFilter
+            filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
+            filter_widgets.insert(-1, S3OptionsFilter("training.course_id$course_sector.sector_id",
+                                                      label = T("Training Sector"),
+                                                      hidden = True,
+                                                      ))
+
         if r.controller == "deploy":
 
             # Custom list fields for RDRT
@@ -1026,9 +1034,7 @@ def customise_hrm_job_title_controller(**attr):
             table.organisation_id.readable = False
             table.organisation_id.writable = False
 
-            SECTOR = T("Sector")
-            ADD_SECTOR = T("Create Sector")
-            help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Create Sector'.")
+            #help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Create Sector'.")
             s3.crud_strings["hrm_job_title"] = Storage(
                 label_create=T("Create Sector"),
                 title_display=T("Sector Details"),
@@ -1287,13 +1293,12 @@ def customise_org_organisation_controller(**attr):
                     crud_form = S3SQLCustomForm(
                         "name",
                         "acronym",
-                        S3SQLInlineLink(
-                            "organisation_type",
-                            field = "organisation_type_id",
-                            label = type_label,
-                            multiple = False,
-                            #widget = "hierarchy",
-                        ),
+                        S3SQLInlineLink("organisation_type",
+                                        field = "organisation_type_id",
+                                        label = type_label,
+                                        multiple = False,
+                                        #widget = "hierarchy",
+                                        ),
                         "region_id",
                         "country",
                         "phone",
@@ -1879,6 +1884,68 @@ S3OptionsFilter({
     return attr
 
 settings.customise_project_project_controller = customise_project_project_controller
+
+# -----------------------------------------------------------------------------
+def customise_project_beneficiary_resource(r, tablename):
+    """
+        Link Project Beneficiaries to Activity Type
+    """
+
+    if r.interactive and r.component:
+        # Assume that we are a component of the Project
+
+        db = current.db
+        s3db = current.s3db
+
+        # Filter Activity Type by Sector
+        ltable = s3db.project_sector_project
+        rows = db(ltable.project_id == r.id).select(ltable.sector_id)
+        sectors = [row.sector_id for row in rows]
+        ltable = s3db.project_activity_type_sector
+        rows = db(ltable.sector_id.belongs(sectors)).select(ltable.activity_type_id)
+        filteropts = [row.activity_type_id for row in rows]
+
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
+        crud_form = S3SQLCustomForm(
+            #"project_id",
+            "project_location_id",
+            S3SQLInlineLink("activity_type",
+                            field = "activity_type_id",
+                            filterby = "id",
+                            options = filteropts,
+                            label = T("Activity Type"),
+                            multiple = False,
+                            #widget = "hierarchy",
+                            ),
+            "parameter_id",
+            "value",
+            "date",
+            "end_date",
+            "comments",
+            )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+    elif not r.component:
+        # Report
+        from s3.s3filter import S3OptionsFilter
+        resource = r.resource
+        filter_widgets = resource.get_config("filter_widgets")
+        filter_widgets.insert(1, S3OptionsFilter("beneficiary_activity_type.activity_type_id",
+                                                 label = T("Activity Type"),
+                                                 ))
+        report_options = resource.get_config("report_options")
+        report_options.rows.append("beneficiary_activity_type.activity_type_id")
+        # Same object so would be added twice
+        #report_options.cols.append("beneficiary_activity_type.activity_type_id")
+
+        resource.configure(filter_widgets = filter_widgets,
+                           report_options = report_options,
+                           )
+            
+
+settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 
 # -----------------------------------------------------------------------------
 def customise_project_location_resource(r, tablename):

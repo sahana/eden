@@ -166,6 +166,7 @@
 'Activity Type': '活動類型',
 'Activity Updated': '更新活動',
 'Activity': '活動',
+'Add Activity Type': '新增活動類型',
 'Add Address': '新增地址',
 'Add Aid Request': '新增輔助請求',
 'Add Alternative Item': '新增替代項目',

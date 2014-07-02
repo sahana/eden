@@ -120,6 +120,7 @@
 'Activity Type': 'Tipo di attività',
 'Activity Updated': 'Attività Aggiornata',
 'Activity': 'Attività',
+'Add Activity Type': 'Aggiungere tipo di attività',
 'Add Address': 'Aggiungere indirizzo',
 'Add Alternative Item': 'Aggiungere Voce Alternativa',
 'Add Assessment Summary': 'Aggiungere Riepilogo valutazione',

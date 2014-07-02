@@ -126,10 +126,9 @@ def volunteer():
             if r.id:
                 if r.method not in ("profile", "delete"):
                     # Redirect to person controller
-                    vars = {
-                        "human_resource.id": r.id,
-                        "group": "volunteer"
-                    }
+                    vars = {"human_resource.id": r.id,
+                            "group": "volunteer"
+                            }
                     redirect(URL(f="person", vars=vars))
             else:
                 if r.method == "import":

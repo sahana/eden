@@ -161,6 +161,7 @@
 'Activity Updated': '支援活動を更新しました',
 'Activity': '支援活動',
 'Add Address': 'アドレスを追加',
+'Add Activity Type': '支援活動タイプを追加',
 'Add Aid Request': '治療要請を追加',
 'Add Alternative Item': '代わりの物資を追加',
 'Add Assessment Summary': 'アセスメントの要約を追加',

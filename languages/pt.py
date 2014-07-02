@@ -88,6 +88,7 @@
 'Activity Type': 'Tipo de Actividade',
 'Activity Updated': 'Actividade actualizada',
 'Activity': 'Actividade',
+'Add Activity Type': 'Adicionar Tipo de Atividade',
 'Add Address': 'Adicionar Endereço',
 'Add Alternative Item': 'Adicionar Item Alternativo',
 'Add Assessment Summary': 'Adicionar Resumo/Sumário de Avaliação',
