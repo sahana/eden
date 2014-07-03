@@ -4,7 +4,6 @@ from os import path
 
 from gluon import current
 from gluon.html import *
-from gluon.storage import Storage
 
 # =============================================================================
 class index():

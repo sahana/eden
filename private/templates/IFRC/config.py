@@ -979,8 +979,7 @@ def customise_hrm_human_resource_controller(**attr):
             
             # Custom list fields for RDRT
             phone_label = settings.get_ui_label_mobile_phone()
-            list_fields = ["id",
-                           "person_id",
+            list_fields = ["person_id",
                            "organisation_id$root_organisation",
                            "type",
                            "job_title_id",
@@ -1259,8 +1258,7 @@ def customise_org_organisation_controller(**attr):
         if not r.component or r.component_name == "branch":
             if r.interactive or r.representation == "aadata":
                 s3db = current.s3db
-                list_fields = ["id",
-                               "name",
+                list_fields = ["name",
                                "acronym",
                                "organisation_organisation_type.organisation_type_id",
                                "country",
@@ -1635,8 +1633,7 @@ def customise_pr_person_controller(**attr):
                                             )
                 s3db.configure("hrm_experience",
                                crud_form = crud_form,
-                               list_fields = ["id",
-                                              "organisation",
+                               list_fields = ["organisation",
                                               "job_title",
                                               "comments",
                                               "start_date",
@@ -1674,28 +1671,6 @@ def pr_rheader(r, vnrc):
         s3db = current.s3db
         s3db.hrm_vars()
         return s3db.hrm_rheader(r)
-
-# -----------------------------------------------------------------------------
-def customise_req_commit_controller(**attr):
-
-    # Request is mandatory
-    field = current.s3db.req_commit.req_id
-    field.requires = field.requires.other
-
-    return attr
-
-settings.customise_req_commit_controller = customise_req_commit_controller
-
-# -----------------------------------------------------------------------------
-def customise_req_req_controller(**attr):
-
-    # Request is mandatory
-    field = current.s3db.req_commit.req_id
-    field.requires = field.requires.other
-
-    return attr
-
-settings.customise_req_req_controller = customise_req_req_controller
 
 # -----------------------------------------------------------------------------
 def customise_survey_series_controller(**attr):
@@ -2057,6 +2032,28 @@ settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 # Should Requests ask whether Transportation is required?
 settings.req.ask_transport = True
+
+# -----------------------------------------------------------------------------
+def customise_req_commit_controller(**attr):
+
+    # Request is mandatory
+    field = current.s3db.req_commit.req_id
+    field.requires = field.requires.other
+
+    return attr
+
+settings.customise_req_commit_controller = customise_req_commit_controller
+
+# -----------------------------------------------------------------------------
+def customise_req_req_controller(**attr):
+
+    # Request is mandatory
+    field = current.s3db.req_commit.req_id
+    field.requires = field.requires.other
+
+    return attr
+
+settings.customise_req_req_controller = customise_req_req_controller
 
 # -----------------------------------------------------------------------------
 def customise_vulnerability_data_resource(r, tablename):
