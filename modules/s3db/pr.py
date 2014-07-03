@@ -200,16 +200,22 @@ class S3PersonEntity(S3Model):
                                      pe_id,
                                      # Email addresses:
                                      {"name": "email",
-                                      "joinby": "pe_id",
+                                      "joinby": pe_id,
                                       "filterby": "contact_method",
                                       "filterfor": ["EMAIL"],
                                       },
                                      # Mobile phone numbers:
                                      {"name": "phone",
-                                      "joinby": "pe_id",
+                                      "joinby": pe_id,
                                       "filterby": "contact_method",
                                       "filterfor": ["SMS"],
                                       },
+                                     # Work phone numbers:
+                                     #{"name": "work_phone",
+                                     # "joinby": pe_id,
+                                     # "filterby": "contact_method",
+                                     # "filterfor": ["WORK_PHONE"],
+                                     # },
                                      ),
                        pr_contact_emergency = pe_id,
                        pr_image = pe_id,
@@ -1751,11 +1757,13 @@ class S3GroupModel(S3Model):
         T = current.T
         db = current.db
 
-        messages = current.messages
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
+
+        messages = current.messages
+        NONE = messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Hard Coded Group types. Add/Comment entries, but don't remove! 
@@ -1790,18 +1798,24 @@ class S3GroupModel(S3Model):
                            ),
                      Field("description",
                            label = T("Group Description"),
-                           represent = lambda v: v or messages["NONE"],
+                           represent = lambda v: v or NONE,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Group description"),
                                                            T("A brief description of the group (optional)")))
+                           ),
+                     Field("meetings",
+                           label = T("Meetings"),
+                           represent = lambda v: v or NONE,
+                           # Enable in S3SQLCustomForm as-required
+                           readable = False,
+                           writable = False,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_GROUP = T("Create Group")
         crud_strings[tablename] = Storage(
-            label_create = ADD_GROUP,
+            label_create = T("Create Group"),
             title_display = T("Group Details"),
             title_list = T("Groups"),
             title_update = T("Edit Group"),
@@ -1813,9 +1827,8 @@ class S3GroupModel(S3Model):
             msg_list_empty = T("No Groups currently registered"))
 
         # CRUD Strings
-        ADD_GROUP = T("Create Mailing List")
         mailing_list_crud_strings = Storage(
-            label_create = ADD_GROUP,
+            label_create = T("Create Mailing List"),
             title_display = T("Mailing List Details"),
             title_list = T("Mailing Lists"),
             title_update = T("Edit Mailing List"),
@@ -1846,6 +1859,7 @@ class S3GroupModel(S3Model):
             add_label = crud_strings.pr_group.label_create
             title = T("Create Group")
             tooltip = T("Create a new Group")
+
         represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    sortby = "name",
@@ -1903,9 +1917,8 @@ class S3GroupModel(S3Model):
         # CRUD strings
         function = current.request.function
         if function == "person":
-            ADD_MEMBERSHIP = T("Add Membership")
             crud_strings[tablename] = Storage(
-                label_create = ADD_MEMBERSHIP,
+                label_create = T("Add Membership"),
                 title_display = T("Membership Details"),
                 title_list = T("Memberships"),
                 title_update = T("Edit Membership"),
@@ -1917,9 +1930,8 @@ class S3GroupModel(S3Model):
                 msg_list_empty = T("Not yet a Member of any Group"))
 
         elif function in ("group", "group_membership"):
-            ADD_MEMBER = T("Add Member")
             crud_strings[tablename] = Storage(
-                label_create = ADD_MEMBER,
+                label_create = T("Add Member"),
                 title_display = T("Membership Details"),
                 title_list = T("Group Members"),
                 title_update = T("Edit Membership"),

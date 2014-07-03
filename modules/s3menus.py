@@ -726,20 +726,23 @@ class S3OptionsMenu(object):
                     M("Scenarios", c="scenario", f="scenario")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
-                        M("View All"),
                     ),
                     M("Events", c="event", f="event")(
                         M("Create", m="create"),
-                        M("View All"),
+                    ),
+                    M("Event Types", c="event", f="event_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
                     ),
                     M("Incidents", c="event", f="incident")(
                         M("Create", m="create"),
-                        M("View All"),
+                    ),
+                    M("Incident Reports", c="event", f="incident_report")(
+                        M("Create", m="create"),
                     ),
                     M("Incident Types", c="event", f="incident_type")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
-                        M("View All"),
                     ),
                 )
 

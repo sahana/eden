@@ -100,9 +100,14 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Stock Counts", c="inv", f="adj"),
                 MM("Shipments", c="inv", f="send")
             ),
-             MM("Cases", c="assess", f="building")(
+            MM("Cases", c="assess", f="building")(
                 MM("Building Assessments", f="building"),
                 MM("Canvass", f="canvass"), 
+            ),  
+            MM("Incidents", c="event", f="event")(
+                MM("Events", f="event"),
+                MM("Incidents", f="incident"), 
+                MM("Incident Reports", f="incident_report"), 
             ),  
             MM("Survey", c="survey")(
                 MM("Templates", f="template"),

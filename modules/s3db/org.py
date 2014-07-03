@@ -1211,6 +1211,8 @@ class S3OrganisationGroupModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        NONE = current.messages["NONE"]
+
         # ---------------------------------------------------------------------
         # Organization Groups
         #
@@ -1221,16 +1223,30 @@ class S3OrganisationGroupModel(S3Model):
                      Field("name", notnull=True, unique=True, length=128,
                            label = T("Name"),
                            ),
-                     self.gis_location_id(
-                         widget = S3LocationSelectorWidget2(
-                                     #catalog_layers=True,
-                                     polygons=True
-                         )),
+                     Field("mission",
+                           label = T("Mission"),
+                           represent = lambda v: v or NONE,
+                           # Enable as-required in Custom Forms
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("website",
                            label = T("Website"),
                            represent = s3_url_represent,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
+                     Field("meetings",
+                           label = T("Meetings"),
+                           represent = lambda v: v or NONE,
+                           # Enable as-required in Custom Forms
+                           readable = False,
+                           writable = False,
+                           ),
+                     self.gis_location_id(
+                         widget = S3LocationSelectorWidget2(
+                                     #catalog_layers=True,
+                                     polygons=True
+                         )),
                      s3_comments(),
                      *s3_meta_fields())
 
