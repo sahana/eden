@@ -4373,7 +4373,11 @@ def hrm_map_popup(r):
     db = current.db
     s3db = current.s3db
     CONTACT_OPTS = current.msg.CONTACT_OPTS
+    
     record = r.record
+    if not record:
+        return ""
+    person_id = record.person_id
 
     output = TABLE()
     append = output.append
@@ -4385,7 +4389,7 @@ def hrm_map_popup(r):
 
     # First name, last name
     append(TR(TD(B("%s:" % T("Name"))),
-              TD(s3_fullname(record.person_id))))
+              TD(s3_fullname(person_id))))
 
     # Job Title
     if record.job_title_id:
@@ -4404,8 +4408,6 @@ def hrm_map_popup(r):
     #          TD(name)))
 
     # Components link to the Person record
-    person_id = record.person_id
-
     # Skills
     table = s3db.hrm_competency
     stable = s3db.hrm_skill

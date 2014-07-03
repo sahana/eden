@@ -646,8 +646,8 @@ class S3CRUD(S3Method):
             fields = [f for f in table if f.readable]
             if r.component:
                 if record_id:
-                    record = current.db(table._id == record_id).select(*fields,
-                                                                       limitby=(0, 1)
+                    record = current.db(table._id == record_id).select(limitby=(0, 1),
+                                                                       *fields
                                                                        ).first()
                 else:
                     record = None
