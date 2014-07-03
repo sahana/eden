@@ -844,6 +844,7 @@ def org_facility_types(row):
     """
         The Types of the Facility
         - required since we can't have a component within an Inline Component
+        UNUSED
     """
 
     if hasattr(row, "org_facility"):
@@ -877,6 +878,13 @@ def org_organisation_postprocess(form):
 
 # -----------------------------------------------------------------------------
 def customise_org_organisation_controller(**attr):
+
+    if "summary" in current.request.args:
+        settings.gis.toolbar = False
+        from s3.s3utils import s3_set_default_filter
+        s3_set_default_filter("org_group_membership.group_id",
+                              default_coalition_filter,
+                              tablename = "org_organisation")
 
     # Custom PreP
     s3 = current.response.s3
@@ -1294,9 +1302,38 @@ def facility_onaccept(form):
                     if match:
                         break
                 if match:
-                    ltable.insert(group_id=p[ctable].id,
-                                  site_id=site_id,
+                    group_id = p[ctable].id
+                    ltable.insert(group_id = group_id,
+                                  site_id = site_id,
                                   )
+                    # Also update the Organisation
+                    stable = db.org_site
+                    site = db(stable.id == site_id).select(stable.organisation_id,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                    if not site:
+                        return
+                    organisation_id = site.organisation_id
+                    ltable = db.org_group_membership
+                    query = (ltable.organisation_id == organisation_id) & \
+                            (ltable.group_id == group_id)
+                    exists = db(query).select(ltable.id,
+                                              limitby=(0, 1))
+                    if not exists:
+                        stable = db.org_group_membership_status
+                        status = db(stable.name == "Located within Coalition").select(stable.id,
+                                                                                      cache = s3db.cache,
+                                                                                      limitby = (0, 1)
+                                                                                      ).first()
+                        if status:
+                            status_id = status.id
+                        else:
+                            # Prepop failed or Status deleted/renamed
+                            status_id = None
+                        ltable.insert(group_id = group_id,
+                                      organisation_id = organisation_id,
+                                      status_id = status_id,
+                                      )
 
     # Normal onaccept:
     # Update Affiliation, record ownership and component ownership
@@ -1308,6 +1345,7 @@ settings.base.import_callbacks = {"org_facility": {"onaccept": facility_onaccept
                                                    },
                                   }
 
+#-----------------------------------------------------------------------------
 def customise_org_facility_controller(**attr):
 
     if "summary" in current.request.args:
@@ -1519,7 +1557,7 @@ def customise_org_facility_controller(**attr):
 settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
-# People
+# People (Stats People)
 #
 def customise_stats_people_controller(**attr):
 

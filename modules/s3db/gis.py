@@ -2448,35 +2448,37 @@ class S3LayerEntityModel(S3Model):
         layer_id = self.super_link("layer_id", "gis_layer_entity",
                                    label = T("Layer"),
                                    represent = gis_layer_represent,
-                                   readable=True, writable=True)
+                                   readable=True,
+                                   writable=True,
+                                   )
 
         # Components
         add_components(tablename,
                        # Configs
-                       gis_config={"link": "gis_layer_config",
+                       gis_config = {"link": "gis_layer_config",
+                                     "pkey": "layer_id",
+                                     "joinby": "layer_id",
+                                     "key": "config_id",
+                                     "actuate": "hide",
+                                     "autocomplete": "name",
+                                     "autodelete": False,
+                                     },
+                       # Symbologies
+                       gis_symbology = {"link": "gis_layer_symbology",
+                                        "pkey": "layer_id",
+                                        "joinby": "layer_id",
+                                        "key": "symbology_id",
+                                        "actuate": "hide",
+                                        "autocomplete": "name",
+                                        "autodelete": False,
+                                        },
+                       # Posts
+                       cms_post = {"link": "cms_post_layer",
                                    "pkey": "layer_id",
                                    "joinby": "layer_id",
-                                   "key": "config_id",
-                                   "actuate": "hide",
-                                   "autocomplete": "name",
-                                   "autodelete": False,
-                                  },
-                       # Symbologies
-                       gis_symbology={"link": "gis_layer_symbology",
-                                      "pkey": "layer_id",
-                                      "joinby": "layer_id",
-                                      "key": "symbology_id",
-                                      "actuate": "hide",
-                                      "autocomplete": "name",
-                                      "autodelete": False,
-                                     },
-                       # Posts
-                       cms_post={"link": "cms_post_layer",
-                                 "pkey": "layer_id",
-                                 "joinby": "layer_id",
-                                 "key": "post_id",
-                                },
-                      )
+                                   "key": "post_id",
+                                   },
+                       )
                       
         # =====================================================================
         #  Layer Config link table
@@ -2510,15 +2512,21 @@ class S3LayerEntityModel(S3Model):
         define_table(tablename,
                      layer_id,
                      self.gis_config_id(),
-                     Field("enabled", "boolean", default=True,
+                     Field("enabled", "boolean",
+                           default = True,
+                           label = T("Available in Viewer?"),
                            represent = s3_yes_no_represent,
-                           label=T("Available in Viewer?")),
-                     Field("visible", "boolean", default=True,
+                           ),
+                     Field("visible", "boolean",
+                           default = True,
+                           label = T("On by default?"),
                            represent = s3_yes_no_represent,
-                           label=T("On by default?")),
-                     Field("base", "boolean", default=False,
+                           ),
+                     Field("base", "boolean",
+                           default = False,
+                           label = T("Default Base layer?"),
                            represent = s3_yes_no_represent,
-                           label=T("Default Base layer?")),
+                           ),
                      # @ToDo: Move to style_id
                      # @ToDo: Switch type to "json" & Test
                      Field("style", "text",
@@ -2549,8 +2557,9 @@ class S3LayerEntityModel(S3Model):
             )
 
         self.configure(tablename,
-                       onvalidation=self.gis_layer_config_onvalidation,
-                       onaccept=self.gis_layer_config_onaccept)
+                       onvalidation = self.gis_layer_config_onvalidation,
+                       onaccept = self.gis_layer_config_onaccept,
+                       )
 
         # =====================================================================
         #  Layer Symbology link table

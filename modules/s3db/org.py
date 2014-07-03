@@ -1330,7 +1330,7 @@ class S3OrganisationGroupModel(S3Model):
         represent = S3Represent(lookup=tablename)
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     label = T("Status"),
-                                    ondelete = "RESTRICT",
+                                    ondelete = "SET NULL",
                                     represent = represent,
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_group_membership_status.id",
@@ -1345,7 +1345,9 @@ class S3OrganisationGroupModel(S3Model):
         #
         tablename = "org_group_membership"
         define_table(tablename,
-                     group_id(empty = False),
+                     group_id(empty = False,
+                              ondelete = "CASCADE",
+                              ),
                      self.org_organisation_id(empty = False,
                                               ondelete = "CASCADE",
                                               ),
