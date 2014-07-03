@@ -1602,7 +1602,7 @@ class S3ResourceQuery(object):
         if not wildcard:
             if len(items) == 1:
                 # Don't use belongs() for single value
-                expr = (field == items[0])
+                expr = (field == tuple(items)[0])
             elif items:
                 expr = (field.belongs(items))
 

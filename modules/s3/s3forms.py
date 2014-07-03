@@ -2784,6 +2784,9 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         options = self.options
         component, link = self.get_link()
 
+        multiple = options.get("multiple", True)
+        options["multiple"] = multiple
+
         # Field dummy
         dummy_field = Storage(name = field.name,
                               type = link.table[component.rkey].type)
@@ -2793,10 +2796,15 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         if widget != "hierarchy":
             # Get the selectable entries for the widget and construct
             # a validator from it
+            zero = None if multiple else options.get("zero", XML("&nbsp"))
             opts = self.get_options()
-            dummy_field.requires = IS_IN_SET(opts,
-                                             multiple=True,
-                                             zero=None)
+            requires = IS_IN_SET(opts,
+                                 multiple=multiple,
+                                 zero=zero,
+                                 sort=options.get("sort", True))
+            if zero is not None:
+                requires = IS_EMPTY_OR(requires)
+            dummy_field.requires = requires
 
         # Helper to extract widget options
         widget_opts = lambda keys: dict((k, v)
