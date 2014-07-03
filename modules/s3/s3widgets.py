@@ -4740,7 +4740,9 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         else:
             w = OptionsWidget
             if value:
-                value = str(value[0])
+                # Base widget requires single value, so enforce that
+                # if necessary, and convert to string to match options
+                value = str(value[0] if type(value) is list else value)
         widget = TAG[""](w.widget(field, value, **attr),
                          requires = field.requires)
 
