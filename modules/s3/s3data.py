@@ -445,8 +445,12 @@ class S3DataTable(object):
         #          hence applying the datatable sorting/filters is
         #          not transparent
         if s3.datatable_ajax_source:
+            # Strip '.aadata' extension
             end = s3.datatable_ajax_source.find(".aadata")
-            default_url = s3.datatable_ajax_source[:end] # strip '.aadata' extension
+            default_url = s3.datatable_ajax_source[:end]
+        elif "." in base_url:
+            # Strip extension (e.g. .iframe)
+            default_url = base_url.split(".", 1)[0]
         else:
             default_url = base_url
 

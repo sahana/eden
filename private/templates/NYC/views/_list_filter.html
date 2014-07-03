@@ -5,7 +5,7 @@
 <div id='component'>
 {{except:}}
 </div>
-<div>
+
 {{pass}}
 <div id='map'></div>
 {{include response.s3.views.get("listadd.html", "_listadd.html")}}
@@ -16,9 +16,9 @@
 {{pass}}
 {{except:}}{{pass}}
 {{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
-{{try:}}{{items = items}}
+{{try:}}{{items}}
 {{if ltype == "datalist":}}
-<div id='dl-container row'>
+<div id='dl-container'>
 {{=items}}
 </div>
 {{else:}}
@@ -27,7 +27,6 @@
 </div>
 {{pass}}
 {{except:}}{{pass}}
-</div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{if ltype == "datalist":}}{{include "dataLists.html"}}
 {{else:}}{{include "dataTables.html"}}{{pass}}

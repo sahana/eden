@@ -1,5 +1,5 @@
 <div id='list-btn-add'>
-{{try:}}{{showadd_btn=showadd_btn}}{{except:}}{{showadd_btn=None}}{{pass}}
+{{try:}}{{showadd_btn}}{{except:}}{{showadd_btn = None}}{{pass}}
 {{if showadd_btn:}}{{=showadd_btn}}{{hide_listadd = True}}
 {{else:}}{{try:}}{{=buttons["add_btn"]}}{{except:}}{{pass}}{{hide_listadd = False}}{{pass}}
 </div>

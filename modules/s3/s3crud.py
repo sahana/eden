@@ -606,11 +606,14 @@ class S3CRUD(S3Method):
             if representation == "html":
                 response.view = self._view(r, "display.html")
                 output["item"] = item
-            elif representation in ("popup", "iframe"):
+            elif representation == "popup":
                 response.view = self._view(r, "popup.html")
-                caller = attr.get("caller", None)
                 output["form"] = item
+                caller = attr.get("caller", None)
                 output["caller"] = caller
+            elif representation == "iframe":
+                response.view = self._view(r, "iframe.html")
+                output["form"] = item
 
             # Buttons
             buttons = self.render_buttons(r,
@@ -640,24 +643,26 @@ class S3CRUD(S3Method):
 
         elif representation == "plain":
             T = current.T
+            fields = [f for f in table if f.readable]
             if r.component:
                 if record_id:
-                    record = current.db(table._id == record_id).select(limitby=(0, 1)).first()
+                    record = current.db(table._id == record_id).select(*fields,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
                 else:
                     record = None
             else:
                 record = r.record
             if record:
                 # Hide empty fields from popups on map
-                for field in table:
-                    if field.readable:
-                        try:
-                            value = record[field]
-                        except:
-                            # e.g. gis_location.wkt
-                            value = None
-                        if value is None or value == "" or value == []:
-                            field.readable = False
+                for field in fields:
+                    try:
+                        value = record[field]
+                    except:
+                        # e.g. gis_location.wkt
+                        value = None
+                    if value is None or value == "" or value == []:
+                        field.readable = False
                 item = self.sqlform(request=request,
                                     resource=resource,
                                     record_id=record_id,
@@ -785,10 +790,12 @@ class S3CRUD(S3Method):
             # Set view
             if representation == "html":
                 response.view = self._view(r, "update.html")
-            elif representation in ("popup", "iframe"):
+            elif representation in "popup":
                 response.view = self._view(r, "popup.html")
             elif representation == "plain":
                 response.view = self._view(r, "plain.html")
+            elif representation == "iframe":
+                response.view = self._view(r, "iframe.html")
 
             # Title and subtitle
             crud_string = self.crud_string
@@ -1037,16 +1044,18 @@ class S3CRUD(S3Method):
 
             if representation in ("aadata", "dl"):
                 return output
-            else:
-                output["list_type"] = list_type
+
+            output["list_type"] = list_type
+
+            crud_string = self.crud_string
 
             # Page title
-            crud_string = self.crud_string
-            if r.component:
-                title = crud_string(r.tablename, "title_display")
-            else:
-                title = crud_string(self.tablename, "title_list")
-            output["title"] = title
+            if representation != "iframe":
+                if r.component:
+                    title = crud_string(r.tablename, "title_display")
+                else:
+                    title = crud_string(self.tablename, "title_list")
+                output["title"] = title
 
             # Filter-form
             if show_filter_form:

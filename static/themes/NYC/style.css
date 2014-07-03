@@ -16,6 +16,20 @@ body {
     }
 }
 
+body.iframe {
+    padding-top: 0;
+}
+body.iframe #table-container{
+    margin-top: -21px;
+}
+body.iframe .form-container{
+    margin-top: -1px;
+}
+body.iframe #list-btn-add {
+    margin-bottom: 21px;
+    margin-top: -11px;
+}
+
 .navbar-inner .container{
     width: auto;
 }

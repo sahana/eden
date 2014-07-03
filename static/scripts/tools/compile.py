@@ -21,14 +21,17 @@ if theme != "default":
     for view in ["create.html",
                  #"delete.html",
                  "display.html",
+                 "iframe.html",
                  "list.html",
                  "list_filter.html",
                  "map.html",
+                 #"merge.html",
                  "popup.html",
                  "profile.html",
                  "report.html",
                  #"review.html",
                  "summary.html",
+                 #"timeplot.html",
                  "update.html",
                  ]:
         if exists(join(folder, "private", "templates", theme, "views", "_%s" % view)):
