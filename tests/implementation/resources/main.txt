@@ -1,7 +1,9 @@
 *** Settings ***
 Documentation     Main resource file for Eden Tests
 Library           Selenium2Library
-Variables         ../../execution/config.py
+Library           Collections
+Variables         ../../execution/settings/config.py
+Library           ../../execution/libs/edentest_robot.py  ${WEB2PY}  ${EDEN_PATH}
 Resource          auth.txt
 Resource          base.txt
 Resource          crud.txt
@@ -11,7 +13,6 @@ Resource          widgets.txt
 Resource          form.txt
 
 *** Variables ***
-${DELAY}            0
 ${BASEURL}          ${SERVER}/${APPNAME}
 ${HOMEPAGE}         http://${BASEURL}/default/index
 
@@ -26,7 +27,10 @@ Start Browser
     Create Webdriver  ${BROWSER}
 
 Start Testing
-    [Documentation]  Starts the test
+    [Documentation]  Starts the test, sets the template global variable
+    ${deployment settings} =  Get Deployment Settings  template
+    ${TEMPLATE}=  Get From Dictionary  ${deployment settings}  template
+    Set Global Variable  ${TEMPLATE}
     Run Keyword If  "${HTTP_PROXY}" != "" and "${BROWSER}" == "Firefox"  Start Browser With Proxy
     ...  ELSE  Start Browser
     Set Selenium Speed  ${DELAY}
