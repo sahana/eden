@@ -36,6 +36,7 @@ import os
 import re
 import sys
 import time
+import urlparse
 import HTMLParser
 
 try:
@@ -1304,6 +1305,71 @@ def s3_orderby_fields(table, orderby, expr=False):
         else:
             continue
         yield f
+
+# =============================================================================
+def s3_get_extension(request=None):
+    """
+        Get the file extension in the path of the request
+
+        @param request: the request object (web2py request or S3Request),
+                        defaults to current.request
+    """
+
+
+    if request is None:
+        request = current.request
+        
+    extension = request.extension
+    if request.function == "ticket" and request.controller == "admin":
+        extension = "html"
+    elif "format" in request.get_vars:
+        ext = request.get_vars.format
+        if isinstance(ext, list):
+            ext = ext[-1]
+        extension = ext.lower() or extension
+    else:
+        ext = None
+        for arg in request.args[::-1]:
+            if "." in arg:
+                ext = arg.rsplit(".", 1)[1].lower()
+                break
+        if ext:
+            extension = ext
+    return extension
+
+# =============================================================================
+def s3_set_extension(url, extension=None):
+    """
+        Add a file extension to the path of a url, replacing all
+        other extensions in the path.
+
+        @param url: the URL (as string)
+        @param extension: the extension, defaults to the extension
+                          of current. request
+    """
+
+    if extension == None:
+        extension = s3_get_extension()
+    #if extension == "html":
+        #extension = ""
+
+    u = urlparse.urlparse(url)
+    
+    path = u.path
+    if path:
+        if "." in path:
+            elements = [p.split(".")[0] for p in path.split("/")]
+        else:
+            elements = path.split("/")
+        if extension and elements[-1]:
+            elements[-1] += ".%s" % extension
+        path = "/".join(elements)
+    return urlparse.urlunparse((u.scheme,
+                                u.netloc,
+                                path,
+                                u.params,
+                                u.query,
+                                u.fragment))
 
 # =============================================================================
 def search_vars_represent(search_vars):

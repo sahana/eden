@@ -56,7 +56,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3resource import S3Resource
-from s3utils import s3_store_last_record_id, s3_remove_last_record_id
+from s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
 
 REGEX_FILTER = re.compile(".+\..+|.*\(.+\).*")
 
@@ -523,16 +523,11 @@ class S3Request(object):
             if not self.component_id:
                 self.component_id = f[2][1]
 
-        # ?format= overrides extensions
-        if "format" in self.vars:
-            ext = self.vars["format"]
-            if isinstance(ext, list):
-                ext = ext[-1]
-            representation = ext or representation
-        if not representation:
-            self.representation = self.DEFAULT_REPRESENTATION
+        representation = s3_get_extension(self)
+        if representation:
+            self.representation = representation
         else:
-            self.representation = representation.lower()
+            self.representation = self.DEFAULT_REPRESENTATION
         return
 
     # -------------------------------------------------------------------------

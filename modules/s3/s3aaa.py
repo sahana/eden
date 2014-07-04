@@ -67,7 +67,7 @@ from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method
 from s3track import S3Tracker
-from s3utils import s3_addrow, s3_mark_required
+from s3utils import s3_addrow, s3_get_extension, s3_mark_required
 
 DEFAULT = lambda: None
 #table_field = re.compile("[\w_]+\.[\w_]+")
@@ -4993,22 +4993,7 @@ class S3Permission(object):
         self.function = request.function
 
         # Request format
-        # @todo: move this into s3utils.py:
-        self.format = request.extension
-        if "format" in request.get_vars:
-            ext = request.get_vars.format
-            if isinstance(ext, list):
-                ext = ext[-1]
-            self.format = ext.lower() or self.format
-        else:
-            ext = [a for a in request.args if "." in a]
-            if ext:
-                self.format = ext[-1].rsplit(".", 1)[1].lower()
-
-        if request.function == "ticket" and \
-           request.controller == "admin":
-            # Error tickets need an override
-            self.format = "html"
+        self.format = s3_get_extension()
 
         # Page permission cache
         self.page_acls = Storage()

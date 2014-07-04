@@ -345,6 +345,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                                authorised=authorised,
                                                update=editable,
                                                native=native)("[id]")
+            if r.representation == "iframe":
+                # If this request is in iframe-format, "open" should
+                # be in iframe-format as well
+                open_url = s3base.s3_set_extension(open_url, "iframe")
 
             # Add action buttons for Open/Delete/Copy as appropriate
             s3_action_buttons(r,

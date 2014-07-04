@@ -55,7 +55,7 @@ from gluon.tools import callback
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
-from s3utils import s3_unicode, s3_validate, s3_represent_value
+from s3utils import s3_unicode, s3_validate, s3_represent_value, s3_set_extension
 from s3widgets import S3EmbedComponentWidget
 
 # Compact JSON encoding
@@ -2431,14 +2431,21 @@ class S3CRUD(S3Method):
         if "viewing" in r.get_vars:
             get_vars["viewing"] = r.get_vars["viewing"]
 
+        # If this request is in iframe-format, action URLs should be in
+        # iframe-format as well
+        if r.representation == "iframe":
+            iframe_safe = lambda url: s3_set_extension(url, "iframe")
+        else:
+            iframe_safe = lambda url: url
+
         # Open-action (Update or Read)
         if editable and has_permission("update", table) and \
            not ownership_required("update", table):
             if not update_url:
                 # To use modals
                 #get_vars["refresh"] = "list"
-                update_url = URL(args = args + ["update"], #.popup to use modals
-                                 vars = get_vars)
+                update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
+                                             vars = get_vars))
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
@@ -2447,8 +2454,8 @@ class S3CRUD(S3Method):
                                  )
         else:
             if not read_url:
-                read_url = URL(args = args,
-                               vars = get_vars)
+                read_url = iframe_safe(URL(args = args,
+                                           vars = get_vars))
             s3crud.action_button(labels.READ, read_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
@@ -2459,8 +2466,8 @@ class S3CRUD(S3Method):
         if deletable and has_permission("delete", table):
             icon = "trash"
             if not delete_url:
-                delete_url = URL(args = args + ["delete"],
-                                 vars = get_vars)
+                delete_url = iframe_safe(URL(args = args + ["delete"],
+                                             vars = get_vars))
             if ownership_required("delete", table):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
@@ -2485,7 +2492,7 @@ class S3CRUD(S3Method):
         # Copy-action
         if copyable and has_permission("create", table):
             if not copy_url:
-                copy_url = URL(args = args + ["copy"])
+                copy_url = iframe_safe(URL(args = args + ["copy"]))
             s3crud.action_button(labels.COPY, 
                                  copy_url,
                                  icon="copy",
@@ -2494,7 +2501,6 @@ class S3CRUD(S3Method):
         # Append custom actions
         if custom_actions:
             s3.actions = s3.actions + custom_actions
-
         return
 
     # -------------------------------------------------------------------------
