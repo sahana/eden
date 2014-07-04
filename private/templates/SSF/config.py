@@ -238,6 +238,8 @@ settings.security.policy = 5
 #settings.ui.label_postcode = T("ZIP Code")
 # Enable Social Media share buttons
 #settings.ui.social_buttons = True
+# Uncomment to restrict the export formats available
+settings.ui.export_formats = ["pdf", "rss", "xls", "xml", "link"]
 
 # Request
 #settings.req.type_inv_label = T("Donations")

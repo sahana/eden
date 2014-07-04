@@ -1375,6 +1375,10 @@ S3.search = {};
             url = filter_form.find('input.filter-submit-url[type="hidden"]').val(),
             queries = getCurrentFilters(filter_form);
 
+        if($('.export_link').length)
+            // If "link" in ui.export_formats
+            setExportLinkHref();
+
         if (filter_form.hasClass('filter-ajax')) {
             // Ajax-refresh the target objects
 
@@ -1556,6 +1560,25 @@ S3.search = {};
         
     };
 
+    var setExportLinkHref = function() {
+        filters = getCurrentFilters();
+        var base_url = $('.filter-submit-url').val();
+
+        // Get the URL arguments
+        var arg_index = window.location.href.indexOf('?');
+        if(arg_index != -1){
+            // If arguments present, add them to base_url
+            args = window.location.href.slice(arg_index);
+            base_url = base_url + args;
+        }
+
+        // Get the URL after applying the filters
+        url = filterURL(base_url, filters);
+
+        // Set the href
+        $('.export_link').attr('href', url);
+    };
+
     /**
      * document-ready script
      */
@@ -1629,6 +1652,10 @@ S3.search = {};
             }
             return true;
         });
+
+        if($('.export_link').length)
+            // If "link" in ui.export_formats
+            setExportLinkHref();
     });
 
 }());

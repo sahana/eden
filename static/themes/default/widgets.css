@@ -274,7 +274,8 @@ textarea.richtext {
     float: right;
     padding-top: 5px;
 }
-.list_formats div {
+.list_formats div,
+.list_formats a {
     padding: 1px;
     cursor: pointer;
     height: 16px;
@@ -310,6 +311,9 @@ textarea.richtext {
 }
 .export_xml {
     background-image: url(../../img/icon-xml.png);
+}
+.export_link {
+    background-image: url(../../img/link.png);
 }
 /* msg_list_empty */
 .empty {

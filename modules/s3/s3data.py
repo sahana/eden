@@ -490,6 +490,10 @@ class S3DataTable(object):
                                                 _title=EXPORT % dict(format="KML"),
                                                 ))
                             break
+            if "link" in export_formats:
+                iconList.append(A(_class="export_link",
+                                    _title=T("Link to filtered list"),
+                                    ))
             if "cap" in formats and "cap" in export_formats:
                 iconList.append(DIV(_class="export_cap",
                                     _onclick="S3.dataTables.formatRequest('cap','%s','%s')" % (id, formats.cap),
