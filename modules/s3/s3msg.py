@@ -135,6 +135,7 @@ class S3Msg(object):
                              "GITHUB":      T("Github Repo"),
                              "LINKEDIN":    T("LinkedIn Profile"),
                              "BLOG":        T("Blog"),
+                             "CAPALERT":    T("CAPAlert"),
                              "OTHER":       T("Other")
                              }
 
@@ -1336,6 +1337,20 @@ class S3Msg(object):
         else:
             graph.put_object(user_id, "feed", message=text)
 
+    #------------------------------------------------------------------------------
+    def post_to_pubsubhubbub(self, alert_url):
+        """
+            Publish a feed to pubsubhubbub
+        """
+
+        import requests
+        settings = current.deployment_settings
+        hub_url = settings.get_cap_publishing_brokers()["Pubsubhubbub"]
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        params = {"hub.mode" : "publish", "hub.url" : alert_url}
+        status = requests.post(url=hub_url, headers=headers, params=params)
+        return status.status_code
+
     # -------------------------------------------------------------------------
     def poll(self, tablename, channel_id):
         """
@@ -1904,7 +1919,7 @@ class S3Msg(object):
                 if parser:
                     pinsert(message_id = exists.message_id,
                             channel_id = channel_id)
-                
+                    
             else:
                 _id = minsert(channel_id = channel_id,
                               title = entry.title,
@@ -2508,7 +2523,7 @@ class S3Compose(S3CRUD):
             else:
                 # @ToDo A new widget (tree?) required to handle multiple persons and groups
                 pe_field.widget = S3PentityAutocompleteWidget()
-                
+
             pe_field.comment = DIV(_class="tooltip",
                                    _title="%s|%s" % \
                 (T("Recipients"),

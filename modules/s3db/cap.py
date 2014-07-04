@@ -413,6 +413,10 @@ class S3CAPModel(S3Model):
         self.set_method("cap", "alert",
                         method = "import_feed",
                         action = CAPImportFeed())
+        
+        self.set_method("cap", "alert",
+                        method = "publish",
+                        action = CAPPublish())
 
         if crud_strings["cap_template"]:
             crud_strings[tablename] = crud_strings["cap_template"]
@@ -1132,12 +1136,19 @@ def cap_rheader(r):
                         error = DIV(T("You need to create at least one alert information item in order to be able to broadcast this alert!"),
                                     _class="error")
                         export_btn = ""
+                        publish_btn = ""
                     else:
                         error = ""
                         export_btn = A(DIV(_class="export_cap_large"),
                                        _href=URL(c="cap", f="alert", args=["%s.cap" % record_id]),
                                        _target="_blank",
                                        )
+                        publish_btn = A(DIV("Publish Alert",
+                                         _class="action-btn",
+                                         _id="publish",
+                                         _value=record_id),
+                                         _href=r.url(method="publish", id=record_id),
+                                        )
 
                     table = s3db.cap_area
                     query = (table.alert_id == record_id)
@@ -1162,7 +1173,9 @@ def cap_rheader(r):
                                                 _href=URL(c="cap", f="alert",
                                                           args=[record_id, "update"]))),
                                            ),
-                                        TR(export_btn)
+                                        TR(TD(export_btn),
+                                           TD(publish_btn),
+                                           ),
                                         ),
                                   rheader_tabs,
                                   error
@@ -1708,4 +1721,63 @@ class CAPImportFeed(S3Method):
         else:
             raise HTTP(501, current.ERROR.BAD_METHOD)
 
+#------------------------------------------------------------------------------        
+class CAPPublish(S3Method):
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.representation == "html" and r.record!=None:
+
+            T = current.T
+            response = current.response
+            settings = current.deployment_settings
+            msg = current.msg
+            
+            title = T("Publish the Alert")
+            form = FORM(
+                    TABLE(
+                        TR(TD(DIV(B("%s:" % T("Broker")),
+                                  SPAN(" *", _class="req"))),
+                           TD(SELECT(settings.get_cap_publishing_brokers().keys(), _name="channel",
+                                     _id="channel", _value="",
+                                     requires=IS_IN_SET(settings.get_cap_publishing_brokers()))),
+                           TD(),
+                           ),
+                        TR(TD(),
+                           TD(INPUT(_type="submit", _value=T("Publish"))),
+                           TD(),
+                           )
+                        )
+                    )
+
+            response.view = "create.html"
+            output = dict(title=title,
+                          form=form)
+
+            if form.accepts(r.vars, current.session):
+                form_vars = form.vars
+                channel = form_vars.get("channel", None)
+                if channel == "Pubsubhubbub":
+                    alert_url = r.url(method="read", representation="cap", host=True)
+                    current.s3task.async("publish_pubsubhubbub",
+                                         [alert_url]
+                                         )
+                    response.flash = T("Alert Published!")
+                elif not channel:
+                    response.error = T("Channel is required")
+                    return output
+                else:
+                    response.error = T("Sorry unsupported or unexpected channel.")
+                    return output
+            return output
+
+        else:
+            r.error(501, current.ERROR.BAD_FORMAT)
 # END =========================================================================

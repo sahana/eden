@@ -47,9 +47,14 @@ def crop_image(path, x1, y1, x2, y2, width):
 tasks["crop_image"] = crop_image
 
 # -----------------------------------------------------------------------------
+def publish_pubsubhubbub(alert_url):
+    msg.post_to_pubsubhubbub(alert_url)
+    
+tasks["publish_pubsubhubbub"] = publish_pubsubhubbub
+# -----------------------------------------------------------------------------
 if settings.has_module("doc"):
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def document_create_index(document, user_id=None):
 
         import os
