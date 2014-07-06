@@ -7,6 +7,7 @@
          Facility - CSV Import Stylesheet
 
          CSV fields:
+         Code....................org_facility.code
          Name....................org_facility.name
          Type....................org_facility.facility_type_id (can be comma-sep list) or org_facility_type.parent
          SubType.................org_facility.facility_type_id (can be comma-sep list. Use ; between different parents) or org_facility_type.parent
@@ -179,13 +180,30 @@
 
             <!-- Facility data -->
             <data field="name"><xsl:value-of select="$FacilityName"/></data>
-            <data field="opening_times"><xsl:value-of select="col[@field='Opening Times']"/></data>
-            <data field="phone1"><xsl:value-of select="col[@field='Phone']"/></data>
-            <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
-            <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
-            <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
-            <data field="obsolete"><xsl:value-of select="col[@field='Obsolete']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="col[@field='Code']!=''">
+                <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Opening Times']!=''">
+                <data field="opening_times"><xsl:value-of select="col[@field='Opening Times']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Phone']!=''">
+                <data field="phone1"><xsl:value-of select="col[@field='Phone']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Phone2']!=''">
+                <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Email']!=''">
+                <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Website']!=''">
+                <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Obsolete']!=''">
+                <data field="obsolete"><xsl:value-of select="col[@field='Obsolete']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
         </resource>
 
         <xsl:call-template name="Locations"/>

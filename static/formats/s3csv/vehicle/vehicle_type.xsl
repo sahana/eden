@@ -3,10 +3,11 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Shelter Type - CSV Import Stylesheet
+         Vehicle Type - CSV Import Stylesheet
          
          CSV column...........Format..........Content
 
+         Code.................string..........Type Code
          Name.................string..........Type Name
          Comments.............string..........Comments
 
@@ -22,7 +23,8 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <resource name="cr_shelter_type">
+        <resource name="vehicle_vehicle_type">
+            <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>

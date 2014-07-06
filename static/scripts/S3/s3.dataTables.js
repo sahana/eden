@@ -1055,9 +1055,15 @@
                                 }
                             } else if (action.url) {
                                 var url = action.url.replace(re, action_id);
-                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + title + '">' + label + '</a>' + '&nbsp;';
+                                var target = action._target;
+                                if (target) {
+                                    target = ' target="' + target + '"';
+                                } else {
+                                    target = '';
+                                }
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + title + '"' + target + '>' + label + '</a>' + '&nbsp;';
                             } else {
-                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + title + '">' + label + '</a>' + '&nbsp;';
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + title + '"' + target + '>' + label + '</a>' + '&nbsp;';
                             }
                         } // end of loop through for each row Action for this table
                     } // end of if there are to be Row Actions for this table

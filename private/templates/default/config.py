@@ -350,6 +350,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
 #settings.ui.camp = True
+# Enable this to have Open links in IFrames open a full page in a new tab
+#settings.ui.iframe_opens_full = True
 # Enable this to change the label for 'Attachments' tabs
 #settings.ui.label_attachments = "Attachments"
 # Enable this to change the label for 'Mobile Phone'

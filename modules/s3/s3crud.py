@@ -2144,6 +2144,7 @@ class S3CRUD(S3Method):
                     _id=None,
                     _class=None,
                     _title=None,
+                    _target=None,
                     **attr):
         """
             Generate a CRUD action button
@@ -2156,6 +2157,7 @@ class S3CRUD(S3Method):
             @param _id: the HTML id of the link
             @param _class: the HTML class of the link
             @param _title: the HTML title of the link
+            @param _target: the HTML target of the link
 
             @keyword custom: custom CRUD button (just add classes)
         """
@@ -2194,7 +2196,9 @@ class S3CRUD(S3Method):
         if _href:
             button["_href"] = _href
         if _title:
-            button["_title"] = _title=_title
+            button["_title"] = _title
+        if _target:
+            button["_target"] = _target
 
         # Additional classes?
         if bootstrap:
@@ -2434,9 +2438,16 @@ class S3CRUD(S3Method):
         # If this request is in iframe-format, action URLs should be in
         # iframe-format as well
         if r.representation == "iframe":
-            iframe_safe = lambda url: s3_set_extension(url, "iframe")
+            if current.deployment_settings.get_ui_iframe_opens_full():
+                iframe_safe = lambda url: url
+                # This is processed client-side in s3.dataTables.js
+                target = dict(_target="_blank")
+            else:
+                iframe_safe = lambda url: s3_set_extension(url, "iframe")
+                target = {}
         else:
             iframe_safe = lambda url: url
+            target = {}
 
         # Open-action (Update or Read)
         if editable and has_permission("update", table) and \
@@ -2451,6 +2462,7 @@ class S3CRUD(S3Method):
                                  #_class="action-btn s3_modal"
                                  _class="action-btn edit",
                                  icon = "edit",
+                                 **target
                                  )
         else:
             if not read_url:
@@ -2460,6 +2472,7 @@ class S3CRUD(S3Method):
                                  # To use modals
                                  #_class="action-btn s3_modal"
                                  _class="action-btn read",
+                                 **target
                                  )
 
         # Delete-action
@@ -2482,11 +2495,13 @@ class S3CRUD(S3Method):
                                      _class="delete-btn",
                                      icon=icon, 
                                      restrict=restrict,
+                                     **target
                                      )
             else:
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn",
                                      icon=icon,
+                                     **target
                                      )
 
         # Copy-action
@@ -2496,6 +2511,7 @@ class S3CRUD(S3Method):
             s3crud.action_button(labels.COPY, 
                                  copy_url,
                                  icon="copy",
+                                 **target
                                  )
 
         # Append custom actions

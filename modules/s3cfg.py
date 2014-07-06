@@ -1287,8 +1287,16 @@ class S3Config(Storage):
         """
         return self.ui.get("hide_report_options", True)
 
+    def get_ui_iframe_opens_full(self):
+        """
+            Open links in IFrames should open a full page in a new tab 
+        """
+        return self.ui.get("iframe_opens_full", False)
+
     def get_ui_interim_save(self):
-        """ Render interim-save button in CRUD forms by default """
+        """
+            Render interim-save button in CRUD forms by default
+        """
         return self.ui.get("interim_save", False)
 
     def get_ui_label_attachments(self):

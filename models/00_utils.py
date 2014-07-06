@@ -345,7 +345,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                                authorised=authorised,
                                                update=editable,
                                                native=native)("[id]")
-            if r.representation == "iframe":
+            if r.representation == "iframe" and not settings.get_ui_iframe_opens_full():
                 # If this request is in iframe-format, "open" should
                 # be in iframe-format as well
                 open_url = s3base.s3_set_extension(open_url, "iframe")

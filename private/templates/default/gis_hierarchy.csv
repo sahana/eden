@@ -2,6 +2,7 @@ UUID,Country,L1,L2,L3,L4,L5,Edit L1
 SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Village / Suburb",,
 ,AF,Province,District,Village,,,
 ,AM,Province,Community,Settlement,,
+,AS,District,County,Village,,,
 ,AU,"State / Territory",Local Government Area,,,,
 ,AZ,Economic Region,"District (Rayon)",,,,
 ,BA,"District / Entity",Canton,Municipality,,,
@@ -21,6 +22,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,LY,District,"City / Town / Village",,,,
 ,MM,State,District,Township,Village Tract,Village,
 ,MN,"Province / Aimag","District / Soum","Subdistrict / Bagh",,,
+,MP,Municipality,Village,,,,
 ,MV,"Atoll/City",Island,,,,
 ,MY,State,District,Mukim,,,
 ,NP,Region,Zone,District,"Village Development Committee",Ward,
@@ -31,6 +33,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,TJ,Province,District,Jamoat,Village,,
 ,TL,District,SubDistrict,Suco,Aldeia,,
 ,TM,Province,District,,,,
+,PR,Municipality,Barrio,,,,
 ,US,State,County,City,Neighborhood,,False
 ,UZ,Province,District,,,,
 ,VN,Province,District,Commune,,,

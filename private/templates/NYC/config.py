@@ -97,8 +97,10 @@ settings.auth.registration_link_user_to_default = "staff"
 
 settings.security.policy = 5 # Controller, Function & Table ACLs
 
-settings.ui.update_label = "Edit"
+# Enable this to have Open links in IFrames open a full page in a new tab
+settings.ui.iframe_opens_full = True
 settings.ui.label_attachments = "Media"
+settings.ui.update_label = "Edit"
 
 # Uncomment to disable checking that LatLons are within boundaries of their parent
 #settings.gis.check_within_parent_boundaries = False

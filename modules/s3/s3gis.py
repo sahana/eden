@@ -721,6 +721,7 @@ class GIS(object):
                         results[row.level] = row.id
                 else:
                     # Oh dear, this is going to be slow :/
+                    # Filter to the BBOX initially
                     query &= (table.lat_min < lat) & \
                              (table.lat_max > lat) & \
                              (table.lon_min < lon) & \
