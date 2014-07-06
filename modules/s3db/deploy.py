@@ -1258,7 +1258,6 @@ def deploy_member_filter():
                S3OptionsFilter("organisation_id",
                                widget="multiselect",
                                filter=True,
-                               header="",
                                hidden=True,
                                ),
                S3OptionsFilter("credential.job_title_id",
@@ -1268,11 +1267,18 @@ def deploy_member_filter():
                                hidden=True,
                                ),
                ]
-    if current.deployment_settings.get_org_regions():
-        widgets.insert(1, S3HierarchyFilter("organisation_id$region_id",
-                                            lookup="org_region",
-                                            hidden=True,
-                                            ))
+    settings = current.deployment_settings
+    if settings.get_org_regions():
+        if settings.get_org_regions_hierarchical():
+            widgets.insert(1, S3HierarchyFilter("organisation_id$region_id",
+                                                lookup="org_region",
+                                                hidden=True,
+                                                ))
+        else:
+            widgets.insert(1, S3OptionsFilter("organisation_id$region_id",
+                                              widget="multiselect",
+                                              filter=True,
+                                              ))
     return widgets
     
 # =============================================================================

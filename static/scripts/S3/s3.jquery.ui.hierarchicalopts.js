@@ -311,11 +311,10 @@
                 this.closeMenu();
             }
             
-            var tree = $(this.tree),
-                button = $(this.button);
+            var button = $(this.button);
             var pos = button.offset();
 
-            tree.css({
+            $(this.tree).css({
                 position: 'absolute',
                 top: pos.top + button.outerHeight(),
                 left: pos.left,
@@ -325,13 +324,6 @@
             this._isOpen = true;
             button.addClass('ui-state-active');
 
-            // Close the menu automatically on mouseleave after click
-            var self = this;
-            tree.one('click.hierarchicalopts', function() {
-                $(this).one('mouseleave.hierarchicalopts', function() {
-                    self.closeMenu();
-                });
-            });
             $(this).trigger('open');
         },
 
@@ -399,7 +391,11 @@
 
             tree.bind('check_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
-                if (!widget.options.multiple) {
+                if (widget.options.multiple) {
+                    tree.one('mouseleave.hierarchicalopts', function() {
+                        widget.closeMenu();
+                    });
+                } else {
                     // Close the menu immediately
                     widget.closeMenu();
                 }
