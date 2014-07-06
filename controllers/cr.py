@@ -10,7 +10,6 @@ resourcename = request.function
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# S3 framework functions
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """

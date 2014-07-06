@@ -72,7 +72,7 @@ class S3LocationModel(S3Model):
         Locations model
     """
 
-    names = ["gis_location",
+    names = ("gis_location",
              #"gis_location_error",
              "gis_location_id",
              "gis_country_id",
@@ -81,7 +81,7 @@ class S3LocationModel(S3Model):
              "gis_location_represent",
              "gis_location_onvalidation",
              "gis_feature_type_opts",
-             ]
+             )
 
     def model(self):
 
@@ -1093,7 +1093,7 @@ class S3LocationNameModel(S3Model):
                not just those we are using in the interface
     """
 
-    names = ["gis_location_name"]
+    names = ("gis_location_name",)
 
     def model(self):
 
@@ -1160,9 +1160,9 @@ class S3LocationTagModel(S3Model):
         - flexible Key-Value component attributes to Locations
     """
 
-    names = ["gis_location_tag",
+    names = ("gis_location_tag",
              "gis_country_opts",
-            ]
+             )
 
     def model(self):
 
@@ -1262,9 +1262,9 @@ class S3LocationGroupModel(S3Model):
         - currently unused
     """
 
-    names = ["gis_location_group",
+    names = ("gis_location_group",
              "gis_location_group_member",
-            ]
+             )
 
     def model(self):
 
@@ -1318,9 +1318,9 @@ class S3LocationHierarchyModel(S3Model):
         Location Hierarchy model
     """
 
-    names = ["gis_hierarchy",
+    names = ("gis_hierarchy",
              "gis_hierarchy_form_setup",
-             ]
+             )
 
     def model(self):
 
@@ -1498,7 +1498,7 @@ class S3GISConfigModel(S3Model):
         - OU config (Organisation &/or Team)
     """
 
-    names = ["gis_config",
+    names = ("gis_config",
              "gis_menu",
              "gis_marker",
              "gis_projection",
@@ -1508,7 +1508,7 @@ class S3GISConfigModel(S3Model):
              "gis_projection_id",
              "gis_symbology_id",
              "gis_config_form_setup",
-             ]
+             )
 
     def model(self):
 
@@ -2383,11 +2383,11 @@ class S3LayerEntityModel(S3Model):
                 for Marker/GPS Symbol
     """
 
-    names = ["gis_layer_entity",
+    names = ("gis_layer_entity",
              "gis_layer_config",
              "gis_layer_symbology",
              "gis_layer_config_onaccept",
-             ]
+             )
 
     def model(self):
 
@@ -2659,7 +2659,7 @@ class S3FeatureLayerModel(S3Model):
           (for transformation to GeoJSON/KML/GPX)
     """
 
-    names = ["gis_layer_feature"]
+    names = ("gis_layer_feature",)
 
     def model(self):
 
@@ -2873,7 +2873,7 @@ class S3FeatureLayerModel(S3Model):
 class S3MapModel(S3Model):
     """ Models for Maps """
 
-    names = ["gis_cache",
+    names = ("gis_cache",
              "gis_cache2",
              "gis_feature_query",
              "gis_layer_arcrest",
@@ -2895,7 +2895,7 @@ class S3MapModel(S3Model):
              "gis_layer_wms",
              "gis_layer_xyz",
              #"gis_style"
-             ]
+             )
 
     def model(self):
 
@@ -4471,10 +4471,10 @@ class S3GISThemeModel(S3Model):
         Thematic Mapping model
     """
 
-    names = ["gis_layer_theme",
+    names = ("gis_layer_theme",
              "gis_theme_data",
              "gis_layer_theme_id",
-             ]
+             )
 
     def model(self):
 
@@ -4637,10 +4637,10 @@ class S3POIModel(S3Model):
         Data Model for PoIs (Points of Interest)
     """
 
-    names = ["gis_poi_type",
+    names = ("gis_poi_type",
              #"gis_poi_type_tag",
              "gis_poi",
-             ]
+             )
 
     def model(self):
 
@@ -4762,7 +4762,7 @@ class S3POIModel(S3Model):
 class S3POIFeedModel(S3Model):
     """ Data Model for PoI feeds """
 
-    names = ["gis_poi_feed"]
+    names = ("gis_poi_feed",)
 
     def model(self):
 

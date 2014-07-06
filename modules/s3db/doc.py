@@ -41,11 +41,11 @@ from ..s3 import *
 # =============================================================================
 class S3DocumentLibrary(S3Model):
 
-    names = ["doc_entity",
+    names = ("doc_entity",
              "doc_document",
              "doc_document_id",
              "doc_image",
-             ]
+             )
 
     def model(self):
 

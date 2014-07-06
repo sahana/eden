@@ -1,0 +1,4 @@
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+reader,"All Module Reader",,cr,,,,READ,,,,,
+reader,"All Module Reader",,sit,,,,READ,,,,,
+reader,"All Module Reader",,vehicle,,,,READ,,,,,

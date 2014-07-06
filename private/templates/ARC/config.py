@@ -188,7 +188,7 @@ settings.gis.map_width = 869
 # @ToDo: Move into gis_config?
 settings.gis.display_L0 = True
 # GeoNames username
-settings.gis.geonames_username = "arc"
+settings.gis.geonames_username = "rms_dev"
 
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
@@ -351,17 +351,14 @@ settings.hrm.staff_experience = False
 settings.hrm.use_skills = False
 
 # -----------------------------------------------------------------------------
-def ns_only(f, required=True, branches=True, updateable=True):
+def ns_only(f, required=True, updateable=True):
     """
         Function to configure an organisation_id field to be restricted to just
-        NS/Branch
+        an ARC Branch
     """
 
     # Label
-    if branches:
-        f.label = T("National Society / Branch")
-    else:
-        f.label = T("National Society")
+    f.label = T("ARC Branch")
 
     # Requires
     db = current.db
@@ -371,7 +368,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
                                                                        limitby=(0, 1)
                                                                        ).first().id
     except:
-        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        # No prepop done - skip (e.g. testing impacts of CSS changes in this theme)
         return
 
     # Filter by type
@@ -382,31 +379,21 @@ def ns_only(f, required=True, branches=True, updateable=True):
     auth = current.auth
     s3_has_role = auth.s3_has_role
     Admin = s3_has_role("ADMIN")
-    if branches:
-        if Admin:
-            parent = True
-        else:
-            # @ToDo: Set the represent according to whether the user can see resources of just a single NS or multiple
-            # @ToDo: Consider porting this into core
-            user = auth.user
-            if user:
-                realms = user.realms
-                #delegations = user.delegations
-                if realms:
-                    parent = True
-                else:
-                    parent = False
-            else:
-                parent = True
-
+    if Admin:
+        parent = True
     else:
-        # Keep the represent function as simple as possible
-        parent = False
-        # Exclude branches
-        btable = current.s3db.org_organisation_branch
-        rows = db((btable.deleted != True) &
-                  (btable.branch_id.belongs(filter_opts))).select(btable.branch_id)
-        filter_opts = list(set(filter_opts) - set(row.branch_id for row in rows))
+        # @ToDo: Set the represent according to whether the user can see resources of just a single NS or multiple
+        # @ToDo: Consider porting this into core
+        user = auth.user
+        if user:
+            realms = user.realms
+            #delegations = user.delegations
+            if realms:
+                parent = True
+            else:
+                parent = False
+        else:
+            parent = True
 
     organisation_represent = current.s3db.org_OrganisationRepresent
     represent = organisation_represent(parent=parent)
@@ -450,8 +437,8 @@ def ns_only(f, required=True, branches=True, updateable=True):
         from s3.s3navigation import S3ScriptItem
         add_link = S3AddResourceLink(c="org", f="organisation",
                                      vars={"organisation_type.name":"Red Cross / Red Crescent"},
-                                     label=T("Create National Society"),
-                                     title=T("National Society"),
+                                     label=T("Create ARC Branch"),
+                                     title=T("ARC Branch"),
                                      )
         comment = f.comment
         if not comment or isinstance(comment, S3AddResourceLink):
@@ -462,7 +449,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
         else:
             f.comment = add_link
     else:
-        # Not allowed to add NS/Branch
+        # Not allowed to add ARC Branch
         f.comment = ""
 
 # -----------------------------------------------------------------------------
@@ -487,10 +474,9 @@ def customise_asset_asset_resource(r, tablename):
     s3db = current.s3db
     table = s3db.asset_asset
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(table.organisation_id,
             required = True,
-            branches = True,
             )
 
     # Custom CRUD Form to allow ad-hoc Kits & link to Teams
@@ -550,70 +536,14 @@ def customise_asset_asset_resource(r, tablename):
 settings.customise_asset_asset_resource = customise_asset_asset_resource
 
 # -----------------------------------------------------------------------------
-def customise_auth_user_controller(**attr):
-    """
-        Customise admin/user() and default/user() controllers
-    """
-
-    #if "arg" in attr and attr["arg"] == "register":
-    # Organisation needs to be an NS/Branch
-    ns_only(current.db.auth_user.organisation_id,
-            required = True,
-            branches = True,
-            updateable = False, # Need to see all Orgs in Registration screens
-            )
-
-    return attr
-
-settings.customise_auth_user_controller = customise_auth_user_controller
-
-# -----------------------------------------------------------------------------
-def customise_deploy_alert_resource(r, tablename):
-
-    current.s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
-
-settings.customise_deploy_alert_resource = customise_deploy_alert_resource
-
-# -----------------------------------------------------------------------------
-def customise_deploy_application_resource(r, tablename):
-
-    r.table.human_resource_id.label = T("Member")
-
-settings.customise_deploy_application_resource = customise_deploy_application_resource
-
-# -----------------------------------------------------------------------------
-def _customise_assignment_fields(**attr):
-
-    MEMBER = T("Member")
-    from gluon.html import DIV
-    hr_comment =  \
-        DIV(_class="tooltip",
-            _title="%s|%s" % (MEMBER,
-                              current.messages.AUTOCOMPLETE_HELP))
-
-    from s3.s3validators import IS_ONE_OF
-    atable = current.s3db.deploy_assignment
-    atable.human_resource_id.label = MEMBER
-    atable.human_resource_id.comment = hr_comment
-    field = atable.job_title_id
-    field.comment = None
-    field.label = T("Sector")
-    field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
-                               field.represent,
-                               filterby = "type",
-                               filter_opts = (4,),
-                               )
-    return
-
-# -----------------------------------------------------------------------------
 def customise_deploy_assignment_controller(**attr):
 
     s3db = current.s3db
     table = s3db.deploy_assignment
 
     # Labels
-    table.job_title_id.label = T("RDRT Type")
-    table.start_date.label = T("Deployment Date")
+    #table.job_title_id.label = T("RDRT Type")
+    #table.start_date.label = T("Deployment Date")
     #table.end_date.label = T("EOM")
 
     # List fields
@@ -624,8 +554,9 @@ def customise_deploy_assignment_controller(**attr):
                    # @todo: replace by date of first alert?
                    (T("Date"), "mission_id$created_on"),
                    "job_title_id",
+                   #(T("Member"), "human_resource_id$person_id"),
                    (T("Member"), "human_resource_id$person_id"),
-                   (T("Deploying NS"), "human_resource_id$organisation_id"),
+                   (T("Deploying Branch"), "human_resource_id$organisation_id"),
                    "start_date",
                    "end_date",
                    "appraisal.rating",
@@ -639,8 +570,8 @@ def customise_deploy_assignment_controller(**attr):
     report_axis = [(T("Appeal Code"), "mission_id$code"),
                    (T("Country"), "mission_id$location_id"),
                    (T("Disaster Type"), "mission_id$event_type_id"),
-                   (T("RDRT Type"), "job_title_id"),
-                   (T("Deploying NS"), "human_resource_id$organisation_id"),
+                   "job_title_id",
+                   (T("Deploying Branch"), "human_resource_id$organisation_id"),
                   ]
     report_options = Storage(
         rows=report_axis,
@@ -657,29 +588,7 @@ def customise_deploy_assignment_controller(**attr):
                    list_fields = list_fields,
                    report_options = report_options,
                    )
-    
-    
-    # CRUD Strings
-    current.response.s3.crud_strings["deploy_assignment"] = Storage(
-        label_create = T("Add Deployment"),
-        title_display = T("Deployment Details"),
-        title_list = T("Deployments"),
-        title_update = T("Edit Deployment Details"),
-        title_upload = T("Import Deployments"),
-        label_list_button = T("List Deployments"),
-        label_delete_button = T("Delete Deployment"),
-        msg_record_created = T("Deployment added"),
-        msg_record_modified = T("Deployment Details updated"),
-        msg_record_deleted = T("Deployment deleted"),
-        msg_list_empty = T("No Deployments currently registered"))
 
-    _customise_assignment_fields()
-    
-    # Restrict Location to just Countries
-    from s3.s3fields import S3Represent
-    field = s3db.deploy_mission.location_id
-    field.represent = S3Represent(lookup="gis_location", translate=True)
-    
     return attr
 
 settings.customise_deploy_assignment_controller = customise_deploy_assignment_controller
@@ -690,32 +599,11 @@ def customise_deploy_mission_controller(**attr):
     db = current.db
     s3db = current.s3db
     s3 = current.response.s3
-    MEMBER = T("Member")
-    from gluon.html import DIV
-    hr_comment =  \
-        DIV(_class="tooltip",
-            _title="%s|%s" % (MEMBER,
-                              current.messages.AUTOCOMPLETE_HELP))
 
     table = s3db.deploy_mission
     table.code.label = T("Appeal Code")
     table.event_type_id.label = T("Disaster Type")
     table.organisation_id.readable = table.organisation_id.writable = False
-
-    # Restrict Location to just Countries
-    from s3.s3fields import S3Represent
-    from s3.s3widgets import S3MultiSelectWidget
-    field = table.location_id
-    field.label = current.messages.COUNTRY
-    field.requires = s3db.gis_country_requires
-    field.widget = S3MultiSelectWidget(multiple=False)
-    field.represent = S3Represent(lookup="gis_location", translate=True)
-
-    rtable = s3db.deploy_response
-    rtable.human_resource_id.label = MEMBER
-    rtable.human_resource_id.comment = hr_comment
-
-    _customise_assignment_fields()
 
     # Report options
     report_fact = [(T("Number of Missions"), "count(id)"),
@@ -742,42 +630,6 @@ def customise_deploy_mission_controller(**attr):
     s3db.configure("deploy_mission",
                    report_options = report_options,
                    )
-
-    # CRUD Strings
-    s3.crud_strings["deploy_assignment"] = Storage(
-        label_create = T("New Deployment"),
-        title_display = T("Deployment Details"),
-        title_list = T("Deployments"),
-        title_update = T("Edit Deployment Details"),
-        title_upload = T("Import Deployments"),
-        label_list_button = T("List Deployments"),
-        label_delete_button = T("Delete Deployment"),
-        msg_record_created = T("Deployment added"),
-        msg_record_modified = T("Deployment Details updated"),
-        msg_record_deleted = T("Deployment deleted"),
-        msg_list_empty = T("No Deployments currently registered"))
-
-    # Custom prep
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-        else:
-            result = True
-
-        if not r.component and r.method == "create":
-            # Org is always IFRC
-            otable = s3db.org_organisation
-            query = (otable.name == "International Federation of Red Cross and Red Crescent Societies")
-            organisation = db(query).select(otable.id,
-                                            limitby = (0, 1),
-                                            ).first()
-            if organisation:
-                r.table.organisation_id.default = organisation.id
-
-        return result
-    s3.prep = custom_prep
 
     return attr
 
@@ -821,10 +673,9 @@ settings.customise_gis_poi_resource = customise_gis_poi_resource
 # -----------------------------------------------------------------------------
 def customise_hrm_certificate_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(current.s3db.hrm_certificate.organisation_id,
             required = False,
-            branches = False,
             )
 
     return attr
@@ -838,10 +689,9 @@ def customise_hrm_course_controller(**attr):
     table = s3db.hrm_course
     tablename = "hrm_course"
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(table.organisation_id,
             required = False,
-            branches = False,
             )
 
     list_fields = ["code",
@@ -895,10 +745,9 @@ settings.customise_hrm_credential_controller = customise_hrm_credential_controll
 # -----------------------------------------------------------------------------
 def customise_hrm_department_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(current.s3db.hrm_department.organisation_id,
             required = False,
-            branches = False,
             )
 
     return attr
@@ -917,10 +766,9 @@ def customise_hrm_human_resource_controller(**attr):
     s3db = current.s3db
     s3db.org_organisation.root_organisation.label = T("National Society")
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(s3db.hrm_human_resource.organisation_id,
             required = True,
-            branches = True,
             )
 
     s3 = current.response.s3
@@ -1016,10 +864,9 @@ def customise_hrm_job_title_controller(**attr):
         # Filter to just deployables
         s3.filter = (table.type == 4)
     else:
-        # Organisation needs to be an NS/Branch
+        # Organisation needs to be an ARC Branch
         ns_only(table.organisation_id,
                 required = False,
-                branches = False,
                 )
     
     # Custom prep
@@ -1061,10 +908,9 @@ settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 # -----------------------------------------------------------------------------
 def customise_hrm_programme_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(current.s3db.hrm_programme.organisation_id,
             required = False,
-            branches = False,
             )
 
     return attr
@@ -1100,10 +946,9 @@ settings.customise_hrm_training_controller = customise_hrm_training_controller
 # -----------------------------------------------------------------------------
 def customise_member_membership_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(current.s3db.member_membership.organisation_id,
             required = True,
-            branches = True,
             )
 
     return attr
@@ -1113,10 +958,9 @@ settings.customise_member_membership_controller = customise_member_membership_co
 # -----------------------------------------------------------------------------
 def customise_member_membership_type_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(current.s3db.member_membership_type.organisation_id,
             required = False,
-            branches = False,
             )
 
     return attr
@@ -1126,10 +970,9 @@ settings.customise_member_membership_type_controller = customise_member_membersh
 # -----------------------------------------------------------------------------
 def customise_org_office_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(current.s3db.org_office.organisation_id,
             required = True,
-            branches = True,
             )
 
     return attr
@@ -1157,7 +1000,9 @@ def customise_org_organisation_controller(**attr):
                                "acronym",
                                "organisation_organisation_type.organisation_type_id",
                                #"country",
-                               "website"
+                               "website",
+                               (T("Facebook"), "facebook.value"),
+                               (T("Twitter"), "twitter.value"),
                                ]
                 
                 type_filter = r.get_vars.get("organisation_type.name",
@@ -1176,7 +1021,7 @@ def customise_org_organisation_controller(**attr):
 
                 if r.interactive:
                     r.table.country.label = T("Country")
-                    from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
+                    from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
                         "name",
                         "acronym",
@@ -1190,6 +1035,26 @@ def customise_org_organisation_controller(**attr):
                         "region_id",
                         "phone",
                         "website",
+                        S3SQLInlineComponent(
+                            "contact",
+                            name = "facebook",
+                            label = T("Facebook"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = dict(field = "contact_method",
+                                            options = "FACEBOOK"
+                                            )
+                        ),
+                        S3SQLInlineComponent(
+                            "contact",
+                            name = "twitter",
+                            label = T("Twitter"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = dict(field = "contact_method",
+                                            options = "TWITTER"
+                                            )
+                        ),
                         "logo",
                         "comments",
                         )
@@ -1207,10 +1072,9 @@ settings.customise_org_organisation_controller = customise_org_organisation_cont
 # -----------------------------------------------------------------------------
 def customise_pr_group_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
+    # Organisation needs to be an ARC Branch
     ns_only(current.s3db.org_organisation_team.organisation_id,
             required = False,
-            branches = True,
             )
 
     return attr
@@ -1300,7 +1164,6 @@ def customise_pr_person_controller(**attr):
             # Organisation needs to be an NS
             #ns_only(atable.organisation_id,
             #        required = True,
-            #        branches = False,
             #        )
             field = atable.supervisor_id
             field.readable = field.writable = False
@@ -1314,10 +1177,9 @@ def customise_pr_person_controller(**attr):
                                        filter_opts = (4,),
                                        )
         elif r.method =="record" or component_name == "human_resource":
-            # Organisation needs to be an NS/Branch
+            # Organisation needs to be an ARC Branch
             ns_only(s3db.hrm_human_resource.organisation_id,
                     required = True,
-                    branches = True,
                     )
 
         return True
@@ -1393,9 +1255,8 @@ def customise_project_project_controller(**attr):
     f = table.organisation_id
     ns_only(f,
             required = True,
-            branches = False,
             )
-    f.label = T("Host National Society")
+    f.label = T("Lead Organization")
 
     # Custom Crud Form
     from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
@@ -1865,11 +1726,17 @@ settings.modules = OrderedDict([
     #       #module_type = 10,
     #   )),
     ("deploy", Storage(
-           name_nice = T("Regional Disaster Response Teams"),
+           name_nice = T("Deployments"),
            #description = "Alerting and Deployment of Disaster Response Teams",
            restricted = True,
            #module_type = 10,
        )),
+    ("sit", Storage(
+            name_nice = T("Situation Reports"),
+            #description = "Manages statistics",
+            restricted = True,
+            #module_type = None,
+        )),
     ("stats", Storage(
             name_nice = T("Statistics"),
             #description = "Manages statistics",

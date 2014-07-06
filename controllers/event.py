@@ -14,12 +14,18 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def index():
-
     """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
-    return dict(module_name=module_name)
+    return s3db.cms_index(module, alt_function="index_alt")
+
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Module homepage for non-Admin users when no CMS content found
+    """
+
+    # Just redirect to the list of Events
+    redirect(URL(f="event"))
 
 # -----------------------------------------------------------------------------
 def create():

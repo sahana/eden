@@ -645,7 +645,8 @@ class S3OptionsMenu(object):
                         ),
                         M("Settings",
                           c="deploy", f="email_channel",
-                        ),
+                          p="update", t="msg_email_channel",
+                          ),
                    ),
                    M("Assignments",
                      c="deploy", f="assignment", m="summary"
@@ -655,8 +656,12 @@ class S3OptionsMenu(object):
                    ),
                    M("Human Resources",
                      c="deploy", f="human_resource", m="summary")(
-                        M("Add Deployables", c="deploy", f="application", m="select"),
-                        M("Import Human Resources", c="deploy", f="person", m="import"),
+                        M("Add Deployables",
+                          c="deploy", f="application", m="select",
+                          p="create", t="deploy_application",
+                          ),
+                        M("Import Human Resources",
+                          c="deploy", f="person", m="import"),
                    ),
                   )
 
@@ -1674,9 +1679,10 @@ class S3OptionsMenu(object):
         return M(c="vehicle")(
                     M("Vehicles", f="vehicle")(
                         M("Create", m="create"),
+                        M("Import", m="import", p="create"),
                         M("Map", m="map"),
                     ),
-                    M("Vehicle Types", f="item")(
+                    M("Vehicle Types", f="vehicle_type")(
                         M("Create", m="create"),
                     ),
                 )

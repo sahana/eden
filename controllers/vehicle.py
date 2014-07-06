@@ -104,6 +104,12 @@ def vehicle():
     return s3db.asset_controller()
 
 # =============================================================================
+def vehicle_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
 def item():
     """ RESTful CRUD controller """
 

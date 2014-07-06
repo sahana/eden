@@ -30,6 +30,7 @@
          Website.................org_organisation.website
          Phone...................org_organisation.phone
          Phone2..................pr_contact.value
+         Facebook................pr_contact.value
          Twitter.................pr_contact.value
          Logo....................org_organisation.logo
          Comments................org_organisation.comments
@@ -332,6 +333,13 @@
                     <resource name="pr_contact">
                         <data field="contact_method">WORK_PHONE</data>
                         <data field="value"><xsl:value-of select="col[@field='Phone2']"/></data>
+                    </resource>
+                </xsl:if>
+                
+                <xsl:if test="col[@field='Facebook']!=''">
+                    <resource name="pr_contact">
+                        <data field="contact_method">FACEBOOK</data>
+                        <data field="value"><xsl:value-of select="col[@field='Facebook']"/></data>
                     </resource>
                 </xsl:if>
                 

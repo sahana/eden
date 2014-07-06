@@ -117,7 +117,7 @@ SEPARATORS = (",", ":")
 class S3PersonEntity(S3Model):
     """ Person Super-Entity """
 
-    names = ["pr_pentity",
+    names = ("pr_pentity",
              "pr_affiliation",
              "pr_person_user",
              "pr_role",
@@ -126,7 +126,7 @@ class S3PersonEntity(S3Model):
              "pr_pe_label",
              "pr_pe_types",
              "pr_pentity_represent",
-             ]
+             )
 
     def model(self):
 
@@ -202,20 +202,32 @@ class S3PersonEntity(S3Model):
                                      {"name": "email",
                                       "joinby": pe_id,
                                       "filterby": "contact_method",
-                                      "filterfor": ["EMAIL"],
+                                      "filterfor": ("EMAIL",),
                                       },
                                      # Mobile phone numbers:
                                      {"name": "phone",
                                       "joinby": pe_id,
                                       "filterby": "contact_method",
-                                      "filterfor": ["SMS"],
+                                      "filterfor": ("SMS",),
                                       },
                                      # Work phone numbers:
                                      #{"name": "work_phone",
                                      # "joinby": pe_id,
                                      # "filterby": "contact_method",
-                                     # "filterfor": ["WORK_PHONE"],
+                                     # "filterfor": ("WORK_PHONE",),
                                      # },
+                                     # Facebook:
+                                     {"name": "facebook",
+                                      "joinby": pe_id,
+                                      "filterby": "contact_method",
+                                      "filterfor": ("FACEBOOK",),
+                                      },
+                                     # Twitter:
+                                     {"name": "twitter",
+                                      "joinby": pe_id,
+                                      "filterby": "contact_method",
+                                      "filterfor": ("TWITTER",),
+                                      },
                                      ),
                        pr_contact_emergency = pe_id,
                        pr_image = pe_id,
@@ -663,7 +675,7 @@ class S3PersonEntity(S3Model):
 class S3OrgAuthModel(S3Model):
     """ Organisation-based Authorization Model """
 
-    names = ["pr_delegation"]
+    names = ("pr_delegation",)
 
     def model(self):
 
@@ -687,13 +699,13 @@ class S3OrgAuthModel(S3Model):
 class S3PersonModel(S3Model):
     """ Persons and Groups """
 
-    names = ["pr_person",
+    names = ("pr_person",
              "pr_gender",
              "pr_gender_opts",
              "pr_person_id",
              "pr_person_lookup",
              "pr_person_represent",
-             ]
+             )
 
     def model(self):
 
@@ -1747,10 +1759,10 @@ class S3PersonModel(S3Model):
 class S3GroupModel(S3Model):
     """ Groups """
 
-    names = ["pr_group",
+    names = ("pr_group",
              "pr_group_id",
              "pr_group_membership"
-             ]
+             )
 
     def model(self):
 
@@ -2035,9 +2047,9 @@ class S3GroupModel(S3Model):
 class S3ContactModel(S3Model):
     """ Person Entity Contacts - for Persons & Organisations """
 
-    names = ["pr_contact",
-             "pr_contact_emergency"
-             ]
+    names = ("pr_contact",
+             "pr_contact_emergency",
+             )
 
     def model(self):
 
@@ -2236,9 +2248,9 @@ class S3ContactModel(S3Model):
 class S3AddressModel(S3Model):
     """ Addresses for Person Entities: Persons and Organisations """
 
-    names = ["pr_address",
+    names = ("pr_address",
              "pr_address_type_opts"
-             ]
+             )
 
     def model(self):
 
@@ -2406,7 +2418,7 @@ class S3AddressModel(S3Model):
 class S3PersonImageModel(S3Model):
     """ Images for Persons """
 
-    names = ["pr_image"]
+    names = ("pr_image",)
 
     def model(self):
 
@@ -2625,10 +2637,10 @@ class S3ImageLibraryModel(S3Model):
         new compulsory module just for this.
     """
 
-    names = ["pr_image_library",
+    names = ("pr_image_library",
              "pr_image_size",
              "pr_image_delete_all",
-             ]
+             )
 
     def model(self):
 
@@ -2697,7 +2709,7 @@ class S3ImageLibraryModel(S3Model):
 class S3PersonIdentityModel(S3Model):
     """ Identities for Persons """
 
-    names = ["pr_identity"]
+    names = ("pr_identity",)
 
     def model(self):
 
@@ -2819,9 +2831,9 @@ class S3PersonIdentityModel(S3Model):
 class S3PersonEducationModel(S3Model):
     """ Education details for Persons """
 
-    names = ["pr_education_level",
+    names = ("pr_education_level",
              "pr_education",
-             ]
+             )
 
     def model(self):
 
@@ -2978,8 +2990,8 @@ class S3PersonEducationModel(S3Model):
 class S3PersonDetailsModel(S3Model):
     """ Extra optional details for People """
 
-    names = ["pr_person_details",
-             ]
+    names = ("pr_person_details",
+             )
 
     def model(self):
 
@@ -3111,9 +3123,9 @@ class S3PersonDetailsModel(S3Model):
 class S3SavedFilterModel(S3Model):
     """ Saved Filters """
 
-    names = ["pr_filter",
+    names = ("pr_filter",
              "pr_filter_id",
-             ]
+             )
 
     def model(self):
 
@@ -3164,10 +3176,10 @@ class S3SavedFilterModel(S3Model):
 class S3SubscriptionModel(S3Model):
     """ Model for subscriptions """
 
-    names = ["pr_subscription",
+    names = ("pr_subscription",
              "pr_subscription_resource",
              "pr_subscription_check_intervals",
-            ]
+             )
 
     def model(self):
 
@@ -3281,13 +3293,13 @@ class S3PersonPresence(S3Model):
         currently still used by CR
     """
 
-    names = ["pr_presence",
+    names = ("pr_presence",
              "pr_trackable_types",
              "pr_default_trackable",
              "pr_presence_opts",
              "pr_presence_conditions",
              "pr_default_presence"
-             ]
+             )
 
     def model(self):
 
@@ -3621,11 +3633,11 @@ class S3PersonPresence(S3Model):
 class S3PersonDescription(S3Model):
     """ Additional tables for DVI/MPR """
 
-    names = ["pr_age_group",
+    names = ("pr_age_group",
              "pr_age_group_opts",
              "pr_note",
              "pr_physical_description",
-             ]
+             )
 
     def model(self):
 

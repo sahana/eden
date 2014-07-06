@@ -92,7 +92,7 @@ class S3OrganisationModel(S3Model):
         Organisations
     """
 
-    names = ["org_organisation_type",
+    names = ("org_organisation_type",
              "org_organisation_type_id",
              "org_region",
              "org_organisation",
@@ -100,7 +100,7 @@ class S3OrganisationModel(S3Model):
              "org_organisation_organisation_type",
              "org_organisation_user",
              "org_organisation_represent",
-             ]
+             )
 
     def model(self):
 
@@ -982,7 +982,7 @@ class S3OrganisationBranchModel(S3Model):
         Organisation Branches
     """
 
-    names = ["org_organisation_branch"]
+    names = ("org_organisation_branch",)
 
     def model(self):
 
@@ -1193,12 +1193,12 @@ class S3OrganisationGroupModel(S3Model):
         - 'Coalitions' or 'Networks'
     """
 
-    names = ["org_group",
+    names = ("org_group",
              "org_group_membership",
              "org_group_membership_status",
              "org_group_id",
              "org_group_represent",
-             ]
+             )
 
     def model(self):
 
@@ -1424,7 +1424,7 @@ class S3OrganisationGroupPersonModel(S3Model):
         Link table between Organisation Groups & Persons
     """
 
-    names = ["org_group_person"]
+    names = ("org_group_person",)
 
     def model(self):
 
@@ -1452,7 +1452,7 @@ class S3OrganisationGroupTeamModel(S3Model):
         Link table between Organisation Groups & Teams
     """
 
-    names = ["org_group_team"]
+    names = ("org_group_team",)
 
     def model(self):
 
@@ -1515,7 +1515,7 @@ class S3OrganisationLocationModel(S3Model):
         Organisation Location Model
     """
 
-    names = ["org_organisation_location"]
+    names = ("org_organisation_location",)
 
     def model(self):
 
@@ -1585,9 +1585,9 @@ class S3OrganisationResourceModel(S3Model):
         - depends on Stats module
     """
 
-    names = ["org_resource",
+    names = ("org_resource",
              "org_resource_type",
-             ]
+             )
 
     def model(self):
 
@@ -1743,11 +1743,11 @@ class S3OrganisationSectorModel(S3Model):
         Organisation Sector Model
     """
 
-    names = ["org_sector",
+    names = ("org_sector",
              "org_sector_id",
              #"org_subsector",
              "org_sector_organisation",
-             ]
+             )
 
     def model(self):
 
@@ -2053,9 +2053,9 @@ class S3OrganisationServiceModel(S3Model):
         Organisation Service Model
     """
 
-    names = ["org_service",
+    names = ("org_service",
              "org_service_organisation",
-             ]
+             )
 
     def model(self):
 
@@ -2192,7 +2192,7 @@ class S3OrganisationSummaryModel(S3Model):
         @ToDo: Deprecate in favour of S3OrganisationResourceModel
     """
 
-    names = ["org_organisation_summary"]
+    names = ("org_organisation_summary",)
 
     def model(self):
 
@@ -2223,7 +2223,7 @@ class S3OrganisationTeamModel(S3Model):
         Link table between Organisations & Teams
     """
 
-    names = ["org_organisation_team"]
+    names = ("org_organisation_team",)
 
     def model(self):
 
@@ -2283,7 +2283,7 @@ class S3OrganisationTypeTagModel(S3Model):
         Organisation Type Tags
     """
 
-    names = ["org_organisation_type_tag"]
+    names = ("org_organisation_type_tag",)
 
     def model(self):
 
@@ -2321,11 +2321,11 @@ class S3SiteModel(S3Model):
         Site Super-Entity
     """
 
-    names = ["org_site",
+    names = ("org_site",
              "org_site_requires",
              "org_site_id",
              "org_site_represent",
-             ]
+             )
 
     def model(self):
 
@@ -2756,9 +2756,9 @@ class S3SiteModel(S3Model):
 class S3SiteDetailsModel(S3Model):
     """ Extra optional details for Sites """
 
-    names = ["org_site_status",
+    names = ("org_site_status",
              "org_site_org_group",
-             ]
+             )
 
     def model(self):
 
@@ -2858,12 +2858,12 @@ class S3FacilityModel(S3Model):
         Generic Site
     """
 
-    names = ["org_facility_type",
+    names = ("org_facility_type",
              "org_facility",
              "org_site_facility_type",
              "org_facility_type_id", # Passed to global for s3translate
              "org_facility_geojson",
-             ]
+             )
 
     def model(self):
 
@@ -3504,9 +3504,9 @@ class S3RoomModel(S3Model):
         - used by Asset module
     """
 
-    names = ["org_room",
-             "org_room_id"
-             ]
+    names = ("org_room",
+             "org_room_id",
+             )
 
     def model(self):
 
@@ -3594,10 +3594,10 @@ class S3RoomModel(S3Model):
 # =============================================================================
 class S3OfficeModel(S3Model):
 
-    names = ["org_office",
+    names = ("org_office",
              "org_office_type",
              "org_office_type_id",
-             ]
+             )
 
     def model(self):
 
@@ -3750,9 +3750,20 @@ class S3OfficeModel(S3Model):
         if settings.get_org_branches():
             ORGANISATION = T("Organization/Branch")
             comment = T("Search for office by organization or branch.")
+            org_filter = S3HierarchyFilter("organisation_id",
+                                           label = ORGANISATION,
+                                           comment = comment,
+                                           #hidden = True,
+                                           )
         else:
             ORGANISATION = T("Organization")
             comment = T("Search for office by organization.")
+            org_filter = S3OptionsFilter("organisation_id",
+                                         label = ORGANISATION,
+                                         comment = comment,
+                                         represent = "%(name)s",
+                                         #hidden = True,
+                                         )
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -3788,12 +3799,7 @@ class S3OfficeModel(S3Model):
                 #                label = T("Type"),
                 #                #hidden = True,
                 #                ),
-                S3OptionsFilter("organisation_id",
-                                label = ORGANISATION,
-                                comment = comment,
-                                represent = "%(name)s",
-                                #hidden = True,
-                                ),
+                org_filter,
                 S3LocationFilter("location_id",
                                  label = T("Location"),
                                  levels = levels,
@@ -3946,7 +3952,7 @@ class S3OfficeSummaryModel(S3Model):
         @ToDo: Deprecate in favour of S3OrganisationResourceModel
     """
 
-    names = ["org_office_summary"]
+    names = ("org_office_summary",)
 
     def model(self):
 
@@ -3982,7 +3988,7 @@ class S3OfficeTypeTagModel(S3Model):
         Office Type Tags
     """
 
-    names = ["org_office_type_tag"]
+    names = ("org_office_type_tag",)
 
     def model(self):
 
