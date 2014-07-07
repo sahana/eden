@@ -139,29 +139,40 @@
             var multiple = opts.multiple,
                 leafonly = opts.leafonly;
 
-            this.tree.jstree({
+            var tree = this.tree,
+                initially_open = [];
+
+            // If there's only one root node, start with this node open
+            var roots = tree.find('> ul > li');
+            if (roots.length == 1) {
+                initially_open.push(roots.attr('id'));
+            }
+            
+            tree.jstree({
                 'core': {
-                    check_callback: true,
                     animation: 100,
-                    rtl: rtl,
-                    html_titles: opts.htmlTitles
+                    check_callback: true,
+                    html_titles: opts.htmlTitles,
+                    initially_open: initially_open,
+                    rtl: rtl
                 },
                 'themes': {
-                    'theme': theme,
-                    'icons': false
+                    icons: false,
+                    theme: theme
                 },
                 'ui': {
-                    'select_limit': multiple ? -1 : 1,
-                    'select_multiple_modifier': 'on',
-                    'initially_select' : selected
+                    initially_select : selected,
+                    select_limit: multiple ? -1 : 1,
+                    select_multiple_modifier: 'on'
                 },
                 'checkbox': {
-                    'override_ui': true,
-                    'two_state': !leafonly
+                    override_ui: true,
+                    two_state: !leafonly
                 },
                 'plugins': ['themes', 'html_data', 'ui', 'sort', 'checkbox']
             });
 
+            // Multiple/LeadOnly selection mode logic
             if (!multiple) {
                 var tree = this.tree;
                 var inst = jQuery.jstree._reference(tree);
@@ -323,7 +334,7 @@
             }).show().jstree('set_focus');
             this._isOpen = true;
             button.addClass('ui-state-active');
-
+            
             $(this).trigger('open');
         },
 
@@ -331,8 +342,8 @@
          * Close the tree (triggers 'close'-event)
          */
         closeMenu: function() {
-            
-            $(this.tree).hide()
+
+            $(this.tree).fadeOut(50)
                         .jstree('unset_focus')
                         .unbind('click.hierarchicalopts')
                         .unbind('mouseleave.hierarchicalopts');
@@ -392,12 +403,18 @@
             tree.bind('check_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
                 if (widget.options.multiple) {
-                    tree.one('mouseleave.hierarchicalopts', function() {
-                        widget.closeMenu();
+                    // Close the menu on mouse-leave
+                    tree.unbind('mouseleave.hierarchicalopts')
+                        .one('mouseleave.hierarchicalopts', function() {
+                        window.setTimeout(function() {
+                            widget.closeMenu();
+                        }, 100);
                     });
                 } else {
                     // Close the menu immediately
-                    widget.closeMenu();
+                    window.setTimeout(function() {
+                        widget.closeMenu();
+                    }, 100);
                 }
             }).bind('uncheck_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
