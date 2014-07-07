@@ -866,7 +866,7 @@ def customise_org_organisation_controller(**attr):
                                        #list_layout = render_projects,
                                        )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
@@ -878,7 +878,7 @@ def customise_org_organisation_controller(**attr):
                                       list_layout = render_profile_posts,
                                       )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",
@@ -891,7 +891,7 @@ def customise_org_organisation_controller(**attr):
                                           )
                 # @ToDo: Renderer
                 #distributions_widget = dict(label = "Distributions",
-                #                            label_create = "Add New Distribution",
+                #                            label_create = "Create Distribution",
                 #                            type = "datalist",
                 #                            tablename = "supply_distribution",
                 #                            context = "location",

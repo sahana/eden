@@ -54,7 +54,7 @@ from s3layouts import S3AddResourceLink
 # =============================================================================
 class S3DeploymentModel(S3Model):
 
-    names = ["deploy_event_type",
+    names = ("deploy_event_type",
              "deploy_mission",
              "deploy_mission_id",
              "deploy_mission_document",
@@ -62,7 +62,7 @@ class S3DeploymentModel(S3Model):
              "deploy_assignment",
              "deploy_assignment_appraisal",
              "deploy_assignment_experience",
-             ]
+             )
 
     def model(self):
 
@@ -167,7 +167,7 @@ class S3DeploymentModel(S3Model):
                                      _href=r.url(component="alert",
                                                  method="create"),
                                      _class="action-btn profile-add-btn"),
-                            label_create = "New Alert",
+                            label_create = "Create Alert",
                             type = "datalist",
                             list_fields = ["modified_on",
                                            "mission_id",
@@ -702,10 +702,10 @@ class S3DeploymentModel(S3Model):
 # =============================================================================
 class S3DeploymentAlertModel(S3Model):
 
-    names = ["deploy_alert",
+    names = ("deploy_alert",
              "deploy_alert_recipient",
              "deploy_response",
-             ]
+             )
 
     def model(self):
 
@@ -763,12 +763,12 @@ class S3DeploymentAlertModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      # Link to the Message once sent
-                     message_id(readable=False),
+                     message_id(readable = False),
                      *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("New Alert"),
+            label_create = T("Create Alert"),
             title_display = T("Alert Details"),
             title_list = T("Alerts"),
             title_update = T("Edit Alert Details"),
@@ -841,7 +841,7 @@ class S3DeploymentAlertModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("New Recipient"),
+            label_create = T("Add Recipient"),
             title_display = T("Recipient Details"),
             title_list = T("Recipients"),
             title_update = T("Edit Recipient Details"),

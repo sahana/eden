@@ -315,7 +315,7 @@ class S3OrganisationModel(S3Model):
                            writable = False,
                            represent = S3Represent(lookup="org_organisation"),
                            ),
-                     Field("name", notnull=True, unique=True,
+                     Field("name", notnull=True, unique=True, # @ToDo: Remove unique=True (ARC have 3x Wayne County chapters)
                            length=128, # Mayon Compatibility
                            label = T("Name"),
                            ),
@@ -2990,7 +2990,7 @@ class S3FacilityModel(S3Model):
                            #readable=False, writable=False,
                            represent = lambda v: v or NONE,
                            ),
-                     self.org_organisation_id(widget=org_widget),
+                     self.org_organisation_id(widget = org_widget),
                      self.gis_location_id(),
                      Field("opening_times",
                            label = T("Opening Times"),
@@ -3113,14 +3113,19 @@ class S3FacilityModel(S3Model):
                                represent = "%(name)s",
                                ))
 
-        regions = settings.get_org_regions()
-        if regions:
+        if settings.get_org_regions():
             report_fields.append("organisation_id$region_id")
-            filter_widgets.insert(1,
-               S3HierarchyFilter("organisation_id$region_id",
-                                 #hidden = True,
-                                 label = T("Region"),
-                                 ))
+            if settings.get_org_regions_hierarchical():
+                filter_widget =  S3HierarchyFilter("organisation_id$region_id",
+                                                   #hidden = True,
+                                                   label = T("Region"),
+                                                   )
+            else:
+                filter_widget = S3OptionsFilter("organisation_id$region_id",
+                                                #hidden = True,
+                                                label = T("Region"),
+                                                )
+            filter_widgets.insert(1, filter_widget)
 
         if settings.has_module("inv"):
             report_fields.append((T("Inventory"), "inv"))
@@ -4696,7 +4701,7 @@ def org_rheader(r, tabs=[]):
         # Tabs
         if not tabs:
             skip_branches = False
-            
+
             # If a filter is being applied to the Organisations, amend the tabs accordingly
             type_filter = current.request.get_vars.get("organisation_type.name",
                                                        None)
@@ -4707,14 +4712,14 @@ def org_rheader(r, tabs=[]):
                             (T("Offices"), "office"),
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),
-                           ]
+                            ]
                 elif type_filter == "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency":
                     tabs = [(T("Basic Details"), None, {"native": 1}),
                             (T("Offices"), "office"),
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),
                             (T("Projects"), "project"),
-                           ]
+                            ]
             else:
                 tabs = [(T("Basic Details"), None),
                         (T("Offices"), "office"),
@@ -4725,12 +4730,12 @@ def org_rheader(r, tabs=[]):
                         (T("Projects"), "project"),
                         (T("User Roles"), "roles"),
                         #(T("Tasks"), "task"),
-                       ]
-                       
+                        ]
+
             # Use branches?
             if settings.org.branches and not skip_branches:
                 tabs.insert(1, (T("Branches"), "branch"))
-                
+
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         # @ToDo: Update for Component
@@ -4750,11 +4755,28 @@ def org_rheader(r, tabs=[]):
         else:
             website = ""
 
+        if record.root_organisation != record.id:
+            btable = s3db.org_organisation_branch
+            query = (btable.branch_id == record.id) & \
+                    (btable.organisation_id == table.id)
+            parent = current.db(query).select(table.id,
+                                              table.name,
+                                              limitby=(0, 1)
+                                              ).first()
+            if parent:
+                parent = TR(TH("%s: " % T("Branch of")),
+                             A(parent.name, _href=URL(args=[parent.id, "read"])))
+            else:
+                parent = ""
+        else:
+            parent = ""
+
         rheader = DIV()
         logo = org_organisation_logo(record)
         rData = TABLE(TR(TH("%s: " % table.name.label),
                          record.name,
                          ),
+                      parent,
                       website,
                       #sectors,
                       )
@@ -5535,7 +5557,7 @@ def org_facility_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "facility",
-                                     rheader = s3db.org_rheader)
+                                     rheader = org_rheader)
     return output
 
 # =============================================================================

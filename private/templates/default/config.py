@@ -410,6 +410,8 @@ settings.gis.geonames_username = "eden_test"
 # Events
 # Make Event Types Hierarchical
 #settings.event.types_hierarchical = True
+# Make Incident Types Hierarchical
+#settings.event.incident_types_hierarchical = True
 
 # -----------------------------------------------------------------------------
 # Members

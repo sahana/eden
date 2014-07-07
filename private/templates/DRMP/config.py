@@ -2398,7 +2398,7 @@ def customise_event_event_controller(**attr):
                                   bbox = bbox,
                                   )
                 alerts_widget = dict(label = "Alerts",
-                                     label_create = "Add New Alert",
+                                     label_create = "Create Alert",
                                      type = "datalist",
                                      tablename = "cms_post",
                                      context = "event",
@@ -2424,7 +2424,7 @@ def customise_event_event_controller(**attr):
                                         list_layout = render_profile_posts,
                                         )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "event",
@@ -2450,7 +2450,7 @@ def customise_event_event_controller(**attr):
                                          list_layout = render_profile_posts,
                                          )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "event",
@@ -2680,7 +2680,7 @@ def customise_gis_location_controller(**attr):
                                         list_layout = render_profile_posts,
                                         )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "location",
@@ -3167,7 +3167,7 @@ def customise_org_organisation_controller(**attr):
                                          list_layout = render_profile_posts,
                                          )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
@@ -3179,7 +3179,7 @@ def customise_org_organisation_controller(**attr):
                                       list_layout = render_profile_posts,
                                       )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",

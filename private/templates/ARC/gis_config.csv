@@ -2,8 +2,8 @@ UUID,Name,OU,"OU Type","Region Country","Default Country",Zoom,Lat,Lon,Projectio
 SITE_DEFAULT,Default,,,,,3,48.2825,-109.29166,900913,IFRC,-90,90,-180,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,WGS84,,,,,3,48.2825,-109.29166,4326,IFRC,-90,90,-180,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,AS,"American Samoa",organisation,AS,AS,11,-14.21756,-169.54496,900913,IFRC,-20,-10,-180,-160,
-,MP,"Pacific",organisation,MP,MP,10,15.048688,145.64064,900913,IFRC,10,20,140,150,
-,PR,"Puerto Rico Chapter",organisation,PR,PR,8,18.0426229,-65.94508,900913,IFRC,16,20,-70,-60,
+,MP,"Northern Mariana Islands",organisation,MP,MP,10,15.048688,145.64064,900913,IFRC,10,20,140,150,
+,PR,"Puerto Rico",organisation,PR,PR,8,18.0426229,-65.94508,900913,IFRC,16,20,-70,-60,
 ,US,"American Red Cross",organisation,US,US,3,48.2825,-109.29166,900913,IFRC,0,90,-180,-50,
 ,"Crossroads Division","Crossroads Division",organisation,US,US,6,39.560516,-85.31947,900913,IFRC,0,90,-180,-50,
 ,"Northwest Ohio Region","Northwest Ohio Region",organisation,US,US,8,40.97206,-83.630344,900913,IFRC,0,90,-180,-50,

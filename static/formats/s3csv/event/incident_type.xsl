@@ -7,7 +7,8 @@
 
          CSV column...........Format..........Content
 
-         Name.................string..........Incident Type Name
+         Type.................string..........Incident Type Name
+         SubType..............string..........Event Type Name @ToDo
          Comments.............string..........Comments
          KV:XX................................Key,Value (Key = XX in column name, value = cell in row)
 
@@ -28,7 +29,9 @@
     <xsl:template match="row">
         <resource name="event_incident_type">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
             <!-- Arbitrary Tags -->
             <xsl:for-each select="col[starts-with(@field, 'KV')]">
                 <xsl:call-template name="KeyValue"/>

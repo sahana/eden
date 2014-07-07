@@ -2048,6 +2048,7 @@ class S3ContactModel(S3Model):
     """ Person Entity Contacts - for Persons & Organisations """
 
     names = ("pr_contact",
+             "pr_contact_represent",
              "pr_contact_emergency",
              )
 
@@ -2128,6 +2129,8 @@ class S3ContactModel(S3Model):
                   onvalidation = self.pr_contact_onvalidation,
                   )
 
+        contact_represent = pr_ContactRepresent()
+
         # ---------------------------------------------------------------------
         # Emergency Contact Information
         # - currently only ever 1 of these expected
@@ -2155,7 +2158,8 @@ class S3ContactModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return dict(pr_contact_represent = contact_represent,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4531,6 +4535,72 @@ def pr_person_phone_represent(id, show_link=True):
     return repr
 
 # =============================================================================
+class pr_ContactRepresent(S3Represent):
+
+    def __init__(self,
+                 show_link = True,
+                 ):
+        """
+            Show a Contact with appropriate hyperlinks if Facebook or Twitter
+
+            @param: see super
+        """
+
+        super(pr_ContactRepresent, self).__init__(lookup="pr_contact",
+                                                  fields=["contact_method",
+                                                          "value"],
+                                                  show_link=show_link,
+                                                  )
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+                - Typically, k is a foreign key value, and v the
+                  representation of the referenced record, and the link
+                  shall open a read view of the referenced record.
+
+                - The linkto-parameter expects a URL (as string) with "[id]"
+                  as placeholder for the key.
+
+            @param k: the key
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        if not k:
+            return v
+
+        if v.startswith("http"):
+            return A(v, _href=v)
+
+        contact_method = row.contact_method
+        if contact_method == "TWITTER":
+            url = "http://twitter.com/%s" % v
+            return A(v, _href=url)
+        elif contact_method == "FACEBOOK":
+            url = "http://%s" % v
+            return A(v, _href=url)
+        else:
+            # No link
+            return v
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        value = row["pr_contact.value"]
+        if not value:
+            return self.default
+
+        return s3_unicode(value)
+
+# =============================================================================
 def pr_person_comment(title=None, comment=None, caller=None, child=None):
 
     T = current.T
@@ -6011,14 +6081,14 @@ def pr_image_modify(image_file,
                                        table.new_name.uploadfolder)
         # rewind the original file so it can be read, if required
         image_file.seek(0)
-        image_id = table.insert(original_name = image_name,
-                                new_name = newfile,
-                                format = to_format,
-                                width = size[0],
-                                height = size[1],
-                                actual_width = im.size[0],
-                                actual_height = im.size[1],
-                               )
+        table.insert(original_name = image_name,
+                     new_name = newfile,
+                     format = to_format,
+                     width = size[0],
+                     height = size[1],
+                     actual_width = im.size[0],
+                     actual_height = im.size[1],
+                     )
         return True
     else:
         return False

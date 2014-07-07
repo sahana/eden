@@ -89,11 +89,11 @@ class S3AssetModel(S3Model):
         Asset Management
     """
 
-    names = ["asset_asset",
+    names = ("asset_asset",
              "asset_item",
              "asset_log",
              "asset_asset_id",
-             ]
+             )
 
     def model(self):
 
@@ -156,13 +156,13 @@ class S3AssetModel(S3Model):
                            ),
                      # @ToDo: We could set this automatically based on Item Category
                      Field("type", "integer",
-                           label = T("Type"),
-                           readable = vehicle,
-                           writable = vehicle,
-                           requires = IS_IN_SET(asset_type_opts),
                            default = ASSET_TYPE_OTHER,
+                           label = T("Type"),
                            represent = lambda opt: \
                                        asset_type_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(asset_type_opts),
+                           readable = vehicle,
+                           writable = vehicle,
                            ),
                      item_id(represent = supply_item_represent,
                              requires = IS_ONE_OF(asset_items_set,
@@ -176,10 +176,10 @@ class S3AssetModel(S3Model):
                      Field("kit", "boolean",
                            default = False,
                            label = T("Kit?"),
-                           # Enable in template if-required
-                           readable = False,
                            represent = lambda opt: \
                                        (opt and [T("Yes")] or [NONE])[0],
+                           # Enable in template if-required
+                           readable = False,
                            writable = False,
                            ),
                      organisation_id(requires=self.org_organisation_requires(
@@ -200,12 +200,12 @@ S3OptionsFilter({
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("site_id", "org_site",
-                                label = org_site_label,
                                 default = auth.user.site_id if auth.is_logged_in() else None,
+                                empty = False,
+                                label = org_site_label,
+                                ondelete = "RESTRICT",
                                 readable = True,
                                 writable = True,
-                                empty = False,
-                                ondelete = "RESTRICT",
                                 represent = self.org_site_represent,
                                 # Comment these to use a Dropdown & not an Autocomplete
                                 #widget = S3SiteAutocompleteWidget(),
@@ -820,8 +820,7 @@ class S3AssetTeamModel(S3Model):
         Optionally link Assets to Teams
     """
 
-    names = ["asset_group",
-             ]
+    names = ("asset_group",)
 
     def model(self):
 

@@ -321,7 +321,7 @@
             if (this._isOpen) {
                 this.closeMenu();
             }
-            
+
             var button = $(this.button);
             var pos = button.offset();
 
@@ -334,7 +334,7 @@
             }).show().jstree('set_focus');
             this._isOpen = true;
             button.addClass('ui-state-active');
-            
+
             $(this).trigger('open');
         },
 

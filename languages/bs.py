@@ -1655,6 +1655,7 @@
 'Create an Assessment Question': 'Kreiraj pitanje ocjene',
 'Create Assessment Answer': 'Kreiraj odgovor ocjene',
 'Create Assessment Template': 'Kreiraj predložak ocjene',
+'Create Assessment': 'Kreiraj ocjene',
 'Create Asset': 'Kreiraj sredstvo',
 'Create Award': 'Kreiraj nagradu',
 'Create Base Station': 'Kreiraj baznu stanicu',

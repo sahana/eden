@@ -59,7 +59,7 @@ class S3ChannelModel(S3Model):
           super-entity
     """
 
-    names = ["msg_channel",
+    names = ("msg_channel",
              "msg_channel_limit",
              "msg_channel_status",
              "msg_channel_id",
@@ -68,7 +68,7 @@ class S3ChannelModel(S3Model):
              "msg_channel_enable_interactive",
              "msg_channel_disable_interactive",
              "msg_channel_onaccept",
-             ]
+             )
 
     def model(self):
 
@@ -338,11 +338,11 @@ class S3MessageModel(S3Model):
         Messages
     """
 
-    names = ["msg_message",
+    names = ("msg_message",
              "msg_message_id",
              "msg_message_represent",
              "msg_outbox",
-             ]
+             )
 
     def model(self):
 
@@ -499,6 +499,20 @@ class S3MessageModel(S3Model):
                     msg_message_represent = message_represent,
                     )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """
+            Return safe defaults in case the model has been deactivated.
+        """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(msg_message_id = lambda **attr: dummy("message_id"),
+                    )
+
 # =============================================================================
 class S3MessageAttachmentModel(S3Model):
     """
@@ -506,8 +520,7 @@ class S3MessageAttachmentModel(S3Model):
         - link table between msg_message & doc_document
     """
 
-    names = ["msg_attachment",
-             ]
+    names = ("msg_attachment",)
 
     def model(self):
 
@@ -533,9 +546,9 @@ class S3EmailModel(S3ChannelModel):
             InBox/OutBox
     """
 
-    names = ["msg_email_channel",
+    names = ("msg_email_channel",
              "msg_email",
-             ]
+             )
 
     def model(self):
 
@@ -659,8 +672,7 @@ class S3MCommonsModel(S3ChannelModel):
         - Outbound can use Web API
     """
 
-    names = ["msg_mcommons_channel",
-             ]
+    names = ("msg_mcommons_channel",)
 
     def model(self):
 
@@ -727,7 +739,7 @@ class S3ParsingModel(S3Model):
         Message Parsing Model
     """
 
-    names = ["msg_parser",
+    names = ("msg_parser",
              "msg_parsing_status",
              "msg_session",
              "msg_keyword",
@@ -737,7 +749,7 @@ class S3ParsingModel(S3Model):
              "msg_parser_disable",
              "msg_parser_enable_interactive",
              "msg_parser_disable_interactive",
-             ]
+             )
 
     def model(self):
 
@@ -1027,9 +1039,9 @@ class S3RSSModel(S3ChannelModel):
         RSS channel
     """
 
-    names = ["msg_rss_channel",
-             "msg_rss"
-             ]
+    names = ("msg_rss_channel",
+             "msg_rss",
+             )
 
     def model(self):
 
@@ -1176,8 +1188,7 @@ class S3SMSModel(S3Model):
         - Twilio
     """
 
-    names = ["msg_sms",
-             ]
+    names = ("msg_sms",)
 
     def model(self):
 
@@ -1243,11 +1254,11 @@ class S3SMSOutboundModel(S3Model):
         - Web API (inc Clickatell, MCommons, mVaayoo)
     """
 
-    names = ["msg_sms_outbound_gateway",
+    names = ("msg_sms_outbound_gateway",
              "msg_sms_modem_channel",
              "msg_sms_smtp_channel",
              "msg_sms_webapi_channel",
-             ]
+             )
 
     def model(self):
 
@@ -1389,9 +1400,9 @@ class S3TropoModel(S3Model):
         https://www.tropo.com
     """
 
-    names = ["msg_tropo_channel",
+    names = ("msg_tropo_channel",
              "msg_tropo_scratch",
-             ]
+             )
 
     def model(self):
 
@@ -1454,9 +1465,9 @@ class S3TwilioModel(S3ChannelModel):
         Twilio Inbound SMS channel
     """
 
-    names = ["msg_twilio_channel",
+    names = ("msg_twilio_channel",
              "msg_twilio_sid",
-             ]
+             )
 
     def model(self):
 
@@ -1527,9 +1538,9 @@ class S3TwilioModel(S3ChannelModel):
 # =============================================================================
 class S3TwitterModel(S3Model):
 
-    names = ["msg_twitter_channel",
+    names = ("msg_twitter_channel",
              "msg_twitter",
-             ]
+             )
 
     def model(self):
 
@@ -1711,9 +1722,9 @@ class S3TwitterSearchModel(S3ChannelModel):
          - results can be fed to KeyGraph
     """
 
-    names = ["msg_twitter_search",
+    names = ("msg_twitter_search",
              "msg_twitter_result",
-             ]
+             )
 
     def model(self):
 
@@ -1981,7 +1992,7 @@ class S3XFormsModel(S3Model):
         http://eden.sahanafoundation.org/wiki/BluePrint/Mobile#Android
     """
 
-    names = ["msg_xforms_store"]
+    names = ("msg_xforms_store",)
 
     def model(self):
 
@@ -2010,7 +2021,7 @@ class S3BaseStationModel(S3Model):
                - see RadioMobile
     """
 
-    names = ["msg_basestation"]
+    names = ("msg_basestation",)
 
     def model(self):
 

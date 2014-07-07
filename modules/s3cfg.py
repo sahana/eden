@@ -1817,6 +1817,12 @@ class S3Config(Storage):
         """
         return self.event.get("types_hierarchical", False)
 
+    def get_incident_types_hierarchical(self):
+        """
+            Whether Incident Types are Hierarchical or not
+        """
+        return self.event.get("incident_types_hierarchical", False)
+
     # -------------------------------------------------------------------------
     # Evacuees
     #

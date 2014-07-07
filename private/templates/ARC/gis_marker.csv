@@ -4,3 +4,6 @@ DRCN,11,11,ARC/DRCN.png
 ERCV,32,50,ARC/ERCV.png
 ERV,31,63,ARC/ERV.png
 Passenger,23,27,ARC/Passenger.png
+hail,50,50,ersSymbolsV0202/Natural_Events/Hydro_Meteor_Hail.png
+thunderstorm,50,50,ersSymbolsV0202/Natural_Events/Hydro_Meteor_Thunder_Storm.png
+tornado,50,50,ersSymbolsV0202/Natural_Events/Hydro_Meteor_Tornado_ch.png

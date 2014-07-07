@@ -61,14 +61,14 @@ class S3ContentModel(S3Model):
         Content Management System
     """
 
-    names = ["cms_series",
+    names = ("cms_series",
              "cms_post",
              "cms_post_id",
              "cms_post_module",
              "cms_tag",
              "cms_tag_post",
              "cms_comment",
-             ]
+             )
 
     def model(self):
 
@@ -508,9 +508,13 @@ class S3ContentModel(S3Model):
         """
             Safe defaults for model-global names in case module is disabled
         """
-        post_id = S3ReusableField("post_id", "integer",
-                                  readable=False, writable=False)
-        return dict(cms_post_id=post_id)
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(cms_post_id = lambda **attr: dummy("post_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -539,8 +543,7 @@ class S3ContentModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        form_vars = form.vars
-        post_id = form_vars.id
+        post_id = form.vars.id
         get_vars = current.request.get_vars
         module = get_vars.get("module", None)
         if module:
@@ -764,8 +767,7 @@ class S3ContentMapModel(S3Model):
         Use of the CMS to provide extra data about Map Layers
     """
 
-    names = ["cms_post_layer",
-             ]
+    names = ("cms_post_layer",)
 
     def model(self):
 
@@ -789,8 +791,7 @@ class S3ContentOrgModel(S3Model):
         Link Posts to Organisations
     """
 
-    names = ["cms_post_organisation",
-             ]
+    names = ("cms_post_organisation",)
 
     def model(self):
 
@@ -814,8 +815,7 @@ class S3ContentOrgGroupModel(S3Model):
         Link Posts to Organisation Groups (Coalitions/Networks)
     """
 
-    names = ["cms_post_organisation_group",
-             ]
+    names = ("cms_post_organisation_group",)
 
     def model(self):
 
@@ -839,8 +839,7 @@ class S3ContentUserModel(S3Model):
         Link Posts to Users to allow Users to Bookmark posts
     """
 
-    names = ["cms_post_user",
-             ]
+    names = ("cms_post_user",)
 
     def model(self):
 

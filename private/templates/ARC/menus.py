@@ -47,22 +47,29 @@ class S3MainMenu(default.S3MainMenu):
             homepage("cms", f="newsfeed", name=T("News"))(
             ),
             homepage("event")(
-                MM("Events", c="event", f="event"),
-                MM("Incident Reports", c="event", f="incident_report"),
-            ),
-            homepage("sit", "survey")(
-                MM("Assessment Templates", c="survey", f="template"),
+                MM("Incidents", c="event", f="incident"),
+                #MM("Incident Reports", c="event", f="incident_report"),
                 MM("Assessments", c="survey", f="series"),
                 MM("Situation Reports", c="sit", f="report"),
+                # Have as a Tab on the Incident?
+                #MM("Budgets", c="budget", f="budget"),
+                # Have as a Tab on the Incident?
+                #MM("Assignments", c="deploy", f="assignment"),
             ),
-            homepage("deploy", f="mission", m="summary",
-                     vars={"~.status__belongs": "2"})(
-                MM("Missions", c="deploy", f="mission", m="summary"),
-                MM("Human Resources", c="deploy", f="human_resource", m="summary"),
-            ),
+            #homepage("sit", "survey")(
+            #    MM("Assessment Templates", c="survey", f="template"),
+            #    MM("Assessments", c="survey", f="series"),
+            #    MM("Situation Reports", c="sit", f="report"),
+            #),
+            #homepage("deploy", f="mission", m="summary",
+            #         vars={"~.status__belongs": "2"})(
+            #    MM("Missions", c="deploy", f="mission", m="summary"),
+            #    MM("Human Resources", c="deploy", f="human_resource", m="summary"),
+            #),
             homepage("project")(
                 MM("Projects", c="project", f="project"),
-                MM("Communities", c="project", f="location"),
+                #MM("Communities", c="project", f="location"),
+                MM("Tasks", c="project", f="task"),
             ),
             homepage("hrm", "org", name=T("Staff"),
                      vars=dict(group="staff"))(
@@ -91,15 +98,18 @@ class S3MainMenu(default.S3MainMenu):
             #homepage("member")(
             #    MM("Members", c="member", f="membership", m="summary"),
             #),
+            homepage("cr", "inv", "org", name="Facilities")(
+                MM("Facilities", c="org", f="facility", m="summary"),
+                MM("Offices", c="org", f="facility", m="summary"),
+                MM("Shelters", c="cr", f="shelter", m="summary"),
+                MM("Warehouses", c="inv", f="warehouse", m="summary"),
+            ),
             homepage("asset")(
                 MM("Assets", c="asset", f="asset", m="summary"),
                 MM("Items", c="asset", f="item", m="summary"),
                 MM("Vehicles", c="vehicle", f="vehicle", m="summary"),
             ),
-            homepage("cr")(
-                MM("Shelters", c="cr", f="shelter", m="summary"),
-            ),
-            homepage("inv", "supply", "req")(
+            homepage("inv", "supply", "req", name="Inventory")(
                 MM("Warehouses", c="inv", f="warehouse"),
                 MM("Received Shipments", c="inv", f="recv"),
                 MM("Sent Shipments", c="inv", f="send"),
@@ -332,31 +342,40 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def event():
-        """ Incident Reporting """
+        """ Incidents """
 
         return M()(
-                    M("Events", c="event", f="event")(
+                    #M("Events", c="event", f="event")(
+                    #    M("Create", m="create"),
+                    #),
+                    M("Incidents", c="event", f="incident", args="summary")(
                         M("Create", m="create"),
                     ),
-                    M("Incident Reports", c="event", f="incident_report")(
+                    #M("Incident Reports", c="event", f="incident_report")(
+                    #    M("Create", m="create"),
+                    #    #M("Open Incidents", vars={"open": 1}),
+                    #    M("Map", m="map"),
+                    #    #M("Timeline", args="timeline"),
+                    #    M("Report", m="report")
+                    #),
+                    M("Assessments", c="survey", f="series")(
                         M("Create", m="create"),
-                        #M("Open Incidents", vars={"open": 1}),
-                        M("Map", m="map"),
-                        #M("Timeline", args="timeline"),
-                        M("Report", m="report")
+                    ),
+                    M("Situation Reports", c="sit", f="report")(
+                        M("Create", m="create"),
                     ),
                     M("Incident Types", c="event", f="incident_type",
                       check=current.auth.s3_has_role(current.session.s3.system_roles.ADMIN))(
                         M("Create", m="create"),
                     ),
-                    M("Reports", c="event", f="incident_report",  m="report")(
-                        M("Incident Reports", m="report"),
-                    ),
+                    #M("Reports", c="event", f="incident_report",  m="report")(
+                    #    M("Incident Reports", m="report"),
+                    #),
                 )
 
     # -------------------------------------------------------------------------
     def gis(self):
-        """ GIS / GIS Controllers """
+        """ GIS / Mapping """
 
         if current.request.function == "index":
             # Empty so as to leave maximum space for the Map
@@ -368,7 +387,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm():
-        """ HRM Human Resource Management """
+        """ HRM / Human Resource Management """
 
         session = current.session
         s3 = current.session.s3
@@ -738,12 +757,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Situation Reports """
 
         # Same as Assessments
-        return self.survey()
+        #return self.survey()
+        # Same as Events
+        return self.event()
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def survey():
-        """ SURVEY / Survey """
+    def survey(self):
+        """ Survey """
+
+        # Same as Events
+        return self.event()
 
         ADMIN = current.session.s3.system_roles.ADMIN
 

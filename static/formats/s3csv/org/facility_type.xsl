@@ -7,7 +7,8 @@
 
          CSV column...........Format..........Content
 
-         Name.................string..........Facility Type Name
+         Type.................string..........Facility Type Name
+         SubType..............string..........Facility Type Name @ToDo
          Comments.............string..........Comments
 
     *********************************************************************** -->
@@ -23,8 +24,10 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <resource name="org_facility_type">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Type']"/></data>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
         </resource>
     </xsl:template>
     <!-- ****************************************************************** -->

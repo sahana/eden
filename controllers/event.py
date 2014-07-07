@@ -71,7 +71,7 @@ def event():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=event_rheader)
+    output = s3_rest_controller(rheader = s3db.event_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -149,7 +149,7 @@ def incident():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=event_rheader)
+    output = s3_rest_controller(rheader = s3db.event_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -191,85 +191,6 @@ def resource():
     s3.prep = prep
 
     return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def event_rheader(r):
-    """ Resource headers for component views """
-
-    rheader = None
-
-    if r.representation == "html":
-
-        if r.name == "event":
-            # Event Controller
-            tabs = [(T("Event Details"), None),
-                    (T("Shelters"), "event_shelter"),
-                    ]
-            #if settings.has_module("req"):
-            #    tabs.append((T("Requests"), "req"))
-            if settings.has_module("msg"):
-                tabs.append((T("Send Notification"), "dispatch"))
-            
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            event = r.record
-            if event:
-                if event.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if event.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                table = r.table
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % table.name.label),
-                                       event.name),
-                                    TR(TH("%s: " % table.comments.label),
-                                       event.comments),
-                                    TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date)),
-                                    TR(closed),
-                                    ), rheader_tabs)
-
-        if r.name == "incident":
-            # Incident Controller
-            tabs = [(T("Incident Details"), None)]
-            if settings.has_module("project"):
-                tabs.append((T("Tasks"), "task"))
-            if settings.has_module("hrm"):
-                tabs.append((T("Human Resources"), "human_resource"))
-            if settings.has_module("asset"):
-                tabs.append((T("Assets"), "asset"))
-            tabs.append((T("Facilities"), "site"))
-            tabs.append((T("Map Configuration"), "config"))
-            if settings.has_module("msg"):
-                tabs.append((T("Send Notification"), "dispatch"))
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            record = r.record
-            if record:
-                if record.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if record.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                table = r.table
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % table.name.label),
-                                       record.name),
-                                    TR(TH("%s: " % table.comments.label),
-                                       record.comments),
-                                    TR(TH("%s: " % table.zero_hour.label),
-                                       table.zero_hour.represent(record.zero_hour)),
-                                    TR(closed),
-                                    ), rheader_tabs)
-
-    return rheader
 
 # -----------------------------------------------------------------------------
 def person():

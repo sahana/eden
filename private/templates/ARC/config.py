@@ -300,6 +300,8 @@ settings.cms.person = "person_id"
 # Events
 # Make Event Types Hierarchical
 #settings.event.types_hierarchical = True
+# Make Incident Types Hierarchical
+#settings.event.incident_types_hierarchical = True
 
 # -----------------------------------------------------------------------------
 # Organisation Management
@@ -944,40 +946,49 @@ def customise_hrm_training_controller(**attr):
 settings.customise_hrm_training_controller = customise_hrm_training_controller
 
 # -----------------------------------------------------------------------------
-def customise_member_membership_controller(**attr):
+#def customise_member_membership_resource(r, resource):
 
-    # Organisation needs to be an ARC Branch
-    ns_only(current.s3db.member_membership.organisation_id,
-            required = True,
-            )
+#    # Organisation needs to be an ARC Branch
+#    ns_only(current.s3db.member_membership.organisation_id,
+#            required = True,
+#            )
 
-    return attr
-
-settings.customise_member_membership_controller = customise_member_membership_controller
+#settings.customise_member_membership_resource = customise_member_membership_resource
 
 # -----------------------------------------------------------------------------
-def customise_member_membership_type_controller(**attr):
+#def customise_member_membership_type_resource(r, tablename):
 
-    # Organisation needs to be an ARC Branch
-    ns_only(current.s3db.member_membership_type.organisation_id,
-            required = False,
-            )
+#    # Organisation needs to be an ARC Branch
+#    ns_only(current.s3db.member_membership_type.organisation_id,
+#            required = False,
+#            )
 
-    return attr
-
-settings.customise_member_membership_type_controller = customise_member_membership_type_controller
+#settings.customise_member_membership_type_resource = customise_member_membership_type_resource
 
 # -----------------------------------------------------------------------------
-def customise_org_office_controller(**attr):
+def customise_org_facility_resource(r, tablename):
 
     # Organisation needs to be an ARC Branch
-    ns_only(current.s3db.org_office.organisation_id,
-            required = True,
-            )
+    #ns_only(current.s3db.org_office.organisation_id,
+    #        required = True,
+    #        )
 
-    return attr
+    if r.representation == "plain":
+        # Shorter version fits popup better
+        current.s3db.gis_location.addr_street.label = T("Address")
 
-settings.customise_org_office_controller = customise_org_office_controller
+settings.customise_org_facility_resource = customise_org_facility_resource
+
+# -----------------------------------------------------------------------------
+def customise_org_office_resource(r, tablename):
+
+    # Organisation needs to be an ARC Branch
+    #ns_only(current.s3db.org_office.organisation_id,
+    #        required = True,
+    #        )
+    pass
+
+#settings.customise_org_office_resource = customise_org_office_resource
 
 # -----------------------------------------------------------------------------
 def customise_org_organisation_controller(**attr):
@@ -994,13 +1005,20 @@ def customise_org_organisation_controller(**attr):
             result = True
 
         if not r.component or r.component_name == "branch":
+            field = r.table.region_id
+            field.label = T("State")
+            field.comment = None # Don't Add
+
             if r.interactive or r.representation == "aadata":
                 s3db = current.s3db
+                #s3db.pr_contact.id.represent = s3db.pr_contact_represent
                 list_fields = ["name",
                                "acronym",
                                "organisation_organisation_type.organisation_type_id",
                                #"country",
                                "website",
+                               #(T("Facebook"), "facebook.id"),
+                               #(T("Twitter"), "twitter.id"),
                                (T("Facebook"), "facebook.value"),
                                (T("Twitter"), "twitter.value"),
                                ]
@@ -1192,30 +1210,32 @@ settings.customise_pr_person_controller = customise_pr_person_controller
 # -----------------------------------------------------------------------------
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-settings.project.mode_3w = True
+#settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
-settings.project.mode_drr = True
+#settings.project.mode_drr = True
+# Uncomment this to use settings suitable for detailed Task management
+settings.project.mode_task = True
 # Uncomment this to use Codes for projects
 settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
-settings.project.community = True
+#settings.project.community = True
 # Uncomment this to enable Hazards in 3W projects
-settings.project.hazards = True
+#settings.project.hazards = True
 # Uncomment this to use multiple Budgets per project
-settings.project.multiple_budgets = True
+#settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 # Uncomment this to enable Themes in 3W projects
-settings.project.themes = True
+#settings.project.themes = True
 # Uncomment this to customise
 # Links to Filtered Components for Donors & Partners
 settings.project.organisation_roles = {
-    1: T("Host National Society"),
+    1: T("Lead Organization"),
     2: T("Partner"),
     3: T("Donor"),
     #4: T("Customer"), # T("Beneficiary")?
-    #5: T("Supplier"),
-    9: T("Partner National Society"),
+    5: T("Supplier"),
+    #9: T("Partner National Society"),
 }
 
 # -----------------------------------------------------------------------------
@@ -1708,7 +1728,7 @@ settings.modules = OrderedDict([
             #module_type = 5,
         )),
     ("event", Storage(
-            name_nice = T("Events"),
+            name_nice = T("Incidents"),
             #description = "Events",
             restricted = True,
             #module_type = 10
