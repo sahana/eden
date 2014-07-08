@@ -496,9 +496,11 @@ class S3OrganisationModel(S3Model):
                             ),
             ]
 
+        location_context = settings.get_org_organisation_location_context()
+
         utablename = auth.settings.table_user_name
         configure(tablename,
-                  context = {"location": "site.location_id",
+                  context = {"location": location_context,
                              },
                   crud_form = crud_form,
                   deduplicate = self.organisation_duplicate,

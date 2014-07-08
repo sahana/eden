@@ -27,3 +27,5 @@ matplotlib>=1.1.1
 PyRTF>=0.45
 # Warning: Message Parsing unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries
 TwitterSearch>=0.78.4
+# Warning: Messaging unresolved dependency: requests required for posting to Facebook
+requests>=2.3.0

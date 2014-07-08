@@ -593,7 +593,10 @@ class S3IncidentModel(S3Model):
         #
         tablename = "event_incident"
         self.define_table(tablename,
-                          self.event_event_id(),
+                          # Enable in template if-required
+                          self.event_event_id(readable = False,
+                                              writable = False,
+                                              ),
                           self.event_incident_type_id(),
                           self.scenario_scenario_id(),
                           Field("name", notnull=True, # Name could be a code

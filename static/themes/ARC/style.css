@@ -1,6 +1,6 @@
 @charset "UTF-8";
 
-/*** General Overrides ***/
+/*
 table tr th.edit-delete-col {
     background: url(../IFRC/img/edit_delete.png) no-repeat bottom;
 }
@@ -27,8 +27,9 @@ table tr th.edit-delete-col {
 }
 .submit-search {
     background: url(../IFRC/img/search_but.png) no-repeat;
-}
+}*/
 
+/* Allow space for 'Subscription' */
 #header #personal-menu li {
-    padding: 2px 3px 0;
+    padding: 5px 6px 0;
 }

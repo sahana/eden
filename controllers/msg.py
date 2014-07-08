@@ -206,6 +206,57 @@ def email_outbox():
     return s3_rest_controller(module, "email")
 
 # -----------------------------------------------------------------------------
+def facebook_outbox():
+    """
+        RESTful CRUD controller for the Facebook Outbox
+        - all Outbound Facebook Messages are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_facebook"
+    table = s3db.msg_facebook
+    s3.filter = (table.inbound == False)
+    table.inbound.readable = False
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Post Details"),
+        title_list = T("Sent Posts"),
+        label_list_button = T("View Sent Posts"),
+        label_delete_button = T("Delete Post"),
+        msg_record_deleted = T("Post deleted"),
+        msg_list_empty = T("No Posts currently in Outbox")
+    )
+
+    #def postp(r, output):
+    #    if isinstance(output, dict):
+    #        add_btn = A(T("Compose"),
+    #                    _class="action-btn",
+    #                    _href=URL(f="compose")
+    #                    )
+    #        output["rheader"] = add_btn
+    #    return output
+    #s3.postp = postp
+
+    s3db.configure(tablename,
+                   # Permissions-based
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
+                   listadd = False,
+                   list_fields = ["id",
+                                  "date",
+                                  #"to_address",
+                                  "body",
+                                  ],
+                   )
+
+    return s3_rest_controller(module, "facebook")
+
+# -----------------------------------------------------------------------------
 def sms_outbox():
     """
         RESTful CRUD controller for the SMS Outbox
@@ -666,11 +717,10 @@ def email_channel():
                                                              T("If this is set to True then mails will be deleted from the server after downloading.")))
 
     # CRUD Strings
-    ADD_EMAIL_ACCOUNT = T("Add Email Account")
     s3.crud_strings[tablename] = Storage(
         title_display = T("Email Settings"),
         title_list = T("Email Accounts"),
-        label_create = ADD_EMAIL_ACCOUNT,
+        label_create = T("Add Email Account"),
         title_update = T("Edit Email Settings"),
         label_list_button = T("View Email Accounts"),
         msg_record_created = T("Account added"),
@@ -708,6 +758,67 @@ def email_channel():
                                     url = URL(args = ["[id]", "poll"]),
                                     restrict = restrict_d)
                                ]
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def facebook_channel():
+    """
+        RESTful CRUD controller for Facebook channels
+            - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+        session.error = ERROR.UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_facebook_channel"
+    table = s3db[tablename]
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Facebook Settings"),
+        title_list = T("Facebook Accounts"),
+        label_create = T("Add Facebook Account"),
+        title_update = T("Edit Facebook Settings"),
+        label_list_button = T("View Facebook Accounts"),
+        msg_record_created = T("Account added"),
+        msg_record_deleted = T("Facebook Account deleted"),
+        msg_list_empty = T("No Accounts currently defined"),
+        msg_record_modified = T("Facebook Settings updated")
+        )
+
+    def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
+
+            s3.actions += [dict(label=str(T("Enable")),
+                                _class="action-btn",
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=str(T("Disable")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
+                           ]
+            #if not s3task._is_alive():
+            #    # No Scheduler Running
+            #    s3.actions += [dict(label=str(T("Poll")),
+            #                        _class="action-btn",
+            #                        url = URL(args = ["[id]", "poll"]),
+            #                        restrict = restrict_d)
+            #                   ]
         return output
     s3.postp = postp
 

@@ -31,6 +31,7 @@ __all__ = ["S3ChannelModel",
            "S3MessageModel",
            "S3MessageAttachmentModel",
            "S3EmailModel",
+           "S3FacebookModel",
            "S3MCommonsModel",
            "S3ParsingModel",
            "S3RSSModel",
@@ -81,8 +82,7 @@ class S3ChannelModel(S3Model):
         # Super entity: msg_channel
         #
         channel_types = Storage(msg_email_channel = T("Email (Inbound)"),
-                                # @ToDo:
-                                #msg_facebook_channel = T("Facebook"),
+                                msg_facebook_channel = T("Facebook"),
                                 msg_mcommons_channel = T("Mobile Commons (Inbound)"),
                                 msg_rss_channel = T("RSS Feed"),
                                 msg_sms_modem_channel = T("SMS Modem"),
@@ -365,6 +365,7 @@ class S3MessageModel(S3Model):
         #
 
         message_types = Storage(msg_email = T("Email"),
+                                msg_facebook = T("Facebook"),
                                 msg_rss = T("RSS"),
                                 msg_sms = T("SMS"),
                                 msg_twitter = T("Twitter"),
@@ -666,6 +667,150 @@ class S3EmailModel(S3ChannelModel):
         return dict()
         
 # =============================================================================
+class S3FacebookModel(S3ChannelModel):
+    """
+        Facebook
+            Channels
+            InBox/OutBox
+
+        https://developers.facebook.com/docs/graph-api
+    """
+
+    names = ("msg_facebook_channel",
+             "msg_facebook",
+             "msg_facebook_login",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        configure = self.configure
+        define_table = self.define_table
+        set_method = self.set_method
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Facebook Channels
+        #
+        tablename = "msg_facebook_channel"
+        define_table(tablename,
+                     # Instance
+                     super_link("channel_id", "msg_channel"),
+                     Field("name"),
+                     Field("description"),
+                     Field("enabled", "boolean",
+                           default = True,
+                           label = T("Enabled?"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("login", "boolean",
+                           default = False,
+                           label = T("Use for Login?"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("app_id", "integer",
+                           requires = IS_INT_IN_RANGE(0, +1e16)
+                           ),
+                     Field("app_secret", "password", length=64,
+                           readable = False,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     # Optional
+                     Field("page_id", "integer",
+                           requires = IS_INT_IN_RANGE(0, +1e16)
+                           ),
+                     Field("page_access_token"),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = self.msg_facebook_channel_onaccept,
+                  super_entity = "msg_channel",
+                  )
+
+        set_method("msg", "facebook_channel",
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
+
+        set_method("msg", "facebook_channel",
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
+
+        #set_method("msg", "facebook_channel",
+        #           method = "poll",
+        #           action = self.msg_channel_poll)
+
+        # ---------------------------------------------------------------------
+        # Facebook Messages: InBox & Outbox
+        #
+
+        tablename = "msg_facebook"
+        define_table(tablename,
+                     # Instance
+                     super_link("message_id", "msg_message"),
+                     self.msg_channel_id(),
+                     s3_datetime(default = "now"),
+                     Field("body", "text",
+                           label = T("Message"),
+                           ),
+                     # @ToDo: Are from_address / to_address relevant in Facebook?
+                     Field("from_address", #notnull=True,
+                           #default = sender,
+                           label = T("Sender"),
+                           ),
+                     Field("to_address",
+                           label = T("To"),
+                           ),
+                     Field("inbound", "boolean",
+                           default = False,
+                           label = T("Direction"),
+                           represent = lambda direction: \
+                                       (direction and [T("In")] or [T("Out")])[0],
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  orderby = "msg_facebook.date desc",
+                  super_entity = "msg_message",
+                  )
+
+        # ---------------------------------------------------------------------
+        return dict(msg_facebook_login = self.msg_facebook_login,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for model-global names if module is disabled """
+
+        return dict(msg_facebook_login = lambda: False,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def msg_facebook_channel_onaccept(form):
+
+        if form.vars.login:
+            # Ensure only a single account used for Login
+            current.db(current.s3db.msg_facebook_channel.id != form.vars.id).update(login = False)
+
+        # Normal onaccept processing
+        S3ChannelModel.channel_onaccept(form)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def msg_facebook_login():
+
+        table = current.s3db.msg_facebook_channel
+        query = (table.login == True) & \
+                (table.deleted == False)
+        c = current.db(query).select(table.app_id,
+                                     table.app_secret,
+                                     limitby=(0, 1)
+                                     ).first()
+        return c
+
+# =============================================================================
 class S3MCommonsModel(S3ChannelModel):
     """
         Mobile Commons Inbound SMS Settings
@@ -714,8 +859,8 @@ class S3MCommonsModel(S3ChannelModel):
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       super_entity = "msg_channel",
                        onaccept = self.msg_channel_onaccept,
+                       super_entity = "msg_channel",
                        )
 
         set_method("msg", "mcommons_channel",

@@ -1292,17 +1292,48 @@ class S3Msg(object):
         return True
 
     #------------------------------------------------------------------------------
-    def post_to_facebook(self, post):
+    def post_to_facebook(self, channel_id=None, text=""):
         """
             Posts a message on Facebook
+
+            https://developers.facebook.com/docs/graph-api
+
+            @ToDo: Log messages in msg_facebook
         """
 
+        table = current.s3db.msg_facebook_channel
+        if not channel_id:
+            # Try the 1st enabled one in the DB
+            query = (table.enabled == True)
+        else:
+            query = (table.channel_id == channel_id)
+
+        c = current.db(query).select(table.app_id,
+                                     table.app_secret,
+                                     table.page_id,
+                                     table.page_access_token,
+                                     limitby=(0, 1)
+                                     ).first()
+
         import facebook
-        settings = current.deployment_settings.get_auth_facebook()
-        access_token = facebook.get_app_access_token(settings["id"],
-                                                     settings["secret"])
-        graph = facebook.GraphAPI(access_token)
-        graph.put_wall_post(post)
+
+        try:
+            app_access_token = facebook.get_app_access_token(c.app_id,
+                                                             c.app_secret)
+        except:
+            import sys
+            message = sys.exc_info()[1]
+            current.log.error("S3MSG: %s" % message)
+            return
+
+        graph = facebook.GraphAPI(app_access_token)
+
+        page_id = c.page_id
+        if page_id:
+            graph = facebook.GraphAPI(c.page_access_token)
+            graph.put_object(page_id, "feed", message=text)
+        else:
+            graph.put_object(user_id, "feed", message=text)
 
     # -------------------------------------------------------------------------
     def poll(self, tablename, channel_id):
@@ -2099,7 +2130,7 @@ class S3Msg(object):
                                 tweet_id = tweet_id,
                                 lang = lang,
                                 date = created_at,
-                                inbound = True,
+                                #inbound = True,
                                 location_id = location_id,
                                 )
             update_super(rtable, dict(id=_id))

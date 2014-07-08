@@ -145,9 +145,6 @@ _settings.lock_keys = False
 
 _settings.expiration = 28800  # seconds
 
-_settings.facebook = settings.get_auth_facebook()
-_settings.google = settings.get_auth_google()
-
 if settings.get_auth_openid():
     # Requires http://pypi.python.org/pypi/python-openid/
     try:

@@ -307,6 +307,10 @@ settings.cms.person = "person_id"
 # Organisation Management
 # Enable the use of Organisation Branches
 settings.org.branches = True
+# Hierarchical Facility Types
+settings.org.facility_types_hierarchical = True
+# Organisation Location context
+settings.org.organisation_location_context = "organisation_location.location_id"
 # Set the length of the auto-generated org/site code the default is 10
 settings.org.site_code_len = 3
 # Set the label for Sites
@@ -636,6 +640,14 @@ def customise_deploy_mission_controller(**attr):
     return attr
 
 settings.customise_deploy_mission_controller = customise_deploy_mission_controller
+
+# -----------------------------------------------------------------------------
+def customise_event_incident_resource(r, tablename):
+
+    # Use Polygons for Location
+    field = current.s3db.event_incident.location_id
+
+settings.customise_event_incident_resource = customise_event_incident_resource
 
 # -----------------------------------------------------------------------------
 def poi_marker_fn(record):

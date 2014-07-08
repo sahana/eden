@@ -109,11 +109,11 @@ class S3ProjectModel(S3Model):
         There are additional tables in other Models
     """
 
-    names = ["project_project",
+    names = ("project_project",
              "project_project_id",
              "project_project_represent",
              "project_human_resource",
-            ]
+             )
 
     def model(self):
 
@@ -475,7 +475,8 @@ class S3ProjectModel(S3Model):
                     )
 
     # -------------------------------------------------------------------------
-    def defaults(self):
+    @staticmethod
+    def defaults():
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
@@ -811,10 +812,10 @@ class S3ProjectActivityModel(S3Model):
         - currently used in mode_task but not mode_3w
     """
 
-    names = ["project_activity",
+    names = ("project_activity",
              "project_activity_id",
              "project_activity_activity_type",
-             ]
+             )
 
     def model(self):
 
@@ -1160,7 +1161,8 @@ class S3ProjectActivityModel(S3Model):
                     )
 
     # -------------------------------------------------------------------------
-    def defaults(self):
+    @staticmethod
+    def defaults():
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
@@ -1247,12 +1249,12 @@ class S3ProjectActivityTypeModel(S3Model):
           but just this summary of Types
     """
 
-    names = ["project_activity_type",
+    names = ("project_activity_type",
              "project_activity_type_location",
              "project_activity_type_project",
              "project_activity_type_sector",
              "project_activity_type_id",
-             ]
+             )
 
     def model(self):
 
@@ -1396,9 +1398,9 @@ class S3ProjectActivityOrganisationModel(S3Model):
         - useful when we don't have the details of the Projects
     """
 
-    names = ["project_activity_organisation",
+    names = ("project_activity_organisation",
              "project_activity_group",
-             ]
+             )
 
     def model(self):
 
@@ -1510,8 +1512,7 @@ class S3ProjectActivitySectorModel(S3Model):
         An Activity can be classified to 1 or more Sectors
     """
 
-    names = ["project_sector_activity",
-             ]
+    names = ("project_sector_activity",)
 
     def model(self):
 
@@ -1567,7 +1568,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
         This model holds the annual budget entries for projects
     """
 
-    names = ["project_annual_budget"]
+    names = ("project_annual_budget",)
 
     def model(self):
 
@@ -1632,11 +1633,11 @@ class S3ProjectBeneficiaryModel(S3Model):
         - depends on Stats module
     """
 
-    names = ["project_beneficiary_type",
+    names = ("project_beneficiary_type",
              "project_beneficiary",
              "project_beneficiary_activity",
              "project_beneficiary_activity_type",
-             ]
+             )
 
     def model(self):
 
@@ -2052,12 +2053,12 @@ class S3ProjectCampaignModel(S3Model):
         - depends on Stats module
     """
 
-    names = ["project_campaign",
+    names = ("project_campaign",
              "project_campaign_message",
              "project_campaign_keyword",
              #"project_campaign_response",
              "project_campaign_response_summary",
-             ]
+             )
 
     def model(self):
 
@@ -2329,9 +2330,9 @@ class S3ProjectFrameworkModel(S3Model):
         Project Framework Model
     """
 
-    names = ["project_framework",
+    names = ("project_framework",
              "project_framework_organisation",
-             ]
+             )
 
     def model(self):
 
@@ -2469,9 +2470,9 @@ class S3ProjectHazardModel(S3Model):
         Project Hazard Model
     """
 
-    names = ["project_hazard",
+    names = ("project_hazard",
              "project_hazard_project",
-             ]
+             )
 
     def model(self):
 
@@ -2583,11 +2584,11 @@ class S3ProjectLocationModel(S3Model):
           or these can be 'Communities'
     """
 
-    names = ["project_location",
+    names = ("project_location",
              "project_location_id",
              "project_location_contact",
              "project_location_represent",
-             ]
+             )
 
     def model(self):
 
@@ -2915,7 +2916,8 @@ class S3ProjectLocationModel(S3Model):
                     )
 
     # -------------------------------------------------------------------------
-    def defaults(self):
+    @staticmethod
+    def defaults():
         """ Safe defaults for model-global names if module is disabled """
 
         project_location_id = S3ReusableField("dummy_id", "integer",
@@ -2976,7 +2978,7 @@ class S3ProjectOrganisationModel(S3Model):
         Project Organisation Model
     """
 
-    names = ["project_organisation"]
+    names = ("project_organisation",)
 
     def model(self):
 
@@ -3185,7 +3187,7 @@ class S3ProjectOutputModel(S3Model):
         Project Output Model
     """
 
-    names = ["project_output"]
+    names = ("project_output",)
 
     def model(self):
 
@@ -3264,7 +3266,7 @@ class S3ProjectSectorModel(S3Model):
         Project Sector Model
     """
 
-    names = ["project_sector_project"]
+    names = ("project_sector_project",)
 
     def model(self):
 
@@ -3308,9 +3310,9 @@ class S3ProjectStatusModel(S3Model):
         - used by both Projects & Activities
     """
 
-    names = ["project_status",
+    names = ("project_status",
              "project_status_id",
-             ]
+             )
 
     def model(self):
 
@@ -3369,13 +3371,13 @@ class S3ProjectThemeModel(S3Model):
         Project Theme Model
     """
 
-    names = ["project_theme",
+    names = ("project_theme",
              "project_theme_id",
              "project_theme_sector",
              "project_theme_project",
              "project_theme_activity",
              "project_theme_location",
-             ]
+             )
 
     def model(self):
 
@@ -3698,7 +3700,7 @@ class S3ProjectDRRModel(S3Model):
         Models for DRR (Disaster Risk Reduction) extensions
     """
 
-    names = ["project_drr"]
+    names = ("project_drr",)
 
     def model(self):
 
@@ -3752,7 +3754,7 @@ class S3ProjectDRRPPModel(S3Model):
         - injected into custom Project CRUD forms
     """
 
-    names = ["project_drrpp"]
+    names = ("project_drrpp",)
 
     def model(self):
 
@@ -3973,7 +3975,7 @@ class S3ProjectTaskModel(S3Model):
         their Tasks in detail.
     """
 
-    names = ["project_milestone",
+    names = ("project_milestone",
              "project_task",
              "project_task_id",
              "project_time",
@@ -3983,7 +3985,7 @@ class S3ProjectTaskModel(S3Model):
              "project_task_milestone",
              "project_task_represent_w_project",
              "project_task_active_statuses",
-             ]
+             )
 
     def model(self):
 
@@ -4675,7 +4677,8 @@ class S3ProjectTaskModel(S3Model):
         )
 
     # -------------------------------------------------------------------------
-    def defaults(self):
+    @staticmethod
+    def defaults():
         """ Safe defaults for model-global names if module is disabled """
 
         dummy = S3ReusableField("dummy_id", "integer",
@@ -5190,9 +5193,9 @@ class S3ProjectTaskHRMModel(S3Model):
         - either individuals or Job Roles
     """
 
-    names = ["project_task_job_title",
+    names = ("project_task_job_title",
              "project_task_human_resource",
-             ]
+             )
 
     def model(self):
 
@@ -5239,8 +5242,7 @@ class S3ProjectTaskIReportModel(S3Model):
         @ToDo: Deprecate as we link to Incidents instead: S3EventTaskModel
     """
 
-    names = ["project_task_ireport",
-             ]
+    names = ("project_task_ireport",)
 
     def model(self):
 

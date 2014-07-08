@@ -84,7 +84,7 @@ SEPARATORS = (",", ":")
 # =============================================================================
 class S3HRModel(S3Model):
 
-    names = ["hrm_department",
+    names = ("hrm_department",
              "hrm_department_id",
              "hrm_job_title",
              "hrm_job_title_id",
@@ -93,7 +93,7 @@ class S3HRModel(S3Model):
              "hrm_human_resource_id",
              "hrm_type_opts",
              "hrm_human_resource_represent",
-             ]
+             )
 
     def model(self):
 
@@ -837,7 +837,8 @@ class S3HRModel(S3Model):
                     )
 
     # -------------------------------------------------------------------------
-    def defaults(self):
+    @staticmethod
+    def defaults():
         """
             Safe defaults for model-global names in case module is disabled
         """
@@ -1227,8 +1228,7 @@ class S3HRModel(S3Model):
 # =============================================================================
 class S3HRSiteModel(S3Model):
 
-    names = ["hrm_human_resource_site",
-             ]
+    names = ("hrm_human_resource_site",)
 
     def model(self):
 
@@ -1371,10 +1371,13 @@ class S3HRSiteModel(S3Model):
 
 # =============================================================================
 class S3HRJobModel(S3Model):
+    """
+        Unused
+    """
 
-    names = [#"hrm_position",
-             #"hrm_position_id",
-             ]
+    names = ("hrm_position",
+             "hrm_position_id",
+             )
 
     def model(self):
 
@@ -1386,140 +1389,144 @@ class S3HRJobModel(S3Model):
         # @ToDo: Vacancies
         #
 
-        #tablename = "hrm_position"
-        #table = define_table(tablename,
-        #                     job_title_id(empty=False),
-        #                     organisation_id(empty=False),
-        #                     site_id,
-        #                     group_id(label="Team"),
-        #                     *s3_meta_fields())
-        #table.site_id.readable = table.site_id.writable = True
+        tablename = "hrm_position"
+        table = define_table(tablename,
+                            job_title_id(empty = False),
+                            organisation_id(empty = False),
+                            site_id,
+                            group_id(label = "Team"),
+                            *s3_meta_fields())
+        table.site_id.readable = table.site_id.writable = True
 
         #crud_strings[tablename] = Storage(
-        #    label_create = T("Add Position"),
-        #    title_display = T("Position Details"),
-        #    title_list = T("Position Catalog"),
-        #    title_update = T("Edit Position"),
-        #    label_list_button = T("List Positions"),
-        #    label_delete_button = T("Delete Position"),
-        #    msg_record_created = T("Position added"),
-        #    msg_record_modified = T("Position updated"),
-        #    msg_record_deleted = T("Position deleted"),
-        #    msg_list_empty = T("Currently no entries in the catalog"))
+        #   label_create = T("Add Position"),
+        #   title_display = T("Position Details"),
+        #   title_list = T("Position Catalog"),
+        #   title_update = T("Edit Position"),
+        #   label_list_button = T("List Positions"),
+        #   label_delete_button = T("Delete Position"),
+        #   msg_record_created = T("Position added"),
+        #   msg_record_modified = T("Position updated"),
+        #   msg_record_deleted = T("Position deleted"),
+        #   msg_list_empty = T("Currently no entries in the catalog"))
 
         #label_create = crud_strings[tablename].label_create
-        #position_id = S3ReusableField("position_id", "reference %s" % tablename,
-        #                              sortby = "name",
-        #                              label = T("Position"),
-        #                              requires = IS_EMPTY_OR(IS_ONE_OF(db,
-        #                                                              "hrm_position.id",
-        #                                                              hrm_position_represent)),
-        #                              represent = hrm_position_represent,
-        #                              comment = DIV(A(label_create,
-        #                                              _class="s3_add_resource_link",
-        #                                              _href=URL(f="position",
-        #                                                        args="create",
-        #                                                        vars=dict(format="popup")),
-        #                                              _target="top",
-        #                                              _title=label_create),
-        #                                            DIV(_class="tooltip",
-        #                                                _title="%s|%s" % (label_create,
-        #                                                                  T("Add a new job role to the catalog.")))),
-        #                              ondelete = "SET NULL")
+        position_id = S3ReusableField("position_id", "reference %s" % tablename,
+                                      label = T("Position"),
+                                      ondelete = "SET NULL",
+                                      represent = hrm_position_represent,
+                                      requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                                       "hrm_position.id",
+                                                                       hrm_position_represent)),
+                                      sortby = "name",
+                                      #comment = DIV(A(label_create,
+                                      #                _class="s3_add_resource_link",
+                                      #                _href=URL(f="position",
+                                      #                          args="create",
+                                      #                          vars=dict(format="popup")),
+                                      #                _target="top",
+                                      #                _title=label_create),
+                                      #              DIV(_class="tooltip",
+                                      #                  _title="%s|%s" % (label_create,
+                                      #                                    T("Add a new job role to the catalog.")))),
+                                      )
 
         # =========================================================================
         # Availability
         #
-        #weekdays = {
-            #1: T("Monday"),
-            #2: T("Tuesday"),
-            #3: T("Wednesday"),
-            #4: T("Thursday"),
-            #5: T("Friday"),
-            #6: T("Saturday"),
-            #7: T("Sunday")
-        #}
-        #weekdays_represent = lambda opt: ",".join([str(weekdays[o]) for o in opt])
+        weekdays = {1: T("Monday"),
+                    2: T("Tuesday"),
+                    3: T("Wednesday"),
+                    4: T("Thursday"),
+                    5: T("Friday"),
+                    6: T("Saturday"),
+                    7: T("Sunday")
+                    }
+        weekdays_represent = lambda opt: ",".join([str(weekdays[o]) for o in opt])
 
-        #tablename = "hrm_availability"
-        #table = define_table(tablename,
-                                   #human_resource_id(),
-                                   #Field("date_start", "date"),
-                                   #Field("date_end", "date"),
-                                   #Field("day_of_week", "list:integer",
-                                          #requires=IS_EMPTY_OR(IS_IN_SET(weekdays,
-                                                                          #zero=None,
-                                                                          #multiple=True)),
-                                          #default=[1, 2, 3, 4, 5],
-                                          #widget=CheckboxesWidgetS3.widget,
-                                          #represent=weekdays_represent
-                                          #),
-                                   #Field("hours_start", "time"),
-                                   #Field("hours_end", "time"),
-                                   ##location_id(label=T("Available for Location"),
-                                               ##requires=IS_ONE_OF(db, "gis_location.id",
-                                                                  ##gis_LocationRepresent(),
-                                                                  ##filterby="level",
-                                                                  ### @ToDo Should this change per config?
-                                                                  ##filter_opts=gis.region_level_keys,
-                                                                  ##orderby="gis_location.name"),
-                                               ##widget=None),
-                                   #*s3_meta_fields())
+        tablename = "hrm_availability"
+        table = define_table(tablename,
+                                   human_resource_id(),
+                                   Field("date_start", "date"),
+                                   Field("date_end", "date"),
+                                   Field("day_of_week", "list:integer",
+                                         default = [1, 2, 3, 4, 5],
+                                         represent = weekdays_represent,
+                                         requires = IS_EMPTY_OR(IS_IN_SET(weekdays,
+                                                                          zero=None,
+                                                                          multiple=True)),
+                                         widget = CheckboxesWidgetS3.widget,
+                                         ),
+                                   Field("hours_start", "time"),
+                                   Field("hours_end", "time"),
+                                   #location_id(label=T("Available for Location"),
+                                               #requires=IS_ONE_OF(db, "gis_location.id",
+                                                                  #gis_LocationRepresent(),
+                                                                  #filterby="level",
+                                                                  ## @ToDo Should this change per config?
+                                                                  #filter_opts=gis.region_level_keys,
+                                                                  #orderby="gis_location.name"),
+                                               #widget=None),
+                                   *s3_meta_fields())
 
         # =========================================================================
         # Hours registration
         #
-        #tablename = "hrm_hours"
-        #table = define_table(tablename,
-                                  #human_resource_id(),
-                                  #Field("timestmp_in", "datetime"),
-                                  #Field("timestmp_out", "datetime"),
-                                  #Field("hours", "double"),
-                                  #*s3_meta_fields())
+        tablename = "hrm_hours"
+        table = define_table(tablename,
+                                  human_resource_id(),
+                                  Field("timestmp_in", "datetime"),
+                                  Field("timestmp_out", "datetime"),
+                                  Field("hours", "double"),
+                                  *s3_meta_fields())
 
         # =========================================================================
         # Vacancy
         #
         # These are Positions which are not yet Filled
         #
-        #tablename = "hrm_vacancy"
-        #table = define_table(tablename,
-                                  #organisation_id(),
-                                  ##Field("code"),
-                                  #Field("title"),
-                                  #Field("description", "text"),
-                                  #self.super_link("site_id", "org_site",
-                                                  #label=T("Facility"),
-                                                  #readable=False,
-                                                  #writable=False,
-                                                  #sort=True,
-                                                  #represent=s3db.org_site_represent),
-                                  #Field("type", "integer",
-                                         #requires = IS_IN_SET(hrm_type_opts, zero=None),
-                                         #default = 1,
-                                         #label = T("Type"),
-                                         #represent = lambda opt: \
-                                                    #hrm_type_opts.get(opt, UNKNOWN_OPT)),
-                                  #Field("number", "integer"),
-                                  ##location_id(),
-                                  #Field("from", "date"),
-                                  #Field("until", "date"),
-                                  #Field("open", "boolean",
-                                        #default=False),
-                                  #Field("app_deadline", "date",
-                                        #label=T("Application Deadline")),
-                                  #*s3_meta_fields())
+        tablename = "hrm_vacancy"
+        table = define_table(tablename,
+                                  organisation_id(),
+                                  #Field("code"),
+                                  Field("title"),
+                                  Field("description", "text"),
+                                  self.super_link("site_id", "org_site",
+                                                  label = T("Facility"),
+                                                  readable = False,
+                                                  writable = False,
+                                                  sort = True,
+                                                  represent = s3db.org_site_represent,
+                                                  ),
+                                  Field("type", "integer",
+                                         default = 1,
+                                         label = T("Type"),
+                                         represent = lambda opt: \
+                                                    hrm_type_opts.get(opt, UNKNOWN_OPT),
+                                         requires = IS_IN_SET(hrm_type_opts, zero=None),
+                                         ),
+                                  Field("number", "integer"),
+                                  #location_id(),
+                                  Field("from", "date"),
+                                  Field("until", "date"),
+                                  Field("open", "boolean",
+                                        default = False,
+                                        ),
+                                  Field("app_deadline", "date",
+                                        #label = T("Application Deadline"),
+                                        ),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(#hrm_position_id = position_id,
+        return dict(hrm_position_id = position_id,
                     )
 
 # =============================================================================
 class S3HRSkillModel(S3Model):
 
-    names = ["hrm_skill_type",
+    names = ("hrm_skill_type",
              "hrm_skill",
              "hrm_competency_rating",
              "hrm_competency",
@@ -1538,7 +1545,7 @@ class S3HRSkillModel(S3Model):
              "hrm_skill_id",
              "hrm_multi_skill_id",
              "hrm_multi_skill_represent",
-             ]
+             )
 
     def model(self):
 
@@ -3139,9 +3146,9 @@ class S3HRAppraisalModel(S3Model):
         - can be for a specific Mission or routine annual appraisal
     """
 
-    names = ["hrm_appraisal",
+    names = ("hrm_appraisal",
              "hrm_appraisal_document",
-             ]
+             )
 
     def model(self):
 
@@ -3327,8 +3334,7 @@ class S3HRExperienceModel(S3Model):
         Record a person's work experience
     """
 
-    names = ["hrm_experience",
-             ]
+    names = ("hrm_experience",)
 
     def model(self):
 
@@ -3449,9 +3455,9 @@ class S3HRProgrammeModel(S3Model):
         @ToDo: Move to modules/eden/vol.py
     """
 
-    names = ["hrm_programme",
+    names = ("hrm_programme",
              "hrm_programme_hours",
-             ]
+             )
 
     def model(self):
 

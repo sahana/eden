@@ -234,18 +234,6 @@ class S3Config(Storage):
  	    """
         return self.auth.get("password_min_length", int(4))
 
-    def get_auth_facebook(self):
-        """
-            Read the FaceBook OAuth settings
-            - if configured, then it is assumed that FaceBook Authentication is enabled
-        """
-        id = self.auth.get("facebook_id", False)
-        secret = self.auth.get("facebook_secret", False)
-        if id and secret:
-            return dict(id=id, secret=secret)
-        else:
-            return False
-
     def get_auth_gmail_domains(self):
         """ List of domains which can use GMail SMTP for Authentication """
         return self.auth.get("gmail_domains", [])
@@ -2192,6 +2180,14 @@ class S3Config(Storage):
             Whether Facility Types are Hierarchical or not
         """
         return self.org.get("facility_types_hierarchical", False)
+
+    def get_org_organisation_location_context(self):
+        """
+            The Context to use for displaying Organisation Locations
+            - defaults to the Organisation's Sites
+            - can also set to "organisation_location.location_id"
+        """
+        return self.org.get("organisation_location_context", "site.location_id")
 
     def get_org_organisation_types_hierarchical(self):
         """
