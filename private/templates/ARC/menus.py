@@ -270,6 +270,7 @@ class S3MainMenu(default.S3MainMenu):
                         MP("Administration", c="admin", f="user",
                            check=is_org_admin),
                         MP("Profile", c="default", f="person"),
+                        MP("Subscription", c="default", f="index", args=["subscriptions"]),
                         MP("Change Password", c="default", f="user",
                            m="change_password"),
                         MP("Logout", c="default", f="user",
