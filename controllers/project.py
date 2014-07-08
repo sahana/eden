@@ -165,6 +165,24 @@ def project():
                     query = FS("status").belongs(statuses)
                     r.resource.add_component_filter("task", query)
 
+                # Remove the project field from CRUD form
+                remove_project_field()
+
+                if settings.get_project_activities():
+                    # Filter the activities to this project's activities
+                    s3db.project_task_activity.activity_id.requires.set_filter(
+                        filterby="project_id",
+                        filter_opts=[r.id],
+                        )
+
+                if settings.get_project_milestones():
+                    # Filter the milestones to this project's milestones
+                    s3db.project_task_milestone.milestone_id.requires.set_filter(
+                        filterby="project_id",
+                        filter_opts=[r.id],
+                        )
+
+
             elif component_name == "beneficiary":
                 # Filter the location selector to the project's locations
                 component.table.project_location_id.requires = \
@@ -358,6 +376,18 @@ def project_theme_id_widget():
     widget = table.theme_id.widget(table.theme_id,
                                    value)
     return widget
+
+# -----------------------------------------------------------------------------
+def remove_project_field():
+    """
+        Removes the project field from project_task CRUD form.
+        Used when accessing task from project's component view.
+    """
+
+    crud_form = s3db.get_config("project_task", "crud_form")
+    for e in crud_form.elements:
+        if e.selector == "task_project":
+            crud_form.elements.remove(e)
 
 # =============================================================================
 def sector():
