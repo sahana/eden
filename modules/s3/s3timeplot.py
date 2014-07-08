@@ -170,7 +170,7 @@ class S3TimePlot(S3Method):
             
             output = {"title": title}
             
-            form = FORM(DIV(_class="tp-chart", _style="height: 300px;"),
+            form = FORM(DIV(_class="tp-chart"),
                         INPUT(_type="hidden",
                               _class="tp-data",
                               _value=items),

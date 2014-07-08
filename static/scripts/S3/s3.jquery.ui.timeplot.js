@@ -1,7 +1,7 @@
 /**
  * jQuery UI timeplot Widget for S3Timeline
  *
- * @copyright: 2013 (c) Sahana Software Foundation
+ * @copyright: 2013-14 (c) Sahana Software Foundation
  * @license: MIT
  *
  * requires: jQuery 1.9.1+
@@ -33,6 +33,7 @@
             var el = this.element;
 
             // Render all initial contents
+            this.svg = null;
             this.refresh();
         },
 
@@ -47,93 +48,110 @@
 
             var opts = this.options,
                 data = JSON.parse($(this.element).find('.tp-data').first().val());
+                
+            this._renderChart(data);
 
-            this._renderChart(data, opts.method);
             this._bindEvents();
         },
 
-        _renderChart: function(data, method) {
+        _parseDate: function(string) {
 
-            var el = this.element,
-                d = this._aggregateSeries(data, method);
-
-            var placeholder = $(el).find('.tp-chart').first()
-            var chart = jQuery.plot(placeholder, [d], {
-                series: {
-                    bars: {
-                        show: true,
-                        align: "center",
-                        barWidth: 120*24*60*60*300,
-                        align: "left"
-                    },
-//                     lines: {
-//                         show: true,
-//                         lineWidth: 0.5,
-//                         fill: true,
-// //                         steps: true,
-//                         fillColor: {
-//                             colors: [ "rgba(255, 255, 255, 0.6)",
-//                                       "rgba(204, 128, 128, 0.6)" ]
-//                         }
-//                     },
-//                     points: { show: true }
-                },
-                xaxis: { mode: "time" },
-                colors: ["#ff0000"],
-                grid: {
-//                     show: boolean
-//                     aboveData: boolean
-//                     color: color
-                    backgroundColor: {colors: ['#ffffff', '#cccccc']}
-//                     margin: number or margin object
-//                     labelMargin: number
-//                     axisMargin: number
-//                     markings: array of markings or (fn: axes -> array of markings)
-//                     borderWidth: number or object with "top", "right", "bottom" and "left" properties with different widths
-//                     borderColor: color or null or object with "top", "right", "bottom" and "left" properties with different colors
-//                     minBorderMargin: number or null
-//                     clickable: boolean
-//                     hoverable: boolean
-//                     autoHighlight: boolean
-//                     mouseActiveRadius: number
-                }
-            });
-
+            var dt = d3.time.format('%Y-%m-%dT%H:%M:%S').parse(string);
+            return dt;
         },
 
-        _aggregateSeries: function(data, method) {
+        _renderChart: function(data) {
 
-            // data is an array of tuples [[id, start, end, value], ...]
-            // method is:
-            //     count = count the number of records
-            //     sum = cumulate the value
-            // id is the record ID
-            // start/end are timestamps
-            // value is a numeric value
+            // data = [[start, end, value], ...]
 
-            var series = [], item, start, dt;
+            var el = this.element;
 
-            var start, end;
-            for (i=0; i<data.length; i++) {
-
-                item = data[i];
-                start = item[0];
-                if (!start) {
-                    continue;
-                } else {
-                    dt = new Date(start).getTime();
-                    series.push([dt, item[2]]);
-                }
+            // Remove previous plot
+            if (this.svg) {
+                this.svg.remove();
+                el.find('.tp-chart').empty();
             }
-            return series
+
+            // Compute width and height
+            var available_width = el.width();
+            var available_height = available_width / 16 * 5;
+            
+            var margin = {top: 40, right: 10, bottom: 70, left: 40},
+                width = available_width - margin.left - margin.right,
+                height = available_height - margin.top - margin.bottom;
+
+            // Generate new plot
+            var svg = d3.select("#timeplot .tp-chart")
+                        .append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            this.svg = svg;
+
+            var x = d3.scale.ordinal()
+                            .rangeRoundBands([0, width], .05);
+
+            // @todo: dynamic tick formatter
+            var xAxis = d3.svg.axis()
+                              .scale(x)
+                              .orient("bottom")
+                              .tickFormat(d3.time.format("%Y-%m-%d"));
+
+            var y = d3.scale.linear()
+                            .range([height, 0]);
+
+            var yAxis = d3.svg.axis()
+                              .scale(y)
+                              .orient("left");
+
+            var self = this;
+            x.domain(data.map(function(d) {
+                return self._parseDate(d[0]);
+            }));
+            y.domain([0, d3.max(data, function(d) { return d[2]; })]);
+            
+            svg.append("g")
+               .attr("class", "x axis")
+               .attr("transform", "translate(0," + height + ")")
+               .call(xAxis)
+               .selectAll("text")
+               .style("text-anchor", "end")
+               .style({"font": "10px sans-serif"})
+               .attr("dx", "-.8em")
+               .attr("dy", "-.55em")
+               .attr("transform", "rotate(-90)" );
+      
+            svg.append("g")
+               .attr("class", "y axis")
+               .call(yAxis);
+               
+            svg.selectAll("bar")
+               .data(data)
+               .enter()
+               .append("rect")
+               .style("fill", "steelblue")
+               .attr("x", function(d) { return x(self._parseDate(d[0])); })
+               .attr("width", x.rangeBand())
+               .attr("y", function(d) { return y(d[2]); })
+               .attr("height", function(d) { return height - y(d[2]); });
+              
         },
 
         _bindEvents: function() {
+
+            var self = this;
+            
             // Bind events to generated elements (after refresh)
+            $(window).on("resize.timeplot", function() {
+                data = JSON.parse($(self.element).find('.tp-data').first().val())
+                self._renderChart(data);
+            });
         },
 
         _unbindEvents: function() {
             // Unbind events (before refresh)
+            $(window).off("resize.timeplot");
         }
     });
 })(jQuery);
