@@ -292,15 +292,15 @@ class S3MainMenu(object):
                     cfg = current.gis.get_config()
                     s3.location_filter = cfg.region_location_id
                     if settings.has_module("event"):
-                        # See if this config is associated with an Event
+                        # See if this config is associated with an Incident
                         table = s3db.event_config
                         query = (table.config_id == config)
                         incident = db(query).select(table.incident_id,
                                                     limitby=(0, 1)).first()
                         if incident:
-                            s3.event = incident.incident_id
+                            s3.incident = incident.incident_id
                         else:
-                            s3.event = None
+                            s3.incident = None
             # Don't use the outdated cache for this call
             cache = None
         else:

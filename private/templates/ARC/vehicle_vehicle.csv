@@ -198,7 +198,7 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 2161,Rio Colorado,Rio Colorado,,ERV,Default,Vehicles,ERV,,2004,"1st Floor, W",2200 7th Street,77414,US,Texas,Matagorda,Bay City,28.8297999985,-95.6363000013
 2162,Southeastern Michigan,Southeastern Michigan,,ERV,Default,Vehicles,ERV,,2004,,100 Mack Avenue,48201,US,Michigan,Wayne,Detroit,42.3476999999,-83.0560000016
 2163,American Red Cross of the Twin Cities Area,American Red Cross of the Twin Cities Area,,ERV,Default,Vehicles,ERV,,2003,,1201 West River Parkway,55454,US,Minnesota,Hennepin,Minneapolis,44.9774000009,-93.2443000002
-2164,,Little Egypt Branch Office,,ERV,Default,Vehicles,ERV,,2004,,665 N Airport Road,62966,US,Illinois,Jackson,Murphysboro,37.7767999995,-89.2520999979
+2164,American Red Cross Saint Louis Area,Little Egypt,,ERV,Default,Vehicles,ERV,,2004,,556 N Airport Road,62966,US,Illinois,Jackson,Murphysboro,37.7762578,-89.2518762
 2165,American Red Cross of Northeast Indiana,American Red Cross of Northeast Indiana,,ERV,Default,Vehicles,ERV,,2004,,1212 E California Road  PO Box 5508,46825,US,Indiana,Allen,Ft Wayne,41.1185999994,-85.124200001
 2166,Greater Ozarks,Greater Ozarks,,ERV,Default,Vehicles,ERV,,2004,,1545 NW Bypass,65803,US,Missouri,Greene,Springfield,37.2763999998,-93.2892999986
 2167,American Red Cross of Southwest Louisiana,American Red Cross of Southwest Louisiana,,ERV,Default,Vehicles,ERV,,2004,,3512 Kirkman Street,70607,US,Louisiana,Calcasieu,Lake Charles,30.1931000016,-93.2096999992
@@ -327,7 +327,6 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 4708,Metropolitan Atlanta,Metropolitan Atlanta,,ERCV,Default,Vehicles,ERCV,Ford,2000,,1955 Monroe Drive NE,30324,US,Georgia,Fulton,Atlanta,33.8079000006,-84.3753999993
 4709,Inland Northwest,Inland Northwest,,ERCV,Default,Vehicles,ERCV,Ford,2000,,315 W Nora Avenue,99205,US,Washington,Spokane,Spokane,47.6964999999,-117.448100001
 4710,Louisville Area,Bullitt & Spencer Counties,,ERCV,Default,Vehicles,ERCV,Ford,2000,P.O. Box 665,200 Saltwell Court,40165,US,Kentucky,Bullitt,Shepherdsville,37.9958129,-85.7247146
-4711,American Red Cross of Greater Chicago,,,ERCV,Default,Vehicles,ERCV,Ford,2000,,2300 Patriot Blvd,60025,US,Illinois,Cook,Glenview,42.0984000007,-87.8240999993
 4712,Capital Region,Capital Region Chapter,,ERCV,Default,Vehicles,ERCV,GMC,2000,,1565 Exposition Boulevard,95866,US,California,Sacramento,Sacramento,38.5956000016,-121.434599999
 4715,Greater Carolinas,Greater Carolinas,,ERCV,Default,Vehicles,ERCV,GMC,2002,,2425 Park Road,28203,US,North Carolina,Mecklenburg,Charlotte,35.1979530017,-80.8517367072
 4716,Connecticut,Connecticut,,ERCV,Default,Vehicles,ERCV,GMC,2002,,209 Farmington Avenue,6032,US,Connecticut,Hartford,Farmington,41.7380000017,-72.7932000008

@@ -451,9 +451,9 @@ class S3EventModel(S3Model):
             When an Event is updated, check for closure
         """
 
-        vars = form.vars
-        if vars.closed:
-            event = vars.id
+        form_vars = form.vars
+        if form_vars.closed:
+            event = form_vars.id
             # Ensure this event isn't active in the session
             s3 = current.session.s3
             if s3.event == event:
@@ -686,6 +686,7 @@ class S3IncidentModel(S3Model):
                        list_layout = event_incident_list_layout,
                        # Most recent Incident first
                        orderby = "event_incident.zero_hour desc",
+                       update_onaccept = self.incident_update_onaccept,
                        )
 
         # Components
@@ -767,9 +768,12 @@ class S3IncidentModel(S3Model):
             When an Incident is instantiated, populate defaults
         """
 
-        vars = form.vars
-        incident = vars.get("incident_id", None)
-        event = vars.get("event_id", None)
+        form_vars = form.vars
+        incident = form_vars.get("id", None)
+        if incident:
+            # Set the Incident in the session
+            current.session.s3.incident = incident
+        event = form_vars.get("event_id", None)
         if event:
             # Set the Event in the session
             current.session.s3.event = event
@@ -777,7 +781,7 @@ class S3IncidentModel(S3Model):
         db = current.db
         ctable = s3db.gis_config
         mapconfig = None
-        scenario = vars.get("scenario_id", None)
+        scenario = form_vars.get("scenario_id", None)
         if scenario:
             # We have been instantiated from a Scenario, so
             # copy all resources from the Scenario to the Incident
@@ -834,7 +838,7 @@ class S3IncidentModel(S3Model):
             # contaminating the base one
             del mapconfig["id"]
             del mapconfig["uuid"]
-            mapconfig["name"] = vars.name
+            mapconfig["name"] = form_vars.name
             config = ctable.insert(**mapconfig.as_dict())
             mtable = db.event_config
             mtable.insert(incident_id=incident,
@@ -846,7 +850,7 @@ class S3IncidentModel(S3Model):
         else:
             # We have been created without a Scenario or from a Scenario without a Map Config
             # Create a new Map Config
-            config = ctable.insert(name = vars.name)
+            config = ctable.insert(name = form_vars.name)
             mtable = db.event_config
             mtable.insert(incident_id=incident,
                           config_id=config)
@@ -854,6 +858,36 @@ class S3IncidentModel(S3Model):
             current.gis.set_config(config)
             # Viewport can be saved from the Map's toolbar
             # @ToDo: Add to GIS Menu? Separate Menu?
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def incident_update_onaccept(form):
+        """
+            When an Incident is updated, check for closure
+        """
+
+        form_vars = form.vars
+        if form_vars.closed:
+            incident = form_vars.id
+            # Ensure this incident isn't active in the session
+            s3 = current.session.s3
+            if s3.incident == incident:
+                s3.incident = None
+
+            # @ToDo: Hide the Incident from the Map menu
+            #gis = current.gis
+            #config = gis.get_config()
+            #if config == config.config_id:
+            #    # Reset to the Default Map
+            #    gis.set_config(0)
+
+            # Expire all related Posts
+            db = current.db
+            ltable = current.s3db.event_post
+            table = db.cms_post
+            rows = db(ltable.incident_id == incident).select(ltable.post_id)
+            for row in rows:
+                db(table.id == row.post_id).update(expired=True)
 
     # -------------------------------------------------------------------------
     @staticmethod
