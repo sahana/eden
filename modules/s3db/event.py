@@ -1859,8 +1859,32 @@ class S3EventTaskModel(S3Model):
             msg_record_deleted = T("Task removed"),
             msg_list_empty = T("No Tasks currently registered in this incident"))
 
+        self.configure(tablename,
+                       deduplicate = self.event_task_duplicate)
+
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_task_duplicate(item):
+        """ Import item de-duplication """
+        
+        data = item.data
+        incident_id = data.get("incident_id")
+        task_id = data.get("task_id")
+
+        if incident_id and task_id:
+            table = item.table
+
+            query = (table.incident_id == incident_id) & \
+                    (table.task_id == task_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3EventShelterModel(S3Model):
