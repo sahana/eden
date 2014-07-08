@@ -185,7 +185,7 @@ class S3TimePlot(S3Method):
 
             # Script to attach the timeplot widget
             options = {"method": method}
-            script = """$("#%(widget_id)s").timeplot(%(options)s);""" % \
+            script = """$("#%(widget_id)s").timeplot(%(options)s)""" % \
                         {"widget_id": widget_id,
                          "options": json.dumps(options)
                         }

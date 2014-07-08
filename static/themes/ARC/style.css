@@ -28,3 +28,7 @@ table tr th.edit-delete-col {
 .submit-search {
     background: url(../IFRC/img/search_but.png) no-repeat;
 }
+
+#header #personal-menu li {
+    padding: 2px 3px 0;
+}

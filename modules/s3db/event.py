@@ -2336,6 +2336,7 @@ def event_rheader(r):
                 tabs.append((T("Human Resources"), "human_resource"))
             if settings.has_module("asset"):
                 tabs.append((T("Assets"), "asset"))
+            tabs.append((T("Organizations"), "organisation"))
             tabs.append((T("Facilities"), "site")) # Inc Shelters
             tabs.append((T("Map Configuration"), "config"))
             if settings.has_module("msg"):
