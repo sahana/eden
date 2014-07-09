@@ -1279,6 +1279,7 @@ class S3BudgetAllocationModel(S3Model):
     """
 
     names = ["budget_allocation",
+             "budget_cost_item",
             ]
 
     def model(self):
