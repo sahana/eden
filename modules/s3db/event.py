@@ -1809,6 +1809,8 @@ class S3EventSiteModel(S3Model):
         # @ToDo: Search Widget
         tablename = "event_site"
         self.define_table(tablename,
+                          # Instance table
+                          self.super_link("cost_item_id", "budget_cost_item"),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE",
                                                  ),
@@ -1836,6 +1838,10 @@ class S3EventSiteModel(S3Model):
             msg_record_modified = T("Facility updated"),
             msg_record_deleted = T("Facility removed"),
             msg_list_empty = T("No Facilities currently registered in this incident"))
+
+        self.configure(tablename,
+                       super_entity = "budget_cost_item",
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict()
