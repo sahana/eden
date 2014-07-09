@@ -34,6 +34,16 @@ def budget():
     return s3_rest_controller(rheader=s3db.budget_rheader)
 
 # =============================================================================
+def allocation():
+    """
+        REST controller for budget_allocation
+
+        @status: experimental, not for production use
+    """
+
+    return s3_rest_controller()
+
+# =============================================================================
 def location():
     """
         REST controller for budget_location

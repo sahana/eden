@@ -56,7 +56,7 @@
 
         _parseDate: function(string) {
 
-            var dt = d3.time.format('%Y-%m-%dT%H:%M:%S').parse(string);
+            var dt = d3.time.format('%Y-%m-%dT%H:%M:%S+00:00').parse(string);
             return dt;
         },
 

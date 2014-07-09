@@ -30,6 +30,7 @@
 """
 
 import datetime
+import dateutil.tz
 import re
 import sys
 
@@ -51,6 +52,11 @@ from gluon.html import *
 
 from s3rest import S3Method
 from s3query import FS
+
+tp_datetime = lambda *t: datetime.datetime(tzinfo=dateutil.tz.tzutc(), *t)
+
+tp_tzsafe = lambda dt: dt.replace(tzinfo=dateutil.tz.tzutc()) \
+                       if dt and dt.tzinfo is None else dt
 
 # =============================================================================
 class S3TimePlot(S3Method):
@@ -116,7 +122,7 @@ class S3TimePlot(S3Method):
         # Parse fact option
         fact = get_vars.get("fact")
         try:
-            fact, method = self.resolve_fact(resource, fact)
+            method, rfields, arguments = self.resolve_fact(resource, fact)
         except (SyntaxError, AttributeError):
             r.error(400, sys.exc_info()[1])
 
@@ -139,7 +145,7 @@ class S3TimePlot(S3Method):
                                 resource,
                                 event_start,
                                 event_end,
-                                [fact])
+                                rfields)
         except (SyntaxError):
             pass
 
@@ -154,7 +160,8 @@ class S3TimePlot(S3Method):
             if item_end:
                 item_end = item_end.isoformat()
             value = period.aggregate(method=method,
-                                     field=fact.colname,
+                                     fields=[rfield.colname for rfield in rfields],
+                                     arguments=arguments,
                                      event_type=resource.tablename)
             new_item((item_start, item_end, value))
 
@@ -313,7 +320,7 @@ class S3TimePlot(S3Method):
 
         resource = self.resource
 
-        now = datetime.datetime.utcnow()
+        now = tp_tzsafe(datetime.datetime.utcnow())
 
         dtparse = self.dtparse
 
@@ -346,7 +353,7 @@ class S3TimePlot(S3Method):
             if rows:
                 first_event = rows.first()[event_start.colname]
                 if isinstance(first_event, datetime.date):
-                    first_event = datetime.datetime.fromordinal(first_event.toordinal())
+                    first_event = tp_tzsafe(datetime.datetime.fromordinal(first_event.toordinal()))
                 start_dt = first_event
 
         if not start_dt and event_end and event_end.field:
@@ -364,7 +371,7 @@ class S3TimePlot(S3Method):
             if rows:
                 last_event = rows.first()[event_end.colname]
                 if isinstance(last_event, datetime.date):
-                    last_event = datetime.datetime.fromordinal(last_event.toordinal())
+                    last_event = tp_tzsafe(datetime.datetime.fromordinal(last_event.toordinal()))
                 start_dt = dtparse("-%s" % STANDARD_SLOT, start=last_event)
 
         if not start_dt:
@@ -413,7 +420,7 @@ class S3TimePlot(S3Method):
         """
 
         if start is None:
-            start = datetime.datetime.utcnow()
+            start = tp_tzsafe(datetime.datetime.utcnow())
 
         if not timestr:
             return start
@@ -445,7 +452,7 @@ class S3TimePlot(S3Method):
             groups = match.groups()
             year = int(groups[1])
             month = int(groups[0])
-            return datetime.datetime(year, month, 1, 0, 0, 0)
+            return tp_datetime(year, month, 1, 0, 0, 0)
 
         # Year-Month, e.g. "2001-05"
         match = regex.YEAR_MONTH.match(timestr)
@@ -453,14 +460,14 @@ class S3TimePlot(S3Method):
             groups = match.groups()
             month = int(groups[1])
             year = int(groups[0])
-            return datetime.datetime(year, month, 1, 0, 0, 0)
+            return tp_datetime(year, month, 1, 0, 0, 0)
 
         # Year only, e.g. "1996"
         match = regex.YEAR.match(timestr)
         if match:
             groups = match.groups()
             year = int(groups[0])
-            return datetime.datetime(year, 1, 1, 0, 0, 0)
+            return tp_datetime(year, 1, 1, 0, 0, 0)
         
         # Date, e.g. "2013-01-04"
         match = regex.DATE.match(timestr)
@@ -470,10 +477,10 @@ class S3TimePlot(S3Method):
             month = int(groups[1])
             day = int(groups[2])
             try:
-                return datetime.datetime(year, month, day)
+                return tp_datetime(year, month, day)
             except ValueError:
                 # Day out of range
-                return datetime.datetime(year, month, 1) + \
+                return tp_datetime(year, month, 1) + \
                        datetime.timedelta(days = day-1)
 
         # ISO datetime
@@ -540,22 +547,34 @@ class S3TimePlot(S3Method):
 
         # Parse the fact
         if not fact:
-            method, selector = "count", "id"
+            method, parameters = "count", "id"
         else:
-            match = re.match("([a-zA-Z]+)\(([a-zA-Z0-9_.$:]+)\)\Z", fact)
+            match = re.match("([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,]+)\)\Z", fact)
             if match:
-                method, selector = match.groups()
+                method, parameters = match.groups()
             else:
-                method, selector = "count", fact
+                method, parameters = "count", fact
 
         # Validate method
         if method not in S3TimePlotPeriod.methods:
             raise SyntaxError("Unsupported aggregation method: %s" % method)
 
-        # Resolve field selector
-        rfield = resource.resolve_selector(selector)
+        parameters = parameters.split(",")
+        selectors = parameters[:1]
+        arguments = []
+        if method == "cumulate":
+            if len(parameters) > 1:
+                parameters = parameters[:3]
+                selectors = parameters[:-1]
+                arguments = parameters[-1:]
 
-        return rfield, method
+        rfields = []
+        for selector in selectors:
+            rfields.append(resource.resolve_selector(selector))
+        if not rfields:
+            raise SyntaxError
+
+        return method, rfields, arguments
 
 # =============================================================================
 class S3TimePlotEvent(object):
@@ -580,8 +599,8 @@ class S3TimePlotEvent(object):
         self.event_type = event_type
         self.event_id = event_id
 
-        self.start = start
-        self.end = end
+        self.start = tp_tzsafe(start)
+        self.end = tp_tzsafe(end)
         
         self.values = values if values is not None else {}
         
@@ -612,7 +631,7 @@ class S3TimePlotEvent(object):
 class S3TimePlotPeriod(object):
     """ Class representing a period within the time frame """
 
-    methods = ("count", "sum", "avg", "min", "max")
+    methods = ("count", "cumulate", "sum", "avg", "min", "max")
 
     def __init__(self, start, end=None):
         """
@@ -622,21 +641,35 @@ class S3TimePlotPeriod(object):
             @param end: end time of the period (datetime.datetime)
         """
 
-        self.start = start
-        self.end = end
+        self.start = tp_tzsafe(start)
+        self.end = tp_tzsafe(end)
 
         # Event sets, structure: {event_type: {event_id: event}}
-        self.sets = {}
+        self.csets = {}
+        self.psets = {}
 
     # -------------------------------------------------------------------------
-    def add(self, event):
+    def current(self, event):
         """
-            Add an event to this period
+            Add a current event to this period
 
             @param event: the event (S3TimePlotEvent)
         """
 
-        sets = self.sets
+        self._add(self.csets, event)
+
+    # -------------------------------------------------------------------------
+    def previous(self, event):
+        """
+            Add a previous event to this period
+
+            @param event: the event (S3TimePlotEvent)
+        """
+
+        self._add(self.psets, event)
+
+    # -------------------------------------------------------------------------
+    def _add(self, sets, event):
         
         # Find the event set by type
         event_type = event.event_type
@@ -648,9 +681,9 @@ class S3TimePlotPeriod(object):
         # Add the event to the set
         events[event.event_id] = event
         return
-
+        
     # -------------------------------------------------------------------------
-    def aggregate(self, method="count", field=None, event_type=None):
+    def aggregate(self, method="count", fields=None, arguments=None, event_type=None):
         """
             Aggregate event data in this period
 
@@ -659,10 +692,61 @@ class S3TimePlotPeriod(object):
             @param method: the aggregation method
         """
 
-        if field is None and method == "count":
+        if fields is None and method == "count":
             return self.count(event_type)
+            
+        if method == "cumulate":
+            
+            events = self.events(event_type=event_type)
+
+            slots = arguments[0] if arguments else None
+            if len(fields) > 1:
+                base, slope = fields[:2]
+            else:
+                if slots:
+                    base, slope = None, fields[0]
+                else:
+                    base, slope = fields[0], None
+
+            values = []
+            for event in events:
+
+                if event.start == None:
+                    continue
+
+                base_value = event[base] if base else None
+                slope_value = event[slope] if slope else None
+
+                if base_value is None:
+                    if not slope or slope_value is None:
+                        continue
+                    else:
+                        base_value = 0
+                elif type(base_value) is list:
+                    try:
+                        base_value = sum(base_value)
+                    except (TypeError, ValueError):
+                        continue
+
+                if slope_value is None:
+                    if not base or base_value is None:
+                        continue
+                    else:
+                        slope_value = 0
+                elif type(slope_value) is list:
+                    try:
+                        slope_value = sum(slope_value)
+                    except (TypeError, ValueError):
+                        continue
+
+                duration = self._duration(event, slots) if slope_value and slots else 1
+                values.append((base_value, slope_value, duration))
+
+            return self._aggregate(method, values)
+                
         else:
-            events = self.events(event_type)
+            events = self.current_events(event_type=event_type)
+            field = fields[0] if fields else None
 
             if field:
                 values = []
@@ -681,6 +765,53 @@ class S3TimePlotPeriod(object):
             else:
                 return None
 
+    # -------------------------------------------------------------------------
+    def _duration(self, event, slots):
+        """
+            Compute the total duration of the given event before the end
+            of this period, in number of slots
+
+            @param event: the S3TimePlotEvent
+            @param slots: the slot
+        """
+
+        if event.end is None or event.end > self.end:
+            end_date = self.end
+        else:
+            end_date = event.end
+        if event.start is None or event.start >= end_date:
+            return 0
+        rule = self.get_rule(event.start, end_date, slots)
+        if rule:
+            return rule.count()
+        else:
+            return 1
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_rule(start, end, slots):
+
+        match = re.match("\s*(\d*)\s*([hdwmy]{1}).*", slots)
+        if match:
+            num, delta = match.groups()
+            deltas = {
+                "h": HOURLY,
+                "d": DAILY,
+                "w": WEEKLY,
+                "m": MONTHLY,
+                "y": YEARLY,
+            }
+            if delta not in deltas:
+                return None
+            else:
+                num = int(num) if num else 1
+                return rrule(deltas[delta],
+                             dtstart=start,
+                             until=end,
+                             interval=num)
+        else:
+            return None
+            
     # -------------------------------------------------------------------------
     @staticmethod
     def _aggregate(method, values):
@@ -720,31 +851,66 @@ class S3TimePlotPeriod(object):
                     return sum(values) / float(num)
             except (TypeError, ValueError):
                 return None
+        elif method in ("cumulate"):
+            try:
+                return sum(base + slope * duration
+                           for base, slope, duration in values)
+            except (TypeError, ValueError):
+                return None
         return None
 
     # -------------------------------------------------------------------------
     def events(self, event_type=None):
         """
-            Return a list of all events
-
-            @param event_type: the event type identifier (string)
+            Return a list of all events of the given type
         """
-        
-        events = {}
-        sets = self.sets
+
+        if event_type in self.csets:
+            events = self.csets[event_type]
+        else:
+            events = {}
+        if event_type in self.psets:
+            events.update(self.psets[event_type])
+        return events.values()
+
+    # -------------------------------------------------------------------------
+    def current_events(self, event_type=None):
+        """
+            Return a list of current events of the given type
+        """
+
+        return self._events(self.csets, event_type=event_type)
+
+    # -------------------------------------------------------------------------
+    def previous_events(self, event_type=None):
+        """
+            Return a list of previous events of the given type
+        """
+
+        return self._events(self.psets, event_type=event_type)
+
+    # -------------------------------------------------------------------------
+    def _events(self, sets, event_type=None):
+        """
+            Return a list of events of the given type from the given sets
+        """
+
         if event_type in sets:
             events = sets[event_type]
-        return events.values()
+            return events.values()
+        else:
+            return {}
 
     # -------------------------------------------------------------------------
     def count(self, event_type=None):
         """
-            Get the number of events of the given type within this period
+            Get the number of current events of the given type
+            within this period.
 
             @param event_type: the event type identifier (string)
         """
 
-        sets = self.sets
+        sets = self.csets
         if event_type in sets:
             return len(sets[event_type])
         else:
@@ -768,12 +934,12 @@ class S3TimePlotEventFrame(object):
         # Start time is required
         if start is None:
             raise SyntaxError("start time required")
-        self.start = start
+        self.start = tp_tzsafe(start)
 
         # End time defaults to now
         if end is None:
             end = datetime.datetime.utcnow()
-        self.end = end
+        self.end = tp_tzsafe(end)
 
         self.slots = slots
         self.periods = {}
@@ -790,27 +956,7 @@ class S3TimePlotEventFrame(object):
         if not slots:
             return None
 
-        match = re.match("\s*(\d*)\s*([hdwmy]{1}).*", slots)
-        if match:
-            num, delta = match.groups()
-            deltas = {
-                "h": HOURLY,
-                "d": DAILY,
-                "w": WEEKLY,
-                "m": MONTHLY,
-                "y": YEARLY,
-            }
-            if delta not in deltas:
-                # @todo: handle "continuous" and "automatic"
-                return None
-            else:
-                num = int(num) if num else 1
-                return rrule(deltas[delta],
-                             dtstart=self.start,
-                             until=self.end,
-                             interval=num)
-        else:
-            return None
+        return S3TimePlotPeriod.get_rule(self.start, self.end, slots)
 
     # -------------------------------------------------------------------------
     def extend(self, events):
@@ -837,6 +983,7 @@ class S3TimePlotEventFrame(object):
             first = rule.before(start, inc=True)
 
         current = []
+        previous = []
         for start in rule.between(first, self.end, inc=True):
 
             # Compute end of this period
@@ -851,8 +998,8 @@ class S3TimePlotEventFrame(object):
             # Find all current events
             for index, event in enumerate(events):
                 if event.end and event.end < start:
-                    # Event ends before this period
-                    continue
+                    # Event ended before this period
+                    previous.append(event)
                 elif event.start is None or event.start < end:
                     # Event starts before or during this period
                     current.append(event)
@@ -865,7 +1012,9 @@ class S3TimePlotEventFrame(object):
             if period is None:
                 period = periods[start] = S3TimePlotPeriod(start, end=end)
             for event in current:
-                period.add(event)
+                period.current(event)
+            for event in previous:
+                period.previous(event)
 
             # Remaining events
             events = events[index:]
@@ -874,8 +1023,13 @@ class S3TimePlotEventFrame(object):
                 break
 
             # Remove events which end during this period
-            current = [event for event in current
-                       if not event.end or event.end > end]
+            remaining = []
+            for event in current:
+                if not event.end or event.end > end:
+                    remaining.append(event)
+                else:
+                    previous.append(event)
+            current = remaining
         return
         
     # -------------------------------------------------------------------------

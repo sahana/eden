@@ -30,6 +30,7 @@
 __all__ = ["S3BudgetModel",
            "S3BudgetKitModel",
            "S3BudgetBundleModel",
+           "S3BudgetAllocationModel",
            "budget_rheader",
           ]
 
@@ -132,18 +133,20 @@ class S3BudgetModel(S3Model):
 
         add_components(tablename,
                        # Staff
-                       budget_staff={"link": "budget_budget_staff",
-                                     "joinby": "budget_id",
-                                     "key": "staff_id",
-                                     "actuate": "link",
-                                    },
+                       budget_staff = {"link": "budget_budget_staff",
+                                       "joinby": "budget_id",
+                                       "key": "staff_id",
+                                       "actuate": "link",
+                                       },
                        # Bundles
-                       budget_bundle={"link": "budget_budget_bundle",
-                                      "joinby": "budget_id",
-                                      "key": "bundle_id",
-                                      "actuate": "link",
-                                     },
-                      )
+                       budget_bundle = {"link": "budget_budget_bundle",
+                                        "joinby": "budget_id",
+                                        "key": "bundle_id",
+                                        "actuate": "link",
+                                        },
+                       # Allocations
+                       budget_allocation = "budget_id",
+                       )
 
         # Configuration
         configure(tablename,
@@ -1268,6 +1271,71 @@ class S3BudgetBundleModel(S3Model):
         return
 
 # =============================================================================
+class S3BudgetAllocationModel(S3Model):
+    """
+        Model for Budget Allocation
+
+        @status: experimental, not for production use
+    """
+
+    names = ["budget_allocation",
+            ]
+
+    def model(self):
+
+        T = current.T
+        configure = self.configure
+        define_table = self.define_table
+        add_components = self.add_components
+
+        s3 = current.response.s3
+        crud_strings = s3.crud_strings
+
+        db = current.db
+
+        # ---------------------------------------------------------------------
+        # Budget allocation (links a resource assignment to a budget)
+        #
+        tablename = "budget_allocation"
+        define_table(tablename,
+                     self.budget_budget_id(),
+                     # @todo: link to event_* and project_* using an SE
+                     Field("resource"),
+                     s3_date("start_date",
+                             label = T("Start Date")
+                             ),
+                     s3_date("end_date",
+                             label = T("End Date")
+                             ),
+                     # @todo: probably better in scope of the linked
+                     #        resource (i.e. global to all budgets)
+                     Field("unit_cost", "double",
+                           default = 0.00,
+                           label = T("Unit Cost"),
+                           ),
+                     # @todo: probably better in scope of the linked
+                     #        resource (i.e. global to all budgets)
+                     Field("daily_cost", "double",
+                           default = 0.00,
+                           label = T("Daily Cost"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        return {}
+
+# =============================================================================
 def budget_kit_totals(kit_id):
     """
         Calculate Totals for a Kit
@@ -1500,6 +1568,7 @@ def budget_rheader(r):
         tabs = [(T("Basic Details"), None),
                 (T("Staff"), "staff"),
                 (T("Bundles"), "bundle"),
+                #(T("Allocation"), "allocation"), # experimental
                ]
                
         rheader_fields = [["name"],

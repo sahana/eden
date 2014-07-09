@@ -1348,7 +1348,7 @@ S3OptionsFilter({
  'showEmptyField':false
 })'''
         ),
-        "drr.hfa",
+        #"drr.hfa",
         "objectives",
         "human_resource_id",
         # Disabled since we need organisation_id filtering to either organisation_type_id == RC or NOT
