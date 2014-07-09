@@ -2691,7 +2691,6 @@ class S3CRUD(S3Method):
 
         get_config = lambda key, tablename=component: \
                             s3db.get_config(tablename, key, None)
-
         try:
             selected = form.vars[key]
         except:
@@ -2700,9 +2699,19 @@ class S3CRUD(S3Method):
         if request.env.request_method == "POST":
             db = current.db
             table = db[component]
-            _vars = request.post_vars
-            _form = Storage(vars=Storage(table._filter_fields(_vars)),
-                            errors=Storage())
+
+            # Extract data for embedded form from post_vars
+            post_vars = request.post_vars
+            form_vars = Storage(table._filter_fields(post_vars))
+            form_vars[table._id.name] = selected
+            
+            # Pass values through validator to convert them into db-format
+            for k in form_vars:
+                value, error = s3_validate(table, k, form_vars[k])
+                if not error:
+                    form_vars[k] = value
+            
+            _form = Storage(vars = form_vars, errors = Storage())
             if _form.vars:
                 if selected:
                     # Onvalidation
@@ -2739,7 +2748,7 @@ class S3CRUD(S3Method):
                         return
                     if selected:
                         # Update post_vars and form.vars
-                        request.post_vars[key] = str(selected)
+                        post_vars[key] = str(selected)
                         form.request_vars[key] = str(selected)
                         form.vars[key] = selected
                         # Update super-entity links

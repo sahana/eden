@@ -610,19 +610,23 @@ class S3Trackable(object):
 
         # Update records with track ID
         # => this can happen table-wise = less queries
-        track_ids = [r[TRACK_ID] for r in self.records
-                                      if TRACK_ID in r]
+        track_ids = [r[TRACK_ID] for r in self.records if TRACK_ID in r]
         rows = db(self.table[TRACK_ID].belongs(track_ids)).select()
+        
         tables = []
+        append = tables.append
+        types = set()
+        seen = types.add
         for r in rows:
             instance_type = r.instance_type
-            table = s3db[instance_type]
-            if instance_type not in tables and \
-               LOCATION_ID in table.fields:
-                   tables.append(table)
-            else:
-                # No location ID in this type => ignore gracefully
-                continue
+            if instance_type not in types:
+                seen(instance_type)
+                table = s3db[instance_type]
+                if instance_type not in tables and LOCATION_ID in table.fields:
+                    append(table)
+                else:
+                    # No location ID in this type => ignore gracefully
+                    continue
 
         # Location specified => update all base locations
         for table in tables:

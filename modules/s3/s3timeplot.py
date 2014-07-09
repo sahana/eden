@@ -649,7 +649,7 @@ class S3TimePlotPeriod(object):
         self.psets = {}
 
     # -------------------------------------------------------------------------
-    def current(self, event):
+    def add_current(self, event):
         """
             Add a current event to this period
 
@@ -659,7 +659,7 @@ class S3TimePlotPeriod(object):
         self._add(self.csets, event)
 
     # -------------------------------------------------------------------------
-    def previous(self, event):
+    def add_previous(self, event):
         """
             Add a previous event to this period
 
@@ -1012,9 +1012,9 @@ class S3TimePlotEventFrame(object):
             if period is None:
                 period = periods[start] = S3TimePlotPeriod(start, end=end)
             for event in current:
-                period.current(event)
+                period.add_current(event)
             for event in previous:
-                period.previous(event)
+                period.add_previous(event)
 
             # Remaining events
             events = events[index:]

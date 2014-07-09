@@ -3462,8 +3462,9 @@ class S3Resource(object):
         if not row:
             form = Storage(vars=Storage({lkey:_lkey, rkey:_rkey}))
             link_id = ltable.insert(**form.vars)
+            form.vars[ltable._id.name] = link_id
+            s3db.update_super(ltable, form)
             if link_id and onaccept:
-                form.vars[ltable._id.name] = link_id
                 callback(onaccept, form)
         else:
             link_id = row[ltable._id.name]
