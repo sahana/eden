@@ -2,7 +2,7 @@
 
 """ S3 TimePlot Reports Method
 
-    @copyright: 2011-2014 (c) Sahana Software Foundation
+    @copyright: 2013-2014 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{Python 2.6}} <http://www.python.org>}
@@ -670,7 +670,7 @@ class S3TimePlotPeriod(object):
 
     # -------------------------------------------------------------------------
     def _add(self, sets, event):
-        
+
         # Find the event set by type
         event_type = event.event_type
         if event_type not in sets:
@@ -681,7 +681,7 @@ class S3TimePlotPeriod(object):
         # Add the event to the set
         events[event.event_id] = event
         return
-        
+
     # -------------------------------------------------------------------------
     def aggregate(self, method="count", fields=None, arguments=None, event_type=None):
         """
@@ -694,9 +694,9 @@ class S3TimePlotPeriod(object):
 
         if fields is None and method == "count":
             return self.count(event_type)
-            
+
         if method == "cumulate":
-            
+
             events = self.events(event_type=event_type)
 
             slots = arguments[0] if arguments else None

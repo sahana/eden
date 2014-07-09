@@ -29,6 +29,7 @@
          Attachment.............optional.....doc_document (URL to remote server to download)
          Events.................optional.....Comma-separated list of Events to tag the Post to
          Incident...............optional.....Incident to link the Post to
+         Incident Type..........optional.....Incident Type to link the Post to
          Roles..................optional.....Post Roles (not yet implemented)
 
     *********************************************************************** -->
@@ -101,6 +102,9 @@
 
     <xsl:key name="incidents" match="row"
              use="col[@field='Incident']"/>
+
+    <xsl:key name="incident_types" match="row"
+             use="col[@field='Incident Type']"/>
 
     <xsl:key name="orgs" match="row"
              use="col[@field='Organisation']"/>
@@ -211,6 +215,12 @@
                 <xsl:call-template name="Incident"/>
             </xsl:for-each>
 
+            <!-- Incident Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('incident_types',
+                                                                   col[@field='Incident Type'])[1])]">
+                <xsl:call-template name="IncidentType"/>
+            </xsl:for-each>
+
             <!-- Posts -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
@@ -237,6 +247,7 @@
         <xsl:variable name="Resource" select="col[@field='Resource']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
+        <xsl:variable name="IncidentType" select="col[@field='IncidentType']/text()"/>
 
         <resource name="cms_post">
             <xsl:if test="$Author!=''">
@@ -355,6 +366,17 @@
                 </resource>
             </xsl:if>
 
+            <!-- Incident Types -->
+            <xsl:if test="$IncidentType!=''">
+                <resource name="event_post_incident_type">
+                    <reference field="incident_type_id" resource="event_incident_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$IncidentType"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
 
     </xsl:template>
@@ -382,6 +404,21 @@
                     <xsl:value-of select="$Incident"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Incident"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="IncidentType">
+        <xsl:variable name="IncidentType" select="col[@field='Incident Type']/text()"/>
+
+        <xsl:if test="$IncidentType!=''">
+            <resource name="event_incident_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$IncidentType"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$IncidentType"/></data>
             </resource>
         </xsl:if>
 

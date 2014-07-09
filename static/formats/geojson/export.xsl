@@ -43,6 +43,7 @@
     <s3:fields tables="event_event" select="event_type_id"/>
     <s3:fields tables="event_event_location" select="event_id"/>-->
     <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
+    <s3:fields tables="event_post_incident_type" select="incident_type_id"/>
     <s3:fields tables="project_activity_activity_type" select="activity_id"/>
     <s3:fields tables="project_activity_group" select="activity_id"/>
     <s3:fields tables="project_activity_organisation" select="activity_id"/>
