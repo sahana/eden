@@ -305,6 +305,7 @@ def cms_post_age(row):
 def newsfeed():
     """
         RESTful CRUD controller for display of posts as a filterable dataList
+        (use with /datalist method)
     """
 
     # Load Model

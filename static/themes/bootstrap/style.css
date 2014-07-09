@@ -217,10 +217,11 @@ a i.icon.icon-plus-sign.big-add:hover {
     border-right: none;
 }
 
+/* in widgets.css
 .ui-dialog {
 	width: 750px !important;
 	padding: 0;
-}
+} */
 
 .popup .form-container form.form-horizontal {
     border: none;

@@ -1490,16 +1490,14 @@ class S3Resource(object):
             @return: a Row (if component is None) or a list of rows
         """
 
-        NOT_FOUND = KeyError("Record not found")
-
         if not key:
-            raise NOT_FOUND
+            raise KeyError("Record not found")
         if self._rows is None:
             self.load()
         try:
             master = self[key]
         except IndexError:
-            raise NOT_FOUND
+            raise KeyError("Record not found")
 
         if not component and not link:
             return master

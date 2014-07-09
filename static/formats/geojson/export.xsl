@@ -51,6 +51,8 @@
     <s3:fields tables="stats_people_group" select="people_id"/>
     <s3:fields tables="stats_trained_group" select="trained_id"/>
     <s3:fields tables="supply_distribution" select="activity_id"/>
+    <s3:fields tables="vehicle_vehicle_type" select="name"/>
+    <s3:fields tables="vehicle_vehicle" select="asset_id,vehicle_type_id"/>
     <s3:fields tables="vulnerability_evac_route_group" select="evac_route_id"/>
     <s3:fields tables="vulnerability_risk_group" select="risk_id"/>
     <s3:fields tables="vulnerability_risk_tag" select="risk_id"/>

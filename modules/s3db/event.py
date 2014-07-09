@@ -1791,6 +1791,13 @@ class S3EventSiteModel(S3Model):
 
         T = current.T
 
+        status_opts = {1: T("Alerted"),
+                       2: T("Standing By"),
+                       3: T("Active"),
+                       4: T("Deactivated"),
+                       5: T("Unable to activate"),
+                       }
+
         # ---------------------------------------------------------------------
         # Facilities
         # @ToDo: Search Widget
@@ -1800,10 +1807,17 @@ class S3EventSiteModel(S3Model):
                                                  ondelete = "CASCADE",
                                                  ),
                           self.org_site_id,
+                          Field("status", "integer",
+                                default = 1,
+                                represent = lambda opt: \
+                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(status_opts),
+                                ),
                           *s3_meta_fields())
 
-        # Do this in template: 
-        #table.site_id.readable = table.site_id.writable = True
+        # @ToDo: Do this in template to keep table Lazy
+        field = self[tablename].site_id
+        field.readable = field.writable = True
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Assign Facility"),

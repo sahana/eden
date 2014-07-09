@@ -44,7 +44,7 @@ class S3MainMenu(default.S3MainMenu):
         return [
             homepage("gis")(
             ),
-            homepage("cms", f="newsfeed", name=T("News"))(
+            homepage("cms", f="newsfeed", m="datalist", name=T("News"))(
             ),
             homepage("event", name= "Situational Awareness")(
                 MM("Incidents", c="event", f="incident"),

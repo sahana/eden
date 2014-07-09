@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from os import path
-
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:

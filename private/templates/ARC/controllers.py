@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from os import path
-
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -20,7 +18,7 @@ from s3.s3utils import S3CustomController
 THEME = "ARC"
 
 # =============================================================================
-class index():
+class index(S3CustomController):
     """ Custom Home Page """
 
     def __call__(self):
@@ -29,14 +27,6 @@ class index():
         response = current.response
 
         response.title = current.deployment_settings.get_system_name()
-        view = path.join(current.request.folder, "private", "templates",
-                         "ARC", "views", "index.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         #script = '''
 #$('.marker').mouseover(function(){
@@ -58,6 +48,7 @@ class index():
 
         current.menu.breadcrumbs = None
         
+        self._view(THEME, "index.html")
         return dict(map=map)
 
 # =============================================================================

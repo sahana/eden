@@ -1387,7 +1387,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                 avatar = IMG(_src=logo,
                              _height=50,
                              _width=50,
-                             _style="padding-right:5px;",
+                             _style="padding-right:5px",
                              _class="media-object")
             else:
                 avatar = organisation
@@ -1479,10 +1479,16 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         series_title = series = ""
 
+    request = current.request
+
     # Tool box
     if updateable:
+        if request.function == "newsfeed":
+            fn = "newsfeed"
+        else:
+            fn = "post"
         edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post",
+                     _href=URL(c="cms", f=fn,
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
                                      "record": record_id}
@@ -1585,7 +1591,6 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         link_list = ""
 
-    request = current.request
     if "profile" in request.args:
         # Single resource list
         # - don't show series_title
