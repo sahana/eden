@@ -1506,6 +1506,13 @@ class S3EventAssetModel(S3Model):
 
         T = current.T
 
+        status_opts = {1: T("Alerted"),
+                       2: T("Standing By"),
+                       3: T("Active"),
+                       4: T("Deactivated"),
+                       5: T("Unable to activate"),
+                       }
+
         # ---------------------------------------------------------------------
         # Assets
         # @ToDo: Search Widget
@@ -1520,6 +1527,12 @@ class S3EventAssetModel(S3Model):
                           self.asset_asset_id(empty = False,
                                               ondelete = "RESTRICT",
                                               ),
+                          Field("status", "integer",
+                                default = 1,
+                                represent = lambda opt: \
+                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(status_opts),
+                                ),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1607,6 +1620,13 @@ class S3EventHRModel(S3Model):
 
         T = current.T
 
+        status_opts = {1: T("Alerted"),
+                       2: T("Standing By"),
+                       3: T("Active"),
+                       4: T("Deactivated"),
+                       5: T("Unable to activate"),
+                       }
+
         # ---------------------------------------------------------------------
         # Staff/Volunteers
         # @ToDo: Use Positions, not individual HRs
@@ -1614,12 +1634,20 @@ class S3EventHRModel(S3Model):
 
         tablename = "event_human_resource"
         self.define_table(tablename,
+                          # Instance table
+                          self.super_link("cost_item_id", "budget_cost_item"),
                           self.event_event_id(ondelete = "CASCADE"),
                           self.event_incident_id(ondelete = "CASCADE"),
                           # @ToDo: Add Warning?
                           self.hrm_human_resource_id(empty = False,
                                                      ondelete = "RESTRICT",
                                                      ),
+                          Field("status", "integer",
+                                default = 1,
+                                represent = lambda opt: \
+                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(status_opts),
+                                ),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1764,11 +1792,16 @@ class S3EventOrganisationModel(S3Model):
 
         T = current.T
 
+        status_opts = {1: T("Alerted"),
+                       2: T("Standing By"),
+                       3: T("Active"),
+                       4: T("Deactivated"),
+                       5: T("Unable to activate"),
+                       }
+
         # ---------------------------------------------------------------------
-        # Tasks
-        # Tasks are to be assigned to resources managed by this EOC
-        # - we manage in detail
-        # @ToDo: Task Templates
+        # Organisations linked to this Incident
+        #
 
         tablename = "event_organisation"
         self.define_table(tablename,
@@ -1779,20 +1812,26 @@ class S3EventOrganisationModel(S3Model):
                           self.org_organisation_id(empty = False,
                                                    ondelete = "CASCADE",
                                                    ),
+                          Field("status", "integer",
+                                default = 1,
+                                represent = lambda opt: \
+                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(status_opts),
+                                ),
                           # @ToDo: Role?
                           *s3_meta_fields())
 
-        #current.response.s3.crud_strings[tablename] = Storage(
-        #    label_create = T("Add Organization"),
-        #    title_display = T("Organization Details"),
-        #    title_list = T("Organizations"),
-        #    title_update = T("Edit Organization"),
-        #    label_list_button = T("List Organizations"),
-        #    label_delete_button = T("Remove Organization from this incident"),
-        #    msg_record_created = T("Organization added"),
-        #    msg_record_modified = T("Organization updated"),
-        #    msg_record_deleted = T("Organization removed"),
-        #    msg_list_empty = T("No Organizations currently registered in this incident"))
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Organization"),
+            title_display = T("Organization Details"),
+            title_list = T("Organizations"),
+            title_update = T("Edit Organization"),
+            label_list_button = T("List Organizations"),
+            label_delete_button = T("Remove Organization from this incident"),
+            msg_record_created = T("Organization added"),
+            msg_record_modified = T("Organization updated"),
+            msg_record_deleted = T("Organization removed"),
+            msg_list_empty = T("No Organizations currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -1809,6 +1848,7 @@ class S3EventSiteModel(S3Model):
     def model(self):
 
         T = current.T
+        super_link = self.super_link
 
         status_opts = {1: T("Alerted"),
                        2: T("Standing By"),
@@ -1817,15 +1857,34 @@ class S3EventSiteModel(S3Model):
                        5: T("Unable to activate"),
                        }
 
+        SITE_LABEL = current.deployment_settings.get_org_site_label()
+
         # ---------------------------------------------------------------------
         # Facilities
-        # @ToDo: Search Widget
+        # @ToDo: Filter Widgets
         tablename = "event_site"
         self.define_table(tablename,
+                          # Instance table
+                          super_link("cost_item_id", "budget_cost_item"),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE",
                                                  ),
-                          self.org_site_id,
+                          # This is a component, so needs to be a super_link
+                          # - can't override field name, ondelete or requires
+                          super_link("site_id", "org_site",
+                                     #default = auth.user.site_id if auth.is_logged_in() else None,
+                                     empty = False,
+                                     label = SITE_LABEL,
+                                     ondelete = "CASCADE",
+                                     represent = self.org_site_represent,
+                                     readable = True,
+                                     writable = True,
+                                     # Comment these to use a Dropdown & not an Autocomplete
+                                     #widget = S3SiteAutocompleteWidget(),
+                                     #comment = DIV(_class="tooltip",
+                                     #              _title="%s|%s" % (SITE_LABEL,
+                                     #                                messages.AUTOCOMPLETE_HELP)),
+                                     ),
                           Field("status", "integer",
                                 default = 1,
                                 represent = lambda opt: \
@@ -1833,10 +1892,6 @@ class S3EventSiteModel(S3Model):
                                 requires = IS_IN_SET(status_opts),
                                 ),
                           *s3_meta_fields())
-
-        # @ToDo: Do this in template to keep table Lazy
-        field = self[tablename].site_id
-        field.readable = field.writable = True
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Assign Facility"),

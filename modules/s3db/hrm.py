@@ -647,31 +647,31 @@ class S3HRModel(S3Model):
         if teams:
             add_components(tablename,
                            # Team Memberships
-                           pr_group_membership={"link": "pr_person",
-                                                "joinby": "id",
-                                                "key": "id",
-                                                "fkey": "person_id",
-                                                "pkey": "person_id",
-                                               },
+                           pr_group_membership = {"link": "pr_person",
+                                                  "joinby": "id",
+                                                  "key": "id",
+                                                  "fkey": "person_id",
+                                                  "pkey": "person_id",
+                                                  },
                            )
 
         if group == "volunteer":
             add_components(tablename,
                            # Programmes
-                           hrm_programme_hours={"link": "pr_person",
-                                                "joinby": "id",
-                                                "key": "id",
-                                                "fkey": "person_id",
-                                                "pkey": "person_id",
-                                                },
-                           # Volunteer Details
-                           vol_details={"joinby": "human_resource_id",
-                                        "multiple": False,
-                                        },
-                           # Volunteer Cluster
-                           vol_volunteer_cluster={"joinby": "human_resource_id",
-                                                  "multiple": False,
+                           hrm_programme_hours = {"link": "pr_person",
+                                                  "joinby": "id",
+                                                  "key": "id",
+                                                  "fkey": "person_id",
+                                                  "pkey": "person_id",
                                                   },
+                           # Volunteer Details
+                           vol_details = {"joinby": "human_resource_id",
+                                          "multiple": False,
+                                          },
+                           # Volunteer Cluster
+                           vol_volunteer_cluster = {"joinby": "human_resource_id",
+                                                    "multiple": False,
+                                                    },
                            )
 
         if settings.get_hrm_multiple_job_titles():

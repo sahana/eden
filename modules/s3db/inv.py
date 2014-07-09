@@ -420,18 +420,19 @@ class S3InventoryModel(S3Model):
                           # This is a component, so needs to be a super_link
                           # - can't override field name, ondelete or requires
                           self.super_link("site_id", "org_site",
-                                          label = WAREHOUSE,
                                           default = auth.user.site_id if auth.is_logged_in() else None,
+                                          empty = False,
+                                          label = WAREHOUSE,
+                                          ondelete = "RESTRICT",
+                                          represent = self.org_site_represent,
                                           readable = True,
                                           writable = True,
-                                          empty = False,
-                                          ondelete = "RESTRICT",
                                           # Comment these to use a Dropdown & not an Autocomplete
                                           #widget = S3SiteAutocompleteWidget(),
                                           #comment = DIV(_class="tooltip",
                                           #              _title="%s|%s" % (WAREHOUSE,
                                           #                                messages.AUTOCOMPLETE_HELP)),
-                                          represent=self.org_site_represent),
+                                          ),
                           self.supply_item_entity_id,
                           self.supply_item_id(ondelete = "RESTRICT",
                                               required = True),
