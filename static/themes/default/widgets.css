@@ -1498,6 +1498,10 @@ div.fm-cancel {
     /* Ensure maximal space for iframe within Dialog */
     padding: 0 !important;
 }
+.ui-dialog {
+    padding: 0;
+    width: 750px !important;
+}
 
 /* UI Multiselect */
 body.ltr label.ui-corner-all span {

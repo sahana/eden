@@ -473,9 +473,9 @@ S3OptionsFilter({
                      asset_id(),
                      Field("status", "integer",
                            label = T("Status"),
-                           requires = IS_IN_SET(asset_log_status_opts),
                            represent = lambda opt: \
-                                       asset_log_status_opts.get(opt, UNKNOWN_OPT)
+                                       asset_log_status_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(asset_log_status_opts),
                            ),
                      s3_datetime("datetime",
                                  default = "now",

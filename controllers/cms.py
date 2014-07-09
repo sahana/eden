@@ -305,6 +305,7 @@ def cms_post_age(row):
 def newsfeed():
     """
         RESTful CRUD controller for display of posts as a filterable dataList
+        (use with /datalist method)
     """
 
     # Load Model
@@ -356,7 +357,7 @@ def newsfeed():
     finsert = filter_widgets.insert
 
     if show_events:
-        fappend(S3OptionsFilter("event_post",
+        fappend(S3OptionsFilter("event_post.event_id",
                                 label = T("Filter by Disaster"),
                                 hidden = hidden,
                                 ))

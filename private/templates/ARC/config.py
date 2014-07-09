@@ -314,7 +314,7 @@ settings.org.organisation_location_context = "organisation_location.location_id"
 # Set the length of the auto-generated org/site code the default is 10
 settings.org.site_code_len = 3
 # Set the label for Sites
-settings.org.site_label = "Office/Warehouse/Facility"
+settings.org.site_label = "Office/Shelter/Warehouse/Facility"
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
