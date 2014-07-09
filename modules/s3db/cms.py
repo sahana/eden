@@ -358,7 +358,7 @@ class S3ContentModel(S3Model):
                                                       "multiple": False,
                                                       },
 
-                       # For InlineForm to tag Posts to Events/Incidents
+                       # For InlineForm to tag Posts to Events/Incidents/Incident Types
                        event_post = (# Events
                                      {"name": "event_post",
                                       "joinby": "post_id",
@@ -368,6 +368,7 @@ class S3ContentModel(S3Model):
                                       "joinby": "post_id",
                                       }
                                      ),
+                       event_post_incident_type = "post_id",
 
                        # For Profile to filter appropriately
                        event_event = {"link": "event_post",
@@ -380,6 +381,11 @@ class S3ContentModel(S3Model):
                                          "key": "incident_id",
                                          "actuate": "hide",
                                          },
+                       event_incident_type = {"link": "event_post_incident_type",
+                                              "joinby": "post_id",
+                                              "key": "incident_type_id",
+                                              "actuate": "hide",
+                                              },
                        )
 
         # Custom Methods

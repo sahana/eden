@@ -542,6 +542,15 @@ def customise_asset_asset_resource(r, tablename):
 settings.customise_asset_asset_resource = customise_asset_asset_resource
 
 # -----------------------------------------------------------------------------
+def customise_cms_post_resource(r, tablename):
+
+    s3db = current.s3db
+    table = s3db.cms_post
+    table.title.comment = None
+
+settings.customise_cms_post_resource = customise_cms_post_resource
+
+# -----------------------------------------------------------------------------
 def customise_deploy_assignment_controller(**attr):
 
     s3db = current.s3db

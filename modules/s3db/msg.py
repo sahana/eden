@@ -709,7 +709,7 @@ class S3FacebookModel(S3ChannelModel):
                            label = T("Use for Login?"),
                            represent = s3_yes_no_represent,
                            ),
-                     Field("app_id", "integer",
+                     Field("app_id", "bigint",
                            requires = IS_INT_IN_RANGE(0, +1e16)
                            ),
                      Field("app_secret", "password", length=64,
@@ -717,7 +717,7 @@ class S3FacebookModel(S3ChannelModel):
                            requires = IS_NOT_EMPTY(),
                            ),
                      # Optional
-                     Field("page_id", "integer",
+                     Field("page_id", "bigint",
                            requires = IS_INT_IN_RANGE(0, +1e16)
                            ),
                      Field("page_access_token"),
@@ -1865,6 +1865,8 @@ class S3TwitterSearchModel(S3ChannelModel):
     """
         Twitter Searches
          - results can be fed to KeyGraph
+
+        https://dev.twitter.com/docs/api/1.1/get/search/tweets
     """
 
     names = ("msg_twitter_search",
@@ -1888,6 +1890,8 @@ class S3TwitterSearchModel(S3ChannelModel):
                      Field("keywords", "text",
                            label = T("Keywords"),
                            ),
+                     # @ToDo: Allow setting a Point & Radius for filtering by geocode
+                     #self.gis_location_id(),
                      Field("lang",
                            # Set in controller
                            #default = current.response.s3.language,

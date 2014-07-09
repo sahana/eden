@@ -1548,11 +1548,12 @@ class S3EventCMSModel(S3Model):
     """
 
     names = ("event_post",
+             "event_post_incident_type",
              )
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         # ---------------------------------------------------------------------
         # Link table between Posts & Events/Incidents
@@ -1565,17 +1566,29 @@ class S3EventCMSModel(S3Model):
                                            ),
                           *s3_meta_fields())
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Tag Post"),
-            title_display = T("Tag Details"),
-            title_list = T("Tags"),
-            title_update = T("Edit Tag"),
-            label_list_button = T("List Tags"),
-            label_delete_button = T("Remove Tag for this Event from this Post"),
-            msg_record_created = T("Tag added"),
-            msg_record_modified = T("Tag updated"),
-            msg_record_deleted = T("Tag removed"),
-            msg_list_empty = T("No Posts currently tagged to this event"))
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Tag Post"),
+        #    title_display = T("Tag Details"),
+        #    title_list = T("Tags"),
+        #    title_update = T("Edit Tag"),
+        #    label_list_button = T("List Tags"),
+        #    label_delete_button = T("Remove Tag for this Event from this Post"),
+        #    msg_record_created = T("Tag added"),
+        #    msg_record_modified = T("Tag updated"),
+        #    msg_record_deleted = T("Tag removed"),
+        #    msg_list_empty = T("No Posts currently tagged to this event"))
+
+        # ---------------------------------------------------------------------
+        # Link table between Posts & Incident Types
+        tablename = "event_post_incident_type"
+        self.define_table(tablename,
+                          self.cms_post_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          self.event_incident_type_id(empty = False,
+                                                      ondelete = "CASCADE",
+                                                      ),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict()
