@@ -721,14 +721,13 @@ class S3IncidentModel(S3Model):
                                                 },
                             event_post = "incident_id",
                             event_site = "incident_id",
-                            event_task = "incident_id",
-                            project_task = {"name": "event_task",
-                                            "link": "event_task",
+                            event_task = {"name": "incident_task",
+                                          "joinby": "incident_id",
+                                          },
+                            project_task = {"link": "event_task",
                                             "joinby": "incident_id",
                                             "key": "task_id",
-                                            # @ToDo: Widget to handle embedded LocationSelector
-                                            #"actuate": "embed",
-                                            "actuate": "link",
+                                            "actuate": "replace",
                                             "autocomplete": "name",
                                             "autodelete": False,
                                             },
@@ -1636,7 +1635,11 @@ class S3EventHRModel(S3Model):
         self.define_table(tablename,
                           # Instance table
                           self.super_link("cost_item_id", "budget_cost_item"),
-                          self.event_event_id(ondelete = "CASCADE"),
+                          #self.event_event_id(ondelete = "CASCADE",
+                          #                    # Enable in template if-desired
+                          #                    readable = False,
+                          #                    writable = False,
+                          #                    ),
                           self.event_incident_id(ondelete = "CASCADE"),
                           # @ToDo: Add Warning?
                           self.hrm_human_resource_id(empty = False,
@@ -1661,6 +1664,10 @@ class S3EventHRModel(S3Model):
             msg_record_modified = T("Human Resource Assignment updated"),
             msg_record_deleted = T("Human Resource unassigned"),
             msg_list_empty = T("No Human Resources currently assigned to this incident"))
+
+        self.configure(tablename,
+                       super_entity = "budget_cost_item",
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -1905,6 +1912,10 @@ class S3EventSiteModel(S3Model):
             msg_record_deleted = T("Facility removed"),
             msg_list_empty = T("No Facilities currently registered in this incident"))
 
+        self.configure(tablename,
+                       super_entity = "budget_cost_item",
+                       )
+
         # Pass names back to global scope (s3.*)
         return dict()
 
@@ -1929,7 +1940,7 @@ class S3EventTaskModel(S3Model):
 
         tablename = "event_task"
         self.define_table(tablename,
-                          #self.event_event_id(),
+                          #self.event_event_id(ondelete = "CASCADE"),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE",
                                                  ),
@@ -1951,7 +1962,8 @@ class S3EventTaskModel(S3Model):
             msg_list_empty = T("No Tasks currently registered in this incident"))
 
         self.configure(tablename,
-                       deduplicate = self.event_task_duplicate)
+                       deduplicate = self.event_task_duplicate,
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict()

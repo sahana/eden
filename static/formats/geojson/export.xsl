@@ -38,6 +38,7 @@
     <s3:fields tables="gis_layer_shapefile*" select="layer_id"/>
     <s3:fields tables="gis_theme_data" select="location_id,value"/>
     <!-- Need to be able to filter &/or style records -->
+    <s3:fields tables="cms_series" select="name"/>
     <s3:fields tables="deploy_application" select="human_resource_id"/>
     <!--
     <s3:fields tables="event_event" select="event_type_id"/>
@@ -458,7 +459,7 @@
     <xsl:template name="Attribute">
         <xsl:param name="attribute"/>
 
-        <xsl:variable name="key" select="w(substring-after(substring-before($attribute,':'),'|'),'|')"/>
+        <xsl:variable name="key" select="substring-before(substring-after(substring-before($attribute,':'),'|'),'|')"/>
         <xsl:variable name="value" select="substring-after($attribute,':')"/>
         <xsl:choose>
             <xsl:when test="contains($value,'|')">
@@ -485,7 +486,7 @@
         <xsl:variable name="attr" select="substring-before(substring-after($attributes,'{'),'}')"/>
         <xsl:choose>
             <!--<xsl:when test="contains($attributes,'],[')">-->
-            <xsl:when test="contains($attr,',')">
+            <xsl:when test="contains($attr, ',')">
                 <!--
                 <xsl:variable name="attribute" select="substring-before($attributes,',[')"/>
                 <xsl:variable name="remainder" select="normalize-space(substring-after($attributes,'],'))"/>-->

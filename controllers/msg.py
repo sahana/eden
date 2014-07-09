@@ -1930,6 +1930,168 @@ def process_twitter_outbox():
 # Enabled only for testing:
 #
 @auth.s3_requires_membership(1)
+def facebook_post():
+    """ Post to Facebook """
+
+    title = T("Post to Facebook")
+
+    # Test the formstyle
+    formstyle = s3.crud.formstyle
+    row = formstyle("test", "test", "test", "test")
+    if isinstance(row, tuple):
+        # Formstyle with separate row for label (e.g. default Eden formstyle)
+        tuple_rows = True
+    else:
+        # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+        tuple_rows = False
+
+    form_rows = []
+    comment = ""
+
+    _id = "channel_id"
+    label = LABEL("%s:" % T("Channel"))
+
+    table = s3db.msg_facebook_channel
+    query = (table.deleted == False) & \
+            (table.enabled == True)
+    rows = db(query).select(table.channel_id, table.name)
+    options = [OPTION(row.name, _value=row.channel_id) for row in rows]
+    channel_select = SELECT(_name = "channel_id",
+                            _id = _id,
+                            *options
+                            )
+    widget = channel_select
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "post"
+    label = LABEL("%s:" % T("Contents"))
+    widget = TEXTAREA(_name = "post",
+                      )
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "submit"
+    label = ""
+    widget = INPUT(_type="submit", _value=T("Post"))
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    if tuple_rows:
+        # Assume TRs
+        form = FORM(TABLE(*form_rows))
+    else:
+        form = FORM(*form_rows)
+
+    if form.accepts(request.vars, session):
+        form_vars = form.vars
+        channel_id = form_vars.get("channel_id")
+        post = form_vars.get("post")
+        if channel_id and post:
+            msg.post_to_facebook(post, channel_id)
+
+    output = dict(form = form,
+                  title = title,
+                  )
+    return output
+
+# =============================================================================
+# Enabled only for testing:
+#
+@auth.s3_requires_membership(1)
+def twitter_post():
+    """ Post to Twitter """
+
+    title = T("Post to Twitter")
+
+    # Test the formstyle
+    formstyle = s3.crud.formstyle
+    row = formstyle("test", "test", "test", "test")
+    if isinstance(row, tuple):
+        # Formstyle with separate row for label (e.g. default Eden formstyle)
+        tuple_rows = True
+    else:
+        # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+        tuple_rows = False
+
+    form_rows = []
+    comment = ""
+
+    _id = "channel_id"
+    label = LABEL("%s:" % T("Channel"))
+
+    table = s3db.msg_twitter_channel
+    query = (table.deleted == False) & \
+            (table.enabled == True)
+    rows = db(query).select(table.channel_id, table.name)
+    options = [OPTION(row.name, _value=row.channel_id) for row in rows]
+    channel_select = SELECT(_name = "channel_id",
+                            _id = _id,
+                            *options
+                            )
+    widget = channel_select
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "post"
+    label = LABEL("%s:" % T("Contents"))
+    widget = TEXTAREA(_name = "post",
+                      )
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "submit"
+    label = ""
+    widget = INPUT(_type="submit", _value=T("Post"))
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    if tuple_rows:
+        # Assume TRs
+        form = FORM(TABLE(*form_rows))
+    else:
+        form = FORM(*form_rows)
+
+    if form.accepts(request.vars, session):
+        form_vars = form.vars
+        channel_id = form_vars.get("channel_id")
+        post = form_vars.get("post")
+        if channel_id and post:
+            msg.send_tweet(post)
+
+    output = dict(form = form,
+                  title = title,
+                  )
+    return output
+
+# =============================================================================
+# Enabled only for testing:
+#
+@auth.s3_requires_membership(1)
 def tag():
     """ RESTful CRUD controller """
 

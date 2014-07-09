@@ -1,15 +1,33 @@
 {{extend "layout.html"}}
 <div id='home'>
-{{=H2(module_name)}}
+<h2>{{=module_name}}</h2>
 <p>
 {{=T("The Messaging Module is the main communications hub of the Sahana system. It is used to send alerts and/or messages using SMS & Email to various groups and individuals before, during and after a disaster.")}} 
 </p>
-<h3>{{=T("Features Include")}}:</h3>
+<div class='col2left'>
+<h3>{{=T("Publish")}}:</h3>
 <ul>
-<li>{{=T("Create & manage Distribution groups to receive Alerts")}}</li>
-<li>{{=T("Send Alerts using Email &/or SMS")}}</li>
-<li>{{=T("View Alerts received using either Email or SMS")}}</li>
+  <li><a href='{{=URL(f="compose")}}'>{{=T("Send Email / SMS")}}</a>
+  <li><a href='{{=URL(f="facebook_post")}}'>{{=T("Post to Facebook")}}</a>
+  <li><a href='{{=URL(f="twitter_post")}}'>{{=T("Post to Twitter")}}</a>
 </ul>
 </div>
-      
-      
+<div class='col2left'>
+<h3>{{=T("InBox")}}:</h3>
+<ul>
+  <li><a href='{{=URL(f="email_inbox")}}'>{{=T("Email")}}</a>
+  <li><a href='{{=URL(f="rss")}}'>{{=T("RSS")}}</a>
+  <li><a href='{{=URL(f="sms_inbox")}}'>{{=T("SMS")}}</a>
+  <li><a href='{{=URL(f="twitter_inbox")}}'>{{=T("Twitter")}}</a>
+</ul>
+</div>
+<div class='col2right'>
+<h3>{{=T("OutBox")}}:</h3>
+<ul>
+  <li><a href='{{=URL(f="email_outbox")}}'>{{=T("Email")}}</a>
+  <li><a href='{{=URL(f="facebook_outbox")}}'>{{=T("Facebook")}}</a>
+  <li><a href='{{=URL(f="sms_outbox")}}'>{{=T("SMS")}}</a>
+  <li><a href='{{=URL(f="twitter_outbox")}}'>{{=T("Twitter")}}</a>
+</ul>
+</div>
+</div>

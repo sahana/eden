@@ -247,7 +247,7 @@
         <xsl:variable name="Resource" select="col[@field='Resource']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
-        <xsl:variable name="IncidentType" select="col[@field='IncidentType']/text()"/>
+        <xsl:variable name="IncidentType" select="col[@field='Incident Type']/text()"/>
 
         <resource name="cms_post">
             <xsl:if test="$Author!=''">

@@ -17,6 +17,24 @@ def index():
     redirect(URL(f="building"))
 
 # -----------------------------------------------------------------------------
+def assess():
+    """
+        Custom function to demo Mobile Assessment collection
+    """
+
+    # This function uses it's own Theme
+    settings.base.theme = "bootstrap"
+
+    form = FORM()
+
+    title = T("Assessment")
+
+    output = dict(form = form,
+                  title = title,
+                  )
+    return output
+
+# -----------------------------------------------------------------------------
 def building_marker_fn(record):
     """
         Function to decide which Marker to use for Building Assessments Map

@@ -1265,9 +1265,9 @@ class S3BudgetAllocationModel(S3Model):
         entity_types = Storage(event_asset = T("Event Asset"),
                                event_human_resource = T("Event Human Resource"),
                                event_site = T("Event Facility"),
-                               #project_asset = T("Event Asset"),
-                               #project_human_resource = T("Event Human Resource"),
-                               #project_site = T("Event Facility"),
+                               #project_asset = T("Project Asset"),
+                               #project_human_resource = T("Project Human Resource"),
+                               #project_site = T("Project Facility"),
                                )
 
         tablename = "budget_cost_item"
