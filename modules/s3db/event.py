@@ -1512,6 +1512,8 @@ class S3EventAssetModel(S3Model):
 
         tablename = "event_asset"
         self.define_table(tablename,
+                          # Instance table
+                          self.super_link("cost_item_id", "budget_cost_item"),
                           self.event_incident_id(empty = False,
                                                  ondelete = "CASCADE"),
                           # @ToDo: Notification
@@ -1531,6 +1533,10 @@ class S3EventAssetModel(S3Model):
             msg_record_modified = T("Asset updated"),
             msg_record_deleted = T("Asset removed"),
             msg_list_empty = T("No Assets currently registered in this incident"))
+
+        self.configure(tablename,
+                       super_entity = "budget_cost_item",
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict()

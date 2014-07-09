@@ -1294,27 +1294,41 @@ class S3BudgetAllocationModel(S3Model):
         db = current.db
 
         # ---------------------------------------------------------------------
+        # Budget allocatable (super-entity for resource assignments that
+        # can be linked to a budget)
+        entity_types = Storage(event_asset=T("Asset"),
+                               # @todo: extend this list
+                               )
+
+        tablename = "budget_cost_item"
+        self.super_entity(tablename, "cost_item_id", entity_types)
+
+        add_components(tablename,
+                       budget_allocation = "cost_item_id")
+
+        # @todo: implement S3Represent for cost_item_id
+
+        # ---------------------------------------------------------------------
         # Budget allocation (links a resource assignment to a budget)
         #
         tablename = "budget_allocation"
         define_table(tablename,
                      self.budget_budget_id(),
-                     # @todo: link to event_* and project_* using an SE
-                     Field("resource"),
+                     # Component not instance
+                     self.super_link("cost_item_id", "budget_cost_item",
+                                     readable = True,
+                                     writable = True,
+                                     ),
                      s3_date("start_date",
                              label = T("Start Date")
                              ),
                      s3_date("end_date",
                              label = T("End Date")
                              ),
-                     # @todo: probably better in scope of the linked
-                     #        resource (i.e. global to all budgets)
                      Field("unit_cost", "double",
                            default = 0.00,
                            label = T("Unit Cost"),
                            ),
-                     # @todo: probably better in scope of the linked
-                     #        resource (i.e. global to all budgets)
                      Field("daily_cost", "double",
                            default = 0.00,
                            label = T("Daily Cost"),

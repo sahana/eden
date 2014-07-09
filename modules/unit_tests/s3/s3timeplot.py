@@ -86,7 +86,7 @@ class PeriodTests(unittest.TestCase):
                                     end=tp_datetime(*end),
                                     values=values,
                                     event_type=event_type)
-            period.current(event)
+            period.add_current(event)
 
         # Add previous events
         events = [
@@ -99,7 +99,7 @@ class PeriodTests(unittest.TestCase):
                                     end=tp_datetime(*end),
                                     values=values,
                                     event_type=event_type)
-            period.previous(event)
+            period.add_previous(event)
 
         # Store period
         self.period = period
