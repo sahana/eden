@@ -42,6 +42,24 @@ def index():
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
+def assess():
+    """
+        Custom function to demo Mobile Assessment collection
+    """
+
+    # This function uses it's own Theme
+    settings.base.theme = "bootstrap"
+
+    form = FORM()
+
+    title = T("Damage Assessment")
+
+    output = dict(form = form,
+                  title = title,
+                  )
+    return output
+
+# -----------------------------------------------------------------------------
 def template():
     """ RESTful CRUD controller """
 

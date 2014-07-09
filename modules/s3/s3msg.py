@@ -1292,7 +1292,7 @@ class S3Msg(object):
         return True
 
     #------------------------------------------------------------------------------
-    def post_to_facebook(self, channel_id=None, text=""):
+    def post_to_facebook(self, text="", channel_id=None):
         """
             Posts a message on Facebook
 

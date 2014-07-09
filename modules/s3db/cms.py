@@ -311,7 +311,7 @@ class S3ContentModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = cms_post_list_layout,
-                  list_orderby = "cms_post.created_on desc",
+                  list_orderby = "cms_post.date desc",
                   onaccept = self.cms_post_onaccept,
                   orderby = "cms_post.date desc",
                   summary = [{"name": "table",
@@ -799,7 +799,7 @@ class S3ContentMapModel(S3Model):
         #
         tablename = "cms_post_layer"
         self.define_table(tablename,
-                          self.cms_post_id(empty=False),
+                          self.cms_post_id(empty = False),
                           self.super_link("layer_id", "gis_layer_entity"),
                           *s3_meta_fields())
 
@@ -823,8 +823,12 @@ class S3ContentOrgModel(S3Model):
         #
         tablename = "cms_post_organisation"
         self.define_table(tablename,
-                          self.cms_post_id(empty=False),
-                          self.org_organisation_id(empty=False),
+                          self.cms_post_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          self.org_organisation_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -1259,13 +1263,14 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     NONE = current.messages["NONE"]
 
     org_field = settings.get_cms_organisation()
-    # Why do we need to look up these vs. set them right in the first place?
+    # Convert to the right format for this context
     if org_field == "created_by$organisation_id":
         org_field = "auth_user.organisation_id"
     elif org_field == "post_organisation.organisation_id":
         org_field = "cms_post_organisation.organisation_id"
 
     org_group_field = settings.get_cms_organisation_group()
+    # Convert to the right format for this context
     if org_group_field == "created_by$org_group_id":
         org_group_field = "auth_user.org_group_id"
     elif org_group_field == "post_organisation_group.group_id":
@@ -1276,7 +1281,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     series_id = raw["cms_post.series_id"]
 
     title  = record["cms_post.title"]
-    if title and title != "-":
+    if title and title != NONE:
         subtitle = [DIV(title,
                         _class="card-subtitle"
                         )
@@ -1557,7 +1562,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             try:
                 doc_name = retrieve(doc)[0]
             except (IOError, TypeError):
-                doc_name = messages["NONE"]
+                doc_name = NONE
             doc_url = URL(c="default", f="download",
                           args=[doc])
             doc_item = LI(A(I(_class="icon-file"),

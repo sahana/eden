@@ -753,7 +753,7 @@ def s3_URLise(text):
         @param text: the text
     """
 
-    output = URLSCHEMA.sub(lambda m: '<a href="%s">%s</a>' %
+    output = URLSCHEMA.sub(lambda m: '<a href="%s" target="_blank">%s</a>' %
                           (m.group(0), m.group(0)), text)
     return output
     

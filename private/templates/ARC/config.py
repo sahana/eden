@@ -24,7 +24,7 @@ T = current.T
 settings.base.prepopulate = ["ARC", "ARC/Demo", "demo/users"]
 
 settings.base.system_name = T("Resource Management System")
-settings.base.system_name_short = T("RMS")
+settings.base.system_name_short = T("ARC Demo")
 
 # =============================================================================
 # System Settings
@@ -280,7 +280,7 @@ settings.cms.show_events = True
 # Uncomment to show Links in Newsfeed
 settings.cms.show_links = True
 # Uncomment to show Tags in Newsfeed
-settings.cms.show_tags = True
+#settings.cms.show_tags = True
 # Uncomment to show post Titles in Newsfeed
 #settings.cms.show_titles = True
 # Uncomment to use organisation_id instead of created_by in Newsfeed
@@ -545,8 +545,8 @@ settings.customise_asset_asset_resource = customise_asset_asset_resource
 def customise_cms_post_resource(r, tablename):
 
     s3db = current.s3db
-    table = s3db.cms_post
-    table.title.comment = None
+    s3db.cms_post.title.comment = None
+    s3db.cms_post_organisation.organisation_id.represent = s3db.org_OrganisationRepresent(acronym=False)
 
 settings.customise_cms_post_resource = customise_cms_post_resource
 
@@ -1784,10 +1784,10 @@ settings.modules = OrderedDict([
             restricted = True,
             #module_type = None,
         )),
-    #("vulnerability", Storage(
-    #        name_nice = T("Vulnerability"),
-    #        #description = "Manages vulnerability indicators",
-    #        restricted = True,
-    #        #module_type = 10,
-    #    )),
+    ("vulnerability", Storage(
+            name_nice = T("Vulnerability"),
+            #description = "Manages vulnerability indicators",
+            restricted = True,
+            #module_type = 10,
+        )),
 ])

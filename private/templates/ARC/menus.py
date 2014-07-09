@@ -51,6 +51,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Incident Reports", c="event", f="incident_report"),
                 MM("Assessments", c="survey", f="series"),
                 MM("Situation Reports", c="sit", f="report"),
+                MM("Messages", c="msg", f="index"),
                 # Have as a Tab on the Incident?
                 #MM("Budgets", c="budget", f="budget"),
                 # Have as a Tab on the Incident?

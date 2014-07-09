@@ -111,8 +111,11 @@ a.btn.btn-primary.main-add {
     margin-left: 0;
 }
 
-.dl-item .s3-tags {
-    margin-bottom: 0
+.s3-tags {
+    border: 0;
+    list-style-type: none;
+    margin-bottom: 0;
+    margin-left: 105px;
 }
 
 .div.media a.pull-left img.media-object {
@@ -206,10 +209,10 @@ a.card-organisation {
     color: #7b7b78;
     text-transform: none;
 }
-
+/*
 .card-organisation{
     font-size: 10px;
-}
+}*/
 
 .card-organisation:hover,
 .card-person a:hover {
