@@ -510,7 +510,7 @@ class S3BudgetKitModel(S3Model):
         #
         tablename = "budget_kit"
         define_table(tablename,
-                     Field("code", length=128, notnull=True, unique=True
+                     Field("code", length=128, notnull=True, unique=True,
                            label = T("Code"),
                            #requires = [IS_NOT_EMPTY(),
                            #            IS_NOT_ONE_OF(db, "%s.code" % tablename),
@@ -626,7 +626,7 @@ class S3BudgetKitModel(S3Model):
                            #default = 1,
                            label = T("Category"),
                            represent = lambda opt: \
-                                       budget_category_type_opts.get(opt, UNKNOWN_OPT)
+                                       budget_category_type_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(budget_category_type_opts, zero=None),
                            ),
                      Field("code", length=128, notnull=True, unique=True,
@@ -643,7 +643,7 @@ class S3BudgetKitModel(S3Model):
                            #default = 1,
                            label = T("Cost Type"),
                            represent = lambda opt: \
-                                       budget_cost_type_opts.get(opt, UNKNOWN_OPT)
+                                       budget_cost_type_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(budget_cost_type_opts,
                                                 zero=None),
                            ),
