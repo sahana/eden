@@ -415,3 +415,26 @@ button.alert-send-btn:enabled {
     max-height: 360px;
     overflow-y: auto;
 }
+
+/* Styling Improvements */
+.filter-form td, #filter_options td {
+    border: none;
+}
+#summary-tabs,
+#summary-tabs .ui-widget-header {
+    border: none;
+    background: none;
+}
+#summary-tab-headers {
+    margin-left: 5px;
+}
+
+#summary-sections {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #fcf9ed;
+    margin-bottom: 10px
+}
+#summary-sections #table-container {
+    margin-bottom: 20px
+}

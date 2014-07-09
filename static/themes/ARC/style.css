@@ -27,9 +27,71 @@ table tr th.edit-delete-col {
 }
 .submit-search {
     background: url(../IFRC/img/search_but.png) no-repeat;
+<<<<<<< HEAD
 }*/
 
 /* Allow space for 'Subscription' */
 #header #personal-menu li {
     padding: 5px 6px 0;
+}
+
+
+/* CMS Post Datalist */
+.dl-row {
+    border: none;
+}
+
+.dl-item {
+    border: 1px solid #aaa;
+    margin-bottom: 5px;
+    padding: 0;
+}
+
+.card-header {
+    border-bottom: 1px solid #aaa;
+    height: 20px;
+    padding: 5px;
+    background-color: #f4edd4;
+}
+
+
+.card-header .icon- {
+    display:none;
+}
+
+.location-title {
+    margin-left: 10px;
+}
+
+.date-title {
+    margin-left: 20px;
+}
+
+.edit-bar.fright {
+    top: 0;
+}
+
+.dl-item .media {
+    margin: 0 10px;
+}
+.dl-item > .media > a {
+    float: left;
+    margin-right: 10px;
+    width: 100px;
+}
+
+div.media a.pull-left img.media-object {
+    position: relative;
+}
+
+.dl-item .media-body {
+    margin-left: 0px;
+}
+
+.card-subtitle {
+    font-size: 16px;
+}
+
+.dl-item .s3-tags {
+    margin-bottom: 0
 }

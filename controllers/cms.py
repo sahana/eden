@@ -356,7 +356,7 @@ def newsfeed():
     finsert = filter_widgets.insert
 
     if show_events:
-        fappend(S3OptionsFilter("event_post",
+        fappend(S3OptionsFilter("event_post.event_id",
                                 label = T("Filter by Disaster"),
                                 hidden = hidden,
                                 ))

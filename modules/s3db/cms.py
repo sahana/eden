@@ -245,6 +245,22 @@ class S3ContentModel(S3Model):
                                   sortby = "name",
                                   )
 
+        list_fields = ["title",
+                       "body",
+                       "location_id",
+                       "date",
+                       "expired",
+                       "comments"
+                       ]
+
+        org_field = settings.get_cms_organisation()
+        if org_field == "created_by$organisation_id":
+            org_field = "auth_user.organisation_id"
+        elif org_field == "post_organisation.organisation_id":
+            org_field = "cms_post_organisation.organisation_id"
+        if org_field:
+            list_fields.append(org_field)
+
         filter_widgets = [S3TextFilter(["body"],
                                        label = T("Search"),
                                        _class = "filter-search",
@@ -293,10 +309,11 @@ class S3ContentModel(S3Model):
                                      },
                                     ],
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   list_layout = cms_post_list_layout,
                   list_orderby = "cms_post.created_on desc",
                   onaccept = self.cms_post_onaccept,
-                  orderby = "cms_post.created_on desc",
+                  orderby = "cms_post.date desc",
                   summary = [{"name": "table",
                               "label": "Table",
                               "widgets": [{"method": "datatable"}]
@@ -1236,6 +1253,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     NONE = current.messages["NONE"]
 
     org_field = settings.get_cms_organisation()
+    # Why do we need to look up these vs. set them right in the first place?
     if org_field == "created_by$organisation_id":
         org_field = "auth_user.organisation_id"
     elif org_field == "post_organisation.organisation_id":
@@ -1251,7 +1269,15 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     body = record["cms_post.body"]
     series_id = raw["cms_post.series_id"]
 
-    subtitle = []
+    title  = record["cms_post.title"]
+    if title and title != "-":
+        subtitle = [DIV(title,
+                        _class="card-subtitle"
+                        )
+                    ]
+    else:
+        subtitle = []
+        
     for event_resource in ["event", "incident"]:
         label = record["event_post.%s_id" % event_resource]
         if label and label != NONE:
@@ -1363,10 +1389,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                              _width=50,
                              _style="padding-right:5px;",
                              _class="media-object")
-                avatar = A(avatar,
-                           _href=org_url,
-                           _class="pull-left",
-                           )
+            else:
+                avatar = organisation
+            avatar = A(avatar,
+                       _href=org_url,
+                       _class="pull-left",
+                       )
 
     org_group = ""
     if org_group_field:
@@ -1406,10 +1434,10 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         card_person = DIV(person,
                           _class="card-person",
                           )
-    elif organisation:
-        card_person = DIV(organisation,
-                          _class="card-person",
-                          )
+    #elif organisation:
+    #    card_person = DIV(organisation,
+    #                      _class="card-person",
+    #                      )
     elif org_group:
         card_person = DIV(org_group,
                           _class="card-person",
