@@ -146,11 +146,6 @@ settings.frontpage.rss = [
 #        "name": "servername"
 #        } 
 
-# FaceBook OAuth (to allow users to login using FaceBook)
-# https://developers.facebook.com/apps
-#settings.auth.facebook_id = ""
-#settings.auth.facebook_secret = ""
-
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
 # NB Needs to be publically-accessible URL for querying via client JS
 #settings.gis.geoserver_url = "http://localhost/geoserver"

@@ -132,11 +132,11 @@ class S3AssetModel(S3Model):
                            ASSET_TYPE_OTHER       : T("Other"),
                            }
 
-        asset_condition_opts = {1:T("Good Condition"),
-                                2:T("Minor Damage"),
-                                3:T("Major Damage"),
-                                4:T("Un-Repairable"),
-                                5:T("Needs Maintenance"),
+        asset_condition_opts = {1: T("Good Condition"),
+                                2: T("Minor Damage"),
+                                3: T("Major Damage"),
+                                4: T("Un-Repairable"),
+                                5: T("Needs Maintenance"),
                                 }
 
         ctable = self.supply_item_category

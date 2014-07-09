@@ -449,6 +449,8 @@ settings.gis.geonames_username = "eden_test"
 # Enable the use of Organisation Groups & what their name is
 #settings.org.groups = "Coalition"
 #settings.org.groups = "Network"
+# Organisation Location context
+#settings.org.organisation_location_context = "organisation_location.location_id"
 # Make Organisation Types Hierarchical
 #settings.org.organisation_types_hierarchical = True
 # Make Organisation Types Multiple

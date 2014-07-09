@@ -3,13 +3,10 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Risks - CSV Import Stylesheet
+         Organisation Locations - CSV Import Stylesheet
 
          CSV fields:
-         Name.................................vulnerability_risk.name
-         Hazard...............................vulnerability_risk.hazard_id
-         Description..........................vulnerability_risk.comments
-         Organisation Group...................vulnerability_risk_group.group_id  
+         Organisation.........................org_organsiation.name
          Country.................optional.....gis_location.L0 Name or ISO2
          L1......................optional.....gis_location.L1
          L2......................optional.....gis_location.L2
@@ -17,7 +14,6 @@
          L4......................optional.....gis_location.L4 (not commonly-used)
          L5......................optional.....gis_location.L5 (not commonly-used)
          WKT.....................optional.....gis_location.WKT (Polygon)
-         KV:XX...................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -74,16 +70,14 @@
                          col[@field='L4'], '/',
                          col[@field='L5'])"/>
 
-    <xsl:key name="hazard" match="row" use="col[@field='Hazard']"/>
-
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
 
-            <!-- Organisation Group -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
-                                                                       col[@field='Organisation Group'])[1])]">
-                <xsl:call-template name="OrganisationGroup"/>
+            <!-- Organisation -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation',
+                                                                       col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 
             <!-- L1 -->
@@ -141,13 +135,7 @@
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
 
-            <!-- Hazards -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('hazard',
-                                                                       col[@field='Hazard'])[1])]">
-                <xsl:call-template name="Hazard"/>
-            </xsl:for-each>
-
-            <!-- Risks -->
+            <!-- Organisation Locations -->
             <xsl:apply-templates select="table/row"/>
 
         </s3xml>
@@ -156,38 +144,20 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <!-- Risk -->
-        <resource name="vulnerability_risk">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Description']"/></data>
+        <!-- Organisation Location -->
+        <resource name="organisation_location">
 
-            <!-- Link to Hazard -->
-            <reference field="hazard_id" resource="vulnerability_hazard">
+            <!-- Organisation -->
+            <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Hazard:', col[@field='Hazard'])"/>
+                    <xsl:value-of select="concat('Organisation:', col[@field='Organisation'])"/>
                 </xsl:attribute>
             </reference>
-
-            <!-- Organisation Group -->
-            <xsl:if test="col[@field='Organisation Group']!=''">
-                <resource name="vulnerability_risk_group">
-                    <reference field="group_id" resource="org_group">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('OrganisationGroup:', col[@field='Organisation Group'])"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
-            </xsl:if>
 
             <!-- Link to Location - @ToDo fix to work with col[@field=$Country] -->
             <xsl:if test="col[@field='WKT']!='' or col[@field='Country']!=''">
                 <xsl:call-template name="LocationReference"/>
             </xsl:if>
-
-            <!-- Arbitrary Tags -->
-            <xsl:for-each select="col[starts-with(@field, 'KV')]">
-                <xsl:call-template name="KeyValue"/>
-            </xsl:for-each>
 
         </resource>
 
@@ -201,44 +171,16 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Hazard">
-        <xsl:variable name="hazard" select="col[@field='Hazard']/text()"/>
+    <xsl:template name="Organisation">
 
-        <resource name="vulnerability_hazard">
+        <xsl:variable name="Organisation" select="col[@field='Organisation']"/>
+
+        <resource name="org_organisation">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('Hazard:', $hazard)"/>
+                <xsl:value-of select="concat('Organisation:', $Organisation)"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="$hazard"/></data>
-       </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="KeyValue">
-        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
-        <xsl:variable name="Value" select="text()"/>
-
-        <xsl:if test="$Value!=''">
-            <resource name="vulnerability_risk_tag">
-                <data field="tag"><xsl:value-of select="$Key"/></data>
-                <data field="value"><xsl:value-of select="$Value"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="OrganisationGroup">
-
-        <xsl:variable name="OrganisationGroup" select="col[@field='Organisation Group']"/>
-
-        <xsl:if test="$OrganisationGroup!=''">
-            <resource name="org_group">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('OrganisationGroup:', $OrganisationGroup)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$OrganisationGroup"/></data>
-            </resource>
-        </xsl:if>
+            <data field="name"><xsl:value-of select="$Organisation"/></data>
+        </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -695,7 +637,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Location">
 
-        <xsl:variable name="Name" select="col[@field='Name']/text()"/>
+        <xsl:variable name="Name" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>

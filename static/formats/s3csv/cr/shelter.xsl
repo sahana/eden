@@ -17,6 +17,7 @@
          L2.............................optional.....L2
          L3.............................optional.....L3
          Address........................optional.....Address
+         Postcode.......................optional.....Postcode
          Lat............................optional.....Latitude
          Lon............................optional.....Longitude
          Capacity Day...................cr_shelter.capacity_day

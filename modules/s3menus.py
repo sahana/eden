@@ -1323,6 +1323,7 @@ class S3OptionsMenu(object):
 
         if current.request.function in ("sms_outbound_gateway",
                                         "email_channel",
+                                        "facebook_channel",
                                         "sms_modem_channel",
                                         "sms_smtp_channel",
                                         "sms_webapi_channel",
@@ -1336,14 +1337,16 @@ class S3OptionsMenu(object):
                     M("Compose", f="compose"),
                     M("InBox", f="inbox")(
                         M("Email", f="email_inbox"),
+                        #M("Facebook", f="facebook_inbox"),
                         M("RSS", f="rss"),
                         M("SMS", f="sms_inbox"),
                         M("Twitter", f="twitter_inbox"),
                     ),
                     M("Outbox", f="outbox")(
-                       M("Email", f="email_outbox"),
-                       M("SMS", f="sms_outbox"),
-                       M("Twitter", f="twitter_outbox"),
+                        M("Email", f="email_outbox"),
+                        M("Facebook", f="facebook_outbox"),
+                        M("SMS", f="sms_outbox"),
+                        M("Twitter", f="twitter_outbox"),
                     ),
                     M("Message Log", f="message"),
                     M("Distribution groups", f="group")(
@@ -1743,6 +1746,7 @@ class S3OptionsMenu(object):
 
         return [
             M("Email Channels (Inbound)", c="msg", f="email_channel"),
+            M("Facebook Channels", c="msg", f="facebook_channel"),
             M("RSS Channels", c="msg", f="rss_channel"),
             M("SMS Outbound Gateways", c="msg", f="sms_outbound_gateway")(
                 M("SMS Modem Channels", c="msg", f="sms_modem_channel"),

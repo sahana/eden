@@ -221,9 +221,14 @@
             <!-- Asset Type is Vehicle -->
             <data field="type">1</data>
 
-            <xsl:if test="$AssetNumber != ''">
-                <data field="number"><xsl:value-of select="$AssetNumber"/></data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$AssetNumber != ''">
+                    <data field="number"><xsl:value-of select="$AssetNumber"/></data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <data field="number"><xsl:value-of select="col[@field='Name']"/></data>
+                </xsl:otherwise>
+            </xsl:choose>
             <xsl:if test="col[@field='SN'] != ''">
                 <data field="sn"><xsl:value-of select="col[@field='SN']"/></data>
             </xsl:if>

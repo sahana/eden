@@ -900,11 +900,13 @@ def skill():
 def facebook():
     """ Login using Facebook """
 
-    if not auth.settings.facebook:
+    channel = s3db.msg_facebook_login()
+
+    if not channel:
         redirect(URL(f="user", args=request.args, vars=get_vars))
 
     from s3oauth import FaceBookAccount
-    auth.settings.login_form = FaceBookAccount()
+    auth.settings.login_form = FaceBookAccount(channel)
     form = auth()
 
     return dict(form=form)
@@ -913,11 +915,13 @@ def facebook():
 def google():
     """ Login using Google """
 
-    if not auth.settings.google:
+    channel = settings.get_auth_google()
+
+    if not channel:
         redirect(URL(f="user", args=request.args, vars=get_vars))
 
     from s3oauth import GooglePlusAccount
-    auth.settings.login_form = GooglePlusAccount()
+    auth.settings.login_form = GooglePlusAccount(channel)
     form = auth()
 
     return dict(form=form)
