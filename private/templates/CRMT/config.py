@@ -290,8 +290,8 @@ settings.gis.mouse_position = None
 settings.gis.overview = False
 # Uncomment to hide the permalink control (we have our own saved maps functionality)
 settings.gis.permalink = False
-# Uncomment to disable the ability to add PoIs to the main map
-settings.gis.pois = False
+# Resources which can be directly added to the main map
+settings.gis.poi_create_resources = None
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
 # Uncomment to show the Print control:

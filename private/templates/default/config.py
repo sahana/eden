@@ -272,8 +272,9 @@ settings.L10n.decimal_separator = "."
 #settings.gis.overview = False
 # Uncomment to hide the permalink control
 #settings.gis.permalink = False
-# Uncomment to disable the ability to add PoIs to the main map
-#settings.gis.pois = False
+# Resources which can be directly added to the main map
+#settings.gis.poi_create_resources = None
+#settings.gis.poi_create_resources = [{"c":"event", "f":"incident_report", "table": "gis_poi", label": T("Add Incident Report") ,"tooltip": T("Add Incident Report"), "layer":"Incident Reports", "location": "popup"}]
 # PoIs to export in KML/OSM feeds from Admin locations
 #settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office"]
 # Uncomment to show the Print control:
@@ -298,8 +299,6 @@ settings.L10n.decimal_separator = "."
 #settings.gis.zoomcontrol = False
 # GeoNames username
 settings.gis.geonames_username = "eden_test"
-# Add a resource to enable it's button to be directly added to the map
-#settings.gis.poi_create_resources = [{"c":"gis","f":"poi","label": T("Add PoI") ,"tooltip": T("Add PoI"),"layer":"PoIs","location":"popup"},{"c":"event","f":"incident","label": "Add Incident Report" ,"tooltip":"Add Incident Report","layer":"Incident Reports","location":"popup"}]
 
 # Messaging Settings
 # If you wish to use a parser.py in another folder than "default"

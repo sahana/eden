@@ -180,8 +180,6 @@ settings.gis.countries = ["LK"]
 settings.gis.layer_properties = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
-# Uncomment to disable the ability to add PoIs to the main map
-settings.gis.pois = False
 # GeoNames username
 settings.gis.geonames_username = "tldrmp"
 

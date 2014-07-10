@@ -920,11 +920,30 @@ class S3Config(Storage):
         """
         return self.gis.get("permalink", True)
 
-    def get_gis_pois(self):
+    def get_gis_poi_create_resources(self):
         """
-            Should the Map allow the addition of PoIs?
+            List of resources which can be directly added to the main map.
+            Includes the type (point, line or polygon) and where they are to be
+            accessed from (button, menu or popup)
+
+            Defaults to the generic 'gis_poi' resource as a point from a button
+
+            @ToDo: Complete the button vs menu vs popup
         """
-        return self.gis.get("pois", True)
+        T = current.T
+        return self.gis.get("poi_create_resources",
+                            [{"c": "gis",               # Controller
+                              "f": "poi",               # Function
+                              "table": "gis_poi",       # For permissions check
+                              # Default:
+                              #"type": "point",          # Feature Type: point, line or polygon
+                              "label": T("Add PoI"),    # Label
+                              #"tooltip": T("Add PoI"),  # Tooltip
+                              "layer": "PoIs",          # Layer Name to refresh
+                              "location": "button",     # Location to access from
+                              },
+                              ]
+                            ) 
 
     def get_gis_poi_export_resources(self):
         """
@@ -1025,12 +1044,6 @@ class S3Config(Storage):
             - if-desired, set to the Key of a Key/Value pair (e.g. "PCode")
         """
         return self.gis.get("lookup_code", False)
-
-    def get_gis_poi_create_resources(self):
-        """
-            List of resources which can be directly added to the map           
-        """
-        return self.gis.get("poi_create_resources", []) 
 
     # -------------------------------------------------------------------------
     # L10N Settings

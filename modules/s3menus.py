@@ -793,7 +793,14 @@ class S3OptionsMenu(object):
 
         settings = current.deployment_settings
         gis_menu = settings.get_gis_menu()
-        pois = settings.get_gis_pois()
+        def pois(i):
+            poi_resources = settings.get_gis_poi_create_resources()
+            if not poi_resources:
+                return False
+            for res in poi_resources:
+                if res["table"] == "gis_poi":
+                    return True
+            return False
 
         def config_menu(i):
             auth = current.auth
@@ -849,7 +856,7 @@ class S3OptionsMenu(object):
                           restrict=[MAP_ADMIN]),
                         #M("Geocode", f="geocode_manual"),
                     ),
-                    M("PoIs", c="gis", f="poi", check=[pois])(),
+                    M("PoIs", c="gis", f="poi", check=pois)(),
                     #M("Population Report", f="location", m="report",
                     #  vars=dict(rows="name",
                     #            fact="population",
