@@ -49,6 +49,7 @@ class S3MainMenu(default.S3MainMenu):
             homepage("event", name= "Situational Awareness")(
                 MM("Incidents", c="event", f="incident"),
                 #MM("Incident Reports", c="event", f="incident_report"),
+                MM("Deployments", c="deploy", f="mission"),
                 MM("Assessments", c="survey", f="series"),
                 MM("Situation Reports", c="sit", f="report"),
                 MM("Messages", c="msg", f="index"),

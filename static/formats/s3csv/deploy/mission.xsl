@@ -30,7 +30,7 @@
     </xsl:variable>
 
     <!-- ****************************************************************** -->
-    <xsl:key name="type" match="row" use="concat(col[@field='Event Type'])"/>
+    <xsl:key name="type" match="row" use="col[@field='Event Type']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -55,12 +55,12 @@
 
         <!-- Mission -->
         <resource name="deploy_mission">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <xsl:if test="col[@field='Date']!=''">
                 <xsl:attribute name="modified_on">
-                    <xsl:value-of select="col[@field='Date']"/></data>
+                    <xsl:value-of select="col[@field='Date']"/>
                 </xsl:attribute>
             </xsl:if>
+            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <xsl:if test="col[@field='Comments']!=''">
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>
@@ -73,7 +73,7 @@
             </reference>
 
             <!-- Link to Location(s) -->
-            <xsl:when test="$l0!=''">
+            <xsl:if test="$l0!=''">
                 <!-- Country Code = UUID of the L0 Location -->
                 <xsl:variable name="countrycode">
                     <xsl:choose>
@@ -100,7 +100,7 @@
                         <xsl:value-of select="$country"/>
                     </xsl:attribute>
                 </reference>
-            </xsl:when>
+            </xsl:if>
 
         </resource>
 

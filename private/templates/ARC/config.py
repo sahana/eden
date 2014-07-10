@@ -614,7 +614,7 @@ def cms_post_popup(r, output):
                                    limitby=(0, 1)
                                    ).first()
     if row:
-        from gluon import IMG, URL
+        from gluon.html import IMG
         image = IMG(_src=URL(c="default", f="download", args=[row.file]))
         output["image"] = image
 
@@ -969,7 +969,7 @@ def customise_hrm_human_resource_controller(**attr):
         if isinstance(output, dict):
             if r.controller == "deploy" and \
                "title" in output:
-                output["title"] = T("RDRT Members")
+                output["title"] = T("Damage Assessment Team Members")
 
         return output
     s3.postp = custom_postp
