@@ -707,6 +707,7 @@ settings.customise_event_incident_resource = customise_event_incident_resource
 def poi_marker_fn(record):
     """
         Function to decide which Marker to use for PoI KML export
+        - unused currently
     """
 
     db = current.db
@@ -715,12 +716,7 @@ def poi_marker_fn(record):
                                                       limitby=(0, 1)
                                                       ).first()
     if ptype:
-        marker = ptype.name.lower().replace(" ", "_")\
-                                   .replace("_cccm", "_CCCM")\
-                                   .replace("_nfi_", "_NFI_")\
-                                   .replace("_ngo_", "_NGO_")\
-                                   .replace("_wash", "_WASH")
-        marker = "OCHA/%s_40px.png" % marker
+        marker = "ARC/%s.png" % ptype.name.replace(" ", "_")
     else:
         # Fallback
         marker = "marker_red.png"
@@ -730,11 +726,25 @@ def poi_marker_fn(record):
 # -----------------------------------------------------------------------------
 def customise_gis_poi_resource(r, tablename):
 
-    if r.representation == "kml":
-        # Custom Marker function
-        current.s3db.configure("gis_poi",
-                               marker_fn = poi_marker_fn,
-                               )
+    #if r.representation == "kml":
+    #    # Custom Marker function
+    #    current.s3db.configure("gis_poi",
+    #                           marker_fn = poi_marker_fn,
+    #                           )
+    if current.request.get_vars.get("wkt"):
+        # Hide Lat/Lon
+        script = """$('#gis_poi_location_id_lat1,#gis_poi_location_id_lat,#gis_poi_location_id_lon1,#gis_poi_location_id_lon').hide()"""
+        current.response.s3.jquery_ready.append(script)
+        # Type is Feeding Route
+        s3db = current.s3db
+        table = s3db.gis_poi_type
+        type = current.db(table.name == "Feeding Route").select(table.id,
+                                                                limitby=(0, 1)
+                                                                ).first()
+        if type:
+            field = s3db.gis_poi.poi_type_id
+            field.default = type.id
+            field.readable = field.writable = False
 
 settings.customise_gis_poi_resource = customise_gis_poi_resource
 

@@ -4378,7 +4378,7 @@ class GIS(object):
                 try:
                     features = db(query).select(*fields)
                 except MemoryError:
-                    s3.log.error("Unable to update Location Tree for level %s: MemoryError" % level)
+                    current.log.error("S3GIS: Unable to update Location Tree for level %s: MemoryError" % level)
                 else:
                     for feature in features:
                         feature["level"] = level
