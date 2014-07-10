@@ -44,11 +44,11 @@ class S3VehicleModel(S3Model):
         @ToDo: Merge into Transport module
     """
 
-    names = ["vehicle_vehicle_type",
+    names = ("vehicle_vehicle_type",
              "vehicle_vehicle",
              "vehicle_gps",
              "vehicle_vehicle_id",
-             ]
+             )
 
     def model(self):
 

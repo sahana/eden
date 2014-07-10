@@ -8699,7 +8699,7 @@ class S3ExportPOI(S3Method):
             resources = r.get_vars["resources"]
         else:
             # Fallback to deployment_setting
-            resources = current.deployment_settings.get_gis_poi_resources()
+            resources = current.deployment_settings.get_gis_poi_export_resources()
         if not isinstance(resources, list):
             resources = [resources]
         [tables.extend(t.split(",")) for t in resources]
@@ -8872,7 +8872,7 @@ class S3ImportPOI(S3Method):
             # @ToDo: use settings.get_ui_formstyle()
             res_select = [TR(TD(B("%s: " % T("Select resources to import")),
                                 _colspan=3))]
-            for resource in current.deployment_settings.get_gis_poi_resources():
+            for resource in current.deployment_settings.get_gis_poi_export_resources():
                 _id = "res_" + resource
                 res_select.append(TR(TD(LABEL(resource, _for=_id)),
                                      TD(INPUT(_type="checkbox",

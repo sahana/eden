@@ -3091,8 +3091,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Add a Popup to map
     var addPopup = function(feature, url, contents, iframe) {
         var id = feature.id + '_popup';
-        if (iframe) {
-            if (url.indexOf('http://') === 0) {
+        if (iframe && url) {
+            if (url.indexOf('http://') === 0 ) {
                 // Use Proxy for remote popups
                 url = OpenLayers.ProxyHost + encodeURIComponent(url);
             }
@@ -3712,16 +3712,76 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Draw Controls
             toolbar.addSeparator();
             //toolbar.add(selectButton);
+            /* @ToDo: Get Menus/Popups working
+            if (S3.gis.poi_resources) {
+                //var is_popup_enabled;
+                var menu_items = [];
+                var resource_array = S3.gis.poi_resources;
+                for (var i=0; i < resource_array.length ; i++) {
+                    addCustomPointControl(map, toolbar, point_pressed, resource_array[i], menu_items);
+                    if (resource_array[i]['location'] == 'popup') {
+                        is_popup_enabled = true;
+                    }
+                }
+                if (menu_items.length > 0) {
+                    toolbar.add({
+                        text: i18n.gis_add_resources, // @ToDo: Add this to s3gis.py
+                        menu: new Ext.menu.Menu({ items: menu_items })
+                    });
+                }
+                 Popup for selecting resources
+                if (is_popup_enabled) {
+                    addResourcePopupButton(map, toolbar, point_pressed, resource_array);
+                }
+            } else if (options.draw_feature) {
+            */
+            var poi_resources = S3.gis.poi_resources;
+            var i,
+                len = poi_resources.length,
+                resource;
             if (options.draw_feature) {
-                addPointControl(map, toolbar, point_pressed);
+                if (poi_resources) {
+                    // Add a button per point resource
+                    for (i = 0; i < len; i++) {
+                        resource = poi_resources[i];
+                        if (resource['t'] == 'point') {
+                            addPointControl(map, toolbar, point_pressed, resource);
+                        }
+                    }
+                } else {
+                    // Add a generic button
+                    addPointControl(map, toolbar, point_pressed);
+                }
             }
             //toolbar.add(lineButton);
             if (options.draw_line) {
-                addLineControl(map, toolbar, line_pressed, true);
+                if (poi_resources) {
+                    // Add a button per line resource
+                    for (i = 0; i < len; i++) {
+                        resource = poi_resources[i];
+                        if (resource['t'] == 'line') {
+                            addLineControl(map, toolbar, line_pressed, resource);
+                        }
+                    }
+                } else {
+                    // Add a generic button
+                    addLineControl(map, toolbar, line_pressed);
+                }
             }
-            //toolbar.add(lineButton);
+            //toolbar.add(polygonButton);
             if (options.draw_polygon) {
-                addPolygonControl(map, toolbar, polygon_pressed, true);
+                if (poi_resources) {
+                    // Add a button per line resource
+                    for (i = 0; i < len; i++) {
+                        resource = poi_resources[i];
+                        if (resource['t'] == 'line') {
+                            addPolygonControl(map, toolbar, polygon_pressed, true, resource);
+                        }
+                    }
+                } else {
+                    // Add a generic button
+                    addPolygonControl(map, toolbar, polygon_pressed, true);
+                }
             }
             //toolbar.add(dragButton);
             //toolbar.add(resizeButton);
@@ -4175,9 +4235,174 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         toolbar.addButton(navPreviousButton);
         toolbar.addButton(navNextButton);
     };
+    
+    // Add button for placing popup on map and selecting a resource
+    /* - currently unused (@ToDo: Integrate this into the main control)
+    var resourcePopup;
+    var urlArray = new Array(), counter = 0;
+    var addResourcePopupButton = function(map, toolbar, active, resource_array) {        
+        OpenLayers.Handler.PointS3 = OpenLayers.Class(OpenLayers.Handler.Point, {
+            // Ensure that we propagate Double Clicks (so we can still Zoom)
+            dblclick: function(evt) {
+                //OpenLayers.Event.stop(evt);
+                return true;
+            },
+            CLASS_NAME: 'OpenLayers.Handler.PointS3'
+        });
+        var draftLayer = map.s3.draftLayer;
+        var control = new OpenLayers.Control.DrawFeature(draftLayer, OpenLayers.Handler.PointS3, {
+            // custom Callback
+            'featureAdded': function(feature) {
+                // Remove previous point
+                if (map.s3.lastDraftFeature) {
+                    map.s3.lastDraftFeature.destroy();
+                } else if (draftLayer.features.length > 1) {
+                    // Clear the one from the Current Location in S3LocationSelector
+                    draftLayer.features[0].destroy();
+                }
+                // Destroy previously created popups
+                while (map.popups.length > 0) { 
+                    map.removePopup(map.popups[0]); 
+                } 
+                //Generating HTML buttons for adding to the popup
+                var HTML_inside_popup = '<div id="addResourcepopup" style="height: 100%; width: 100%;"> ';
+                for (var i=0; i < resource_array.length ; i++){
+                    resource = resource_array[i];
+                    if (resource['location'] == 'popup'){     
+                        var url = map.s3.urlForPopup(feature, resource);
+                        urlArray[counter] = url;
+                        urlArray[counter].feature = feature;
+                        HTML_inside_popup +=  '<input onClick="S3.gis.changePopupContent('+ counter +');" type="radio" name="selectResource" value='+url+' /> '+resource["label"]+'<br/>';
+                        counter++; 
+                    }
+                 } 
+                HTML_inside_popup += '</div>';
+                // Create A popup with buttons of generated HTML
+                resourcePopup = addPopup(feature, undefined, HTML_inside_popup , undefined);      
+                // Prepare in case user selects a new point
+                map.s3.lastDraftFeature = feature;
+            }
+        });
+        
+        if (toolbar) {
+            // Toolbar Button 
+            var resourcePopupButton = new GeoExt.Action({
+            control: control,
+            handler: function() {
+                if (resourcePopupButton.items[0].pressed) {
+                        $('.olMapViewport').addClass('crosshair');
+                    } else {
+                        $('.olMapViewport').removeClass('crosshair');
+                    }
+                },
+                map: map,
+                iconCls: 'drawpoint-off',
+                allowDepress: true,
+                enableToggle: true,
+                toggleGroup: 'controls',
+                pressed: active
+            });
+            toolbar.add(resourcePopupButton);
+            // Pass to Global scope for LocationSelectorWidget
+            map.s3.resourcePopupButton = resourcePopupButton;  
+          } 
+    };
+   
+    var changePopupContent = function (c) {
+    $('input:radio[name="selectResource"]').change(
+        function () {
+            if ($(this).is(':checked')) {
+                contents = i18n.gis_loading + '...<div class="throbber"></div>';
+                resourcePopup.setContentHTML(contents);
+                loadDetails(urlArray[c], resourcePopup.id + '_contentDiv', resourcePopup);
+            }
+        });
+    }
+    S3.gis.changePopupContent = changePopupContent;
+    */
+    
+    // Add custom point controls to add new markers for different resources to the map
+    /* - currently unused (@ToDo: Integrate this into the main control)
+    var addCustomPointControl = function (map, toolbar, active, resource, menu_items) {
+        OpenLayers.Handler.PointS3 = OpenLayers.Class(OpenLayers.Handler.Point, {
+            // Ensure that we propagate Double Clicks (so we can still Zoom)
+            dblclick: function (evt) {
+                //OpenLayers.Event.stop(evt);
+                return true;
+            },
+            CLASS_NAME: 'OpenLayers.Handler.PointS3'
+        });
+        var draftLayer = map.s3.draftLayer;
+        var control = new OpenLayers.Control.DrawFeature(draftLayer, OpenLayers.Handler.PointS3, {
+            // custom Callback
+            'featureAdded': function (feature) {
+                // Remove previous point
+                if (map.s3.lastDraftFeature) {
+                    map.s3.lastDraftFeature.destroy();
+                } else if (draftLayer.features.length > 1) {
+                    // Clear the one from the Current Location in S3LocationSelector
+                    draftLayer.features[0].destroy();
+                }
+                // Destroy previously created popups
+                while (map.popups.length > 0) { 
+                    map.removePopup(map.popups[0]); 
+                }
+                if (undefined != map.s3.pointPlaced) {
+                    // Call Custom Call-back
+                    map.s3.pointPlaced(feature, resource)
+                }
+                // Prepare in case user selects a new point
+                map.s3.lastDraftFeature = feature;
+            }
+        });
+
+        if (toolbar) {
+            // Toolbar Button 
+            if (resource['location'] == 'toolbar') {
+                var pointButton = new GeoExt.Action({
+                    control: control,
+                    handler: function () {
+                        if (pointButton.items[0].pressed) {
+                            $('.olMapViewport').addClass('crosshair');
+                        } else {
+                            $('.olMapViewport').removeClass('crosshair');
+                        }
+                    },
+                    map: map,
+                    iconCls: 'drawpoint-off',
+                    tooltip: resource['tooltip'],
+                    allowDepress: true,
+                    enableToggle: true,
+                    toggleGroup: 'controls',
+                    pressed: active
+                });
+                toolbar.add(pointButton);
+                // Pass to Global scope for LocationSelectorWidget
+                map.s3.pointButton = pointButton;
+            } else if (resource['location'] == 'menu') {
+                var menuButton = new GeoExt.Action({
+                    control: control,
+                    handler: function () {
+                        if (menuButton.items[0].pressed) {
+                            $('.olMapViewport').addClass('crosshair');
+                        } else {
+                            $('.olMapViewport').removeClass('crosshair');
+                        }
+                    },
+                    iconCls: 'drawpoint-off',
+                    map: map,
+                    text: resource['label']
+                });
+                var newItem = new Ext.menu.CheckItem(menuButton);
+                menu_items.push(newItem);
+                // Pass to Global scope for LocationSelectorWidget
+                map.s3.menuButton = menuButton;
+            }
+        } // ToDo : Add custom right click menu for adding resources when toolbar is not defined
+    }; */
 
     // Point Control to add new Markers to the Map
-    var addPointControl = function(map, toolbar, active) {
+    var addPointControl = function(map, toolbar, active, config) {
         OpenLayers.Handler.PointS3 = OpenLayers.Class(OpenLayers.Handler.Point, {
             // Ensure that we propagate Double Clicks (so we can still Zoom)
             dblclick: function(evt) {
@@ -4198,12 +4423,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     // Clear the one from the Current Location in S3LocationSelector
                     draftLayer.features[0].destroy();
                 }
-
+                // Destroy all popups
+                while (map.popups.length > 0) { 
+                    map.removePopup(map.popups[0]); 
+                }
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back
-                    map.s3.pointPlaced(feature);
+                    map.s3.pointPlaced(feature, config);
                 }
-
                 // Prepare in case user selects a new point
                 map.s3.lastDraftFeature = feature;
             }
@@ -4211,6 +4438,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         if (toolbar) {
             // Toolbar Button
+            if (config && config.l) {
+                var tooltip = config.l;
+            } else {
+                var tooltip = i18n.gis_draw_feature;
+            }
             var pointButton = new GeoExt.Action({
                 control: control,
                 handler: function() {
@@ -4222,7 +4454,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 },
                 map: map,
                 iconCls: 'drawpoint-off',
-                tooltip: i18n.gis_draw_feature,
+                tooltip: tooltip,
                 allowDepress: true,
                 enableToggle: true,
                 toggleGroup: 'controls',
@@ -4242,7 +4474,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Line Control to draw Lines on the Map
-    var addLineControl = function(map, toolbar, active) {
+    var addLineControl = function(map, toolbar, active, config) {
         var draftLayer = map.s3.draftLayer;
         var control = new OpenLayers.Control.DrawFeature(draftLayer, OpenLayers.Handler.Path, {
             // custom Callback
@@ -4254,12 +4486,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     // Clear the one from the Current Location in S3LocationSelector
                     draftLayer.features[0].destroy();
                 }
-
+                // Destroy all popups
+                while (map.popups.length > 0) { 
+                    map.removePopup(map.popups[0]); 
+                }
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back
-                    map.s3.pointPlaced(feature);
+                    map.s3.pointPlaced(feature, config);
                 }
-
                 // Prepare in case user draws a new line
                 map.s3.lastDraftFeature = feature;
             }
@@ -4267,6 +4501,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         if (toolbar) {
             // Toolbar Button
+            if (config && config.l) {
+                var tooltip = config.l;
+            } else {
+                var tooltip = i18n.gis_draw_line;
+            }
             var lineButton = new GeoExt.Action({
                 control: control,
                 handler: function() {
@@ -4278,7 +4517,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 },
                 map: map,
                 iconCls: 'drawline-off',
-                tooltip: i18n.gis_draw_line,
+                tooltip: tooltip,
                 allowDepress: true,
                 enableToggle: true,
                 toggleGroup: 'controls',
@@ -4300,7 +4539,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Polygon Control to select Areas on the Map
-    var addPolygonControl = function(map, toolbar, active, not_regular) {
+    var addPolygonControl = function(map, toolbar, active, not_regular, config) {
         var draftLayer = map.s3.draftLayer;
         var control = new OpenLayers.Control.DrawFeature(draftLayer,
             not_regular ? OpenLayers.Handler.Polygon :
@@ -4334,17 +4573,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         wkt_search_field.val(WKT).trigger('change');
                     }
                 }
-
+                // Destroy all popups
+                while (map.popups.length > 0) { 
+                    map.removePopup(map.popups[0]); 
+                }
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back
-                    map.s3.pointPlaced(feature);
+                    map.s3.pointPlaced(feature, config);
                 }
-
-                if (undefined != map.s3.pointPlaced) {
-                    // Call Custom Call-back
-                    map.s3.pointPlaced(feature);
-                }
-
                 // Prepare in case user draws a new polygon
                 map.s3.lastDraftFeature = feature;
             }
@@ -4352,6 +4588,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         if (toolbar) {
             // Toolbar Button
+            if (config && config.l) {
+                var tooltip = config.l;
+            } else {
+                var tooltip = i18n.gis_draw_polygon;
+            }
             var polygonButton = new GeoExt.Action({
                 control: control,
                 handler: function(){
@@ -4363,7 +4604,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 },
                 map: map,
                 iconCls: 'drawpolygon-off',
-                tooltip: i18n.gis_draw_polygon,
+                tooltip: tooltip,
                 allowDepress: true,
                 enableToggle: true,
                 toggleGroup: 'controls',

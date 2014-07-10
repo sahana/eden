@@ -144,23 +144,62 @@ def define_map(height = None,
         wms_browser = None
 
     # Do we allow creation of PoIs from the main Map?
-    pois = settings.get_gis_pois() and \
-           auth.s3_has_permission("create", s3db.gis_poi)
-    if pois:
-        if s3.debug:
-            script = "/%s/static/scripts/S3/s3.gis.pois.js" % appname
-        else:
-            script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
-        s3.scripts.append(script)
-        # @ToDo: Allow multiple PoI layers
-        ftable = s3db.gis_layer_feature
-        layer = db(ftable.name == "PoIs").select(ftable.layer_id,
-                                                 limitby=(0, 1)
-                                                 ).first()
-        if layer:
-            script = '''S3.gis.pois_layer=%s''' % layer.layer_id
-            s3.js_global.append(script)
+    add_feature = add_line = add_polygon = False
+    poi_resources = settings.get_gis_poi_create_resources()
+    if poi_resources:
+        layers = []
+        # Remove those which this user doesn't have permissions to create
+        not_permitted = []
+        for res in poi_resources:
+            permit = auth.s3_has_permission("create", res["table"], c=res["c"], f=res["f"])
+            if permit:
+                # Store the layer name
+                layers.append(res["layer"])
+                # Enable the relevant button
+                # @ToDo: Support Menus / Popups
+                if res["type"] == "line":
+                    add_line = True
+                elif res["type"] == "polygon":
+                    add_polygon = True
+                else:
+                    # Default
+                    add_feature = True
+            else:
+                # Remove from list
+                not_permitted.append(res)
+        for res in not_permitted:
+            poi_resources.remove(res)
 
+        if poi_resources:
+            # Lookup Layer IDs
+            ftable = s3db.gis_layer_feature
+            rows = db(ftable.name.belongs(layers)).select(ftable.layer_id, ftable.name)
+            layers_lookup = dict()
+            for row in rows:
+                layers_lookup[row.name] = row.layer_id
+
+            # Prepare JSON data structure
+            pois = []
+            for res in poi_resources:
+                poi = dict(c = res["c"],
+                           f = res["f"],
+                           l = s3_unicode(res["label"]),
+                           #t = s3_unicode(res["tooltip"]),
+                           i = layers_lookup.get(res["layer"], None),
+                           t = res.get("type", "point"),
+                           )
+                pois.append(poi)
+
+            # Inject client-side JS
+            script = '''S3.gis.poi_resources=%s''' % json.dumps(pois, separators=SEPARATORS)
+            s3.js_global.append(script)
+            if s3.debug:
+                script = "/%s/static/scripts/S3/s3.gis.pois.js" % appname
+            else:
+                script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
+            s3.scripts.append(script)
+
+    # Are we wanting to display a specific PoI Marker?
     # @ToDo: Generalise with feature/tablename?
     poi = get_vars.get("poi", None)
     if poi:
@@ -197,7 +236,9 @@ def define_map(height = None,
                        width = width,
                        lat = lat,
                        lon = lon,
-                       add_feature = pois,
+                       add_feature = add_feature,
+                       add_line = add_line,
+                       add_polygon = add_polygon,
                        catalogue_layers = True,
                        feature_resources = feature_resources,
                        legend = legend,
@@ -2859,6 +2900,15 @@ def poi():
                         s3db.gis_location_onvalidation(form)
                         id = s3db.gis_location.insert(**form_vars)
                         field.default = id
+                # WKT from Feature?
+                wkt = get_vars.get("wkt", None)
+                if wkt is not None:
+                    form_vars = Storage(wkt=wkt,
+                                        )
+                    form = Storage(vars=form_vars)
+                    s3db.gis_location_onvalidation(form)
+                    id = s3db.gis_location.insert(**form_vars)
+                    field.default = id
 
             elif r.method in ("update", "update.popup"):
                 table = r.table

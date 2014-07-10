@@ -1,0 +1,10 @@
+Catalog,Category Code,Category,Item Code,Item Name,Unit of Measure,Pack,Pack2 Quantity,Notes
+Default,Meal,Meal,,Breakfast,each,,,
+Default,Meal,Meal,,"Lunch, Cold",each,,,
+Default,Meal,Meal,,"Lunch, Cold - Halal",each,,,
+Default,Meal,Meal,,"Lunch, Cold - Kosher",each,,,
+Default,Meal,Meal,,"Dinner, Hot",each,,,
+Default,Meal,Meal,,"Dinner, Hot - Halal",each,,,
+Default,Meal,Meal,,"Dinner, Hot - Kosher",each,,,
+Default,Meal,Meal,,Snacks,each,box,20,
+Default,Transport,Transport,,Diesel,gallon,,,

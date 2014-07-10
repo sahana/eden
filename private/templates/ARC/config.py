@@ -189,6 +189,23 @@ settings.gis.map_width = 869
 settings.gis.display_L0 = True
 # GeoNames username
 settings.gis.geonames_username = "rms_dev"
+# Resources which can be directly added to the main map
+settings.gis.poi_create_resources = \
+    [dict(c="gis",
+          f="poi",
+          table="gis_poi",
+          type="point",
+          label=T("Add PoI"),
+          layer="PoIs",
+          ),
+     dict(c="gis",
+          f="poi",
+          table="gis_poi",
+          type="line",
+          label=T("Add Route"),
+          layer="Routes",
+          ),
+     ]
 
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
@@ -539,14 +556,40 @@ def customise_asset_asset_resource(r, tablename):
                    crud_form = crud_form,
                    )
 
+    if r.representation == "geojson":
+        from s3.s3fields import S3Represent
+        s3db.vehicle_vehicle.vehicle_type_id.represent = S3Represent(lookup="vehicle_vehicle_type",
+                                                                     fields=("code",))
+
 settings.customise_asset_asset_resource = customise_asset_asset_resource
 
 # -----------------------------------------------------------------------------
 def customise_cms_post_resource(r, tablename):
 
     s3db = current.s3db
-    s3db.cms_post.title.comment = None
+    table = s3db.cms_post
+    table.title.comment = None
     s3db.cms_post_organisation.organisation_id.represent = s3db.org_OrganisationRepresent(acronym=False)
+
+    if r.representation == "plain":
+        # Map Popups
+        table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
+        from s3.s3utils import s3_auth_user_represent_name
+        table.created_by.represent = s3_auth_user_represent_name
+        # Used by default popups
+        series = table.series_id.represent(r.record.series_id)
+        current.response.s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
+        s3db.configure("cms_post",
+                       popup_url="",
+                       )
+        table.avatar.readable = False
+        table.body.label = ""
+        table.expired.readable = False
+        table.replies.readable = False
+        table.created_by.readable = True
+        table.created_by.label = T("Author")
+        # Used by cms_post_popup
+        #table.created_on.represent = datetime_represent
 
 settings.customise_cms_post_resource = customise_cms_post_resource
 

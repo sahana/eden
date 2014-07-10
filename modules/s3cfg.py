@@ -229,9 +229,9 @@ class S3Config(Storage):
         return self.auth.get("hmac_key", "akeytochange")
 
     def get_auth_password_min_length(self):
-     	""" 
+        """ 
             To set the Minimum Password Length
- 	    """
+        """
         return self.auth.get("password_min_length", int(4))
 
     def get_auth_gmail_domains(self):
@@ -920,18 +920,38 @@ class S3Config(Storage):
         """
         return self.gis.get("permalink", True)
 
-    def get_gis_pois(self):
+    def get_gis_poi_create_resources(self):
         """
-            Should the Map allow the addition of PoIs?
-        """
-        return self.gis.get("pois", True)
+            List of resources which can be directly added to the main map.
+            Includes the type (point, line or polygon) and where they are to be
+            accessed from (button, menu or popup)
 
-    def get_gis_poi_resources(self):
+            Defaults to the generic 'gis_poi' resource as a point from a button
+
+            @ToDo: Complete the button vs menu vs popup
+            @ToDo: Function to easily add to other resources to get them to actually process the Lat/Lon/WKT passed-in
+        """
+        T = current.T
+        return self.gis.get("poi_create_resources",
+                            [{"c": "gis",               # Controller
+                              "f": "poi",               # Function
+                              "table": "gis_poi",       # For permissions check
+                              # Default:
+                              #"type": "point",          # Feature Type: point, line or polygon
+                              "label": T("Add PoI"),    # Label
+                              #"tooltip": T("Add PoI"),  # Tooltip
+                              "layer": "PoIs",          # Layer Name to refresh
+                              "location": "button",     # Location to access from
+                              },
+                              ]
+                            ) 
+
+    def get_gis_poi_export_resources(self):
         """
             List of resources (tablenames) to import/export as PoIs from Admin Locations
             - KML & OpenStreetMap formats
         """
-        return self.gis.get("poi_resources",
+        return self.gis.get("poi_export_resources", 
                             ["cr_shelter", "hms_hospital", "org_office"])
 
     def get_gis_postcode_selector(self):

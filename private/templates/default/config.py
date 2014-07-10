@@ -272,10 +272,11 @@ settings.L10n.decimal_separator = "."
 #settings.gis.overview = False
 # Uncomment to hide the permalink control
 #settings.gis.permalink = False
-# Uncomment to disable the ability to add PoIs to the main map
-#settings.gis.pois = False
+# Resources which can be directly added to the main map
+#settings.gis.poi_create_resources = None
+#settings.gis.poi_create_resources = [{"c":"event", "f":"incident_report", "table": "gis_poi", label": T("Add Incident Report") ,"tooltip": T("Add Incident Report"), "layer":"Incident Reports", "location": "popup"}]
 # PoIs to export in KML/OSM feeds from Admin locations
-#settings.gis.poi_resources = ["cr_shelter", "hms_hospital", "org_office"]
+#settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office"]
 # Uncomment to show the Print control:
 # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
 #settings.gis.print_button = True
