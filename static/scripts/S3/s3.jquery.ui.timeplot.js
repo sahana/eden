@@ -127,6 +127,8 @@
 
             // @todo: move into subfunction per chart type
             // @todo: split groups, stack or group bars
+
+            // Create the x axis
             var x = d3.scale.ordinal()
                             .rangeRoundBands([0, width], .05);
 
@@ -136,6 +138,7 @@
                               .orient("bottom")
                               .tickFormat(d3.time.format("%Y-%m-%d"));
 
+            // Create the y axis
             var y = d3.scale.linear()
                             .range([height, 0]);
 
@@ -143,12 +146,14 @@
                               .scale(y)
                               .orient("left");
 
+            // Compute the scales
             var self = this;
             x.domain(data.map(function(d) {
                 return self._parseDate(d[0]);
             }));
             y.domain([0, d3.max(data, function(d) { return d[2]; })]);
-            
+
+            // Add x axis
             svg.append("g")
                .attr("class", "x axis")
                .attr("transform", "translate(0," + height + ")")
@@ -159,11 +164,18 @@
                .attr("dx", "-.8em")
                .attr("dy", "-.55em")
                .attr("transform", "rotate(-90)" );
-      
+
+            // Add y axis
             svg.append("g")
                .attr("class", "y axis")
                .call(yAxis);
-               
+
+            // Add horizontal grid lines
+            svg.append("g")
+               .attr("class", "grid")
+               .call(yAxis.tickSize(-width).tickFormat(""));
+
+            // Add the bars
             svg.selectAll("bar")
                .data(data)
                .enter()
@@ -173,7 +185,6 @@
                .attr("width", x.rangeBand())
                .attr("y", function(d) { return y(d[2]); })
                .attr("height", function(d) { return height - y(d[2]); });
-              
         },
 
         /**
