@@ -1920,6 +1920,11 @@ class S3TwitterSearchModel(S3ChannelModel):
                            label = T("Searched?"),
                            represent = s3_yes_no_represent,
                            ),
+                     Field("include_to_map", "boolean",
+                           default = True,
+                           label = T("Include on Map?"),
+                           represent = s3_yes_no_represent,
+                           ),
                      *s3_meta_fields())
 
         configure(tablename,

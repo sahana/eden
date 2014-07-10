@@ -2387,6 +2387,8 @@ class S3LayerEntityModel(S3Model):
              "gis_layer_config",
              "gis_layer_symbology",
              "gis_layer_config_onaccept",
+             "gis_enable_layer",
+             "gis_disable_layer",
              )
 
     def model(self):
@@ -2601,6 +2603,8 @@ class S3LayerEntityModel(S3Model):
         return dict(gis_layer_types = layer_types,
                     # Run from config() controller when saving state
                     gis_layer_config_onaccept = self.gis_layer_config_onaccept,
+                    gis_enable_layer = self.gis_enable_layer,
+                    gis_disable_layer = self.gis_disable_layer,
                     )
 
     # -------------------------------------------------------------------------
@@ -2650,6 +2654,70 @@ class S3LayerEntityModel(S3Model):
                          (ltable.id != vars.id)
                 db(query).update(base = False)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_enable_layer(layer_id):
+        """
+            Add twitter marker for a twitter keyword layer
+            having layer_id as it's layer id.
+        """
+
+        db = current.db
+        s3db = current.s3db
+        update_super = s3db.update_super
+
+        ctable = s3db.gis_config
+        config = db(ctable.name == 'Default').select(ctable.id,
+                                                     limitby=(0, 1)
+                                                     ).first()
+
+        glayertable = s3db.gis_layer_config
+        glayer_id = glayertable.insert(layer_id = layer_id,
+                                       config_id = config.id,
+                                       enabled = True,
+                                       visible = True,
+                                       base = False,
+                                       )
+        record = dict(id = glayer_id)
+        update_super(glayertable, record)
+
+        symbologytable = s3db.gis_symbology
+        symbology = db(symbologytable.name == "US").select(symbologytable.id,
+                                                           limitby=(0, 1)
+                                                           ).first()
+
+        sym_marker = s3db.gis_marker
+        marker = db(sym_marker.name == "twitter").select(sym_marker.id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+
+        symtable = s3db.gis_layer_symbology
+        symbology_id = symtable.insert(layer_id = layer_id,
+                                       symbology_id = symbology.id,
+                                       marker_id = marker.id
+                                       )
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_disable_layer(layer_id):
+        """
+            Remove twitter marker for a twitter keyword layer
+            having layer_id as it's layer id.
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        glayertable = s3db.gis_layer_config
+        symtable = s3db.gis_layer_symbology
+
+        db(glayertable.layer_id == layer_id).delete()
+        db(symtable.layer_id == layer_id).delete()
+
+        return
+
 # =============================================================================
 class S3FeatureLayerModel(S3Model):
     """
@@ -2659,7 +2727,10 @@ class S3FeatureLayerModel(S3Model):
           (for transformation to GeoJSON/KML/GPX)
     """
 
-    names = ("gis_layer_feature",)
+    names = ("gis_layer_feature",
+             "gis_add_feature_layer",
+             "gis_remove_feature_layer",
+             )
 
     def model(self):
 
@@ -2773,46 +2844,118 @@ class S3FeatureLayerModel(S3Model):
             msg_list_empty = T("No Feature Layers currently defined"))
 
         self.configure(tablename,
-                       deduplicate = self.gis_layer_feature_deduplicate,
-                       list_fields = ["id",
-                                      "name",
-                                      "description",
-                                      "controller",
-                                      "function",
-                                      "filter",
-                                      "attr_fields",
-                                      "dir",
-                                      "trackable",
-                                      "polygons",
-                                      ],
-                       onaccept = self.gis_layer_feature_onaccept,
-                       super_entity = "gis_layer_entity",
-                       )
+                       onaccept=self.gis_layer_feature_onaccept,
+                       super_entity="gis_layer_entity",
+                       deduplicate=self.gis_layer_feature_deduplicate,
+                       list_fields=["id",
+                                    "name",
+                                    "description",
+                                    "controller",
+                                    "function",
+                                    "filter",
+                                    "attr_fields",
+                                    "dir",
+                                    "trackable",
+                                    "polygons",
+                                    ])
 
         # Components
         add_components(tablename,
                        # Configs
-                       gis_config = {"link": "gis_layer_config",
-                                     "pkey": "layer_id",
-                                     "joinby": "layer_id",
-                                     "key": "config_id",
-                                     "actuate": "hide",
-                                     "autocomplete": "name",
-                                     "autodelete": False,
-                                     },
+                       gis_config={"link": "gis_layer_config",
+                                   "pkey": "layer_id",
+                                   "joinby": "layer_id",
+                                   "key": "config_id",
+                                   "actuate": "hide",
+                                   "autocomplete": "name",
+                                   "autodelete": False,
+                                  },
                        # Symbologies
-                       gis_symbology = {"link": "gis_layer_symbology",
-                                        "pkey": "layer_id",
-                                        "joinby": "layer_id",
-                                        "key": "symbology_id",
-                                        "actuate": "hide",
-                                        "autocomplete": "name",
-                                        "autodelete": False,
-                                        },
+                       gis_symbology={"link": "gis_layer_symbology",
+                                      "pkey": "layer_id",
+                                      "joinby": "layer_id",
+                                      "key": "symbology_id",
+                                      "actuate": "hide",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                     },
                       )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return dict(gis_add_feature_layer=self.gis_add_feature_layer,
+                    gis_remove_feature_layer=self.gis_remove_feature_layer,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_add_feature_layer():
+        """
+            Add a feature layer for a twitter keyword.
+        """
+
+        request = current.request
+
+        keywords = request.post_vars.get("keywords")
+        controller = request.get("controller")
+
+        db = current.db
+        s3db = current.s3db
+        update_super = s3db.update_super
+
+        gtable = s3db.gis_layer_feature
+
+        entity_id = gtable.insert(name = keywords,
+                                  description ="Twitter",
+                                  controller = controller,
+                                  function = "twitter_result",
+                                  popup_label = "Tweet",
+                                  popup_fields = "body",
+                                  dir = "Twitter",
+                                  )
+
+        record = dict(id = entity_id)
+        update_super(gtable, record)
+
+        rtable = s3db.msg_twitter_search
+        search = db(rtable.keywords == keywords).select(rtable.id,
+                                                        limitby=(0, 1)
+                                                        ).first()
+
+        if search:
+            db(gtable.name == keywords).update(filter = "~.search_id=%s" % \
+                                               str(search.id)
+                                               )
+
+        return record['layer_id']
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_remove_feature_layer():
+        """
+            Remove a feature layer for a twitter keyword.
+        """
+
+        db = current.db
+        s3db = current.s3db
+        request = current.request
+
+        keywords = request.post_vars.get("keywords")
+
+        gtable = s3db.gis_layer_feature
+        etable = s3db.gis_layer_entity
+
+        layer_id = db(etable.name == keywords).select(etable.layer_id,
+                                                      limitby=(0, 1)
+                                                      ).first()
+
+        entity_id = db(etable.name == keywords).select(etable.id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+
+        db(etable.layer_id == layer_id).delete()
+        db(gtable.layer_id == layer_id).delete()
+
+        return layer_id
 
     # -------------------------------------------------------------------------
     @staticmethod

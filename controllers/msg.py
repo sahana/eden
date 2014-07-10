@@ -1370,8 +1370,37 @@ def inject_search_after_save(output):
 def action_after_save(form):
     """
         Schedules Twitter query search immediately after save
-        depending on flag
+        and adds or deletes map layer depending on flag
     """
+
+    keyword_str = request.post_vars.get("keywords")
+    s3db = current.s3db
+
+    gtable = s3db.gis_layer_feature
+
+    exists = db(gtable.name == keyword_str).select(gtable.id,
+                                                   limitby=(0, 1)
+                                                   ).first()
+
+    if request.post_vars.get("include_to_map"):
+        if not exists:
+            gis_add_feature_layer = s3db.gis_add_feature_layer
+            gis_enable_layer = s3db.gis_enable_layer
+
+            layer_id = gis_add_feature_layer()
+            gis_enable_layer(layer_id)
+    else:
+        if exists:
+            etable = s3db.gis_layer_entity
+            layer_id = db(etable.name == keyword_str).select(etable.layer_id,
+                                                             limitby=(0, 1)
+                                                             ).first()
+
+            gis_disable_layer = s3db.gis_disable_layer
+            gis_remove_feature_layer = s3db.gis_remove_feature_layer
+
+            gis_disable_layer(layer_id)
+            gis_remove_feature_layer()
 
     if request.post_vars.get("search_after_save"):
         s3task.async("msg_twitter_search", args=[form.vars.id])
@@ -1466,7 +1495,7 @@ def twitter_search():
     s3db.configure(tablename,
                    listadd=True,
                    deletable=True,
-                   create_onaccept=action_after_save,
+                   onaccept=action_after_save,
                    create_next=url_after_save
                    )
 
