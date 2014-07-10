@@ -4361,7 +4361,10 @@ class GIS(object):
                         _vars.update(inherited = False)
                     if spatial:
                         _vars.update(the_geom = wkt)
-                db(table.id == feature.id).update(**_vars)
+                try:
+                    db(table.id == feature.id).update(**_vars)
+                except MemoryError:
+                    current.log.error("S3GIS: Unable to set bounds & centroid for feature %s: MemoryError" % feature.id)
 
         if not feature:
             # Do the whole database
