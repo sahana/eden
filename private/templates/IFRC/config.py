@@ -21,7 +21,7 @@ settings = current.deployment_settings
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ("IFRC", "IFRC/Train")
+settings.base.prepopulate = ["IFRC", "IFRC/Train"]
 
 settings.base.system_name = T("Resource Management System")
 settings.base.system_name_short = T("RMS")
@@ -64,7 +64,7 @@ def ifrc_realm_entity(table, row):
     tablename = table._tablename
 
     # Do not apply realms for Master Data
-    # @ToDo: Restore Realms and add a role/functionality support for Master Data  
+    # @ToDo: Restore Realms and add a role/functionality support for Master Data
     if tablename in ("hrm_certificate",
                      "hrm_department",
                      "hrm_job_title",
@@ -149,7 +149,7 @@ def ifrc_realm_entity(table, row):
             #else:
             # Continue to loop through the rest of the default_fks
             # Fall back to default get_realm_entity function
-    
+
     use_user_organisation = False
     # Suppliers & Partners are owned by the user's organisation
     if realm_entity == 0 and tablename == "org_organisation":
@@ -170,7 +170,7 @@ def ifrc_realm_entity(table, row):
 
     user = current.auth.user
     if use_user_organisation and user:
-        # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org 
+        # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org
         realm_entity = s3db.pr_get_pe_id("org_organisation",
                                          user.organisation_id)
 
@@ -628,13 +628,13 @@ def customise_deploy_assignment_controller(**attr):
                          totals=True
                          )
         )
-            
+
     s3db.configure("deploy_assignment",
                    list_fields = list_fields,
                    report_options = report_options,
                    )
-    
-    
+
+
     # CRUD Strings
     current.response.s3.crud_strings["deploy_assignment"] = Storage(
         label_create = T("Add Deployment"),
@@ -650,12 +650,12 @@ def customise_deploy_assignment_controller(**attr):
         msg_list_empty = T("No Deployments currently registered"))
 
     _customise_assignment_fields()
-    
+
     # Restrict Location to just Countries
     from s3.s3fields import S3Represent
     field = s3db.deploy_mission.location_id
     field.represent = S3Represent(lookup="gis_location", translate=True)
-    
+
     return attr
 
 settings.customise_deploy_assignment_controller = customise_deploy_assignment_controller
@@ -976,7 +976,7 @@ def customise_hrm_human_resource_controller(**attr):
                     widgets.append(widget)
             if profile_widgets:
                 widgets.extend(profile_widgets)
-            
+
             # Custom list fields for RDRT
             phone_label = settings.get_ui_label_mobile_phone()
             list_fields = ["person_id",
@@ -1040,7 +1040,7 @@ def customise_hrm_job_title_controller(**attr):
                 required = False,
                 branches = False,
                 )
-    
+
     # Custom prep
     standard_prep = s3.prep
     def custom_prep(r):
@@ -1264,7 +1264,7 @@ def customise_org_organisation_controller(**attr):
                                "country",
                                "website"
                                ]
-                
+
                 type_filter = r.get_vars.get("organisation_type.name",
                                              None)
                 type_label = T("Type")
@@ -1981,7 +1981,7 @@ def customise_project_beneficiary_resource(r, tablename):
         resource.configure(filter_widgets = filter_widgets,
                            report_options = report_options,
                            )
-            
+
 
 settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 

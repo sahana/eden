@@ -57,6 +57,8 @@ settings.base.template = "default"
 settings.base.migrate = True
 # To just create the .table files (also requires migrate=True):
 #settings.base.fake_migrate = True
+# Uncomment when using a demo instance
+#settings.base.isdemo = True
 
 # Set this to True to switch to Debug mode
 # Debug mode means that uncompressed CSS/JS files are loaded
@@ -144,7 +146,7 @@ settings.frontpage.rss = [
 #settings.base.chat_server = { "ip": "127.0.0.1",
 #        "port": 7070,
 #        "name": "servername"
-#        } 
+#        }
 
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
 # NB Needs to be publically-accessible URL for querying via client JS
