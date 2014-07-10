@@ -372,6 +372,7 @@ S3OptionsFilter({
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
+                  deduplicate = self.asset_duplicate,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   mark_required = ["organisation_id"],
@@ -598,6 +599,36 @@ S3OptionsFilter({
 
         return dict(asset_asset_id = lambda **attr: dummy("asset_id"),
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def asset_duplicate(item):
+        """
+            Deduplication of Assets
+        """
+
+        if item.tablename != "asset_asset":
+            return
+        table = item.table
+
+        data = item.data
+        number = data.get("number", None)
+        query = (table.number == number)
+
+        organisation_id = data.get("organisation_id", None)
+        if organisation_id:
+            query &= (table.organisation_id == organisation_id)
+
+        site_id = data.get("site_id", None)
+        if site_id:
+            query &= (table.site_id == site_id)
+
+        _duplicate = current.db(query).select(table.id,
+                                              limitby=(0, 1)).first()
+        if _duplicate:
+            item.id = _duplicate.id
+            item.data.id = _duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

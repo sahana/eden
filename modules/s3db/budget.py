@@ -1290,6 +1290,7 @@ class S3BudgetAllocationModel(S3Model):
                                           readable = True,
                                           writable = True,
                                           ),
+                          # @ToDo: s3_datetime
                           s3_date("start_date",
                                   label = T("Start Date")
                                   ),
@@ -1298,8 +1299,9 @@ class S3BudgetAllocationModel(S3Model):
                                   ),
                           Field("unit_cost", "double",
                                 default = 0.00,
-                                label = T("Unit Cost"),
+                                label = T("One-Time Cost"),
                                 ),
+                          # @ToDo: make the Time Unit configurable
                           Field("daily_cost", "double",
                                 default = 0.00,
                                 label = T("Daily Cost"),
