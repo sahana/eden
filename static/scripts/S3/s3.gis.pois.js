@@ -38,12 +38,23 @@
         var proj4326 = gis.proj4326;
         // Read lat & lon
         var current_projection = feature.layer.map.getProjectionObject();
-        var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-        centerPoint.transform(current_projection, proj4326);
-        // Build URL for create form
-        var url = S3.Ap.concat('/' + resource['c'] + '/' + resource['f'] + '/create.popup?refresh_layer=' + resource['i'] + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
-        // Convert geometry back for the marker
-        centerPoint.transform(proj4326, current_projection);
+        var geometry = feature.geometry;
+        if (geometry.CLASS_NAME != 'OpenLayers.Geometry.Point') {
+            // Line or Polygon: pass WKT
+            geometry.transform(current_projection, proj4326);
+            var wkt = geometry.toString();
+            // Build URL for create form
+            var url = S3.Ap.concat('/' + resource['c'] + '/' + resource['f'] + '/create.popup?refresh_layer=' + resource['i'] + '&wkt=' + wkt);
+            // Convert geometry back for the vector
+            geometry.transform(proj4326, current_projection);
+        } else {
+            var centerPoint = geometry.getBounds().getCenterLonLat();
+            centerPoint.transform(current_projection, proj4326);
+            // Build URL for create form
+            var url = S3.Ap.concat('/' + resource['c'] + '/' + resource['f'] + '/create.popup?refresh_layer=' + resource['i'] + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
+            // Convert geometry back for the marker
+            centerPoint.transform(proj4326, current_projection);
+        }
         // Collapse the LayerTree to give more space for the Popup
         gis.maps['default_map'].s3.westPanelContainer.collapse();
         // Create a popup with an iframe inside

@@ -929,6 +929,7 @@ class S3Config(Storage):
             Defaults to the generic 'gis_poi' resource as a point from a button
 
             @ToDo: Complete the button vs menu vs popup
+            @ToDo: Function to easily add to other resources to get them to actually process the Lat/Lon/WKT passed-in
         """
         T = current.T
         return self.gis.get("poi_create_resources",

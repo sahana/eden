@@ -2900,6 +2900,15 @@ def poi():
                         s3db.gis_location_onvalidation(form)
                         id = s3db.gis_location.insert(**form_vars)
                         field.default = id
+                # WKT from Feature?
+                wkt = get_vars.get("wkt", None)
+                if wkt is not None:
+                    form_vars = Storage(wkt=wkt,
+                                        )
+                    form = Storage(vars=form_vars)
+                    s3db.gis_location_onvalidation(form)
+                    id = s3db.gis_location.insert(**form_vars)
+                    field.default = id
 
             elif r.method in ("update", "update.popup"):
                 table = r.table
