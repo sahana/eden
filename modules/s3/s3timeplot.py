@@ -52,11 +52,15 @@ from gluon.html import *
 
 from s3rest import S3Method
 from s3query import FS
+from s3report import S3ReportForm
 
 tp_datetime = lambda *t: datetime.datetime(tzinfo=dateutil.tz.tzutc(), *t)
 
 tp_tzsafe = lambda dt: dt.replace(tzinfo=dateutil.tz.tzutc()) \
                        if dt and dt.tzinfo is None else dt
+
+# Compact JSON encoding
+SEPARATORS = (",", ":")
 
 # =============================================================================
 class S3TimePlot(S3Method):
@@ -86,6 +90,8 @@ class S3TimePlot(S3Method):
         return output
 
     # -------------------------------------------------------------------------
+    # @todo: widget-method
+    # -------------------------------------------------------------------------
     def timeplot(self, r, **attr):
         """
             Time plot report page
@@ -94,22 +100,44 @@ class S3TimePlot(S3Method):
             @param attr: controller attributes for the request
         """
         
-        resource = self.resource
+        output = {}
 
-        options = ("timestamp",
-                   "fact",
-                   "start",
-                   "end",
-                   "slots")
+        resource = self.resource
+        get_config = resource.get_config
+
+        # Apply filter defaults (before rendering the data!)
+        show_filter_form = False
+        if r.representation in ("html", "iframe"):
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not self.hide_filter:
+                from s3filter import S3FilterForm
+                show_filter_form = True
+                S3FilterForm.apply_filter_defaults(r, resource)
+
+        # Widget ID
+        widget_id = "timeplot"
 
         # Extract the relevant GET vars
+        # @todo: options for baseline and grouping
+        report_vars = ("timestamp",
+                       "fact",
+                       "start",
+                       "end",
+                       "slots")
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                               if k in options)
+                        if k in report_vars)
 
         # Fall back to report options defaults
-        if not any(k in get_vars for k in options):
-            timeplot_options = resource.get_config("timeplot_options", {})
-            get_vars = timeplot_options.get("defaults", {})
+        report_options = resource.get_config("report_options", {})
+        defaults = report_options.get("defaults", {})
+        if not any(k in get_vars for k in report_vars):
+            get_vars = defaults
+        else:
+            # Optional URL args always fall back to config:
+            optional = ("timestamp",)
+            for opt in optional:
+                if opt not in get_vars and opt in defaults:
+                    get_vars[opt] = defaults[opt]
 
         # Parse event timestamp option
         timestamp = get_vars.get("timestamp")
@@ -165,42 +193,59 @@ class S3TimePlot(S3Method):
                                      event_type=resource.tablename)
             new_item((item_start, item_end, value))
 
-        # Convert to JSON
-        items = json.dumps(items)
-
-        # Generate output
-        widget_id = "timeplot"
-
         if r.representation in ("html", "iframe"):
             
-            title = self.crud_string(resource.tablename, "title_report")
+            output["title"] = self.crud_string(resource.tablename, "title_report")
             
-            output = {"title": title}
-            
-            form = FORM(DIV(_class="tp-chart"),
-                        INPUT(_type="hidden",
-                              _class="tp-data",
-                              _value=items),
-                        _class="tp-form",
-                        _id = widget_id)
+            # Filter widgets
+            if show_filter_form:
+                advanced = False
+                for widget in filter_widgets:
+                    if "hidden" in widget.opts and widget.opts.hidden:
+                        advanced = get_config("report_advanced", True)
+                        break
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_form = S3FilterForm(filter_widgets,
+                                           formstyle=filter_formstyle,
+                                           advanced=advanced,
+                                           submit=False,
+                                           _class="filter-form",
+                                           _id="%s-filter-form" % widget_id)
+                fresource = current.s3db.resource(resource.tablename)
+                alias = resource.alias if r.component else None
+                filter_widgets = filter_form.fields(fresource,
+                                                    r.get_vars,
+                                                    alias=alias)
+            else:
+                # Render as empty string to avoid the exception in the view
+                filter_widgets = None
 
-            output["form"] = form
+            ajax_vars = Storage(r.get_vars)
+            ajax_vars.update(get_vars)
+            filter_url = url=r.url(method="",
+                                   representation="",
+                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                            if k not in report_vars)))
+            ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
+                                                representation="json",
+                                                vars=ajax_vars))
+
+            output["form"] = S3TimePlotForm(resource) \
+                                           .html(items,
+                                                 get_vars = get_vars,
+                                                 filter_widgets = filter_widgets,
+                                                 ajaxurl = ajaxurl,
+                                                 filter_url = filter_url,
+                                                 widget_id = widget_id,
+                                                 )
 
             # View
             response = current.response
             response.view = self._view(r, "timeplot.html")
-
-            # Script to attach the timeplot widget
-            options = {"method": method}
-            script = """$("#%(widget_id)s").timeplot(%(options)s)""" % \
-                        {"widget_id": widget_id,
-                         "options": json.dumps(options)
-                        }
-            response.s3.jquery_ready.append(script)
-        
+       
         elif r.representation == "json":
 
-            output = items
+            output = json.dumps(items, separators=SEPARATORS)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -576,6 +621,108 @@ class S3TimePlot(S3Method):
 
         return method, rfields, arguments
 
+# =============================================================================
+class S3TimePlotForm(S3ReportForm):
+    """ Helper class to render a report form """
+
+    def __init__(self, resource):
+
+        self.resource = resource
+
+    # -------------------------------------------------------------------------
+    def html(self,
+             data,
+             filter_widgets=None,
+             get_vars=None,
+             ajaxurl=None,
+             filter_url=None,
+             filter_form=None,
+             filter_tab=None,
+             widget_id=None):
+        """
+            Render the form for the report
+
+            @param get_vars: the GET vars if the request (as dict)
+            @param widget_id: the HTML element base ID for the widgets
+        """
+
+        T = current.T
+
+        # Filter options
+        if filter_widgets is not None:
+            filter_options = self._fieldset(T("Filter Options"),
+                                            filter_widgets,
+                                            _id="%s-filters" % widget_id,
+                                            _class="filter-form")
+        else:
+            filter_options = ""
+
+        hidden = {"tp-data": json.dumps(data, separators=SEPARATORS)}
+
+
+        # @todo: report options
+        # @todo: chart title
+        # @todo: empty-section
+        # @todo: CSS
+        
+        # Report form submit element
+        resource = self.resource
+        submit = resource.get_config("report_submit", True)
+        if submit:
+            _class = "tp-submit"
+            if submit is True:
+                label = T("Update Report")
+            elif isinstance(submit, (list, tuple)):
+                label = submit[0]
+                _class = "%s %s" % (submit[1], _class)
+            else:
+                label = submit
+            submit = TAG[""](
+                        INPUT(_type="button",
+                              _value=label,
+                              _class=_class))
+        else:
+            submit = ""
+
+        form = DIV(DIV(FORM(filter_options,
+                            #report_options,
+                            submit,
+                            hidden = hidden,
+                            _class = "tp-form",
+                            _id = "%s-tp-form" % widget_id,
+                            ),
+                       _class="tp-form-container form-container",
+                       ),
+                   DIV(DIV(_class="inline-throbber tp-throbber"),
+                       DIV(#DIV(_class="tp-chart-controls"),
+                           DIV(#DIV(_class="tp-hide-chart"),
+                               #DIV(_class="tp-chart-title"),
+                               DIV(_class="tp-chart"),
+                               _class="tp-chart-contents"
+                           ),
+                           _class="tp-chart-container"
+                       ),
+                       #DIV(empty, _class="tp-empty"),
+                   ),
+                   _class="tp-container",
+                   _id=widget_id
+               )
+        
+        # Script to attach the timeplot widget
+
+        settings = current.deployment_settings
+        options = {
+            "ajaxURL": ajaxurl,
+            "autoSubmit": settings.get_ui_report_auto_submit(),
+        }
+        script = """$("#%(widget_id)s").timeplot(%(options)s)""" % \
+                    {"widget_id": widget_id,
+                     "options": json.dumps(options),
+                    }
+        current.response.s3.jquery_ready.append(script)
+
+        return form
+        
 # =============================================================================
 class S3TimePlotEvent(object):
     """ Class representing an event """

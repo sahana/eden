@@ -918,6 +918,8 @@ S3.search = {};
                 S3.gis.refreshLayer('search_results');
             } else if (t.hasClass('pt-container')) {
                 t.pivottable('reload', null, target_data['queries']);
+            } else if (t.hasClass('tp-container')) {
+                t.timeplot('reload', null, target_data['queries']);
             }
         }
     };
@@ -987,6 +989,7 @@ S3.search = {};
                 t = $('#' + target_id);
                 if (t.hasClass('dl') ||
                     t.hasClass('pt-container') ||
+                    t.hasClass('tp-container') ||
                     t.hasClass('map_wrapper')) {
                     // These targets handle their AjaxURL themselves
                     ajaxurl = null;
@@ -1440,6 +1443,9 @@ S3.search = {};
                 } else if (t.hasClass('pt-container')) {
                     // PivotTables do not need page reload
                     needs_reload = false;
+                } else if (t.hasClass('tp-container')) {
+                    // TimePlots do not need page reload
+                    needs_reload = false;
                 } else {
                     // all other targets need page reload
                     if (visible) {
@@ -1498,6 +1504,8 @@ S3.search = {};
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('pt-container')) {
                     t.pivottable('reload', null, queries);
+                } else if (t.hasClass('tp-container')) {
+                    t.timeplot('reload', null, queries);
                 }
             }
         } else {

@@ -980,7 +980,7 @@
 
             var widget_id = '#' + $(this.element).attr('id');
 
-            var filters = $(widget_id + '-filters'), filter_options = [];
+            var filters = $(widget_id + '-filters');
             try {
                 if (filters.length) {
                     return S3.search.getCurrentFilters(filters.first());
