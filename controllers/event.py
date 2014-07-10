@@ -102,16 +102,13 @@ def incident():
             if r.component:
                 if r.component.name == "config":
                     s3db.configure("gis_config",
-                                   deletable=False)
+                                   deletable = False,
+                                   )
                     s3.crud.submit_button = T("Update")
                 elif r.component.name == "human_resource":
-                    s3db.configure("event_human_resource",
-                                   list_fields=["human_resource_id"])
                     s3.crud.submit_button = T("Assign")
                     s3.crud_labels["DELETE"] = T("Remove")
                 elif r.component.name == "asset":
-                    s3db.configure("event_asset",
-                                   list_fields=["asset_id"])
                     s3.crud.submit_button = T("Assign")
                     s3.crud_labels["DELETE"] = T("Remove")
                 else:

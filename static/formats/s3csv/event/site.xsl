@@ -16,7 +16,7 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:include href="../../xml/commons.xsl"/>
 
     <xsl:variable name="IncidentPrefix" select="'Incident:'"/>
     <xsl:variable name="FacilityPrefix" select="'Facility:'"/>

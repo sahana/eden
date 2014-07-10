@@ -612,7 +612,7 @@ def customise_deploy_assignment_controller(**attr):
     list_fields = [(T("Mission"), "mission_id$name"),
                    (T("Appeal Code"), "mission_id$code"),
                    (T("Country"), "mission_id$location_id"),
-                   (T("Disaster Type"), "mission_id$event_type_id"),
+                   (T("Incident Type"), "mission_id$event_type_id"),
                    # @todo: replace by date of first alert?
                    (T("Date"), "mission_id$created_on"),
                    "job_title_id",
@@ -631,7 +631,7 @@ def customise_deploy_assignment_controller(**attr):
                    ]
     report_axis = [(T("Appeal Code"), "mission_id$code"),
                    (T("Country"), "mission_id$location_id"),
-                   (T("Disaster Type"), "mission_id$event_type_id"),
+                   (T("Incident Type"), "mission_id$event_type_id"),
                    "job_title_id",
                    (T("Deploying Branch"), "human_resource_id$organisation_id"),
                   ]
@@ -664,13 +664,13 @@ def customise_deploy_mission_controller(**attr):
 
     table = s3db.deploy_mission
     table.code.label = T("Appeal Code")
-    table.event_type_id.label = T("Disaster Type")
+    table.event_type_id.label = T("Incident Type")
     table.organisation_id.readable = table.organisation_id.writable = False
 
     # Report options
     report_fact = [(T("Number of Missions"), "count(id)"),
                    (T("Number of Countries"), "count(location_id)"),
-                   (T("Number of Disaster Types"), "count(event_type_id)"),
+                   (T("Number of Incident Types"), "count(event_type_id)"),
                    (T("Number of Responses"), "sum(response_count)"),
                    (T("Number of Deployments"), "sum(hrquantity)"),
                   ]
@@ -698,12 +698,12 @@ def customise_deploy_mission_controller(**attr):
 settings.customise_deploy_mission_controller = customise_deploy_mission_controller
 
 # -----------------------------------------------------------------------------
-def customise_event_incident_resource(r, tablename):
+#def customise_event_incident_resource(r, tablename):
 
-    # Use Polygons for Location
-    field = current.s3db.event_incident.location_id
+#    # Use Polygons for Location
+#    field = current.s3db.event_incident.location_id
 
-settings.customise_event_incident_resource = customise_event_incident_resource
+#settings.customise_event_incident_resource = customise_event_incident_resource
 
 # -----------------------------------------------------------------------------
 def poi_marker_fn(record):
@@ -1289,8 +1289,6 @@ settings.customise_pr_person_controller = customise_pr_person_controller
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #settings.project.mode_3w = True
-# Uncomment this to use DRR (Disaster Risk Reduction) extensions
-#settings.project.mode_drr = True
 # Uncomment this to use settings suitable for detailed Task management
 settings.project.mode_task = True
 # Uncomment this to use Codes for projects

@@ -697,7 +697,8 @@ class S3IncidentModel(S3Model):
                             asset_asset = {"link": "event_asset",
                                            "joinby": "incident_id",
                                            "key": "asset_id",
-                                           "actuate": "embed",
+                                           #"actuate": "embed",
+                                           "actuate": "hide",
                                            "autocomplete": "name",
                                            "autodelete": False,
                                            },
@@ -707,7 +708,7 @@ class S3IncidentModel(S3Model):
                                                   "key": "human_resource_id",
                                                   # @ToDo: Widget to handle embedded AddPersonWidget
                                                   #"actuate": "embed",
-                                                  "actuate": "link",
+                                                  "actuate": "hide",
                                                   "autocomplete": "name",
                                                   "autodelete": False,
                                                   },
@@ -715,7 +716,8 @@ class S3IncidentModel(S3Model):
                             org_organisation = {"link": "event_organisation",
                                                 "joinby": "incident_id",
                                                 "key": "organisation_id",
-                                                "actuate": "embed",
+                                                #"actuate": "embed",
+                                                "actuate": "hide",
                                                 "autocomplete": "name",
                                                 "autodelete": False,
                                                 },
@@ -1546,7 +1548,32 @@ class S3EventAssetModel(S3Model):
             msg_record_deleted = T("Asset removed"),
             msg_list_empty = T("No Assets currently registered in this incident"))
 
+        if current.deployment_settings.has_module("budget"):
+            crud_form = S3SQLCustomForm("incident_id",
+                                        "asset_id",
+                                        "status",
+                                        S3SQLInlineComponent("allocation",
+                                                             label = T("Budget"),
+                                                             fields = ["budget_id",
+                                                                       "start_date",
+                                                                       "end_date",
+                                                                       "daily_cost",
+                                                                       ],
+                                                             ),
+                                        )
+        else:
+            crud_form = None
+
         self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["incident_id",
+                                      "asset_id",
+                                      "status",
+                                      "allocation.budget",
+                                      "allocation.start_date",
+                                      "allocation.end_date",
+                                      "allocation.daily_cost",
+                                      ],
                        super_entity = "budget_cost_item",
                        )
 
@@ -1665,7 +1692,32 @@ class S3EventHRModel(S3Model):
             msg_record_deleted = T("Human Resource unassigned"),
             msg_list_empty = T("No Human Resources currently assigned to this incident"))
 
+        if current.deployment_settings.has_module("budget"):
+            crud_form = S3SQLCustomForm("incident_id",
+                                        "human_resource_id",
+                                        "status",
+                                        S3SQLInlineComponent("allocation",
+                                                             label = T("Budget"),
+                                                             fields = ["budget_id",
+                                                                       "start_date",
+                                                                       "end_date",
+                                                                       "daily_cost",
+                                                                       ],
+                                                             ),
+                                        )
+        else:
+            crud_form = None
+
         self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["incident_id",
+                                      "human_resource_id",
+                                      "status",
+                                      "allocation.budget",
+                                      "allocation.start_date",
+                                      "allocation.end_date",
+                                      "allocation.daily_cost",
+                                      ],
                        super_entity = "budget_cost_item",
                        )
 
@@ -1912,7 +1964,32 @@ class S3EventSiteModel(S3Model):
             msg_record_deleted = T("Facility removed"),
             msg_list_empty = T("No Facilities currently registered in this incident"))
 
+        if current.deployment_settings.has_module("budget"):
+            crud_form = S3SQLCustomForm("incident_id",
+                                        "site_id",
+                                        "status",
+                                        S3SQLInlineComponent("allocation",
+                                                             label = T("Budget"),
+                                                             fields = ["budget_id",
+                                                                       "start_date",
+                                                                       "end_date",
+                                                                       "daily_cost",
+                                                                       ],
+                                                             ),
+                                        )
+        else:
+            crud_form = None
+
         self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["incident_id",
+                                      "site_id",
+                                      "status",
+                                      "allocation.budget",
+                                      "allocation.start_date",
+                                      "allocation.end_date",
+                                      "allocation.daily_cost",
+                                      ],
                        super_entity = "budget_cost_item",
                        )
 
