@@ -136,8 +136,10 @@ def human_resource():
 
     # Add deploy_alert_recipient as component so that we filter by it
     s3db.add_components("hrm_human_resource",
-                        deploy_alert_recipient="human_resource_id")
+                        deploy_alert_recipient = "human_resource_id",
+                        )
 
+    # Filter to just Deployables
     q = FS("application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)
     return output
@@ -519,11 +521,11 @@ def alert():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader=s3db.deploy_rheader,
+    return s3_rest_controller(rheader = s3db.deploy_rheader,
                               # Show filter only on recipient tab
-                              hide_filter={"recipient": False,
-                                           "_default": True,
-                                           }
+                              hide_filter = {"recipient": False,
+                                             "_default": True,
+                                             }
                               )
 
 # -----------------------------------------------------------------------------

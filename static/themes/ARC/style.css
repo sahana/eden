@@ -33,3 +33,9 @@ table tr th.edit-delete-col {
 #header #personal-menu li {
     padding: 5px 6px 0;
 }
+
+/* For the Mission Profile page */
+/* @ToDo: Responsive */
+.span12 {
+  width: 770px;
+}

@@ -354,7 +354,7 @@ settings.hrm.use_credentials = False
 # Uncomment to enable the use of HR Education
 settings.hrm.use_education = True
 # Custom label for Organisations in HR module
-settings.hrm.organisation_label = "National Society / Branch"
+#settings.hrm.organisation_label = "National Society / Branch"
 # Uncomment to consolidate tabs into a single CV
 settings.hrm.cv_tab = True
 # Uncomment to consolidate tabs into Staff Record
@@ -613,8 +613,8 @@ def cms_post_popup(r, output):
     row = current.db(query).select(table.file,
                                    limitby=(0, 1)
                                    ).first()
-    if row:
-        from gluon.html import IMG
+    if row and row.file:
+        from gluon import IMG, URL
         image = IMG(_src=URL(c="default", f="download", args=[row.file]))
         output["image"] = image
 
@@ -887,13 +887,13 @@ def customise_hrm_human_resource_controller(**attr):
                           user_org_default_filter,
                           tablename = "hrm_human_resource")
 
-    s3db = current.s3db
-    s3db.org_organisation.root_organisation.label = T("National Society")
+    #s3db = current.s3db
+    #s3db.org_organisation.root_organisation.label = T("National Society")
 
     # Organisation needs to be an ARC Branch
-    ns_only(s3db.hrm_human_resource.organisation_id,
-            required = True,
-            )
+    #ns_only(s3db.hrm_human_resource.organisation_id,
+    #        required = True,
+    #        )
 
     s3 = current.response.s3
 
@@ -907,7 +907,7 @@ def customise_hrm_human_resource_controller(**attr):
                 return False
 
         from s3.s3filter import S3OptionsFilter
-        filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
+        filter_widgets = current.s3db.get_config("hrm_human_resource", "filter_widgets")
         filter_widgets.insert(-1, S3OptionsFilter("training.course_id$course_sector.sector_id",
                                                   label = T("Training Sector"),
                                                   hidden = True,
@@ -941,7 +941,7 @@ def customise_hrm_human_resource_controller(**attr):
             # Custom list fields for RDRT
             phone_label = settings.get_ui_label_mobile_phone()
             list_fields = ["person_id",
-                           "organisation_id$root_organisation",
+                           "organisation_id",
                            "type",
                            "job_title_id",
                            (T("Email"), "email.value"),
