@@ -455,7 +455,7 @@ class S3BudgetModel(S3Model):
         table = current.s3db.budget_budget_staff
         row = current.db(table.id == record_id).select(table.budget_id,
                                                        limitby=(0, 1)).first()
-        if record:
+        if row:
             budget_budget_totals(row.budget_id)
         return
 

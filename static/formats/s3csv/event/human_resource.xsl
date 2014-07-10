@@ -11,7 +11,13 @@
          Incident.............string..........Incident Name
          First Name...........string..........First Name
          Last Name............string..........Last Name
+         Organisation.........string..........Name of the Organisation
          Status...............string..........Status
+         Budget...............string..........Budget Name
+         Start................date............Start Date
+         End..................date............End Date
+         OneTimeCost..........number..........One-time cost
+         DailyCost............number..........Daily cost
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -21,12 +27,16 @@
     <xsl:variable name="IncidentPrefix" select="'Incident:'"/>
     <xsl:variable name="HumanResourcePrefix" select="'Human Resource:'"/>
     <xsl:variable name="PersonPrefix" select="'Person:'"/>
+    <xsl:variable name="OrganisationPrefix" select="'Organisation:'"/>
+    <xsl:variable name="BudgetPrefix" select="'Budget:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="incident" match="row" use="col[@field='Incident']"/>
     <xsl:key name="person" match="row" use="concat(col[@field='First Name'],
                                                    col[@field='Last Name'])"/>
+    <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="budget" match="row" use="col[@field='Budget']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -35,6 +45,18 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('incident',
                                                                    col[@field='Incident'])[1])]">
                 <xsl:call-template name="Incident" />
+            </xsl:for-each>
+
+            <!-- Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation',
+                                                                   col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation" />
+            </xsl:for-each>
+
+            <!-- Budgets -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('budget',
+                                                                   col[@field='Budget'])[1])]">
+                <xsl:call-template name="Budget" />
             </xsl:for-each>
 
             <!-- Persons -->
@@ -57,7 +79,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template match="row">
         <xsl:variable name="Incident">
             <xsl:value-of select="col[@field='Incident']"/>
@@ -73,6 +94,8 @@
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
+
+        <xsl:variable name="Budget" select="col[@field='Budget']/text()"/>
 
         <resource name="event_human_resource">
 
@@ -90,6 +113,7 @@
                 </xsl:attribute>
             </reference>
 
+            <!-- Status -->
             <xsl:choose>
                 <xsl:when test="$Status=''">
                     <!-- Use System Default -->
@@ -110,6 +134,30 @@
                     <data field="status">5</data>
                 </xsl:when>
             </xsl:choose>
+            
+            <!-- Budget allocation -->
+            <xsl:if test="$Budget!=''">
+                <resource name="budget_allocation">
+                    <reference field="budget_id" resource="budget_budget">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($BudgetPrefix, $Budget)"/>
+                        </xsl:attribute>
+                    </reference>
+                    <data field="unit_cost">
+                        <xsl:value-of select="col[@field='OneTimeCost']/text()"/>
+                    </data>
+                    <data field="daily_cost">
+                        <xsl:value-of select="col[@field='DailyCost']/text()"/>
+                    </data>
+                    <data field="start_date">
+                        <xsl:value-of select="col[@field='Start']/text()"/>
+                    </data>
+                    <data field="end_date">
+                        <xsl:value-of select="col[@field='End']/text()"/>
+                    </data>
+                </resource>
+            </xsl:if>
+
         </resource>
     </xsl:template>
 
@@ -150,6 +198,7 @@
             <xsl:value-of select="concat(col[@field='First Name'],
                                          col[@field='Last Name'])"/>
         </xsl:variable>
+        <xsl:variable name="Organisation" select="col[@field='Organisation']/text()"/>
 
         <resource name="hrm_human_resource">
             <xsl:attribute name="tuid">
@@ -161,9 +210,49 @@
                     <xsl:value-of select="concat($PersonPrefix, $HumanResource)"/>
                 </xsl:attribute>
             </reference>
+            
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($OrganisationPrefix, $Organisation)"/>
+                </xsl:attribute>
+            </reference>
         </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Organisation">
+    
+        <xsl:variable name="Organisation" select="col[@field='Organisation']/text()"/>
+        
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($OrganisationPrefix, $Organisation)"/>
+            </xsl:attribute>
+            
+            <data field="name">
+                <xsl:value-of select="$Organisation"/>
+            </data>
+        </resource>
+    </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="Budget">
+
+        <xsl:variable name="Budget" select="col[@field='Budget']/text()"/>
+
+        <resource name="budget_budget">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($BudgetPrefix, $Budget)"/>
+            </xsl:attribute>
+            <data field="name">
+                <xsl:value-of select="$Budget"/>
+            </data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Required for template validation when importing commons -->
+    <xsl:template name="resource"/>
+    
+    <!-- ****************************************************************** -->
 </xsl:stylesheet>
