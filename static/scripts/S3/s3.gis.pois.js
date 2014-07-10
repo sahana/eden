@@ -34,7 +34,8 @@
     /**
      * Callback for placing a new PoI
      */
-    var pointPlaced = function(feature) {
+    var url;
+    var pointPlaced = function (feature, resource) {
         var gis = S3.gis;
         var proj4326 = gis.proj4326;
         // Read lat & lon
@@ -42,14 +43,36 @@
         var centerPoint = feature.geometry.getBounds().getCenterLonLat();
         centerPoint.transform(current_projection, proj4326);
         // Build URL for create form
-        var url = S3.Ap.concat('/gis/poi/create.popup?refresh_layer=' + gis.pois_layer + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
+        if (resource) {
+            var cntroller = resource['c'];
+            var fnction = resource['f'];
+            url = S3.Ap.concat('/' + cntroller + '/' + fnction + '/create.plain?refresh_layer=' + gis.pois_layer[resource['layer']] + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
+        } else {
+            url = S3.Ap.concat('/gis/poi/create.plain?refresh_layer=' + gis.pois_layer[resource['layer']] + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
+        }
         // Convert geometry back for the marker
         centerPoint.transform(proj4326, current_projection);
         // Collapse the LayerTree to give more space for the Popup
         gis.maps['default_map'].s3.westPanelContainer.collapse();
         // Create a popup with an iframe inside
-        gis.addPopup(feature, url, undefined, true);
-    };
+        gis.addPopup(feature, url, undefined, undefined);
+    };    
+    
+    var urlForPopup = function(feature, resource) { 
+        var gis = S3.gis;
+        var proj4326 = gis.proj4326;
+        // Read lat & lon
+        var current_projection = feature.layer.map.getProjectionObject();
+        var centerPoint = feature.geometry.getBounds().getCenterLonLat();
+        centerPoint.transform(current_projection, proj4326);
+        // Build URL for create form
+          var cntroller = resource['c'];
+		  var fnction = resource['f'];		  
+		  url = S3.Ap.concat('/' + cntroller + '/' + fnction + '/create.plain?refresh_layer=' + gis.pois_layer[resource['layer']] + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
+		// Convert geometry back for the marker
+        centerPoint.transform(proj4326, current_projection);
+        return url;
+    }; 
 
     /**
      * document-ready script
@@ -60,6 +83,7 @@
                 // Success: Add Callback to handle PoIs
                 // @ToDo: Configurable map_id
                 S3.gis.maps['default_map'].s3.pointPlaced = pointPlaced;
+                S3.gis.maps['default_map'].s3.urlForPopup = urlForPopup;
             },
             function(status) {
                 // Failed

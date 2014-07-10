@@ -229,9 +229,9 @@ class S3Config(Storage):
         return self.auth.get("hmac_key", "akeytochange")
 
     def get_auth_password_min_length(self):
-     	""" 
+        """ 
             To set the Minimum Password Length
- 	    """
+        """
         return self.auth.get("password_min_length", int(4))
 
     def get_auth_gmail_domains(self):
@@ -926,12 +926,12 @@ class S3Config(Storage):
         """
         return self.gis.get("pois", True)
 
-    def get_gis_poi_resources(self):
+    def get_gis_poi_export_resources(self):
         """
             List of resources (tablenames) to import/export as PoIs from Admin Locations
             - KML & OpenStreetMap formats
         """
-        return self.gis.get("poi_resources",
+        return self.gis.get("poi_export_resources", 
                             ["cr_shelter", "hms_hospital", "org_office"])
 
     def get_gis_postcode_selector(self):
@@ -1025,6 +1025,12 @@ class S3Config(Storage):
             - if-desired, set to the Key of a Key/Value pair (e.g. "PCode")
         """
         return self.gis.get("lookup_code", False)
+
+    def get_gis_poi_create_resources(self):
+        """
+            List of resources which can be directly added to the map           
+        """
+        return self.gis.get("poi_create_resources", []) 
 
     # -------------------------------------------------------------------------
     # L10N Settings
