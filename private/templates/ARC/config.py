@@ -252,6 +252,8 @@ settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
 settings.ui.label_postcode = "ZIP Code"
 
+settings.msg.require_international_phone_numbers = False
+
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {
