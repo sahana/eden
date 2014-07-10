@@ -701,7 +701,7 @@ class S3CRUD(S3Method):
                 item = T("Record not found")
 
             output["item"] = item
-            response.view = "plain.html"
+            response.view = self._view(r, "plain.html")
 
         elif representation == "csv":
             exporter = S3Exporter().csv

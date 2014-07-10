@@ -54,8 +54,7 @@ from s3layouts import S3AddResourceLink
 # =============================================================================
 class S3DeploymentModel(S3Model):
 
-    names = ("deploy_event_type",
-             "deploy_mission",
+    names = ("deploy_mission",
              "deploy_mission_id",
              "deploy_mission_document",
              "deploy_application",

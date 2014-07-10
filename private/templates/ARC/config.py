@@ -598,6 +598,50 @@ def customise_cms_post_resource(r, tablename):
 settings.customise_cms_post_resource = customise_cms_post_resource
 
 # -----------------------------------------------------------------------------
+def cms_post_popup(r, output):
+    """
+        Customised Map popup for cms_post resource
+        - include Photo if-present
+
+        @ToDo: Much better checking!
+    """
+
+    doc_id = r.record.doc_id
+    table = current.s3db.doc_document
+    query = (table.deleted == False) & \
+            (table.doc_id == doc_id)
+    row = current.db(query).select(table.file,
+                                   limitby=(0, 1)
+                                   ).first()
+    if row:
+        from gluon import IMG, URL
+        image = IMG(_src=URL(c="default", f="download", args=[row.file]))
+        output["image"] = image
+
+# -----------------------------------------------------------------------------
+def customise_cms_post_controller(**attr):
+
+    s3 = current.response.s3
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.representation == "plain":
+            # Map Popups
+            cms_post_popup(r, output)
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.customise_cms_post_controller = customise_cms_post_controller
+
+# -----------------------------------------------------------------------------
 def customise_deploy_assignment_controller(**attr):
 
     s3db = current.s3db

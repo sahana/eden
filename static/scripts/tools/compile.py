@@ -26,6 +26,7 @@ if theme != "default":
                  "list_filter.html",
                  "map.html",
                  #"merge.html",
+                 "plain.html",
                  "popup.html",
                  "profile.html",
                  "report.html",
