@@ -4733,6 +4733,8 @@ def org_rheader(r, tabs=[]):
                         (T("User Roles"), "roles"),
                         #(T("Tasks"), "task"),
                         ]
+                if settings.get_org_resources_tab():
+                    tabs.insert(-1, (T("Resources"), "resource"))
 
             # Use branches?
             if settings.org.branches and not skip_branches:

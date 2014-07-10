@@ -42,22 +42,14 @@ def index():
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
-def assess():
+def create():
     """
-        Custom function to demo Mobile Assessment collection
+        Enter a new assessment.
+        - provides a simpler URL to access from mobile devices...
     """
-
-    # This function uses it's own Theme
-    settings.base.theme = "bootstrap"
-
-    form = FORM()
-
-    title = T("Damage Assessment")
-
-    output = dict(form = form,
-                  title = title,
-                  )
-    return output
+    
+    redirect(URL(f="newAssessment.iframe",
+                 vars={"viewing": "survey_series.%s" % request.args[0]}))
 
 # -----------------------------------------------------------------------------
 def template():
@@ -1129,8 +1121,8 @@ def question_metadata():
 # -----------------------------------------------------------------------------
 def newAssessment():
     """
-        RESTful CRUD controller
-        @ToDo: Why is this a specialised function?
+        RESTful CRUD controller to create a new 'complete' survey
+        - although the created form is a fully custom one
     """
 
     # Load Model
@@ -1200,8 +1192,8 @@ def newAssessment():
     s3.postp = postp
 
     output = s3_rest_controller(module, "complete",
-                                method="create",
-                                rheader=s3db.survey_series_rheader
+                                method = "create",
+                                rheader = s3db.survey_series_rheader
                                 )
     return output
 

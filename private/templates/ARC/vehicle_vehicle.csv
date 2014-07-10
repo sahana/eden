@@ -48,7 +48,7 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 1138,Connecticut,Waterford,,ERV,Default,Vehicles,ERV,,2003,,200 Boston Post Road PO Box 640,6385,US,Connecticut,New London,Waterford,41.3447000013,-72.1354999989
 1139,Mid-Ohio Valley,Mid-Ohio Valley,,ERV,Default,Vehicles,ERV,,2003,,220 8th Street 2nd Floor,26101,US,West Virginia,Kanawha,Parkersburg,38.4250999988,-81.7608000004
 1141,American Red Cross of Eastern Massachusetts Region,American Red Cross of Massachusetts Bay,,ERV,Default,Vehicles,ERV,,2003,,139 Main Street,2148,US,Massachusetts,Middlesex,Cambridge,42.4200000017,-71.0661000012
-1142,Southwestern Pennsylvania,Southwestern Pennsylvania,,ERV,Default,Vehicles,ERV,,2003,,225 Boulevard of the Allies,15222,US,Pennsylvania,Lackawanna,Pittsburgh,41.4070999996,-75.6411000005
+1142,Southwestern Pennsylvania,Southwestern Pennsylvania,,ERV,Default,Vehicles,ERV,,2003,,225 Boulevard of the Allies,15222,US,Pennsylvania,Allegheny,Pittsburgh,41.4070999996,-75.6411000005
 1143,Southeastern Pennsylvania,Southeastern Pennsylvania,,ERV,Default,Vehicles,ERV,,2004,,2221 Chestnut Street,19103,US,Pennsylvania,Philadelphia,Philadelphia,39.9526596444,-75.1778336782
 1144,American Red Cross of Summit and Portage Counties,American Red Cross of Summit and Portage Counties,,ERV,Default,Vehicles,ERV,,2004,,501 W Market Street,44303,US,Ohio,Stark,Akron,40.7611000013,-81.3493999988
 1145,Alabama Gulf Coast,Alabama Gulf Coast,,ERV,Default,Vehicles,ERV,,2004,,35 N Sage Ave,36607,US,Alabama,Mobile,Mobile,30.6913000009,-88.1145999986
@@ -66,7 +66,7 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 1159,Northeast Mississippi,Columbus Office,,ERV,Default,Vehicles,ERV,,2005,,501 7th St N,39703,US,Mississippi,Lowndes,Columbus,33.6332999993,-88.4503999986
 1160,American Red Cross of Upstate SC,American Red Cross of Upstate SC,,ERV,Default,Vehicles,ERV,,2005,,940 Grove Road  PO Box 9035,29604,US,South Carolina,Florence,Greenville,34.2061999996,-79.826499999
 1161,Carolina Lowcountry,Carolina Lowcountry,,ERV,Default,Vehicles,ERV,,2005,,8085 Rivers Avenue Ste F,29406,US,South Carolina,York,North Charleston,34.9686999993,-81.0852999989
-1162,Lackawanna County,Lackawanna County,,ERV,Default,Vehicles,ERV,,2005,,545 Jefferson Avenue,18510,US,Pennsylvania,Luzerne,Scranton,41.2131000012,-75.7765000018
+1162,American Red Cross of Lackawanna County,American Red Cross of Lackawanna County,,ERV,Default,Vehicles,ERV,,2005,,545 Jefferson Avenue,18510,US,Pennsylvania,Lackawanna,Scranton,41.2131000012,-75.7765000018
 1163,Chesapeake Region,Central Maryland,,ERV,Default,Vehicles,ERV,,2005,,4800 Mount Hope Drive,21740,US,Maryland,Washington,Baltimore,39.6317999996,-77.7360999995
 1164,Rhode Island,Rhode Island,,ERV,Default,Vehicles,ERV,,2005,,105 Gano Street,2905,US,Rhode Island,Union,Providence,40.965500001,-76.9289000001
 1165,Central North Carolina,Central North Carolina,,ERV,Default,Vehicles,ERV,,2005,Unit 3,4737 University Drive,27707,US,North Carolina,Durham,Durham,35.9554000013,-78.9549000006
@@ -150,7 +150,7 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 2110,Greater Houston Area,Greater Houston Area,,ERV,Default,Vehicles,ERV,,2000,,2700 SW Freeway,77098,US,Texas,Bexar,Houston,29.4444999996,-98.396600001
 2111,Texarkana Area,Texarkana Area,,ERV,Default,Vehicles,ERV,,2000,,821 Spruce Street,75501,US,Texas,Jefferson,Texarkana,30.0863999987,-94.128600001
 2112,Texoma Area,Texoma Area,,ERV,Default,Vehicles,ERV,,2000,,2527 Highway 691,75020,US,Texas,Nueces,Denison,27.7745000009,-97.3986000011
-2113,Greater Kalamazoo Area,Greater Kalamazoo Area,,ERV,Default,Vehicles,ERV,,2000,,5640 Venture Court,49009,US,Michigan,Kalamazoo,Kalamazoo,42.2694999984,-85.6614000014
+2113,American Red Cross of Greater Kalamazoo Area,American Red Cross of Greater Kalamazoo Area,,ERV,Default,Vehicles,ERV,,2000,,5640 Venture Court,49009,US,Michigan,Kalamazoo,Kalamazoo,42.2694999984,-85.6614000014
 2114,Wabash Valley,Wabash Valley,,ERV,Default,Vehicles,ERV,,2000,,700 S 3rd Street,47807,US,Indiana,Vigo,Terre Haute,39.4593999985,-87.4136000017
 2115,American Red Cross of Central Texas,American Red Cross of Central Texas,,ERV,Default,Vehicles,ERV,,2000,,2218 Pershing Drive,78723,US,Texas,Potter,Austin,35.1986000015,-101.862599998
 2116,Badger,Badger,,ERV,Default,Vehicles,ERV,,2000,,4860 Sheboygan Avenue,53705,US,Wisconsin,Kanawha,Madison,38.4250999988,-81.7608000004
@@ -264,8 +264,8 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 3051,"Sonoma, Mendocino and Lake Counties","Sonoma, Mendocino and Lake Counties",,ERV,Default,Vehicles,ERV,,1997,,5297 Aero Drive,95403,US,California,Sonoma,Santa Rosa,38.5111000018,-122.765099998
 3052,San Gabriel Pomona Valley,San Gabriel Pomona Valley,,ERV,Default,Vehicles,ERV,,1997,,430 Madeline Drive,91105,US,California,Los Angeles,Pasadena,34.1266000013,-118.159499999
 3053,Santa Barbara County,Santa Barbara County,,ERV,Default,Vehicles,ERV,,1997,,2707 State Street,93105,US,California,Santa Barbara,Santa Barbara,34.4374999999,-119.724199999
-3054,Greater Los Angeles,American Red Cross of Greater Los Angeles,,ERV,Default,Vehicles,ERV,,1997,,11355 Ohio Avenue,90025,US,California,Los Angeles,Los Angeles,34.047600001,-118.451299999
-3055,Greater Los Angeles,American Red Cross of Greater Los Angeles,,ERV,Default,Vehicles,ERV,,1997,,11355 Ohio Avenue,90025,US,California,Los Angeles,Los Angeles,34.047600001,-118.451299999
+3054,American Red Cross of Greater Los Angeles,American Red Cross of Greater Los Angeles,,ERV,Default,Vehicles,ERV,,1997,,11355 Ohio Avenue,90025,US,California,Los Angeles,Los Angeles,34.047600001,-118.451299999
+3055,American Red Cross of Greater Los Angeles,American Red Cross of Greater Los Angeles,,ERV,Default,Vehicles,ERV,,1997,,11355 Ohio Avenue,90025,US,California,Los Angeles,Los Angeles,34.047600001,-118.451299999
 3056,Oregon Trail,Oregon Trail,,ERV,Default,Vehicles,ERV,,1997,,3131 N Vancouver Avenue,97227,US,Oregon,Polk,Portland,45.0100000017,-123.109099999
 3057,Mile High,Colorado-Wyoming Region,,ERV,Default,Vehicles,ERV,,1999,,444 Sherman Street,80203,US,Colorado,Denver,Denver,39.7234999983,-104.984700002
 3058,Grand Canyon,Grand Canyon,,ERV,Default,Vehicles,ERV,,1999,,6135 N Black Canyon Highway,85015,US,Arizona,Maricopa,Phoenix,33.5263999999,-112.111600001

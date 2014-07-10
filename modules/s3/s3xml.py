@@ -2503,7 +2503,7 @@ class S3XML(S3Codec):
             col.set(FIELD, s3_unicode(key))
             if value:
                 text = s3_unicode(value).strip()
-                if text.lower() not in ("null", "<null>"):
+                if text[:6].lower() not in ("null", "<null>"):
                     col.text = text
             else:
                 col.text = ""

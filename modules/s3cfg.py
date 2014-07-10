@@ -929,7 +929,7 @@ class S3Config(Storage):
             Defaults to the generic 'gis_poi' resource as a point from a button
 
             @ToDo: Complete the button vs menu vs popup
-            @ToDo: Function to easily add to other resources to get them to actually process the Lat/Lon/WKT passed-in
+            @ToDo: S3PoIWidget() to allow other resources to pickup the passed Lat/Lon/WKT
         """
         T = current.T
         return self.gis.get("poi_create_resources",
@@ -2241,6 +2241,12 @@ class S3Config(Storage):
             Whether Organisation Regions are Hierarchical or not
         """
         return self.org.get("regions_hierarchical", False)
+
+    def get_org_resources_tab(self):
+        """
+            Whether to show a Tab for Organisation Resources
+        """
+        return self.org.get("resources_tab", False)
 
     def get_org_services_hierarchical(self):
         """

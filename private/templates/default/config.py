@@ -460,6 +460,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.org.regions = True
 # Make Organisation Regions Hierarchical
 #settings.org.regions_hierarchical = True
+# Uncomment to show a Tab for Organisation Resources
+#settings.org.resources_tab = True
 # Make Services Hierarchical
 #settings.org.services_hierarchical = True
 # Set the length of the auto-generated org/site code the default is 10

@@ -332,6 +332,8 @@ settings.org.organisation_location_context = "organisation_location.location_id"
 settings.org.site_code_len = 3
 # Set the label for Sites
 settings.org.site_label = "Office/Shelter/Warehouse/Facility"
+# Uncomment to show a Tab for Organisation Resources
+settings.org.resources_tab = True
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
@@ -1621,26 +1623,26 @@ settings.req.use_commit = False
 settings.req.ask_transport = True
 
 # -----------------------------------------------------------------------------
-def customise_req_commit_controller(**attr):
+def customise_req_commit_resource(r, tablename):
 
     # Request is mandatory
     field = current.s3db.req_commit.req_id
     field.requires = field.requires.other
 
-    return attr
-
-settings.customise_req_commit_controller = customise_req_commit_controller
+settings.customise_req_commit_resource = customise_req_commit_resource
 
 # -----------------------------------------------------------------------------
-def customise_req_req_controller(**attr):
+def customise_survey_complete_resource(r, tablename):
 
-    # Request is mandatory
-    field = current.s3db.req_commit.req_id
-    field.requires = field.requires.other
+    if r.representation == "iframe":
+        # Use a custom Theme more suited to Mobile
+        # Doesn't work with Survey
+        #settings.base.theme = "bootstrap"
+        # Ensure the form is visible
+        script = """$('#popup form').show()"""
+        current.response.s3.jquery_ready.append(script)
 
-    return attr
-
-settings.customise_req_req_controller = customise_req_req_controller
+settings.customise_survey_complete_resource = customise_survey_complete_resource
 
 # =============================================================================
 # Template Modules

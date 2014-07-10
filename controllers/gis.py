@@ -2889,6 +2889,7 @@ def poi():
                 field = r.table.location_id
                 field.label = ""
                 # Lat/Lon from Feature?
+                # @ToDo: S3PoIWidget() instead to pickup the passed Lat/Lon/WKT
                 lat = get_vars.get("lat", None)
                 if lat is not None:
                     lon = get_vars.get("lon", None)

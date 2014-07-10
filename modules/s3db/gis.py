@@ -4707,6 +4707,7 @@ class S3POIModel(S3Model):
                      self.gis_location_id(
                          ondelete = "CASCADE",
                          requires = IS_LAT_LON("gis_poi_location_id"),
+                         # @ToDo: S3PoIWidget() to allow other resources to pickup the passed Lat/Lon/WKT
                          widget = S3LocationLatLonWidget(),
                      ),
                      *s3_meta_fields())

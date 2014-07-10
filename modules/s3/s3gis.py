@@ -4375,16 +4375,20 @@ class GIS(object):
             update_location_tree = GIS.update_location_tree
             for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
                 query = (table.level == level) & (table.deleted == False)
-                features = db(query).select(*fields)
-                for feature in features:
-                    feature["level"] = level
-                    wkt = feature["wkt"]
-                    if wkt and not wkt.startswith("POI"):
-                        # Polygons aren't inherited
-                        feature["inherited"] = False
-                    update_location_tree(feature)
-                    # Also do the Bounds/Centroid/WKT
-                    bounds_centroid_wkt(feature)
+                try:
+                    features = db(query).select(*fields)
+                except MemoryError:
+                    s3.log.error("Unable to update Location Tree for level %s: MemoryError" % level)
+                else:
+                    for feature in features:
+                        feature["level"] = level
+                        wkt = feature["wkt"]
+                        if wkt and not wkt.startswith("POI"):
+                            # Polygons aren't inherited
+                            feature["inherited"] = False
+                        update_location_tree(feature)
+                        # Also do the Bounds/Centroid/WKT
+                        bounds_centroid_wkt(feature)
             return
 
         # Single Feature
