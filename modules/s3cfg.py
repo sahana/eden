@@ -523,13 +523,21 @@ class S3Config(Storage):
     def get_base_migrate(self):
         """ Whether to allow Web2Py to migrate the SQL database to the new structure """
         return self.base.get("migrate", True)
+
     def get_base_fake_migrate(self):
         """ Whether to have Web2Py create the .table files to match the expected SQL database structure """
         return self.base.get("fake_migrate", False)
         
     def get_base_prepopulate(self):
         """ Whether to prepopulate the database &, if so, which set of data to use for this """
-        return self.base.get("prepopulate", 1)
+        base = self.base
+        setting = base.get("prepopulate", 1)
+        if setting:
+            options = base.get("prepopulate_options")
+            return self.resolve_profile(options, setting)
+        else:
+            # Pre-populate off (production mode), don't bother resolving
+            return 0
 
     def get_base_guided_tour(self):
         """ Whether the guided tours are enabled """
@@ -2737,5 +2745,90 @@ class S3Config(Storage):
     #
     def get_vulnerability_indicator_hierarchical(self):
         return self.vulnerability.get("indicator_hierarchical", False)
+
+    # -------------------------------------------------------------------------
+    # Utilities
+    #
+    def resolve_profile(self, options, setting, resolved=None):
+        """
+            Resolve option profile (e.g. prepopulate)
+
+            @param options: the template options as dict like:
+                            {"name": ("item1", "item2",...),...},
+                            The "mandatory" list will always be
+                            added, while the "default" list will
+                            be added only if setting is None.
+            @param setting: the active setting, as single item
+                            or tuple/list, items with a "template:"
+                            prefix (like "template:name") refer to
+                            the respective list in options
+            @param resolved: internal (for recursion)
+
+            @example:
+
+                # Template provides:
+                settings.base.prepopulate_options = {
+                    "mandatory": "locations/intl",
+                    "brazil": "locations/brazil",
+                    "germany": "locations/germany",
+                    "default": "default",
+                    "demo": ("template:default", "demo/users"),
+                }
+
+                # Set up a demo for Brazil:
+                settings.base.prepopulate = ("template:brazil", "template:demo")
+                # result:
+                ["locations/intl", "locations/brazil", "default", "demo/users"]
+
+                # Set up a production instance for Germany:
+                settings.base.prepopulate = ("template:germany", "template:default")
+                # result:
+                ["locations/intl", "locations/germany", "default"]
+
+                # Default setup:
+                settings.base.prepopulate = None
+                # result:
+                ["locations/intl", "default"]
+
+                # Custom options:
+                settings.base.prepopulate = ["template:demo", "IFRC/Train"]
+                # result:
+                ["locations/intl", "default", "demo/users", "IFRC/Train"]
+
+            @note: the result list is deduplicated, maintaining the original
+                   order by first occurrence
+        """
+
+        default = resolved is None
+        if default:
+            resolved = set()
+        seen = resolved.add
+
+        result = []
+
+        def append(item):
+            if item not in resolved:
+                seen(item)
+                if isinstance(item, basestring) and item[:9] == "template:":
+                    if options:
+                        option = options.get(item[9:])
+                        if option:
+                            result.extend(self.resolve_profile(options,
+                                                               option,
+                                                               resolved=resolved))
+                else:
+                    result.append(item)
+            return
+
+        if default:
+            append("template:mandatory")
+        if setting is not None:
+            if not isinstance(setting, (tuple, list)):
+                setting = (setting,)
+            for item in setting:
+                append(item)
+        elif default:
+            append("template:default")
+        return result
 
 # END =========================================================================
