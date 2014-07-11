@@ -6,6 +6,7 @@
  *
  * requires: jQuery 1.9.1+
  * requires: jQuery UI 1.10 widget factory
+ * requires: D3.js 3.4.9+
  *
  */
 
@@ -21,11 +22,16 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {string} ajaxURL - the URL to Ajax-load data from
+         * @prop {number|bool} autoSubmit - auto-submit timeout, false to
+         *                                  deactivate auto-submit
+         * @prop {string} emptyMessage - message to show when no data are
+         *                               available for the time interval
          */
         options: {
             ajaxURL: null,
-            autoSubmit: 1000
+            autoSubmit: 1000,
+            emptyMessage: 'No data available'
         },
 
         /**
@@ -166,7 +172,7 @@
                .call(xAxis)
                .selectAll("text")
                .style("text-anchor", "end")
-               .style({"font": "10px sans-serif"})
+               .style("font", "10px sans-serif")
                .attr("dx", "-.8em")
                .attr("dy", "-.55em")
                .attr("transform", "rotate(-90)" );
@@ -176,44 +182,58 @@
                .attr("class", "y axis")
                .call(yAxis);
 
-            // Add horizontal grid lines
-            svg.append("g")
-               .attr("class", "grid")
-               .call(yAxis.tickSize(-width).tickFormat(""));
-
-            // Render baseline?
-            if (baseline) {
-                svg.selectAll("baseline")
-                   .data([baseline])
+            if (data.empty) {
+                // Display empty message
+                svg.selectAll("message")
+                   .data([this.options.emptyMessage])
                    .enter()
+                   .append("text")
+                   .attr("class", "empty")
+                   .attr("x", 20)
+                   .attr("y", 30)
+                   .text(function(d) { return d; });
+            } else {
+                // Add horizontal grid lines
+                svg.append("g")
+                   .attr("class", "grid")
+                   .call(yAxis.tickSize(-width).tickFormat(""));
+
+                // Render baseline?
+                if (baseline) {
+                    svg.selectAll("baseline")
+                       .data([baseline])
+                       .enter()
+                       .append("rect")
+                       .attr("class", "baseline")
+                       .attr("x", 0 )
+                       .attr("width", width )
+                       .attr("y", function(d) { return y(d); })
+                       .attr("height", function(d) { return height - y(d); });
+                }
+
+                // Add the bars
+                bar = svg.selectAll("bar")
+                         .data(data.items);
+
+                bar.enter()
                    .append("rect")
-                   .attr("class", "baseline")
-                   .style("fill", "lightgreen")
-                   .style("opacity", "0.2")
-                   .attr("x", 0 )
-                   .attr("width", width )
-                   .attr("y", function(d) { return y(d); })
-                   .attr("height", function(d) { return height - y(d); });
+                   .attr("class", "bar")
+                   .attr("x", function(d) { return x(self._parseDate(d[0])); })
+                   .attr("width", x.rangeBand())
+                   .attr("y", function(d) { return y(d[2]); })
+                   .attr("height", function(d) { return height - y(d[2]); });
             }
 
-            // Add the bars
-            bar = svg.selectAll("bar")
-                     .data(data.items);
-                     
-            bar.enter()
-               .append("rect")
-               .attr("class", "bar")
-               .style("fill", "steelblue")
-               .attr("x", function(d) { return x(self._parseDate(d[0])); })
-               .attr("width", x.rangeBand())
-               .attr("y", function(d) { return y(d[2]); })
-               .attr("height", function(d) { return height - y(d[2]); });
         },
 
         /**
          * Ajax-reload the data and refresh all widget elements
          *
-         * @todo: document parameters
+         * @param {object} options - the report options as object
+         * @param {object} filters - the filter options as object
+         * @param {bool} force - reload regardless whether options or
+         *                       filters have changed (e.g. after db
+         *                       update in popup), default = true
          */
         reload: function(options, filters, force) {
 
@@ -295,7 +315,10 @@
 
         /**
          * Update the Ajax URL with new options and filters
-         * */
+         *
+         * @param {object} options - the report options as object
+         * @param {object} filters - the filter options as object
+         */
         _updateAjaxURL: function(options, filters) {
 
             var ajaxURL = this.options.ajaxURL;
@@ -402,6 +425,11 @@
             return needs_reload;
         },
 
+        /**
+         * Convert an ISO datetime string into a JS Date
+         *
+         * @param {string} string - the datetime string
+         */
         _parseDate: function(string) {
 
             var dt = d3.time.format('%Y-%m-%dT%H:%M:%S+00:00').parse(string);
@@ -422,7 +450,6 @@
             });
             
             // Form submission
-            // @todo: implement _getOptions
             if (this.options.autoSubmit) {
                 // Auto-submit
                 var timeout = this.options.autoSubmit;
@@ -437,6 +464,7 @@
                         clearTimeout(timer);
                     }
                     timer = setTimeout(function () {
+                        // @todo: implement _getOptions
                         var options = null, //self._getOptions(),
                             filters = self._getFilters();
                         self.reload(options, filters, false);
@@ -446,6 +474,7 @@
             } else {
                 // Manual submit
                 $('#' + this.widget_id + '-tp-form input.tp-submit').on('click.timeplot', function() {
+                    // @todo: implement _getOptions
                     var options = null, // self._getOptions(),
                         filters = self._getFilters();
                     self.reload(options, filters, false);
@@ -453,8 +482,11 @@
             }
         },
 
+        /**
+         * Unbind events (before refresh)
+         */
         _unbindEvents: function() {
-            // Unbind events (before refresh)
+
             $(window).off("resize.timeplot");
             $('#' + this.widget_id + '-tp-form').off('optionChanged');
             $('#' + this.widget_id + '-tp-form input.tp-submit').off('click.timeplot');

@@ -208,6 +208,7 @@ class S3TimePlot(S3Method):
 
         # Timeplot data
         data = {"items": items,
+                "empty": event_frame.empty,
                 "baseline": event_frame.baseline,
                 }
 
@@ -374,7 +375,7 @@ class S3TimePlot(S3Method):
         # Create the events
         events = []
         add_event = events.append
-        for row in data["rows"]:
+        for row in data.rows:
             values = dict((fact.colname, row[fact.colname])
                           for fact in facts)
             start = row[start_colname]
@@ -393,7 +394,6 @@ class S3TimePlot(S3Method):
         # Extend the event frame with these events
         if events:
             event_frame.extend(events)
-
         return data
         
     # -------------------------------------------------------------------------
@@ -766,6 +766,7 @@ class S3TimePlotForm(S3ReportForm):
         options = {
             "ajaxURL": ajaxurl,
             "autoSubmit": settings.get_ui_report_auto_submit(),
+            "emptyMessage": str(T("No data available for this time interval")),
         }
         script = """$("#%(widget_id)s").timeplot(%(options)s)""" % \
                     {"widget_id": widget_id,
@@ -1140,7 +1141,9 @@ class S3TimePlotEventFrame(object):
             end = datetime.datetime.utcnow()
         self.end = tp_tzsafe(end)
 
+        self.empty = True
         self.baseline = None
+        
         self.slots = slots
         self.periods = {}
 
@@ -1168,6 +1171,10 @@ class S3TimePlotEventFrame(object):
             @todo: integrate in constructor
             @todo: handle self.rule == None
         """
+
+        if not events:
+            return
+        empty = self.empty
 
         # Order events by start datetime
         events = sorted(events)
@@ -1216,6 +1223,8 @@ class S3TimePlotEventFrame(object):
             for event in previous:
                 period.add_previous(event)
 
+            empty = False
+            
             # Remaining events
             events = events[index:]
             if not events:
@@ -1230,6 +1239,8 @@ class S3TimePlotEventFrame(object):
                 else:
                     previous.append(event)
             current = remaining
+
+        self.empty = empty
         return
         
     # -------------------------------------------------------------------------
