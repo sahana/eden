@@ -31,6 +31,8 @@
     @status: experimental
 """
 
+__all__ = ("S3Hierarchy",)
+
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:

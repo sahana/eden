@@ -27,6 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("FS",
+           "S3FieldSelector",
+           "S3Joins",
+           "S3ResourceField",
+           "S3ResourceQuery",
+           "S3URLQuery",
+           )
+
 import datetime
 import re
 import sys

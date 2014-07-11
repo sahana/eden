@@ -31,6 +31,11 @@
     @group Helper Classes: S3RecordMerger
 """
 
+__all__ = ("S3AxisFilter",
+           "S3Resource",
+           "S3ResourceFilter",
+           )
+
 import datetime
 import sys
 

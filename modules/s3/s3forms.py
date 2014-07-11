@@ -27,6 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3SQLCustomForm",
+           "S3SQLDefaultForm",
+           "S3SQLInlineComponent",
+           "S3SQLInlineComponentCheckbox",
+           "S3SQLInlineComponentMultiSelectWidget",
+           "S3SQLInlineLink",
+           )
+
 from itertools import chain
 
 try:

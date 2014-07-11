@@ -32,6 +32,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3CRUD",)
+
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:

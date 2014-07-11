@@ -12,6 +12,7 @@ import dateutil.tz
 
 from gluon import *
 from s3.s3timeplot import *
+from s3.s3timeplot import tp_datetime
 from s3.s3query import FS
 
 # =============================================================================

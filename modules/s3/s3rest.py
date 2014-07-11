@@ -27,6 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3Request",
+           "S3Method",
+           "s3_request",
+           )
+
 import datetime
 import os
 import re

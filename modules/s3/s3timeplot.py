@@ -29,6 +29,12 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3TimePlot",
+           "S3TimePlotEvent",
+           "S3TimePlotEventFrame",
+           "S3TimePlotPeriod",
+           )
+
 import datetime
 import dateutil.tz
 import re

@@ -29,6 +29,19 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3DateFilter",
+           "S3Filter",
+           "S3FilterForm",
+           "S3FilterString",
+           "S3FilterWidget",
+           "S3HierarchyFilter",
+           "S3LocationFilter",
+           "S3OptionsFilter",
+           "S3RangeFilter",
+           "S3TextFilter",
+           "get_s3_filter_opts",
+           )
+
 import datetime
 import re
 
