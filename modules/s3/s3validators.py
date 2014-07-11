@@ -30,7 +30,7 @@
 
 """
 
-__all__ = ["single_phone_number_pattern",
+__all__ = ("single_phone_number_pattern",
            "multi_phone_number_pattern",
            "s3_single_phone_requires",
            "s3_phone_requires",
@@ -58,7 +58,7 @@ __all__ = ["single_phone_number_pattern",
            "IS_UTC_OFFSET",
            "QUANTITY_INV_ITEM",
            "IS_PHONE_NUMBER",
-           ]
+           )
 
 import re
 import time

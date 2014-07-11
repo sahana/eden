@@ -21,7 +21,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["NYC"]
+settings.base.prepopulate = ("NYC",)
 
 settings.base.system_name = T("NYC Prepared")
 settings.base.system_name_short = T("NYC Prepared")

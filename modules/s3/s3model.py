@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Model"]
+__all__ = ("S3Model",)
 
 from gluon import *
 from gluon.dal import Table

@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AssessBuildingModel",
+__all__ = ("S3AssessBuildingModel",
            "S3AssessCanvassModel",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -167,9 +167,9 @@ class S3AssessBuildingModel(S3Model):
         Building Damage Assessment form
     """
 
-    names = ["assess_building",
+    names = ("assess_building",
              "assess_building_rheader",
-             ]
+             )
 
     def model(self):
 
@@ -928,8 +928,7 @@ class S3AssessCanvassModel(S3Model):
         Building Canvassing form
     """
 
-    names = ["assess_canvass",
-             ]
+    names = ("assess_canvass",)
 
     def model(self):
 

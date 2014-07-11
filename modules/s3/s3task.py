@@ -42,7 +42,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Task"]
+__all__ = ("S3Task",)
 
 import datetime
 

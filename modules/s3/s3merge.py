@@ -29,8 +29,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys
-
 from gluon import *
 from gluon.dal import Field
 #from gluon.html import BUTTON
@@ -586,6 +584,7 @@ class S3Merge(S3Method):
             except KeyError:
                 r.error(404, current.ERROR.BAD_RECORD)
             except:
+                import sys
                 r.error(424,
                         T("Could not merge records. (Internal Error: %s)") %
                             sys.exc_info()[1],

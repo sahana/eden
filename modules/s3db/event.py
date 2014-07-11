@@ -1100,8 +1100,8 @@ class S3EventResourceModel(S3Model):
 
         # Custom Methods
         #self.set_method("event", "resource",
-        #                method = "location",
-        #                action = S3UpdateLocation())
+        #                method = "check-in",
+        #                action = S3CheckInMethod())
 
         # List Fields
         #list_fields = ["id",

@@ -29,13 +29,13 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["AuthS3",
+__all__ = ("AuthS3",
            "S3Permission",
            "S3Audit",
            "S3RoleManager",
            "S3OrgRoleManager",
            "S3PersonRoleManager",
-           ]
+           )
 
 import datetime
 #import re

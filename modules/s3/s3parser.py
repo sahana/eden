@@ -30,7 +30,7 @@
    OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Parsing"]
+__all__ = ("S3Parsing",)
 
 import sys
 

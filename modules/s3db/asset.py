@@ -1118,8 +1118,8 @@ def asset_controller():
     s3db.set_method("asset", "asset", method="check-in",
                     action = S3CheckInMethod())
 
-    #s3db.set_method("asset", "asset", method="check-out",
-    #                action = S3CheckOutMethod())
+    s3db.set_method("asset", "asset", method="check-out",
+                    action = S3CheckOutMethod())
 
     # Pre-process
     def prep(r):

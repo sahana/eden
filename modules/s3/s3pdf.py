@@ -40,7 +40,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3PDF"]
+__all__ = ("S3PDF",)
 
 import os
 import sys

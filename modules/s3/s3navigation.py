@@ -34,12 +34,12 @@
            - ...and any todo's in the code
 """
 
-__all__ = ["S3NavigationItem",
+__all__ = ("S3NavigationItem",
            "S3ScriptItem",
            "S3ResourceHeader",
            "s3_rheader_tabs",
            "s3_rheader_resource",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage

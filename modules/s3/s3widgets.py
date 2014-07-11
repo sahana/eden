@@ -32,7 +32,7 @@
        in addition to when generating new forms (so are often processed twice)
 """
 
-__all__ = ["S3ACLWidget",
+__all__ = ("S3ACLWidget",
            "S3AddObjectWidget",
            "S3AddPersonWidget",
            "S3AddPersonWidget2",
@@ -71,7 +71,7 @@ __all__ = ["S3ACLWidget",
            "s3_comments_widget",
            "s3_richtext_widget",
            "search_ac",
-           ]
+           )
 
 import datetime
 import os
