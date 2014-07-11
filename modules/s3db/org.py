@@ -1102,69 +1102,72 @@ class S3OrganisationBranchModel(S3Model):
             branch = record.org_branch_organisation
             link = record.org_organisation_branch
 
-            try:
-                branch_id = link.branch_id
-                organisation_id = link.organisation_id
-                
-                if branch_id and organisation_id and not link.deleted:
+            branch_id = link.branch_id
+            organisation_id = link.organisation_id
 
-                    # Inherit fields from parent organisation
-                    update = dict((field, organisation[field])
-                                  for field in inherit
-                                  if not branch[field] and organisation[field])
-                    if update:
-                        db(otable.id == branch_id).update(**update)
+            if branch_id and organisation_id and not link.deleted:
 
-                    # Org Types
-                    ltable = db.org_organisation_organisation_type
-                    rows = db(ltable.organisation_id.belongs((organisation_id, branch_id))).select(ltable.organisation_id,
-                                                                                                   ltable.organisation_type_id)
-                    org_types = []
-                    branch_types = []
-                    for row in rows:
-                        if row.organisation_id == organisation_id:
-                            org_types.append(row.organisation_type_id)
-                        else:
-                            branch_types.append(row.organisation_type_id)
-                    for t in org_types:
-                        if t not in branch_types:
-                            ltable.insert(organisation_id = branch_id,
-                                          organisation_type_id = t,
-                                          )
+                # Eliminate duplicate affiliations
+                query = (ltable.branch_id == branch_id) & \
+                        (ltable.organisation_id == organisation_id) & \
+                        (ltable.id != _id) & \
+                        (ltable.deleted != True)
 
-                    # Sectors
-                    ltable = s3db.org_sector_organisation
-                    rows = db(ltable.organisation_id.belongs((organisation_id, branch_id))).select(ltable.organisation_id,
-                                                                                                   ltable.sector_id)
-                    org_sectors = []
-                    branch_sectors = []
-                    for row in rows:
-                        if row.organisation_id == organisation_id:
-                            org_sectors.append(row.sector_id)
-                        else:
-                            branch_sectors.append(row.sector_id)
-                    for s in org_sectors:
-                        if s not in branch_sectors:
-                            ltable.insert(organisation_id = branch_id,
-                                          sector_id = s,
-                                          )
+                deleted_fk = {"branch_id": branch_id,
+                              "organisation_id": organisation_id,
+                              }
+                db(query).update(deleted=True,
+                                 branch_id=None,
+                                 organisation_id=None,
+                                 deleted_fk=json.dumps(deleted_fk))
 
-                    # Eliminate duplicate affiliations
-                    query = (ltable.branch_id == branch_id) & \
-                            (ltable.organisation_id == organisation_id) & \
-                            (ltable.id != _id) & \
-                            (ltable.deleted != True)
+                # Inherit fields from parent organisation
+                update = dict((field, organisation[field])
+                                for field in inherit
+                                if not branch[field] and organisation[field])
+                if update:
+                    db(otable.id == branch_id).update(**update)
 
-                    deleted_fk = {"branch_id": branch_id,
-                                  "organisation_id": organisation_id}
-                    db(query).update(deleted=True,
-                                     branch_id=None,
-                                     organisation_id=None,
-                                     deleted_fk=json.dumps(deleted_fk))
+                record_ids = (organisation_id, branch_id)
+                                    
+                # Inherit Org Types
+                ltable = db.org_organisation_organisation_type
+                rows = db(ltable.organisation_id.belongs(record_ids)) \
+                                            .select(ltable.organisation_id,
+                                                    ltable.organisation_type_id,
+                                                    )
 
-                org_update_affiliations("org_organisation_branch", link)
-            except:
-                pass
+                org_types = set()
+                branch_types = set()
+                for row in rows:
+                    if row.organisation_id == organisation_id:
+                        org_types.add(row.organisation_type_id)
+                    else:
+                        branch_types.add(row.organisation_type_id)
+                for t in org_types - branch_types:
+                    ltable.insert(organisation_id = branch_id,
+                                  organisation_type_id = t,
+                                  )
+
+                # Inherit Org Sectors
+                ltable = s3db.org_sector_organisation
+                rows = db(ltable.organisation_id.belongs(record_ids)) \
+                                            .select(ltable.organisation_id,
+                                                    ltable.sector_id,
+                                                    )
+                org_sectors = set()
+                branch_sectors = set()
+                for row in rows:
+                    if row.organisation_id == organisation_id:
+                        org_sectors.add(row.sector_id)
+                    else:
+                        branch_sectors.add(row.sector_id)
+                for s in org_sectors - branch_sectors:
+                    ltable.insert(organisation_id = branch_id,
+                                  sector_id = s,
+                                  )
+
+            org_update_affiliations("org_organisation_branch", link)
 
             # Update the root organisation
             if link.deleted or \
