@@ -27,10 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DocumentLibrary",
+__all__ = ("S3DocumentLibrary",
+           "S3DocSitRepModel",
            "doc_image_represent",
            "doc_document_list_layout",
-          ]
+           )
 
 import os
 
@@ -636,7 +637,6 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
 class doc_DocumentRepresent(S3Represent):
     """ Representation of Documents """
 
-    # -------------------------------------------------------------------------
     def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
@@ -659,5 +659,52 @@ class doc_DocumentRepresent(S3Represent):
                 elif url:
                     return A(v, _href=url)
         return v
+
+# =============================================================================
+class S3DocSitRepModel(S3Model):
+    """
+        Situation Reports
+    """
+
+    names = ("doc_sitrep",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Situation Reports
+        # - can be aggregated by OU
+        #
+        tablename = "doc_sitrep"
+        self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
+                          Field("name", length=128,
+                               label = T("Name"),
+                               ),
+                          self.org_organisation_id(),
+                          self.gis_location_id(),
+                          s3_date(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Situation Report"),
+                title_display = T("Situation Report Details"),
+                title_list = T("Situation Reports"),
+                title_update = T("Edit Situation Report"),
+                title_upload = T("Import Situation Reports"),
+                label_list_button = T("List Situation Reports"),
+                label_delete_button = T("Delete Situation Report"),
+                msg_record_created = T("Situation Report added"),
+                msg_record_modified = T("Situation Report updated"),
+                msg_record_deleted = T("Situation Report deleted"),
+                msg_list_empty = T("No Situation Reports currently registered"))
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
 
 # END =========================================================================

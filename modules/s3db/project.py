@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ProjectModel",
+__all__ = ("S3ProjectModel",
            "S3ProjectActivityModel",
            "S3ProjectActivityTypeModel",
            "S3ProjectActivityOrganisationModel",
@@ -61,7 +61,7 @@ __all__ = ["S3ProjectModel",
            "project_project_filters",
            "project_project_list_layout",
            "project_task_list_layout",
-           ]
+           )
 
 import datetime
 

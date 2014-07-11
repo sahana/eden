@@ -27,10 +27,4 @@ def index_alt():
     # Just redirect to the list of Reports
     redirect(URL(f="report"))
 
-# -----------------------------------------------------------------------------
-def report():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
 # END =========================================================================

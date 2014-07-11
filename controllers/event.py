@@ -136,8 +136,9 @@ def incident():
         if r.interactive:
             if r.component:
                 if r.component.name == "human_resource":
-                    update_url = URL(c="hrm", f="human_resource", args=["[id]"])
-                    s3_action_buttons(r, update_url=update_url)
+                    #update_url = URL(c="hrm", f="human_resource", args=["[id]"])
+                    #s3_action_buttons(r, update_url=update_url)
+                    s3_action_buttons(r)
                     if "msg" in settings.modules:
                         s3base.S3CRUD.action_button(url = URL(f="compose",
                                                               vars = {"hrm_id": "[id]"}),

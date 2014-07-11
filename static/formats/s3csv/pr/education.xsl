@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Human Resources - CSV Import Stylesheet
+         Education - CSV Import Stylesheet
 
          Column headers defined in this stylesheet:
 
@@ -21,11 +21,10 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+
     <!-- ****************************************************************** -->
-    <!-- Indexes for faster processing -->        
-    <xsl:key name="email"
-             match="row"
-             use="col[@field='Email']"/>
+    <!-- Indexes for faster processing -->
+    <xsl:key name="email" match="row" use="col[@field='Email']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">

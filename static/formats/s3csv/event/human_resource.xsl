@@ -89,7 +89,6 @@
     <xsl:template match="row">
         <xsl:variable name="Budget" select="col[@field='Budget']/text()"/>
         <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
-        </xsl:variable>
         <xsl:variable name="HumanResource">
             <xsl:value-of select="concat(col[@field='Organisation'],
                                          col[@field='First Name'],

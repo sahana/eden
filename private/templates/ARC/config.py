@@ -1357,6 +1357,20 @@ settings.project.organisation_roles = {
     5: T("Supplier"),
     #9: T("Partner National Society"),
 }
+settings.project.task_status_opts = {1: T("Draft"),
+                                     2: T("New"),
+                                     3: T("Assigned"),
+                                     #4: T("Feedback"),
+                                     4: T("Accepted"),
+                                     5: T("Blocked"),
+                                     6: T("On Hold"),
+                                     7: T("Cancelled"),
+                                     8: T("Duplicate"),
+                                     9: T("Ready"),
+                                    10: T("Verified"),
+                                    11: T("Reopened"),
+                                    12: T("Completed"),
+                                    }
 
 # -----------------------------------------------------------------------------
 def customise_project_project_controller(**attr):

@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3PersonEntity",
+__all__ = ("S3PersonEntity",
            "S3OrgAuthModel",
            "S3PersonModel",
            "S3GroupModel",
@@ -85,7 +85,7 @@ __all__ = ["S3PersonEntity",
            #"pr_address_list_layout",
            #"pr_contact_list_layout",
            #"pr_filter_list_layout",
-           ]
+           )
 
 import os
 #import re
@@ -3168,6 +3168,7 @@ class S3SavedFilterModel(S3Model):
                                       ],
                        listadd = False,
                        list_layout = pr_filter_list_layout,
+                       onvalidation = self.pr_filter_onvalidation,
                        orderby = "pr_filter.resource",
                        )
 
@@ -3175,6 +3176,22 @@ class S3SavedFilterModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(pr_filter_id = filter_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_filter_onvalidation(form):
+        """
+            Ensure that JSON can be loaded by json.loads()
+        """
+
+        query = form.vars.get("query", None)
+        if query:
+            query = query.replace("'", "\"")
+            try:
+                json.loads(query)
+            except ValueError, e: 
+                form.errors.query = "%s: %s" % (current.T("Query invalid"), e)
+            form.vars.query = query
 
 # =============================================================================
 class S3SubscriptionModel(S3Model):
@@ -3225,68 +3242,75 @@ class S3SubscriptionModel(S3Model):
                           self.super_link("pe_id", "pr_pentity"),
                           self.pr_filter_id(),
                           Field("notify_on", "list:string",
-                                requires=IS_IN_SET(trigger_opts,
-                                                   multiple=True,
-                                                   zero=None),
-                                default=["new"],
-                                represent=S3Represent(options=trigger_opts,
-                                                      multiple=True)),
+                                default = ["new"],
+                                represent = S3Represent(options=trigger_opts,
+                                                        multiple=True),
+                                requires = IS_IN_SET(trigger_opts,
+                                                     multiple=True,
+                                                     zero=None),
+                                ),
                           Field("frequency",
-                                requires=IS_IN_SET(frequency_opts,
-                                                   zero=None),
-                                default="daily",
-                                represent=lambda opt: \
-                                          FREQUENCY_OPTS.get(opt,
-                                                             UNKNOWN_OPT)),
+                                default = "daily",
+                                represent = lambda opt: \
+                                            FREQUENCY_OPTS.get(opt,
+                                                               UNKNOWN_OPT),
+                                requires = IS_IN_SET(frequency_opts,
+                                                     zero=None),
+                                ),
                           Field("method", "list:string",
-                                requires=IS_IN_SET(MSG_CONTACT_OPTS,
-                                                   multiple=True,
-                                                   zero=None),
-                                default=["EMAIL"],
-                                represent=S3Represent(
-                                            options=MSG_CONTACT_OPTS,
-                                            multiple=True)),
+                                default = ["EMAIL"],
+                                represent = S3Represent(options=MSG_CONTACT_OPTS,
+                                                        multiple=True),
+                                requires = IS_IN_SET(MSG_CONTACT_OPTS,
+                                                     multiple=True,
+                                                     zero=None),
+                                ),
                           Field("email_format",
-                                requires=IS_EMPTY_OR(
-                                          IS_IN_SET(email_format_opts,
-                                                    zero=None)),
-                                represent=S3Represent(
-                                            options=email_format_opts)),
+                                represent = S3Represent(options=email_format_opts),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(email_format_opts,
+                                                      zero=None)),
+                                ),
                           *s3_meta_fields())
 
         self.add_components(tablename,
-                            pr_subscription_resource="subscription_id",
-                           )
+                            pr_subscription_resource = "subscription_id",
+                            )
 
         # ---------------------------------------------------------------------
         tablename = "pr_subscription_resource"
         self.define_table(tablename,
-                          Field("subscription_id",
-                                "reference pr_subscription",
-                                ondelete="CASCADE"),
+                          Field("subscription_id", "reference pr_subscription",
+                                ondelete = "CASCADE",
+                                ),
                           Field("resource"),
                           Field("url"),
-                          Field("auth_token",
-                                length=40,
-                                readable=False,
-                                writable=False),
+                          Field("auth_token", length=40,
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("locked", "boolean",
-                                default=False,
-                                readable=False,
-                                writable=False),
+                                default = False,
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("batch_mode", "boolean",
-                                default=True),
+                                default = True,
+                                ),
                           Field("last_check_time", "datetime",
-                                default=current.request.utcnow,
-                                writable=False),
+                                default = current.request.utcnow,
+                                writable = False,
+                                ),
                           Field("next_check_time", "datetime",
-                                writable=False),
+                                writable = False,
+                                ),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_subscription_check_intervals = check_intervals)
+        return dict(pr_subscription_check_intervals = check_intervals,
+                    )
 
 # =============================================================================
 class S3PersonPresence(S3Model):
@@ -3294,7 +3318,7 @@ class S3PersonPresence(S3Model):
         Presence Log for Persons
 
         @todo: deprecate
-        currently still used by CR
+        currently still used by CR?
     """
 
     names = ("pr_presence",
