@@ -493,7 +493,7 @@ class S3HRModel(S3Model):
             msg_record_deleted = T("Volunteer deleted"),
             msg_list_empty = T("No Volunteers currently registered"))
 
-        hrm_human_resource_represent = hrm_HumanResourceRepresent()
+        hrm_human_resource_represent = hrm_HumanResourceRepresent(show_link=True)
         
         if group == "staff":
             label = STAFF
@@ -3905,13 +3905,14 @@ class hrm_HumanResourceRepresent(S3Represent):
         
         # Append the job title if present
         if hr.job_title_id:
-            append(self.job_title_represent(hr.job_title_id))
+            append(self.job_title_represent(hr.job_title_id, show_link=False))
             
         # Append the organisation if present (and configured)
         if hr.organisation_id and \
            current.deployment_settings.get_hrm_show_organisation():
             htable = current.s3db.hrm_human_resource
-            append(htable.organisation_id.represent(hr.organisation_id))
+            append(htable.organisation_id.represent(hr.organisation_id,
+                                                    show_link=False))
 
         return ", ".join(representation)
         

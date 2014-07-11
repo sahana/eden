@@ -420,7 +420,7 @@ class S3OrganisationModel(S3Model):
         org_widgets = {"default": default_widget}
 
         # Representation for foreign keys
-        org_organisation_represent = org_OrganisationRepresent()
+        org_organisation_represent = org_OrganisationRepresent(show_link=True)
 
         # Fields for text filter
         text_fields = ["name",

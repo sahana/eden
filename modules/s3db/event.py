@@ -694,12 +694,13 @@ class S3IncidentModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            event_asset = "incident_id",
                             asset_asset = {"link": "event_asset",
                                            "joinby": "incident_id",
                                            "key": "asset_id",
                                            #"actuate": "embed",
                                            "actuate": "hide",
-                                           "autocomplete": "name",
+                                           #"autocomplete": "number",
                                            "autodelete": False,
                                            },
                             event_human_resource = "incident_id",
@@ -709,7 +710,7 @@ class S3IncidentModel(S3Model):
                                                   # @ToDo: Widget to handle embedded AddPersonWidget
                                                   #"actuate": "embed",
                                                   "actuate": "hide",
-                                                  "autocomplete": "name",
+                                                  #"autocomplete": "first_name",
                                                   "autodelete": False,
                                                   },
                             event_organisation = "incident_id",
@@ -718,7 +719,7 @@ class S3IncidentModel(S3Model):
                                                 "key": "organisation_id",
                                                 #"actuate": "embed",
                                                 "actuate": "hide",
-                                                "autocomplete": "name",
+                                                #"autocomplete": "name",
                                                 "autodelete": False,
                                                 },
                             event_post = "incident_id",
@@ -1566,10 +1567,10 @@ class S3EventAssetModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
-                       list_fields = ["incident_id",
+                       list_fields = [#"incident_id", # Not being dropped in component view
                                       "asset_id",
                                       "status",
-                                      "allocation.budget",
+                                      "allocation.budget_id",
                                       "allocation.start_date",
                                       "allocation.end_date",
                                       "allocation.daily_cost",
@@ -1710,10 +1711,10 @@ class S3EventHRModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
-                       list_fields = ["incident_id",
+                       list_fields = [#"incident_id", # Not being dropped in component view
                                       "human_resource_id",
                                       "status",
-                                      "allocation.budget",
+                                      "allocation.budget_id",
                                       "allocation.start_date",
                                       "allocation.end_date",
                                       "allocation.daily_cost",
@@ -1982,10 +1983,10 @@ class S3EventSiteModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
-                       list_fields = ["incident_id",
+                       list_fields = [#"incident_id", # Not being dropped in component view
                                       "site_id",
                                       "status",
-                                      "allocation.budget",
+                                      "allocation.budget_id",
                                       "allocation.start_date",
                                       "allocation.end_date",
                                       "allocation.daily_cost",
@@ -2516,8 +2517,8 @@ def event_rheader(r):
                 tabs.append((T("Human Resources"), "human_resource"))
             if settings.has_module("asset"):
                 tabs.append((T("Assets"), "asset"))
-            tabs.append((T("Organizations"), "organisation"))
             tabs.append((T("Facilities"), "site")) # Inc Shelters
+            tabs.append((T("Organizations"), "organisation"))
             tabs.append((T("Map Configuration"), "config"))
             if settings.has_module("msg"):
                 tabs.append((T("Send Notification"), "dispatch"))

@@ -264,15 +264,16 @@ S3OptionsFilter({
             msg_record_deleted = T("Asset deleted"),
             msg_list_empty = T("No Assets currently registered"))
 
+        asset_represent = asset_AssetRepresent(show_link=True)
+
         # Reusable Field
         asset_id = S3ReusableField("asset_id", "reference %s" % tablename,
                                    label = T("Asset"),
                                    ondelete = "CASCADE",
-                                   # @ToDo: migrate to S3Represent
-                                   represent = self.asset_represent,
+                                   represent = asset_represent,
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "asset_asset.id",
-                                                          self.asset_represent,
+                                                          asset_represent,
                                                           sort=True)),
                                    sortby = "number",
                                    )
@@ -585,7 +586,7 @@ S3OptionsFilter({
         # Pass names back to global scope (s3.*)
         #
         return dict(asset_asset_id = asset_id,
-                    asset_represent = self.asset_represent,
+                    asset_represent = asset_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -629,43 +630,6 @@ S3OptionsFilter({
             item.id = _duplicate.id
             item.data.id = _duplicate.id
             item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def asset_represent(id, row=None):
-        """
-            Represent an Asset
-
-            @ToDo: migrate to S3Represent
-        """
-
-        if row:
-            id = row.id
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.asset_asset
-        itable = db.supply_item
-        btable = db.supply_brand
-        query = (table.id == id) & \
-                (itable.id == table.item_id)
-        r = db(query).select(table.number,
-                             itable.name,
-                             btable.name,
-                             left = btable.on(itable.brand_id == btable.id),
-                             limitby=(0, 1)).first()
-        try:
-            represent = "%s (%s" % (r.asset_asset.number,
-                                    r.supply_item.name)
-            if r.supply_brand.name:
-                represent = "%s, %s)" % (represent,
-                                         r.supply_brand.name)
-            else:
-                represent = "%s)" % represent
-        except:
-            represent = current.messages.UNKNOWN_OPT
-        return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1220,5 +1184,84 @@ def asset_controller():
     output = current.rest_controller("asset", "asset",
                                      rheader = asset_rheader)
     return output
+
+# =============================================================================
+class asset_AssetRepresent(S3Represent):
+    """ Representation of Assets """
+
+    def __init__(self,
+                 fields = ("number",), # unused
+                 show_link = False,
+                 translate = False,
+                 multiple = False,
+                 ):
+
+        # Need a custom lookup
+        self.lookup_rows = self.custom_lookup_rows
+
+        super(asset_AssetRepresent,
+              self).__init__(lookup="asset_asset",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for organisation rows, does a
+            left join with the parent organisation. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the organisation IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.asset_asset
+        itable = db.supply_item
+        btable = db.supply_brand
+
+        qty = len(values)
+        if qty == 1:
+            query = (table.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (table.id.belongs(values))
+            limitby = (0, qty)
+
+        query &= (itable.id == table.item_id)
+
+        rows = db(query).select(table.id,
+                                table.number,
+                                itable.name,
+                                btable.name,
+                                left=btable.on(itable.brand_id == btable.id),
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the asset_asset Row
+        """
+
+        # Custom Row (with the item & brand left-joined)
+        number = row["asset_asset.number"]
+        item = row["supply_item.name"]
+        brand = row.get("supply_brand.name", None)
+
+        if not number:
+            return self.default
+        represent = "%s (%s" % (number, item)
+        if brand:
+            represent = "%s, %s)" % (represent, brand)
+        else:
+            represent = "%s)" % represent
+        return s3_unicode(represent)
 
 # END =========================================================================
