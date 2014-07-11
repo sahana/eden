@@ -148,10 +148,16 @@
 
             // Compute the scales
             var self = this;
-            x.domain(data.map(function(d) {
+            x.domain(data.items.map(function(d) {
                 return self._parseDate(d[0]);
             }));
-            y.domain([0, d3.max(data, function(d) { return d[2]; })]);
+            var values = data.items,
+                baseline = data.baseline;
+            if (baseline) {
+                var b = [[null, null, baseline]];
+                values = values ? values.concat(b) : b;
+            }
+            y.domain([0, d3.max(values, function(d) { return d[2]; })]);
 
             // Add x axis
             svg.append("g")
@@ -175,11 +181,28 @@
                .attr("class", "grid")
                .call(yAxis.tickSize(-width).tickFormat(""));
 
+            // Render baseline?
+            if (baseline) {
+                svg.selectAll("baseline")
+                   .data([baseline])
+                   .enter()
+                   .append("rect")
+                   .attr("class", "baseline")
+                   .style("fill", "lightgreen")
+                   .style("opacity", "0.2")
+                   .attr("x", 0 )
+                   .attr("width", width )
+                   .attr("y", function(d) { return y(d); })
+                   .attr("height", function(d) { return height - y(d); });
+            }
+
             // Add the bars
-            svg.selectAll("bar")
-               .data(data)
-               .enter()
+            bar = svg.selectAll("bar")
+                     .data(data.items);
+                     
+            bar.enter()
                .append("rect")
+               .attr("class", "bar")
                .style("fill", "steelblue")
                .attr("x", function(d) { return x(self._parseDate(d[0])); })
                .attr("width", x.rangeBand())

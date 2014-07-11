@@ -118,12 +118,14 @@ class S3TimePlot(S3Method):
         widget_id = "timeplot"
 
         # Extract the relevant GET vars
-        # @todo: options for baseline and grouping
+        # @todo: option for grouping
         report_vars = ("timestamp",
                        "fact",
                        "start",
                        "end",
-                       "slots")
+                       "slots",
+                       "baseline",
+                       )
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
                         if k in report_vars)
 
@@ -163,17 +165,21 @@ class S3TimePlot(S3Method):
                                                   event_end,
                                                   start,
                                                   end,
-                                                  slots)
+                                                  slots,
+                                                  )
         except (SyntaxError, ValueError):
             r.error(400, sys.exc_info()[1])
 
         # Add event data
+        baseline = get_vars.get("baseline")
         try:
             self.add_event_data(event_frame,
                                 resource,
                                 event_start,
                                 event_end,
-                                rfields)
+                                rfields,
+                                baseline=baseline,
+                                )
         except (SyntaxError):
             pass
 
@@ -190,10 +196,18 @@ class S3TimePlot(S3Method):
             value = period.aggregate(method=method,
                                      fields=[rfield.colname for rfield in rfields],
                                      arguments=arguments,
-                                     event_type=resource.tablename)
+                                     event_type=resource.tablename,
+                                     )
             new_item((item_start, item_end, value))
 
+        # Timeplot data
+        data = {"items": items,
+                "baseline": event_frame.baseline,
+                }
+
+        # Render output
         if r.representation in ("html", "iframe"):
+            # Page load
             
             output["title"] = self.crud_string(resource.tablename, "title_report")
             
@@ -210,12 +224,14 @@ class S3TimePlot(S3Method):
                                            advanced=advanced,
                                            submit=False,
                                            _class="filter-form",
-                                           _id="%s-filter-form" % widget_id)
+                                           _id="%s-filter-form" % widget_id,
+                                           )
                 fresource = current.s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 filter_widgets = filter_form.fields(fresource,
                                                     r.get_vars,
-                                                    alias=alias)
+                                                    alias=alias,
+                                                    )
             else:
                 # Render as empty string to avoid the exception in the view
                 filter_widgets = None
@@ -228,10 +244,11 @@ class S3TimePlot(S3Method):
                                                             if k not in report_vars)))
             ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
                                                 representation="json",
-                                                vars=ajax_vars))
+                                                vars=ajax_vars,
+                                                ))
 
             output["form"] = S3TimePlotForm(resource) \
-                                           .html(items,
+                                           .html(data,
                                                  get_vars = get_vars,
                                                  filter_widgets = filter_widgets,
                                                  ajaxurl = ajaxurl,
@@ -244,8 +261,9 @@ class S3TimePlot(S3Method):
             response.view = self._view(r, "timeplot.html")
        
         elif r.representation == "json":
+            # Ajax load
 
-            output = json.dumps(items, separators=SEPARATORS)
+            output = json.dumps(data, separators=SEPARATORS)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -258,7 +276,8 @@ class S3TimePlot(S3Method):
                        resource,
                        event_start,
                        event_end,
-                       facts):
+                       facts,
+                       baseline=None):
         """
             Extract event data from resource and add them to the
             event frame
@@ -297,6 +316,33 @@ class S3TimePlot(S3Method):
 
         # Add as temporary filter
         resource.add_filter(query)
+
+        # Compute baseline
+        value = None
+        if baseline:
+            try:
+                rfield = resource.resolve_selector(baseline)
+            except (AttributeError, SyntaxError):
+                current.log.error(sys.exc_info[1])
+            else:
+                if rfield.field and rfield.ftype in ("integer", "double"):
+                    # Don't need s3db here - if there's an rfield.field,
+                    # then there's also a table!
+                    baseline_table = current.db[rfield.tname]
+                    pkey = str(baseline_table._id)
+                    colname = rfield.colname
+                    rows = resource.select([baseline],
+                                           groupby = [pkey, colname],
+                                           as_rows = True,
+                                           )
+                    value = 0
+                    for row in rows:
+                        v = row[colname]
+                        if v is not None:
+                            value += v
+                else:
+                    current.log.error("Invalid field type for baseline")
+        event_frame.baseline = value
 
         # Extract the records
         data = resource.select(fields)
@@ -1088,6 +1134,7 @@ class S3TimePlotEventFrame(object):
             end = datetime.datetime.utcnow()
         self.end = tp_tzsafe(end)
 
+        self.baseline = None
         self.slots = slots
         self.periods = {}
 
