@@ -55,13 +55,13 @@ class S3StatsModel(S3Model):
         Statistics Data
     """
 
-    names = ["stats_parameter",
+    names = ("stats_parameter",
              "stats_data",
              "stats_source",
              "stats_source_superlink",
              "stats_source_id",
              #"stats_source_details",
-             ]
+             )
 
     def model(self):
 
@@ -211,13 +211,13 @@ class S3StatsDemographicModel(S3Model):
         @ToDo: Don't aggregate data for locations which don't exist in time window
     """
 
-    names = ["stats_demographic",
+    names = ("stats_demographic",
              "stats_demographic_data",
              "stats_demographic_aggregate",
              "stats_demographic_rebuild_all_aggregates",
              "stats_demographic_update_aggregates",
              "stats_demographic_update_location_aggregate",
-             ]
+             )
 
     def model(self):
 
@@ -1174,10 +1174,10 @@ class S3StatsImpactModel(S3Model):
         - might link to Assessments module in future
     """
 
-    names = ["stats_impact",
+    names = ("stats_impact",
              "stats_impact_type",
              "stats_impact_id",
-             ]
+             )
 
     def model(self):
 
@@ -1328,10 +1328,10 @@ class S3StatsPeopleModel(S3Model):
         Used to record people in the CRMT (Community Resilience Mapping Tool) template
     """
 
-    names = ["stats_people",
+    names = ("stats_people",
              "stats_people_type",
              "stats_people_group",
-             ]
+             )
 
     def model(self):
 
@@ -1512,10 +1512,10 @@ class S3StatsTrainedPeopleModel(S3Model):
         Used to record trained people in the CRMT (Community Resilience Mapping Tool) template
     """
 
-    names = ["stats_trained",
+    names = ("stats_trained",
              "stats_trained_type",
              "stats_trained_group",
-             ]
+             )
 
     def model(self):
 

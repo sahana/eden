@@ -63,7 +63,7 @@ class S3RequestModel(S3Model):
     """
     """
 
-    names = ["req_req",
+    names = ("req_req",
              "req_req_id",
              "req_req_ref",
              "req_hide_quantities",
@@ -72,7 +72,7 @@ class S3RequestModel(S3Model):
              "req_prep",
              "req_tabs",
              "req_priority_opts",
-             ]
+             )
 
     def model(self):
 
@@ -1588,11 +1588,11 @@ class S3RequestItemModel(S3Model):
     """
     """
 
-    names = ["req_req_item",
+    names = ("req_req_item",
              "req_item_id",
              "req_item_represent",
              "req_req_item_category",
-             ]
+             )
 
     def model(self):
 
@@ -1923,9 +1923,9 @@ class S3RequestSkillModel(S3Model):
     """
     """
 
-    names = ["req_req_skill",
+    names = ("req_req_skill",
              "req_skill_represent",
-             ]
+             )
 
     def model(self):
 
@@ -2083,8 +2083,7 @@ class S3RequestRecurringModel(S3Model):
     """
     """
 
-    names = ["req_job",
-            ]
+    names = ("req_job",)
 
     def model(self):
 
@@ -2159,9 +2158,9 @@ class S3RequestSummaryModel(S3Model):
         - Sites can request Time from local volunteers or accept drop-off for Goods
     """
 
-    names = ["req_organisation_needs",
+    names = ("req_organisation_needs",
              "req_site_needs",
-             ]
+             )
 
     def model(self):
 
@@ -2273,8 +2272,7 @@ class S3RequestTaskModel(S3Model):
         Link Requests for Skills to Tasks
     """
 
-    names = ["req_task",
-             ]
+    names = ("req_task",)
 
     def model(self):
 
@@ -2301,9 +2299,9 @@ class S3CommitModel(S3Model):
     """
     """
 
-    names = ["req_commit",
+    names = ("req_commit",
              "req_commit_id",
-             ]
+             )
 
     def model(self):
 
@@ -2849,9 +2847,9 @@ class S3CommitItemModel(S3Model):
     """
     """
 
-    names = ["req_commit_item",
+    names = ("req_commit_item",
              "req_send_commit"
-             ]
+             )
 
     def model(self):
 
@@ -3065,7 +3063,7 @@ class S3CommitPersonModel(S3Model):
         Commit a named individual to a Request
     """
 
-    names = ["req_commit_person"]
+    names = ("req_commit_person",)
 
     def model(self):
 
@@ -3151,7 +3149,7 @@ class S3CommitSkillModel(S3Model):
         Commit anonymous people to a Request
     """
 
-    names = ["req_commit_skill"]
+    names = ("req_commit_skill",)
 
     def model(self):
 

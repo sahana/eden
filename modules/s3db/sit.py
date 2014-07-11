@@ -27,9 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SituationModel",
-           "S3SituationReportModel",
-           ]
+__all__ = ("S3SituationModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -41,11 +39,11 @@ class S3SituationModel(S3Model):
         Situation Super Entity & Presence tables for Trackable resources
     """
 
-    names = ["sit_situation",
+    names = ("sit_situation",
              "sit_trackable",
              "sit_presence",
              "sit_location",
-             ]
+             )
 
     def model(self):
 
@@ -150,53 +148,5 @@ class S3SituationModel(S3Model):
         location = tracker.get_location(as_rows=True).first()
 
         return s3db.gis_location_represent(None, row=location)
-
-# =============================================================================
-class S3SituationReportModel(S3Model):
-    """
-        Situation Reports
-    """
-
-    names = ["sit_report",
-             ]
-
-    def model(self):
-
-        T = current.T
-
-        # ---------------------------------------------------------------------
-        # Situation Reports
-        # - can be aggregated by OU
-        #
-        tablename = "sit_report"
-        self.define_table(tablename,
-                          self.super_link("doc_id", "doc_entity"),
-                          Field("name", length=128,
-                               label = T("Name"),
-                               ),
-                          self.org_organisation_id(),
-                          self.gis_location_id(),
-                          s3_date(),
-                          s3_comments(),
-                          *s3_meta_fields())
-
-        # CRUD strings
-        current.response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Add Situation Report"),
-                title_display = T("Situation Report Details"),
-                title_list = T("Situation Reports"),
-                title_update = T("Edit Situation Report"),
-                title_upload = T("Import Situation Reports"),
-                label_list_button = T("List Situation Reports"),
-                label_delete_button = T("Delete Situation Report"),
-                msg_record_created = T("Situation Report added"),
-                msg_record_modified = T("Situation Report updated"),
-                msg_record_deleted = T("Situation Report deleted"),
-                msg_list_empty = T("No Situation Reports currently registered"))
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return dict()
 
 # END =========================================================================

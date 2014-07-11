@@ -50,8 +50,7 @@ from s3layouts import S3AddResourceLink
 # =============================================================================
 class S3VolunteerModel(S3Model):
 
-    names = ["vol_details",
-             ]
+    names = ("vol_details",)
 
     def model(self):
 
@@ -113,9 +112,9 @@ class S3VolunteerModel(S3Model):
 # =============================================================================
 class S3VolunteerAwardModel(S3Model):
 
-    names = ["vol_award",
+    names = ("vol_award",
              "vol_volunteer_award",
-             ]
+             )
 
     def model(self):
 
@@ -220,11 +219,11 @@ class S3VolunteerAwardModel(S3Model):
 # =============================================================================
 class S3VolunteerClusterModel(S3Model):
 
-    names = ["vol_cluster_type",
+    names = ("vol_cluster_type",
              "vol_cluster",
              "vol_cluster_position",
              "vol_volunteer_cluster",
-             ]
+             )
 
     def model(self):
 

@@ -29,7 +29,7 @@
 
 from __future__ import division
 
-__all__ = ["S3LocationModel",
+__all__ = ("S3LocationModel",
            "S3LocationNameModel",
            "S3LocationTagModel",
            "S3LocationGroupModel",
@@ -45,7 +45,7 @@ __all__ = ["S3LocationModel",
            "gis_LocationRepresent",
            "gis_layer_represent",
            "gis_rheader",
-           ]
+           )
 
 import os
 
