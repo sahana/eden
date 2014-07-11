@@ -58,9 +58,6 @@ def vehicle():
     list_fields = s3db.get_config("asset_asset", "list_fields")
     if "type" in list_fields:
         list_fields.remove("type")
-    s3db.configure(tablename,
-                   list_fields = list_fields,
-                   )
 
     field = table.item_id
     field.label = T("Vehicle Type")

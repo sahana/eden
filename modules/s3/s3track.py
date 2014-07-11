@@ -32,11 +32,14 @@ from datetime import datetime, timedelta
 
 from gluon import current
 from gluon.dal import Table, Rows, Row
+from gluon.html import *
 
 from s3rest import S3Method
 
 __all__ = ["S3Tracker",
-           "S3UpdateLocation",
+           "S3CheckInMethod",
+           #"S3CheckOutMethod",
+           #"S3UpdateLocation",
            ]
 
 UID = "uuid"                # field name for UIDs
@@ -710,7 +713,107 @@ class S3Tracker(object):
         """
         raise NotImplementedError
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+class S3CheckInMethod(S3Method):
+    """
+        Custom Method to allow a trackable resource to check-in
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_method(r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.representation == "html":
+
+            T = current.T
+            s3db = current.s3db
+            response = current.response
+
+            title = T("Check-In")
+
+            get_vars = r.get_vars
+
+            # Are we being passed a location_id?
+            location_id = get_vars.get("location_id", None)
+            if not location_id:
+                # Are we being passed a lat and lon?
+                lat = get_vars.get("lat", None)
+                if lat is not None:
+                    lon = get_vars.get("lon", None)
+                    if lon is not None:
+                        form_vars = Storage(lat = float(lat),
+                                            lon = float(lon),
+                                            )
+                        form = Storage(vars=form_vars)
+                        s3db.gis_location_onvalidation(form)
+                        location_id = s3db.gis_location.insert(**form_vars)
+
+            form = None
+            if not location_id:
+                # Give the user a form to check-in
+
+                # Test the formstyle
+                formstyle = response.s3.crud.formstyle
+                row = formstyle("test", "test", "test", "test")
+                if isinstance(row, tuple):
+                    # Formstyle with separate row for label (e.g. default Eden formstyle)
+                    tuple_rows = True
+                else:
+                    # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+                    tuple_rows = False
+
+                form_rows = []
+                comment = ""
+
+                _id = "location_id"
+                label = LABEL("%s:" % T("Location"))
+
+                from s3.s3widgets import S3LocationSelectorWidget2
+                widget = S3LocationSelectorWidget2()
+
+                row = formstyle("%s__row" % _id, label, widget, comment)
+                if tuple_rows:
+                    form_rows.append(row[0])
+                    form_rows.append(row[1])
+                else:
+                    form_rows.append(row)
+
+                if tuple_rows:
+                    # Assume TRs
+                    form = FORM(TABLE(*form_rows))
+                else:
+                    form = FORM(*form_rows)
+
+                if form.accepts(current.request.vars, current.session):
+                    location_id = form.vars.get("location_id", None)
+
+            if location_id:
+                # We're not Checking-in in S3Track terms (that's about interlocking with another object)
+                #tracker.check_in()
+                #timestmp = form.vars.get("timestmp", None)
+                #if timestmp:
+                #    # @ToDo: Convert from string
+                #    pass
+                #tracker.set_location(location_id, timestmp=timestmp)
+                tracker.set_location(location_id)
+                response.confirmation = T("Checked-In successfully!")
+
+            response.view = "check-in.html"
+            output = dict(form = form,
+                          title = title,
+                          )
+            return output
+
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
+
+# =============================================================================
 class S3UpdateLocation(S3Method):
     """
         UI method to update the location of a Trackable resource:
@@ -736,7 +839,6 @@ class S3UpdateLocation(S3Method):
         if r.representation == "html":
 
             from gluon.dal import Field
-            from gluon.html import FORM, INPUT, OPTION, SELECT
             from gluon.validators import IS_IN_SET, IS_EMPTY_OR
             from s3fields import s3_datetime
             from s3validators import IS_LOCATION_SELECTOR2

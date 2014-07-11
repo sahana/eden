@@ -35,9 +35,9 @@
 
 """
 
-__all__ = ["S3Msg",
+__all__ = ("S3Msg",
            "S3Compose",
-           ]
+           )
 
 import base64
 import datetime

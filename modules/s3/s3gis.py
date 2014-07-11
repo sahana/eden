@@ -29,11 +29,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["GIS",
+__all__ = ("GIS",
            "S3Map",
            "S3ExportPOI",
            "S3ImportPOI",
-           ]
+           )
 
 import datetime         # Needed for Feed Refresh checks
 import os
@@ -8851,7 +8851,7 @@ class S3ExportPOI(S3Method):
                 (FS("location_id$path").like("%s/%%" % lx))
         resource.add_filter(query)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3ImportPOI(S3Method):
     """
         Import point-of-interest resources for a location

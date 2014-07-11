@@ -997,7 +997,9 @@ def asset_rheader(r):
             if record.type == ASSET_TYPE_VEHICLE:
                 tabs = [(T("Asset Details"), None, {"native": True}),
                         (T("Vehicle Details"), "vehicle"),
-                        (T("GPS Data"), "gps")]
+                        (T("GPS Data"), "gps"),
+                        (T("Check-In"), "check-in"),
+                        ]
             else:
                 tabs = [(T("Edit Details"), None)]
             #elif record.type == s3.asset.ASSET_TYPE_RADIO:
@@ -1110,7 +1112,14 @@ def asset_rheader(r):
 def asset_controller():
     """ RESTful CRUD controller """
 
+    s3db = current.s3db
     s3 = current.response.s3
+
+    s3db.set_method("asset", "asset", method="check-in",
+                    action = S3CheckInMethod())
+
+    #s3db.set_method("asset", "asset", method="check-out",
+    #                action = S3CheckOutMethod())
 
     # Pre-process
     def prep(r):
@@ -1133,7 +1142,6 @@ def asset_controller():
         current.response.s3.asset_import = True
         return
         # @ToDo: get this working
-        s3db = current.s3db
         ctable = s3db.pr_contact
         ptable = s3db.pr_person
 

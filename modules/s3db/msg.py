@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ChannelModel",
+__all__ = ("S3ChannelModel",
            "S3MessageModel",
            "S3MessageAttachmentModel",
            "S3EmailModel",
@@ -43,7 +43,7 @@ __all__ = ["S3ChannelModel",
            "S3TwitterSearchModel",
            "S3XFormsModel",
            "S3BaseStationModel",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage

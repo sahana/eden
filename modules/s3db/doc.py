@@ -714,12 +714,12 @@ class S3DocSitRepModel(S3Model):
                                     "organisation_id",
                                     "location_id",
                                     "date",
-                                    #S3SQLInlineComponent(
-                                    #    "document",
-                                    #    name = "document",
-                                    #    label = T("Attachments"),
-                                    #    fields = [("", "file")],
-                                    #),
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        name = "document",
+                                        label = T("Attachments"),
+                                        fields = [("", "file")],
+                                    ),
                                     "comments",
                                     )
 
@@ -734,7 +734,7 @@ class S3DocSitRepModel(S3Model):
                                       (T("Attachments"), "document.file"),
                                       "comments",
                                       ],
-                       super_entity = "doc_id",
+                       super_entity = "doc_entity",
                        )
 
         # ---------------------------------------------------------------------
