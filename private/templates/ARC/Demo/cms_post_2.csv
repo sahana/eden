@@ -1,3 +1,2 @@
-Series,Title,Body,Country,L1,L2,L3,Lat,Lon,Organisation,Author,Date,Attachment,Incident Type
-Tweet,,"Hail like I've never seen it - smashing the cars! #FortWayne",US,Indiana,Allen,Fort Wayne,,,,@RobinChk,2014-07-14 16:00,,,
-Alert,Storm Damage,"Heavy amounts of soft ball size damaging hail affecting Ft. Wayne Indiana and communities just to the north of Ft Wayne",US,Indiana,Allen,Fort Wayne,,,Indiana Department of Homeland Security,,2014-07-14 16:15,,,Hail
+Series,Title,Body,Country,L1,L2,L3,Lat,Lon,Comments,Organisation,Author,Date,Attachment,Notes
+Alert,,"Tornado touchdown in an open field, just north of the intersection of Illinois Route 9 and county road 86 North. The tornado was on the ground for a 5 minutes for moving out of sight travelling West.",US,Ohio,Cloverdale,,41.043901,-83.722815,,Findlay Fire Department,,2014-07-14  17:32:00,,Touch down

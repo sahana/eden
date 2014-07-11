@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3OrganisationModel",
+__all__ = ("S3OrganisationModel",
            "S3OrganisationBranchModel",
            "S3OrganisationGroupModel",
            "S3OrganisationGroupPersonModel",
@@ -66,7 +66,7 @@ __all__ = ["S3OrganisationModel",
            "org_organisation_list_layout",
            "org_resource_list_layout",
            "org_update_root_organisation",
-           ]
+           )
 
 try:
     import json # try stdlib (Python 2.6)

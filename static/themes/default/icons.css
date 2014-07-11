@@ -142,7 +142,8 @@
   /* used for AddPersonWidget2 */
   content: "\f00c";
 }
-.icon-paperclip:before {
+.icon-paperclip:before,
+.icon-paper-clip:before {
   /* Used for Attachments */
   content: "\f0c6";
 }

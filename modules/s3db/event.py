@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3EventModel",
+__all__ = ("S3EventModel",
            "S3IncidentModel",
            "S3IncidentReportModel",
            "S3IncidentReportOrganisationGroupModel",
@@ -50,7 +50,7 @@ __all__ = ["S3EventModel",
            "event_notification_dispatcher",
            "event_incident_list_layout",
            "event_rheader",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage

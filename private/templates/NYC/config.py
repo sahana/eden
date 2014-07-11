@@ -467,7 +467,7 @@ def customise_org_organisation_resource(r, tablename):
             filterby = dict(field = "name",
                             options="iCal"
                             )
-        ),                                                                
+        ),
         S3SQLInlineComponent(
             "document",
             name = "data",
@@ -477,7 +477,7 @@ def customise_org_organisation_resource(r, tablename):
             filterby = dict(field = "name",
                             options="Data"
                             )
-        ),                                                                
+        ),
         S3SQLInlineComponent(
             "contact",
             name = "twitter",
@@ -500,7 +500,7 @@ def customise_org_organisation_resource(r, tablename):
         ),
         "comments",
     )
-    
+
     from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
     # activate hierarchical org_service:
     #from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, S3HierarchyFilter

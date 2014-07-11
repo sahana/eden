@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3WarehouseModel",
+__all__ = ("S3WarehouseModel",
            "S3InventoryModel",
            "S3InventoryTrackingModel",
            "S3InventoryAdjustModel",
@@ -42,7 +42,7 @@ __all__ = ["S3WarehouseModel",
            "inv_adj_rheader",
            "depends",
            "inv_InvItemRepresent",
-           ]
+           )
 
 import itertools
 
@@ -125,9 +125,9 @@ SEPARATORS = (",", ":")
 # =============================================================================
 class S3WarehouseModel(S3Model):
 
-    names = ["inv_warehouse",
+    names = ("inv_warehouse",
              #"inv_warehouse_type",
-             ]
+             )
 
     def model(self):
 
@@ -380,12 +380,12 @@ class S3InventoryModel(S3Model):
         A module to record inventories of items at a location (site)
     """
 
-    names = ["inv_inv_item",
+    names = ("inv_inv_item",
              "inv_remove",
              "inv_item_id",
              "inv_item_represent",
              "inv_prep",
-             ]
+             )
 
     def model(self):
 
@@ -862,7 +862,7 @@ class S3InventoryTrackingModel(S3Model):
         - And audit trail of the shipment process
     """
 
-    names = ["inv_send",
+    names = ("inv_send",
              "inv_send_represent",
              "inv_send_ref_represent",
              "inv_send_controller",
@@ -874,7 +874,7 @@ class S3InventoryTrackingModel(S3Model):
              "inv_kit",
              "inv_track_item",
              "inv_track_item_onaccept",
-             ]
+             )
 
     def model(self):
 
@@ -3797,10 +3797,10 @@ class S3InventoryAdjustModel(S3Model):
         - And audit trail of the shipment process
     """
 
-    names = ["inv_adj",
+    names = ("inv_adj",
              "inv_adj_item",
              "inv_adj_item_id",
-             ]
+             )
 
     def model(self):
 

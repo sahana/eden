@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3RequestModel",
+__all__ = ("S3RequestModel",
            "S3RequestItemModel",
            "S3RequestSkillModel",
            "S3RequestRecurringModel",
@@ -46,7 +46,7 @@ __all__ = ["S3RequestModel",
            "req_req_list_layout",
            "req_customise_commit_fields",
            "req_commit_list_layout",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage

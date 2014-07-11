@@ -27,13 +27,13 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AssetModel",
+__all__ = ("S3AssetModel",
            "S3AssetTeamModel",
            #"asset_rheader",
            "asset_types",
            "asset_log_status",
            "asset_controller",
-           ]
+           )
 
 try:
     import json # try stdlib (Python 2.6)

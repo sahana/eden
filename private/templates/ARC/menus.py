@@ -353,8 +353,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    def vehicle(self):
-        return self.asset()
+    def doc(self):
+        """ Situation Reports """
+
+        # Same as Events
+        return self.event()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -378,7 +381,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Assessments", c="survey", f="series")(
                         M("Create", m="create"),
                     ),
-                    M("Situation Reports", c="sit", f="report")(
+                    M("Situation Reports", c="doc", f="sitrep")(
                         M("Create", m="create"),
                     ),
                     M("Incident Types", c="event", f="incident_type",
@@ -527,6 +530,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         # Same as HRM
         return self.hrm()
     
+    # -------------------------------------------------------------------------
+    def vehicle(self):
+        return self.asset()
+
     # -------------------------------------------------------------------------
     @staticmethod
     def vol():
@@ -768,15 +775,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # Same as Inventory
         return self.inv()
-
-    # -------------------------------------------------------------------------
-    def sit(self):
-        """ Situation Reports """
-
-        # Same as Assessments
-        #return self.survey()
-        # Same as Events
-        return self.event()
 
     # -------------------------------------------------------------------------
     def survey(self):

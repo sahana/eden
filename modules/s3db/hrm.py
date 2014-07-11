@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3HRModel",
+__all__ = ("S3HRModel",
            "S3HRSiteModel",
            "S3HRSkillModel",
            "S3HRAppraisalModel",
@@ -57,7 +57,7 @@ __all__ = ["S3HRModel",
            #"hrm_experience_list_layout",
            #"hrm_training_list_layout",
            "hrm_human_resource_filters",
-           ]
+           )
 
 import datetime
 

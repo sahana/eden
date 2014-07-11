@@ -85,6 +85,7 @@ class S3DocumentLibrary(S3Model):
                                cms_post=T("Post"),
                                cr_shelter=T("Shelter"),
                                deploy_mission=T("Mission"),
+                               doc_sitrep=T("Situation Report"),
                                hms_hospital=T("Hospital"),
                                hrm_human_resource=T("Human Resource"),
                                inv_adj=T("Stock Adjustment"),
@@ -682,9 +683,15 @@ class S3DocSitRepModel(S3Model):
                           Field("name", length=128,
                                label = T("Name"),
                                ),
+                          Field("description", "text",
+                                label = T("Description"),
+                                represent = lambda body: XML(body),
+                                widget = s3_richtext_widget,
+                                ),
                           self.org_organisation_id(),
                           self.gis_location_id(),
-                          s3_date(),
+                          s3_date(default = "now",
+                                  ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -701,6 +708,34 @@ class S3DocSitRepModel(S3Model):
                 msg_record_modified = T("Situation Report updated"),
                 msg_record_deleted = T("Situation Report deleted"),
                 msg_list_empty = T("No Situation Reports currently registered"))
+
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    "organisation_id",
+                                    "location_id",
+                                    "date",
+                                    #S3SQLInlineComponent(
+                                    #    "document",
+                                    #    name = "document",
+                                    #    label = T("Attachments"),
+                                    #    fields = [("", "file")],
+                                    #),
+                                    "comments",
+                                    )
+
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["date",
+                                      "location_id$L1",
+                                      "location_id$L2",
+                                      "location_id$L3",
+                                      "organisation_id",
+                                      "name",
+                                      (T("Attachments"), "document.file"),
+                                      "comments",
+                                      ],
+                       super_entity = "doc_id",
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

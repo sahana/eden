@@ -163,6 +163,13 @@ class S3ContentModel(S3Model):
         #   be viewed as full pages or as part of a Series
         #
 
+        if settings.get_cms_richtext():
+            body_represent = lambda body: XML(body)
+            body_widget = s3_richtext_widget
+        else:
+            body_represent = lambda body: XML(s3_URLise(body))
+            body_widget = None
+
         tablename = "cms_post"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
@@ -177,7 +184,7 @@ class S3ContentModel(S3Model):
                            ),
                      Field("body", "text", notnull=True,
                            label = T("Body"),
-                           widget = s3_richtext_widget,
+                           widget = body_widget,
                            ),
                      # @ToDo: Move this to link table?
                      # - although this makes widget hard!
@@ -1165,11 +1172,6 @@ def cms_customise_post_fields():
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
     # Required
     field.requires = IS_LOCATION_SELECTOR2()
-
-    if settings.get_cms_richtext():
-        table.body.represent = lambda body: XML(body)
-    else:
-        table.body.represent = lambda body: XML(s3_URLise(body))
 
     list_fields = ["series_id",
                    "location_id",

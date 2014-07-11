@@ -575,7 +575,17 @@ def customise_cms_post_resource(r, tablename):
     table.title.comment = None
     s3db.cms_post_organisation.organisation_id.represent = s3db.org_OrganisationRepresent(acronym=False)
 
-    if r.representation == "plain":
+    if r.function == "newsfeed":
+        # Inject Bootstrap JS for the attachments dropdown menu
+        s3 = current.response.s3
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/bootstrap.js" % r.application)
+        elif s3.cdn:
+            s3.scripts.append("http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js")
+        else:
+            s3.scripts.append("/%s/static/scripts/bootstrap.min.js" % r.application)
+
+    elif r.representation == "plain":
         # Map Popups
         table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
         from s3.s3utils import s3_auth_user_represent_name

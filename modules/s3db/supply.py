@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SupplyModel",
+__all__ = ("S3SupplyModel",
            "S3SupplyDistributionModel",
            "supply_item_rheader",
            "supply_item_controller",
@@ -41,7 +41,7 @@ __all__ = ["S3SupplyModel",
            "supply_ItemRepresent",
            #"supply_ItemCategoryRepresent",
            "supply_get_shipping_code",
-           ]
+           )
 
 import re
 
@@ -71,7 +71,7 @@ class S3SupplyModel(S3Model):
                - is this just supply_item_alt?
     """
 
-    names = ["supply_brand",
+    names = ("supply_brand",
              "supply_catalog",
              "supply_item_category",
              "supply_item_category_id",
@@ -88,7 +88,7 @@ class S3SupplyModel(S3Model):
              "supply_item_category_represent",
              "supply_item_add",
              "supply_item_pack_quantity",
-             ]
+             )
 
     def model(self):
 
@@ -1163,9 +1163,9 @@ class S3SupplyDistributionModel(S3Model):
         - usually as part of an Activity
     """
 
-    names = ["supply_distribution_item",
+    names = ("supply_distribution_item",
              "supply_distribution",
-             ]
+             )
 
     def model(self):
 

@@ -50,7 +50,11 @@ def series():
             _roles_permitted = table.roles_permitted
             _roles_permitted.readable = _roles_permitted.writable = False
             _roles_permitted.default = r.record.roles_permitted
-            if not r.record.richtext:
+            if r.record.richtext:
+                table.body.represent = lambda body: XML(body)
+                table.body.widget = s3_richtext_widget
+            else:
+                table.body.represent = lambda body: XML(s3_URLise(body))
                 table.body.widget = None
             # Titles do show up
             table.name.comment = ""
