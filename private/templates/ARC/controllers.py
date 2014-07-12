@@ -27,14 +27,8 @@ class index(S3CustomController):
 
         response.title = current.deployment_settings.get_system_name()
 
-        #script = '''
-#$('.marker').mouseover(function(){
-# $(this).children('.marker-window').show();
-#})
-#$('.marker').mouseout(function(){
-# $(this).children('.marker-window').hide();
-#})'''
-        #response.s3.jquery_ready.append(script)
+        script = '''$('#single-col').css('padding', 0)'''
+        response.s3.jquery_ready.append(script)
 
         map = DIV(A(T("Go to Functional Map"),
                     _href=URL(c="gis", f="index"),

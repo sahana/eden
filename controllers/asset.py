@@ -14,12 +14,18 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def index():
-    """ Module Home Page """
+    """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
+    return s3db.cms_index(module, alt_function="index_alt")
 
-    return dict(module_name=module_name)
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Module homepage for non-Admin users when no CMS content found
+    """
+
+    # Just redirect to the list of Assets
+    redirect(URL(f="asset"))
 
 # -----------------------------------------------------------------------------
 def create():

@@ -997,8 +997,9 @@ def asset_rheader(r):
             if record.type == ASSET_TYPE_VEHICLE:
                 tabs = [(T("Asset Details"), None, {"native": True}),
                         (T("Vehicle Details"), "vehicle"),
-                        (T("GPS Data"), "gps"),
                         (T("Check-In"), "check-in"),
+                        (T("Check-Out"), "check-out"),
+                        (T("GPS Data"), "gps"),
                         ]
             else:
                 tabs = [(T("Edit Details"), None)]
@@ -1115,12 +1116,6 @@ def asset_controller():
     s3db = current.s3db
     s3 = current.response.s3
 
-    s3db.set_method("asset", "asset", method="check-in",
-                    action = S3CheckInMethod())
-
-    s3db.set_method("asset", "asset", method="check-out",
-                    action = S3CheckOutMethod())
-
     # Pre-process
     def prep(r):
         # Location Filter
@@ -1190,7 +1185,8 @@ def asset_controller():
     s3.postp = postp
 
     output = current.rest_controller("asset", "asset",
-                                     rheader = asset_rheader)
+                                     rheader = asset_rheader,
+                                     )
     return output
 
 # =============================================================================
