@@ -44,11 +44,16 @@ def vehicle():
                    deletable = False,
                    )
 
-    s3db.set_method("asset", "asset", method="check-in",
-                    action = s3base.S3CheckInMethod())
+    set_method = s3db.set_method
 
-    s3db.set_method("asset", "asset", method="check-out",
-                    action = s3base.S3CheckOutMethod())
+    set_method("asset", "asset", method="assign",
+               action = s3db.hrm_AssignMethod(component="human_resource"))
+
+    set_method("asset", "asset", method="check-out",
+               action = s3base.S3CheckOutMethod())
+
+    set_method("asset", "asset", method="check-out",
+               action = s3base.S3CheckOutMethod())
 
     # Type is Vehicle
     VEHICLE = s3db.asset_types["VEHICLE"]

@@ -584,6 +584,7 @@ class S3IncidentModel(S3Model):
         T = current.T
         db = current.db
         settings = current.deployment_settings
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # Incidents
@@ -708,10 +709,7 @@ class S3IncidentModel(S3Model):
                             hrm_human_resource = {"link": "event_human_resource",
                                                   "joinby": "incident_id",
                                                   "key": "human_resource_id",
-                                                  # @ToDo: Widget to handle embedded AddPersonWidget
-                                                  #"actuate": "embed",
                                                   "actuate": "hide",
-                                                  #"autocomplete": "first_name",
                                                   "autodelete": False,
                                                   },
                             event_organisation = "incident_id",
@@ -755,9 +753,15 @@ class S3IncidentModel(S3Model):
                                           },
                             )
 
-        self.set_method("event", "incident",
-                        method = "dispatch",
-                        action = event_notification_dispatcher)
+        # Custom Method to Assign HRs
+        set_method("event", "incident",
+                   method = "assign",
+                   action = self.hrm_AssignMethod(component="human_resource"))
+
+        # Custom Method to Dispatch HRs
+        set_method("event", "incident",
+                   method = "dispatch",
+                   action = event_notification_dispatcher)
 
         # Pass names back to global scope (s3.*)
         return dict(event_incident_id = incident_id,
@@ -1361,8 +1365,7 @@ class S3IncidentTypeTagModel(S3Model):
          - can be a Triple Store for Semantic Web support
     """
 
-    names = ("event_incident_type_tag",
-             )
+    names = ("event_incident_type_tag",)
 
     def model(self):
 
@@ -2407,7 +2410,8 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
                    _class="card-header",
                    ),
                DIV(DIV(A(name,
-                          _href =  URL(c="event", f="incident", args = [record_id, "profile"])),
+                          _href=URL(c="event", f="incident",
+                                    args=[record_id, "profile"])),
                         _class="card-title"),
                    DIV(DIV((description or ""),
                            DIV(author or "",
@@ -2593,18 +2597,23 @@ def event_rheader(r):
         if r.name == "incident":
             # Incident Controller
             tabs = [(T("Incident Details"), None)]
+            append = tabs.append
             if settings.has_module("project"):
-                tabs.append((T("Tasks"), "task"))
+                append((T("Tasks"), "task"))
             if settings.has_module("hrm"):
-                tabs.append((T("Human Resources"), "human_resource"))
+                STAFF = settings.get_hrm_staff_label()
+                append((STAFF, "human_resource"))
+                if current.auth.s3_has_permission("create", "event_human_resource"):
+                     append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
             if settings.has_module("asset"):
-                tabs.append((T("Assets"), "asset"))
-            tabs.append((T("Facilities"), "site")) # Inc Shelters
-            tabs.append((T("Organizations"), "organisation"))
-            tabs.append((T("SitReps"), "sitrep"))
-            tabs.append((T("Map Configuration"), "config"))
+                append((T("Assets"), "asset"))
+            tabs.extend(((T("Facilities"), "site"), # Inc Shelters
+                         (T("Organizations"), "organisation"),
+                         (T("SitReps"), "sitrep"),
+                         (T("Map Configuration"), "config"),
+                         ))
             if settings.has_module("msg"):
-                tabs.append((T("Send Notification"), "dispatch"))
+                append((T("Send Notification"), "dispatch"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             record = r.record

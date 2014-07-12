@@ -1292,15 +1292,14 @@ def deploy_apply(r, **attr):
     authorised = current.auth.s3_has_permission("create", "deploy_application")
     if not authorised:
         r.unauthorised()
-        
+
     T = current.T
     s3db = current.s3db
 
     get_vars = r.get_vars
     response = current.response
-    settings = current.deployment_settings
+    #settings = current.deployment_settings
 
-    resource = r.resource
     if r.http == "POST":
         added = 0
         post_vars = r.post_vars
@@ -1325,7 +1324,7 @@ def deploy_apply(r, **attr):
                                               filter=query, vars=filters)
                     rows = hresource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
-                    
+
                 query = (atable.human_resource_id.belongs(selected)) & \
                         (atable.deleted != True)
                 rows = db(query).select(atable.id,
@@ -1339,8 +1338,8 @@ def deploy_apply(r, **attr):
                     if hr_id in rows:
                         row = rows[hr_id]
                         if not row.active:
+                            row.update_record(active=True)
                             added += 1
-                        row.update_record(active=True)
                     else:
                         atable.insert(human_resource_id=human_resource_id,
                                       active=True)
@@ -1366,6 +1365,7 @@ def deploy_apply(r, **attr):
                        ]
         
         # Data table
+        resource = r.resource
         totalrows = resource.count()
         if "iDisplayLength" in get_vars:
             display_length = int(get_vars["iDisplayLength"])

@@ -37,6 +37,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectCampaignModel",
            "S3ProjectFrameworkModel",
            "S3ProjectHazardModel",
+           "S3ProjectHRModel",
            "S3ProjectLocationModel",
            "S3ProjectOrganisationModel",
            "S3ProjectOutputModel",
@@ -112,7 +113,6 @@ class S3ProjectModel(S3Model):
     names = ("project_project",
              "project_project_id",
              "project_project_represent",
-             "project_human_resource",
              )
 
     def model(self):
@@ -122,8 +122,6 @@ class S3ProjectModel(S3Model):
         auth = current.auth
 
         NONE = current.messages["NONE"]
-
-        human_resource_id = self.hrm_human_resource_id
 
         settings = current.deployment_settings
         mode_3w = settings.get_project_mode_3w()
@@ -153,8 +151,8 @@ class S3ProjectModel(S3Model):
                      # multi_orgs deployments use the separate project_organisation table
                      # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
                      self.org_organisation_id(
-                        label = org_label,
                         default = auth.root_org(),
+                        label = org_label,
                         requires = self.org_organisation_requires(
                                     required = True,
                                     # Only allowed to add Projects for Orgs
@@ -189,8 +187,8 @@ class S3ProjectModel(S3Model):
                      # Free-text field with no validation (used by OCHA template currently)
                      Field("duration",
                            label = T("Duration"),
-                           readable=False,
-                           writable=False,
+                           readable = False,
+                           writable = False,
                            ),
                      Field("calendar",
                            label = T("Calendar"),
@@ -199,13 +197,14 @@ class S3ProjectModel(S3Model):
                            requires = IS_EMPTY_OR(IS_URL()),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Calendar"),
-                                                           T("URL to a Google Calendar to display on the project timeline.")))),
+                                                           T("URL to a Google Calendar to display on the project timeline."))),
+                           ),
                      # multi_budgets deployments handle on the Budgets Tab
                      Field("budget", "double",
                            label = T("Budget"),
-                           readable = False if multi_budgets else True,
                            represent = lambda v: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2),
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           readable = False if multi_budgets else True,
                            writable = False if multi_budgets else True,
                            ),
                      s3_currency(readable = False if multi_budgets else True,
@@ -213,11 +212,12 @@ class S3ProjectModel(S3Model):
                                  ),
                      Field("objectives", "text",
                            label = T("Objectives"),
-                           readable = mode_3w,
                            represent = lambda v: v or NONE,
+                           readable = mode_3w,
                            writable = mode_3w,
                            ),
-                     human_resource_id(label=T("Contact Person")),
+                     self.hrm_human_resource_id(label = T("Contact Person"),
+                                                ),
                      Field.Method("total_organisation_amount",
                                    self.project_total_organisation_amount),
                      Field.Method("total_annual_budget",
@@ -338,6 +338,7 @@ class S3ProjectModel(S3Model):
             project_represent = S3Represent(lookup=tablename)
         project_id = S3ReusableField("project_id", "reference %s" % tablename,
             label = T("Project"),
+            ondelete = "CASCADE",
             represent = project_represent,
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "project_project.id",
@@ -348,10 +349,13 @@ class S3ProjectModel(S3Model):
             sortby = "name",
             comment = S3AddResourceLink(c="project", f="project",
                                         tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'.")),
-            ondelete = "CASCADE"
             )
 
         # Custom Methods
+        set_method("project", "project",
+                   method = "assign",
+                   action = self.hrm_AssignMethod(component="human_resource"))
+
         set_method("project", "project",
                    method = "timeline",
                    action = self.project_timeline)
@@ -396,6 +400,11 @@ class S3ProjectModel(S3Model):
                                          },
                        # Human Resources
                        project_human_resource = "project_id",
+                       hrm_human_resource = {"link": "project_human_resource",
+                                             "joinby": "project_id",
+                                             "key": "human_resource_id",
+                                             "actuate": "hide",
+                                             },
                        # Locations
                        project_location = "project_id",
                        # Sectors
@@ -447,25 +456,6 @@ class S3ProjectModel(S3Model):
                                           "multiple": False,
                                           },
                            )
-
-        # ---------------------------------------------------------------------
-        # Project Human Resources
-        #
-        define_table("project_human_resource",
-                     project_id(empty = False),
-                     human_resource_id(empty = False),
-                     *s3_meta_fields()
-                     )
-
-        configure("project_human_resource",
-                  list_fields = [#"project_id",
-                                 "human_resource_id$person_id",
-                                 "human_resource_id$organisation_id",
-                                 "human_resource_id$job_title",
-                                 "human_resource_id$status"
-                                 ],
-                  onvalidation = self.project_human_resource_onvalidation,
-                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -779,29 +769,6 @@ class S3ProjectModel(S3Model):
 
         else:
             raise HTTP(501, current.ERROR.BAD_METHOD)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_human_resource_onvalidation(form):
-        """
-            Prevent the same hrm_human_resource record being added more than
-            once.
-        """
-
-        # The project human resource table
-        hr = current.s3db.project_human_resource
-
-        # Fetch the first row that has the same project and human resource ids
-        query = (hr.human_resource_id == form.vars.human_resource_id) & \
-                (hr.project_id == form.request_vars.project_id)
-        row = current.db(query).select(hr.id,
-                                       limitby=(0, 1)).first()
-
-        # If we found a row we have a duplicate. Return an error to the user.
-        if row:
-            form.errors.human_resource_id = current.T("Record already exists")
-
-        return
 
 # =============================================================================
 class S3ProjectActivityModel(S3Model):
@@ -2575,6 +2542,115 @@ class S3ProjectHazardModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3ProjectHRModel(S3Model):
+    """
+        Optionally link Projects <> Human Resources
+    """
+
+    names = ("project_human_resource",)
+
+    def model(self):
+
+        T = current.T
+
+        status_opts = {1: T("Assigned"),
+                       #2: T("Standing By"),
+                       #3: T("Active"),
+                       4: T("Left"),
+                       #5: T("Unable to activate"),
+                       }
+
+        # ---------------------------------------------------------------------
+        # Projects <> Human Resources
+        #
+        tablename = "project_human_resource"
+        self.define_table(tablename,
+                          # Instance table
+                          self.super_link("cost_item_id", "budget_cost_item"),
+                          self.project_project_id(empty = False,
+                                                  ondelete = "CASCADE",
+                                                  ),
+                          self.hrm_human_resource_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          Field("status", "integer",
+                                default = 1,
+                                represent = lambda opt: \
+                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(status_opts),
+                                ),
+                          *s3_meta_fields()
+                          )
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Assign Human Resource"),
+            title_display = T("Human Resource Details"),
+            title_list = T("Assigned Human Resources"),
+            title_update = T("Edit Human Resource"),
+            label_list_button = T("List Assigned Human Resources"),
+            label_delete_button = T("Remove Human Resource from this project"),
+            msg_record_created = T("Human Resource assigned"),
+            msg_record_modified = T("Human Resource Assignment updated"),
+            msg_record_deleted = T("Human Resource unassigned"),
+            msg_list_empty = T("No Human Resources currently assigned to this project"))
+
+        if current.deployment_settings.has_module("budget"):
+            crud_form = S3SQLCustomForm("project_id",
+                                        "human_resource_id",
+                                        "status",
+                                        S3SQLInlineComponent("allocation",
+                                                             label = T("Budget"),
+                                                             fields = ["budget_id",
+                                                                       "start_date",
+                                                                       "end_date",
+                                                                       "daily_cost",
+                                                                       ],
+                                                             ),
+                                        )
+        else:
+            crud_form = None
+
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = [#"project_id", # Not being dropped in component view
+                                      "human_resource_id",
+                                      "status",
+                                      "allocation.budget_id",
+                                      "allocation.start_date",
+                                      "allocation.end_date",
+                                      "allocation.daily_cost",
+                                      ],
+                       onvalidation = self.project_human_resource_onvalidation,
+                       super_entity = "budget_cost_item",
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_human_resource_onvalidation(form):
+        """
+            Prevent the same hrm_human_resource record being added more than
+            once.
+        """
+
+        # The project human resource table
+        hr = current.s3db.project_human_resource
+
+        # Fetch the first row that has the same project and human resource ids
+        query = (hr.human_resource_id == form.vars.human_resource_id) & \
+                (hr.project_id == form.request_vars.project_id)
+        row = current.db(query).select(hr.id,
+                                       limitby=(0, 1)).first()
+
+        # If we found a row we have a duplicate. Return an error to the user.
+        if row:
+            form.errors.human_resource_id = current.T("Record already exists")
+
+        return
 
 # =============================================================================
 class S3ProjectLocationModel(S3Model):
@@ -5905,7 +5981,7 @@ def project_rheader(r):
     resourcename = r.name
 
     T = current.T
-    auth = current.auth
+    #auth = current.auth
     settings = current.deployment_settings
 
     attachments_label = settings.get_ui_label_attachments()
@@ -5914,10 +5990,10 @@ def project_rheader(r):
         mode_task = settings.get_project_mode_task()
 
         # Tabs
-        ADMIN = current.session.s3.system_roles.ADMIN
-        admin = auth.s3_has_role(ADMIN)
+        #ADMIN = current.session.s3.system_roles.ADMIN
+        #admin = auth.s3_has_role(ADMIN)
         #staff = auth.s3_has_role("STAFF")
-        staff = True
+        #staff = True
 
         tabs = [(T("Basic Details"), None)]
         append = tabs.append
@@ -5946,9 +6022,13 @@ def project_rheader(r):
         else:
             append((attachments_label, "document"))
         if settings.get_hrm_show_staff():
-            append((settings.get_hrm_staff_label(), "human_resource", dict(group="staff")))
-        if settings.has_module("vol"):
-            append((T("Volunteers"), "human_resource", dict(group="volunteer")))
+            STAFF = settings.get_hrm_staff_label()
+            #append((STAFF, "human_resource", dict(group="staff")))
+            append((STAFF, "human_resource"))
+            if current.auth.s3_has_permission("create", "project_human_resource"):
+                append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+        #if settings.has_module("vol"):
+        #    append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 
         rheader_fields = [["code", "name"],
                           ["organisation_id"],
@@ -6107,7 +6187,7 @@ def project_task_controller():
     s3db = current.s3db
     auth = current.auth
     s3 = current.response.s3
-    vars = current.request.get_vars
+    get_vars = current.request.get_vars
 
     # Pre-process
     def prep(r):
@@ -6148,7 +6228,7 @@ def project_task_controller():
                 # Can't do this for an inline form
                 #field.readable = field.writable = False
 
-        elif "mine" in vars:
+        elif "mine" in get_vars:
             # Show the Open Tasks for this User
             if auth.user:
                 pe_id = auth.user.pe_id
@@ -6168,9 +6248,9 @@ def project_task_controller():
                 list_fields[:] = (fn for fn in list_fields
                                      if fn not in ("pe_id", "status"))
 
-        elif "project" in vars:
+        elif "project" in get_vars:
             # Show Open Tasks for this Project
-            project = vars.project
+            project = get_vars.project
             ptable = s3db.project_project
             try:
                 name = current.db(ptable.id == project).select(ptable.name,
@@ -6199,7 +6279,7 @@ def project_task_controller():
                            insertable = False,
                            list_fields = list_fields,
                            )
-        elif "open" in vars:
+        elif "open" in get_vars:
             # Show Only Open Tasks
             crud_strings.title_list = T("All Open Tasks")
             s3.filter = (table.status.belongs(statuses))
@@ -6227,20 +6307,20 @@ def project_task_controller():
         if r.interactive:
             if not r.component and r.method != "import":
                 # Maintain vars: why?
-                update_url = URL(args=["[id]"], vars=vars)
+                update_url = URL(args=["[id]"], vars=get_vars)
                 S3CRUD.action_buttons(r, update_url=update_url)
         return output
     s3.postp = postp
 
-    if "mine" in vars or "project" in vars:
+    if "mine" in get_vars or "project" in get_vars:
         # Show no filters in pre-filtered views
         hide_filter = True
     else:
         hide_filter = None
 
     return current.rest_controller("project", "task",
-                                   rheader=s3db.project_rheader,
-                                   hide_filter=hide_filter,
+                                   hide_filter = hide_filter,
+                                   rheader = s3db.project_rheader,
                                    )
 
 # =============================================================================

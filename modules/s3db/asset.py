@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3AssetModel",
+           "S3AssetHRModel",
            "S3AssetTeamModel",
            #"asset_rheader",
            "asset_types",
@@ -390,6 +391,12 @@ S3OptionsFilter({
                        asset_group = "asset_id",
                        asset_item = "asset_id",
                        asset_log = "asset_id",
+                       asset_human_resource = "asset_id",
+                       hrm_human_resource = {"link": "asset_human_resource",
+                                             "joinby": "asset_id",
+                                             "key": "human_resource_id",
+                                             "actuate": "hide",
+                                             },
                        vehicle_gps = "asset_id",
                        vehicle_vehicle = {"joinby": "asset_id",
                                           "multiple": False,
@@ -810,6 +817,36 @@ S3OptionsFilter({
         return
 
 # =============================================================================
+class S3AssetHRModel(S3Model):
+    """
+        Optionally link Assets to Human Resources
+        - useful for staffing a vehicle
+    """
+
+    names = ("asset_human_resource",)
+
+    def model(self):
+
+        #T = current.T
+
+        #--------------------------------------------------------------------------
+        # Assets <> Human Resources
+        #
+        tablename = "asset_human_resource"
+        self.define_table(tablename,
+                          self.asset_asset_id(empty = False),
+                          self.hrm_human_resource_id(empty = False,
+                                                     ondelete = "CASCADE",
+                                                     ),
+                          #s3_comments(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
+# =============================================================================
 class S3AssetTeamModel(S3Model):
     """
         Optionally link Assets to Teams
@@ -819,7 +856,7 @@ class S3AssetTeamModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
 
         #--------------------------------------------------------------------------
         # Assets <> Groups
@@ -995,8 +1032,11 @@ def asset_rheader(r):
             NONE = current.messages["NONE"]
 
             if record.type == ASSET_TYPE_VEHICLE:
+                STAFF = current.deployment_settings.get_hrm_staff_label()
                 tabs = [(T("Asset Details"), None, {"native": True}),
                         (T("Vehicle Details"), "vehicle"),
+                        (STAFF, "human_resource"),
+                        (T("Assign %(staff)s") % dict(staff=STAFF), "assign"),
                         (T("Check-In"), "check-in"),
                         (T("Check-Out"), "check-out"),
                         (T("GPS Data"), "gps"),
@@ -1102,7 +1142,7 @@ def asset_rheader(r):
                                    ltable.site_id.represent(current_log.site_id),
                                    ),
                                 ),
-                          DIV(_style = "margin-top:5px;", # @ToDo: Move to CSS
+                          DIV(_style = "margin-top:5px", # @ToDo: Move to CSS
                               *asset_action_btns
                               ),
                           rheader_tabs)

@@ -334,6 +334,8 @@ settings.org.organisation_location_context = "organisation_location.location_id"
 settings.org.site_code_len = 3
 # Set the label for Sites
 settings.org.site_label = "Office/Shelter/Warehouse/Facility"
+# Uncomment to allow Sites to be staffed by Volunteers
+settings.org.site_volunteers = True
 # Uncomment to show a Tab for Organisation Resources
 settings.org.resources_tab = True
 
@@ -1401,6 +1403,8 @@ settings.project.codes = True
 #settings.project.community = True
 # Uncomment this to enable Hazards in 3W projects
 #settings.project.hazards = True
+# Uncomment this to enable Milestones in projects
+settings.project.milestones = True
 # Uncomment this to use multiple Budgets per project
 #settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project

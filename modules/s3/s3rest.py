@@ -184,14 +184,14 @@ class S3Request(object):
         if self.representation == "xml" and "include_deleted" in get_vars:
             include_deleted = True
         if "components" in get_vars:
-           cnames = get_vars["components"]
-           if isinstance(cnames, list):
-               cnames = ",".join(cnames)
-           cnames = cnames.split(",")
-           if len(cnames) == 1 and cnames[0].lower() == "none":
-               cnames = []
+            cnames = get_vars["components"]
+            if isinstance(cnames, list):
+                cnames = ",".join(cnames)
+            cnames = cnames.split(",")
+            if len(cnames) == 1 and cnames[0].lower() == "none":
+                cnames = []
         else:
-           cnames = None
+            cnames = None
 
         # Append component ID to the URL query
         component_name = self.component_name

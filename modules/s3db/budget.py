@@ -109,7 +109,7 @@ class S3BudgetModel(S3Model):
         )
 
         # Represent
-        budget_budget_represent = S3Represent(lookup=tablename)
+        budget_budget_represent = S3Represent(lookup=tablename, show_link=True)
 
         # Reusable Field
         budget_budget_id = S3ReusableField("budget_id", "reference %s" % tablename,
@@ -1266,7 +1266,7 @@ class S3BudgetAllocationModel(S3Model):
                                event_human_resource = T("Event Human Resource"),
                                event_site = T("Event Facility"),
                                #project_asset = T("Project Asset"),
-                               #project_human_resource = T("Project Human Resource"),
+                               project_human_resource = T("Project Human Resource"),
                                #project_site = T("Project Facility"),
                                )
 
