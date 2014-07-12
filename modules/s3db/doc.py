@@ -667,7 +667,9 @@ class S3DocSitRepModel(S3Model):
         Situation Reports
     """
 
-    names = ("doc_sitrep",)
+    names = ("doc_sitrep",
+             "doc_sitrep_id",
+             )
 
     def model(self):
 
@@ -689,7 +691,9 @@ class S3DocSitRepModel(S3Model):
                                 widget = s3_richtext_widget,
                                 ),
                           self.org_organisation_id(),
-                          self.gis_location_id(),
+                          self.gis_location_id(
+                            widget = S3LocationSelectorWidget2(show_map = False),
+                            ),
                           s3_date(default = "now",
                                   ),
                           s3_comments(),
@@ -723,9 +727,26 @@ class S3DocSitRepModel(S3Model):
                                     "comments",
                                     )
 
+        if current.deployment_settings.get_org_branches():
+            org_filter = S3HierarchyFilter("organisation_id",
+                                           leafonly = False,
+                                           )
+        else:
+            org_filter = S3OptionsFilter("organisation_id",
+                                         #filter = True,
+                                         #header = "",
+                                         )
+
+        filter_widgets = [org_filter,
+                          S3LocationFilter(),
+                          S3DateFilter("date"),
+                          ]
+
         self.configure(tablename,
                        crud_form = crud_form,
+                       filter_widgets = filter_widgets,
                        list_fields = ["date",
+                                      "event_sitrep.incident_id",
                                       "location_id$L1",
                                       "location_id$L2",
                                       "location_id$L3",
@@ -737,9 +758,53 @@ class S3DocSitRepModel(S3Model):
                        super_entity = "doc_entity",
                        )
 
+        # Components
+        self.add_components(tablename,
+                            event_sitrep = {"name": "event_sitrep",
+                                            "joinby": "sitrep_id",
+                                            },
+                            event_incident = {"link": "event_sitrep",
+                                              "joinby": "sitrep_id",
+                                              "key": "incident_id",
+                                              "actuate": "hide",
+                                              "multiple": "False",
+                                              #"autocomplete": "name",
+                                              "autodelete": False,
+                                              },
+                            )
+
+        represent = S3Represent(lookup=tablename)
+
+        sitrep_id = S3ReusableField("sitrep_id", "reference %s" % tablename,
+                                    label = T("Situation Report"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "doc_sitrep.id",
+                                                          represent,
+                                                          orderby="doc_sitrep.name",
+                                                          sort=True)),
+                                    sortby = "name",
+                                    )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return dict(doc_sitrep_id = sitrep_id,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """
+            Return safe defaults in case the model has been deactivated.
+        """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(doc_sitrep_id = lambda **attr: dummy("sitrep_id"),
+                    )
 
 # END =========================================================================

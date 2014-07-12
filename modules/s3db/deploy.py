@@ -27,13 +27,13 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DeploymentModel",
+__all__ = ("S3DeploymentModel",
            "S3DeploymentAlertModel",
            "deploy_rheader",
            "deploy_apply",
            "deploy_alert_select_recipients",
            "deploy_response_select_mission",
-           ]
+           )
 
 try:
     # try stdlib (Python 2.6)
@@ -1345,6 +1345,7 @@ def deploy_apply(r, **attr):
                         atable.insert(human_resource_id=human_resource_id,
                                       active=True)
                         added += 1
+        # @ToDo: Move 'RDRT' label to settings
         current.session.confirmation = T("%(number)s RDRT members added") % \
                                        dict(number=added)
         if added > 0:

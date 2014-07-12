@@ -330,7 +330,7 @@ class S3Resource(object):
             @param alias: the alias
             @param hook: the hook
         """
-        
+
         if alias is not None and hook.filterby is not None:
             table_alias = "%s_%s_%s" % (hook.prefix,
                                         hook.alias,

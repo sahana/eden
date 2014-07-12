@@ -7101,11 +7101,16 @@ def hrm_human_resource_filters(resource_type=None,
                                           ))
 
     # Organisation filter (always)
-    append_filter(S3OptionsFilter("organisation_id",
-                                  filter = True,
-                                  header = "",
-                                  #hidden = True,
-                                  ))
+    if settings.get_org_branches():
+        append_filter(S3HierarchyFilter("organisation_id",
+                                        leafonly = False,
+                                        ))
+    else:
+        append_filter(S3OptionsFilter("organisation_id",
+                                      filter = True,
+                                      header = "",
+                                      #hidden = True,
+                                      ))
 
     # Location filter (always)
     append_filter(S3LocationFilter("location_id",

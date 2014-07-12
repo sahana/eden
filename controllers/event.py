@@ -100,20 +100,17 @@ def incident():
     def prep(r):
         if r.interactive:
             if r.component:
-                if r.component.name == "config":
+                if r.component_name == "config":
                     s3db.configure("gis_config",
                                    deletable = False,
                                    )
                     s3.crud.submit_button = T("Update")
-                elif r.component.name == "human_resource":
+                elif r.component_name in ("asset", "human_resource", "organisation", "site"):
                     s3.crud.submit_button = T("Assign")
                     s3.crud_labels["DELETE"] = T("Remove")
-                elif r.component.name == "asset":
-                    s3.crud.submit_button = T("Assign")
-                    s3.crud_labels["DELETE"] = T("Remove")
-                else:
-                    s3.crud.submit_button = T("Assign")
-                    s3.crud_labels["DELETE"] = T("Remove")
+                #else:
+                #    s3.crud.submit_button = T("Assign")
+                #    s3.crud_labels["DELETE"] = T("Remove")
 
             elif r.method != "update" and r.method != "read":
                 # Create or ListCreate

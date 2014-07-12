@@ -45,6 +45,7 @@ __all__ = ("S3EventModel",
            #"S3EventRequestModel",
            "S3EventResourceModel",
            "S3EventSiteModel",
+           "S3EventSitRepModel",
            "S3EventTaskModel",
            "S3EventShelterModel",
            "event_notification_dispatcher",
@@ -724,6 +725,16 @@ class S3IncidentModel(S3Model):
                                                 },
                             event_post = "incident_id",
                             event_site = "incident_id",
+                            event_sitrep = {"name": "incident_sitrep",
+                                            "joinby": "incident_id",
+                                            },
+                            doc_sitrep = {"link": "event_sitrep",
+                                          "joinby": "incident_id",
+                                          "key": "sitrep_id",
+                                          "actuate": "replace",
+                                          #"autocomplete": "name",
+                                          "autodelete": True,
+                                          },
                             event_task = {"name": "incident_task",
                                           "joinby": "incident_id",
                                           },
@@ -731,8 +742,8 @@ class S3IncidentModel(S3Model):
                                             "joinby": "incident_id",
                                             "key": "task_id",
                                             "actuate": "replace",
-                                            "autocomplete": "name",
-                                            "autodelete": False,
+                                            #"autocomplete": "name",
+                                            "autodelete": True,
                                             },
                             gis_config = {"link": "event_config",
                                           "joinby": "incident_id",
@@ -1998,6 +2009,76 @@ class S3EventSiteModel(S3Model):
         return dict()
 
 # =============================================================================
+class S3EventSitRepModel(S3Model):
+    """
+        Link Incidents to SitReps
+    """
+
+    names = ("event_sitrep",
+             "event_sitrep_id",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # SitReps
+        #
+
+        tablename = "event_sitrep"
+        self.define_table(tablename,
+                          #self.event_event_id(ondelete = "CASCADE"),
+                          self.event_incident_id(empty = False,
+                                                 ondelete = "CASCADE",
+                                                 ),
+                          self.doc_sitrep_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
+                          *s3_meta_fields())
+
+        # Not used as we actuate = replace
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Create SitRep"),
+        #    title_display = T("SitRep Details"),
+        #    title_list = T("SitReps"),
+        #    title_update = T("Edit Task"),
+        #    label_list_button = T("List SitReps"),
+        #    label_delete_button = T("Remove SitRep from this incident"),
+        #    msg_record_created = T("SitRep added"),
+        #    msg_record_modified = T("SitRep updated"),
+        #    msg_record_deleted = T("SitRep removed"),
+        #    msg_list_empty = T("No SitReps currently registered in this incident"))
+
+        self.configure(tablename,
+                       deduplicate = self.event_sitrep_duplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_sitrep_duplicate(item):
+        """ Import item de-duplication """
+        
+        data = item.data
+        incident_id = data.get("incident_id")
+        sitrep_id = data.get("sitrep_id")
+
+        if incident_id and sitrep_id:
+            table = item.table
+
+            query = (table.incident_id == incident_id) & \
+                    (table.sitrep_id == sitrep_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
 class S3EventTaskModel(S3Model):
     """
         Link Tasks to Incidents
@@ -2027,17 +2108,18 @@ class S3EventTaskModel(S3Model):
                                                ),
                           *s3_meta_fields())
 
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Task"),
-            title_display = T("Task Details"),
-            title_list = T("Tasks"),
-            title_update = T("Edit Task"),
-            label_list_button = T("List Tasks"),
-            label_delete_button = T("Remove Task from this incident"),
-            msg_record_created = T("Task added"),
-            msg_record_modified = T("Task updated"),
-            msg_record_deleted = T("Task removed"),
-            msg_list_empty = T("No Tasks currently registered in this incident"))
+        # Not used as we actuate = replace
+        #current.response.s3.crud_strings[tablename] = Storage(
+        #    label_create = T("Create Task"),
+        #    title_display = T("Task Details"),
+        #    title_list = T("Tasks"),
+        #    title_update = T("Edit Task"),
+        #    label_list_button = T("List Tasks"),
+        #    label_delete_button = T("Remove Task from this incident"),
+        #    msg_record_created = T("Task added"),
+        #    msg_record_modified = T("Task updated"),
+        #    msg_record_deleted = T("Task removed"),
+        #    msg_list_empty = T("No Tasks currently registered in this incident"))
 
         self.configure(tablename,
                        deduplicate = self.event_task_duplicate,
@@ -2519,6 +2601,7 @@ def event_rheader(r):
                 tabs.append((T("Assets"), "asset"))
             tabs.append((T("Facilities"), "site")) # Inc Shelters
             tabs.append((T("Organizations"), "organisation"))
+            tabs.append((T("SitReps"), "sitrep"))
             tabs.append((T("Map Configuration"), "config"))
             if settings.has_module("msg"):
                 tabs.append((T("Send Notification"), "dispatch"))
