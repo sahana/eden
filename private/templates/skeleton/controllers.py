@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from s3.s3utils import S3CustomController
+from s3 import S3CustomController
 
 THEME = "skeleton"
 

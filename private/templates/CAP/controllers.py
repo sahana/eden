@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from os import path
-
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -14,8 +12,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3FilterForm
-from s3.s3utils import S3CustomController
+from s3 import S3LocationFilter, S3OptionsFilter, S3FilterForm, S3CustomController
 
 THEME = "CAP"
 

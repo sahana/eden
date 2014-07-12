@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from os import path
-
 from gluon import current
 from gluon.html import *
 
+from s3 import S3CustomController
+
+THEME = "Delphi"
+
 # =============================================================================
-class index():
+class index(S3CustomController):
     """ Custom Home Page """
 
     def __call__(self):
@@ -15,19 +17,9 @@ class index():
         auth = current.auth
         db = current.db
         request = current.request
-        appname = request.application
         response = current.response
         s3 = response.s3
         settings = current.deployment_settings
-
-        view = path.join(request.folder, "private", "templates",
-                         "Delphi", "views", "index.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         title = settings.get_system_name()
         response.title = title
@@ -84,6 +76,7 @@ $('#login-btn').click(function(){
                             P(XML(T("Registered users can %(login)s to access the system") % \
                                   dict(login=B(T("login"))))))
 
+        self._view(THEME, "index.html")
         return dict(title = title,
                     self_registration=self_registration,
                     registered=registered,

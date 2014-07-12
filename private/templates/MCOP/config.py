@@ -13,7 +13,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import s3_avatar_represent
+from s3 import s3_avatar_represent
 
 T = current.T
 s3 = current.response.s3
@@ -253,7 +253,7 @@ def customise_cms_post_resource(r, tablename):
         # Default page, not homepage
         s3.dl_rowsize = 2
 
-    #from s3.s3query import FS
+    #from s3 import FS
     #s3.filter = FS("series_id$name").belongs(["Alert"])
 
     s3.crud_strings["cms_post"] = Storage(
@@ -269,8 +269,7 @@ def customise_cms_post_resource(r, tablename):
         msg_list_empty = T("No Alerts currently registered"))
 
     # CRUD Form
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
+    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
     table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
                                                          show_address=True,
@@ -293,7 +292,7 @@ def customise_cms_post_resource(r, tablename):
     table.body.label = T("Description")
     table.body.widget = None
 
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     crud_fields = ["date",
                    #"series_id",
                    "body",
@@ -337,7 +336,7 @@ def customise_cms_post_resource(r, tablename):
 
     crud_form = S3SQLCustomForm(*crud_fields)
 
-    from s3.s3filter import S3OptionsFilter
+    from s3 import S3OptionsFilter
     filter_widgets = s3db.get_config("cms_post", "filter_widgets")
     # Remove the Type filter
     # @ToDo: More robust way to identify it
@@ -377,7 +376,7 @@ def customise_event_incident_controller(**attr):
 
     # Not working
     if "summary" in current.request.args:
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("~.closed",
                               open_incident_filter,
                               tablename = "event_incident")
@@ -451,7 +450,7 @@ def customise_event_incident_resource(r, tablename):
 
     #from gluon.validators import IS_EMPTY_OR
     #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
-    from s3.s3forms import S3SQLCustomForm
+    from s3 import S3SQLCustomForm
     crud_fields = ["zero_hour",
                    "name",
                    "location_id",
@@ -462,7 +461,7 @@ def customise_event_incident_resource(r, tablename):
         crud_fields.append("closed")
     crud_form = S3SQLCustomForm(*crud_fields)
 
-    from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+    from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
     filter_widgets = [S3TextFilter(["name",
                                     "comments"
                                     ],
@@ -502,7 +501,7 @@ def customise_event_incident_resource(r, tablename):
         # Customise tables used by widgets
         customise_project_task_resource(r, "project_task")
 
-        from s3.s3query import FS
+        from s3 import FS
         map_widget = dict(label = "Map",
                           type = "map",
                           context = "incident",
@@ -605,8 +604,7 @@ def customise_org_facility_resource(r, tablename):
         msg_record_deleted = T("Facility deleted"),
         msg_list_empty = T("No Facilities currently registered"))
 
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
+    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
     location_id_field = table.location_id
     location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
     location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
@@ -623,7 +621,7 @@ def customise_org_facility_resource(r, tablename):
                    "comments",
                    ]
 
-    from s3.s3forms import S3SQLCustomForm
+    from s3 import S3SQLCustomForm
     crud_form = S3SQLCustomForm(*list_fields)
 
     # Report options
@@ -698,7 +696,7 @@ def customise_org_organisation_resource(r, tablename):
             msg_record_deleted = T("Stakeholder deleted"),
             msg_list_empty = T("No Stakeholders currently registered"))
 
-        from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm("id",
                                     "name",
                                     S3SQLInlineLink(
@@ -724,7 +722,7 @@ def customise_org_organisation_resource(r, tablename):
             s3.dl_pagelength = 12
             s3.dl_rowsize = 3
     
-            from s3.s3filter import S3TextFilter, S3OptionsFilter
+            from s3 import S3TextFilter, S3OptionsFilter
             filter_widgets = [S3TextFilter(["name",
                                             "acronym",
                                             "website",
@@ -751,7 +749,7 @@ def customise_org_organisation_resource(r, tablename):
             #customise_org_office_fields()
             s3db.org_customise_org_resource_fields("profile")
 
-            from s3.s3query import FS
+            from s3 import FS
             contacts_widget = dict(label = "Directory",
                                    label_create = "Create Contact",
                                    type = "datalist",
@@ -921,8 +919,7 @@ def customise_org_resource_resource(r, tablename):
             location_field.default = location_id
             # We still want to be able to specify a precise location
             #location_field.readable = location_field.writable = False    
-        from s3.s3validators import IS_LOCATION_SELECTOR2
-        from s3.s3widgets import S3LocationSelectorWidget2
+        from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
         location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
         location_field.widget = S3LocationSelectorWidget2(levels=levels,
                                                           show_address=True,
@@ -993,7 +990,7 @@ def customise_project_task_controller(**attr):
 
     # Not working
     if "summary" in current.request.args:
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("~.status",
                               active_status_filter,
                               tablename = "project_task")
@@ -1053,7 +1050,7 @@ def customise_project_task_resource(r, tablename):
     table.description.label = T("Description")
     table.description.comment = None
     table.location_id.readable = table.location_id.writable = True
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     crud_fields = ["source_url",
                    "status",
                    "priority",
@@ -1100,7 +1097,7 @@ def customise_project_task_resource(r, tablename):
     crud_form = S3SQLCustomForm(*crud_fields)
 
     # Filter Widgets
-    from s3.s3filter import S3OptionsFilter
+    from s3 import S3OptionsFilter
     filter_widgets = s3db.get_config("project_task", "filter_widgets")
     filter_widgets.insert(2, S3OptionsFilter("incident.incident_id"))
 
@@ -1218,11 +1215,10 @@ def customise_pr_person_resource(r, tablename):
     htable = s3db.hrm_human_resource
     htable.organisation_id.widget = None
     site_field = htable.site_id
-    from s3.s3fields import S3Represent
+    from s3 import S3Represent, IS_ONE_OF
     represent = S3Represent(lookup="org_site")
     site_field.label = T("Facility")
     site_field.represent = represent
-    from s3.s3validators import IS_ONE_OF
     site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                     represent,
                                     orderby = "org_site.name")
@@ -1254,7 +1250,7 @@ def customise_pr_person_resource(r, tablename):
         hr_fields.remove("organisation_id")
 
     
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     s3_sql_custom_fields = [
             "first_name",
             #"middle_name",
@@ -1314,7 +1310,7 @@ def customise_pr_person_resource(r, tablename):
 
     crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
-    from s3.s3filter import S3TextFilter, S3OptionsFilter
+    from s3 import S3TextFilter, S3OptionsFilter
     filter_widgets = [S3TextFilter(["pe_label",
                                     "first_name",
                                     "middle_name",

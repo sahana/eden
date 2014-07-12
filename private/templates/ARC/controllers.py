@@ -12,8 +12,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
-from s3.s3utils import S3CustomController
+from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm, S3CustomController
 
 THEME = "ARC"
 
@@ -144,7 +143,7 @@ class subscriptions(S3CustomController):
 
         from gluon.sqlhtml import SQLFORM
         from gluon.validators import IS_IN_SET
-        from s3.s3widgets import S3GroupedOptionsWidget
+        from s3 import S3GroupedOptionsWidget
 
         # L10n
         T = current.T

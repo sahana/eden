@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import s3_avatar_represent
+from s3 import s3_avatar_represent
 
 T = current.T
 settings = current.deployment_settings
@@ -458,14 +458,11 @@ def customise_pr_person_controller(**attr):
                     msg_list_empty = T("No Contacts currently registered"))
 
             # Custom Form (Read/Create/Update)
-            from s3.s3fields import S3Represent
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3Represent, S3SQLCustomForm, S3SQLInlineComponent
             if r.method in ("create", "update"):
                 # Custom Widgets/Validators
                 widgets = True
-                from s3.s3validators import IS_ONE_OF
-                from s3.s3widgets import S3MultiSelectWidget
-                from s3layouts import S3AddResourceLink
+                from s3 import IS_ONE_OF, S3MultiSelectWidget, S3AddResourceLink
             else:
                 widgets = False
 
@@ -637,7 +634,7 @@ def customise_project_activity_controller(**attr):
 
     if "summary" in current.request.args:
         settings.gis.toolbar = False
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("activity_group.group_id",
                               default_coalition_filter,
                               tablename = "project_activity")
@@ -684,7 +681,7 @@ def customise_project_activity_controller(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             # Custom Form (Read/Create/Update inc embedded Summary)
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
 
             table.person_id.comment = None
 
@@ -748,7 +745,7 @@ def customise_project_activity_controller(**attr):
                            )
             
             if method in ("summary", "report"):
-                from s3.s3filter import S3OptionsFilter, S3DateFilter
+                from s3 import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
                                                   represent = "%(name)s",
                                                   header = True,
@@ -797,8 +794,7 @@ def customise_project_activity_controller(**attr):
 
             if method in ("create", "update", "summary"):
                 # Custom Widgets/Validators
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
 
                 s3db.project_activity_activity_type.activity_type_id.widget = S3MultiSelectWidget(multiple=False)
                 s3db.project_activity_group.group_id.widget = S3MultiSelectWidget(multiple=False)
@@ -827,7 +823,7 @@ settings.customise_project_activity_controller = customise_project_activity_cont
 
 def customise_project_activity_type_controller(**attr):
 
-    from s3.s3forms import S3SQLCustomForm
+    from s3 import S3SQLCustomForm
     current.s3db.configure("project_activity_type",
                            crud_form = S3SQLCustomForm("name",
                                                        "comments"),
@@ -881,7 +877,7 @@ def customise_org_organisation_controller(**attr):
 
     if "summary" in current.request.args:
         settings.gis.toolbar = False
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("org_group_membership.group_id",
                               default_coalition_filter,
                               tablename = "org_organisation")
@@ -931,7 +927,7 @@ def customise_org_organisation_controller(**attr):
             table.name.label = T("Organization Name")
 
             if method in ("summary", "report"):
-                from s3.s3filter import S3OptionsFilter, S3TextFilter, S3HierarchyFilter
+                from s3 import S3OptionsFilter, S3TextFilter, S3HierarchyFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "group_membership.group_id",
                                                 "sector_organisation.sector_id",
@@ -994,7 +990,7 @@ def customise_org_organisation_controller(**attr):
 
             if not current.auth.is_logged_in():
                 # Anonymous user creating Org: Keep Simple
-                from s3.s3forms import S3SQLCustomForm
+                from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("name",
                                             "website",
                                             "comments",
@@ -1005,7 +1001,7 @@ def customise_org_organisation_controller(**attr):
 
             elif method in ("read", "create", "update", "summary", "import"):
                 # Custom Form (Read/Create/Update inc embedded Summary)
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
 
                 # Allow free-text in Phone
                 table.phone.requires = None
@@ -1015,8 +1011,7 @@ def customise_org_organisation_controller(**attr):
                 field = ftable.location_id
                 field.label = T("Address")
                 field.represent = s3db.gis_LocationRepresent(address_only=True)
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
                 levels = ("L3",)
                 field.requires = IS_LOCATION_SELECTOR2(levels=levels)
                 field.widget = S3LocationSelectorWidget2(levels=levels,
@@ -1053,7 +1048,7 @@ def customise_org_organisation_controller(**attr):
                     if method == "update":
                         # Filter the options for site_id in the organisation contacts
                         # inline component to just the sites of this organisation
-                        from s3.s3validators import IS_ONE_OF
+                        from s3 import IS_ONE_OF
                         auth = current.auth
                         realms = auth.permission.permitted_realms("hrm_human_resource",
                                                                   method="create")
@@ -1070,7 +1065,7 @@ def customise_org_organisation_controller(**attr):
                                                              )
 
                 # Custom Crud Form
-                from s3.s3widgets import S3MultiSelectWidget
+                from s3 import S3MultiSelectWidget
                 s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
                 mtable = s3db.org_group_membership
                 mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
@@ -1159,7 +1154,7 @@ def customise_org_organisation_controller(**attr):
                     #    if method == "update":
                     #        # Filter the options for site_id in the organisation contacts
                     #        # inline component to just the sites of this organisation
-                    #        from s3.s3validators import IS_ONE_OF
+                    #        from s3 import IS_ONE_OF
                     #        auth = current.auth
                     #        realms = auth.permission.permitted_realms("hrm_human_resource",
                     #                                                  method="create")
@@ -1228,8 +1223,7 @@ def customise_org_group_controller(**attr):
                 return False
 
         if r.interactive:
-            from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2
+            from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
             table = current.s3db.org_group
             table.name.label = T("Coalition Name")
             field = table.location_id
@@ -1350,7 +1344,7 @@ def customise_org_facility_controller(**attr):
 
     if "summary" in current.request.args:
         settings.gis.toolbar = False
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("site_org_group.group_id",
                               default_coalition_filter,
                               tablename = "org_facility")
@@ -1410,11 +1404,10 @@ def customise_org_facility_controller(**attr):
                 msg_list_empty = T("No Places currently recorded"))
 
             # Custom Form (Read/Create/Update inc embedded Summary)
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
             if method in ("create", "update", "summary", "import"):
                 # Custom Widgets/Validators
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
 
                 # Allow free-text in Phone
                 table.phone1.requires = None
@@ -1478,7 +1471,7 @@ def customise_org_facility_controller(**attr):
                            )
 
             if method in ("summary", "report"):
-                from s3.s3filter import S3OptionsFilter, S3TextFilter, S3HierarchyFilter
+                from s3 import S3OptionsFilter, S3TextFilter, S3HierarchyFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "site_org_group.group_id",
                                                 "site_facility_type.facility_type_id",
@@ -1563,7 +1556,7 @@ def customise_stats_people_controller(**attr):
 
     if "summary" in current.request.args:
         settings.gis.toolbar = False
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("people_group.group_id",
                               default_coalition_filter,
                               tablename = "stats_people")
@@ -1622,11 +1615,10 @@ def customise_stats_people_controller(**attr):
                 msg_list_empty = T("No People currently recorded"))
             
             # Custom Form (Read/Create/Update inc embedded Summary)
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
             if method in ("create", "update", "summary"):
                 # Custom Widgets/Validators
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
 
                 table.parameter_id.widget = S3MultiSelectWidget(multiple=False)
                 s3db.stats_people_group.group_id.widget = S3MultiSelectWidget(multiple=False)
@@ -1643,8 +1635,7 @@ def customise_stats_people_controller(**attr):
                                                          show_map=False,
                                                          )
                 # L3s only
-                #from s3.s3fields import S3Represent
-                #from s3.s3validators import IS_ONE_OF
+                #from s3 import S3Represent, IS_ONE_OF
                 #field.requires = IS_ONE_OF(current.db, "gis_location.id",
                 #                           S3Represent(lookup="gis_location"),
                 #                           sort = True,
@@ -1688,7 +1679,7 @@ def customise_stats_people_controller(**attr):
                            )
 
             if method in ("summary", "report"):
-                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                from s3 import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "people_group.group_id",
                                                 "parameter_id",
@@ -1761,7 +1752,7 @@ def customise_vulnerability_evac_route_controller(**attr):
 
     if "summary" in current.request.args:
         settings.gis.toolbar = False
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("evac_route_group.group_id",
                               default_coalition_filter,
                               tablename = "vulnerability_evac_route")
@@ -1804,12 +1795,11 @@ def customise_vulnerability_evac_route_controller(**attr):
             table.location_id.readable = False
 
             # Custom Form (Read/Create/Update inc embedded summary)
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
             if method in ("create", "update", "summary"):
                 # Custom Widgets/Validators
                 #from s3layouts import S3AddResourceLink
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
 
                 s3db.vulnerability_evac_route_group.group_id.widget = S3MultiSelectWidget(multiple=False)
 
@@ -1851,7 +1841,7 @@ def customise_vulnerability_evac_route_controller(**attr):
                            )
 
             if method in ("summary", "report"):
-                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                from s3 import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "evac_route_group.group_id",
                                                 "location_id",
@@ -1911,7 +1901,7 @@ def customise_vulnerability_risk_controller(**attr):
 
     if "summary" in current.request.args:
         settings.gis.toolbar = False
-        from s3.s3utils import s3_set_default_filter
+        from s3 import s3_set_default_filter
         s3_set_default_filter("risk_group.group_id",
                               default_coalition_filter,
                               tablename = "vulnerability_risk")
@@ -1965,11 +1955,10 @@ def customise_vulnerability_risk_controller(**attr):
                 msg_list_empty = T("No Hazards currently recorded"))
             
             # Custom Form (Read/Create/Update inc embedded summary)
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
             if method in ("create", "update", "summary"):
                 # Custom Widgets/Validators
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
 
                 s3db.vulnerability_risk_group.group_id.widget = S3MultiSelectWidget(multiple=False)
 
@@ -2014,11 +2003,11 @@ def customise_vulnerability_risk_controller(**attr):
             if method in ("summary", "report"):
                 # Not needed now that Risk data is moved to WMS
                 # Filter out data not associated with any Coalition
-                #from s3.s3query import FS
+                #from s3 import FS
                 #group_filter = (FS("group.id") != None)
                 #r.resource.add_filter(group_filter)
 
-                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                from s3 import S3OptionsFilter, S3TextFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "risk_group.group_id",
                                                 "location_id",
@@ -2069,7 +2058,7 @@ def customise_vulnerability_risk_controller(**attr):
         #    layer = current.request.get_vars.get("layer", None)
         #    if not layer:
         #        # Filter out data not associated with any Coalition
-        #        from s3.s3query import FS
+        #        from s3 import FS
         #        group_filter = (FS("group.id") != None)
         #        r.resource.add_filter(group_filter)
 
@@ -2116,7 +2105,7 @@ def customise_gis_config_controller(**attr):
                                     distinct=True)
             if rows:
                 coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
-                from s3.s3filter import S3OptionsFilter
+                from s3 import S3OptionsFilter
                 filter_widgets = [
                     S3OptionsFilter("pe_id",
                                     label = "",
@@ -2281,10 +2270,9 @@ current.response.s3.render_log = render_log
 # -----------------------------------------------------------------------------
 def customise_s3_audit_controller(**attr):
 
-    from s3.s3utils import s3_auth_user_represent_name
+    from s3 import s3_auth_user_represent_name, FS
     current.db.s3_audit.user_id.represent = s3_auth_user_represent_name
 
-    from s3.s3query import FS
     current.response.s3.filter = (FS("~.method") != "delete")
 
     tablename = "s3_audit"

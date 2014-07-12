@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
+#from gluon import current
 from gluon.html import URL
 from gluon.http import redirect
 
-from s3.s3utils import S3CustomController
+from s3 import S3CustomController
 
 # =============================================================================
 class index(S3CustomController):

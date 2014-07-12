@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import s3_fullname
+from s3 import s3_fullname
 
 T = current.T
 settings = current.deployment_settings
@@ -319,7 +319,7 @@ def customise_org_facility_controller(**attr):
             types = r.get_vars.get("site_facility_type.facility_type_id__belongs", None)
             if not types:
                 # Hide Private Residences
-                from s3.s3query import FS
+                from s3 import FS
                 s3.filter = FS("site_facility_type.facility_type_id$name") != "Private Residence"
 
         if r.interactive:
@@ -327,8 +327,7 @@ def customise_org_facility_controller(**attr):
             table = s3db[tablename]
 
             if not r.component and r.method in (None, "create", "update"):
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
                 field = table.location_id
                 if r.method in ("create", "update"):
                     field.label = "" # Gets replaced by widget
@@ -345,7 +344,7 @@ def customise_org_facility_controller(**attr):
             if r.get_vars.get("format", None) == "popup":
                 # Coming from req/create form
                 # Hide most Fields
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 # We default this onvalidation
                 table.name.notnull = False
                 table.name.requires = None
@@ -375,7 +374,7 @@ settings.customise_org_facility_controller = customise_org_facility_controller
 def customise_org_organisation_resource(r, tablename):
 
     from gluon.html import DIV, INPUT
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+    from s3 import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
     s3db = current.s3db
 
@@ -501,7 +500,7 @@ def customise_org_organisation_resource(r, tablename):
         "comments",
     )
 
-    from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
+    from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
     # activate hierarchical org_service:
     #from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, S3HierarchyFilter
     filter_widgets = [
@@ -573,8 +572,7 @@ def customise_org_organisation_controller(**attr):
         if r.interactive:
             if r.component_name == "facility":
                 if r.method in (None, "create", "update"):
-                    from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2
+                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
                     table = s3db.org_facility
                     field = table.location_id
                     if r.method in ("create", "update"):
@@ -649,11 +647,10 @@ def customise_org_group_controller(**attr):
 
             if r.interactive:
                 from gluon.html import DIV, INPUT
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
                 if r.method != "read":
                     from gluon.validators import IS_EMPTY_OR
-                    from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2
+                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
                     #field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
@@ -836,7 +833,7 @@ def customise_pr_person_controller(**attr):
                 #image_field.requires = IS_IMAGE()
                 #image_field.widget = None
 
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 s3_sql_custom_fields = ["first_name",
                                         #"middle_name",
                                         "last_name",
@@ -982,9 +979,7 @@ def customise_pr_group_controller(**attr):
                             org_group_team = "group_id",
                             )
 
-        from s3.s3fields import S3Represent
-        from s3.s3filter import S3TextFilter, S3OptionsFilter
-        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        from s3 import S3Represent, S3TextFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent
 
         s3db.org_group_team.org_group_id.represent = S3Represent(lookup="org_group",
                                                                  show_link=True)
@@ -1048,7 +1043,7 @@ def customise_pr_group_resource(r, tablename):
     """
 
     from gluon import Field, URL
-    from s3.s3widgets import s3_comments_widget
+    from s3 import s3_comments_widget
 
     s3db = current.s3db
 
@@ -1176,7 +1171,7 @@ def customise_hrm_human_resource_controller(**attr):
 
         if r.interactive or r.representation == "aadata":
             if not r.component:
-                from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+                from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [
                     S3TextFilter(["person_id$first_name",
                                   "person_id$middle_name",
@@ -1251,7 +1246,7 @@ def customise_hrm_human_resource_resource(r, tablename):
     """
 
     s3db = current.s3db
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     crud_form = S3SQLCustomForm("person_id",
                                 "organisation_id",
                                 "site_id",
@@ -1339,7 +1334,7 @@ def customise_project_project_controller(**attr):
             result = True
 
         if not r.component and (r.interactive or r.representation == "aadata"):
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
             s3db = current.s3db
 
             table = r.table
@@ -1408,7 +1403,7 @@ def customise_project_project_controller(**attr):
                 "comments",
             )
             
-            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
+            from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
             filter_widgets = [
                 S3TextFilter(["name",
                               "code",

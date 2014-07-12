@@ -287,10 +287,9 @@ def customise_gis_location_controller(**attr):
                                                      },
                         )
 
-    from s3.s3widgets import S3MultiSelectWidget
+    from s3 import S3MultiSelectWidget, S3SQLCustomForm, S3SQLInlineComponent
     s3db.gis_location.parent.widget = S3MultiSelectWidget(multiple=False)
     
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
     crud_form = S3SQLCustomForm("name",
                                 #"name_ru.name_l10n",
                                 S3SQLInlineComponent(
@@ -424,9 +423,7 @@ def customise_event_event_resource(r, tablename):
         But runs before prep
     """
 
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent, IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
 
     db = current.db
     s3db = current.s3db
@@ -575,7 +572,7 @@ def customise_vulnerability_data_resource(r, tablename):
     table = r.table
 
     # Higher precision wanted for the Multidimensional Poverty Index
-    from s3.s3validators import IS_FLOAT_AMOUNT
+    from s3 import IS_FLOAT_AMOUNT
     table.value.represent =  lambda v: \
         IS_FLOAT_AMOUNT.represent(v, precision=3)
 
@@ -633,8 +630,7 @@ def customise_org_facility_resource(r, tablename):
 
     s3db = current.s3db
 
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
+    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
     levels = ("L0", "L1", "L2")
     loc_field = r.table.location_id
     loc_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
@@ -651,7 +647,7 @@ def customise_org_facility_resource(r, tablename):
                    "comments",
                    ]
 
-    from s3.s3filter import S3OptionsFilter, S3TextFilter
+    from s3 import S3OptionsFilter, S3TextFilter
     filter_widgets = [S3TextFilter(["name",
                                     "site_facility_type.facility_type_id",
                                     #"organisation_id",
@@ -693,7 +689,7 @@ def customise_org_facility_resource(r, tablename):
                            )
         )
 
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentMultiSelectWidget
+    from s3 import S3SQLCustomForm, S3SQLInlineComponentMultiSelectWidget
     # Custom Crud Form
     crud_form = S3SQLCustomForm("name",
                                 S3SQLInlineComponentMultiSelectWidget(

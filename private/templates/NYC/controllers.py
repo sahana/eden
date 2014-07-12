@@ -9,10 +9,12 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.html import *
+#from gluon.html import *
+#from gluon.sqlhtml import SQLFORM
+#from gluon.validators import IS_IN_SET
 from gluon.storage import Storage
 
-from s3.s3utils import S3CustomController
+from s3 import FS, S3CustomController, S3FilterForm, S3LocationFilter, S3OptionsFilter, S3GroupedOptionsWidget, s3_auth_user_represent_name
 
 THEME = "NYC"
 
@@ -88,7 +90,6 @@ $('#login-btn').click(function(){
         output["register_form"] = register_form
 
         # Latest 4 Events and Requests
-        from s3.s3query import FS
         s3db = current.s3db
         layout = s3db.cms_post_list_layout
         list_id = "latest_events"
@@ -122,7 +123,6 @@ $('#login-btn').click(function(){
         output["latest_reqs"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         # Site Activity Log
-        from s3.s3utils import s3_auth_user_represent_name
         resource = s3db.resource("s3_audit")
         resource.add_filter(FS("~.method") != "delete")
         orderby = "s3_audit.timestmp desc"
@@ -147,7 +147,7 @@ $('#login-btn').click(function(){
         filter_form = DIV(_class="filter_form")
         if numrows == 0:
             # Empty table or just no match?
-            from s3.s3crud import S3CRUD
+            from s3 import S3CRUD
             table = resource.table
             if "deleted" in table:
                 available_records = db(table.deleted != True)
@@ -176,7 +176,6 @@ $('#login-btn').click(function(){
 
             if auth.s3_logged_in() and auth.user.org_group_id:
                 # Add a Filter
-                from s3.s3filter import S3OptionsFilter, S3FilterForm
                 filter_widgets = [S3OptionsFilter("user_id$org_group_id",
                                                   label = "",
                                                   # Can't just use "" as this is then omitted from rendering
@@ -243,7 +242,7 @@ def latest_records(resource, layout, list_id, limit, list_fields, orderby):
             available_records = current.db(table.deleted != True)
         else:
             available_records = current.db(table._id > 0)
-        from s3.s3crud import S3CRUD
+        from s3 import S3CRUD
         if available_records.select(table._id,
                                     limitby=(0, 1)).first():
             msg = DIV(S3CRUD.crud_string(resource.tablename,
@@ -308,7 +307,6 @@ class subscriptions(S3CustomController):
         # @note: subscription manager has no resource context, so
         #        must configure fixed options or lookup resources
         #        for filter widgets which need it.
-        from s3.s3filter import S3LocationFilter, S3OptionsFilter
         filters = [S3OptionsFilter("series_id",
                                    label = T("Subscribe to"),
                                    represent = "%(name)s",
@@ -348,10 +346,6 @@ class subscriptions(S3CustomController):
             @param resources: available resources config
             @param filters: filter widgets
         """
-
-        from gluon.sqlhtml import SQLFORM
-        from gluon.validators import IS_IN_SET
-        from s3.s3widgets import S3GroupedOptionsWidget
 
         # L10n
         T = current.T

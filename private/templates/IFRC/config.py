@@ -380,7 +380,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
     represent = organisation_represent(parent=parent)
     f.represent = represent
 
-    from s3.s3validators import IS_ONE_OF
+    from s3 import IS_ONE_OF
     requires = IS_ONE_OF(db, "org_organisation.id",
                          represent,
                          filterby = "id",
@@ -415,7 +415,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
     if (Admin or s3_has_role("ORG_ADMIN")):
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
-        from s3.s3navigation import S3ScriptItem
+        from s3 import S3ScriptItem
         add_link = S3AddResourceLink(c="org", f="organisation",
                                      vars={"organisation_type.name":"Red Cross / Red Crescent"},
                                      label=T("Create National Society"),
@@ -462,7 +462,7 @@ def customise_asset_asset_resource(r, tablename):
             )
 
     # Custom CRUD Form to allow ad-hoc Kits & link to Teams
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     table.kit.readable = table.kit.writable = True
     crud_form = S3SQLCustomForm("number",
                                 "type",
@@ -503,7 +503,7 @@ def customise_asset_asset_resource(r, tablename):
                                 "comments",
                                 )
 
-    from s3.s3filter import S3OptionsFilter
+    from s3 import S3OptionsFilter
     filter_widgets = s3db.get_config(tablename, "filter_widgets")
     filter_widgets.insert(-2, S3OptionsFilter("group.group_id",
                                               label = T("Team"),
@@ -567,7 +567,7 @@ def _customise_assignment_fields(**attr):
             _title="%s|%s" % (MEMBER,
                               current.messages.AUTOCOMPLETE_HELP))
 
-    from s3.s3validators import IS_ONE_OF
+    from s3 import IS_ONE_OF
     atable = current.s3db.deploy_assignment
     atable.human_resource_id.label = MEMBER
     atable.human_resource_id.comment = hr_comment
@@ -652,7 +652,7 @@ def customise_deploy_assignment_controller(**attr):
     _customise_assignment_fields()
     
     # Restrict Location to just Countries
-    from s3.s3fields import S3Represent
+    from s3 import S3Represent
     field = s3db.deploy_mission.location_id
     field.represent = S3Represent(lookup="gis_location", translate=True)
     
@@ -679,8 +679,7 @@ def customise_deploy_mission_controller(**attr):
     table.organisation_id.readable = table.organisation_id.writable = False
 
     # Restrict Location to just Countries
-    from s3.s3fields import S3Represent
-    from s3.s3widgets import S3MultiSelectWidget
+    from s3 import S3Represent, S3MultiSelectWidget
     field = table.location_id
     field.label = current.messages.COUNTRY
     field.requires = s3db.gis_country_requires
@@ -832,7 +831,7 @@ def customise_hrm_course_controller(**attr):
                    (T("Sectors"), "course_sector.sector_id"),
                    ]
 
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
+    from s3 import S3SQLCustomForm, S3SQLInlineLink
     crud_form = S3SQLCustomForm("code",
                                 "name",
                                 "organisation_id",
@@ -859,7 +858,7 @@ def customise_hrm_credential_controller(**attr):
     field = table.job_title_id
     field.comment = None
     field.label = T("Sector")
-    from s3.s3validators import IS_ONE_OF
+    from s3 import IS_ONE_OF
     field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
                                field.represent,
                                filterby = "type",
@@ -945,7 +944,7 @@ def customise_hrm_human_resource_controller(**attr):
             field.readable = field.writable = False
 
         if not vnrc:
-            from s3.s3filter import S3OptionsFilter
+            from s3 import S3OptionsFilter
             filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
             filter_widgets.insert(-1, S3OptionsFilter("training.course_id$course_sector.sector_id",
                                                       label = T("Training Sector"),
@@ -1311,7 +1310,7 @@ def customise_org_organisation_controller(**attr):
 
                 if r.interactive:
                     r.table.country.label = T("Country")
-                    from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
+                    from s3 import S3SQLCustomForm, S3SQLInlineLink
                     crud_form = S3SQLCustomForm(
                         "name",
                         "acronym",
@@ -1520,7 +1519,7 @@ def customise_pr_person_controller(**attr):
             field = atable.job_title_id
             field.comment = None
             field.label = T("Sector") # RDRT-specific
-            from s3.s3validators import IS_ONE_OF
+            from s3 import IS_ONE_OF
             field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
                                        field.represent,
                                        filterby = "type",
@@ -1560,7 +1559,7 @@ def customise_pr_person_controller(**attr):
                 field.label = T("Religion")
                 field.readable = field.writable = True
                 # Also hide some other fields
-                from s3.s3forms import S3SQLCustomForm
+                from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("first_name",
                                             "middle_name",
                                             "last_name",
@@ -1624,7 +1623,7 @@ def customise_pr_person_controller(**attr):
                 table.job_title.readable = True
                 table.job_title.writable = True
                 table.comments.label = T("Main Duties")
-                from s3.s3forms import S3SQLCustomForm
+                from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("organisation",
                                             "job_title",
                                             "comments",
@@ -1756,7 +1755,7 @@ def customise_project_project_controller(**attr):
     f.label = T("Host National Society")
 
     # Custom Crud Form
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
     crud_form = S3SQLCustomForm(
         "organisation_id",
         "name",
@@ -1942,7 +1941,7 @@ def customise_project_beneficiary_resource(r, tablename):
                               activity_type_id = activity_type_id,
                               )
 
-        from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm(#"project_id",
                                     "project_location_id",
                                     S3SQLInlineLink("activity_type",
@@ -1966,7 +1965,7 @@ def customise_project_beneficiary_resource(r, tablename):
 
     elif not r.component:
         # Report
-        from s3.s3filter import S3OptionsFilter
+        from s3 import S3OptionsFilter
         resource = r.resource
         filter_widgets = resource.get_config("filter_widgets")
         filter_widgets.insert(1,
@@ -1988,7 +1987,7 @@ settings.customise_project_beneficiary_resource = customise_project_beneficiary_
 # -----------------------------------------------------------------------------
 def customise_project_location_resource(r, tablename):
 
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
+    from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox
     crud_form = S3SQLCustomForm(
         "project_id",
         "location_id",

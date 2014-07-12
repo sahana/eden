@@ -15,10 +15,7 @@ from gluon import current, URL
 from gluon.html import *
 #from gluon.storage import Storage
 
-from s3.s3filter import S3FilterForm, S3FilterString, S3OptionsFilter
-from s3.s3query import FS, S3URLQuery
-from s3.s3summary import S3Summary
-from s3.s3utils import s3_auth_user_represent_name, S3CustomController
+from s3 import S3FilterForm, S3FilterString, S3OptionsFilter, FS, S3URLQuery, S3Summary, s3_auth_user_represent_name, S3CustomController
 
 THEME = "CRMT"
 
@@ -107,7 +104,7 @@ for(var i=0,len=layers.length;i<len;i++){
         filter_form = DIV(_class="filter_form")
         if numrows == 0:
             # Empty table or just no match?
-            from s3.s3crud import S3CRUD
+            from s3 import S3CRUD
             table = resource.table
             if "deleted" in table:
                 available_records = db(table.deleted != True)
