@@ -1309,6 +1309,18 @@ class S3BudgetAllocationModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
+        self.configure(tablename,
+                       timeplot_options = {
+                            "defaults": {
+                                "baseline": "budget_id$total_recurring_costs",
+                                "fact": "cumulate(unit_cost,daily_cost,days)",
+                                "slots": "months",
+                                "start": "-6months",
+                                "end": "+9months",
+                            },
+                       },
+                       )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -1551,11 +1563,15 @@ def budget_rheader(r):
     resourcename = r.name
 
     if resourcename == "budget":
+
+        tpvars = dict(r.get_vars)
+        tpvars["component"] = "allocation"
         
         tabs = [(T("Basic Details"), None),
                 (T("Staff"), "staff"),
                 (T("Bundles"), "bundle"),
-                #(T("Allocation"), "allocation"), # experimental
+                #(T("Allocation"), "allocation"),
+                (T("Report"), "timeplot", tpvars),
                ]
                
         rheader_fields = [["name"],

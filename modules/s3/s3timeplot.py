@@ -108,21 +108,6 @@ class S3TimePlot(S3Method):
         
         output = {}
 
-        resource = self.resource
-        get_config = resource.get_config
-
-        # Apply filter defaults (before rendering the data!)
-        show_filter_form = False
-        if r.representation in ("html", "iframe"):
-            filter_widgets = get_config("filter_widgets", None)
-            if filter_widgets and not self.hide_filter:
-                from s3filter import S3FilterForm
-                show_filter_form = True
-                S3FilterForm.apply_filter_defaults(r, resource)
-
-        # Widget ID
-        widget_id = "timeplot"
-
         # Extract the relevant GET vars
         # @todo: option for grouping
         report_vars = ("timestamp",
@@ -135,8 +120,31 @@ class S3TimePlot(S3Method):
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
                         if k in report_vars)
 
+        # Execute on component?
+        resource = self.resource
+        alias = r.get_vars.get("component")
+        if alias and alias not in (resource.alias, "~"):
+            if alias not in resource.components:
+                hook = current.s3db.get_component(resource.tablename, alias)
+                if hook:
+                    resource._attach(alias, hook)
+            if alias in resource.components:
+                resource = resource.components[alias]
+
+        tablename = resource.tablename
+        get_config = resource.get_config
+
+        # Apply filter defaults (before rendering the data!)
+        show_filter_form = False
+        if r.representation in ("html", "iframe"):
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not self.hide_filter:
+                from s3filter import S3FilterForm
+                show_filter_form = True
+                S3FilterForm.apply_filter_defaults(r, resource)
+
         # Fall back to report options defaults
-        report_options = resource.get_config("report_options", {})
+        report_options = resource.get_config("timeplot_options", {})
         defaults = report_options.get("defaults", {})
         if not any(k in get_vars for k in report_vars):
             get_vars = defaults
@@ -167,7 +175,8 @@ class S3TimePlot(S3Method):
         end = get_vars.get("end")
         slots = get_vars.get("slots")
         try:
-            event_frame = self.create_event_frame(event_start,
+            event_frame = self.create_event_frame(resource,
+                                                  event_start,
                                                   event_end,
                                                   start,
                                                   end,
@@ -186,7 +195,7 @@ class S3TimePlot(S3Method):
                                 rfields,
                                 baseline=baseline,
                                 )
-        except (SyntaxError):
+        except SyntaxError:
             pass
 
         # Iterate over the event frame to collect aggregates
@@ -202,7 +211,7 @@ class S3TimePlot(S3Method):
             value = period.aggregate(method=method,
                                      fields=[rfield.colname for rfield in rfields],
                                      arguments=arguments,
-                                     event_type=resource.tablename,
+                                     event_type=tablename,
                                      )
             new_item((item_start, item_end, value))
 
@@ -212,11 +221,14 @@ class S3TimePlot(S3Method):
                 "baseline": event_frame.baseline,
                 }
 
+        # Widget ID
+        widget_id = "timeplot"
+
         # Render output
         if r.representation in ("html", "iframe"):
             # Page load
             
-            output["title"] = self.crud_string(resource.tablename, "title_report")
+            output["title"] = self.crud_string(tablename, "title_report")
             
             # Filter widgets
             if show_filter_form:
@@ -233,8 +245,8 @@ class S3TimePlot(S3Method):
                                            _class="filter-form",
                                            _id="%s-filter-form" % widget_id,
                                            )
-                fresource = current.s3db.resource(resource.tablename)
-                alias = resource.alias if r.component else None
+                fresource = current.s3db.resource(tablename)
+                alias = resource.alias if resource.parent else None
                 filter_widgets = filter_form.fields(fresource,
                                                     r.get_vars,
                                                     alias=alias,
@@ -300,8 +312,12 @@ class S3TimePlot(S3Method):
 
         # Fields to extract
         fields = set(fact.selector for fact in facts)
-        fields.add(event_start.selector)
-        fields.add(event_end.selector)
+        if event_start:
+            fields.add(event_start.selector)
+        else:
+            return None
+        if event_end:
+            fields.add(event_end.selector)
         fields.add(resource._id.name)
 
         # Filter by event frame start:
@@ -367,7 +383,7 @@ class S3TimePlot(S3Method):
         # Column names for extractions
         pkey = str(resource._id)
         start_colname = event_start.colname
-        end_colname = event_end.colname
+        end_colname = event_end.colname if event_end else None
 
         # Use table name as event type
         tablename = resource.tablename
@@ -381,7 +397,7 @@ class S3TimePlot(S3Method):
             start = row[start_colname]
             if convert_start:
                 start = convert_date(start)
-            end = row[end_colname]
+            end = row[end_colname] if end_colname else None
             if convert_end:
                 end = convert_date(end)
             event = S3TimePlotEvent(row[pkey],
@@ -398,6 +414,7 @@ class S3TimePlot(S3Method):
         
     # -------------------------------------------------------------------------
     def create_event_frame(self,
+                           resource,
                            event_start,
                            event_end,
                            start=None,
@@ -414,8 +431,6 @@ class S3TimePlot(S3Method):
 
             @return: the event frame
         """
-
-        resource = self.resource
 
         now = tp_tzsafe(datetime.datetime.utcnow())
 

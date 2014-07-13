@@ -74,6 +74,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Sent Shipments", c="inv", f="send"),
                 MM("Shelters", c="cr", f="shelter", m="summary"),
                 MM("Warehouses", c="inv", f="warehouse"),
+                MM("Budgets", c="budget", f="budget"),
             ),
             homepage("project")(
                 MM("Projects", c="project", f="project"),
