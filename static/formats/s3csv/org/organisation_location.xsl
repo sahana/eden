@@ -32,7 +32,7 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="organisation_group" match="row" use="col[@field='Organisation Group']"/>
+    <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="L1" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
@@ -144,8 +144,13 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
+        <!-- Polygon -->
+        <xsl:if test="col[@field='WKT']!=''">
+            <xsl:call-template name="Location"/>
+        </xsl:if>
+
         <!-- Organisation Location -->
-        <resource name="organisation_location">
+        <resource name="org_organisation_location">
 
             <!-- Organisation -->
             <reference field="organisation_id" resource="org_organisation">
@@ -160,13 +165,6 @@
             </xsl:if>
 
         </resource>
-
-        <!-- Polygon -->
-        <xsl:if test="col[@field='WKT']!=''">
-            <resource name="gis_location">
-                <xsl:call-template name="Location"/>
-            </resource>
-        </xsl:if>
 
     </xsl:template>
 
@@ -674,7 +672,7 @@
         <xsl:variable name="l4id" select="concat('L4/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4)"/>
         <xsl:variable name="l5id" select="concat('L5/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5)"/>
 
-        <!-- Risk Location -->
+        <!-- Organisation Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$wkt"/>
