@@ -747,6 +747,9 @@ class S3LocationFilter(S3FilterWidget):
             @param attr: configuration options for this widget
         """
 
+        if not field:
+            field = "location_id"
+
         # Translate options using gis_location_name?
         settings = current.deployment_settings
         translate = settings.get_L10n_translate_gis_location()

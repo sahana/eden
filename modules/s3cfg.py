@@ -30,7 +30,7 @@
 
 """
 
-__all__ = ["S3Config"]
+__all__ = ("S3Config",)
 
 try:
     # Python 2.7
@@ -1870,6 +1870,13 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Human Resource Management
     #
+    #def get_hrm_human_resource_label(self):
+    #    """
+    #        Label for 'Human Resources'
+    #        e.g. 'Contacts'
+    #    """
+    #    return current.T(self.hrm.get("human_resource_label", "Staff"))
+
     def get_hrm_staff_label(self):
         """
             Label for 'Staff'
@@ -2297,6 +2304,12 @@ class S3Config(Storage):
             Whether to display the last_contacted field for a Site
         """
         return self.org.get("site_last_contacted", False)
+
+    def get_org_site_volunteers(self):
+        """
+            Whether volunteers can be assigned to Sites
+        """
+        return self.org.get("site_volunteers", False)
 
     def get_org_summary(self):
         """

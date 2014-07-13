@@ -497,7 +497,7 @@ class S3OptionsMenu(object):
                     M("Budgets", f="budget")(
                         M("Create", m="create"),
                     ),
-                    M("Staff", f="staff")(
+                    M("Staff Types", f="staff")(
                         M("Create", m="create"),
                     ),
                     M("Projects", f="project")(

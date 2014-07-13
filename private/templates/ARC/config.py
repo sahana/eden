@@ -334,6 +334,8 @@ settings.org.organisation_location_context = "organisation_location.location_id"
 settings.org.site_code_len = 3
 # Set the label for Sites
 settings.org.site_label = "Office/Shelter/Warehouse/Facility"
+# Uncomment to allow Sites to be staffed by Volunteers
+settings.org.site_volunteers = True
 # Uncomment to show a Tab for Organisation Resources
 settings.org.resources_tab = True
 
@@ -491,6 +493,37 @@ def user_org_default_filter(selector, tablename=None):
     user_org_id = auth.is_logged_in() and auth.user.organisation_id
     if user_org_id:
         return user_org_id
+    else:
+        # no default
+        return {}
+
+# -----------------------------------------------------------------------------
+def user_org_and_children_default_filter(selector, tablename=None):
+    """
+        Default filter for organisation_id:
+        * Use the user's organisation if logged-in and associated with an
+          organisation.
+    """
+
+    auth = current.auth
+    user_org_id = auth.is_logged_in() and auth.user.organisation_id
+    if user_org_id:
+        db = current.db
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        org = db(otable.id == user_org_id).select(otable.pe_id,
+                                                  limitby=(0, 1)
+                                                  ).first()
+        if org:
+            pe_id = org.pe_id
+            pe_ids = s3db.pr_get_descendants((pe_id,),
+                                             entity_types=("org_organisation",))
+            rows = db(otable.pe_id.belongs(pe_ids)).select(otable.id)
+            ids = [row.id for row in rows]
+            ids.append(user_org_id)
+            return ids
+        else:
+            return user_org_id
     else:
         # no default
         return {}
@@ -752,6 +785,25 @@ def customise_deploy_mission_controller(**attr):
 settings.customise_deploy_mission_controller = customise_deploy_mission_controller
 
 # -----------------------------------------------------------------------------
+def customise_doc_sitrep_controller(**attr):
+
+    # Default Filter
+    # Org and all Branches & SubBranches
+    # @ToDo: Only look at current level + 1 level down
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.organisation_id",
+                          user_org_and_children_default_filter,
+                          tablename = "doc_sitrep")
+
+    # @ToDo: Pick this up in request.post_vars along with 'selected'
+    dt_bulk_actions = [(T("Consolidate"), "consolidate")]
+
+    attr["dtargs"] = dict(dt_bulk_actions=dt_bulk_actions)
+    return attr
+
+settings.customise_doc_sitrep_controller = customise_doc_sitrep_controller
+
+# -----------------------------------------------------------------------------
 #def customise_event_incident_resource(r, tablename):
 
 #    # Use Polygons for Location
@@ -894,7 +946,7 @@ def customise_hrm_human_resource_controller(**attr):
     # Default Filter
     from s3 import s3_set_default_filter
     s3_set_default_filter("~.organisation_id",
-                          user_org_default_filter,
+                          user_org_and_children_default_filter,
                           tablename = "hrm_human_resource")
 
     #s3db = current.s3db
@@ -1351,6 +1403,8 @@ settings.project.codes = True
 #settings.project.community = True
 # Uncomment this to enable Hazards in 3W projects
 #settings.project.hazards = True
+# Uncomment this to enable Milestones in projects
+settings.project.milestones = True
 # Uncomment this to use multiple Budgets per project
 #settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
@@ -1865,6 +1919,12 @@ settings.modules = OrderedDict([
         restricted = True,
         #module_type = 10
     )),
+    ("assess", Storage(
+            name_nice = T("Assessments"),
+            #description = "Create, enter, and manage surveys.",
+            restricted = True,
+            #module_type = 5,
+        )),
     ("survey", Storage(
             name_nice = T("Assessments"),
             #description = "Create, enter, and manage surveys.",

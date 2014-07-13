@@ -16,23 +16,17 @@ def index():
 
     redirect(URL(f="building"))
 
+
 # -----------------------------------------------------------------------------
-def assess():
+def ifrc24h():
     """
         Custom function to demo Mobile Assessment collection
     """
 
     # This function uses it's own Theme
-    settings.base.theme = "bootstrap"
+    settings.base.theme = "mobile"
 
-    form = FORM()
-
-    title = T("Assessment")
-
-    output = dict(form = form,
-                  title = title,
-                  )
-    return output
+    return s3_rest_controller("assess", "24h")
 
 # -----------------------------------------------------------------------------
 def building_marker_fn(record):

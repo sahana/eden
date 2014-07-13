@@ -476,6 +476,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.org.site_autocomplete_fields = ("instance_type", "location_id$L1", "location_id$addr_street", "organisation_id$name")
 # Uncomment to hide inv & req tabs from Sites
 #settings.org.site_inv_req_tabs = False
+# Uncomment to allow Sites to be staffed by Volunteers
+#settings.org.site_volunteers = True
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 #settings.org.summary = True
 # Enable certain fields just for specific Organisations

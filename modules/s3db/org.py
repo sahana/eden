@@ -2408,14 +2408,20 @@ class S3SiteModel(S3Model):
 
         # Custom Method for S3SiteAutocompleteWidget
         set_method("org", "site",
-                   method="search_ac",
-                   action=self.site_search_ac)
+                   method = "search_ac",
+                   action = self.site_search_ac)
 
         # Custom Method for S3AddPersonWidget2
         # @ToDo: One for HRMs
         set_method("org", "site",
                    method = "site_contact_person",
                    action = self.site_contact_person)
+
+        # Custom Method to Assign HRs
+        # - done in instances
+        #set_method("org", "site",
+        #           method = "assign",
+        #           action = self.hrm_AssignMethod(component="human_resource_site"))
 
         self.configure(tablename,
                        context = {"location": "location_id",
@@ -2437,69 +2443,69 @@ class S3SiteModel(S3Model):
         add_components(tablename,
                        # Facility Types
                        # Format for S3SQLInlineComponentCheckbox
-                       org_facility_type={"link": "org_site_facility_type",
-                                          "joinby": "site_id",
-                                          "key": "facility_type_id",
-                                          "actuate": "hide",
-                                          },
+                       org_facility_type = {"link": "org_site_facility_type",
+                                            "joinby": "site_id",
+                                            "key": "facility_type_id",
+                                            "actuate": "hide",
+                                            },
                        # Format for filter_widgets & imports
-                       org_site_facility_type="site_id",
+                       org_site_facility_type = "site_id",
 
                        # Human Resources
                        # - direct component (suitable for Create/List)
-                       hrm_human_resource="site_id",
+                       hrm_human_resource = "site_id",
                        # - via link table (suitable for Assign)
-                       hrm_human_resource_site="site_id",
+                       hrm_human_resource_site = "site_id",
 
                        # Documents
-                       doc_document="site_id",
-                       doc_image="site_id",
+                       doc_document = "site_id",
+                       doc_image = "site_id",
 
                        # Inventory
-                       inv_inv_item="site_id",
-                       inv_recv="site_id",
-                       inv_send="site_id",
+                       inv_inv_item = "site_id",
+                       inv_recv = "site_id",
+                       inv_send = "site_id",
 
                        # Assets
-                       asset_asset="site_id",
+                       asset_asset = "site_id",
 
                        # Procurement Plans
-                       proc_plan="site_id",
+                       proc_plan = "site_id",
 
                        # Needs
-                       req_site_needs=(# with alias
-                                       {"name": "needs",
-                                        "joinby": "site_id",
-                                        "multiple": False,
-                                        },
-                                       # without alias
-                                       {"joinby": "site_id",
-                                        "multiple": False,
-                                        },
-                                       ),
-                                      
+                       req_site_needs = (# with alias
+                                         {"name": "needs",
+                                          "joinby": "site_id",
+                                          "multiple": False,
+                                          },
+                                         # without alias
+                                         {"joinby": "site_id",
+                                          "multiple": False,
+                                          },
+                                         ),
+
                        # Requests
-                       req_req="site_id",
-                       req_commit="site_id",
+                       req_req = "site_id",
+                       req_commit = "site_id",
 
                        # Status
-                       org_site_status={"name": "status",
-                                        "joinby": "site_id",
-                                        "multiple": False,
-                                        },
+                       org_site_status = {"name": "status",
+                                          "joinby": "site_id",
+                                          "multiple": False,
+                                          },
                        # Coalitions
-                       org_group={"link": "org_site_org_group",
-                                  "joinby": "site_id",
-                                  "key": "group_id",
-                                  "actuate": "hide",
-                                  },
+                       org_group = {"link": "org_site_org_group",
+                                    "joinby": "site_id",
+                                    "key": "group_id",
+                                    "actuate": "hide",
+                                    },
                        # Format for InlineComponent/filter_widget
-                       org_site_org_group="site_id",
+                       org_site_org_group = "site_id",
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict(org_site_id=site_id,
-                    org_site_represent=org_site_represent,
+        return dict(org_site_id = site_id,
+                    org_site_represent = org_site_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -3271,6 +3277,11 @@ class S3FacilityModel(S3Model):
                   update_realm = True,
                   )
 
+        # Custom Method to Assign HRs
+        self.set_method("org", "facility",
+                        method = "assign",
+                        action = self.hrm_AssignMethod(component="human_resource_site"))
+
         # ---------------------------------------------------------------------
         # Link Table: Sites <> Facility Types
         # - currently just used for Facilities but can be easily used by other
@@ -3280,14 +3291,14 @@ class S3FacilityModel(S3Model):
         define_table(tablename,
                      # Component not instance
                      super_link("site_id", "org_site",
-                                label=settings.get_org_site_label(),
                                 instance_types = current.auth.org_site_types,
+                                label = settings.get_org_site_label(),
                                 orderby = "org_site.name",
+                                represent = self.org_site_represent,
                                 not_filterby = "obsolete",
                                 not_filter_opts = (True,),
                                 readable = True,
                                 writable = True,
-                                represent = self.org_site_represent,
                                 ),
                      facility_type_id(),
                      *s3_meta_fields())
@@ -4799,18 +4810,21 @@ def org_rheader(r, tabs=[]):
                 #(T("Contact Data"), "contact"),
                 (STAFF, "human_resource"),
                 ]
-        if current.auth.s3_has_permission("create", "hrm_human_resource"):
-            tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
+        append = tabs.append
+        if current.auth.s3_has_permission("create", "hrm_human_resource_site"):
+            #append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
+            append((T("Assign %(staff)s") % dict(staff=STAFF), "assign")),
         if settings.get_req_summary():
-            tabs.append((T("Needs"), "site_needs"))
+            append((T("Needs"), "site_needs"))
         if settings.has_module("asset"):
-            tabs.append((T("Assets"), "asset"))
+            append((T("Assets"), "asset"))
         if settings.has_module("inv"):
             tabs = tabs + s3db.inv_tabs(r)
         if settings.has_module("req"):
             tabs = tabs + s3db.req_tabs(r)
-        tabs.append((T("Attachments"), "document"))
-        tabs.append((T("User Roles"), "roles"))
+        tabs.extend(((T("Attachments"), "document"),
+                     (T("User Roles"), "roles"),
+                     ))
 
         if tablename == "org_office":
             rheader_fields = [["name", "organisation_id", "email"],
@@ -5149,11 +5163,28 @@ def org_site_staff_config(r):
         Configure the Staff tab for Sites
     """
 
-    htable = current.s3db.hrm_human_resource
-    #record = r.record
+    table = current.s3db.hrm_human_resource
 
-    # Filter to just Staff
-    current.response.s3.filter = (htable.type == 1)
+    settings = current.deployment_settings
+    if settings.has_module("vol"):
+        if settings.get_hrm_show_staff():
+            if settings.get_org_site_volunteers():
+                # Show the type field
+                field = table.type
+                field.label = current.T("Type")
+                field.readable = field.writable = True
+            #else:
+            #    # Filter to just Staff
+            #    r.resource.add_filter(FS("human_resource.type") == 1)
+        elif settings.get_org_site_volunteers():
+            # Default to Volunteers
+            table.type.default = 2
+
+    # Cascade the organisation_id from the site to the staff
+    field = table.organisation_id
+    field.default = r.record.organisation_id
+    field.writable = False
+    field.comment = None
 
     # Filter out people which are already staff for this office
     # - this only works for an IS_ONE_OF dropdown
@@ -5173,31 +5204,6 @@ def org_site_staff_config(r):
     #                                            not_filter_opts = person_ids)
     #    except:
     #        pass
-
-    # Cascade the organisation_id from the site to the staff
-    field = htable.organisation_id
-    field.default = r.record.organisation_id
-    field.writable = False
-    field.comment = None
-
-    # Make it clear that this is for adding new staff, not assigning existing
-    # @ToDo: Review with new crud_strings & make it react to settings.hrm.staff_label
-    #s3.crud_strings.hrm_human_resource.label_create = current.T("Create Staff Member")
-
-    # Modify list_fields
-    # - we don't want this over-riding Templates' custom_configure_hrm_human_resource
-    #s3db.configure("hrm_human_resource",
-    #               list_fields = ["person_id",
-    #                              "phone",
-    #                              "email",
-    #                              #"organisation_id",
-    #                              "job_title_id",
-    #                              "department_id",
-    #                              "site_contact",
-    #                              "status",
-    #                              "comments",
-    #                              ]
-    #               )
 
 # =============================================================================
 def org_office_controller():
@@ -5243,10 +5249,10 @@ def org_office_controller():
 
                     # Remove CRUD generated buttons in the tabs
                     s3db.configure("inv_inv_item",
-                                   create=False,
-                                   listadd=False,
-                                   editable=False,
-                                   deletable=False,
+                                   create = False,
+                                   deletable = False,
+                                   editable = False,
+                                   listadd = False,
                                    )
 
                 elif cname == "human_resource":
@@ -5389,7 +5395,6 @@ def org_facility_controller():
         multiple controllers for unified menus
     """
 
-    db = current.db
     s3db = current.s3db
     s3 = current.response.s3
 
@@ -5438,6 +5443,7 @@ def org_facility_controller():
             elif r.id:
                 field = r.table.obsolete
                 field.readable = field.writable = True
+
             elif r.method in ("create", "create.popup"):
                 name = r.get_vars.get("name", None)
                 if name:
@@ -5470,6 +5476,7 @@ def org_facility_controller():
             site_id = record.site_id
 
             # Type(s)
+            db = current.db
             ttable = db.org_facility_type
             ltable = db.org_site_facility_type
             query = (ltable.site_id == site_id) & \
@@ -5564,7 +5571,8 @@ def org_facility_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "facility",
-                                     rheader = org_rheader)
+                                     rheader = org_rheader,
+                                     )
     return output
 
 # =============================================================================
