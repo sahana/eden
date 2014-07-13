@@ -1536,6 +1536,7 @@ form.jeditable-input input {
 button.toggle-text {
     font-size: 10px !important;
     margin-left: 12px !important;
+    line-height: 1.0;
 }
 
 /* Action Toolbar */

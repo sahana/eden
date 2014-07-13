@@ -55,6 +55,8 @@ from itertools import izip, tee
 from gluon import current
 from gluon.storage import Storage
 from gluon.html import *
+from gluon.validators import IS_IN_SET
+from gluon.sqlhtml import OptionsWidget
 
 from s3rest import S3Method
 from s3query import FS
@@ -724,6 +726,10 @@ class S3TimePlotForm(S3ReportForm):
         else:
             filter_options = ""
 
+        # Report options
+        report_options = self.report_options(get_vars = get_vars,
+                                             widget_id = widget_id)
+
         hidden = {"tp-data": json.dumps(data, separators=SEPARATORS)}
 
 
@@ -752,7 +758,7 @@ class S3TimePlotForm(S3ReportForm):
             submit = ""
 
         form = DIV(DIV(FORM(filter_options,
-                            #report_options,
+                            report_options,
                             submit,
                             hidden = hidden,
                             _class = "tp-form",
@@ -791,6 +797,114 @@ class S3TimePlotForm(S3ReportForm):
 
         return form
         
+    # -------------------------------------------------------------------------
+    def report_options(self, get_vars=None, widget_id="timeplot"):
+        """
+            Render the widgets for the report options form
+
+            @param get_vars: the GET vars if the request (as dict)
+            @param widget_id: the HTML element base ID for the widgets
+        """
+
+        T = current.T
+
+        timeplot_options = self.resource.get_config("timeplot_options")
+
+        selectors = []
+
+        # @todo: formstyle may not be executable => convert
+        formstyle = current.deployment_settings.get_ui_filter_formstyle()
+
+        # Report type selector
+        # @todo: implement
+        #fact_selector = self.fact_options(options = timeplot_options,
+                                          #get_vars = get_vars,
+                                          #widget_id = "%s-fact" % widget_id,
+                                          #)
+        #selectors.append(formstyle("%s-fact__row" % widget_id,
+                                   #"Label",
+                                   #fact_selector,
+                                   #None,
+                                   #))
+
+        # Time frame selector
+        time_selector = self.time_options(options = timeplot_options,
+                                          get_vars = get_vars,
+                                          widget_id = "%s-time" % widget_id,
+                                          )
+        selectors.append(formstyle("%s-time__row" % widget_id,
+                                   "Time Frame",
+                                   time_selector,
+                                   None,
+                                   ))
+
+        # Render container according to row type
+        if selectors[0].tag == "tr":
+            selectors = TABLE(selectors)
+        else:
+            selectors = TAG[""](selectors)
+
+        # Render field set
+        fieldset = self._fieldset(T("Report Options"),
+                                  selectors,
+                                  _id="%s-options" % widget_id)
+
+        return fieldset
+
+    # -------------------------------------------------------------------------
+    def time_options(self,
+                     options=None,
+                     get_vars=None,
+                     widget_id=None):
+
+        T = current.T
+
+        resource = self.resource
+        prefix = resource.prefix_selector
+
+        # Time options:
+        if options and "time" in options:
+            opts = options["time"]
+        else:
+            opts = (("All up to now", "", "", ""),
+                    ("Last Year", "-1year", "", "months"),
+                    ("Last 6 Months", "-6months", "", "weeks"),
+                    ("Last Quarter", "-3months", "", "weeks"),
+                    ("Last Month", "-1month", "", "days"),
+                    ("Last Week", "-1week", "", "days"),
+                    ("All/+1 Month", "", "+1month", ""),
+                    ("-6/+3 Months", "-6months", "+9months", "months"),
+                    ("-3/+1 Months", "-3months", "+4months", "weeks"),
+                    ("-4/+2 Weeks", "-4weeks", "+6weeks", "weeks"),
+                    ("-2/+1 Weeks", "-2weeks", "+3weeks", "days"),
+                    )
+
+        widget_opts = []
+        for opt in opts:
+            label, start, end, slots = opt
+            widget_opts.append(("|".join((start, end, slots)), T(label)))
+        
+        # Get current value
+        if get_vars:
+            start = get_vars.get("start", "")
+            end = get_vars.get("end", "")
+            slots = get_vars.get("slots", "")
+        else:
+            start = end = slots = ""
+        value = "|".join((start, end, slots))
+
+        # Dummy field
+        dummy_field = Storage(name="time",
+                              requires=IS_IN_SET(widget_opts))
+
+        # Construct widget
+        return OptionsWidget.widget(dummy_field,
+                                    value,
+                                    _id=widget_id,
+                                    _name="time",
+                                    _class="tp-time",
+                                    )
+                                    
 # =============================================================================
 class S3TimePlotEvent(object):
     """ Class representing an event """

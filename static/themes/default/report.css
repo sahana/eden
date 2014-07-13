@@ -87,7 +87,8 @@
 .pt-show-table {
     display: none;
 }
-.pt-form button:first-child {
+.pt-form fieldset legend button:first-child,
+.tp-form fieldset legend button:first-child {
     display: none;
 }
 

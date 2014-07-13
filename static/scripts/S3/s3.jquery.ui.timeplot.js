@@ -117,8 +117,17 @@
             // Compute width and height
             var available_width = el.width();
             var available_height = available_width / 16 * 5;
+
+            var values = data.items,
+                baseline = data.baseline;
+            if (baseline) {
+                var b = [[null, null, baseline]];
+                values = values ? values.concat(b) : b;
+            }
+            var maxValue = d3.max(values, function(d) { return d[2]; })
+            var marginLeft = maxValue.toString().length * 6 + 18;
             
-            var margin = {top: 40, right: 10, bottom: 70, left: 40},
+            var margin = {top: 40, right: 10, bottom: 70, left: marginLeft},
                 width = available_width - margin.left - margin.right,
                 height = available_height - margin.top - margin.bottom;
 
@@ -157,13 +166,7 @@
             x.domain(data.items.map(function(d) {
                 return self._parseDate(d[0]);
             }));
-            var values = data.items,
-                baseline = data.baseline;
-            if (baseline) {
-                var b = [[null, null, baseline]];
-                values = values ? values.concat(b) : b;
-            }
-            y.domain([0, d3.max(values, function(d) { return d[2]; })]);
+            y.domain([0, maxValue]);
 
             // Add x axis
             svg.append("g")
@@ -290,8 +293,28 @@
             var $el = $(this.element);
             var widget_id = '#' + $el.attr('id');
 
+            var time = $(widget_id + '-time').val(),
+                time_options = null,
+                start = null,
+                end = null,
+                slots = null;
+                
+            if (time != 'custom') {
+                time_options = time.split('|');
+                if (time_options.length == 3) {
+                    start = time_options[0];
+                    end = time_options[1];
+                    slots = time_options[2];
+                }
+            } else {
+                // @todo
+            }
+
             var options = {
-                fact: $(widget_id + '-fact').val(),
+//                 fact: $(widget_id + '-fact').val(),
+                start: start,
+                end: end,
+                slots: slots
             };
             return options;
         },
@@ -441,7 +464,8 @@
          */
         _bindEvents: function() {
 
-            var self = this;
+            var self = this,
+                widget_id = this.widget_id;
 
             // Refresh on resize in order to adapt to page width
             // @todo: make configurable
@@ -449,6 +473,21 @@
                 self.refresh();
             });
             
+            // Show/hide report options
+            $('#' + widget_id + '-options legend').click(function() {
+                $(this).siblings().toggle();
+                $(this).children().toggle();
+            });
+            $('#' + widget_id + '-filters legend').click(function() {
+                $(this).siblings().toggle();
+                $(this).children().toggle();
+            });
+
+            // Axis selectors to fire optionChanged-event
+            $('#' + widget_id + '-time').on('change.autosubmit', function() {
+                $('#' + widget_id + '-tp-form').trigger('optionChanged');
+            });
+
             // Form submission
             if (this.options.autoSubmit) {
                 // Auto-submit
@@ -465,7 +504,7 @@
                     }
                     timer = setTimeout(function () {
                         // @todo: implement _getOptions
-                        var options = null, //self._getOptions(),
+                        var options = self._getOptions(),
                             filters = self._getFilters();
                         self.reload(options, filters, false);
                     }, timeout);
@@ -475,7 +514,7 @@
                 // Manual submit
                 $('#' + this.widget_id + '-tp-form input.tp-submit').on('click.timeplot', function() {
                     // @todo: implement _getOptions
-                    var options = null, // self._getOptions(),
+                    var options = self._getOptions(),
                         filters = self._getFilters();
                     self.reload(options, filters, false);
                 });
@@ -487,9 +526,15 @@
          */
         _unbindEvents: function() {
 
+            var widget_id = this.widget_id;
+
             $(window).off("resize.timeplot");
-            $('#' + this.widget_id + '-tp-form').off('optionChanged');
-            $('#' + this.widget_id + '-tp-form input.tp-submit').off('click.timeplot');
+            $('#' + widget_id + '-tp-form').off('optionChanged');
+            $('#' + widget_id + '-tp-form input.tp-submit').off('click.timeplot');
+            $('#' + widget_id + '-time').unbind('change.autosubmit');
+
+            $('#' + widget_id + '-options legend').unbind('click');
+            $('#' + widget_id + '-filters legend').unbind('click');
         }
     });
 })(jQuery);
