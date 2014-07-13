@@ -26,6 +26,10 @@ def ifrc24h():
     # This function uses it's own Theme
     settings.base.theme = "mobile"
 
+    # No need to capture DoB/Gender of community contact people
+    settings.pr.request_dob = False
+    settings.pr.request_gender = False
+
     return s3_rest_controller("assess", "24h")
 
 # -----------------------------------------------------------------------------

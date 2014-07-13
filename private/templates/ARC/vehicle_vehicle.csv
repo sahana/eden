@@ -41,7 +41,7 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 1130,American Red Cross of Central New Jersey,American Red Cross of Central New Jersey,,ERV,Default,Vehicles,ERV,,2003,Suite 101,707 Alexander Road,8540,US,New Jersey,Essex,Princeton,40.8817999998,-74.3046
 1131,Dayton Area,Dayton Area,,ERV,Default,Vehicles,ERV,,2003,,370 W 1st Street,45402,US,Ohio,Summit,Dayton,41.1050999986,-81.5373999999
 1132,Highlands,Highlands,,ERV,Default,Vehicles,ERV,,2003,,807 Carol St,28303,US,North Carolina,Cumberland,Fayetteville,35.0958000013,-78.9719000011
-1133,Mid Florida Region,Florida's Coast to Coast,,ERV,Default,Vehicles,ERV,,2003,,341 White Street,32114,US,Florida,Volusia,Daytona Beach,29.2067000009,-81.0481999999
+1133,Mid Florida Region,Florida's Coast to Coast,,ERV,Default,Vehicles,ERV,,2003,,341 White Street,32114,US,Florida,Volusia,Daytona Beach,29.2063284327,-81.0484401366
 1135,American Red Cross in the National Capital Region,Fairfax County,,ERV,Default,Vehicles,ERV,,2003,,8550 Arlington Boulevard,22031,US,Virginia,Fairfax,Fairfax,38.8599999995,-77.2593999992
 1136,American Red Cross in the National Capital Region,Fairfax County,,ERV,Default,Vehicles,ERV,,2003,,8550 Arlington Boulevard,22031,US,Virginia,Fairfax,Fairfax,38.8599999995,-77.2593999992
 1137,American Red Cross in the National Capital Region,Fairfax County,,ERV,Default,Vehicles,ERV,,2003,,8550 Arlington Boulevard,22031,US,Virginia,Fairfax,Fairfax,38.8599999995,-77.2593999992
@@ -75,7 +75,7 @@ Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,P
 1168,Triangle Area,Triangle Area,,ERV,Default,Vehicles,ERV,,2005,,100 N Peartree Lane,27610,US,North Carolina,Johnston,Raleigh,35.5179999991,-78.3546000008
 1169,New Hampshire Region,Manchester,,ERV,Default,Vehicles,ERV,,2006,,425 Reservoir Avenue,3104,US,New Hampshire,Hillsborough,Manchester,42.9978277,-71.4366116
 1170,American Red Cross in Greater New York,American Red Cross in Greater New York,,ERV,Default,Vehicles,ERV,,2006,,520 W 49th Street,10019,US,New York,New York,New York,36.0769999993,-115.167199999
-1171,Mid Florida Region,Florida's Coast to Coast,,ERV,Default,Vehicles,ERV,,2006,,341 White Street,32114,US,Florida,Volusia,Daytona Beach,29.2067000009,-81.0481999999
+1171,Mid Florida Region,Florida's Coast to Coast,,ERV,Default,Vehicles,ERV,,2006,,341 White Street,32114,US,Florida,Volusia,Daytona Beach,29.2063284327,-81.0484401366
 1172,Central Panhandle,Central Panhandle,,ERV,Default,Vehicles,ERV,,2006,,430 E 15th Street,32405,US,Florida,Bay,Panama City,30.1750000009,-85.6543000004
 1173,Capital Area,Capital Area,,ERV,Default,Vehicles,ERV,,2006,,1115 Easterwood Drive,32311,US,Florida,Leon,Tallahassee,30.4420000016,-84.2186000016
 1174,Martin County,Martin County,,ERV,Default,Vehicles,ERV,,2006,,2750 S Kanner Highway,34994,US,Florida,Martin,Stuart,27.1713999992,-80.2525999997

@@ -967,6 +967,7 @@ class S3LocationModel(S3Model):
         elif loc_select:
             # LocationSelector
             # @ToDo: Deprecate
+            from s3.s3export import S3Exporter
             output = S3Exporter().json(resource,
                                        start=0,
                                        limit=limit,

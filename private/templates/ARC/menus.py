@@ -69,12 +69,12 @@ class S3MainMenu(default.S3MainMenu):
             #    MM("Human Resources", c="deploy", f="human_resource", m="summary"),
             #),
             homepage("cr", name="Operations Management")(
+                MM("Budgets", c="budget", f="budget"),
                 MM("Requests", c="req", f="req"),
                 MM("Received Shipments", c="inv", f="recv"),
                 MM("Sent Shipments", c="inv", f="send"),
                 MM("Shelters", c="cr", f="shelter", m="summary"),
                 MM("Warehouses", c="inv", f="warehouse"),
-                MM("Budgets", c="budget", f="budget"),
             ),
             homepage("project")(
                 MM("Projects", c="project", f="project"),
@@ -460,6 +460,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
+                    M("Facilities", c="org", f="facility")(
+                        M("Create", m="create"),
+                    ),
+                    M("Facility Types", c="org", f="facility_type",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
                     M("Department Catalog", c="hrm", f="department",
                       check=manager_mode)(
                         M("Create", m="create"),
@@ -525,12 +532,160 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def inv():
+        """ INV / Inventory """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        s3db = current.s3db
+        s3db.inv_recv_crud_strings()
+        inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
+
+        #settings = current.deployment_settings
+        #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
+        #def use_adjust(i):
+        #    db = current.db
+        #    otable = s3db.org_organisation
+        #    try:
+        #        ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
+        #                                                                 limitby=(0, 1)
+        #                                                                 ).first().id
+        #    except:
+        #        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        #        return False
+        #    if current.auth.root_org() == ausrc:
+        #        # AusRC use proper Logistics workflow
+        #        return True
+        #    else:
+        #        # Others use simplified version
+        #        return False
+        #use_commit = lambda i: settings.get_req_use_commit()
+
+        return M()(
+                    #M("Home", f="index"),
+                    M("Warehouses", c="inv", f="warehouse")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Warehouse Stock", c="inv", f="inv_item")(
+                        M("Search Shipped Items", f="track_item"),
+                        #M("Adjust Stock Levels", f="adj", check=use_adjust),
+                        #M("Kitting", f="kit"),
+                        M("Import", f="inv_item", m="import", p="create"),
+                    ),
+                    M("Requests", c="req", f="req")(
+                        M("Create", m="create"),
+                        M("Requested Items", f="req_item"),
+                        M("Recurring Requests", f="req_template"),
+                    ),
+                    #M("Commitments", c="req", f="commit", check=use_commit)(
+                    #),
+                    M("Reports", c="inv", f="inv_item")(
+                        M("Warehouse Stock", f="inv_item",m="report"),
+                        #M("Expiration Report", c="inv", f="track_item",
+                        #  vars=dict(report="exp")),
+                        #M("Monetization Report", c="inv", f="inv_item",
+                        #  vars=dict(report="mon")),
+                        #M("Utilization Report", c="inv", f="track_item",
+                        #  vars=dict(report="util")),
+                        #M("Summary of Incoming Supplies", c="inv", f="track_item",
+                        #  vars=dict(report="inc")),
+                        # M("Summary of Releases", c="inv", f="track_item",
+                        #  vars=dict(report="rel")),
+                    ),
+                    M(inv_recv_list, c="inv", f="recv")(
+                        M("Create", m="create"),
+                    ),
+                    M("Sent Shipments", c="inv", f="send")(
+                        M("Create", m="create"),
+                        M("Search Shipped Items", f="track_item"),
+                    ),
+                    M("Items", c="supply", f="item", m="summary")(
+                        M("Create", m="create"),
+                        M("Import", f="catalog_item", m="import", p="create"),
+                    ),
+                    # Catalog Items moved to be next to the Item Categories
+                    #M("Catalog Items", c="supply", f="catalog_item")(
+                    #   M("Create", m="create"),
+                    #),
+                    #M("Brands", c="supply", f="brand",
+                    #  restrict=[ADMIN])(
+                    #    M("Create", m="create"),
+                    #),
+                    M("Catalogs", c="supply", f="catalog")(
+                        M("Create", m="create"),
+                    ),
+                    M("Item Categories", c="supply", f="item_category",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
+                    M("Suppliers", c="inv", f="supplier")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def org(self):
         """ Organisation Management """
 
         # Same as HRM
         return self.hrm()
-    
+
+    # -------------------------------------------------------------------------
+    def req(self):
+        """ Requests Management """
+
+        # Same as Inventory
+        return self.inv()
+
+    # -------------------------------------------------------------------------
+    def survey(self):
+        """ Survey """
+
+        # Same as Events
+        return self.event()
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        # Do we have a series_id?
+        series_id = False
+        get_vars = Storage()
+        try:
+            series_id = int(current.request.args[0])
+        except:
+            try:
+                (dummy, series_id) = current.request.get_vars["viewing"].split(".")
+                series_id = int(series_id)
+            except:
+                pass
+        if series_id:
+            get_vars.viewing = "survey_complete.%s" % series_id
+
+        return M(c="survey")(
+                    M("Assessment Templates", f="template")(
+                        M("Create", m="create"),
+                    ),
+                    #M("Section", f="section")(
+                    #    M("Create", args="create"),
+                    #),
+                    M("Assessments", f="series")(
+                        M("Create", m="create"),
+                    ),
+                    M("Situation Reports", c="sit", f="report")(
+                        M("Create", m="create"),
+                    ),
+                    M("Administration", f="admin", restrict=[ADMIN])(
+                        M("Import Templates", f="question_list",
+                          m="import", p="create"),
+                        M("Import Template Layout", f="formatter",
+                          m="import", p="create"),
+                        M("Import Completed Assessment Forms", f="complete",
+                          m="import", p="create", vars=get_vars, check=series_id),
+                    ),
+                )
+
     # -------------------------------------------------------------------------
     def vehicle(self):
         return self.asset()
@@ -667,160 +822,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     # This provides the link to switch to the personal mode:
                     #M("Personal Profile", f="person",
                     #  check=manager_mode, vars=dict(mode="personal"))
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv():
-        """ INV / Inventory """
-
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        s3db = current.s3db
-        s3db.inv_recv_crud_strings()
-        inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
-
-        settings = current.deployment_settings
-        #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
-        def use_adjust(i):
-            db = current.db
-            otable = s3db.org_organisation
-            try:
-                ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
-                                                                         limitby=(0, 1)
-                                                                         ).first().id
-            except:
-                # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
-                return False
-            if current.auth.root_org() == ausrc:
-                # AusRC use proper Logistics workflow
-                return True
-            else:
-                # Others use simplified version
-                return False
-        use_commit = lambda i: settings.get_req_use_commit()
-
-        return M()(
-                    #M("Home", f="index"),
-                    M("Warehouses", c="inv", f="warehouse")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    M("Warehouse Stock", c="inv", f="inv_item")(
-                        M("Search Shipped Items", f="track_item"),
-                        M("Adjust Stock Levels", f="adj", check=use_adjust),
-                        #M("Kitting", f="kit"),
-                        M("Import", f="inv_item", m="import", p="create"),
-                    ),
-                    M("Reports", c="inv", f="inv_item")(
-                        M("Warehouse Stock", f="inv_item",m="report"),
-                        #M("Expiration Report", c="inv", f="track_item",
-                        #  vars=dict(report="exp")),
-                        #M("Monetization Report", c="inv", f="inv_item",
-                        #  vars=dict(report="mon")),
-                        #M("Utilization Report", c="inv", f="track_item",
-                        #  vars=dict(report="util")),
-                        #M("Summary of Incoming Supplies", c="inv", f="track_item",
-                        #  vars=dict(report="inc")),
-                        # M("Summary of Releases", c="inv", f="track_item",
-                        #  vars=dict(report="rel")),
-                    ),
-                    M(inv_recv_list, c="inv", f="recv")(
-                        M("Create", m="create"),
-                    ),
-                    M("Sent Shipments", c="inv", f="send")(
-                        M("Create", m="create"),
-                        M("Search Shipped Items", f="track_item"),
-                    ),
-                    M("Items", c="supply", f="item", m="summary")(
-                        M("Create", m="create"),
-                        M("Import", f="catalog_item", m="import", p="create"),
-                    ),
-                    # Catalog Items moved to be next to the Item Categories
-                    #M("Catalog Items", c="supply", f="catalog_item")(
-                    #   M("Create", m="create"),
-                    #),
-                    #M("Brands", c="supply", f="brand",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
-                    M("Catalogs", c="supply", f="catalog")(
-                        M("Create", m="create"),
-                    ),
-                    M("Item Categories", c="supply", f="item_category",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    M("Suppliers", c="inv", f="supplier")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    M("Facilities", c="inv", f="facility")(
-                        M("Create", m="create", t="org_facility"),
-                    ),
-                    M("Facility Types", c="inv", f="facility_type",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    M("Requests", c="req", f="req")(
-                        M("Create", m="create"),
-                        M("Requested Items", f="req_item"),
-                    ),
-                    M("Commitments", c="req", f="commit", check=use_commit)(
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    def req(self):
-        """ Requests Management """
-
-        # Same as Inventory
-        return self.inv()
-
-    # -------------------------------------------------------------------------
-    def survey(self):
-        """ Survey """
-
-        # Same as Events
-        return self.event()
-
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        # Do we have a series_id?
-        series_id = False
-        get_vars = Storage()
-        try:
-            series_id = int(current.request.args[0])
-        except:
-            try:
-                (dummy, series_id) = current.request.get_vars["viewing"].split(".")
-                series_id = int(series_id)
-            except:
-                pass
-        if series_id:
-            get_vars.viewing = "survey_complete.%s" % series_id
-
-        return M(c="survey")(
-                    M("Assessment Templates", f="template")(
-                        M("Create", m="create"),
-                    ),
-                    #M("Section", f="section")(
-                    #    M("Create", args="create"),
-                    #),
-                    M("Assessments", f="series")(
-                        M("Create", m="create"),
-                    ),
-                    M("Situation Reports", c="sit", f="report")(
-                        M("Create", m="create"),
-                    ),
-                    M("Administration", f="admin", restrict=[ADMIN])(
-                        M("Import Templates", f="question_list",
-                          m="import", p="create"),
-                        M("Import Template Layout", f="formatter",
-                          m="import", p="create"),
-                        M("Import Completed Assessment Forms", f="complete",
-                          m="import", p="create", vars=get_vars, check=series_id),
-                    ),
                 )
 
 # END =========================================================================

@@ -1738,6 +1738,7 @@
 'Create Report': 'Kreiraj izvještaj',
 'Create Repository': 'Kreiraj repozitorij',
 'Create Request': 'Kreiraj zahtjev',
+'Create Request Template': 'Kreiraj predložak zahtjeva',
 'Create Resource': 'Kreiraj resurs',
 'Create Role': 'Kreiraj ulogu',
 'Create Room': 'Kreiraj sobu',

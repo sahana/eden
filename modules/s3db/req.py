@@ -980,6 +980,7 @@ S3OptionsFilter({
         else:
             filename = None
 
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request=r,
@@ -1196,7 +1197,7 @@ S3OptionsFilter({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_tabs(r):
+    def req_tabs(r, match=True):
         """
             Add a set of Tabs for a Site's Request Tasks
 
@@ -1210,9 +1211,9 @@ S3OptionsFilter({
                s3_has_permission("read", "req_req", c="req"):
                 T = current.T
                 tabs = [(T("Requests"), "req")]
-                if s3_has_permission("read", "req_req",
-                                     c=current.request.controller,
-                                     f="req_match"):
+                if match and s3_has_permission("read", "req_req",
+                                               c=current.request.controller,
+                                               f="req_match"):
                     tabs.append((T("Match Requests"), "req_match/"))
                 if settings.get_req_use_commit():
                     tabs.append((T("Commit"), "commit"))

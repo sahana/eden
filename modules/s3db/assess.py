@@ -87,7 +87,10 @@ class S3Assess24HModel(S3Model):
                                 label = T("Approximate number of inhabitants"),
                                 ),
                           self.pr_person_id("contact_id",
+                            comment = None,
                             label = ("Name of contact person in the community"),
+                            requires = IS_ADD_PERSON_WIDGET2(),
+                            widget = S3AddPersonWidget2(),
                             ),
                           Field("injured", "integer",
                                 label = T("# Injured"),
@@ -993,6 +996,7 @@ class S3AssessBuildingModel(S3Model):
                     )
         
         WORK_ORDER = current.T("Work Order")
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r,
                         method = "read",

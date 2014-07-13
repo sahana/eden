@@ -27,12 +27,12 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ShelterModel",
+__all__ = ("S3ShelterModel",
            "S3ShelterRegistrationModel",
            "cr_shelter_rheader",
            "cr_update_shelter_population",
            "cr_notification_dispatcher",
-           ]
+           )
 
 try:
     # try stdlib (Python 2.6)
@@ -56,14 +56,14 @@ DAY_AND_NIGHT = 2
 # =============================================================================
 class S3ShelterModel(S3Model):
 
-    names = ["cr_shelter_type",
+    names = ("cr_shelter_type",
              "cr_shelter_service",
              "cr_shelter",
              "cr_shelter_id",
              "cr_shelter_status",
              "cr_shelter_person",
              "cr_shelter_allocation"
-             ]
+             )
 
     # Define a function model() which takes no parameters (except self):
     def model(self):
@@ -426,6 +426,17 @@ class S3ShelterModel(S3Model):
         cr_shelter_status_filter_opts = dict(cr_shelter_opts)
         cr_shelter_status_filter_opts[None] = T("Unspecified")
 
+        if settings.get_org_branches():
+            org_filter = S3HierarchyFilter("organisation_id",
+                                           leafonly = False,
+                                           )
+        else:
+            org_filter = S3OptionsFilter("organisation_id",
+                                         filter = True,
+                                         header = "",
+                                         #hidden = True,
+                                         )
+
         filter_widgets = [
                 S3TextFilter(text_fields,
                              label = T("Name"),
@@ -436,6 +447,7 @@ class S3ShelterModel(S3Model):
                                 #Doesn't translate
                                 #represent = "%(name)s",
                                 ),
+                org_filter,
                 S3LocationFilter("location_id",
                                  label = T("Location"),
                                  levels = levels,
@@ -446,6 +458,7 @@ class S3ShelterModel(S3Model):
                                 none = True,
                                 ),
                 ]
+
         if dynamic:
             filter_widgets.append(S3RangeFilter("available_capacity_night",
                                                 label = T("Available Capacity (Night)"),
@@ -463,7 +476,7 @@ class S3ShelterModel(S3Model):
                         rows=report_fields,
                         cols=report_fields,
                         fact=report_fields,
-                        defaults=Storage(rows="location_id$L2",
+                        defaults=Storage(rows = lfield, # Lowest-level of hierarchy
                                          cols="status",
                                          fact="count(name)",
                                          totals=True)
@@ -499,6 +512,11 @@ class S3ShelterModel(S3Model):
                             event_event_shelter = "shelter_id"
                             )
 
+        # Custom Method to Assign HRs
+        set_method("cr", "shelter",
+                   method = "assign",
+                   action = self.hrm_AssignMethod(component="human_resource_site"))
+
         set_method("cr", "shelter",
                    method = "dispatch",
                    action = cr_notification_dispatcher)
@@ -530,10 +548,8 @@ class S3ShelterModel(S3Model):
 
         # CRUD strings
         if settings.get_ui_label_camp():
-            ADD_SHELTER_STATUS = T("Add Camp Status")
-            SHELTER_STATUS_LABEL = T("Camp Status")
             crud_strings[tablename] = Storage(
-                label_create = ADD_SHELTER_STATUS,
+                label_create = T("Add Camp Status"),
                 title_display = T("Camp Status Details"),
                 title_list = T("Camp Statuses"),
                 title_update = T("Edit Camp Status"),
@@ -543,10 +559,8 @@ class S3ShelterModel(S3Model):
                 msg_record_deleted = T("Camp Status deleted"),
                 msg_list_empty = T("No Camp Statuses currently registered"))
         else:
-            ADD_SHELTER_STATUS = T("Create Shelter Status")
-            SHELTER_STATUS_LABEL = T("Shelter Status")
             crud_strings[tablename] = Storage(
-                label_create = ADD_SHELTER_STATUS,
+                label_create = T("Create Shelter Status"),
                 title_display = T("Shelter Status Details"),
                 title_list = T("Shelter Statuses"),
                 title_update = T("Edit Shelter Status"),
@@ -698,9 +712,9 @@ class S3ShelterModel(S3Model):
 # =============================================================================
 class S3ShelterRegistrationModel(S3Model):
     
-    names = ["cr_shelter_allocation",
+    names = ("cr_shelter_allocation",
              "cr_shelter_registration",
-             ]
+             )
 
     def model(self):
         
@@ -852,54 +866,59 @@ class S3ShelterRegistrationModel(S3Model):
 def cr_shelter_rheader(r, tabs=[]):
     """ Resource Headers """
 
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+
     rheader = None
-    if r.representation == "html":
+    tablename, record = s3_rheader_resource(r)
+    if tablename == "cr_shelter" and record:
+        T = current.T
+        s3db = current.s3db
+        if not tabs:
+            settings = current.deployment_settings
+            STAFF = settings.get_hrm_staff_label()
+            tabs = [(T("Basic Details"), None),
+                    (T("Status Reports"), "status"),
+                    (T("People Reservation"), "shelter_allocation"),
+                    (T("People Registration"), "shelter_registration"),
+                    (STAFF, "human_resource"),
+                    ]
+            if current.auth.s3_has_permission("create", "hrm_human_resource_site"):
+                #tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
+                tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign")),
+            #tabs.append((T("Events"), "event_shelter"))
+            #if settings.has_module("assess"):
+            #    tabs.append((T("Assessments"), "rat"))
 
-        tablename, record = s3_rheader_resource(r)
-        if tablename == "cr_shelter" and record:
-            T = current.T
-            s3db = current.s3db
-            if not tabs:
-                tabs = [(T("Basic Details"), None),
-                        (T("Status Reports"), "status"),
-                        (T("People Reservation"), "shelter_allocation"),
-                        (T("People Registration"), "shelter_registration"),
-                        (T("Staff"), "human_resource"),
-                        (T("Assign Staff"), "human_resource_site"),
-                        (T("Events"), "event_shelter")
-                        ]
-                settings = current.deployment_settings
-                #if settings.has_module("assess"):
-                #    tabs.append((T("Assessments"), "rat"))
+            try:
+                tabs = tabs + s3db.req_tabs(r, match=False)
+            except:
+                pass
+            try:
+                tabs = tabs + s3db.inv_tabs(r)
+            except:
+                pass
 
-                try:
-                    tabs = tabs + s3db.req_tabs(r)
-                except:
-                    pass
-                try:
-                    tabs = tabs + s3db.inv_tabs(r)
-                except:
-                    pass
+            if settings.has_module("msg"):
+                tabs.append((T("Send Notification"), "dispatch"))
 
-                if settings.has_module("msg"):
-                    tabs.append((T("Send Notification"), "dispatch"))
+        rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            rheader_tabs = s3_rheader_tabs(r, tabs)
+        if r.name == "shelter":
+            location = r.table.location_id.represent(record.location_id)
 
-            if r.name == "shelter":
-                location = r.table.location_id.represent(record.location_id)
-
-                rheader = DIV(TABLE(TR(TH("%s: " % T("Name")), record.name
-                                       ),
-                                    TR(TH("%s: " % T("Location")), location
-                                       ),
-                                    ),
-                              rheader_tabs)
-            else:
-                rheader = DIV(TABLE(TR(TH("%s: " % T("Name")), record.name
-                                       ),
-                                    ),
-                              rheader_tabs)
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Name")), record.name
+                                   ),
+                                TR(TH("%s: " % T("Location")), location
+                                   ),
+                                ),
+                          rheader_tabs)
+        else:
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Name")), record.name
+                                   ),
+                                ),
+                          rheader_tabs)
 
     return rheader
 

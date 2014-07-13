@@ -27,11 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["HospitalDataModel",
+__all__ = ("HospitalDataModel",
            "CholeraTreatmentCapabilityModel",
            "HospitalActivityReportModel",
            "hms_hospital_rheader"
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -42,14 +42,14 @@ from s3layouts import S3AddResourceLink
 # =============================================================================
 class HospitalDataModel(S3Model):
 
-    names = ["hms_hospital",
+    names = ("hms_hospital",
              "hms_contact",
              "hms_bed_capacity",
              "hms_services",
              "hms_image",
              "hms_resources",
-             "hms_hospital_id"
-             ]
+             "hms_hospital_id",
+             )
 
     def model(self):
 
@@ -372,6 +372,11 @@ class HospitalDataModel(S3Model):
             add_components(tablename, hms_ctc=single)
         if settings.get_hms_activity_reports():
             add_components(tablename, hms_activity=multiple)
+
+        # Custom Method to Assign HRs
+        self.set_method("hms", "hospital",
+                        method = "assign",
+                        action = self.hrm_AssignMethod(component="human_resource_site"))
 
         # ---------------------------------------------------------------------
         # Hospital status
@@ -954,7 +959,7 @@ class HospitalDataModel(S3Model):
 # =============================================================================
 class CholeraTreatmentCapabilityModel(S3Model):
 
-    names = ["hms_ctc"]
+    names = ("hms_ctc",)
 
     def model(self):
 
@@ -1092,7 +1097,7 @@ class CholeraTreatmentCapabilityModel(S3Model):
 # =============================================================================
 class HospitalActivityReportModel(S3Model):
 
-    names = ["hms_activity"]
+    names = ("hms_activity",)
 
     def model(self):
 
@@ -1212,7 +1217,7 @@ def hms_hospital_rheader(r, tabs=[]):
                         (T("Images"), "image"),
                         (T("Services"), "services"),
                         (T("Bed Capacity"), "bed_capacity"),
-                       ]
+                        ]
 
                 if settings.get_hms_activity_reports():
                     tabs.append((T("Activity Report"), "activity"))
@@ -1220,12 +1225,14 @@ def hms_hospital_rheader(r, tabs=[]):
                 if settings.get_hms_track_ctc():
                     tabs.append((T("Cholera Treatment Capability"), "ctc"))
 
-                tabs += [
-                        (T("Staff"), "human_resource"),
-                        (T("Assign Staff"), "human_resource_site"),
-                        ]
+                STAFF = settings.get_hrm_staff_label()
+                tabs.append((STAFF, "human_resource"))
+                if current.auth.s3_has_permission("create", "hrm_human_resource_site"):
+                    #tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
+                    tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign")),
+
                 try:
-                    tabs = tabs + s3db.req_tabs(r)
+                    tabs = tabs + s3db.req_tabs(r, match=False)
                 except:
                     pass
                 try:
