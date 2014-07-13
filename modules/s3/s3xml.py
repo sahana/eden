@@ -1018,7 +1018,7 @@ class S3XML(S3Codec):
                         attr[ATTRIBUTE.lon] = "%.4f" % lon
             else:
                 # Error
-                raise
+                raise RuntimeError("Bulk lookup of GeoJSON or Lat/Lon data failed for %s" % tablename)
 
             if tablename in attributes:
                 # Add Attributes
