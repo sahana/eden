@@ -1833,30 +1833,124 @@ class URLQueryParserTests(unittest.TestCase):
         self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
-    def testBBOXFilter(self):
-        """ Test URL query with BBOX filter """
+    def testBBOXFilterDirectLink(self):
+        """ Test URL query with BBOX filter, location_id """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         org_office = s3db.org_office
         gis_location = s3db.gis_location
 
-        url_query = {"bbox": "119.80485082193,12.860457717185,122.27677462907,15.107136411359"}
+        # Remove any location context
+        context = s3db.get_config("org_office", "context")
+        s3db.configure("org_office", context={})
 
-        resource = s3db.resource("org_office", vars=url_query)
-        rfilter = resource.rfilter
+        try:
+            url_query = {"bbox": "119.80,12.86,122.27,15.10"}
 
-        # Check the query
-        query = rfilter.get_query()
-        expected = (((org_office.deleted != True) &
-                     (org_office.id > 0)) &
-                    ((org_office.location_id == gis_location.id) &
-                     ((((gis_location.lon > 119.80485082193) &
-                        (gis_location.lon < 122.27677462907)) &
-                       (gis_location.lat > 12.860457717185)) &
-                      (gis_location.lat < 15.107136411359))))
+            resource = s3db.resource("org_office", vars=url_query)
+            rfilter = resource.rfilter
 
-        self.assertEqual(str(query), str(expected))
+            # Parse the bbox
+            bbox, joins = rfilter.parse_bbox_query(resource, url_query)
+
+            expected_bbox = ((((gis_location.lon > 119.8) & \
+                            (gis_location.lon < 122.27)) & \
+                            (gis_location.lat > 12.86)) & \
+                            (gis_location.lat < 15.1))
+            assertEqual(bbox, expected_bbox)
+
+            # Check the joins
+            assertTrue(isinstance(joins, dict))
+            assertEqual(len(joins), 1)
+
+            subjoins = joins.get("gis_location")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = gis_location.on(org_office.location_id == gis_location.id)
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            # Check the query
+            query = rfilter.get_query()
+            expected = (((org_office.deleted != True) & (org_office.id > 0)) & expected_bbox)
+            assertEqual(str(query), str(expected))
+            
+        finally:
+            # Restore context configuration
+            resource.configure(context=context)
+
+    # -------------------------------------------------------------------------
+    def testBBOXFilterLocationContext(self):
+        """ Test URL query with BBOX filter, location context """
+
+        s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
+        org_office = s3db.org_office
+        gis_location = s3db.gis_location
+        org_organisation = s3db.org_organisation
+        org_organisation_location = s3db.org_organisation_location
+
+        # Define a location context
+        context = s3db.get_config("org_office", "context")
+        s3db.configure("org_office",
+                       context={"location": "organisation_id$organisation_location.location_id"})
+
+        try:
+            url_query = {"bbox": "119.80,12.86,122.27,15.10"}
+
+            resource = s3db.resource("org_office", vars=url_query)
+            rfilter = resource.rfilter
+
+            # Parse the bbox
+            bbox, joins = rfilter.parse_bbox_query(resource, url_query)
+
+            expected_bbox = ((((gis_location.lon > 119.8) & \
+                            (gis_location.lon < 122.27)) & \
+                            (gis_location.lat > 12.86)) & \
+                            (gis_location.lat < 15.1))
+            assertEqual(bbox, expected_bbox)
+
+            # Check the joins
+            assertTrue(isinstance(joins, dict))
+            assertEqual(len(joins), 3)
+
+            subjoins = joins.get("gis_location")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = gis_location.on(org_organisation_location.location_id == gis_location.id)
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            subjoins = joins.get("org_organisation")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = org_organisation.on(org_office.organisation_id == org_organisation.id)
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            subjoins = joins.get("org_organisation_location")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = org_organisation_location.on(
+                                (org_organisation_location.organisation_id == org_organisation.id) &
+                                (org_organisation_location.deleted != True)
+                            )
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            # Check the query
+            query = rfilter.get_query()
+            expected = (((org_office.deleted != True) & (org_office.id > 0)) & expected_bbox)
+            assertEqual(str(query), str(expected))
+            
+        finally:
+            # Restore context configuration
+            resource.configure(context=context)
 
     # -------------------------------------------------------------------------
     def tearDown(self):
