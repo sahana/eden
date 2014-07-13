@@ -1303,7 +1303,8 @@ class S3Request(object):
             target=None,
             method=None,
             representation=None,
-            vars=None):
+            vars=None,
+            host=None):
         """
             Returns the URL of this request, use parameters to override
             current requests attributes:
@@ -1319,6 +1320,7 @@ class S3Request(object):
             @param method: the URL method
             @param representation: the representation for the URL
             @param vars: the URL query variables
+            @param host: string to force absolute URL with host (True means http_host)
 
             Particular behavior:
                 - changing the master record ID resets the component ID
@@ -1419,7 +1421,9 @@ class S3Request(object):
         return URL(r=self,
                    c=self.controller,
                    f=f,
-                   args=args, vars=vars)
+                   args=args,
+                   vars=vars,
+                   host=host)
 
     # -------------------------------------------------------------------------
     def target(self):
