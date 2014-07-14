@@ -94,6 +94,10 @@ class S3BudgetModel(S3Model):
                            label = T("Total Recurring Costs"),
                            writable = False,
                            ),
+                     Field("total_volume", "double",
+                           default = 0.0,
+                           label = T("Total Volume"),
+                           ),
                      Field("status", "integer",
                            default = 1,
                            represent = lambda opt: \
@@ -398,12 +402,11 @@ class S3BudgetModel(S3Model):
             Calculate totals for the budget
         """
 
-        # Commented for now to allow prepop of totals
-        #try:
-        #    budget_id = form.vars.id
-        #except:
-        #    return
-        #budget_budget_totals(budget_id)
+        try:
+           budget_id = form.vars.id
+        except:
+           return
+        budget_budget_totals(budget_id)
         return
         
     # -------------------------------------------------------------------------
@@ -1312,7 +1315,7 @@ class S3BudgetAllocationModel(S3Model):
         self.configure(tablename,
                        timeplot_options = {
                             "defaults": {
-                                "baseline": "budget_id$total_recurring_costs",
+                                "baseline": "budget_id$total_volume",
                                 "fact": "cumulate(unit_cost,daily_cost,days)",
                                 "slots": "months",
                                 "start": "-6months",
@@ -1576,6 +1579,7 @@ def budget_rheader(r):
                
         rheader_fields = [["name"],
                           ["description"],
+                          ["total_volume"],
                           ["total_onetime_costs"],
                           ["total_recurring_costs"],
                          ]
