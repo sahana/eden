@@ -1313,6 +1313,7 @@ class S3BudgetAllocationModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
+                       deduplicate = self.budget_allocation_duplicate,
                        timeplot_options = {
                             "defaults": {
                                 "baseline": "budget_id$total_volume",
@@ -1336,6 +1337,39 @@ class S3BudgetAllocationModel(S3Model):
         """
 
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_allocation_duplicate(item):
+        """
+            Import item de-duplication
+
+            @todo: additionally have an onaccept sanitizing overlapping
+                   allocations? (may be too simple, though)
+        """
+
+        data = item.data
+        budget_id = data.get("budget_id")
+        cost_item_id = data.get("cost_item_id")
+
+        if budget_id and cost_item_id:
+            table = item.table
+
+            start_date = data.get("start_date")
+            end_date = data.get("end_date")
+
+            # Regard same budget_id and cost_item_id, and with
+            # start_date = None or same start_date as match
+            query = (table.budget_id == budget_id) & \
+                    (table.cost_item_id == cost_item_id) & \
+                    ((table.start_date == None) | \
+                     (table.start_date == start_date))
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 def budget_kit_totals(kit_id):

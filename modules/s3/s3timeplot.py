@@ -403,10 +403,10 @@ class S3TimePlot(S3Method):
             values = dict((fact.colname, row[fact.colname])
                           for fact in facts)
             start = row[start_colname]
-            if convert_start:
+            if convert_start and start:
                 start = convert_date(start)
             end = row[end_colname] if end_colname else None
-            if convert_end:
+            if convert_end and end:
                 end = convert_date(end)
             event = S3TimePlotEvent(row[pkey],
                                     start = start,
