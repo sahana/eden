@@ -636,7 +636,8 @@ def customise_cms_post_resource(r, tablename):
     s3db = current.s3db
     table = s3db.cms_post
     table.title.comment = None
-    s3db.cms_post_organisation.organisation_id.represent = s3db.org_OrganisationRepresent(acronym=False)
+    s3db.cms_post_organisation.organisation_id.represent = \
+                                s3db.org_OrganisationRepresent(acronym=False)
 
     if r.function == "newsfeed":
         # Inject Bootstrap JS for the attachments dropdown menu

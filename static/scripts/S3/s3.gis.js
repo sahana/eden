@@ -1371,7 +1371,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         try {
             // Only load Google layers if GoogleAPI downloaded ok
             // - allow rest of map to work offline
-            google & addGoogleLayers(map);
+            if (google) {
+                addGoogleLayers(map);
+            }
         } catch(e) {}
 
         // Bing
@@ -3810,8 +3812,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         try {
             // Only load Google layers if GoogleAPI downloaded ok
             // - allow rest of map to work offline
-            if (options.Google.Earth) {
-                google & addGoogleEarthControl(toolbar);
+            if (options.Google.Earth && google) {
+                addGoogleEarthControl(toolbar);
             }
         } catch(e) {}
         

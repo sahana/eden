@@ -598,6 +598,7 @@ def newsfeed():
                            )
 
         elif r.representation == "xls":
+            table.body.represent = None
             table.created_by.represent = s3base.s3_auth_user_represent_name
             #table.created_on.represent = datetime_represent
             utable = auth.settings.table_user

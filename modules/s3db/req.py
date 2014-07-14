@@ -180,24 +180,26 @@ class S3RequestModel(S3Model):
                           super_link("doc_id", "doc_entity"),
                           # @ToDo: Replace with Link Table
                           self.event_event_id(
-                               default=session.s3.event,
+                               default = session.s3.event,
+                               ondelete = "SET NULL",
                                readable = False,
                                writable = False,
-                               ondelete="SET NULL"),
+                               ),
                           Field("type", "integer",
-                                requires = IS_IN_SET(req_type_opts, zero=None),
+                                label = T("Request Type"),
                                 represent = lambda opt: \
                                             req_type_opts.get(opt, UNKNOWN_OPT),
-                                label = T("Request Type")),
+                                requires = IS_IN_SET(req_type_opts, zero=None),
+                                ),
                           req_ref(),
                           s3_datetime(label = T("Date Requested"),
-                                      default="now",
-                                      past=8760, # Hours, so 1 year
-                                      future=0,
-                                      readable=date_writable,
-                                      writable=date_writable,
-                                      #represent="date",
-                                      #widget="date",
+                                      default = "now",
+                                      past = 8760, # Hours, so 1 year
+                                      future = 0,
+                                      readable = date_writable,
+                                      writable = date_writable,
+                                      #represent = "date",
+                                      #widget = "date",
                                       ),
                           Field("priority", "integer",
                                 default = 2,
@@ -236,42 +238,42 @@ class S3RequestModel(S3Model):
                                       represent = s3_string_represent,
                                       ),
                           Field("is_template", "boolean",
+                                default = False,
                                 label = T("Recurring Request?"),
                                 represent = s3_yes_no_represent,
-                                default = False,
                                 comment = DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Recurring Request?"),
                                                                   T("If this is a request template to be added repeatedly then the schedule can be set on the next page."))),
                                 ),
                           s3_datetime("date_required",
                                       label = T("Date Needed By"),
-                                      past=1, # Allow time for people to fill out form
-                                      future=8760, # Hours, so 1 year
-                                      #represent="date",
-                                      #widget="date",
+                                      past = 1, # Allow time for people to fill out form
+                                      future = 8760, # Hours, so 1 year
+                                      #represent = "date",
+                                      #widget = "date",
                                       ),
                           s3_datetime("date_required_until",
                                       label = T("Date Required Until"),
-                                      past=0,
-                                      future=8760, # Hours, so 1 year
+                                      past = 0,
+                                      future = 8760, # Hours, so 1 year
                                       readable = False,
                                       writable = False
                                       ),
                           person_id("requester_id",
-                                    label = requester_label,
+                                    default = requester_default,
                                     empty = settings.get_req_requester_optional(),
+                                    label = requester_label,
                                     #writable = False,
                                     comment = S3AddResourceLink(c="pr", f="person",
                                                                 vars = dict(child="requester_id",
                                                                             parent="req"),
                                                                 title=crud_strings["pr_person"].label_create,
                                                                 tooltip=AUTOCOMPLETE_HELP),
-                                    default = requester_default
                                     ),
                           person_id("assigned_to_id", # This field should be in req_commit, but that complicates the UI
+                                    label = T("Assigned To"),
                                     readable = False,
                                     writable = False,
-                                    label = T("Assigned To")
                                     ),
                           person_id("approved_by_id",
                                     label = T("Approved By"),
@@ -279,33 +281,35 @@ class S3RequestModel(S3Model):
                                     writable = False,
                                     ),
                           person_id("request_for_id",
+                                    #default = auth.s3_logged_in_person(),
                                     label = T("Requested For"),
                                     readable = False,
                                     writable = False,
-                                    #default = auth.s3_logged_in_person()
                                     ),
                           Field("transport_req", "boolean",
+                                label = T("Transportation Required"),
                                 represent = s3_yes_no_represent,
                                 readable = req_ask_transport,
                                 writable = req_ask_transport,
-                                label = T("Transportation Required")),
+                                ),
                           Field("security_req", "boolean",
+                                label = T("Security Required"),
                                 represent = s3_yes_no_represent,
                                 readable = req_ask_security,
                                 writable = req_ask_security,
-                                label = T("Security Required")),
+                                ),
                           s3_datetime("date_recv",
                                       label = T("Date Received"), # Could be T("Date Delivered") - make deployment_setting
-                                      past=8760, # Hours, so 1 year
-                                      future=0,
+                                      past = 8760, # Hours, so 1 year
+                                      future = 0,
                                       readable = False,
                                       writable = False,
                                       ),
                           person_id("recv_by_id",
-                                    label = T("Received By"),
                                     # @ToDo: Set this in Update forms? Dedicated 'Receive' button?
                                     # (Definitely not in Create forms)
-                                    #default = auth.s3_logged_in_person()
+                                    #default = auth.s3_logged_in_person(),
+                                    label = T("Received By"),
                                     ),
                           # Simple Status
                           # - currently just enabled in customise_req_fields() workflow
@@ -314,26 +318,31 @@ class S3RequestModel(S3Model):
                                      ),
                           # Detailed Status
                           req_status("commit_status",
+                                     label = T("Commit. Status"),
+                                     represent = self.req_commit_status_represent,
                                      readable = use_commit,
                                      writable = req_status_writable and use_commit,
-                                     represent = self.req_commit_status_represent,
-                                     label = T("Commit. Status")),
+                                     ),
                           req_status("transit_status",
-                                     label = T("Transit Status")),
+                                     label = T("Transit Status"),
+                                     ),
                           req_status("fulfil_status",
-                                     label = T("Fulfil. Status")),
+                                     label = T("Fulfil. Status"),
+                                     ),
                           Field("closed", "boolean",
+                                default = False,
                                 label = T("Closed"),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Closed"),
                                                                 T("No more items may be added to this request"))),
-                                default = False),
+                                ),
                           Field("cancel", "boolean",
+                                default = False,
                                 label = T("Cancel"),
-                                default = False),
+                                ),
                           Field.Method("details", req_req_details),
                           Field.Method("drivers", req_req_drivers),
-                          s3_comments(comment=""),
+                          s3_comments(comment = ""),
                           *s3_meta_fields())
 
         # @todo: make lazy_table
@@ -350,9 +359,8 @@ class S3RequestModel(S3Model):
             table.req_ref.writable = False
 
         # CRUD strings
-        ADD_REQUEST = T("Make Request")
         crud_strings[tablename] = Storage(
-            label_create = ADD_REQUEST,
+            label_create = T("Make Request"),
             title_display = T("Request Details"),
             title_list = T("Requests"),
             title_map=T("Map of Requests"),
@@ -447,6 +455,9 @@ class S3RequestModel(S3Model):
         # Reusable Field
         represent = self.req_represent
         req_id = S3ReusableField("req_id", "reference %s" % tablename,
+                                 label = T("Request"),
+                                 ondelete = "CASCADE",
+                                 represent = represent,
                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db,
                                                           "req_req.id",
@@ -456,10 +467,7 @@ class S3RequestModel(S3Model):
                                                           orderby="req_req.date",
                                                           sort=True)
                                                 ),
-                                 represent = represent,
                                  sortby = "date",
-                                 label = T("Request"),
-                                 ondelete = "CASCADE",
                                  )
         list_fields = ["id",
                        "date",
@@ -487,8 +495,9 @@ class S3RequestModel(S3Model):
             list_fields.append("commit_status")
         list_fields.extend(("transit_status",
                             "fulfil_status",
-                            (T("Committed By"), "commit.site_id"),
                             ))
+        if use_commit:
+            list_fields.append((T("Committed By"), "commit.site_id"))
 
         self.configure(tablename,
                        context = {"event": "event_id",
