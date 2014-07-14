@@ -1318,9 +1318,9 @@ class S3BudgetAllocationModel(S3Model):
                             "defaults": {
                                 "baseline": "budget_id$total_volume",
                                 "fact": "cumulate(unit_cost,daily_cost,days)",
-                                "slots": "months",
-                                "start": "-6months",
-                                "end": "+9months",
+                                "slots": "",
+                                "start": "",
+                                "end": "+1month",
                             },
                        },
                        )
