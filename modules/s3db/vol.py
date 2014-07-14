@@ -671,6 +671,7 @@ def vol_service_record(r, **attr):
 
         return output
 
+    from s3.s3export import S3Exporter
     exporter = S3Exporter().pdf
     return exporter(r.resource,
                     request = r,

@@ -273,6 +273,30 @@ settings.fin.currencies = {
 #settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
+# Summary Pages
+settings.ui.summary = [{"common": True,
+                        "name": "add",
+                        "widgets": [{"method": "create"}],
+                        },
+                       #{"common": True,
+                       # "name": "cms",
+                       # "widgets": [{"method": "cms"}]
+                       # },
+                       {"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
+                        },
+                       {"name": "charts",
+                        "label": "Charts",
+                        "widgets": [{"method": "report", "ajax_init": True}]
+                        },
+                       {"name": "map",
+                        "label": "Map",
+                        "widgets": [{"method": "map", "ajax_init": True}],
+                        },
+                       ]
+
+# -----------------------------------------------------------------------------
 # Filter Manager
 settings.search.filter_manager = False
 
@@ -330,14 +354,20 @@ settings.org.branches = True
 settings.org.facility_types_hierarchical = True
 # Organisation Location context
 settings.org.organisation_location_context = "organisation_location.location_id"
+# Uncomment to show a Tab for Organisation Resources
+settings.org.resources_tab = True
+# Uncomment to use an Autocomplete for Site lookup fields
+settings.org.site_autocomplete = True
+# Extra fields to search in Autocompletes & display in Representations
+settings.org.site_autocomplete_fields = ("organisation_id$name",
+                                         "location_id$addr_street",
+                                         )
 # Set the length of the auto-generated org/site code the default is 10
 settings.org.site_code_len = 3
 # Set the label for Sites
 settings.org.site_label = "Office/Shelter/Warehouse/Facility"
 # Uncomment to allow Sites to be staffed by Volunteers
 settings.org.site_volunteers = True
-# Uncomment to show a Tab for Organisation Resources
-settings.org.resources_tab = True
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
@@ -683,6 +713,26 @@ def customise_cms_post_controller(**attr):
     return attr
 
 settings.customise_cms_post_controller = customise_cms_post_controller
+
+# -----------------------------------------------------------------------------
+def customise_cr_shelter_controller(**attr):
+
+    # Default Filter
+    # Org and all Branches & SubBranches
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.organisation_id",
+                          user_org_and_children_default_filter,
+                          tablename = "cr_shelter")
+
+    s3db = current.s3db
+    field = s3db.cr_shelter.shelter_type_id
+    field.readable = field.writable = False
+    list_fields = s3db.get_config("cr_shelter", "list_fields")
+    list_fields.remove("shelter_type_id")
+
+    return attr
+
+settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
 # -----------------------------------------------------------------------------
 def customise_deploy_assignment_controller(**attr):
@@ -1749,6 +1799,7 @@ settings.inv.direct_stock_edits = True
 # Request Management
 # Uncomment to disable Inline Forms in Requests module
 settings.req.inline_forms = False
+#settings.req.prompt_match = False
 settings.req.req_type = ["Stock"]
 settings.req.use_commit = False
 # Should Requests ask whether Transportation is required?

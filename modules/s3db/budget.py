@@ -65,6 +65,11 @@ class S3BudgetModel(S3Model):
 
         db = current.db
 
+        status_opts = {1: T("Draft"),
+                       2: T("Approved"),
+                       3: T("Rejected"),
+                       }
+
         # ---------------------------------------------------------------------
         # Budgets
         #
@@ -88,6 +93,12 @@ class S3BudgetModel(S3Model):
                            default = 0.0,
                            label = T("Total Recurring Costs"),
                            writable = False,
+                           ),
+                     Field("status", "integer",
+                           default = 1,
+                           represent = lambda opt: \
+                            status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(status_opts),
                            ),
                      s3_comments(),
                      *s3_meta_fields()
@@ -371,20 +382,13 @@ class S3BudgetModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        # @ToDo: Rewrite as dummy
-        budget_budget_id = S3ReusableField("budget_id", "integer",
-                                           readable = False,
-                                           writable = False)
-        budget_location_id = S3ReusableField("location_id", "integer",
-                                             readable = False,
-                                             writable = False)
-        budget_staff_id = S3ReusableField("staff_id", "integer",
-                                          readable = False,
-                                          writable = False)
-                                             
-        return dict(budget_budget_id = budget_budget_id,
-                    budget_location_id = budget_location_id,
-                    budget_staff_id = budget_staff_id,
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(budget_budget_id = lambda **attr: dummy("budget_id"),
+                    budget_location_id = lambda **attr: dummy("location_id"),
+                    budget_staff_id = lambda **attr: dummy("staff_id"),
                     )
                    
     # -------------------------------------------------------------------------
@@ -618,7 +622,7 @@ class S3BudgetKitModel(S3Model):
                                      17: T("Relief"),
                                      18: T("Miscellaneous"),
                                      19: T("Running Cost"),
-                                    }
+                                     }
             
         tablename = "budget_item"
         define_table(tablename,
@@ -743,16 +747,12 @@ class S3BudgetKitModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        # @ToDo: Rewrite as dummy
-        budget_kit_id = S3ReusableField("kit_id", "integer",
-                                        readable = False,
-                                        writable = False)
-        budget_item_id = S3ReusableField("item_id", "integer",
-                                         readable = False,
-                                         writable = False)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
-        return dict(budget_kit_id = budget_kit_id,
-                    budget_item_id = budget_item_id,
+        return dict(budget_kit_id = lambda **attr: dummy("kit_id"),
+                    budget_item_id = lambda **attr: dummy("item_id"),
                     )
 
     # -------------------------------------------------------------------------
@@ -1102,12 +1102,11 @@ class S3BudgetBundleModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        # @ToDo: Rewrite as dummy
-        budget_bundle_id = S3ReusableField("bundle_id", "integer",
-                                           readable = False,
-                                           writable = False)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
-        return dict(budget_bundle_id = budget_bundle_id,
+        return dict(budget_bundle_id = lambda **attr: dummy("bundle_id"),
                     )
 
     # -------------------------------------------------------------------------

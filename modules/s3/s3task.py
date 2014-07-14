@@ -111,6 +111,8 @@ class S3Task(object):
 
         table.uuid.readable = table.uuid.writable = False
 
+        table.prevent_drift.readable = table.prevent_drift.writable = False
+
         table.sync_output.readable = table.sync_output.writable = False
 
         table.times_failed.readable = False

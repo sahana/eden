@@ -2345,6 +2345,7 @@ S3OptionsFilter({
             list_fields + ["currency",
                            "pack_value",
                            ]
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request = r,
@@ -2485,6 +2486,7 @@ S3OptionsFilter({
                        "pack_value",
                        "bin"
                        ]
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request = r,
@@ -2521,6 +2523,7 @@ S3OptionsFilter({
         site_id = record.site_id
         site = field.represent(site_id, False)
 
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request=r,
