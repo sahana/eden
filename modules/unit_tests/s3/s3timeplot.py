@@ -777,27 +777,27 @@ class TimePlotTests(unittest.TestCase):
 
         query = FS("event_type") == "STARTEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end)
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertTrue(is_now(ef.end))
 
         query = FS("event_type") == "NOSTART"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end)
         # falls back to first end date minus 1 day
         assertEqual(ef.start, tp_datetime(2012, 2, 12, 0, 0, 0))
         assertTrue(is_now(ef.end))
 
         query = FS("event_type") == "NOEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end)
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2012, 7, 21, 0, 0, 0))
         assertTrue(is_now(ef.end))
 
         tp.resource = s3db.resource("tp_test_events")
-        ef = tp.create_event_frame(event_start, event_end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end)
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertTrue(is_now(ef.end))
@@ -819,7 +819,7 @@ class TimePlotTests(unittest.TestCase):
         end = "2011-03-01"
         query = FS("event_type") == "STARTEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end, end=end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2011, 3, 1, 0, 0, 0))
@@ -829,7 +829,7 @@ class TimePlotTests(unittest.TestCase):
         end = "2013-01-01"
         query = FS("event_type") == "NOSTART"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end, end=end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
         # falls back to first end date minus 1 day
         assertEqual(ef.start, tp_datetime(2012, 2, 12, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2013, 1, 1, 0, 0))
@@ -839,7 +839,7 @@ class TimePlotTests(unittest.TestCase):
         end = "2016-06-01"
         query = FS("event_type") == "NOEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end, end=end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2012, 7, 21, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2016, 6, 1, 0, 0))
@@ -848,7 +848,7 @@ class TimePlotTests(unittest.TestCase):
 
         end = "2011-01-15"
         tp.resource = s3db.resource("tp_test_events")
-        ef = tp.create_event_frame(event_start, event_end, end=end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2011, 1, 15, 0, 0))
@@ -859,7 +859,7 @@ class TimePlotTests(unittest.TestCase):
         end = "2016-06-01"
         query = FS("event_type") == "NOEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end, end=end, slots="years")
+        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end, slots="years")
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2012, 7, 21, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2016, 6, 1, 0, 0))
@@ -870,7 +870,7 @@ class TimePlotTests(unittest.TestCase):
         end = "2011-03-01"
         query = FS("event_type") == "STARTEND"
         tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(event_start, event_end, start=start, end=end)
+        ef = tp.create_event_frame(tp.resource, event_start, event_end, start=start, end=end)
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 2, 15, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2011, 3, 1, 0, 0, 0))
@@ -893,7 +893,8 @@ class TimePlotTests(unittest.TestCase):
         fact2 = resource.resolve_selector("parameter2")
         
         end = "2013-01-01"
-        ef = tp.create_event_frame(event_start,
+        ef = tp.create_event_frame(tp.resource, 
+                                   event_start,
                                    event_end,
                                    end=end,
                                    slots="months")

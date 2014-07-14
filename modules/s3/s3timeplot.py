@@ -195,7 +195,8 @@ class S3TimePlot(S3Method):
                                 event_start,
                                 event_end,
                                 rfields,
-                                baseline=baseline,
+                                baseline= baseline,
+                                cumulative = method == "cumulate",
                                 )
         except SyntaxError:
             pass
@@ -298,6 +299,7 @@ class S3TimePlot(S3Method):
                        event_start,
                        event_end,
                        facts,
+                       cumulative=False,
                        baseline=None):
         """
             Extract event data from resource and add them to the
@@ -308,6 +310,9 @@ class S3TimePlot(S3Method):
             @param event_start: the event start field (S3ResourceField)
             @param event_end: the event_end field (S3ResourceField)
             @param fact: list of fact fields (S3ResourceField)
+            @param cumulative: whether the aggregation method is cumulative
+            @param baseline: field selector to extract the baseline value (e.g.
+                             for burn-down visualization)
 
             @return: the extracted data (dict from S3Resource.select)
         """
@@ -324,12 +329,13 @@ class S3TimePlot(S3Method):
 
         # Filter by event frame start:
         # End date of events must be after the event frame start date
-        if event_end:
+        if not cumulative and event_end:
             end_selector = FS(event_end.selector)
             start = event_frame.start
             query = (end_selector == None) | (end_selector >= start)
         else:
-            # No point if events have no end date
+            # No point if events have no end date, and wrong if
+            # method is cumulative
             query = None
 
         # Filter by event frame end:
@@ -423,8 +429,9 @@ class S3TimePlot(S3Method):
                            end=None,
                            slots=None):
         """
-            Create an event frame for the current resource
+            Create an event frame for this report
 
+            @param resource: the target resource
             @param event_start: the event start field (S3ResourceField)
             @param event_end: the event end field (S3ResourceField)
             @param start: the start date/time (string)
