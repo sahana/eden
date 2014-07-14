@@ -11,6 +11,11 @@
          Incident.............string..........Incident Name
          Asset................string..........Asset Number
          Status...............string..........Status
+         Budget...............string..........Budget Name
+         Start................date............Start Date
+         End..................date............End Date
+         OneTimeCost..........number..........One-time cost
+         DailyCost............number..........Daily cost
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -19,11 +24,13 @@
 
     <xsl:variable name="IncidentPrefix" select="'Incident:'"/>
     <xsl:variable name="AssetPrefix" select="'Asset:'"/>
+    <xsl:variable name="BudgetPrefix" select="'Budget:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="incident" match="row" use="col[@field='Incident']"/>
     <xsl:key name="asset" match="row" use="col[@field='Asset']"/>
+    <xsl:key name="budget" match="row" use="col[@field='Budget']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -40,6 +47,12 @@
                 <xsl:call-template name="Asset" />
             </xsl:for-each>
 
+            <!-- Budgets -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('budget',
+                                                                   col[@field='Budget'])[1])]">
+                <xsl:call-template name="Budget" />
+            </xsl:for-each>
+
             <!-- Links -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
@@ -48,12 +61,10 @@
     <!-- ****************************************************************** -->
 
     <xsl:template match="row">
-        <xsl:variable name="Incident">
-            <xsl:value-of select="col[@field='Incident']"/>
-        </xsl:variable>
-        <xsl:variable name="Asset">
-            <xsl:value-of select="col[@field='Asset']"/>
-        </xsl:variable>
+        <xsl:variable name="Incident" select="col[@field='Incident']"/>
+        <xsl:variable name="Asset" select="col[@field='Asset']"/>
+        <xsl:variable name="Budget" select="col[@field='Budget']/text()"/>
+        
         <xsl:variable name="Status">
             <xsl:call-template name="uppercase">
                 <xsl:with-param name="string">
@@ -98,6 +109,30 @@
                     <data field="status">5</data>
                 </xsl:when>
             </xsl:choose>
+            
+            <!-- Budget allocation -->
+            <xsl:if test="$Budget!=''">
+                <resource name="budget_allocation">
+                    <reference field="budget_id" resource="budget_budget">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($BudgetPrefix, $Budget)"/>
+                        </xsl:attribute>
+                    </reference>
+                    <data field="unit_cost">
+                        <xsl:value-of select="col[@field='OneTimeCost']/text()"/>
+                    </data>
+                    <data field="daily_cost">
+                        <xsl:value-of select="col[@field='DailyCost']/text()"/>
+                    </data>
+                    <data field="start_date">
+                        <xsl:value-of select="col[@field='Start']/text()"/>
+                    </data>
+                    <data field="end_date">
+                        <xsl:value-of select="col[@field='End']/text()"/>
+                    </data>
+                </resource>
+            </xsl:if>
+            
         </resource>
     </xsl:template>
 
@@ -131,6 +166,21 @@
                 <data field="number"><xsl:value-of select="$AssetName"/></data>
             </resource>
         </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Budget">
+
+        <xsl:variable name="Budget" select="col[@field='Budget']/text()"/>
+
+        <resource name="budget_budget">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat($BudgetPrefix, $Budget)"/>
+            </xsl:attribute>
+            <data field="name">
+                <xsl:value-of select="$Budget"/>
+            </data>
+        </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
