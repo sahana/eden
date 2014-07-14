@@ -30,6 +30,9 @@
             <xsl:if test="col[@field='Description']!=''">
                 <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             </xsl:if>
+            <xsl:if test="col[@field='Total Recurring Costs']!=''">
+                <data field="total_recurring_costs"><xsl:value-of select="col[@field='Total Recurring Costs']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Comments']!=''">
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>

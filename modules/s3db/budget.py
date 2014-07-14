@@ -398,11 +398,12 @@ class S3BudgetModel(S3Model):
             Calculate totals for the budget
         """
 
-        try:
-            budget_id = form.vars.id
-        except:
-            return
-        budget_budget_totals(budget_id)
+        # Commented for now to allow prepop of totals
+        #try:
+        #    budget_id = form.vars.id
+        #except:
+        #    return
+        #budget_budget_totals(budget_id)
         return
         
     # -------------------------------------------------------------------------
