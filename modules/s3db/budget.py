@@ -27,12 +27,12 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3BudgetModel",
+__all__ = ("S3BudgetModel",
            "S3BudgetKitModel",
            "S3BudgetBundleModel",
            "S3BudgetAllocationModel",
            "budget_rheader",
-           ]
+           )
 
 from gluon import *
 from gluon.dal import Row
@@ -1609,14 +1609,14 @@ def budget_rheader(r):
                 (T("Bundles"), "bundle"),
                 #(T("Allocation"), "allocation"),
                 (T("Report"), "timeplot", tpvars),
-               ]
+                ]
                
         rheader_fields = [["name"],
                           ["description"],
                           ["total_volume"],
                           ["total_onetime_costs"],
                           ["total_recurring_costs"],
-                         ]
+                          ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
         
     elif resourcename == "bundle":
@@ -1624,26 +1624,26 @@ def budget_rheader(r):
         tabs = [(T("Basic Details"), None),
                 (T("Kits"), "kit"),
                 (T("Items"), "item"),
-               ]
+                ]
 
         rheader_fields = [["name"],
                           ["description"],
                           ["total_unit_cost"],
                           ["total_monthly_cost"],
-                         ]
+                          ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename == "kit":
 
         tabs = [(T("Basic Details"), None),
                 (T("Items"), "item"),
-               ]
+                ]
 
         rheader_fields = [["code"],
                           ["description"],
                           ["total_unit_cost"],
                           ["total_monthly_cost"],
-                         ]
+                          ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     return rheader

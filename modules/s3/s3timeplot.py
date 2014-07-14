@@ -873,6 +873,8 @@ class S3TimePlotForm(S3ReportForm):
         if options and "time" in options:
             opts = options["time"]
         else:
+            # (label, start, end, slots)
+            # If you specify a start, then end is relative to that - without start, end is relative to now
             opts = (("All up to now", "", "", ""),
                     ("Last Year", "-1year", "", "months"),
                     ("Last 6 Months", "-6months", "", "weeks"),
