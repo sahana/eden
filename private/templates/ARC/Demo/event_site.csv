@@ -1,3 +1,3 @@
 Incident,Facility,Facility Type,Status,Budget,Start,End,OneTimeCost,DailyCost
-Thunderstorm,Hancock School,Shelter,Alerted,Thunderstorm,2014-03-01,2014-03-05,,5400
-Thunderstorm,Putnam School,Shelter,Alerted,Thunderstorm,2014-03-01,2014-03-05,,3600
+Thunderstorm,Hancock School,Shelter,Alerted,Thunderstorm,,,,1000
+Thunderstorm,Putnam School,Shelter,Alerted,Thunderstorm,,,,500
