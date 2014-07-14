@@ -1581,6 +1581,7 @@ class S3EventAssetModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
+                       deduplicate = self.event_asset_duplicate,
                        list_fields = [#"incident_id", # Not being dropped in component view
                                       "asset_id",
                                       "status",
@@ -1594,6 +1595,27 @@ class S3EventAssetModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_asset_duplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        incident_id = data.get("incident_id")
+        asset_id = data.get("asset_id")
+
+        if incident_id and asset_id:
+            table = item.table
+
+            query = (table.incident_id == incident_id) & \
+                    (table.asset_id == asset_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3EventCMSModel(S3Model):
@@ -1725,6 +1747,7 @@ class S3EventHRModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
+                       deduplicate = self.event_human_resource_duplicate,
                        list_fields = [#"incident_id", # Not being dropped in component view
                                       "human_resource_id",
                                       "status",
@@ -1738,6 +1761,27 @@ class S3EventHRModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_human_resource_duplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        incident_id = data.get("incident_id")
+        human_resource_id = data.get("human_resource_id")
+
+        if incident_id and human_resource_id:
+            table = item.table
+
+            query = (table.incident_id == incident_id) & \
+                    (table.human_resource_id == human_resource_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3EventImpactModel(S3Model):
@@ -1997,6 +2041,7 @@ class S3EventSiteModel(S3Model):
 
         self.configure(tablename,
                        crud_form = crud_form,
+                       deduplicate = self.event_site_duplicate,
                        list_fields = [#"incident_id", # Not being dropped in component view
                                       "site_id",
                                       "status",
@@ -2010,6 +2055,27 @@ class S3EventSiteModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_site_duplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        incident_id = data.get("incident_id")
+        site_id = data.get("site_id")
+
+        if incident_id and site_id:
+            table = item.table
+
+            query = (table.incident_id == incident_id) & \
+                    (table.site_id == site_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3EventSitRepModel(S3Model):
