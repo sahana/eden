@@ -18,6 +18,11 @@ h2 a {
     cursor: pointer;
 }
 
+h2 a:hover,
+h2 a:focus {
+    text-decoration: none;
+    }
+
 h2 i {
     font-size: 20px;
 }
@@ -75,6 +80,42 @@ h2 i {
 }
 
 /* Main Map */
+.map_home {
+    margin: 0;
+}
+
+.x-panel-header {
+    border-bottom: 1px solid #d0d0d0;
+}
+
+.x-tree .x-panel-body {
+    border: none;
+}
+
+.mappnlcntr {
+    margin-left: -2px; 
+}
+
+.map_save_button,
+.map_save_panel,
+.map_legend_tab,
+.map_legend_panel {
+    border: 1px solid #d0d0d0;
+}
+
+.map_legend_tab {
+    border-right: none;
+    margin-right: -1px;
+}
+
+.map_legend_panel {
+    margin-bottom: 45px;
+}
+
+.map_save_panel {
+    margin-top: 10px;
+}
+
 .gis_fullscreen_map-btn {
     display: none;
 }
@@ -82,6 +123,46 @@ h2 i {
 .map_legend_div {
     max-width: 400px;
 }
+
+/* Increase Layer Fonts */
+.x-panel-header {
+    font: normal 18px/18px 'Open Sans',sans-serif;
+    padding: 9px 0 6px 4px;
+    }
+
+.x-tree-root-node > .x-tree-node > .x-unselectable > img {
+     margin: 4px 0 0 4px;
+}
+
+.x-tree-node-anchor {
+    padding-left: 3px;
+}
+
+.x-tree-root-node > .x-tree-node > .x-unselectable > a.x-tree-node-anchor span {
+    color: #656665;
+    font: normal 18px/30px 'Open Sans',sans-serif;
+    padding-left: 0;
+}
+
+.x-tree-root-node > .x-tree-node > .x-tree-node-ct {
+    margin-top: -6px;
+    }
+
+.x-tree-node a.x-tree-node-anchor span {
+    color: #656665;
+    font: normal 14px/18px 'Open Sans',sans-serif;
+}
+
+/* EXT: Last icon has a different image? */
+.x-tree-no-lines .x-tree-elbow-plus,
+.x-tree-no-lines .x-tree-elbow-end-plus {
+    background-image:url(../../scripts/ext/resources/images/gray/tree/elbow-end-plus-nl.gif);
+}
+.x-tree-no-lines .x-tree-elbow-minus,
+.x-tree-no-lines .x-tree-elbow-end-minus {
+    background-image:url(../../scripts/ext/resources/images/gray/tree/elbow-end-minus-nl.gif);
+}
+
 
 /* Saved Maps */
 #config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td {
@@ -98,7 +179,6 @@ h2 {
 }
 
 #list-btn-add {
-    margin-top: 15px;
     float: left;
 }
 
@@ -126,6 +206,7 @@ h2 {
     /* Push above alert-space & Summary Tabs */
     position: relative;
     z-index: 1001;
+    margin-top: 15px;
 }
 
 #summary-common #cms {
@@ -133,12 +214,6 @@ h2 {
     margin-left: 20px;
     line-height: 12px;
     width: 50%;
-}
-
-.cms-edit {
-    float: right;
-    margin-top: -25px;
-}
 }
 
 .ui-tabs {
@@ -188,10 +263,6 @@ h2 {
 .dataTables_wrapper {
     clear: none;
 } */
-
-.dataTables_info {
-    margin: 8px 30px 4px 30px;
-}
 
 .dt-export-options {
     padding-top: 8px;
@@ -390,13 +461,6 @@ form#summary-filter-form {
 }
 
 /* Organisations */
-#org_organisation_sub_defaultfacility__label {
-    width: 0;
-}
-#sub-defaultfacility {
-    margin-left: -170px;
-}
-
 #sub-filedocument {
     float: left;
 }
@@ -412,32 +476,6 @@ form#summary-filter-form {
 
 #sub_defaultsite_org_group_defaultsite_org_group_i_status_edit_none {
     width: 270px;
-}
-
-/* Map */
-.map_home {
-    margin: 0;
-}
-
-.map_save_button,
-.map_save_panel,
-.map_legend_tab,
-.map_legend_panel,
-.x-panel-body {
-    border: 1px solid #B2B2B2;
-}
-
-.map_legend_tab {
-    border-right: none;
-    margin-right: -1px;
-}
-
-.map_legend_panel {
-    margin-bottom: 30px;
-}
-
-.map_save_panel {
-    margin-top: 10px;
 }
 
 /* Report */

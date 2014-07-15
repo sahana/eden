@@ -160,7 +160,7 @@ menu = [
     {"name": T("Places"),
      "c":"org", 
      "f":"facility",
-     "icon": "icon-home"
+     "icon": "icon-map-marker"
      },
     {"name": T("People"),
      "c":"stats", 
@@ -281,7 +281,7 @@ settings.gis.label_overlays = "Places"
 settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons
 settings.gis.layer_tree_radio = True
-settings.gis.layers_label = "Map Data"
+settings.gis.layers_label = "Map Layers"
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
@@ -907,7 +907,7 @@ def customise_org_organisation_controller(**attr):
             list_fields = ["id",
                            "name",
                            (T("Coalition Member"), "group_membership.group_id"),
-                           (T("Address"), "facility.location_id"),
+                           (T("Organization's Places"), "facility.location_id"),
                            #"facility.location_id$addr_postcode",
                            (T("Sectors"), "sector_organisation.sector_id"),
                            (T("Services"), "service_organisation.service_id"),
@@ -1129,7 +1129,7 @@ def customise_org_organisation_controller(**attr):
                                S3SQLInlineComponent(
                                     "facility",
                                     #label = T("Address"),
-                                    label = "",
+                                    label = T("Organization's Places"),
                                     fields = [("", "location_id"),
                                               ],
                                     multiple = False,
@@ -1486,12 +1486,14 @@ def customise_org_facility_controller(**attr):
                                                ),
                                   S3OptionsFilter("site_org_group.group_id",
                                                   represent = "%(name)s",
+                                                  header = True,
                                                   ),
                                   S3HierarchyFilter("site_facility_type.facility_type_id",
                                                     label = T("Type of Place"),
                                                     ),
                                   S3OptionsFilter("organisation_id",
                                                   represent = "%(name)s",
+                                                  header = True,
                                                   ),
                                   ]
 

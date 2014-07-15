@@ -743,7 +743,7 @@ def s3_url_represent(url):
 
     if not url:
         return ""
-    return A(url, _href=url, _target="blank")
+    return A(url, _href=url, _target="_blank")
 
 # =============================================================================
 def s3_URLise(text):

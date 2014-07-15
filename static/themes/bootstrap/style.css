@@ -484,6 +484,12 @@ http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ 
     font-size: 12px;
 }
 
+#list-add .req_key {
+    position: absolute;
+    z-index: 1;
+    margin: 7px 0 0 7px;
+}
+
 #last_update {
     color: #d35400;
 }
@@ -787,6 +793,7 @@ label.ui-corner-all span {
 
 .dataTables_length label select {
     width: auto;
+    margin-bottom: 0;
 }
 
 .dataTables_info,
@@ -801,7 +808,7 @@ label.ui-corner-all span {
 }
 
 .dataTables_info {
-    margin-top: 7px;
+    margin: 5px 30px 0px 5px;
 }
 
 .dataTables_wrapper {
@@ -809,11 +816,9 @@ label.ui-corner-all span {
 }
 
 .dt-export-options {
-    margin-right: 20px;
-    top: 10px;
+    margin-right: 5px;
     font-size: 12px;
     padding: 0;
-    position: relative;
     z-index: 1000;
 }
 
@@ -925,12 +930,17 @@ label.ui-corner-all span {
 
 #auth_user_remember__row label {
     margin-left: 28px;
-    margin-top: -21px;
+    margin-top: -19px;
 }
 
-.auth_login #submit_record__row .btn-primary {
+.form-container .auth_login #submit_record__row .btn-primary {
     margin-left: -70px;
     margin-right: 0;
+}
+
+.dropdown-menu #register-btn {
+    /* Layout on page needs fixing */
+    display: none;
 }
 
 #email__error,
@@ -944,6 +954,23 @@ label.ui-corner-all span {
     color: #b84947;
     background-color: #f2dedd;
 }
+
+.dropdown-menu input.btn {
+    /* Make appear on same row */
+    position: relative;
+    left: 150px;
+    top: -58px;
+}
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    /* IE 10 */
+    .dropdown-menu form {
+        height: 100px;
+    }
+    .dropdown-menu input.btn {
+        left: 268px;
+    }
+}
+
 
 /* Registration Page */
 .auth_change_password .control-label,

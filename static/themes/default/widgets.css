@@ -879,7 +879,10 @@ span.tab_next_inactive a {
 }
 .action-btn:hover,
 .delete-btn-ajax:hover,
-.delete-btn:hover {
+.delete-btn:hover,
+.action-btn:focus,
+.delete-btn-ajax:focus,
+.delete-btn:focus  {
     text-decoration: none;
     color: #fff;
     background-color: #164b8b;
