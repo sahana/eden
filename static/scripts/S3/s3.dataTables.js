@@ -1103,8 +1103,8 @@
                     if ($.inArray(j, gList) != -1) {
                         continue;
                     }
-                    // Ignore if the data starts with an html open tag
-                    if (aData[j][0] == '<') {
+                    // Ignore if the data contains HTML tags
+                    if (aData[j].match(/<.*>/)) {
                         tdposn++;
                         continue;
                     }

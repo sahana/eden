@@ -32,6 +32,7 @@ __all__ = ("S3BudgetModel",
            "S3BudgetBundleModel",
            "S3BudgetAllocationModel",
            "budget_rheader",
+           "budget_CostItemRepresent",
            )
 
 from gluon import *
@@ -1292,6 +1293,7 @@ class S3BudgetAllocationModel(S3Model):
                           self.super_link("cost_item_id", "budget_cost_item",
                                           readable = True,
                                           writable = True,
+                                          represent = self.budget_CostItemRepresent(),
                                           ),
                           # @ToDo: s3_datetime
                           s3_date("start_date",
@@ -1370,6 +1372,146 @@ class S3BudgetAllocationModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+# =============================================================================
+class budget_CostItemRepresent(S3Represent):
+    """ Representation of Cost Items """
+
+    # -------------------------------------------------------------------------
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        super(budget_CostItemRepresent, self).__init__(lookup="budget_cost_item",
+                                                       key="cost_item_id",
+                                                       )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup function
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        instance_fields = {
+            "event_asset": ["incident_id", "asset_id"],
+            "event_site": ["incident_id", "site_id"],
+            "event_human_resource": ["incident_id", "human_resource_id"],
+        }
+
+        # Get all super-entity rows
+        etable = s3db.budget_cost_item
+        rows = db(key.belongs(values)).select(key,
+                                              etable.instance_type)
+        self.queries += 1
+
+        # Sort the super-entity rows by instance type
+        keyname = key.name
+        types = {}
+        for row in rows:
+            instance_type = row.instance_type
+            cost_item_id = row[keyname]
+            if instance_type not in types:
+                types[instance_type] = {cost_item_id: row}
+            else:
+                types[instance_type][cost_item_id] = row
+
+        # Get all instance records (per instance type)
+        results = []
+        append = results.append
+        for instance_type in types:
+
+            # Determine instance table
+            table = s3db.table(instance_type)
+            if not table:
+                continue
+
+            # Determine instance fields
+            fields = []
+            bulk_repr = {}
+            if instance_type in instance_fields:
+                for fname in instance_fields[instance_type]:
+                    field = table[fname]
+                    # Supports bulk representation?
+                    represent = field.represent
+                    if represent and hasattr(represent, "bulk"):
+                        bulk_repr[fname] = {"method": represent, "values": []}
+                    fields.append(field)
+            else:
+                continue
+            fields.insert(0, table[keyname])
+
+            # Extract instance rows
+            query = (table[keyname].belongs(types[instance_type].keys()))
+            rows = db(query).select(*fields)
+            self.queries += 1
+
+            # Construct result rows
+            sdata = types[instance_type]
+            for row in rows:
+                for fname, frepr in bulk_repr.items():
+                    frepr["values"].append(row[fname])
+                # Construct a new Row which contains both, the super-entity
+                # record and the instance record:
+                append(Row(budget_cost_item = sdata[row[keyname]],
+                           **{instance_type: row}))
+
+            # Bulk representation of instance fields:
+            # The results are stored in S3Represent instance, and there they
+            # will be re-used for single-value representation in represent_row
+            for fname, frepr in bulk_repr.items():
+                frepr["method"].bulk(frepr["values"])
+
+        return results
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        s3db = current.s3db
+
+        cost_item = row.budget_cost_item
+        instance_type = cost_item.instance_type
+
+        # Type-specific representation
+        item = object.__getattribute__(row, instance_type)
+        if instance_type == "event_asset":
+            table = s3db.event_asset
+            repr_str = "%s - %s" % \
+                       (table.incident_id.represent(item.incident_id),
+                        table.asset_id.represent(item.asset_id),
+                        )
+        elif instance_type == "event_site":
+            table = s3db.event_site
+            repr_str = "%s - %s" % \
+                       (table.incident_id.represent(item.incident_id),
+                        table.site_id.represent(item.site_id),
+                        )
+        elif instance_type == "event_human_resource":
+            table = s3db.event_human_resource
+            repr_str = "%s - %s" % \
+                        (table.incident_id.represent(item.incident_id),
+                         table.human_resource_id.represent(item.human_resource_id),
+                         )
+        else:
+            # Unknown instance type
+            etable = s3db.budget_cost_item
+            instance_type_nice = etable.instance_type.represent(instance_type)
+            repr_str = "%s #%s" % (instance_type_nice,
+                                   cost_item.cost_item_id,
+                                   )
+        return repr_str
 
 # =============================================================================
 def budget_kit_totals(kit_id):
@@ -1607,7 +1749,7 @@ def budget_rheader(r):
         tabs = [(T("Basic Details"), None),
                 (T("Staff"), "staff"),
                 (T("Bundles"), "bundle"),
-                #(T("Allocation"), "allocation"),
+                (T("Allocation"), "allocation"),
                 (T("Report"), "timeplot", tpvars),
                 ]
                
