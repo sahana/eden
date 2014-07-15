@@ -48,12 +48,10 @@
          */
         _init: function() {
 
+            // Initialize instance data
             this.widget_id = $(this.element).attr('id');
-            
             this.input = $(this.element).find('input[type="hidden"][name="tp-data"]').first();
             this.data = null;
-
-            // Render all initial contents
             this.svg = null;
 
             // Refresh
@@ -62,11 +60,23 @@
 
         /**
          * Remove generated elements & reset other changes
-         *
-         * @todo: implement
          */
         _destroy: function() {
-            
+
+            var el = this.element;
+
+            // Unbind events
+            this._unbindEvents();
+
+            // Remove the chart
+            if (this.svg) {
+                this.svg.remove();
+                this.svg = null;
+                el.find('.tp-chart').empty();
+            }
+
+            // Forget the data
+            this.data = null;
         },
         
         /**
@@ -74,7 +84,7 @@
          */
         refresh: function() {
 
-            var $el = this.element
+            var el = this.element
 
             this._unbindEvents();
             
@@ -82,13 +92,13 @@
 
             // Hide submit-button if autoSubmit
             if (this.options.autoSubmit) {
-                $el.find('.tp-submit').hide();
+                el.find('.tp-submit').hide();
             } else {
-                $el.find('.tp-submit').show();
+                el.find('.tp-submit').show();
             }
             this._bindEvents();
             
-            $el.find('.tp-throbber').hide();
+            el.find('.tp-throbber').hide();
         },
 
         /**
