@@ -1378,14 +1378,22 @@ class budget_CostItemRepresent(S3Represent):
     """ Representation of Cost Items """
 
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, show_link=False):
         """
             Constructor
         """
 
         super(budget_CostItemRepresent, self).__init__(lookup="budget_cost_item",
                                                        key="cost_item_id",
+                                                       show_link=show_link,
                                                        )
+
+        s3db = current.s3db
+        self.represent = {
+            "asset_id": s3db.asset_AssetRepresent(show_link=False),
+            "site_id": s3db.org_SiteRepresent(show_link=False),
+            "human_resource_id": s3db.hrm_HumanResourceRepresent(show_link=False),
+        }
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=[]):
@@ -1440,7 +1448,10 @@ class budget_CostItemRepresent(S3Represent):
                 for fname in instance_fields[instance_type]:
                     field = table[fname]
                     # Supports bulk representation?
-                    represent = field.represent
+                    if fname in self.represent:
+                        represent = self.represent[fname]
+                    else:
+                        represent = field.represent
                     if represent and hasattr(represent, "bulk"):
                         bulk_repr[fname] = {"method": represent, "values": []}
                     fields.append(field)
@@ -1490,19 +1501,19 @@ class budget_CostItemRepresent(S3Represent):
             table = s3db.event_asset
             repr_str = "%s - %s" % \
                        (table.incident_id.represent(item.incident_id),
-                        table.asset_id.represent(item.asset_id),
+                        self.represent["asset_id"](item.asset_id),
                         )
         elif instance_type == "event_site":
             table = s3db.event_site
             repr_str = "%s - %s" % \
                        (table.incident_id.represent(item.incident_id),
-                        table.site_id.represent(item.site_id),
+                        self.represent["site_id"](item.site_id),
                         )
         elif instance_type == "event_human_resource":
             table = s3db.event_human_resource
             repr_str = "%s - %s" % \
                         (table.incident_id.represent(item.incident_id),
-                         table.human_resource_id.represent(item.human_resource_id),
+                         self.represent["human_resource_id"](item.human_resource_id),
                          )
         else:
             # Unknown instance type

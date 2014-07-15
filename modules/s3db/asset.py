@@ -34,6 +34,7 @@ __all__ = ("S3AssetModel",
            "asset_types",
            "asset_log_status",
            "asset_controller",
+           "asset_AssetRepresent",
            )
 
 try:
