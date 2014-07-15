@@ -955,6 +955,90 @@ class TimePlotTests(unittest.TestCase):
             assertEqual(value2, 0.5)
 
     # -------------------------------------------------------------------------
+    def testEventDataCumulativeAggregation(self):
+        """ Test aggregation of event data, cumulative """
+
+        s3db = current.s3db
+        resource = s3db.resource("tp_test_events")
+
+        tp = S3TimePlot()
+        tp.resource = resource
+
+        event_start = resource.resolve_selector("event_start")
+        event_end =  resource.resolve_selector("event_end")
+        fact1 = resource.resolve_selector("parameter1")
+        fact2 = resource.resolve_selector("parameter2")
+
+        start = "2012-01-01"
+        end = "2013-01-01"
+        ef = tp.create_event_frame(tp.resource,
+                                   event_start,
+                                   event_end,
+                                   start=start,
+                                   end=end,
+                                   slots="months")
+        tp.add_event_data(ef,
+                          resource,
+                          event_start,
+                          event_end,
+                          [fact1, fact2],
+                          cumulative=True,
+                          )
+
+        expected = [
+            ((2012,1,1), (2012,2,1), 45, 12),       # 01 P NS1 NS2 NS3 (SE1 SE2 SE3)
+            ((2012,2,1), (2012,3,1), 45, 12),       # 02 P NS1 NS2 NS3 (SE1 SE2 SE3)
+            ((2012,3,1), (2012,4,1), 45, 9),        # 03 P NS2 NS3 (SE1 SE2 SE3)
+            ((2012,4,1), (2012,5,1), 45, 9),        # 04 P NS2 NS3 (SE1 SE2 SE3)
+            ((2012,5,1), (2012,6,1), 45, 9),        # 05 P NS2 NS3 (SE1 SE2 SE3)
+            ((2012,6,1), (2012,7,1), 45, 6),        # 06 P NS3 (SE1 SE2 SE3)
+            ((2012,7,1), (2012,8,1), 48, 9),        # 07 P NS3 (SE1 SE2 SE3) NE1
+            ((2012,8,1), (2012,9,1), 51, 9),        # 08 P NS3 (SE1 SE2 SE3) NE1
+            ((2012,9,1), (2012,10,1), 54, 6),       # 09 P (SE1 SE2 SE3) NE1
+            ((2012,10,1), (2012,11,1), 60, 9),      # 10 P (SE1 SE2 SE3) NE1 NE2
+            ((2012,11,1), (2012,12,1), 66, 9),      # 11 P (SE1 SE2 SE3) NE1 NE2
+            ((2012,12,1), (2013,1,1), 72, 9),       # 12 P (SE1 SE2 SE3) NE1 NE2
+        ]
+
+        assertEqual = self.assertEqual
+
+        assertEqual(ef.slots, "months")
+        for i, period in enumerate(ef):
+            expected_start, expected_end, expected_cumulative, expected_sum = expected[i]
+            expected_start = tp_datetime(*expected_start)
+            expected_end = tp_datetime(*expected_end)
+
+            # Verify period start and end
+            assertEqual(period.start, expected_start,
+                        msg="Period %s start should be %s, but is %s" %
+                        (i, expected_start, period.start))
+            assertEqual(period.end, expected_end,
+                        msg="Period %s end should be %s, but is %s" %
+                        (i, expected_end, period.end))
+
+            # Verify cumulative value
+            value1 = period.aggregate(method="cumulate",
+                                      fields=[fact1.colname],
+                                      arguments=["months"],
+                                      event_type=resource.tablename)
+            assertEqual(value1, expected_cumulative,
+                        msg="Period %s cumulative sum should be %s, but is %s" %
+                        (i, expected_cumulative, value1))
+
+            value1 = period.aggregate(method="sum",
+                                      fields=[fact1.colname],
+                                      event_type=resource.tablename)
+            assertEqual(value1, expected_sum,
+                        msg="Period %s sum should be %s, but is %s" %
+                        (i, expected_sum, value1))
+                        
+            # Indirect count-check: average should be constant
+            value2 = period.aggregate(method="avg",
+                                      fields=[fact2.colname],
+                                      event_type=resource.tablename)
+            assertEqual(value2, 0.5)
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def is_now(dt):
 

@@ -1,5 +1,5 @@
 /**
- * jQuery UI timeplot Widget for S3Timeline
+ * jQuery UI timeplot Widget for S3TimePlot
  *
  * @copyright: 2013-14 (c) Sahana Software Foundation
  * @license: MIT

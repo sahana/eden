@@ -1204,7 +1204,7 @@ class S3TimePlotPeriod(object):
         """
 
         if event_type in self.csets:
-            events = self.csets[event_type]
+            events = dict(self.csets[event_type])
         else:
             events = {}
         if event_type in self.psets:
@@ -1327,8 +1327,8 @@ class S3TimePlotEventFrame(object):
         else:
             first = rule.before(start, inc=True)
 
-        current = []
-        previous = []
+        current_events = {}
+        previous_events = {}
         for start in rule.between(first, self.end, inc=True):
 
             # Compute end of this period
@@ -1344,10 +1344,10 @@ class S3TimePlotEventFrame(object):
             for index, event in enumerate(events):
                 if event.end and event.end < start:
                     # Event ended before this period
-                    previous.append(event)
+                    previous_events[event.event_id] = event
                 elif event.start is None or event.start < end:
                     # Event starts before or during this period
-                    current.append(event)
+                    current_events[event.event_id] = event
                 else:
                     # Event starts only after this period
                     break
@@ -1356,13 +1356,13 @@ class S3TimePlotEventFrame(object):
             period = periods.get(start)
             if period is None:
                 period = periods[start] = S3TimePlotPeriod(start, end=end)
-            for event in current:
+            for event in current_events.values():
                 period.add_current(event)
-            for event in previous:
+            for event in previous_events.values():
                 period.add_previous(event)
 
             empty = False
-            
+
             # Remaining events
             events = events[index:]
             if not events:
@@ -1370,13 +1370,13 @@ class S3TimePlotEventFrame(object):
                 break
 
             # Remove events which end during this period
-            remaining = []
-            for event in current:
+            remaining = {}
+            for event_id, event in current_events.items():
                 if not event.end or event.end > end:
-                    remaining.append(event)
+                    remaining[event_id] = event
                 else:
-                    previous.append(event)
-            current = remaining
+                    previous_events[event_id] = event
+            current_events = remaining
 
         self.empty = empty
         return
