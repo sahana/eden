@@ -1500,7 +1500,8 @@ S3OptionsFilter({
                     s3db.hrm_human_resource_onaccept(Storage(id=hr_id))
 
         # Configure the next page to go to based on the request type
-        if is_template:
+        inline_forms = settings.get_req_inline_forms()
+        if inline_forms and is_template:
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f=f,
@@ -1509,7 +1510,7 @@ S3OptionsFilter({
                                              f=f,
                                              args=["[id]", "job"]))
 
-        elif not settings.get_req_inline_forms():
+        elif not inline_forms:
             if table.type.default:
                 type = table.type.default
             elif "type" in form_vars:
