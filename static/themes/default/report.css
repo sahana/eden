@@ -166,9 +166,21 @@
 .grid {
     fill: none;
 }
-rect.baseline {
-    fill: lightgreen;
+rect.basearea {
     opacity: 0.4;
+    stroke-width: 0;
+}
+rect.basearea.positive {
+    fill: lightgreen;
+}
+rect.basearea.negative {
+    fill: #fcc;
+}
+line.baseline.positive {
+    stroke: green;
+}
+line.baseline.negative {
+    stroke: red;
 }
 rect.bar.positive {
     fill: steelblue;

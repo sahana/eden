@@ -273,15 +273,26 @@
                 // Render baseline?
                 var baseline = data.baseline;
                 if (baseline && !burnDown) {
-                    svg.selectAll("baseline")
+                    
+                    svg.selectAll("basearea")
                        .data([baseline])
                        .enter()
                        .append("rect")
-                       .attr("class", "baseline")
+                       .attr("class", baseline > 0 ? "basearea positive" : "basearea negative")
                        .attr("x", 0 )
                        .attr("width", width )
                        .attr("y", function(d) { return d < 0 ? y(0) : y(d); })
                        .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
+                       
+                    svg.selectAll("baseline")
+                       .data([baseline])
+                       .enter()
+                       .append("line")
+                       .attr("class",  baseline > 0 ? "baseline positive" : "baseline negative")
+                       .attr("x1", 0)
+                       .attr("x2", width)
+                       .attr("y1", function(d) { return y(d);} )
+                       .attr("y2", function(d) { return y(d);} );
                 }
 
                 // Add the bars
