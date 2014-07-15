@@ -714,11 +714,11 @@ class S3BudgetKitModel(S3Model):
 
         # Configuration
         configure(tablename,
-                  onaccept = self.budget_item_onaccept,
                   main = "code",
                   extra = "description",
+                  onaccept = self.budget_item_onaccept,
                   orderby = "budget_item.category_type",
-                 )
+                  )
 
         # ---------------------------------------------------------------------
         # Kit<>Item Many2Many
@@ -992,15 +992,15 @@ class S3BudgetBundleModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Kit"),
+            label_create = T("Add Kit"),
             title_display = T("Kit Details"),
             title_list = T("Kits"),
             title_update = T("Edit Kit"),
             label_list_button = T("List Kits"),
-            label_delete_button = T("Delete Kit"),
+            label_delete_button = T("Remove Kit"),
             msg_record_created = T("Kit added"),
             msg_record_modified = T("Kit updated"),
-            msg_record_deleted = T("Kit deleted"),
+            msg_record_deleted = T("Kit removed"),
             msg_list_empty = T("No Kits currently registered in this bundle"),
         )
 
@@ -1036,15 +1036,15 @@ class S3BudgetBundleModel(S3Model):
                      
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Item"),
+            label_create = T("Add Item"),
             title_display = T("Item Details"),
             title_list = T("Items"),
             title_update = T("Edit Item"),
             label_list_button = T("List Items"),
-            label_delete_button = T("Delete Items"),
+            label_delete_button = T("Remove Item"),
             msg_record_created = T("Item added"),
             msg_record_modified = T("Item updated"),
-            msg_record_deleted = T("Item deleted"),
+            msg_record_deleted = T("Item removed"),
             msg_list_empty = T("No Items currently registered in this bundle"),
         )
 
@@ -1077,16 +1077,16 @@ class S3BudgetBundleModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Bundle"),
+            label_create = T("Add Bundle"),
             title_display = T("Bundle Details"),
             title_list = T("Budget Bundles"),
             title_update = T("Edit Bundle"),
             label_list_button = T("List Bundles"),
-            label_delete_button = T("Delete Bundle"),
+            label_delete_button = T("Remove Bundle"),
             msg_record_created = T("Bundle added"),
             msg_record_modified = T("Bundle updated"),
-            msg_record_deleted = T("Bundle deleted"),
-            msg_list_empty = T("No Bundles currently registered"),
+            msg_record_deleted = T("Bundle removed"),
+            msg_list_empty = T("No Bundles currently registered in this Budget"),
         )
 
         # Configuration

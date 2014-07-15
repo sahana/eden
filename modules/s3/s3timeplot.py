@@ -882,6 +882,7 @@ class S3TimePlotForm(S3ReportForm):
                     ("Last Month", "-1month", "", "days"),
                     ("Last Week", "-1week", "", "days"),
                     ("All/+1 Month", "", "+1month", ""),
+                    ("All/+2 Month", "", "+2month", ""),
                     ("-6/+3 Months", "-6months", "+9months", "months"),
                     ("-3/+1 Months", "-3months", "+4months", "weeks"),
                     ("-4/+2 Weeks", "-4weeks", "+6weeks", "weeks"),
