@@ -27,10 +27,13 @@
          *                                  deactivate auto-submit
          * @prop {string} emptyMessage - message to show when no data are
          *                               available for the time interval
+         * @prop {bool} burnDown - render as burnDown from baseline
+         *                         rather than as burnUp from zero
          */
         options: {
             ajaxURL: null,
             autoSubmit: 1000,
+            burnDown: false,
             emptyMessage: 'No data available'
         },
 
@@ -128,16 +131,11 @@
             var available_width = el.width();
             var available_height = available_width / 16 * 5;
 
-            var values = data.items,
-                baseline = data.baseline;
-            if (baseline) {
-                var b = [[null, null, baseline]];
-                values = values ? values.concat(b) : b;
-            }
-            var maxValue = d3.max(values, function(d) { return d[2]; })
-            var marginLeft = maxValue.toString().length * 6 + 18;
+            var values = this._computeValues(data);
+            var marginLeft = this.options.burnDown ? 10 : values.maxValue.toString().length * 6 + 18;
+            var marginRight = this.options.burnDown ? values.maxValue.toString().length * 6 + 18 : 10;
             
-            var margin = {top: 40, right: 10, bottom: 70, left: marginLeft},
+            var margin = {top: 40, right: marginRight, bottom: 70, left: marginLeft},
                 width = available_width - margin.left - margin.right,
                 height = available_height - margin.top - margin.bottom;
 
@@ -150,8 +148,67 @@
                         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
             this.svg = svg;
 
-            // @todo: move into subfunction per chart type
-            // @todo: split groups, stack or group bars
+            this._renderBarChart(values, width, height);
+        },
+
+        /**
+         * Compute the chart values
+         *
+         * @param {object} data - the data (from the server)
+         * @return chart data object including min/max values
+         */
+        _computeValues: function(data) {
+            
+            var values = data.items,
+                baseline = data.baseline,
+                burnDown = this.options.burnDown;
+
+            var results = [],
+                minValue,
+                maxValue;
+            if (!data.empty) {
+                var items = data.items, v;
+                for (var i=0, len=items.length; i<len; i++) {
+                    item = items[i];
+                    if (burnDown && (baseline || baseline == 0)) {
+                        v = baseline - item[2];
+                    } else {
+                        v = item[2];
+                    }
+                    results.push([item[0], item[1], v]);
+                }
+                var minValue = d3.min(results, function(d) {
+                    return burnDown ? d[2] : Math.min(d[2], baseline);
+                });
+                var maxValue = d3.max(results, function(d) {
+                    return burnDown ? d[2] : Math.max(d[2], baseline);
+                });
+            } else {
+                results = [];
+                minValue = d3.min([baseline, 0]);
+                maxValue = d3.max([baseline, 0]);
+            }
+            return {
+                baseline: baseline,
+                items: results,
+                empty: data.empty,
+                minValue: minValue,
+                maxValue: maxValue
+            }
+        },
+
+        /**
+         * Render Bar Chart
+         *
+         * @param {object} data - the computed data (from _computeValues)
+         * @param {number} width - the chart width
+         * @param {number} height - the chart height
+         */
+
+        _renderBarChart: function(data, width, height) {
+
+            var svg = this.svg,
+                burnDown = this.options.burnDown;
 
             // Create the x axis
             var x = d3.scale.ordinal()
@@ -169,14 +226,14 @@
 
             var yAxis = d3.svg.axis()
                               .scale(y)
-                              .orient("left");
+                              .orient(burnDown? "right" : "left");
 
             // Compute the scales
             var self = this;
             x.domain(data.items.map(function(d) {
                 return self._parseDate(d[0]);
             }));
-            y.domain([0, maxValue]);
+            y.domain([Math.min(0, data.minValue), data.maxValue]);
 
             // Add x axis
             svg.append("g")
@@ -191,8 +248,10 @@
                .attr("transform", "rotate(-90)" );
 
             // Add y axis
+            var yAxisPosition = burnDown ? width : 0;
             svg.append("g")
                .attr("class", "y axis")
+               .attr("transform", "translate(" + yAxisPosition + ",0)")
                .call(yAxis);
 
             if (data.empty) {
@@ -209,10 +268,11 @@
                 // Add horizontal grid lines
                 svg.append("g")
                    .attr("class", "grid")
-                   .call(yAxis.tickSize(-width).tickFormat(""));
+                   .call(yAxis.tickSize(burnDown ? width : -width).tickFormat(""));
 
                 // Render baseline?
-                if (baseline) {
+                var baseline = data.baseline;
+                if (baseline && !burnDown) {
                     svg.selectAll("baseline")
                        .data([baseline])
                        .enter()
@@ -220,8 +280,8 @@
                        .attr("class", "baseline")
                        .attr("x", 0 )
                        .attr("width", width )
-                       .attr("y", function(d) { return y(d); })
-                       .attr("height", function(d) { return height - y(d); });
+                       .attr("y", function(d) { return d < 0 ? y(0) : y(d); })
+                       .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
                 }
 
                 // Add the bars
@@ -230,13 +290,12 @@
 
                 bar.enter()
                    .append("rect")
-                   .attr("class", "bar")
+                   .attr("class", function(d, i) { return d[2] < 0 ? "bar negative" : "bar positive"; })
                    .attr("x", function(d) { return x(self._parseDate(d[0])); })
                    .attr("width", x.rangeBand())
-                   .attr("y", function(d) { return y(d[2]); })
-                   .attr("height", function(d) { return height - y(d[2]); });
+                   .attr("y", function(d) { return d[2] < 0 ? y(0) : y(d[2]); })
+                   .attr("height", function(d) { return Math.abs(y(d[2]) - y(0)); });
             }
-
         },
 
         /**

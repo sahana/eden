@@ -170,8 +170,11 @@ rect.baseline {
     fill: lightgreen;
     opacity: 0.2;
 }
-rect.bar {
+rect.bar.positive {
     fill: steelblue;
+}
+rect.bar.negative {
+    fill: brown;
 }
 text.empty {
     font-size: 12px;
