@@ -1280,6 +1280,7 @@ class asset_AssetRepresent(S3Represent):
 
         rows = db(query).select(table.id,
                                 table.number,
+                                table.type,
                                 itable.name,
                                 btable.name,
                                 left=btable.on(itable.brand_id == btable.id),
@@ -1308,5 +1309,26 @@ class asset_AssetRepresent(S3Represent):
         else:
             represent = "%s)" % represent
         return s3_unicode(represent)
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, row=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+            @param k: the key (site_id)
+            @param v: the representation of the key
+            @param row: the row with this key
+        """
+
+        if row:
+            type = row.get("asset_asset.type", None)
+            if type == 1:
+                return A(v, _href=URL(c="vehicle", f="vehicle", args=[k],
+                                      # remove the .aaData extension in paginated views
+                                      extension=""
+                                      ))
+        k = s3_unicode(k)
+        return A(v, _href=self.linkto.replace("[id]", k) \
+                                     .replace("%5Bid%5D", k))
 
 # END =========================================================================
