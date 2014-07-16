@@ -81,7 +81,8 @@ class S3CRUD(S3Method):
         """
 
         self.settings = current.response.s3.crud
-        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
+        sqlform = self._config("crud_form")
+        self.sqlform = sqlform if sqlform else S3SQLDefaultForm()
 
         # Pre-populate create-form?
         self.data = None
@@ -154,7 +155,8 @@ class S3CRUD(S3Method):
 
         # Settings
         self.settings = current.response.s3.crud
-        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
+        sqlform = self._config("crud_form")
+        self.sqlform = sqlform if sqlform else S3SQLDefaultForm()
 
         _attr = Storage(attr)
         _attr["list_id"] = widget_id
