@@ -5235,7 +5235,39 @@ def hrm_competency_controller():
     s3 = current.response.s3
 
     def prep(r):
-        if not r.id:
+        if r.method in ("create", "create.popup", "update", "update.popup"):
+            # Coming from Profile page?
+            table = r.table
+            get_vars = r.get_vars
+            person_id = get_vars.get("~.person_id", None)
+            if person_id:
+                try:
+                    person_id = int(person_id)
+                except ValueError:
+                    pass
+                else:
+                    field = table.person_id
+                    field.default = person_id
+                    field.readable = field.writable = False
+
+                # Additional filtering of the profile section by skill type
+                skill_type_name = get_vars.get("~.skill_id$skill_type_id$name")
+                if skill_type_name:
+                    ttable = s3db.hrm_skill_type
+                    query = (ttable.name == skill_type_name)
+                    rows = current.db(query).select(ttable.id)
+                    skill_type_ids = [row.id for row in rows]
+                    if skill_type_ids:
+                        field = table.skill_id
+                        requires = field.requires
+                        if isinstance(requires, IS_EMPTY_OR):
+                            requires = requires.other
+                        if hasattr(requires, "set_filter"):
+                            requires.set_filter(filterby="skill_type_id",
+                                                filter_opts=skill_type_ids,
+                                                )
+                
+        elif not r.id:
             filter_widgets = [
                 S3TextFilter(["person_id$first_name",
                               "person_id$middle_name",
@@ -5264,13 +5296,6 @@ def hrm_competency_controller():
                                           "comments",
                                           ],
                            )
-        elif r.method in ("create", "create.popup", "update", "update.popup"):
-            # Coming from Profile page?
-            person_id = current.request.get_vars.get("~.person_id", None)
-            if person_id:
-                field = s3db.hrm_competency.person_id
-                field.default = person_id
-                field.readable = field.writable = False
 
         return True
     s3.prep = prep

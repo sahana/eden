@@ -986,19 +986,20 @@ def customise_hrm_human_resource_controller(**attr):
 
             # Custom profile widgets for hrm_competency ("skills"):
             from s3 import FS
-            subsets = (("Computer", "Computer Skills"),
-                       ("Language", "Language Skills"),
+            subsets = (("Computer", "Computer Skills", "Add Computer Skills"),
+                       ("Language", "Language Skills", "Add Language Skills"),
                        )
             widgets = []
             profile_widgets = r.resource.get_config("profile_widgets")
             while profile_widgets:
                 widget = profile_widgets.pop(0)
                 if widget["tablename"] == "hrm_competency":
-                    for skill_type, label in subsets:
+                    for skill_type, label, label_create in subsets:
                         query = widget["filter"] & \
                                 (FS("skill_id$skill_type_id$name") == skill_type)
                         new_widget = dict(widget)
                         new_widget["label"] = label
+                        new_widget["label_create"] = label_create
                         new_widget["filter"] = query
                         widgets.append(new_widget)
                     break
