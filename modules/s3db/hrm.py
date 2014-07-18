@@ -3190,9 +3190,7 @@ class S3HRAppraisalModel(S3Model):
                            ),
                      person_id("supervisor_id",
                                label = T("Supervisor"),
-                               requires = IS_EMPTY_OR(
-                                            IS_ADD_PERSON_WIDGET2()
-                                          ),
+                               requires = IS_ADD_PERSON_WIDGET2(allow_empty=True),
                                widget = S3AddPersonWidget2(),
                                ),
                      s3_comments(),
@@ -3395,9 +3393,7 @@ class S3HRExperienceModel(S3Model):
                           self.gis_location_id(),
                           person_id("supervisor_id",
                                     label = T("Supervisor"),
-                                    requires = IS_EMPTY_OR(
-                                        IS_ADD_PERSON_WIDGET2()
-                                        ),
+                                    requires = IS_ADD_PERSON_WIDGET2(allow_empty=True),
                                     widget = S3AddPersonWidget2(),
                                     ),
                           s3_comments(),

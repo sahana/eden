@@ -2249,11 +2249,27 @@ class IS_ADD_PERSON_WIDGET2(Validator):
     """
 
     def __init__(self,
-                 error_message=None):
+                 error_message=None,
+                 allow_empty=False):
+        """
+            Constructor
+
+            @param error_message: alternative error message
+            @param allow_empty: allow the selector to be left empty
+
+            @note: This validator can *not* be used together with IS_EMPTY_OR,
+                   because when a new person gets entered, the submitted value
+                   for person_id would be None and hence satisfy IS_EMPTY_OR,
+                   and then this validator would never be reached and no new
+                   person record would be created => instead of IS_EMPTY_OR,
+                   use IS_ADD_PERSON_WIDGET2(allow_empty=True).
+        """
 
         self.error_message = error_message
+        self.allow_empty = allow_empty
+        
         # Tell s3_mark_required that this validator doesn't accept NULL values
-        self.mark_required = True
+        self.mark_required = not allow_empty
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -2478,13 +2494,17 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             _vars = Storage([(k, _vars[k])
                              for k in _vars if k != "location_id"])
 
+            fullname = _vars["full_name"]
+            if not fullname and self.allow_empty:
+                return None, None
+
             # Validate the email
             email, error = email_validate(_vars.email, None)
             if error:
                 return (None, error)
 
             # Separate the Name into components
-            first_name, middle_name, last_name = name_split(_vars["full_name"])
+            first_name, middle_name, last_name = name_split(fullname)
             _vars["first_name"] = first_name
             _vars["middle_name"] = middle_name
             _vars["last_name"] = last_name

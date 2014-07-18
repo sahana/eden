@@ -827,9 +827,7 @@ class S3ProjectActivityModel(S3Model):
                      # Beneficiary could be a person_id
                      # Either way label should be clear
                      self.pr_person_id(label = T("Contact Person"),
-                                       requires = IS_EMPTY_OR(
-                                                    IS_ADD_PERSON_WIDGET2()
-                                                    ),
+                                       requires = IS_ADD_PERSON_WIDGET2(allow_empty=True),
                                        widget = S3AddPersonWidget2(controller="pr"),
                                        ),
                      Field("time_estimated", "double",
