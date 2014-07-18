@@ -471,23 +471,10 @@ a.cancel-form-btn,
 http://www.usabilitycounts.com/2009/11/18/form-design-and-the-fallacy-of-the-required-field/
 http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ */
 .req_key {
-    /* Tested on CRMT, MCOP, DRMP & NYC */
-    float: left;
-    /* Broken on CRMT - overlapped with Header
-    position: absolute;
-    z-index: 1;
-    margin-left: 7px; */
-    margin-top: 5px;
-    /* This pushed it 'out of the way' on NYC so not easy to see (CRMT just pads it down a little, still looking worse, DRMP looks awful with this)
-    float: right;
-    margin-right: 7px;*/
-    font-size: 12px;
-}
-
-#list-add .req_key {
     position: absolute;
     z-index: 1;
     margin: 7px 0 0 7px;
+    font-size: 12px;
 }
 
 #last_update {

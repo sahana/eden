@@ -79,99 +79,6 @@ h2 i {
     margin-bottom: -16px;
 }
 
-/* Main Map */
-.map_home {
-    margin: 0;
-}
-
-.x-panel-header {
-    border-bottom: 1px solid #d0d0d0;
-}
-
-.x-tree .x-panel-body {
-    border: none;
-}
-
-.mappnlcntr {
-    margin-left: -2px; 
-}
-
-.map_save_button,
-.map_save_panel,
-.map_legend_tab,
-.map_legend_panel {
-    border: 1px solid #d0d0d0;
-}
-
-.map_legend_tab {
-    border-right: none;
-    margin-right: -1px;
-}
-
-.map_legend_panel {
-    margin-bottom: 45px;
-}
-
-.map_save_panel {
-    margin-top: 10px;
-}
-
-.gis_fullscreen_map-btn {
-    display: none;
-}
-/* Hide the large legend for the Floods layer */
-.map_legend_div {
-    max-width: 400px;
-}
-
-/* Increase Layer Fonts */
-.x-panel-header {
-    font: normal 18px/18px 'Open Sans',sans-serif;
-    padding: 9px 0 6px 4px;
-    }
-
-.x-tree-root-node > .x-tree-node > .x-unselectable > img {
-     margin: 4px 0 0 4px;
-}
-
-.x-tree-node-anchor {
-    padding-left: 3px;
-}
-
-.x-tree-root-node > .x-tree-node > .x-unselectable > a.x-tree-node-anchor span {
-    color: #656665;
-    font: normal 18px/30px 'Open Sans',sans-serif;
-    padding-left: 0;
-}
-
-.x-tree-root-node > .x-tree-node > .x-tree-node-ct {
-    margin-top: -6px;
-    }
-
-.x-tree-node a.x-tree-node-anchor span {
-    color: #656665;
-    font: normal 14px/18px 'Open Sans',sans-serif;
-}
-
-/* EXT: Last icon has a different image? */
-.x-tree-no-lines .x-tree-elbow-plus,
-.x-tree-no-lines .x-tree-elbow-end-plus {
-    background-image:url(../../scripts/ext/resources/images/gray/tree/elbow-end-plus-nl.gif);
-}
-.x-tree-no-lines .x-tree-elbow-minus,
-.x-tree-no-lines .x-tree-elbow-end-minus {
-    background-image:url(../../scripts/ext/resources/images/gray/tree/elbow-end-minus-nl.gif);
-}
-
-
-/* Saved Maps */
-#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td {
-    padding-right: 10px;
-}
-#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:last-child {
-    border-left: solid 1px;
-}
-
 /* Summary Page */
 h2 {
     float: left;
@@ -192,7 +99,7 @@ h2 {
 }
 
 #map {
-    float:left;
+    float: left;
 }
 
 #list-add,

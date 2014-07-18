@@ -4092,7 +4092,14 @@ class S3BulkImporter(object):
         if extension == "zip":
             # Need to unzip
             import zipfile
-            myfile = zipfile.ZipFile(fp)
+            try:
+                myfile = zipfile.ZipFile(fp)
+            except zipfile.BadZipfile, exception:
+                # e.g. trying to download through a captive portal
+                current.log.error(exception)
+                # Revert back to the working directory as before.
+                os.chdir(cwd)
+                return
             files = myfile.infolist()
             for f in files:
                 filename = f.filename

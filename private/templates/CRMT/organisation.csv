@@ -1,7 +1,7 @@
 Organisation,Acronym,Sectors,Services,Type,Country,Website,Twitter,Donation Phone,Comments
-LA City Emergency Management Department,EMD,"Government, Emergency Management",Emergency and Disaster Offices,Government,US,http://emergency.lacity.org,ReadyLA,,
-CERT Los Angeles,CERT,"Emergency Management, Emergency Management",Volunteer Opportunities,National NGO,US,http://www.cert-la.com,,,
-American Red Cross,ARC,"Emergency Management, Housing / Shelter",Volunteer Opportunities,Red Cross / Red Crescent,US,http://redcrossla.org,redcrossla,,
+LA City Emergency Management Department,EMD,"Government,Emergency Management",Emergency and Disaster Offices,Government,US,http://emergency.lacity.org,ReadyLA,,
+CERT Los Angeles,CERT,Emergency Management,Volunteer Opportunities,National NGO,US,http://www.cert-la.com,,,
+American Red Cross,ARC,"Emergency Management,Housing / Shelter",Volunteer Opportunities,Red Cross / Red Crescent,US,http://redcrossla.org,redcrossla,,
 LA Works,,Social Services,Volunteer Opportunities,National NGO,US,http://www.laworks.com,,,
 Volunteer Center of Los Angeles,VCLA,Social Services,,National NGO,US,http://www.vcla.net,,,
 Disaster Healthcare Volunteers,DHV,Emergency Management,Volunteer Opportunities,National NGO,US,http://www.lacountydhv.org,,,
@@ -18,5 +18,5 @@ LA City Department of Animal Services,,Government,Animals and Pets,Government,US
 LA County Chief Information Office,,Government,,Government,US,http://egis3.lacounty.gov/egis/,,,
 LA County Department of Public Health,,Government,,Government,US,http://publichealth.lacounty.gov,,,
 LA County Department of Social Services,,Government,,Government,US,http://www.ladpss.org,,,
-LA County Emergency Management Office,,"Government, Emergency Management",,Government,US,http://www.lacoa.org,,,
+LA County Emergency Management Office,,"Government,Emergency Management",,Government,US,http://www.lacoa.org,,,
 Walmart,,Business,,Business,US,http://www.walmart.com,,,
