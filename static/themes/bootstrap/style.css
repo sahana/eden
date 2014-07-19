@@ -476,6 +476,9 @@ http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ 
     margin: 7px 0 0 7px;
     font-size: 12px;
 }
+#component .req_key {
+    margin-top: 25px;
+}
 
 #last_update {
     color: #d35400;

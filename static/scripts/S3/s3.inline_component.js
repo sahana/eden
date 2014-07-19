@@ -1093,9 +1093,10 @@ $(function() {
             inline_edit(formname, rowindex);
         });
         $('.inline-form.add-row.single').each(function() {
+            var $this = $(this);
             var defaults = false;
-            $(this).find('input, select').each(function() {
-                if ($(this).val()) {
+            $this.find('input, select').each(function() {
+                if (($this.val()) && ($this.attr('type') != 'checkbox')) {
                     defaults = true;
                 }
             });

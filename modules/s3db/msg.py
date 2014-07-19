@@ -173,6 +173,7 @@ class S3ChannelModel(S3Model):
         """
             Enable a Channel
             - Schedule a Poll for new messages
+            - Enable all associated Parsers
 
             CLI API for shell scripts & to be called by S3Method
         """
@@ -190,6 +191,14 @@ class S3ChannelModel(S3Model):
             record.update_record(enabled = True)
             # Update Super
             s3db.update_super(table, record)
+
+        # Enable all Parser tasks on this channel
+        ptable = s3db.msg_parser
+        query = (ptable.channel_id == channel_id) & \
+                (ptable.deleted == False)
+        parsers = db(query).select(ptable.id)
+        for parser in parsers:
+            s3db.msg_parser_enable(parser.id)
 
         # Do we have an existing Task?
         ttable = db.scheduler_task
@@ -232,6 +241,7 @@ class S3ChannelModel(S3Model):
         """
             Disable a Channel
             - Remove schedule for Polling for new messages
+            - Disable all associated Parsers
 
             CLI API for shell scripts & to be called by S3Method
         """
@@ -249,6 +259,12 @@ class S3ChannelModel(S3Model):
             record.update_record(enabled = False)
             # Update Super
             s3db.update_super(table, record)
+
+        # Disable all Parser tasks on this channel
+        ptable = s3db.msg_parser
+        parsers = db(ptable.channel_id == channel_id).select(ptable.id)
+        for parser in parsers:
+            s3db.msg_parser_disable(parser.id)
 
         # Do we have an existing Task?
         ttable = db.scheduler_task

@@ -8,7 +8,7 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
-from gluon.html import *
+from gluon.html import A, URL
 from gluon.storage import Storage
 
 from s3 import s3_fullname
@@ -378,6 +378,57 @@ def customise_org_organisation_resource(r, tablename):
 
     s3db = current.s3db
 
+    if r.tablename == "org_organisation":
+        if r.id:
+            # Update form
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id == r.record.pe_id) & \
+                    (ctable.contact_method == "RSS") & \
+                    (ctable.deleted == False)
+            rss = current.db(query).select(ctable.poll,
+                                           limitby=(0, 1)
+                                           ).first()
+            if rss and not rss.poll:
+                # Remember that we don't wish to import
+                rss_import = "on"
+            else:
+                # Default
+                rss_import = None
+        else:
+            # Create form: Default
+            rss_import = None
+    else:
+        # Component
+        if r.component_id:
+            # Update form
+            otable = s3db.org_organisation
+            org = db(otable.id == r.component_id).select(otable.pe_id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+            try:
+                pe_id = org.pe_id
+            except:
+                current.log.error("Org %s not found: cannot set rss_import correctly" % r.component_id)
+                # Default
+                rss_import = None
+            else:
+                ctable = s3db.pr_contact
+                query = (ctable.pe_id == pe_id) & \
+                        (ctable.contact_method == "RSS") & \
+                        (ctable.deleted == False)
+                rss = current.db(query).select(ctable.poll,
+                                               limitby=(0, 1)
+                                               ).first()
+                if rss and not rss.poll:
+                    # Remember that we don't wish to import
+                    rss_import = "on"
+                else:
+                    # Default
+                    rss_import = None
+        else:
+            # Create form: Default
+            rss_import = None
+    
     crud_form = S3SQLCustomForm(
         "name",
         "acronym",
@@ -447,12 +498,16 @@ def customise_org_organisation_resource(r, tablename):
         S3SQLInlineComponent(
             "contact",
             comment = DIV(INPUT(_type="checkbox",
-                                _name="rss_no_import"),
+                                _name="rss_no_import",
+                                value = rss_import,
+                                ),
                           T("Don't Import Feed")),
             name = "rss",
             label = T("RSS"),
             multiple = False,
-            fields = [("", "value")],
+            fields = [("", "value"),
+                      #(T("Don't Import Feed"), "poll"),
+                      ],
             filterby = dict(field = "contact_method",
                             options = "RSS"
                             )
@@ -498,6 +553,7 @@ def customise_org_organisation_resource(r, tablename):
                             )
         ),
         "comments",
+        postprocess = pr_contact_postprocess,
     )
 
     from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
@@ -546,10 +602,6 @@ def customise_org_organisation_resource(r, tablename):
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
                    list_fields = list_fields,
-                   )
-
-    s3db.configure("pr_contact",
-                   onaccept = pr_contact_onaccept,
                    )
     
 settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -647,7 +699,7 @@ def customise_org_group_controller(**attr):
 
             if r.interactive:
                 from gluon.html import DIV, INPUT
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 if r.method != "read":
                     from gluon.validators import IS_EMPTY_OR
                     from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
@@ -672,6 +724,25 @@ def customise_org_group_controller(**attr):
 
                 table.mission.readable = table.mission.writable = True
                 table.meetings.readable = table.meetings.writable = True
+
+                if r.id:
+                    # Update form
+                    ctable = s3db.pr_contact
+                    query = (ctable.pe_id == r.record.pe_id) & \
+                            (ctable.contact_method == "RSS") & \
+                            (ctable.deleted == False)
+                    rss = current.db(query).select(ctable.poll,
+                                                   limitby=(0, 1)
+                                                   ).first()
+                    if rss and not rss.poll:
+                        # Remember that we don't wish to import
+                        rss_import = "on"
+                    else:
+                        # Default
+                        rss_import = None
+                else:
+                    # Create form: Default
+                    rss_import = None
 
                 crud_form = S3SQLCustomForm(
                     "name",
@@ -701,7 +772,9 @@ def customise_org_group_controller(**attr):
                     S3SQLInlineComponent(
                         "contact",
                         comment = DIV(INPUT(_type="checkbox",
-                                            _name="rss_no_import"),
+                                            _name="rss_no_import",
+                                            value = rss_import,
+                                            ),
                                       T("Don't Import Feed")),
                         name = "rss",
                         label = T("RSS"),
@@ -753,14 +826,11 @@ def customise_org_group_controller(**attr):
                     ),
                     "meetings",
                     "comments",
+                    postprocess = pr_contact_postprocess,
                 )
 
                 s3db.configure("org_group",
                                crud_form = crud_form,
-                               )
-
-                s3db.configure("pr_contact",
-                               onaccept = pr_contact_onaccept,
                                )
 
         return result
@@ -1042,9 +1112,6 @@ def customise_pr_group_resource(r, tablename):
             - but runs before prep
     """
 
-    from gluon import Field, URL
-    from s3 import s3_comments_widget
-
     s3db = current.s3db
 
     table = s3db.pr_group
@@ -1058,8 +1125,10 @@ def customise_pr_group_resource(r, tablename):
     table.meetings.readable = table.meetings.writable = True
 
     # Increase size of widget
+    from s3 import s3_comments_widget
     table.description.widget = s3_comments_widget
 
+    from gluon import Field
     table.chairperson = Field.Method("chairperson", chairperson)
 
     list_fields = [(T("Network"), "group_team.org_group_id"),
@@ -1080,46 +1149,77 @@ def customise_pr_group_resource(r, tablename):
 settings.customise_pr_group_resource = customise_pr_group_resource
 
 # -----------------------------------------------------------------------------
-def pr_contact_onaccept(form):
+def pr_contact_postprocess(form):
     """
         Import Organisation/Network RSS Feeds
     """
 
-    form_vars = form.vars
-    contact_method = form_vars.contact_method
-    if not contact_method or contact_method != "RSS":
-        return
-    no_import = current.request.post_vars.get("rss_no_import", None)
-    if no_import:
-        return
-    url = form_vars.value
-    db = current.db
     s3db = current.s3db
+
+    form_vars = form.vars
+
+    rss_url = form_vars.rsscontact_i_value_edit_0 or \
+              form_vars.rsscontact_i_value_edit_none
+    if not rss_url:
+        if form.record:
+            # Update form
+            old_rss = form.record.sub_rsscontact
+            import json
+            old_rss = json.loads(old_rss)["data"][0]["value"]["value"]
+            if old_rss:
+                # RSS feed is being deleted, so we should disable it
+                table = s3db.msg_rss_channel
+                old = current.db(table.url == old_rss).select(table.channel_id,
+                                                              table.enabled,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                if old and old.enabled:
+                    s3db.msg_channel_disable("msg_rss_channel", old.channel_id)
+                return
+        else:
+            # Nothing to do :)
+            return
+
+    no_import = current.request.post_vars.get("rss_no_import", None)
+
     table = s3db.msg_rss_channel
-    exists  = db(table.url == url).select(table.id, limitby=(0, 1))
+    exists = current.db(table.url == rss_url).select(table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
     if exists:
+        if no_import:
+            if exists.enabled:
+                # Disable channel (& associated parsers)
+                s3db.msg_channel_disable("msg_rss_channel", exists.channel_id)
+            return
+        elif exists.enabled:
+            # Nothing to do :)
+            return
+        else:
+            # Enable channel (& associated parsers)
+            s3db.msg_channel_enable("msg_rss_channel", exists.channel_id)
+            return
+    elif no_import:
+        # Nothing to do :)
         return
-    # Lookup name of Org/Network
-    pe_id = form_vars.pe_id
-    etable = db.pr_pentity
-    instance_type = db(etable.pe_id == pe_id).select(etable.instance_type,
-                                                     limitby=(0, 1)
-                                                     ).first().instance_type
-    otable = db[instance_type]
-    name = db(otable.pe_id == pe_id).select(otable.name,
-                                            limitby=(0, 1)
-                                            ).first().name
+
     # Add RSS Channel
-    _id = table.insert(name=name, enabled=True, url=url)
+    _id = table.insert(name=form_vars.name, enabled=True, url=rss_url)
     record = dict(id=_id)
     s3db.update_super(table, record)
+
     # Enable
     channel_id = record["channel_id"]
     s3db.msg_channel_enable("msg_rss_channel", channel_id)
+
     # Setup Parser
     table = s3db.msg_parser
-    _id = table.insert(channel_id=channel_id, function_name="parse_rss", enabled=True)
+    _id = table.insert(channel_id=channel_id,
+                       function_name="parse_rss",
+                       enabled=True)
     s3db.msg_parser_enable(_id)
+
     # Check Now
     async = current.s3task.async
     async("msg_poll", args=["msg_rss_channel", channel_id])

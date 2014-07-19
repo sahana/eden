@@ -2045,7 +2045,10 @@ class S3GroupModel(S3Model):
 
 # =============================================================================
 class S3ContactModel(S3Model):
-    """ Person Entity Contacts - for Persons & Organisations """
+    """
+        Person Entity Contacts
+        - for Persons, Groups, Organisations and Organisation Groups
+    """
 
     names = ("pr_contact",
              "pr_contact_represent",
@@ -2099,6 +2102,14 @@ class S3ContactModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority"),
                                                            T("What order to be contacted in."))),
+                           ),
+                     # Used to determine whether an RSS/Facebook/Twitter feed should be imported into the main newsfeed
+                     # (usually used for Organisational ones)
+                     Field("poll", "boolean",
+                           default = False,
+                           # Enable as-required in templates
+                           readable = False,
+                           writable = False,
                            ),
                      s3_comments(),
                      *s3_meta_fields())

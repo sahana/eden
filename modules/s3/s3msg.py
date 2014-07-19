@@ -119,40 +119,37 @@ class S3Msg(object):
 
         MOBILE = current.deployment_settings.get_ui_label_mobile_phone()
         # Full range of contact options
-        self.CONTACT_OPTS = {
-                "EMAIL":       T("Email"),
-                "FACEBOOK":    T("Facebook"),
-                "FAX":         T("Fax"),
-                "HOME_PHONE":  T("Home phone"),
-                "RADIO":       T("Radio Callsign"),
-                "RSS":         T("RSS Feed"),
-                "SKYPE":       T("Skype"),
-                "SMS":         MOBILE,
-                "TWITTER":     T("Twitter"),
-                #"XMPP":       "XMPP",
-                #"WEB":        T("Website"),
-                "WORK_PHONE":  T("Work phone"),
-                "OTHER":       T("other")
-            }
+        self.CONTACT_OPTS = {"EMAIL":       T("Email"),
+                             "FACEBOOK":    T("Facebook"),
+                             "FAX":         T("Fax"),
+                             "HOME_PHONE":  T("Home phone"),
+                             "RADIO":       T("Radio Callsign"),
+                             "RSS":         T("RSS Feed"),
+                             "SKYPE":       T("Skype"),
+                             "SMS":         MOBILE,
+                             "TWITTER":     T("Twitter"),
+                             #"XMPP":       "XMPP",
+                             #"WEB":        T("Website"),
+                             "WORK_PHONE":  T("Work phone"),
+                             "OTHER":       T("other")
+                             }
 
         # Those contact options to which we can send notifications
         # NB Coded into hrm_map_popup & s3.msg.js
-        self.MSG_CONTACT_OPTS = {
-                "EMAIL":   T("Email"),
-                "SMS":     MOBILE,
-                "TWITTER": T("Twitter"),
-                #"XMPP":   "XMPP",
-            }
+        self.MSG_CONTACT_OPTS = {"EMAIL":   T("Email"),
+                                 "SMS":     MOBILE,
+                                 "TWITTER": T("Twitter"),
+                                 #"XMPP":   "XMPP",
+                                 }
 
         # SMS Gateways
-        self.GATEWAY_OPTS = {
-                "MODEM":   T("Modem"),
-                "SMTP":    T("SMTP"),
-                "TROPO":   T("Tropo"),
-                # Currently only available for Inbound
-                #"TWILIO":  T("Twilio"),
-                "WEB_API": T("Web API"),
-            }
+        self.GATEWAY_OPTS = {"MODEM":   T("Modem"),
+                             "SMTP":    T("SMTP"),
+                             "TROPO":   T("Tropo"),
+                             # Currently only available for Inbound
+                             #"TWILIO":  T("Twilio"),
+                             "WEB_API": T("Web API"),
+                             }
 
     # -------------------------------------------------------------------------
     @staticmethod

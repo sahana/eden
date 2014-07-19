@@ -3399,9 +3399,8 @@ class S3HRExperienceModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-        ADD_EXPERIENCE = T("Add Professional Experience")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_EXPERIENCE,
+            label_create = T("Add Professional Experience"),
             title_display = T("Professional Experience Details"),
             title_list = T("Professional Experience"),
             title_update = T("Edit Professional Experience"),
@@ -3434,8 +3433,8 @@ class S3HRExperienceModel(S3Model):
         # Components
         self.add_components(tablename,
                             # Assignments
-                            deploy_assignment="experience_id",
-                           )
+                            deploy_assignment = "experience_id",
+                            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3478,22 +3477,24 @@ class S3HRProgrammeModel(S3Model):
         tablename = "hrm_programme"
         define_table(tablename,
                      Field("name", notnull=True, length=64,
-                           label=T("Name")),
+                           label = T("Name"),
+                           ),
                      Field("name_long",
-                           label=T("Long Name")),
+                           label = T("Long Name"),
+                           ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
                      self.org_organisation_id(default = root_org,
                                               readable = is_admin,
                                               writable = is_admin,
                                               ),
-                     s3_comments(label=T("Description"),
-                                 comment=None),
+                     s3_comments(comment = None,
+                                 label = T("Description"),
+                                 ),
                      *s3_meta_fields())
 
-        ADD_PROG = T("Create Program")
         crud_strings[tablename] = Storage(
-            label_create = ADD_PROG,
+            label_create = T("Create Program"),
             title_display = T("Program Details"),
             title_list = T("Programs"),
             title_update = T("Edit Program"),
