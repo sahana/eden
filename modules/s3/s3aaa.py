@@ -60,7 +60,7 @@ from gluon import *
 from gluon.dal import Row, Rows, Query, Table
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
-from gluon.tools import Auth, callback
+from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
 from s3error import S3PermissionError
@@ -68,9 +68,6 @@ from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_c
 from s3rest import S3Method
 from s3track import S3Tracker
 from s3utils import s3_addrow, s3_get_extension, s3_mark_required
-
-DEFAULT = lambda: None
-#table_field = re.compile("[\w_]+\.[\w_]+")
 
 DEBUG = False
 if DEBUG:
@@ -848,7 +845,13 @@ Thank you"""
                                log=DEFAULT,
                                ):
         """
-            Returns a form to reset the user password
+            Returns a form to reset the user password, overrides web2py's
+            version of the method to apply Eden formstyles.
+
+            @param next: URL to redirect to after successful form submission
+            @param onvalidation: callback to validate password reset form
+            @param onaccept: callback to post-process password reset request
+            @param log: event description for the log (string)
         """
 
         messages = self.messages
@@ -858,7 +861,7 @@ Thank you"""
         response = current.response
         session = current.session
         captcha = settings.retrieve_password_captcha or \
-                (settings.retrieve_password_captcha != False and settings.captcha)
+                  (settings.retrieve_password_captcha != False and settings.captcha)
 
         if next is DEFAULT:
             next = self.get_vars_next() or settings.request_reset_password_next
@@ -898,7 +901,7 @@ Thank you"""
                         formname="reset_password", dbio=False,
                         onvalidation=onvalidation,
                         hideerror=settings.hideerror):
-            user = table_user(**{userfield:form.vars.get(userfield)})
+            user = utable(**{userfield:form.vars.get(userfield)})
             if not user:
                 session.error = messages["invalid_%s" % userfield]
                 redirect(self.url(args=request.args),
@@ -918,7 +921,7 @@ Thank you"""
             else:
                 next = replace_id(next, form)
             redirect(next, client_side=settings.client_side)
-        # old_requires = table_user.email.requires
+        # old_requires = utable.email.requires
         return form
 
     # -------------------------------------------------------------------------
@@ -1313,22 +1316,28 @@ Thank you"""
     # -------------------------------------------------------------------------
     def email_reset_password(self, user):
         """
-             Overrides Web2Py's email_reset_password() to modify the message structure
-        """
+             Overrides Web2Py's email_reset_password() to modify the message
+             structure
 
-        import time
-        settings = self.settings
-        if not settings.mailer:
+             @param user: the auth_user record (Row)
+        """
+        
+        mailer = self.settings.mailer
+        if not mailer:
             return False
+            
+        import time
         reset_password_key = str(int(time.time())) + '-' + web2py_uuid()
-        message = self.messages.reset_password % \
-            dict(url="%s/default/user/reset_password/%s" % \
-                dict(current.response.s3.base_url, reset_password_key))
-        if settings.mailer.send(to=user.email,
-                                subject=self.messages.reset_password_subject,
-                                message=message):
+        reset_password_url = "%s/default/user/reset_password/%s" % \
+                             (current.response.s3.base_url, reset_password_key)
+
+        message = self.messages.reset_password % dict(url=reset_password_url)
+        if mailer.send(to=user.email,
+                       subject=self.messages.reset_password_subject,
+                       message=message):
             user.update_record(reset_password_key=reset_password_key)
             return True
+            
         return False
 
     # -------------------------------------------------------------------------
