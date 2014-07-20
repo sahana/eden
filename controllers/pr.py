@@ -244,12 +244,12 @@ def contact():
             # & vol specific versions
             controller = get_vars.get("controller", "pr")
             s3db.configure("pr_contact",
-                           create_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, "contacts"]),
-                           update_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, "contacts"])
+                           create_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, "contacts"]),
+                           update_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, "contacts"])
                            )
             if r.method == "create":
                 table = s3db.pr_person
@@ -263,6 +263,20 @@ def contact():
             pe_id = get_vars.get("~.pe_id", None)
             if pe_id:
                 s3db.pr_contact.pe_id.default = pe_id
+
+        else:
+            from s3 import S3TextFilter, S3OptionsFilter
+            filter_widgets = [S3TextFilter(["value",
+                                            "comments",
+                                            ],
+                                           label = T("Search"),
+                                           comment = T("You can search by value or comments."),
+                                           ),
+                              S3OptionsFilter("contact_method"),
+                              ]
+            s3db.configure("pr_contact",
+                           filter_widgets = filter_widgets,
+                           )
 
         return True
     s3.prep = prep

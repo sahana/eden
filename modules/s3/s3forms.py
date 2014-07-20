@@ -59,7 +59,7 @@ from gluon.tools import callback
 from gluon.validators import Validator
 
 from s3query import FS
-from s3utils import s3_mark_required, s3_unicode, s3_store_last_record_id, s3_validate, s3_represent_value
+from s3utils import s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_strip_markup, s3_unicode, s3_validate
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -1772,6 +1772,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         # Virtual Field
                         value = row[colname]
                     text = s3_unicode(record[colname])
+                    if "<" in text:
+                        text = s3_strip_markup(text)
 
                     item[fname] = {"value": value, "text": text}
 

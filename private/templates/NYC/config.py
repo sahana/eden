@@ -896,6 +896,8 @@ def customise_pr_person_controller(**attr):
                         field.default = site_id
                         field.readable = field.writable = False
                         hr_fields.remove("site_id")
+                    else:
+                        s3db.hrm_human_resource.site_id.default = None
 
                 # ImageCrop widget doesn't currently work within an Inline Form
                 #image_field = s3db.pr_image.image
