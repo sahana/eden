@@ -182,7 +182,6 @@
 'Add New Record': 'ثبت جدید را اضافه نمایید',
 'Add New Region': 'منطقه جدید را اضافه نمایید',
 'Add New Resource': 'منبع جدید را اضافه نمایید',
-'Add New Resource Type': 'نوع منبع جدید را اضافه نمایید',
 'Add New Response Summary': 'خلاصه پاسخ جدید را اضافه نمایید',
 'Add New Role': 'نقش جدید را اضافه نمایید',
 'Add New Room': 'اتاق جدید را اضافه نمایید',

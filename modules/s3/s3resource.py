@@ -5450,11 +5450,11 @@ class S3ResourceData(object):
             renderer = lambda v: s3_unicode(v) if v is not None else none
 
         # Deactivate linkto if so requested
-        if not show_links and hasattr(renderer, "linkto"):
-            linkto = renderer.linkto
-            renderer.linkto = None
+        if not show_links and hasattr(renderer, "show_link"):
+            show_link = renderer.show_link
+            renderer.show_link = False
         else:
-            linkto = None
+            show_link = None
 
         per_row_lookup = list_type and \
                          self.effort[colname] < len(fvalues) * 30
@@ -5531,8 +5531,8 @@ class S3ResourceData(object):
                     result["_row"][colname] = record.keys()
 
         # Restore linkto
-        if linkto is not None:
-            renderer.linkto = linkto
+        if show_link is not None:
+            renderer.show_link = show_link
 
         return results
         

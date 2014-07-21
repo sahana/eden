@@ -1024,8 +1024,7 @@ class S3EventResourceModel(S3Model):
         @ToDo: Optional link to org_resource to e.g. mark resources as assigned
     """
 
-    names = ("event_resource",
-             )
+    names = ("event_resource",)
 
     def model(self):
 
@@ -1069,7 +1068,7 @@ class S3EventResourceModel(S3Model):
                                      comment = S3AddResourceLink(c="org",
                                                                  f="resource_type",
                                                                  vars = dict(child = "parameter_id"),
-                                                                 title=T("Add New Resource Type")),
+                                                                 title=T("Create Resource Type")),
                                      ),
                           Field("status", "integer",
                                 label = T("Status"),

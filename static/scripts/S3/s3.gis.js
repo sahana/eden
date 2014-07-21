@@ -1747,6 +1747,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Default to global settings
             var cluster_threshold = cluster_threshold_default;
         }
+        if (undefined != layer.popup_format) {
+            var popup_format = layer.popup_format;
+        } else {
+            // Default to global settings
+            var popup_format = '';
+        }
         if (undefined != layer.projection) {
             var projection = layer.projection;
         } else {
@@ -1845,6 +1851,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 // Used to Save State & locate Layer to Activate/Refresh
                 s3_layer_id: layer.id,
                 s3_layer_type: layer_type,
+                s3_popup_format: popup_format,
                 s3_style: layer.style
             }
         );
@@ -3003,8 +3010,23 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 var attributes = feature.attributes,
                     centerPoint = feature.geometry.getBounds().getCenterLonLat(),
                     tooltip;
-                if (undefined != attributes.popup) {
-                    // GeoJSON Feature Layers or Theme Layers
+                if (undefined != layer.s3_popup_format) {
+                    // GeoJSON Feature Layers
+                    _.templateSettings = {interpolate: /\{(.+?)\}/g};
+                    var s3_popup_format = layer.s3_popup_format;
+                    var template = _.template(s3_popup_format);
+                    // Ensure we have all keys (we don't transmit empty attr)
+                    var defaults = {},
+                        key,
+                        keys = s3_popup_format.split('{');
+                    for (var j = 0; j < keys.length; j++) {
+                        key = keys[j].split('}')[0];
+                        defaults[key] = '';
+                    }
+                    _.defaults(attributes, defaults);
+                    tooltip = template(attributes);
+                } else if (undefined != attributes.popup) {
+                    // Feature Queries or Theme Layers
                     tooltip = attributes.popup;
                 } else if (undefined != attributes.name) {
                     // GeoJSON, GeoRSS or Legacy Features
@@ -3275,13 +3297,30 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             contents = i18n.gis_cluster_multiple + ':<ul>';
             // Only display 1st 9 records
             //var length = Math.min(cluster.length, 9);
-            var length = cluster.length;
-            var map_id = s3.id;
-            for (var i = 0; i < length; i++) {
+            var i,
+                length = cluster.length,
+                map_id = s3.id;
+            for (i = 0; i < length; i++) {
                 var attributes = cluster[i].attributes;
-                if (undefined != attributes.popup) {
+                if (undefined != layer.s3_popup_format) {
+                    // GeoJSON Feature Layers
+                    _.templateSettings = {interpolate: /\{(.+?)\}/g};
+                    var s3_popup_format = layer.s3_popup_format;
+                    var template = _.template(s3_popup_format);
+                    // Ensure we have all keys (we don't transmit empty attr)
+                    var defaults = {},
+                        key,
+                        keys = s3_popup_format.split('{');
+                    for (var j = 0; j < keys.length; j++) {
+                        key = keys[j].split('}')[0];
+                        defaults[key] = '';
+                    }
+                    _.defaults(attributes, defaults);
                     // Only display the 1st line of the hover popup
-                    name = attributes.popup.split('<br />', 1)[0];
+                    name = template(attributes).split('<br/>', 1)[0];
+                } else if (undefined != attributes.popup) {
+                    // Only display the 1st line of the hover popup
+                    name = attributes.popup.split('<br/>', 1)[0];
                 } else {
                     name = attributes[titleField];
                 }

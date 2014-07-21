@@ -2700,14 +2700,14 @@ class S3FeatureLayerModel(S3Model):
                                                                 "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Wiki</a>" % \
                                                                 T("Uses the REST Query Format defined in"))),
                                 ),
-                          # @ToDo: Replace with s3.crud_strings[tablename]?
+                          # @ToDo: Deprecate (replaced by popup_format)
                           Field("popup_label",
                                 label = T("Popup Label"),
                                 comment=DIV(_class="tooltip",
                                             _title="%s|%s" % (T("Popup Label"),
                                                               T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
                                 ),
-                          # @ToDo: Build Popups from Attributes & Format to avoid duplication
+                          # @ToDo: Deprecate (replaced by popup_format)
                           Field("popup_fields", "list:string",
                                 # Want to be able to prepop layers with this empty to prevent popups from showing
                                 #default = "name",
@@ -2716,11 +2716,17 @@ class S3FeatureLayerModel(S3Model):
                                               _title="%s|%s" % (T("Popup Fields"),
                                                                 T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records."))),
                                 ),
+                          Field("popup_format",
+                                label = T("Popup Format"),
+                                comment=DIV(_class="tooltip",
+                                            _title="%s|%s" % (T("Popup Format"),
+                                                              T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
+                                ),
                           Field("attr_fields", "list:string",
                                 label = T("Attributes"),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Attributes"),
-                                                                T("Used to populate feature attributes which can be used for Styling."))),
+                                                                T("Used to populate feature attributes which can be used for Styling and Popups."))),
                                 ),
                           Field("style_default", "boolean",
                                 default=False,
