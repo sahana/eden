@@ -14,6 +14,8 @@
          GPS Marker...........string..........Layer Symbology GPS Marker
          Controller...........string..........Layer Controller
          Function.............string..........Layer Function
+         Popup Format.........string..........Layer Popup Format
+         OR
          Popup Label..........string..........Layer Popup Label
          Popup Fields.........comma-sep list..Layer Popup Fields (Fields to build feature OnHover tooltip)
          Attributes...........comma-sep list..Layer Attributes (Fields to put in feature attributes to be visible to Styler)
@@ -154,20 +156,29 @@
             <xsl:if test="col[@field='Filter']!=''">
                 <data field="filter"><xsl:value-of select="col[@field='Filter']"/></data>
             </xsl:if>
-            <data field="popup_label"><xsl:value-of select="col[@field='Popup Label']"/></data>
-            <xsl:if test="$PopupFields!=''">
-                <data field="popup_fields">
-                    <xsl:attribute name="value">
-                        <xsl:text>[</xsl:text>
-                        <xsl:call-template name="listString">
-                            <xsl:with-param name="list">
-                                <xsl:value-of select="$PopupFields"/>
-                            </xsl:with-param>
-                        </xsl:call-template>
-                        <xsl:text>]</xsl:text>
-                    </xsl:attribute>
-                </data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="col[@field='Popup Format']!=''">
+                    <data field="popup_format"><xsl:value-of select="col[@field='Popup Format']"/></data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:if test="col[@field='Popup Label']!=''">
+                        <data field="popup_label"><xsl:value-of select="col[@field='Popup Label']"/></data>
+                    </xsl:if>
+                    <xsl:if test="$PopupFields!=''">
+                        <data field="popup_fields">
+                            <xsl:attribute name="value">
+                                <xsl:text>[</xsl:text>
+                                <xsl:call-template name="listString">
+                                    <xsl:with-param name="list">
+                                        <xsl:value-of select="$PopupFields"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                                <xsl:text>]</xsl:text>
+                            </xsl:attribute>
+                        </data>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
             <xsl:if test="$Attributes!=''">
                 <data field="attr_fields">
                     <xsl:attribute name="value">

@@ -186,7 +186,6 @@
 'Add New Record': 'नयाँ विवरण राख्नुहोस्',
 'Add New Region': 'नया क्षेत्र राख्नुहोस',
 'Add New Resource': 'नयाँ स्रोत राख्नुहोस्',
-'Add New Resource Type': 'नयाँ स्रोतको प्रकार राख्नुहोस्',
 'Add New Response Summary': 'नयाँ प्रतिकृया संक्षेप राख्नुहोस्',
 'Add New Role': 'नयाँ भूमिका राख्नुहोस्',
 'Add New Room': 'नयाँ कोठा राख्नुहोस्',

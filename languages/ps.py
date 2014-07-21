@@ -182,7 +182,6 @@
 'Add New Record': 'اضافه کړی نوی تاریخچه',
 'Add New Region': 'اضافه کړی نوی ځای/ محل',
 'Add New Resource': 'اضافه کړی نوی منبع',
-'Add New Resource Type': 'اضافه کړی نوی د منبع بڼه',
 'Add New Response Summary': 'اضافه کړی نوی د ځواب خلاصه',
 'Add New Role': 'اضافه کړی نوی وظیفه/ نقش',
 'Add New Room': 'اضافه کړی نوی کوټه',

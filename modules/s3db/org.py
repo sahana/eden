@@ -1620,9 +1620,9 @@ class S3OrganisationResourceModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_RESOURCE_TYPE = T("Add New Resource Type")
+        ADD_RESOURCE_TYPE = T("Create Resource Type")
         crud_strings[tablename] = Storage(
-            label_create = T("Add Resource Type"),
+            label_create = ADD_RESOURCE_TYPE,
             title_display = T("Resource Type Details"),
             title_list = T("Resource Types"),
             title_update = T("Edit Resource Type"),
