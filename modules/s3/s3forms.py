@@ -1712,6 +1712,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                         limit=None,
                                         represent=True,
                                         raw_data=True,
+                                        show_links=False,
                                         orderby=orderby)
 
                 records = data["rows"]

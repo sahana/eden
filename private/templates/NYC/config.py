@@ -401,6 +401,7 @@ def customise_org_organisation_resource(r, tablename):
         # Component
         if r.component_id:
             # Update form
+            db = current.db
             otable = s3db.org_organisation
             org = db(otable.id == r.component_id).select(otable.pe_id,
                                                          limitby=(0, 1)
@@ -416,9 +417,9 @@ def customise_org_organisation_resource(r, tablename):
                 query = (ctable.pe_id == pe_id) & \
                         (ctable.contact_method == "RSS") & \
                         (ctable.deleted == False)
-                rss = current.db(query).select(ctable.poll,
-                                               limitby=(0, 1)
-                                               ).first()
+                rss = db(query).select(ctable.poll,
+                                       limitby=(0, 1)
+                                       ).first()
                 if rss and not rss.poll:
                     # Remember that we don't wish to import
                     rss_import = "on"
