@@ -1632,10 +1632,10 @@ def customise_stats_people_controller(**attr):
                 field.requires = IS_LOCATION_SELECTOR2(levels = levels)
                 field.widget = S3LocationSelectorWidget2(levels = levels,
                                                          hide_lx = False,
-                                                         #polygons = True,
+                                                         polygons = True,
                                                          reverse_lx = True,
                                                          show_postcode = True,
-                                                         show_map = False,
+                                                         #show_map = False,
                                                          )
                 # L3s only
                 #from s3 import S3Represent, IS_ONE_OF
@@ -1972,7 +1972,7 @@ def customise_vulnerability_risk_controller(**attr):
                 field.widget = S3LocationSelectorWidget2(levels = levels,
                                                          hide_lx = False,
                                                          reverse_lx = True,
-                                                         points = False,
+                                                         #points = False,
                                                          polygons = True,
                                                          show_address = True,
                                                          show_postcode = True,
