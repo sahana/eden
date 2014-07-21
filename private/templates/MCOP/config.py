@@ -374,8 +374,9 @@ def open_incident_filter(selector, tablename=None):
 # -----------------------------------------------------------------------------
 def customise_event_incident_controller(**attr):
 
-    # Not working
     if "summary" in current.request.args:
+        settings.gis.legend = None
+        # Not working
         from s3 import s3_set_default_filter
         s3_set_default_filter("~.closed",
                               open_incident_filter,
@@ -653,6 +654,9 @@ def customise_org_facility_resource(r, tablename):
                    summary = settings.ui.summary,
                    update_next = url_next,
                    )
+
+    if r.method == "summary":
+        settings.gis.legend = None
 
 settings.customise_org_facility_resource = customise_org_facility_resource
 
@@ -948,6 +952,9 @@ def customise_org_resource_resource(r, tablename):
         # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
         s3.cancel = URL(c="org", f="resource")
 
+    if r.method == "summary":
+        settings.gis.legend = None
+
 settings.customise_org_resource_resource = customise_org_resource_resource
 
 # -----------------------------------------------------------------------------
@@ -973,6 +980,9 @@ def customise_event_resource_resource(r, tablename):
             msg_record_deleted = T("Resource Responding deleted"),
             msg_list_empty = T("No Resources Responding"))
 
+    if r.method == "summary":
+        settings.gis.legend = None
+
 settings.customise_event_resource_resource = customise_event_resource_resource
 
 # -----------------------------------------------------------------------------
@@ -988,8 +998,9 @@ def active_status_filter(selector, tablename=None):
 # -----------------------------------------------------------------------------
 def customise_project_task_controller(**attr):
 
-    # Not working
     if "summary" in current.request.args:
+        settings.gis.legend = None
+        # Not working
         from s3 import s3_set_default_filter
         s3_set_default_filter("~.status",
                               active_status_filter,
