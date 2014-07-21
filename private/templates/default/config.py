@@ -264,6 +264,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.layer_tree_radio = True
 # Uncomment to display the Map Legend as a floating DIV
 #settings.gis.legend = "float"
+# Uncomment to prevent showing LatLon in Location Represents
+#settings.gis.location_represent_address_only = True
 # Mouse Position: 'normal', 'mgrs' or None
 #settings.gis.mouse_position = "mgrs"
 # Uncomment to show the Navigation controls on the toolbar

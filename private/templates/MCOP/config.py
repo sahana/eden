@@ -25,7 +25,7 @@ settings = current.deployment_settings
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["MCOP", "demo/users"]
+settings.base.prepopulate = ("MCOP", "demo/users")
 
 settings.base.system_name = T("Sahana: Puget Sound Common Maritime Operating Picture (MCOP)")
 settings.base.system_name_short = T("Sahana")
@@ -109,7 +109,7 @@ settings.base.paper_size = T("Letter")
 # -----------------------------------------------------------------------------
 # GIS settings
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["US"]
+settings.gis.countries = ("US",)
 # Levels for the LocationSelector
 levels = ("L1", "L2", "L3")
 
@@ -122,6 +122,8 @@ levels = ("L1", "L2", "L3")
 #settings.gis.layer_properties = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# Uncomment to prevent showing LatLon in Location Represents
+settings.gis.location_represent_address_only = True
 # GeoNames username
 settings.gis.geonames_username = "mcop"
 
