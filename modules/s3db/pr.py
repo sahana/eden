@@ -1808,7 +1808,7 @@ class S3GroupModel(S3Model):
                            label = T("Group Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("description",
+                     Field("description", length=2048, # Default is 512
                            label = T("Group Description"),
                            represent = lambda v: v or NONE,
                            comment = DIV(_class="tooltip",

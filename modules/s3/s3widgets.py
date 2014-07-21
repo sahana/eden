@@ -5405,9 +5405,15 @@ class S3SiteAutocompleteWidget(FormWidget):
             except ValueError:
                 pass
             # Provide the representation for the current/default Value
-            text = s3_unicode(field.represent(value))
-            if "<" in text:
-                text = s3_strip_markup(text)
+            represent = field.represent
+            if hasattr(represent, "link"):
+                # S3Represent, so don't generate HTML
+                text = s3_unicode(represent(value, show_link=False))
+            else:
+                # Custom represent, so filter out HTML later
+                text = s3_unicode(represent(value))
+                if "<" in text:
+                    text = s3_strip_markup(text)
             represent = text.encode("utf-8")
         else:
             represent = ""
