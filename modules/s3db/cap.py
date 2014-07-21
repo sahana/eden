@@ -838,10 +838,11 @@ class S3CAPModel(S3Model):
                               ),
                      area_id(),
                      self.gis_location_id(
-                        widget = S3LocationSelectorWidget2(polygons=True,
-                                                           show_map=True,
-                                                           show_address=False,
-                                                           show_postcode=False,
+                        widget = S3LocationSelectorWidget2(points = False,
+                                                           polygons = True,
+                                                           show_map = True,
+                                                           show_address = False,
+                                                           show_postcode = False,
                                                            ),
                         ),
                      )

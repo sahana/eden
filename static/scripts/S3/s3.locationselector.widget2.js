@@ -1105,6 +1105,7 @@
                             if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
                                 var centerPoint = geometry.getBounds().getCenterLonLat();
                                 centerPoint.transform(map.getProjectionObject(), gis.proj4326);
+                                wktfield.val('');
                                 latfield.val(centerPoint.lat);
                                 lonfield.val(centerPoint.lon);
                                 // Store the fact that we've now added Marker manually
@@ -1121,6 +1122,10 @@
                                     };
                                 wkt = new OpenLayers.Format.WKT(out_options).write(feature);
                                 wktfield.val(wkt);
+                                latfield.val('');
+                                lonfield.val('');
+                                // Store the fact that we've now added Marker manually
+                                real_input.data('manually_geocoded', true);
                             }
                             // Update the Hidden Fields
                             resetHidden(fieldname);

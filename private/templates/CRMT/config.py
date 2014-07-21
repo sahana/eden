@@ -119,7 +119,7 @@ settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 settings.ui.update_label = "Update" 
-settings.ui.export_formats = ["xls", "xml"]
+settings.ui.export_formats = ("xls", "xml")
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 settings.ui.multiselect_widget = True
 settings.ui.use_button_glyphicons = True
@@ -1229,9 +1229,10 @@ def customise_org_group_controller(**attr):
             field = table.location_id
             field.label = "" # Gets replaced by widget
             levels = ("L2",)
-            field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-            field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                     polygons=True,
+            field.requires = IS_LOCATION_SELECTOR2(levels = levels)
+            field.widget = S3LocationSelectorWidget2(levels = levels,
+                                                     points = False,
+                                                     polygons = True,
                                                      )
 
         return True
@@ -1628,13 +1629,13 @@ def customise_stats_people_controller(**attr):
                 field = table.location_id
                 field.label = "" # Gets replaced by widget
                 levels = ("L3",)
-                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         hide_lx=False,
-                                                         #polygons=True,
-                                                         reverse_lx=True,
-                                                         show_postcode=True,
-                                                         show_map=False,
+                field.requires = IS_LOCATION_SELECTOR2(levels = levels)
+                field.widget = S3LocationSelectorWidget2(levels = levels,
+                                                         hide_lx = False,
+                                                         #polygons = True,
+                                                         reverse_lx = True,
+                                                         show_postcode = True,
+                                                         show_map = False,
                                                          )
                 # L3s only
                 #from s3 import S3Represent, IS_ONE_OF
@@ -1967,13 +1968,14 @@ def customise_vulnerability_risk_controller(**attr):
                 field = table.location_id
                 field.label = "" # Gets replaced by widget
                 levels = ("L3",)
-                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         polygons=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
+                field.requires = IS_LOCATION_SELECTOR2(levels = levels)
+                field.widget = S3LocationSelectorWidget2(levels = levels,
+                                                         hide_lx = False,
+                                                         reverse_lx = True,
+                                                         points = False,
+                                                         polygons = True,
+                                                         show_address = True,
+                                                         show_postcode = True,
                                                          )
 
             # Custom Crud Form

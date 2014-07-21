@@ -1677,7 +1677,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Styling
         var layer = {
             'marker': marker
-            }
+            };
         var response = createStyleMap(map, layer);
         var featureStyleMap = response[0];
         var marker_url = response[1];
@@ -3791,8 +3791,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             } else if (options.draw_feature) {
             */
             var poi_resources = S3.gis.poi_resources;
+            if (poi_resources) {
+                var len = poi_resources.length;
+            }
             var i,
-                len = poi_resources.length,
                 resource;
             if (options.draw_feature) {
                 if (poi_resources) {
@@ -5547,8 +5549,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             // - done within OpenLayers.Rule
                         }
                     } else {
-                        // Use Layer Marker
-                        return marker_url;
+                        if (feature.geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                            // Use Layer Marker
+                            return marker_url;
+                        }
                     }
                     return url;
                 },

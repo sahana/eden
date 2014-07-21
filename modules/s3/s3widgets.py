@@ -3840,8 +3840,9 @@ class S3LocationSelectorWidget2(FormWidget):
                  show_address = False,   # Whether to show a field for Street Address
                  show_postcode = False,  # Whether to show a field for Postcode
                  show_map = True,        # Whether to show a Map to select specific points
-                 lines = False,          # Whether the Map uses a Line draw tool instead of Point
-                 polygons = False,       # Whether the Map uses a Polygon draw tool instead of Point
+                 lines = False,          # Whether the Map uses a Line draw tool
+                 points = True,          # Whether the Map uses a Point draw tool
+                 polygons = False,       # Whether the Map uses a Polygon draw tool
                  catalog_layers = False, # Whether the Map should display Catalogue Layers or just the default base layer
                  ):
 
@@ -3852,6 +3853,7 @@ class S3LocationSelectorWidget2(FormWidget):
         self.show_postcode = show_postcode
         self.show_map = show_map
         self.lines = lines
+        self.points = points
         self.polygons = polygons
         self.catalog_layers = catalog_layers
 
@@ -3952,7 +3954,9 @@ class S3LocationSelectorWidget2(FormWidget):
         show_postcode = self.show_postcode and settings.get_gis_postcode_selector()
         show_map = self.show_map
         lines = self.lines
-        polygons = self.polygons or lines
+        points = self.points
+        polygons = self.polygons
+        use_wkt = polygons or lines
 
         # Test the formstyle
         formstyle = s3.crud.formstyle
@@ -4036,12 +4040,17 @@ class S3LocationSelectorWidget2(FormWidget):
                 # Specific location
                 # Only use a specific Lat/Lon when they are not inherited
                 if not record.inherited:
-                    if polygons:
-                        wkt = wkt or record.wkt
-                    else:
+                    if points:
                         lat = lat or record.lat
                         lon = lon or record.lon
+                    else:
+                        lat = ""
+                        lon = ""
+                    if use_wkt:
+                        wkt = wkt or record.wkt
+                    else:
                         wkt = ""
+
                 address = address or record.addr_street
                 postcode = postcode or record.addr_postcode
                 values["specific"] = value
@@ -4079,15 +4088,7 @@ class S3LocationSelectorWidget2(FormWidget):
                              value=parent,
                              )
         if show_map:
-            if polygons:
-                # WKT INPUT field, will be hidden
-                wkt_input = INPUT(_name="wkt",
-                                  _id="%s_wkt" % fieldname,
-                                  value=wkt,
-                                  )
-                lat_input = ""
-                lon_input = ""
-            else:
+            if points:
                 # Lat/Lon INPUT fields, will be hidden
                 lat_input = INPUT(_name="lat",
                                   _id="%s_lat" % fieldname,
@@ -4097,6 +4098,17 @@ class S3LocationSelectorWidget2(FormWidget):
                                   _id="%s_lon" % fieldname,
                                   value=lon,
                                   )
+            else:
+                lat_input = ""
+                lon_input = ""
+
+            if use_wkt:
+                # WKT INPUT field, will be hidden
+                wkt_input = INPUT(_name="wkt",
+                                  _id="%s_wkt" % fieldname,
+                                  value=wkt,
+                                  )
+            else:
                 wkt_input = ""
         else:
             lat_input = ""
@@ -4566,17 +4578,45 @@ class S3LocationSelectorWidget2(FormWidget):
         if show_map:
             # @ToDo: handle multiple LocationSelectors in 1 page
             # (=> multiple callbacks, as well as the need to migrate options from globals to a parameter)
+            if points and lines:
+                toolbar = True              # Allow selection between
+                add_feature_active = True   # Default to Points
+                add_line_active = add_polygon_active = False
+            elif points and polygons:
+                toolbar = True              # Allow selection between
+                add_feature_active = True   # Default to Points
+                add_line_active = add_polygon_active = False
+            elif points:
+                toolbar = False             # No need to select between
+                add_feature_active = True   # Default to Points
+                add_line_active = add_polygon_active = False
+            elif lines and polygons:
+                toolbar = True              # Allow selection between
+                add_polygon_active = True   # Default to Polygons
+                add_feature_active = add_line_active = False
+            elif lines:
+                toolbar = False             # No need to select between
+                add_line_active = True      # Default to Lines
+                add_feature_active = add_polygon_active = False
+            elif polygons:
+                toolbar = False             # No need to select between
+                add_polygon_active = True   # Default to Polygons
+                add_feature_active = add_line_active = False
+            else:
+                # No Valid options!
+                raise SyntaxError
             map = gis.show_map(id = "location_selector_%s" % fieldname,
                                collapsed = True,
                                height = 340,
                                width = 480,
-                               add_feature = not polygons,
-                               add_feature_active = not polygons,
+                               add_feature = points,
+                               add_feature_active = add_feature_active,
                                add_line = lines,
-                               add_line_active = lines,
-                               add_polygon = polygons and not lines,
-                               add_polygon_active = polygons and not lines,
+                               add_line_active = add_line_active,
+                               add_polygon = polygons,
+                               add_polygon_active = add_polygon_active,
                                catalogue_layers = self.catalog_layers,
+                               toolbar = toolbar,
                                # Hide controls from toolbar
                                nav = False,
                                area = False,
@@ -4587,7 +4627,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                )
             icon_id = "%s_map_icon" % fieldname
             row_id = "%s_map_icon__row" % fieldname
-            if polygons:
+            if use_wkt:
                 label = T("Draw on Map")
             else:
                 label = T("Find on Map")

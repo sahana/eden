@@ -1249,8 +1249,9 @@ class S3OrganisationGroupModel(S3Model):
                            ),
                      self.gis_location_id(
                          widget = S3LocationSelectorWidget2(
-                                     #catalog_layers=True,
-                                     polygons=True
+                                     #catalog_layers = True,
+                                     points = False,
+                                     polygons = True,
                          )),
                      s3_comments(),
                      *s3_meta_fields())
