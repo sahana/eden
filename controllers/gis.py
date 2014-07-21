@@ -289,10 +289,11 @@ def location():
     filter_level_widgets = []
     for level, level_label in location_hierarchy.items():
         search_fields.append(level)
+        hidden = False if level == "L0" else True
         filter_level_widgets.append(S3OptionsFilter(level,
                                                     label = level_label,
                                                     #cols = 5,
-                                                    hidden = True,
+                                                    hidden = hidden,
                                                     ))
 
     filter_widgets = [
