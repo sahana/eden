@@ -1080,7 +1080,8 @@ def customise_project_task_resource(r, tablename):
                                                    multiple = False,
                                                    ))
 
-    if (r.method == None or r.method == "update") and r.record.source_url:
+    if (r.method == None or r.method == "update") and \
+       r.record and r.record.source_url:
         # Task imported from Wrike
         # - lock all fields which should only be edited within Wrike
         #crud_fields.insert(0, "source_url")
