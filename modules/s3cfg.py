@@ -843,6 +843,12 @@ class S3Config(Storage):
         " Label for the Map's Layer Tree "
         return self.gis.get("layers_label", "Layers")
 
+    def get_gis_location_represent_address_only(self):
+        """
+            Never use LatLon for Location Represents
+        """
+        return self.gis.get("location_represent_address_only", False)
+
     def get_gis_map_height(self):
         """
             Height of the Embedded Map

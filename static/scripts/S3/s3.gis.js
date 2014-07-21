@@ -3114,16 +3114,18 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         );
         //popup.disableFirefoxOverflowHack = true; // Still needed
         //popup.keepInMap = false; // Not working
-        feature.popup = popup;
-        popup.feature = feature;
+        feature.popup = popup; // Link to be able to delete popup onClose
+        popup.feature = feature; // Link to be able to delete popup onClose
         // @ToDo: deployment_setting (default OL is 1200 x 660)
         popup.maxSize = new OpenLayers.Size(750, 660);
-        feature.layer.map.addPopup(popup);
+        var map = feature.layer.map;
+        feature.map = map; // Link to be able to delete all popups as a failsafe
+        map.addPopup(popup);
         if (!iframe && undefined != url) {
             // use AJAX to get the contentHTML
             loadDetails(url, id + '_contentDiv', popup);
         }
-        return popup
+        return popup;
     };
     // Pass to global scope to access from external scripts (e.g. s3.gis.pois.js)
     S3.gis.addPopup = addPopup;
@@ -3447,9 +3449,21 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     layer.map.removePopup(feature.popup);
                 }
                 feature.popup.destroy();
+                delete feature.popup;
             }
-            delete feature.popup;
-            $('#' + feature.id + '_popup').remove();
+            if (feature.id) {
+                $('#' + feature.id + '_popup').remove();
+            } else {
+                // Somehow the feature has lost it's references - better to delete all popups than leave it hanging
+                var map = feature.map;
+                if (map) {
+                    var popups = map.popups;
+                    var len = popups.length;
+                    for (var i = len - 1; i > -1; i--) {
+                        map.removePopup(popups[i]);
+                    }
+                }
+            }
             if (layer && layer.name == i18n.gis_draft_layer) {
                 // Also destroy the feature
                 feature.destroy();

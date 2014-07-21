@@ -5015,10 +5015,11 @@ class gis_LocationRepresent(S3Represent):
                  show_name = False, # Show name in location for level==None when sep is used
                  ):
 
+        settings = current.deployment_settings
         # Translation uses gis_location_name & not T()
-        translate = current.deployment_settings.get_L10n_translate_gis_location() 
+        translate = settings.get_L10n_translate_gis_location()
 
-        self.address_only = address_only
+        self.address_only = address_only or settings.get_gis_location_represent_address_only()
         self.sep = sep
         self.show_name = show_name
 
