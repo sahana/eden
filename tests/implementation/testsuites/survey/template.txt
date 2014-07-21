@@ -1,0 +1,42 @@
+*** Settings ***
+Documentation     Test cases for survey template run using "pybot implementation/testsuites/survey"
+Resource          ../../resources/main.txt
+Suite Setup       Start Testing
+Suite Teardown      End Testing
+
+*** Variables ***
+${TEMPLATE URL}            http://${BASEURL}/survey/template
+${TEMPLATE COUNT}
+
+*** Test Cases ***
+
+List Survey Templates
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${TEMPLATE URL}
+    ${TEMPLATE COUNT}=  Get DataTable Row Count
+
+
+Create New Survey Template
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${TEMPLATE URL}/create
+    Input Text  survey_template_name  New Test Template
+    Input Text  survey_template_description  A Template created by the test suite
+    Input Text  survey_template_competion_qstn  Name of person who completed the questionnaire
+    Input Text  survey_template_date_qstn  Date the questionnaire was completed
+    Input Text  survey_template_time_qstn  Time the questionnaire was completed
+    Submit CRUD Form
+    Should Show Confirmation
+    Go To  ${TEMPLATE URL}
+    Should Give X Results  ${TEMPLATE COUNT}+1
+
+
+Delete New Survey Template
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Go To  ${TEMPLATE URL}
+    DataTable Search  New Test Template
+    Should Give X Results  1
+    Click Link  Delete
+    ${message}=  Confirm Action	# Chooses Ok
+    Should Be Equal	${message}	Are you sure you want to delete this record?
+    Should Show Confirmation  Assessment Template deleted
+
