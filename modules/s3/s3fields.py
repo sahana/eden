@@ -651,8 +651,10 @@ class S3Represent(object):
             if h.config:
                 def lookup_parent(node_id):
                     parent = h.parent(node_id)
-                    if parent and parent not in theset:
-                        lookup[parent] = True
+                    if parent and \
+                       parent not in theset and \
+                       parent not in lookup:
+                        lookup[parent] = False
                         lookup_parent(parent)
                     return
                 for node_id in lookup.keys():
@@ -702,8 +704,11 @@ class S3Represent(object):
             if h:
                 represent_path = self._represent_path
                 for k, row in rows.items():
-                    lookup.pop(k, None)
-                    items[keys.get(k, k)] = represent_path(k, row, rows=rows, hierarchy=h)
+                    if lookup.pop(k, None):
+                        items[keys.get(k, k)] = represent_path(k,
+                                                               row,
+                                                               rows=rows,
+                                                               hierarchy=h)
             else:
                 for k, row in rows.items():
                     lookup.pop(k, None)

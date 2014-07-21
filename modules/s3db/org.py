@@ -2090,7 +2090,11 @@ class S3OrganisationServiceModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup = tablename,
+                                # Questionable UX:
+                                #hierarchy = hierarchical_service_types,
+                                translate = True,
+                                )
 
         if hierarchical_service_types:
             hierarchy = "parent"
@@ -2915,7 +2919,11 @@ class S3FacilityModel(S3Model):
                      *s3_meta_fields()
                      )
 
-        type_represent = S3Represent(lookup=tablename, translate=True)
+        type_represent = S3Represent(lookup = tablename,
+                                     # Questionable UX:
+                                     #hierarchy = hierarchical_facility_types,
+                                     translate = True,
+                                     )
 
         if hierarchical_facility_types:
             hierarchy = "parent"
