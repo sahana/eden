@@ -1368,7 +1368,7 @@ def customise_org_facility_controller(**attr):
         if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["name",
-                           (T("Type of Place"), "facility_type.name"),
+                           (T("Type of Place"), "site_facility_type.facility_type_id"),
                            "organisation_id",
                            "site_org_group.group_id",
                            (T("Address"), "location_id"),
