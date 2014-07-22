@@ -14,7 +14,7 @@ Should Show Confirmation
     Sleep  1s  Wait for message to render
     Page Should Contain Element  ${CONFIRMATION}  Confirmation message not shown
     ${msg len} =  Get Length  ${message}
-    Run Keyword if  ${msg len} == 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
+    Run Keyword if  ${msg len} >= 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
 
 Should Show Error
     [Documentation]  Fails if no error message is visible in the page
@@ -22,4 +22,4 @@ Should Show Error
     Sleep  1s  Wait for message to render
     Page Should Contain Element  ${ERROR}  Error message not shown
     ${msg len} =  Get Length  ${message}
-    Run Keyword if  ${msg len} == 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
+    Run Keyword if  ${msg len} >= 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
