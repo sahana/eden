@@ -165,6 +165,22 @@ def project():
                     query = FS("status").belongs(statuses)
                     r.resource.add_component_filter("task", query)
 
+                # Filter activities and milestones to the current project
+                options_filter = {"filterby": "project_id",
+                                  "filter_opts": (r.id,),
+                                  }
+                fields = []
+                if settings.get_project_activities():
+                    fields.append(s3db.project_task_activity.activity_id)
+                if settings.get_project_milestones():
+                    fields.append(s3db.project_task_milestone.milestone_id)
+                for f in fields:
+                    requires = f.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        requires = requires.other
+                    if hasattr(requires, "set_filter"):
+                        requires.set_filter(**options_filter)
+                                            
             elif component_name == "beneficiary":
                 # Filter the location selector to the project's locations
                 component.table.project_location_id.requires = \

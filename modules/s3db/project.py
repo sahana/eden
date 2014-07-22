@@ -4290,9 +4290,10 @@ class S3ProjectTaskModel(S3Model):
 
         crud_fields = []
         cappend = crud_fields.append
+        jquery_ready_append = s3.jquery_ready.append
 
         use_projects = settings.get_project_projects()
-        if use_projects:
+        if use_projects and current.request.function != "project":
             jquery_ready_append = s3.jquery_ready.append
             lappend("task_project.project_id")
             fappend(S3OptionsFilter("task_project.project_id",
@@ -4323,7 +4324,7 @@ class S3ProjectTaskModel(S3Model):
                            "optional": True,
                            }
                 jquery_ready_append('''S3OptionsFilter(%s)''' % \
-                    json.dumps(options, separators=SEPARATORS))
+                                    json.dumps(options, separators=SEPARATORS))
 
         crud_fields.extend(("name",
                             "description",
@@ -4353,7 +4354,7 @@ class S3ProjectTaskModel(S3Model):
                            "optional": True,
                            }
                 jquery_ready_append('''S3OptionsFilter(%s)''' % \
-                    json.dumps(options, separators=SEPARATORS))
+                                    json.dumps(options, separators=SEPARATORS))
 
         list_fields.extend(("name",
                             "pe_id",
