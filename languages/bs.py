@@ -1741,6 +1741,7 @@
 'Create Request Template': 'Kreiraj predložak zahtjeva',
 'Create Resource': 'Kreiraj resurs',
 'Create Resource Type': 'Kreiraj tip resursa',
+'Create River': 'Kreiraj rijeku',
 'Create Role': 'Kreiraj ulogu',
 'Create Room': 'Kreiraj sobu',
 'Create Seaport': 'Kreiraj luku',

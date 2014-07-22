@@ -2108,8 +2108,9 @@ class S3ProjectCampaignModel(S3Model):
                                  label = T("Message")),
                      location_id(
                         widget = S3LocationSelectorWidget2(
-                           catalog_layers=True,
-                           polygons=True
+                           catalog_layers = True,
+                           points = False,
+                           polygons = True,
                         )
                      ),
                      # @ToDo: Allow selection of which channel message should be sent out on

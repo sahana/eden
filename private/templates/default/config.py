@@ -368,7 +368,7 @@ settings.gis.geonames_username = "eden_test"
 # Uncomment to show created_by/modified_by using Names not Emails
 #settings.ui.auth_user_represent = "name"
 # Uncomment to restrict the export formats available
-#settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
+#settings.ui.export_formats = ("kml", "pdf", "rss", "xls", "xml")
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
 # Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)

@@ -706,12 +706,13 @@ def customise_org_group_controller(**attr):
                     from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
-                    #field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
+                    #field.requires = IS_LOCATION_SELECTOR2(levels = ("L2",))
                     field.requires = IS_EMPTY_OR(
-                                        IS_LOCATION_SELECTOR2(levels=("L2",))
+                                        IS_LOCATION_SELECTOR2(levels = ("L2",))
                                         )
-                    field.widget = S3LocationSelectorWidget2(levels=("L2",),
-                                                             polygons=True,
+                    field.widget = S3LocationSelectorWidget2(levels = ("L2",),
+                                                             points = True,
+                                                             polygons = True,
                                                              )
                     # Default location to Manhattan
                     db = current.db

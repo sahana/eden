@@ -714,7 +714,7 @@ class S3LocationModel(S3Model):
                 return
 
             code = current.deployment_settings.get_gis_lookup_code()
-            if code and name[0].isdigit():
+            if code:
                 # The name is a Code
                 kv_table = current.s3db.gis_location_tag
                 query = (kv_table.tag == code) & \

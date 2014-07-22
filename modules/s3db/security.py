@@ -64,7 +64,7 @@ class S3SecurityModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ZONE_TYPE = T("Add Zone Type")
+        ADD_ZONE_TYPE = T("Create Zone Type")
         crud_strings[tablename] = Storage(
             label_create = ADD_ZONE_TYPE,
             title_display = T("Zone Type Details"),
@@ -104,15 +104,16 @@ class S3SecurityModel(S3Model):
                            label=T("Type")),
                      self.gis_location_id(
                      widget = S3LocationSelectorWidget2(
-                         catalog_layers=True,
-                         polygons=True
+                         catalog_layers = True,
+                         points = False,
+                         polygons = True,
                          )
                      ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ZONE = T("Add Zone")
+        ADD_ZONE = T("Create Zone")
         crud_strings[tablename] = Storage(
             label_create = ADD_ZONE,
             title_display = T("Zone Details"),
