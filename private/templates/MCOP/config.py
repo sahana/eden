@@ -118,14 +118,16 @@ levels = ("L1", "L2", "L3")
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
+# GeoNames username
+settings.gis.geonames_username = "mcop"
 # Uncomment to hide Layer Properties tool
 #settings.gis.layer_properties = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Uncomment to prevent showing LatLon in Location Represents
 settings.gis.location_represent_address_only = True
-# GeoNames username
-settings.gis.geonames_username = "mcop"
+# Resources which can be directly added to the main map
+settings.gis.poi_create_resources = None
 
 # -----------------------------------------------------------------------------
 # Module settings
