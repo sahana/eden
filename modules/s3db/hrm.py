@@ -3339,11 +3339,23 @@ class S3HRExperienceModel(S3Model):
         T = current.T
         person_id = self.pr_person_id
 
-        if current.deployment_settings.get_org_autocomplete():
+        settings = current.deployment_settings
+        
+        if settings.get_org_autocomplete():
             org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
         else:
             org_widget = None
 
+        site_label = settings.get_org_site_label()
+        if settings.get_org_site_autocomplete():
+            site_widget = S3SiteAutocompleteWidget(),
+            site_comment = DIV(_class="tooltip",
+                               _title="%s|%s" % (site_label,
+                                                 current.messages.AUTOCOMPLETE_HELP))
+        else:
+            site_widget = None
+            site_comment = None
+            
         # =====================================================================
         # Professional Experience (Mission Record)
         #
@@ -3371,12 +3383,25 @@ class S3HRExperienceModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
+                          # Component, not instance
+                          self.super_link("site_id", "org_site",
+                                          comment = site_comment,
+                                          label = site_label,
+                                          orderby = "org_site.name",
+                                          #readable = True,
+                                          represent = self.org_site_represent,
+                                          widget = site_widget,
+                                          #writable = True,
+                                          ),
                           self.hrm_job_title_id(),
                           # Alternate free-text form especially suitable for volunteers
                           Field("job_title",
                                 label = T("Position"),
                                 readable = False,
                                 writable = False,
+                                ),
+                          Field("responsibilities",
+                                label = T("Key Responsibilities"),
                                 ),
                           s3_date("start_date",
                                   label = T("Start Date"),
