@@ -332,6 +332,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             //paddingForPopups: new OpenLayers.Bounds(50, 10, 200, 300),
             maxResolution: options.maxResolution,
             maxExtent: options.maxExtent,
+            // Apply only for ZoomToMaxExtent
+            //restrictedExtent: options.restrictedExtent,
             numZoomLevels: options.numZoomLevels,
             units: options.units
         };
@@ -3580,8 +3582,25 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Allow WMSGetFeatureInfo to find the toolbar
         s3.portal.toolbar = toolbar;
 
+        OpenLayers.Control.ZoomToMaxExtentS3 = OpenLayers.Class(OpenLayers.Control.Button, {
+            /**
+             * Method: trigger
+             * 
+             * Called whenever this control is being rendered inside of a panel and a 
+             *     click occurs on this controls element. Actually zooms to the maximum
+             *     extent of this controls map.
+             */
+            trigger: function() {
+                var restrictedExtent = new OpenLayers.Bounds.fromArray(options.restrictedExtent);
+                restrictedExtent.transform(proj4326, map.getProjectionObject());
+                map.zoomToExtent(restrictedExtent);
+            },
+
+            CLASS_NAME: "OpenLayers.Control.ZoomToMaxExtentS3"
+        });
+
         var zoomfull = new GeoExt.Action({
-            control: new OpenLayers.Control.ZoomToMaxExtent(),
+            control: new OpenLayers.Control.ZoomToMaxExtentS3(),
             map: map,
             iconCls: 'zoomfull',
             // button options

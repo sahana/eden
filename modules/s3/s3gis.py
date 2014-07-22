@@ -6270,6 +6270,12 @@ class MAP(DIV):
 
         options["numZoomLevels"] = config.zoom_levels
 
+        options["restrictedExtent"] = [config.lon_min,
+                                       config.lat_min,
+                                       config.lon_max,
+                                       config.lat_max,
+                                       ]
+
         ############
         # Projection
         ############
