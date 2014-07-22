@@ -12,7 +12,6 @@ from gluon.html import *
 from gluon.storage import Storage
 
 T = current.T
-s3 = current.response.s3
 settings = current.deployment_settings
 
 """
@@ -102,7 +101,7 @@ settings.L10n.thousands_separator = ","
 #settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["AM",
+settings.gis.countries = ("AM",
                           "AZ",
                           "GE",
                           "KZ",
@@ -111,7 +110,7 @@ settings.gis.countries = ["AM",
                           "TM",
                           "UA",
                           "UZ",
-                          ]
+                          )
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -176,7 +175,7 @@ settings.search.filter_manager = False
 
 # =============================================================================
 # Menu
-current.response.menu = [
+current.response.menu = (
     #{"name": T("Places"),
     # "c": "gis", 
     # "f": "location",
@@ -208,14 +207,14 @@ current.response.menu = [
     # "f": "facility",
     # "icon": "home",
     # },
-    ]
+    )
 for item in current.response.menu:
     item["url"] = URL(item["c"], 
                       item["f"], 
                       args = ["summary" if item["f"] not in ["organisation"]
                                         else "datalist"])
     
-current.response.countries = [
+current.response.countries = (
     {"name": T("Armenia"),
      "code": "am"
      },
@@ -243,151 +242,158 @@ current.response.countries = [
     {"name": T("Uzbekistan"),
      "code": "uz"
      }
-    ]
+    )
 
 # =============================================================================
 # Custom Controllers
 
 # =============================================================================
-def customise_gis_location_resource(r, tablename):
-    """
-        Customise gis_location resource
-        - List Fields
-        - CRUD Strings
-        - Form
-        - Filter
-        - Report 
-        Runs after controller customisation
-        But runs before prep
-    """
-    s3db = current.s3db
+def customise_gis_location_controller(**attr):
 
-    if r.interactive:
-        if r.vars.get("location.level__ne"):
-            s3.crud_strings["gis_location"] = Storage(
-                title_list = T("Administrative Areas"),
-                )
+    s3 = current.response.s3
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        s3db = current.s3db
+
+        if r.interactive or r.representation == "aadata":
+            if r.vars.get("location.level__ne"):
+                s3.crud_strings["gis_location"] = Storage(
+                    title_list = T("Administrative Areas"),
+                    )
+            else:
+                s3.crud_strings["gis_location"] = Storage(
+                    #label_create = T("Record Disaster"),
+                    #title_display = T("Disaster Details"),
+                    title_list = T("Locations")
+                    )
+
+                # Remove level column & filter
+                list_fields = s3db.get_config("gis_location", "list_fields")
+                list_fields.remove("level")
+
+                filter_widgets = s3db.get_config("gis_location", "filter_widgets")
+                # NB Fragile: dependent on filters defined in gis/location controller
+                filter_widgets.pop(1)
+
+        if r.method == "import":
+            l10n_languages = settings.L10n.languages
+            l10n_languages["ky"] = "Kyrgyz"
+            l10n_languages["ru"] = "Russian"
+            l10n_languages["hy"] = "Armenian"
+            l10n_languages["az"] = "Azerbaijani"
+            l10n_languages["ka"] = "Georgian"
+            l10n_languages["kk"] = "Kazakh"
+            l10n_languages["tg"] = "Tajik"
+            l10n_languages["tk"] = "Turkmen"
+            l10n_languages["uk"] = "Ukraine"
+            l10n_languages["uz"] = "Uzbek"
+            from gluon import IS_IN_SET
+            s3db.gis_location_name.language.requires = IS_IN_SET(l10n_languages)
+
         else:
-            s3.crud_strings["gis_location"] = Storage(
-                #label_create = T("Record Disaster"),
-                #title_display = T("Disaster Details"),
-                title_list = T("Locations")
-                )
-
-            # Remove level column & filter
-            list_fields = s3db.get_config("gis_location", "list_fields")
-            list_fields.remove("level")
-
-            filter_widgets = s3db.get_config("gis_location", "filter_widgets")
-            # NB Fragile: dependent on filters defined in gis/location controller
-            filter_widgets.pop(1)
-
-    if r.method == "import":
-        l10n_languages = settings.L10n.languages
-        l10n_languages["ky"] = "Kyrgyz"
-        l10n_languages["ru"] = "Russian"
-        l10n_languages["hy"] = "Armenian"
-        l10n_languages["az"] = "Azerbaijani"
-        l10n_languages["ka"] = "Georgian"
-        l10n_languages["kk"] = "Kazakh"
-        l10n_languages["tg"] = "Tajik"
-        l10n_languages["tk"] = "Turkmen"
-        l10n_languages["uz"] = "Uzbek"
-        l10n_languages["uk"] = "Ukraine"
-        from s3 import IS_IN_SET
-        s3db.gis_location_name.language.requires = IS_IN_SET(l10n_languages)
-    else:
-        # Custom filtered components for custom list_fields
-        s3db.add_components("gis_location",
-                            gis_location_name = {"name": "name_ru",
-                                                 "joinby": "location_id",
-                                                 "filterby": "language",
-                                                 "filterfor": ("ru",),
-                                                 },
-                            gis_location_tag = {"name": "pcode",
-                                                "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": ("PCode",),
-                                                },
-                            )
-        s3db.add_components("gis_location",
-                            gis_location_tag = {"name": "lat_lon_source",
-                                                "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": ("LatLon Source",),
-                                                },
-                            )
-        s3db.add_components("gis_location",
-                            gis_location_tag = {"name": "lat_lon_date",
-                                                "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": ("LatLon Date",),
-                                                },
-                            )
-    
-        from s3 import S3MultiSelectWidget, S3SQLCustomForm, S3SQLInlineComponent
-        s3db.gis_location.parent.widget = S3MultiSelectWidget(multiple=False)
+            table = s3db.gis_location
+            # Custom filtered components for custom list_fields
+            s3db.add_components("gis_location",
+                                gis_location_name = {"name": "name_ru",
+                                                     "joinby": "location_id",
+                                                     "filterby": "language",
+                                                     "filterfor": ("ru",),
+                                                     },
+                                gis_location_tag = ({"name": "pcode",
+                                                     "joinby": "location_id",
+                                                     "filterby": "tag",
+                                                     "filterfor": ("PCode",),
+                                                     },
+                                                    {"name": "lat_lon_source",
+                                                     "joinby": "location_id",
+                                                     "filterby": "tag",
+                                                     "filterfor": ("LatLon Source",),
+                                                     },
+                                                    {"name": "lat_lon_date",
+                                                     "joinby": "location_id",
+                                                     "filterby": "tag",
+                                                     "filterfor": ("LatLon Date",),
+                                                     },
+                                                    ),
+                                )
         
-        crud_form = S3SQLCustomForm("name",
-                                    #"name_ru.name_l10n",
-                                    S3SQLInlineComponent(
-                                        "name_ru",
-                                        label = T("Russian Name"),
-                                        multiple = False,
-                                        fields = [("", "name_l10n")],
-                                    ),
-                                    "level",
-                                    S3SQLInlineComponent(
-                                        "pcode",
-                                        label = T("PCode"),
-                                        multiple = False,
-                                        fields = [("", "value")],
-                                    ),
-                                    S3SQLInlineComponent(
-                                        "lat_lon_source",
-                                        label = T("Lat/Lon Source"),
-                                        multiple = False,
-                                        fields = [("", "value")],
-                                    ),
-                                    S3SQLInlineComponent(
-                                        "lat_lon_date",
-                                        label = T("Lat/Lon Date"),
-                                        multiple = False,
-                                        fields = [("", "value")],
-                                    ),
-                                    #"pcode.value",
-                                    "parent",
-                                    )
-    
-        s3db.gis_location.level.represent = lambda level: current.gis.get_location_hierarchy(level) if level else current.messages.NONE
-    
-        field = s3db.gis_location.inherited
-        field.label =  T("Mapped?")
-        field.represent =  lambda inherited: T("No") if inherited else T("Yes")
-    
-        filter_widgets = s3db.get_config("gis_location", 
-                                         "filter_widgets")
-        # Remove L2 & L3 filters 
-        # NB Fragile: dependent on filters defined in gis/location controller
-        filter_widgets.pop()
-        filter_widgets.pop()
-    
-        s3db.configure("gis_location",
-                       crud_form = crud_form,
-                       filter_widgets = filter_widgets,
-                       list_fields = ["name",
-                                      # @ToDo: Investigate whether we can support this style & hence not need to define custom components
-                                      #(T("Russian Name"), "name.name_l10n?location_name.language=ru"),
-                                      #("PCode", "tag.value?location_tag.tag=PCode"),
-                                      (T("Russian Name"), "name_ru.name_l10n"),
-                                      "level",
-                                      ("PCode", "pcode.value"),
-                                      "L0", "L1", "L2",
-                                      "inherited",
-                                      ]
-                       )
+            from s3 import S3MultiSelectWidget, S3SQLCustomForm, S3SQLInlineComponent
+            table.parent.widget = S3MultiSelectWidget(multiple=False)
+            
+            crud_form = S3SQLCustomForm("name",
+                                        #"name_ru.name_l10n",
+                                        S3SQLInlineComponent(
+                                            "name_ru",
+                                            label = T("Russian Name"),
+                                            multiple = False,
+                                            fields = [("", "name_l10n")],
+                                        ),
+                                        "level",
+                                        S3SQLInlineComponent(
+                                            "pcode",
+                                            label = T("PCode"),
+                                            multiple = False,
+                                            fields = [("", "value")],
+                                        ),
+                                        S3SQLInlineComponent(
+                                            "lat_lon_source",
+                                            label = T("Lat/Lon Source"),
+                                            multiple = False,
+                                            fields = [("", "value")],
+                                        ),
+                                        S3SQLInlineComponent(
+                                            "lat_lon_date",
+                                            label = T("Lat/Lon Date"),
+                                            multiple = False,
+                                            fields = [("", "value")],
+                                        ),
+                                        #"pcode.value",
+                                        "parent",
+                                        )
+        
+            NONE = current.messages["NONE"]
+            levels = current.gis.get_location_hierarchy()
+            table.level.represent = lambda l: levels[l] if l else NONE
+        
+            field = table.inherited
+            field.label =  T("Mapped?")
+            field.represent =  lambda inherited: T("No") if inherited else T("Yes")
+        
+            filter_widgets = s3db.get_config("gis_location", 
+                                             "filter_widgets")
+            # Remove L2 & L3 filters 
+            # NB Fragile: dependent on filters defined in gis/location controller
+            filter_widgets.pop()
+            filter_widgets.pop()
+        
+            s3db.configure("gis_location",
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           list_fields = ["name",
+                                          # @ToDo: Investigate whether we can support this style & hence not need to define custom components
+                                          #(T("Russian Name"), "name.name_l10n?location_name.language=ru"),
+                                          #("PCode", "tag.value?location_tag.tag=PCode"),
+                                          (T("Russian Name"), "name_ru.name_l10n"),
+                                          "level",
+                                          ("PCode", "pcode.value"),
+                                          "L0", "L1", "L2",
+                                          "inherited",
+                                          ]
+                           )
+        return True
+    s3.prep = custom_prep
 
-settings.customise_gis_location_resource = customise_gis_location_resource
+    return attr
+
+settings.customise_gis_location_controller = customise_gis_location_controller
 
 # -----------------------------------------------------------------------------
 def customise_event_event_controller(**attr):
@@ -501,12 +507,12 @@ def customise_event_event_resource(r, tablename):
         lappend(location_level)
 
     s3db.add_components("gis_location",
-                    gis_location_tag = {"name": "pcode",
-                                        "joinby": "location_id",
-                                        "filterby": "tag",
-                                        "filterfor": ("PCode",),
-                                        },
-                    )
+                        gis_location_tag = {"name": "pcode",
+                                            "joinby": "location_id",
+                                            "filterby": "tag",
+                                            "filterfor": ("PCode",),
+                                            },
+                        )
     lappend(("PCode", "event_location.location_id$pcode.value"))
 
     list_fields.extend(("start_date",
@@ -529,7 +535,7 @@ def customise_event_event_resource(r, tablename):
         # Labels
         table.comments.label = T("Description")
 
-        s3.crud_strings["event_event"] = Storage(
+        current.response.s3.crud_strings["event_event"] = Storage(
             label_create = T("Record Disaster"),
             title_display = T("Disaster Details"),
             title_list = T("Disasters"),
@@ -566,14 +572,14 @@ def customise_stats_demographic_data_resource(r, tablename):
     table.date.represent = represent_year
     
     s3db.add_components("gis_location",
-                    gis_location_tag = {"name": "pcode",
-                                        "joinby": "location_id",
-                                        "filterby": "tag",
-                                        "filterfor": ("PCode",),
-                                        },
-                    )
+                        gis_location_tag = {"name": "pcode",
+                                            "joinby": "location_id",
+                                            "filterby": "tag",
+                                            "filterfor": ("PCode",),
+                                            },
+                        )
     list_fields = s3db.get_config(r.tablename, "list_fields")
-    list_fields.insert(7,("PCode", "location_id$pcode.value"))
+    list_fields.insert(7, ("PCode", "location_id$pcode.value"))
 
 
 settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
@@ -591,8 +597,8 @@ def customise_vulnerability_data_resource(r, tablename):
         But runs before prep
     """
 
-    s3db = current.s3db
     db = current.db
+    s3db = current.s3db
     table = r.table
 
     # Higher precision wanted for the Multidimensional Poverty Index
@@ -626,13 +632,13 @@ def customise_vulnerability_data_resource(r, tablename):
     list_fields.insert(list_fields.index("date") + 1, "end_date")
 
     s3db.add_components("gis_location",
-                    gis_location_tag = {"name": "pcode",
-                                        "joinby": "location_id",
-                                        "filterby": "tag",
-                                        "filterfor": ("PCode",),
-                                        },
-                    )
-    list_fields.insert(7,("PCode", "location_id$pcode.value"))
+                        gis_location_tag = {"name": "pcode",
+                                            "joinby": "location_id",
+                                            "filterby": "tag",
+                                            "filterfor": ("PCode",),
+                                            },
+                        )
+    list_fields.insert(7, ("PCode", "location_id$pcode.value"))
 
     if r.interactive:
         current.response.s3.crud_strings["vulnerability_data"] = Storage(
@@ -722,8 +728,8 @@ def customise_org_facility_resource(r, tablename):
                            )
         )
 
-    from s3 import S3SQLCustomForm, S3SQLInlineComponentMultiSelectWidget
     # Custom Crud Form
+    from s3 import S3SQLCustomForm, S3SQLInlineComponentMultiSelectWidget
     crud_form = S3SQLCustomForm("name",
                                 S3SQLInlineComponentMultiSelectWidget(
                                     "facility_type",
