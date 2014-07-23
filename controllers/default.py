@@ -1208,23 +1208,29 @@ def audit():
 
 def get_settings():
     """
-       Function to respond to get requests
+       Function to respond to get requests. Requires admin permissions
     """
 
-    if not auth.s3_has_role("ADMIN") and settings.get_base_allow_testing():
+    # Check if the request has a valid authorization header with admin cred.
+    if not auth.s3_has_role("ADMIN"):
         auth.permission.format = None
         auth.permission.fail()
+
+    elif not settings.get_base_allow_testing():
+        raise(HTTP("405", "Testing not allowed"))
+
     else:
         arg = request.args(0)
+
+        # Ex. request /get_settings/deployment_settings/template
         if arg == "deployment_settings":
             asked = request.args[1:]
-
             return_settings = {}
 
             for setting in asked:
                 func_name = "get_%s" % setting
                 function = getattr(settings, func_name)
-                # eg value of function - settings.get_template()
+                # Ex. value of function - settings.get_template()
                 try:
                     value = function()
                 except TypeError:

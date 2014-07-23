@@ -29,23 +29,22 @@ class edentest_robot:
 
         logger.info("base_url %s" % (self.base_url))
 
-        # create the request_url for the get request
+        # Create the request_url for the get request
         request_url = "%s/default/get_settings/deployment_settings" % (self.base_url)
 
         for key in asked:
             request_url = "%s/%s" % (request_url, key)
         logger.info("request_url %s" % (request_url))
 
-        # create the headers
+        # Create the headers
         b64_auth_string = b64encode("%s:%s" % (self.admin_email, self.admin_password))
         headers = {
             "content-type" : "application/json",
             "Authorization" : "Basic %s" % b64_auth_string
             }
 
-        # send the response and get the response
+        # Send the response and get the response
         response = requests.get(request_url, headers=headers)
-
         if response.status_code != requests.codes.ok:
             if response.status_code == 403:
                 logger.warn("Could not login")
@@ -55,6 +54,11 @@ class edentest_robot:
             elif response.status_code == 401:
                 logger.warn("Insufficent priviledges")
                 m = "You do not have admin rights. request %s" \
+                % request_url
+
+            elif response.status_code in (405, 500):
+                logger.warn("Testing not allowed/Internal server error")
+                m = "allow_testing set to False in 000_config.py. request %s" \
                 % request_url
 
             else:
