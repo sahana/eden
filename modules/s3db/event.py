@@ -1484,7 +1484,7 @@ class S3EventAlertModel(S3Model):
         # ---------------------------------------------------------------------
         # Recipients of the Alert
         #
-        tablename = "deploy_alert_recipient"
+        tablename = "event_alert_recipient"
         define_table(tablename,
                      alert_id(),
                      self.pr_person_id(empty = False,
