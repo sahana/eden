@@ -1,20 +1,21 @@
 *** Settings ***
 Documentation     Main resource file for Eden Tests
-Library           Selenium2Library
-Library           Collections
-Variables         ../../execution/settings/config.py
-Library           ../../execution/libs/edentest_robot.py  ${SERVER}  ${APPNAME}  ${ADMIN EMAIL}  ${ADMIN PASSWORD}
-Resource          auth.txt
-Resource          base.txt
-Resource          crud.txt
-Resource          filter.txt
-Resource          datatable.txt
-Resource          widgets.txt
-Resource          form.txt
+Library  Selenium2Library
+Library  Collections
+Variables  ../../execution/settings/config.py
+Library  ../../execution/libs/edentest_robot.py  ${SERVER}  ${APPNAME}  ${ADMIN EMAIL}  ${ADMIN PASSWORD}
+Library  ../../execution/libs/edentest_database_local.py
+Resource  auth.txt
+Resource  base.txt
+Resource  crud.txt
+Resource  filter.txt
+Resource  datatable.txt
+Resource  widgets.txt
+Resource  form.txt
 
 *** Variables ***
-${BASEURL}          ${SERVER}/${APPNAME}
-${HOMEPAGE}         http://${BASEURL}/default/index
+${BASEURL}  ${SERVER}/${APPNAME}
+${HOMEPAGE}  http://${BASEURL}/default/index
 
 *** Keywords ***
 Start Browser With Proxy
