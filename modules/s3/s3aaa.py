@@ -4899,14 +4899,15 @@ class S3Permission(object):
 
     TABLENAME = "s3_permission"
 
-    CREATE = 0x0001
-    READ = 0x0002
-    UPDATE = 0x0004
-    DELETE = 0x0008
-    REVIEW = 0x0010
-    APPROVE = 0x0020
+    CREATE = 0x0001     # Permission to create new records
+    READ = 0x0002       # Permission to read records
+    UPDATE = 0x0004     # Permission to update records
+    DELETE = 0x0008     # Permission to delete records
+    REVIEW = 0x0010     # Permission to review unapproved records
+    APPROVE = 0x0020    # Permission to approve records
+    PUBLISH = 0x0040    # Permission to publish records outside of Eden
 
-    ALL = CREATE | READ | UPDATE | DELETE | REVIEW | APPROVE
+    ALL = CREATE | READ | UPDATE | DELETE | REVIEW | APPROVE | PUBLISH
     NONE = 0x0000 # must be 0!
 
     PERMISSION_OPTS = OrderedDict([
@@ -4916,9 +4917,11 @@ class S3Permission(object):
         [UPDATE, "UPDATE"],
         [DELETE, "DELETE"],
         [REVIEW, "REVIEW"],
-        [APPROVE, "APPROVE"]])
+        [APPROVE, "APPROVE"],
+        [PUBLISH, "PUBLISH"],
+    ])
 
-    # Method string <-> required permission
+    # Method <-> required permission
     METHODS = Storage({
         "create": CREATE,
         "read": READ,
@@ -4931,6 +4934,7 @@ class S3Permission(object):
         "review": REVIEW,
         "approve": APPROVE,
         "reject": APPROVE,
+        "publish": PUBLISH,
     })
 
     # Lambda expressions for ACL handling

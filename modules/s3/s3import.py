@@ -3873,6 +3873,8 @@ class S3BulkImporter(object):
                     aclValue = aclValue | acl.REVIEW
                 if permission == "APPROVE":
                     aclValue = aclValue | acl.APPROVE
+                if permission == "PUBLISH":
+                    aclValue = aclValue | acl.PUBLISH
                 if permission == "ALL":
                     aclValue = aclValue | acl.ALL
             return aclValue
