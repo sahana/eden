@@ -96,6 +96,9 @@ body.iframe #list-btn-add {
 .col3 {
     padding: 0;
 }
+#single-col {
+    margin-left: 20px;
+}
 .aside {
     background: #fff;
     margin: 10px;

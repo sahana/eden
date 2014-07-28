@@ -184,6 +184,7 @@ class S3ContentModel(S3Model):
                            ),
                      Field("body", "text", notnull=True,
                            label = T("Body"),
+                           represent = body_represent,
                            widget = body_widget,
                            ),
                      # @ToDo: Move this to link table?

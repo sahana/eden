@@ -920,15 +920,17 @@ settings.customise_hrm_department_controller = customise_hrm_department_controll
 # -----------------------------------------------------------------------------
 def customise_hrm_human_resource_controller(**attr):
 
-    # Default Filter
-    from s3 import s3_set_default_filter
-    s3_set_default_filter("~.organisation_id",
-                          user_org_and_children_default_filter,
-                          tablename = "hrm_human_resource")
+    controller = current.request.controller
+    if controller != "deploy":
+        # Default Filter
+        from s3 import s3_set_default_filter
+        s3_set_default_filter("~.organisation_id",
+                              user_org_and_children_default_filter,
+                              tablename = "hrm_human_resource")
 
     arcs = False
     vnrc = False
-    if current.request.controller == "vol":
+    if controller == "vol":
         # Special cases for different NS
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
@@ -982,7 +984,7 @@ def customise_hrm_human_resource_controller(**attr):
                                                       hidden = True,
                                                       ))
 
-        if r.controller == "deploy":
+        if controller == "deploy":
 
             # Custom profile widgets for hrm_competency ("skills"):
             from s3 import FS
@@ -1037,13 +1039,13 @@ def customise_hrm_human_resource_controller(**attr):
             output = standard_postp(r, output)
 
         if isinstance(output, dict):
-            if r.controller == "deploy" and \
+            if controller == "deploy" and \
                "title" in output:
                 output["title"] = T("RDRT Members")
             elif vnrc and \
                  r.method != "report" and \
                  "form" in output and \
-                 (r.controller == "vol" or \
+                 (controller == "vol" or \
                   r.component_name == "human_resource"):
                 # Remove the injected Programme field
                 del output["form"][0].components[4]
