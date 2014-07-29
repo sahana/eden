@@ -4304,7 +4304,7 @@ class S3ProjectTaskModel(S3Model):
                                          fields = [("", "project_id")],
                                          multiple = False,
                                          ))
-
+                               
         if settings.get_project_activities():
             lappend("task_activity.activity_id")
             fappend(S3OptionsFilter("task_activity.activity_id",
@@ -4325,6 +4325,21 @@ class S3ProjectTaskModel(S3Model):
                            }
                 jquery_ready_append('''S3OptionsFilter(%s)''' % \
                                     json.dumps(options, separators=SEPARATORS))
+                                    
+                # @todo: migrate when ready:
+                #options = {"trigger": {"alias": "task_project",
+                                    #"name": "project_id",
+                                    #},
+                        #"target": {"alias": "task_activity",
+                                    #"name": "activity_id",
+                                    #},
+                        #"scope": "form",
+                        #"lookupPrefix": "project",
+                        #"lookupResource": "activity",
+                        #"optional": True,
+                        #}
+                #jquery_ready_append('''$.filterOptionsS3(%s)''' % \
+                                    #json.dumps(options, separators=SEPARATORS))
 
         crud_fields.extend(("name",
                             "description",

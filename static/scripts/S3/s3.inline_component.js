@@ -756,15 +756,33 @@ $(function() {
         if (changed.length) {
             changed.each(function() {
                 var $this = $(this);
-                var formname = $this.attr('id').split('-').pop();
-                if ($this.hasClass('add-row')) {
-                    _success = inline_add(formname);
+                var empty = true;
+                if (!$this.hasClass('required')) {
+                    // Check that the row contains data
+                    var inputs = $this.find('input, select, textarea');
+                    for (var input, i=0, len=inputs.length; i<len; i++) {
+                        input = $(inputs[i]);
+                        if ((input.attr('type') != 'checkbox' && input.val()) || input.prop('checked')) {
+                            empty = false;
+                            break;
+                        }
+                    }
                 } else {
-                    var rowindex = $this.data('rowindex');
-                    _success = inline_update(formname, rowindex);
+                    // Treat required rows as non-empty
+                    empty = false;
                 }
-                if (!_success) {
-                    success = false;
+                // Skip empty rows
+                if (!empty) {
+                    var formname = $this.attr('id').split('-').pop();
+                    if ($this.hasClass('add-row')) {
+                        _success = inline_add(formname);
+                    } else {
+                        var rowindex = $this.data('rowindex');
+                        _success = inline_update(formname, rowindex);
+                    }
+                    if (!_success) {
+                        success = false;
+                    }
                 }
             });
         }
@@ -791,15 +809,19 @@ $(function() {
             inline_catch_submit(this);
         });
         $('.edit-row input[type!="text"], .edit-row select').bind('focusin', function() {
-            $('.edit-row input[type!="text"], .edit-row select').one('change', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('focusout', function() {
+                $(this).unbind('change.inline');
             });
         });
-        $('.edit-row select.multiselect-widget').bind('multiselectopen', function() {
-            $('.edit-row select.multiselect-widget').one('change', function() {
+        $('.edit-row select.multiselect-widget').bind('open.multiselect', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('close.multiselect', function() {
+                $(this).unbind('change.inline');
             });
         });
         $('.add-row input[type="text"], .add-row textarea').bind('input', function() {
@@ -807,15 +829,19 @@ $(function() {
             inline_catch_submit(this);
         });
         $('.add-row input[type!="text"], .add-row select').bind('focusin', function() {
-            $('.add-row input[type!="text"], .add-row select').one('change', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('focusout', function() {
+                $(this).unbind('change.inline');
             });
         });
-        $('.add-row select.multiselect-widget').bind('multiselectopen', function() {
-            $('.add-row select.multiselect-widget').one('change', function() {
+        $('.add-row select.multiselect-widget').bind('open.multiselect', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('close.multiselect', function() {
+                $(this).unbind('change.inline');
             });
         });
         // Chrome doesn't mark row as changed when just file input added
