@@ -15,3 +15,4 @@ Training Events,Used for Search Results,hrm,training_event,US,,,Training Event,"
 Vehicles,,vehicle,vehicle,US,vehicle,Car,Vehicle,"number,person_id",,,True,,,False,
 Volunteers,All Active Volunteers,vol,volunteer,US,volunteer,"Contact, Dreadlocks",Volunteer,"person_id,organisation_id",~.status=1,,True,,,False,
 Warehouses,All Active Warehouses,inv,warehouse,US,warehouse,Building,Office,"name,organisation_id",~.obsolete=False,,,,,False,
+All Tweets,Tweets for keywords,msg,twitter_result,US,twitter,,Tweet,body,,,,Twitter,True,
