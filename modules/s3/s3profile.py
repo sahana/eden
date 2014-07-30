@@ -64,10 +64,21 @@ class S3Profile(S3CRUD):
 
         if r.http in ("GET", "POST", "DELETE"):
             if r.record:
+                # Initialize CRUD form
+                self.settings = current.response.s3.crud
+                sqlform = self._config("crud_form")
+                self.sqlform = sqlform if sqlform else S3SQLDefaultForm()
+
+                # Render page
                 output = self.profile(r, **attr)
-            else:
+                
+            elif r.representation not in ("dl", "aadata"):
                 # Redirect to the List View
                 redirect(r.url(method=""))
+                
+            else:
+                # No point redirecting
+                r.error(404, current.ERROR.BAD_RECORD)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
@@ -88,27 +99,12 @@ class S3Profile(S3CRUD):
         widgets = get_config(tablename, "profile_widgets")
         if not widgets:
             # Profile page not configured:
-            # - redirect to the Read View
-            redirect(r.url(method="read"))
-
-        # Page Title
-        title = get_config(tablename, "profile_title")
-        if not title:
-            try:
-                title = r.record.name
-            except:
-                title = current.T("Profile Page")
-        elif callable(title):
-            title = title(r)
-
-        # Page Header
-        header = get_config(tablename, "profile_header")
-        if not header:
-            header = H2(title, _class="profile-header")
-        elif callable(header):
-            header = header(r)
-
-        output = dict(title=title, header=header)
+            if r.representation not in ("dl", "aadata"):
+                # Redirect to the Read View
+                redirect(r.url(method="read"))
+            else:
+                # No point redirecting
+                r.error(405, current.ERROR.BAD_METHOD)
 
         # Index the widgets by their position in the config
         for index, widget in enumerate(widgets):
@@ -126,7 +122,7 @@ class S3Profile(S3CRUD):
                     # @ToDo: Check permissions to the Resource & do
                     # something different if no permission
                     datalist = self._datalist(r, widgets[index], **attr)
-            output["item"] = datalist
+            output = {"item": datalist}
 
         elif r.representation == "aadata":
             # Ajax-update of one datalist
@@ -144,6 +140,42 @@ class S3Profile(S3CRUD):
 
         else:
             # Default page-load
+            
+            # Page Title
+            title = get_config(tablename, "profile_title")
+            if not title:
+                try:
+                    title = r.record.name
+                except:
+                    title = current.T("Profile Page")
+            elif callable(title):
+                title = title(r)
+
+            # Page Header
+            header = get_config(tablename, "profile_header")
+            if not header:
+                header = H2(title, _class="profile-header")
+            elif callable(header):
+                header = header(r)
+
+            output = dict(title=title, header=header)
+
+            # Update Form, if configured
+            update = get_config(tablename, "profile_update")
+            if update:
+                editable = get_config(tablename, "editable", True)
+                authorised = self._permitted(method="update")
+                if authorised and editable:
+                    form = self.update(r, **attr)["form"]
+                else:
+                    form = self.read(r, **attr)["item"]
+                output["form"] = DIV(form,
+                                     _class="profile-update",
+                                     )
+            else:
+                output["form"] = ""
+
+            # Widgets
             response = current.response
             rows = []
             append = rows.append

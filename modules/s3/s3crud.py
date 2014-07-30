@@ -355,7 +355,7 @@ class S3CRUD(S3Method):
                 response.s3.jquery_ready.append("S3EnableNavigateAwayConfirm()")
 
             # Redirection
-            if representation in ("popup", "iframe"):
+            if representation in ("popup", "iframe", "plain", "dl"):
                 self.next = None
             else:
                 if r.http == "POST" and "interim_save" in r.post_vars:
@@ -892,14 +892,15 @@ class S3CRUD(S3Method):
                                   vars=next_vars)
             else:
                 update_next = _config("update_next")
-                if representation in ("popup", "iframe", "plain"):
+                if representation in ("popup", "iframe", "plain", "dl"):
                     self.next = None
                 elif not update_next:
                     next_vars = self._remove_filters(r.get_vars)
                     if r.component:
                         self.next = r.url(method="", vars=next_vars)
                     else:
-                        self.next = r.url(id="[id]", method="read",
+                        self.next = r.url(id="[id]",
+                                          method="read",
                                           vars=next_vars)
                 else:
                     try:
