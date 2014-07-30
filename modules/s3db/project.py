@@ -4328,18 +4328,18 @@ class S3ProjectTaskModel(S3Model):
                                     
                 # @todo: migrate when ready:
                 #options = {"trigger": {"alias": "task_project",
-                                    #"name": "project_id",
-                                    #},
-                        #"target": {"alias": "task_activity",
-                                    #"name": "activity_id",
-                                    #},
-                        #"scope": "form",
-                        #"lookupPrefix": "project",
-                        #"lookupResource": "activity",
-                        #"optional": True,
-                        #}
+                #                       "name": "project_id",
+                #                       },
+                #           "target": {"alias": "task_activity",
+                #                      "name": "activity_id",
+                #                      },
+                #           "scope": "form",
+                #           "lookupPrefix": "project",
+                #           "lookupResource": "activity",
+                #           "optional": True,
+                #           }
                 #jquery_ready_append('''$.filterOptionsS3(%s)''' % \
-                                    #json.dumps(options, separators=SEPARATORS))
+                #                    json.dumps(options, separators=SEPARATORS))
 
         crud_fields.extend(("name",
                             "description",

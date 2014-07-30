@@ -625,6 +625,8 @@ var s3_showMap = function(feature_id) {
  * - Item Packs filtered by Item
  * - Rooms filtered by Site
  * - Themes filtered by Sector
+ * 
+ * @todo: deprecate, replace by $.filterOptionsS3
  **/
 
 var S3OptionsFilter = function(settings) {
@@ -984,27 +986,37 @@ var S3OptionsFilter = function(settings) {
 
 // ============================================================================
 /**
- * Replacement for S3OptionsFilter script
- *
- * @todo: complete
- * @todo: docstring
+ * Filter options of a drop-down field (=target) by the selection made
+ * in another field (=trigger), e.g.:
+ *   - Task Form: Activity options filtered by Project selection
+ * 
+ * => Replacement for the S3OptionsFilter script
+ * @todo: implement first-run (see $.filterOptionsS3)
+ * @todo: test with S3SQLInlineLink
+ * @todo: migrate use-cases
+ * @todo: fix updateAddResourceLink
+ * @todo: move into separate file and load only when needed?
+ * @todo: S3SQLInlineComponentCheckboxes not supported (but to be
+ *        deprecated itself anyway, so just remove the case?)
  */
 
 (function() {
 
     /**
      * Get a CSS selector for trigger/target fields
-     * 
-     * @param {string|object} setting - the setting for trigger/target, a field name
-     *                                  for regular form fields, or an object describing
-     *                                  a field in an inline component
+     *
+     * @param {string|object} setting - the setting for trigger/target, value of the
+     *                                  name-attribute in regular form fields, or an
+     *                                  object describing a field in an inline component
+     *                                  (see below for the latter)
      * @param {string} setting.prefix - the inline form prefix (default: 'default')
      * @param {string} setting.alias - the component alias for the inline form (e.g. task_project)
      * @param {string} setting.name - the field name
      * @param {string} setting.inlineType - the inline form type, 'link' (for S3SQLInlineLink),
      *                                      or 'sub' (for other S3SQLInlineComponent types)
      * @param {string} setting.inlineRows - the inline form has multiple rows, default: true,
-     *                                      should be false for e.g. S3SQLInlineComponentCheckbox
+     *                                      should be set to false for e.g.
+     *                                      S3SQLInlineComponentMultiSelectWidget
      */
     var getSelector = function(setting) {
 
@@ -1144,79 +1156,81 @@ var S3OptionsFilter = function(settings) {
     /**
      * Update the options of the target field from JSON data
      *
-     * @param {object} targetField - the target field
+     * @param {jQuery} widget - the widget
      * @param {object} data - the data as rendered by renderOptions
      * @param {bool} empty - no options available (don't bother retaining
      *                       the current value)
-     * @param {object} settings - the filterOptionsS3 settings
      */
-    var updateOptions = function(targetField, data, empty, settings) {
+    var updateOptions = function(widget, data, empty) {
 
-        // @todo: rename targetField into widget
+        // Catch unsupported widget type
+        if (widget.hasClass('checkboxes-widget-s3')) {
+            s3_debug('filterOptionsS3 error: checkboxes-widget-s3 not supported, updateOptions aborted');
+            return;
+        }
 
         var options = data.options,
             newValue = data.defaultValue;
 
+        // Get the current value of the target field
         if (!empty) {
-
-            // Get the current value of the target field
             var currentValue = '';
-            if (targetField.hasClass('checkboxes-widget-s3')) {
-                // Checkboxes
-                // @todo: not actually supported!
-                currentValue = new Array();
-                targetField.find('input:checked').each(function() {
-                    currentValue.push($(this).val());
-                });
+            if (widget.hasClass('checkboxes-widget-s3')) {
+                // Checkboxes-widget-s3 target, not currently supported
+                //currentValue = new Array();
+                //widget.find('input:checked').each(function() {
+                //   currentValue.push($(this).val());
+                //});
+                return;
             } else {
-                // SELECT
-                currentValue = targetField.val();
+                // SELECT-based target (Select, MultiSelect, GroupedOpts)
+                currentValue = widget.val();
                 if (!currentValue) {
                     // Options list not populated yet?
-                    currentValue = targetField.prop('value');
+                    currentValue = widget.prop('value');
                 }
             }
             if (currentValue) {
                 // Retain selected value
-                // @todo: only possible if selected value is present in new options!
+                // @todo: only meaningful if selected value is present in
+                //        new options! => check that
                 newValue = currentValue;
             }
         }
 
         // Convert IS_ONE_OF_EMPTY <input> into a <select>
         // (Better use IS_ONE_OF_EMPTY_SELECT where possible)
-        if (targetField.prop('tagName') == 'INPUT') {
-            var select = $('<select/>').addClass(targetField.attr('class'))
-                                       .attr('id', targetField.attr('id'))
-                                       .attr('name', targetField.attr('name'))
+        if (widget.prop('tagName') == 'INPUT') {
+            var select = $('<select/>').addClass(widget.attr('class'))
+                                       .attr('id', widget.attr('id'))
+                                       .attr('name', widget.attr('name'))
                                        .hide();
-            targetField.replaceWith(select);
-            targetField = select;
+            widget.replaceWith(select);
+            widget = select;
         }
 
+        // Update the target field options
         if (options !== '') {
-            // Update the target field options
-            targetField.html(options)
-                       .val(newValue)
-                       .change()
-                       .prop('disabled', false);
+            widget.html(options)
+                  .val(newValue)
+                  .change()
+                  .prop('disabled', false);
         } else {
             // No options available => disable the target field
-            targetField.prop('disabled', true);
+            widget.prop('disabled', true);
         }
     };
 
     /**
      * Replace the widget HTML with the data returned by Ajax request
-     * 
-     * @param {jQuery} widget: the target widget
+     *
+     * @param {jQuery} widget: the widget
      * @param {string} data: the HTML data
-     * @param {object} settings: the settings
      */
-    var replaceWidgetHTML = function(widget, data, settings) {
+    var replaceWidgetHTML = function(widget, data) {
 
         if (data !== '') {
-            
+
             // Do we have a groupedopts or multiselect widget?
             var is_groupedopts = false,
                 is_multiselect = false;
@@ -1226,21 +1240,21 @@ var S3OptionsFilter = function(settings) {
                 is_multiselect = true;
             }
 
+            // Store selected value before replacing the widget HTML
             if (is_groupedopts || is_multiselect) {
-                // Store selected value before replacing the widget HTML
                 var widgetValue = null;
                 if (widget.prop('tagName').toLowerCase() == 'select') {
                     widgetValue = widget.val();
                 }
             }
 
-            // Replace the target field with the HTML returned
+            // Replace the widget with the HTML returned
             widget.html(data)
                   .change()
                   .prop('disabled', false);
 
+            // Restore selected values if the options are still available
             if (is_groupedopts || is_multiselect) {
-                // Restore selected values if the options are still available
                 if (widgetValue) {
                     var new_value = [];
                     for (var i=0, len=widgetValue.length, val; i<len; i++) {
@@ -1259,7 +1273,7 @@ var S3OptionsFilter = function(settings) {
                 }
             }
         } else {
-            // Disable the target field
+            // Disable the widget
             widget.prop('disabled', true);
         }
     };
@@ -1268,9 +1282,11 @@ var S3OptionsFilter = function(settings) {
      * Update all targets in scope
      *
      * @param {jQuery} target - the target(s)
-     * @param {string} value - the selected value in the trigger field
+     * @param {string} lookupKey - the key to filter the records in the lookup table by,
+     *                             usually the name of the field represented by the target
+     * @param {string} value - the selected value in the trigger field (=the filter value)
      * @param {object} settings - the settings
-     * @param {bool} userChange - options update is triggered by a user action
+     * @param {bool} userChange - this options update is triggered by a user action
      */
     var updateTarget = function(target, lookupKey, value, settings, userChange) {
 
@@ -1279,10 +1295,10 @@ var S3OptionsFilter = function(settings) {
             if (target.first().attr('type') == 'checkbox') {
                 var checkboxesWidget = target.first().closest('.checkboxes-widget-s3');
                 if (checkboxesWidget) {
-                    // Not actually supported => skip
-                    // @todo: issue console warning
-                    target = checkboxesWidget;
+                    // Not currently supported => skip
+                    s3_debug('filterOptionsS3 error: checkboxes-widget-s3 not supported, skipping');
                     return;
+                    //target = checkboxesWidget;
                 }
             } else {
                 // Multiple rows inside an inline form
@@ -1291,13 +1307,12 @@ var S3OptionsFilter = function(settings) {
         }
 
         if (multiple && settings.getWidgetHTML) {
-            // => @todo: issue console warning: getWidgetHTML not supported for
-            //           multiple inline rows
+            s3_debug('filterOptionsS3 warning: getWidgetHTML=true not suitable for multiple target widgets (e.g. inline rows)');
             target = target.first();
             multiple = false;
         }
         var requestTarget = multiple ? target.first() : target;
-        
+
         // Abort previous request (if any)
         var previousRequest = requestTarget.data('update-request');
         if (previousRequest) {
@@ -1353,11 +1368,10 @@ var S3OptionsFilter = function(settings) {
                 }
             });
 
+            // Send update request
             request = $.ajaxS3({
                 url: url,
                 dataType: 'json',
-
-                // Gets moved to .done() inside .ajaxS3
                 success: function(data) {
 
                     // Render the options
@@ -1370,7 +1384,7 @@ var S3OptionsFilter = function(settings) {
                         var widget = $(this);
 
                         // Update the widget
-                        updateOptions(widget, options, empty, settings);
+                        updateOptions(widget, options, empty);
 
                         // Show the widget if it was visible before
                         if (widget.data('visible')) {
@@ -1411,11 +1425,10 @@ var S3OptionsFilter = function(settings) {
                 addThrobber(widget, lookupResource);
             }
 
+            // Send update request
             request = $.ajaxS3({
                 url: url,
                 dataType: 'html',
-
-                // Gets moved to .done() inside .ajaxS3
                 success: function(data) {
 
                     // Replace the widget HTML
@@ -1437,7 +1450,7 @@ var S3OptionsFilter = function(settings) {
                     if (!userChange) {
                         S3ClearNavigateAwayConfirm();
                     }
-                    
+
                     // Restore event handlers (@todo: deprecate)
                     if (S3.inline_checkbox_events) {
                         S3.inline_checkbox_events();
@@ -1445,7 +1458,6 @@ var S3OptionsFilter = function(settings) {
                 }
             });
         }
-        
         requestTarget.data('update-request', request);
     };
 
@@ -1563,11 +1575,11 @@ var S3OptionsFilter = function(settings) {
             updateTarget(target, lookupKey, triggerValue, settings, true);
         });
 
-        // @todo: initial options update
+        // @todo: first run (initial options update)
         // for each target
         //          => find trigger in scope
         //          => get trigger value
-        //          => run updateTarget with first=True
+        //          => run updateTarget with userChange=False
     };
 })(jQuery);
 

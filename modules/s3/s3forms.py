@@ -3102,6 +3102,8 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         client-side manipulation of the JSON data.
         During accept(), the component gets updated according to the JSON
         returned.
+
+        @todo: deprecate, replace by S3SQLInlineLink
     """
 
     # -------------------------------------------------------------------------
@@ -3556,6 +3558,8 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
         client-side manipulation of the JSON data.
         During accept(), the component gets updated according to the JSON
         returned.
+
+        @todo: deprecate, replace by S3SQLInlineLink
     """
 
     # -------------------------------------------------------------------------
