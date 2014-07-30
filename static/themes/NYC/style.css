@@ -84,9 +84,6 @@ body.iframe #list-btn-add {
 }
 
 /* Style */
-.fullpage {
-    background: #eee;
-}
 .fullpage .col1 {
     width: 100%;
     left: 0;
@@ -96,15 +93,11 @@ body.iframe #list-btn-add {
 .col3 {
     padding: 0;
 }
+
 #single-col {
     margin-left: 20px;
 }
-.aside {
-    background: #fff;
-    margin: 10px;
-    /* Leave room for margin */
-    width: 180px;
-}
+
 .map_home {
     margin: 0;
 }

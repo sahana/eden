@@ -8,6 +8,21 @@
     margin: 0;
 }
 
+.aside {
+    background: #fff;
+    margin: 10px;
+    /* Leave room for margin */
+    width: 180px;
+}
+
+#subnav {
+    padding: 15px;
+}
+
+#subnav div a {
+    color: #666;
+}
+
 /* Layout changes when using a side menu */
 .colmask {
     margin-top: 0;
