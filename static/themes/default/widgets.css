@@ -906,6 +906,13 @@ span.tab_next_inactive a {
 .action-lnk:first-child {
     margin-left: 0;
 }
+.form-toggle,
+.form-toggle:hover {
+    text-decoration: none;
+}
+.form-toggle i {
+    margin-left: 3px;
+}
 
 .sublabels {
     font-size: 85%;

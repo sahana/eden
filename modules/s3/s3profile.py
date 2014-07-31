@@ -166,10 +166,36 @@ class S3Profile(S3CRUD):
                 editable = get_config(tablename, "editable", True)
                 authorised = self._permitted(method="update")
                 if authorised and editable:
+                    show = self.crud_string(tablename, "title_update")
+                    hide = current.T("Hide Form")
                     form = self.update(r, **attr)["form"]
                 else:
+                    show = self.crud_string(tablename, "title_display")
+                    hide = current.T("Hide Details")
                     form = self.read(r, **attr)["item"]
-                output["form"] = DIV(form,
+
+                if update == "visible":
+                    hidden = False
+                    label = hide
+                    style_hide, style_show = None, "display:none"
+                else:
+                    hidden = True
+                    label = show
+                    style_hide, style_show = "display:none", None
+                    
+                toggle = A(SPAN(label,
+                                data = {"on": show,
+                                        "off": hide,
+                                        },
+                                ),
+                           I(" ", _class="icon-down", _style=style_show),
+                           I(" ", _class="icon-up", _style=style_hide),
+                           data = {"hidden": hidden},
+                           _class="form-toggle action-lnk",
+                           )
+                form.update(_style=style_hide)
+                output["form"] = DIV(toggle,
+                                     form,
                                      _class="profile-update",
                                      )
             else:

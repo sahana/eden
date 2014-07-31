@@ -917,7 +917,7 @@ def customise_org_organisation_controller(**attr):
 
             s3db.configure(tablename,
                            profile_cols = 1,
-                           profile_update = True,
+                           profile_update = "visible",
                            profile_widgets = [places_widget,
                                               ],
                            )

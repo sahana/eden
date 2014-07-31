@@ -653,8 +653,10 @@ class S3Request(object):
                 form = output.get("form")
                 if form:
                     if not hasattr(form, "errors"):
-                        form = form[0]
-                    if form.errors:
+                        # Form embedded in a DIV together with other components
+                        form = form.elements('form', first_only=True)
+                        form = form[0] if form else None
+                    if form and form.errors:
                         return output
 
             session = current.session
