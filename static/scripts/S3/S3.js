@@ -1462,6 +1462,34 @@ var S3OptionsFilter = function(settings) {
     };
 
     /**
+     * Helper method to extract the trigger information, returns an
+     * array with the actual trigger widget
+     *
+     * @param {jQuery} trigger - the trigger field(s)
+     * @returns {array} [triggerField, triggerValue]
+     */
+    var getTriggerData = function(trigger) {
+        
+        var triggerField = trigger,
+            triggerValue = '';
+        if (triggerField.attr('type') == 'checkbox') {
+            checkboxesWidget = triggerField.closest('.checkboxes-widget-s3');
+            if (checkboxesWidget) {
+                triggerField = checkboxesWidget;
+            }
+        }
+        if (triggerField.length == 1 && !triggerField.hasClass('checkboxes-widget-s3')) {
+            triggerValue = triggerField.val();
+        } else if (triggerField.hasClass('checkboxes-widget-s3')) {
+            triggerValue = new Array();
+            triggerField.find('input:checked').each(function() {
+                triggerValue.push($(this).val());
+            });
+        }
+        return [triggerField, triggerValue];
+    };
+
+    /**
      * Main entry point, configures the event handlers
      *
      * @param {object} settings - the settings
@@ -1535,51 +1563,44 @@ var S3OptionsFilter = function(settings) {
             targetForm = targetField.closest('form');
         }
 
+        // Initial event-less update of the target(s)
+        $(triggerSelector).last().each(function() {
+            var trigger = $(this),
+                $scope;
+            if (settings.scope == 'row') {
+                $scope = trigger.closest('.edit-row.inline-form,.add-row.inline-form');
+            } else {
+                $scope = triggerForm;
+            }
+            var triggerData = getTriggerData(trigger),
+                target = $scope.find(targetSelector);
+            updateTarget(target, lookupKey, triggerData[1], settings, false);
+        });
 
+        // Change-event for the trigger fires trigger-event for the target
+        // form, delegated to triggerForm so it happens also for dynamically
+        // inserted triggers (e.g. inline forms)
         var changeEventName = 'change.s3options',
             triggerEventName = 'triggerUpdate.' + triggerName;
         triggerForm.undelegate(triggerSelector, changeEventName)
                    .delegate(triggerSelector, changeEventName, function() {
-            // Get the trigger value
-            var $triggerField = $(this),
-                triggerValue = '';
-            if ($triggerField.attr('type') == 'checkbox') {
-                checkboxesWidget = $triggerField.closest('.checkboxes-widget-s3');
-                if (checkboxesWidget) {
-                    $triggerField = checkboxesWidget;
-                }
-            }
-            if ($triggerField.length == 1 && !$triggerField.hasClass('checkboxes-widget-s3')) {
-                triggerValue = $triggerField.val();
-            } else if ($triggerField.hasClass('checkboxes-widget-s3')) {
-                lookupValue = new Array();
-                $triggerField.find('input:checked').each(function() {
-                    lookupValue.push($(this).val());
-                });
-            }
-            // Fire triggerUpdate event on target form
-            targetForm.trigger(triggerEventName, [$triggerField, triggerValue]);
+            var triggerData = getTriggerData($(this));
+            targetForm.trigger(triggerEventName, triggerData);
         });
+
+        // Trigger-event for the target form updates all targets within scope
         targetForm.on(triggerEventName, function(e, triggerField, triggerValue) {
             // Determine the scope
-            var scope = settings.scope;
-            if (scope == 'row') {
-                _scope = triggerField.closest('.edit-row.inline-form,.add-row.inline-form');
+            var $scope;
+            if (settings.scope == 'row') {
+                $scope = triggerField.closest('.edit-row.inline-form,.add-row.inline-form');
             } else {
-                _scope = triggerForm;
+                $scope = triggerForm;
             }
-
-            var target = $(scope).find(targetSelector);
-
             // Update all targets within scope
+            var target = $scope.find(targetSelector);
             updateTarget(target, lookupKey, triggerValue, settings, true);
         });
-
-        // @todo: first run (initial options update)
-        // for each target
-        //          => find trigger in scope
-        //          => get trigger value
-        //          => run updateTarget with userChange=False
     };
 })(jQuery);
 

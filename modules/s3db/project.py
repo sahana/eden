@@ -4317,29 +4317,19 @@ class S3ProjectTaskModel(S3Model):
                                          ))
             if use_projects:
                 # Filter Activity List to just those for the Project
-                options = {"triggerName": "project_id",
-                           "targetName": "activity_id",
+                options = {"trigger": {"alias": "task_project",
+                                       "name": "project_id",
+                                       },
+                           "target": {"alias": "task_activity",
+                                      "name": "activity_id",
+                                      },
+                           "scope": "form",
                            "lookupPrefix": "project",
                            "lookupResource": "activity",
                            "optional": True,
                            }
-                jquery_ready_append('''S3OptionsFilter(%s)''' % \
+                jquery_ready_append('''$.filterOptionsS3(%s)''' % \
                                     json.dumps(options, separators=SEPARATORS))
-                                    
-                # @todo: migrate when ready:
-                #options = {"trigger": {"alias": "task_project",
-                #                       "name": "project_id",
-                #                       },
-                #           "target": {"alias": "task_activity",
-                #                      "name": "activity_id",
-                #                      },
-                #           "scope": "form",
-                #           "lookupPrefix": "project",
-                #           "lookupResource": "activity",
-                #           "optional": True,
-                #           }
-                #jquery_ready_append('''$.filterOptionsS3(%s)''' % \
-                #                    json.dumps(options, separators=SEPARATORS))
 
         crud_fields.extend(("name",
                             "description",
@@ -4362,15 +4352,20 @@ class S3ProjectTaskModel(S3Model):
                                          ))
             if use_projects:
                 # Filter Milestone List to just those for the Project
-                options = {"triggerName": "project_id",
-                           "targetName": "milestone_id",
+                options = {"trigger": {"alias": "task_project",
+                                       "name": "project_id",
+                                       },
+                           "target": {"alias": "task_milestone",
+                                      "name": "milestone_id",
+                                      },
+                           "scope": "form",
                            "lookupPrefix": "project",
                            "lookupResource": "milestone",
                            "optional": True,
                            }
-                jquery_ready_append('''S3OptionsFilter(%s)''' % \
+                jquery_ready_append('''$.filterOptionsS3(%s)''' % \
                                     json.dumps(options, separators=SEPARATORS))
-
+                                   
         list_fields.extend(("name",
                             "pe_id",
                             "date_due",
