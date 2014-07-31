@@ -33,6 +33,10 @@
     float: right;
 }
 
+.profile-update {
+    margin-top: 20px;
+}
+
 @media (max-width: 480px) {
     .profile-header h2 {
         padding: 10px 20px;

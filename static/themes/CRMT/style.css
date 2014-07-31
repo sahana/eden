@@ -85,6 +85,17 @@ h2 {
     margin-right: 15px;
 }
 
+h2.profile-header {
+    float: none;
+}
+
+.card_1_line {
+    height: 1.5em;
+}
+.dl-field p > i {
+    margin-right: 5px;
+}
+
 #list-btn-add {
     float: left;
 }

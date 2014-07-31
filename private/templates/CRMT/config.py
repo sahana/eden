@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import s3_avatar_represent
+from s3 import s3_avatar_represent, S3DataListLayout
 
 T = current.T
 settings = current.deployment_settings
@@ -901,6 +901,26 @@ def customise_org_organisation_controller(**attr):
         if method == "validate":
             # Need to override .requires here too
             current.s3db.org_facility.location_id.requires = None
+
+        elif method == "profile":
+
+            profile_layout = OrganisationProfileLayout()
+            places_widget = dict(label = "Places",
+                                 label_create = "Add Place",
+                                 type = "datalist",
+                                 tablename = "org_facility",
+                                 context = "organisation",
+                                 list_fields = ["location_id",
+                                                ],
+                                 list_layout = profile_layout,
+                                 )
+
+            s3db.configure(tablename,
+                           profile_cols = 1,
+                           profile_update = True,
+                           profile_widgets = [places_widget,
+                                              ],
+                           )
 
         elif method == "summary" or r.representation == "aadata":
             # Modify list_fields
@@ -2295,6 +2315,103 @@ def customise_s3_audit_controller(**attr):
     return attr
 
 settings.customise_s3_audit_controller = customise_s3_audit_controller
+
+# =============================================================================
+class OrganisationProfileLayout(S3DataListLayout):
+    """ DataList layout for Organisation Profile """
+
+    # -------------------------------------------------------------------------
+    def render_header(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card header
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        toolbox = self.render_toolbox(list_id, resource, record)
+
+        tablename = resource.tablename
+        if tablename == "org_facility":
+            icon_class = "icon-globe"
+            title = record["org_facility.location_id"] 
+        else:
+            icon_class = "icon"
+            title = ""
+
+        return DIV(I(_class=icon_class),
+                   SPAN(" %s" % title, _class="card-title"),
+                   toolbox,
+                   _class="card-header",
+                   )
+
+    # ---------------------------------------------------------------------
+    def render_body(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card body
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        # No body in this layout so far (org_facility is header-only)
+        return None
+
+    # -------------------------------------------------------------------------
+    def render_toolbox(self, list_id, resource, record):
+        """
+            Render the toolbox
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+            @param record: the record as dict
+        """
+
+        table = resource.table
+        tablename = resource.tablename
+        record_id = record[str(resource._id)]
+
+        open_url = update_url = None
+        if tablename == "org_facility":
+            update_url = URL(f="facility",
+                             args=[record_id, "update.popup"],
+                             vars={"refresh": list_id, "record": record_id},
+                             )
+
+        has_permission = current.auth.s3_has_permission
+
+        from s3 import S3Method
+        crud_string = S3Method.crud_string
+
+        toolbox = DIV(_class="edit-bar fright")
+        
+        if update_url and \
+           has_permission("update", table, record_id=record_id):
+            btn = A(I(" ", _class="icon icon-edit"),
+                    _href=update_url,
+                    _class="s3_modal",
+                    _title=crud_string(tablename, "title_update"))
+            toolbox.append(btn)
+
+        elif open_url:
+            btn = A(I(" ", _class="icon icon-file-alt"),
+                    _href=open_url,
+                    _title=crud_string(tablename, "title_display"))
+            toolbox.append(btn)
+
+        if has_permission("delete", table, record_id=record_id):
+            btn = A(I(" ", _class="icon icon-trash"),
+                    _class="dl-item-delete",
+                    _title=crud_string(tablename, "label_delete_button"))
+            toolbox.append(btn)
+            
+        return toolbox
 
 # =============================================================================
 # Template Modules
