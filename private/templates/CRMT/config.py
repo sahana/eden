@@ -905,7 +905,7 @@ def customise_org_organisation_controller(**attr):
         elif method == "profile":
 
             profile_layout = OrganisationProfileLayout()
-            places_widget = dict(label = "Places",
+            places_widget = dict(label = "Organization's Places",
                                  label_create = "Add Place",
                                  type = "datalist",
                                  tablename = "org_facility",
