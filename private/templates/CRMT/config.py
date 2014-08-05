@@ -875,6 +875,7 @@ def org_organisation_postprocess(form):
 # -----------------------------------------------------------------------------
 def customise_org_organisation_controller(**attr):
 
+    # Filter defaults
     if "summary" in current.request.args:
         settings.gis.toolbar = False
         from s3 import s3_set_default_filter
@@ -887,6 +888,7 @@ def customise_org_organisation_controller(**attr):
     standard_prep = s3.prep
 
     def custom_prep(r):
+        
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
@@ -904,6 +906,7 @@ def customise_org_organisation_controller(**attr):
 
         elif method == "profile":
 
+            # Profile page configuration
             profile_layout = OrganisationProfileLayout()
             places_widget = dict(label = "Organization's Places",
                                  label_create = "Add Place",
@@ -923,7 +926,8 @@ def customise_org_organisation_controller(**attr):
                            )
 
         elif method == "summary" or r.representation == "aadata":
-            # Modify list_fields
+            
+            # Data table configuration
             list_fields = ["id",
                            "name",
                            (T("Coalition Member"), "group_membership.group_id"),
@@ -938,15 +942,21 @@ def customise_org_organisation_controller(**attr):
 
             s3db.configure(tablename,
                            list_fields = list_fields,
+                           # Hide Open & Delete dataTable action buttons
+                           deletable = False,
+                           editable = False,
                            )
 
-        if (r.interactive or r.representation=="json") and not r.component:
+        if (r.interactive or r.representation == "json") and not r.component:
+            
             # CRUD Strings / Represent
             s3.crud_strings[tablename].title_update = T("Update Organization")
             table.logo.readable = table.logo.writable = False
             table.name.label = T("Organization Name")
 
             if method in ("summary", "report"):
+
+                # Filter form
                 from s3 import S3OptionsFilter, S3TextFilter, S3HierarchyFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "group_membership.group_id",
@@ -976,7 +986,7 @@ def customise_org_organisation_controller(**attr):
 
                 s3.crud_strings.org_organisation.title_report = T("Organization Matrix")
 
-                # Custom Report Fields
+                # Report Options
                 report_fields = [# Only 1 Axis so use singular name
                                  #"name",
                                  (T("Coalition Member"), "group_membership.group_id"),
@@ -998,9 +1008,6 @@ def customise_org_organisation_controller(**attr):
                     )
 
                 s3db.configure(tablename,
-                               # Hide Open & Delete dataTable action buttons
-                               deletable = False,
-                               editable = False,
                                filter_formstyle = filter_formstyle,
                                filter_widgets = filter_widgets,
                                report_options = report_options,
@@ -1008,7 +1015,9 @@ def customise_org_organisation_controller(**attr):
                                #summary = [s for s in settings.ui.summary if s["name"] != "map"],
                                )
 
+            # Custom CRUD Form
             if not current.auth.is_logged_in():
+                
                 # Anonymous user creating Org: Keep Simple
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("name",
@@ -1019,91 +1028,9 @@ def customise_org_organisation_controller(**attr):
                                crud_form = crud_form,
                                )
 
-            elif method in ("read", "create", "update", "summary", "import"):
-                # Custom Form (Read/Create/Update inc embedded Summary)
+            elif method in ("read", "create", "update", "summary", "import", "profile"):
+
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
-
-                # Allow free-text in Phone
-                table.phone.requires = None
-
-                ftable = s3db.org_facility
-                ftable.name.default = "TEMP" # replace in form postprocess
-                field = ftable.location_id
-                field.label = T("Address")
-                field.represent = s3db.gis_LocationRepresent(address_only=True)
-                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
-                levels = ("L3",)
-                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
-                # We don't have a widget capable of creating/editing Locations inline
-                #field.widget = None
-                #field.writable = False
-                # s3forms passes even read-only fields through validation
-                #field.requires = None
-                #s3db.configure("org_facility",
-                #               #editable = False,
-                #               insertable = False,
-                #               )
-                # We can't include components in an Inline Component
-                # => use a readonly virtual field instead
-                #from gluon import Field
-                #ftable.facility_types = Field.Method("facility_types", org_facility_types)
-
-                hrtable = s3db.hrm_human_resource
-                hrtable.person_id.widget = None
-                hrtable.site_id.label = T("Place")
-
-                hr_fields = ["person_id",
-                             #"job_title_id",
-                             #"email",
-                             #"phone",
-                             ]
-                if method not in ("create", "summary"):
-                    hr_fields.insert(1, "site_id")
-                    if method == "update":
-                        # Filter the options for site_id in the organisation contacts
-                        # inline component to just the sites of this organisation
-                        from s3 import IS_ONE_OF
-                        auth = current.auth
-                        realms = auth.permission.permitted_realms("hrm_human_resource",
-                                                                  method="create")
-                        instance_types = auth.org_site_types
-                        hrtable.site_id.requires = IS_ONE_OF(current.db, "org_site.site_id",
-                                                             label=s3db.org_site_represent,
-                                                             orderby="org_site.name",
-                                                             filterby="organisation_id",
-                                                             filter_opts=(r.id,),
-                                                             instance_types=instance_types,
-                                                             realms=realms,
-                                                             not_filterby="obsolete",
-                                                             not_filter_opts=(True,)
-                                                             )
-
-                # Custom Crud Form
-                from s3 import S3MultiSelectWidget
-                s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
-                mtable = s3db.org_group_membership
-                mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
-                #from s3layouts import S3AddResourceLink
-                #mtable.status_id.comment = S3AddResourceLink(c="org",
-                #                                             f="group_membership_status",
-                #                                             vars={"child": "status_id"},
-                #                                             title=T("Add New Status"))
-                mtable.status_id.comment = T("Status of the Organization in the Coalition")
-                mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
-                                                              # NB Has no permissions checks
-                                                              create=dict(c="org",
-                                                                          f="group_membership_status",
-                                                                          label=str(T("Add New Status")),
-                                                                          parent="group_membership",
-                                                                          child="status_id"
-                                                                          ))
-
                 form_fields = ["name",
                                "logo",
                                S3SQLInlineComponent(
@@ -1145,70 +1072,106 @@ def customise_org_organisation_controller(**attr):
                                                     options = "TWITTER"
                                                     )
                                     ),
-                               # Not fully ready yet
-                               S3SQLInlineComponent(
-                                    "facility",
-                                    #label = T("Address"),
-                                    label = T("Organization's Places"),
-                                    fields = [("", "location_id"),
-                                              ],
-                                    multiple = False,
-                                    ),
                                "comments",
                                ]
 
-                if method not in ("create", "update", "summary"):
+                # Allow free-text in Phone
+                table.phone.requires = None
+
+                # Organisation's Resources
+                from s3 import S3MultiSelectWidget
+                s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
+
+                # Coalition Memberships
+                mtable = s3db.org_group_membership
+                mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
+                #from s3layouts import S3AddResourceLink
+                #mtable.status_id.comment = S3AddResourceLink(c="org",
+                #                                             f="group_membership_status",
+                #                                             vars={"child": "status_id"},
+                #                                             title=T("Add New Status"))
+                mtable.status_id.comment = T("Status of the Organization in the Coalition")
+                mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
+                                                              # NB Has no permissions checks
+                                                              create=dict(c="org",
+                                                                          f="group_membership_status",
+                                                                          label=str(T("Add New Status")),
+                                                                          parent="group_membership",
+                                                                          child="status_id"
+                                                                          ))
+
+                # Organization's Places (create only once profile is ready)
+                #if method in ("create", "summary"):
+                if method != "profile":
+                    form_fields.insert(-1,
+                                       # Not fully ready yet
+                                       S3SQLInlineComponent("facility",
+                                                #label = T("Address"),
+                                                label = T("Organization's Places"),
+                                                fields = [("", "location_id"),
+                                                        ],
+                                                multiple = False,
+                                       ))
+
+                    ftable = s3db.org_facility
+                    ftable.name.default = "TEMP" # replace in form postprocess
+                    field = ftable.location_id
+                    field.label = T("Address")
+                    field.represent = s3db.gis_LocationRepresent(address_only=True)
+                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+                    levels = ("L3",)
+                    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+                    field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                             hide_lx=False,
+                                                             reverse_lx=True,
+                                                             show_address=True,
+                                                             show_postcode=True,
+                                                             )
+                
+                # Human resource (currently only in read because S3AddPersonWidget
+                # not working inside inline component => consider HRAutoComplete
+                # with AddResourceLink instead?)
+                if r.record and method not in ("update", "profile"):
+
                     hrtable = s3db.hrm_human_resource
                     hrtable.person_id.widget = None
                     hrtable.site_id.label = T("Place")
 
                     hr_fields = ["person_id",
-                                 "site_id"
+                                 "site_id",
                                  #"job_title_id",
                                  #"email",
                                  #"phone",
                                  ]
 
-                    #if method not in ["create", "update"]:
-                    #    hr_fields.insert(1, "site_id")
-                    #    if method == "update":
-                    #        # Filter the options for site_id in the organisation contacts
-                    #        # inline component to just the sites of this organisation
-                    #        from s3 import IS_ONE_OF
-                    #        auth = current.auth
-                    #        realms = auth.permission.permitted_realms("hrm_human_resource",
-                    #                                                  method="create")
-                    #        instance_types = auth.org_site_types
-                    #        hrtable.site_id.requires = IS_ONE_OF(current.db,
-                    #                                             "org_site.site_id",
-                    #                                             label=s3db.org_site_represent,
-                    #                                             orderby="org_site.name",
-                    #                                             filterby="organisation_id",
-                    #                                             filter_opts=(r.id,),
-                    #                                             instance_types=instance_types,
-                    #                                             realms=realms,
-                    #                                             not_filterby="obsolete",
-                    #                                             not_filter_opts=(True,)
-                    #                                             )
+                    #if method in ("update", "profile"):
+                    #    # Filter the options for site_id in the organisation
+                    #    # contacts inline component to just the sites of this
+                    #    # organisation
+                    #    from s3 import IS_ONE_OF
+                    #    auth = current.auth
+                    #    realms = auth.permission.permitted_realms("hrm_human_resource",
+                    #                                              method="create")
+                    #    instance_types = auth.org_site_types
+                    #    hrtable.site_id.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                    #                                         label=s3db.org_site_represent,
+                    #                                         orderby="org_site.name",
+                    #                                         filterby="organisation_id",
+                    #                                         filter_opts=(r.id,),
+                    #                                         instance_types=instance_types,
+                    #                                         realms=realms,
+                    #                                         not_filterby="obsolete",
+                    #                                         not_filter_opts=(True,)
+                    #                                         )
 
                     form_fields.insert(6, S3SQLInlineComponent(
                         "human_resource",
                         label = T("Organization's Contacts"),
                         fields = hr_fields,
                     ))
-                    #form_fields.insert(6, S3SQLInlineComponent(
-                    #    "facility",
-                    #    label = T("Organization's Places"),
-                    #    fields = ["name", 
-                    #              # Only fields within the table are supported
-                    #              #"facility_type.facility_type_id",
-                    #              "location_id",
-                    #              ],
-                    #    # Fields needed to load for Virtual Fields
-                    #    extra_fields = ["site_id"],
-                    #    virtual_fields = [(T("Type"), "facility_types"),
-                    #                      ],
-                    #))
+
+                elif r.record:
+                    s3.cancel = r.url(method="read")
 
                 crud_form = S3SQLCustomForm(*form_fields,
                                             postprocess = org_organisation_postprocess)
@@ -1219,6 +1182,26 @@ def customise_org_organisation_controller(**attr):
         return True
     s3.prep = custom_prep
 
+    # Uncomment this to use the profile page to update organisations:
+    #standard_postp = s3.postp
+    #def custom_postp(r, output):
+    #    # Call standard postp
+    #    if callable(standard_postp):
+    #        output = standard_postp(r, output)
+    #    if r.record and isinstance(output, dict):
+    #        buttons = output.get("buttons")
+    #        if buttons and "edit_btn" in buttons:
+    #            # Override Edit-button (to go to the profile page)
+    #            from s3 import S3CRUD
+    #            buttons["edit_btn"] = S3CRUD.crud_button(
+    #                                        current.messages.UPDATE,
+    #                                        icon="icon-edit",
+    #                                        _href=r.url(method="profile"),
+    #                                        _id="edit-btn",
+    #                                        )
+    #    return output
+    #s3.postp = custom_postp
+    
     # Remove rheader
     attr["rheader"] = None
 
@@ -2321,6 +2304,12 @@ class OrganisationProfileLayout(S3DataListLayout):
     """ DataList layout for Organisation Profile """
 
     # -------------------------------------------------------------------------
+    def __init__(self, profile="org_organisation"):
+        """ Constructor """
+
+        super(OrganisationProfileLayout, self).__init__(profile=profile)
+
+    # -------------------------------------------------------------------------
     def render_header(self, list_id, item_id, resource, rfields, record):
         """
             Render the card header
@@ -2381,7 +2370,10 @@ class OrganisationProfileLayout(S3DataListLayout):
         if tablename == "org_facility":
             update_url = URL(f="facility",
                              args=[record_id, "update.popup"],
-                             vars={"refresh": list_id, "record": record_id},
+                             vars={"refresh": list_id,
+                                   "record": record_id,
+                                   "profile": self.profile,
+                                   },
                              )
 
         has_permission = current.auth.s3_has_permission
@@ -2392,7 +2384,8 @@ class OrganisationProfileLayout(S3DataListLayout):
         toolbox = DIV(_class="edit-bar fright")
         
         if update_url and \
-           has_permission("update", table, record_id=record_id):
+           has_permission("update", table,
+                          record_id=record_id, c="org", f="facility"):
             btn = A(I(" ", _class="icon icon-edit"),
                     _href=update_url,
                     _class="s3_modal",
@@ -2405,7 +2398,8 @@ class OrganisationProfileLayout(S3DataListLayout):
                     _title=crud_string(tablename, "title_display"))
             toolbox.append(btn)
 
-        if has_permission("delete", table, record_id=record_id):
+        if has_permission("delete", table,
+                          record_id=record_id, c="org", f="facility"):
             btn = A(I(" ", _class="icon icon-trash"),
                     _class="dl-item-delete",
                     _title=crud_string(tablename, "label_delete_button"))

@@ -1027,9 +1027,15 @@ class S3Profile(S3CRUD):
         insert = widget.get("insert", True)
         
         table = resource.table
-        if insert and current.auth.s3_has_permission("create", table):
+        tablename = resource.tablename
+        
+        # Default to primary REST controller for the resource being added
+        c, f = tablename.split("_", 1)
+        c = widget.get("create_controller", c)
+        f = widget.get("create_function", f)
 
-            tablename = resource.tablename
+        if insert and \
+           current.auth.s3_has_permission("create", table, c=c, f=f):
             
             #if tablename = "org_organisation":
                 # @ToDo: Special check for creating resources on Organisation profile
@@ -1044,8 +1050,8 @@ class S3Profile(S3CRUD):
             # URL-serialize the context filter
             if context:
                 filters = context.serialize_url(resource)
-                for f in filters:
-                    url_vars[f] = filters[f]
+                for selector in filters:
+                    url_vars[selector] = filters[selector]
 
             # URL-serialize the widget default
             default = widget.get("default")
@@ -1056,6 +1062,9 @@ class S3Profile(S3CRUD):
             # URL-serialize the list ID (refresh-target of the popup)
             url_vars.refresh = list_id
 
+            # Indicate that popup comes from profile (and which)
+            url_vars.profile = r.tablename
+
             # CRUD string
             label_create = widget.get("label_create", None)
             if label_create:
@@ -1064,10 +1073,6 @@ class S3Profile(S3CRUD):
                 label_create = S3CRUD.crud_string(tablename, "label_create")
 
             # Popup URL
-            # Default to primary REST controller for the resource being added
-            c, f = tablename.split("_", 1)
-            c = widget.get("create_controller", c)
-            f = widget.get("create_function", f)
             component = widget.get("create_component", None)
             if component:
                 args = [r.id, component, "create.popup"]

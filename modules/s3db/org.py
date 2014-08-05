@@ -5450,8 +5450,17 @@ def org_facility_controller():
                                    create_next = None)
 
             elif r.id:
-                field = r.table.obsolete
+                table = r.table
+                field = table.obsolete
                 field.readable = field.writable = True
+                if r.method == "update" and \
+                   r.representation == "popup" and \
+                   r.get_vars.get("profile") == "org_organisation":
+                        # Coming from organisation profile
+                        # Don't allow change of organisation_id in this case
+                        field = table.organisation_id
+                        field.writable = False
+                        field.readable = False
 
             elif r.method == "create":
                 table = r.table
@@ -5459,8 +5468,9 @@ def org_facility_controller():
                 name = get_vars.get("name")
                 if name:
                     table.name.default = name
-                if r.representation == "popup":
-                    # Coming from organisation profile?
+                if r.representation == "popup" and \
+                   get_vars.get("profile") == "org_organisation":
+                    # Coming from organisation profile
                     organisation_id = None
                     for k in ("~.organisation_id", "(organisation)", "~.(organisation)"):
                         if k in get_vars:
@@ -5471,7 +5481,7 @@ def org_facility_controller():
                         field = table.organisation_id
                         field.default = organisation_id
                         field.writable = False
-                        field.comment = None
+                        field.readable = False
 
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode

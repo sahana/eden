@@ -1946,8 +1946,10 @@ class deploy_MissionProfileLayout(S3DataListLayout):
     """ DataList layout for Mission Profile """
 
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, profile="deploy_mission"):
         """ Constructor """
+
+        super(deploy_MissionProfileLayout, self).__init__(profile=profile)
 
         self.dcount = {}
         self.avgrat = {}
@@ -2551,13 +2553,21 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
         elif tablename == "deploy_response":
             update_url = URL(f="response_message",
-                            args=[record_id, "update.popup"],
-                            vars={"refresh": list_id, "record": record_id})
+                             args=[record_id, "update.popup"],
+                             vars={"refresh": list_id,
+                                   "record": record_id,
+                                   "profile": self.profile,
+                                   },
+                             )
 
         elif tablename == "deploy_assignment":
             update_url = URL(c="deploy", f="assignment",
-                            args=[record_id, "update.popup"],
-                            vars={"refresh": list_id, "record": record_id})
+                             args=[record_id, "update.popup"],
+                             vars={"refresh": list_id,
+                                   "record": record_id,
+                                   "profile": self.profile,
+                                   },
+                             )
 
         has_permission = current.auth.s3_has_permission
         crud_string = S3Method.crud_string

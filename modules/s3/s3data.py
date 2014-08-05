@@ -1122,6 +1122,19 @@ class S3DataListLayout(object):
     item_class = "thumbnail"
 
     # ---------------------------------------------------------------------
+    def __init__(self, profile=None):
+        """
+            Constructor
+
+            @param profile: table name of the master resource of the
+                            profile page (if used for a profile), can be
+                            used in popup URLs to indicate the master
+                            resource
+        """
+
+        self.profile = profile
+
+    # ---------------------------------------------------------------------
     def __call__(self, list_id, item_id, resource, rfields, record):
         """
             Wrapper for render_item.
