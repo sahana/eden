@@ -584,29 +584,27 @@ class S3DeploymentModel(S3Model):
         # Lookup the person ID
         hrtable = s3db.hrm_human_resource
         hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
+                                                        hrtable.type,
                                                         limitby=(0, 1)
                                                         ).first()
 
         # Lookup mission details
         mtable = db.deploy_mission
-        mission = db(mtable.id == mission_id).select(mtable.code,
-                                                     mtable.location_id,
+        mission = db(mtable.id == mission_id).select(mtable.location_id,
                                                      mtable.organisation_id,
                                                      limitby=(0, 1)
                                                      ).first()
         if mission:
-            code = mission.code
             location_id = mission.location_id
             organisation_id = mission.organisation_id
         else:
-            code = None
             location_id = None
             organisation_id = None
 
         # Create hrm_experience
         etable = s3db.hrm_experience
         id = etable.insert(person_id = hr.person_id,
-                           code = code,
+                           employment_type = hr.type,
                            location_id = location_id,
                            job_title_id = job_title_id,
                            organisation_id = organisation_id,

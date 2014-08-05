@@ -540,6 +540,9 @@ div.dl {
     text-overflow: none;
     overflow: hidden;
 }
+.card_1_line i {
+    margin-right: 5px;
+}
 
 /* Display view */
 .item-container {

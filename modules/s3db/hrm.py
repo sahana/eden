@@ -3366,11 +3366,18 @@ class S3HRExperienceModel(S3Model):
         # This should be auto-populated out of Events
         # - as well as being updateable manually for off-system Events
         #
+        hr_type = self.hrm_human_resource.type
 
         tablename = "hrm_experience"
         self.define_table(tablename,
                           person_id(),
-                          # For Mission or Event
+                          # Employment type (staff or volunteer)
+                          Field("employment_type", "integer",
+                                default = hr_type.default,
+                                represent = hr_type.represent,
+                                requires = hr_type.requires,
+                                ),
+                          # For Events
                           Field("code",
                                 label = T("Code"),
                                 readable = False,
@@ -3447,6 +3454,7 @@ class S3HRExperienceModel(S3Model):
                                       "start_date",
                                       "end_date",
                                       "organisation_id",
+                                      "employment_type",
                                       "job_title_id",
                                       "location_id",
                                       "comments",
@@ -5650,7 +5658,8 @@ def hrm_human_resource_controller(extra_filter=None):
             # Adapt list_fields for hrm_experience
             s3db.hrm_experience # Load normal model
             s3db.configure("hrm_experience",
-                           list_fields = ["code",
+                           list_fields = [#"code",
+                                          "employment_type",
                                           "organisation_id",
                                           "organisation",
                                           "job_title_id",
@@ -7065,95 +7074,45 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
 
     raw = record._row
 
-    mission = raw["hrm_experience.code"] or ""
-    if mission:
-        # Lookup Mission
-        # @ToDo: S3Represent to do this in bulk
-        mtable = current.s3db.deploy_mission
-        mission = current.db(mtable.code == mission).select(mtable.id,
-                                                            mtable.name,
-                                                            limitby=(0, 1)
-                                                            ).first()
-        if mission:
-            mission_url = URL(c="deploy", f="mission",
-                              args=[mission.id, "profile"])
-            mission = A(mission.name,
-                        _href=mission_url,
-                        _target="_blank")
-        mission = P(I(_class="icon-circle"),
-                    " ",
-                    SPAN(mission),
-                    " ",
-                    _class="card_1_line",
-                    )
+    card_line = lambda icon, item: P(I(" ", _class=icon),
+                                     SPAN(item),
+                                     _class="card_1_line",
+                                     )
 
-    job_title = raw["hrm_experience.job_title_id"]
-    if job_title:
-        job_title = record["hrm_experience.job_title_id"]
+    # Organisation
+    organisation_id = raw["hrm_experience.organisation_id"]
+    if organisation_id:
+        org_url = URL(c="org", f="organisation", args=[organisation_id])
+        organisation = A(record["hrm_experience.organisation_id"], _href=org_url)
     else:
         # Try free-text field
-        job_title = raw["hrm_experience.job_title"] or ""
-
-    organisation = raw["hrm_experience.organisation_id"]
+        organisation = raw["hrm_experience.organisation"]
     if organisation:
-        #org_url = URL(c="org", f="organisation", args=[organisation, "profile"])
-        org_url = URL(c="org", f="organisation", args=[organisation])
-        organisation = P(I(_class="icon-sitemap"),
-                         " ",
-                         SPAN(A(record["hrm_experience.organisation_id"],
-                                _href=org_url),
-                              ),
-                         " ",
-                         _class="card_1_line",
-                         )
+        organisation = card_line("icon-sitemap", organisation)
     else:
-        # Try free-text field
-        organisation = raw["hrm_experience.organisation"] or ""
-        if organisation:
-            organisation = P(I(_class="icon-sitemap"),
-                             " ",
-                             SPAN(organisation),
-                             " ",
-                             _class="card_1_line",
-                             )
+        organisation = ""
 
+    # Location
     location_id = raw["hrm_experience.location_id"]
     if location_id:
         #location_url = URL(c="gis", f="location", args=[location_id, "profile"])
         location_url = URL(c="gis", f="location", args=[location_id])
-        location = SPAN(I(_class="icon-globe"),
-                        " ",
-                        SPAN(A(record["hrm_experience.location_id"],
-                               _href=location_url),
-                             ),
-                        " ",
-                        _class="card_1_line",
-                        )
+        location = card_line("icon-globe",
+                             A(record["hrm_experience.location_id"],
+                               _href=location_url,
+                               ),
+                             )
     else:
         location = ""
 
-    hours = raw["hrm_experience.hours"] or ""
+    # Hours
+    hours = raw["hrm_experience.hours"]
     if hours:
-        hours = P(I(_class="icon-time"),
-                  " ",
-                  SPAN(hours),
-                  " ",
-                  _class="card_1_line",
-                  )
+        hours = card_line("icon-time", hours)
+    else:
+        hours = ""
 
-    super = raw["hrm_experience.supervisor_id"] or ""
-    if super:
-        #person_url = URL(c="hrm", f="person", args=[super, "profile"])
-        person_url = URL(c="hrm", f="person", args=[super])
-        super = P(I(_class="icon-user"),
-                  " ",
-                  SPAN(A(record["hrm_experience.supervisor_id"],
-                         _href=person_url)
-                       ),
-                  " ",
-                  _class="card_1_line",
-                  )
-
+    # Start and End Dates
     start_date = raw["hrm_experience.start_date"]
     end_date = raw["hrm_experience.end_date"]
     if start_date or end_date:
@@ -7165,16 +7124,36 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
             dates = "%s - " % record["hrm_experience.start_date"]
         else:
             dates = " - %s" % record["hrm_experience.end_date"]
-        date = P(I(_class="icon-calendar"),
-                 " ",
-                 SPAN(dates),
-                 " ",
-                 _class="card_1_line",
-                 )
+        date = card_line("icon-calendar", dates)
     else:
         date = ""
 
+    # Supervisor
+    supervisor_id = raw["hrm_experience.supervisor_id"]
+    if supervisor_id:
+        #person_url = URL(c="hrm", f="person", args=[supervisor_id, "profile"])
+        person_url = URL(c="hrm", f="person", args=[supervisor_id])
+        supervisor = card_line("icon-user",
+                               A(record["hrm_experience.supervisor_id"],
+                                 _href=person_url,
+                                 ),
+                              )
+    else:
+        supervisor = ""
+
+    # Comments
     comments = raw["hrm_experience.comments"] or ""
+
+    # Job title as card title, indicate employment type if given
+    if raw["hrm_experience.job_title_id"]:
+        job_title = record["hrm_experience.job_title_id"]
+    else:
+        # Try free-text field
+        job_title = raw["hrm_experience.job_title"] or ""
+    if raw["hrm_experience.employment_type"]:
+        title = " %s (%s)" % (job_title, record["hrm_experience.employment_type"])
+    else:
+        title = " %s" % job_title
 
     # Edit Bar
     permit = current.auth.s3_has_permission
@@ -7206,17 +7185,15 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
 
     # Render the item
     item = DIV(DIV(I(_class="icon"),
-                   SPAN(" %s" % job_title,
-                        _class="card-title"),
+                   SPAN(title, _class="card-title"),
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(DIV(DIV(mission,
-                           organisation,
+               DIV(DIV(DIV(organisation,
                            location,
                            date,
                            hours,
-                           super,
+                           supervisor,
                            P(SPAN(comments),
                              " ",
                              _class="card_manylines",
