@@ -27,11 +27,9 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: experimental
 """
 
-__all__ = ("S3Hierarchy",)
+__all__ = ("S3Hierarchy", "S3HierarchyCRUD")
 
 try:
     import json # try stdlib (Python 2.6)
@@ -43,8 +41,131 @@ except ImportError:
 
 from gluon import *
 from s3utils import s3_unicode
+from s3rest import S3Method
+from s3widgets import SEPARATORS
 
 DEFAULT = lambda: None
+
+# =============================================================================
+class S3HierarchyCRUD(S3Method):
+    """ Method handler for hierarchical CRUD """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST interface
+
+            @param r: the S3Request
+            @param attr: controller attributes
+        """
+
+        if r.http == "GET":
+            output = self.tree(r, **attr)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def tree(self, r, **attr):
+        """
+            Page load
+
+            @param r: the S3Request
+            @param attr: controller attributes
+        """
+
+        output = {}
+
+        s3 = current.response.s3
+        tablename = self.resource.tablename
+
+        # Widget ID
+        widget_id = "%s-hierarchy" % tablename
+
+        # Render the tree
+        tree = self.render_tree(widget_id, record=r.record)
+
+        # Page title
+        if r.record:
+            title = self.crud_string(tablename, "title_display")
+        else:
+            title = self.crud_string(tablename, "title_list")
+        output["title"] = title
+
+        # Build the form
+        form = FORM(DIV(tree,
+                        _class="s3-hierarchy-tree",
+                        ),
+                    _id = widget_id,
+                    )
+        output["form"] = form
+
+        # View
+        widget_opts = {}
+        self.include_scripts(widget_id, widget_opts)
+        current.response.view = self._view(r, "hierarchy.html")
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def render_tree(self, widget_id, record=None):
+        """
+            Render the tree
+
+            @param widget_id: the widget ID
+            @param record: the root record (if requested)
+        """
+
+        resource = self.resource
+        tablename = resource.tablename
+
+        h = S3Hierarchy(tablename = tablename)
+        if not h.config:
+            # @todo: redirect to read/update with a warning?
+            raise AttributeError("No hierarchy configured for %s" % tablename)
+
+        root = None
+        if record:
+            try:
+                root = record[h.pkey]
+            except AttributeError:
+                # @todo: proper error response?
+                raise
+
+        # @todo: apply all resource filters?
+        return h.html("%s-tree" % widget_id, root=root)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def include_scripts(widget_id, widget_opts):
+        """ Include JS needed for hierarchical CRUD """
+
+        s3 = current.response.s3
+        scripts = s3.scripts
+
+        # Include static scripts
+        script_dir = "/%s/static/scripts" % current.request.application
+        if s3.debug:
+            script = "%s/jquery.jstree.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+            script = "%s/S3/s3.jquery.ui.hierarchicalcrud.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+        else:
+            script = "%s/S3/s3.jstree.min.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+
+        # Apply the widget JS
+        script = '''$('#%(widget_id)s').hierarchicalcrud(%(widget_opts)s)''' % \
+                 {"widget_id": widget_id,
+                  "widget_opts": json.dumps(widget_opts, separators=SEPARATORS),
+                  }
+        s3.jquery_ready.append(script)
+
+        return
 
 # =============================================================================
 class S3Hierarchy(object):
@@ -865,11 +986,18 @@ class S3Hierarchy(object):
         return None
 
     # -------------------------------------------------------------------------
-    def html(self, widget_id, represent=None, hidden=True, _class=None):
+    def html(self,
+             widget_id,
+             root=None,
+             represent=None,
+             hidden=True,
+             _class=None):
         """
             Render this hierarchy as nested unsorted list
 
             @param widget_id: a unique ID for the HTML widget
+            @param root: node ID of the start node (defaults to all
+                         available root nodes)
             @param represent: the representation method for the node IDs
             @param hidden: render with style display:none
             @param _class: the HTML class for the outermost list
@@ -879,9 +1007,11 @@ class S3Hierarchy(object):
 
         self._represent(renderer=represent)
 
+        roots = [root] if root else self.roots
+
         html = self._html
         output = UL([html(node_id, widget_id, represent=represent)
-                    for node_id in self.roots],
+                    for node_id in roots],
                     _id=widget_id,
                     _style="display:none" if hidden else None)
         if _class:

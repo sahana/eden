@@ -2216,6 +2216,12 @@ class S3Config(Storage):
         """
         return self.org.get("branches", False)
 
+    def get_org_branches_tree_view(self):
+        """
+            Show branches of an organisation as tree rather than as table
+        """
+        return self.org.get("branches_tree_view", False)
+
     def get_org_facility_types_hierarchical(self):
         """
             Whether Facility Types are Hierarchical or not

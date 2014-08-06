@@ -80,6 +80,8 @@
 
             // Forget the data
             this.data = null;
+
+            $.Widget.prototype.destroy.call(this);
         },
         
         /**

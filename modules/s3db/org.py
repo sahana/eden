@@ -4760,8 +4760,12 @@ def org_rheader(r, tabs=[]):
                     tabs.insert(-1, (T("Resources"), "resource"))
 
             # Use branches?
-            if settings.org.branches and not skip_branches:
-                tabs.insert(1, (T("Branches"), "branch"))
+            if settings.get_org_branches() and not skip_branches:
+                if settings.get_org_branches_tree_view():
+                    presentation = "hierarchy"
+                else:
+                    presentation = "branch"
+                tabs.insert(1, (T("Branches"), presentation))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -4927,38 +4931,34 @@ def org_organisation_controller():
             r.table.country.default = gis.get_default_country("code")
 
             method = r.method
-            if not r.component:
-                if method not in ("read", "update", "delete", "deduplicate"):
-                    use_branches = settings.get_org_branches()
-                    if use_branches:
-                        # Filter Branches
-                        branch_filter = (FS("parent.id") == None)
-                    # Filter Locations
-                    lfilter = current.session.s3.location_filter
-                    if lfilter:
-                        # Include those whose parent is in a different country
-                        gtable = s3db.gis_location
-                        query = (gtable.id == lfilter)
-                        row = db(query).select(gtable.id,
-                                               gtable.name,
-                                               gtable.level,
-                                               gtable.path,
-                                               limitby=(0, 1)).first()
-                        if row and row.level:
-                            if row.level != "L0":
-                                code = gis.get_parent_country(row, key_type="code")
-                            else:
-                                ttable = s3db.gis_location_tag
-                                query = (ttable.tag == "ISO2") & \
-                                        (ttable.location_id == row.id)
-                                tag = db(query).select(ttable.value,
-                                                       limitby=(0, 1)).first()
-                                code = tag.value
-                            # Filter out Branches
-                            branch_filter |= (FS("parent.country") != code) | \
-                                             (FS("parent.country") == None)
-                    if use_branches:
-                        r.resource.add_filter(branch_filter)
+            use_branches = settings.get_org_branches()
+            if use_branches and not r.component and not r.record:
+                # Filter out branches from multi-record views
+                branch_filter = (FS("parent.id") == None)
+                # Filter Locations
+                lfilter = current.session.s3.location_filter
+                if lfilter:
+                    # Include those whose parent is in a different country
+                    gtable = s3db.gis_location
+                    query = (gtable.id == lfilter)
+                    row = db(query).select(gtable.id,
+                                           gtable.name,
+                                           gtable.level,
+                                           gtable.path,
+                                           limitby=(0, 1)).first()
+                    if row and row.level:
+                        if row.level != "L0":
+                            code = gis.get_parent_country(row, key_type="code")
+                        else:
+                            ttable = s3db.gis_location_tag
+                            query = (ttable.tag == "ISO2") & \
+                                    (ttable.location_id == row.id)
+                            tag = db(query).select(ttable.value,
+                                                   limitby=(0, 1)).first()
+                            code = tag.value
+                        branch_filter |= (FS("parent.country") != code) | \
+                                         (FS("parent.country") == None)
+                r.resource.add_filter(branch_filter)
 
             if not r.component or r.component_name == "branch":
                 type_filter = r.get_vars.get("organisation_type.name", None)

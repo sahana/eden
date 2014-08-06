@@ -1347,9 +1347,7 @@ class S3ComponentTabs(object):
                    r.component.alias == component and \
                    vars_match:
                     here = True
-                elif not r.component and \
-                     r.custom_action and \
-                     r.method == component:
+                elif not r.component and r.method == component:
                     here = True
                 else:
                     here = False

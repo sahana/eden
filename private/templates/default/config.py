@@ -447,6 +447,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.org.autocomplete = True
 # Enable the use of Organisation Branches
 #settings.org.branches = True
+# Show branches as tree rather than as table
+#settings.org.branches_tree_view = True
 # Make Facility Types Hierarchical
 #settings.org.facility_types_hierarchical = True
 # Enable the use of Organisation Groups & what their name is
