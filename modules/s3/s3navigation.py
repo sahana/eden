@@ -1279,7 +1279,7 @@ def s3_rheader_resource(r):
     return (tablename, record)
 
 # =============================================================================
-def s3_rheader_tabs(r, tabs=[]):
+def s3_rheader_tabs(r, tabs=None):
     """
         Constructs a DIV of component links for a S3RESTRequest
 
@@ -1292,32 +1292,48 @@ def s3_rheader_tabs(r, tabs=[]):
 
 # =============================================================================
 class S3ComponentTabs(object):
+    """ Class representing a row of component tabs """
 
-    def __init__(self, tabs=[]):
+    def __init__(self, tabs=None):
+        """
+            Constructor
 
-        self.tabs = [S3ComponentTab(t) for t in tabs if t]
+            @param tabs: the tabs configuration as list of names or tuples
+                         (label, name)
+        """
+
+        if not tabs:
+            self.tabs = []
+        else:
+            self.tabs = [S3ComponentTab(t) for t in tabs if t]
 
     # -------------------------------------------------------------------------
     def render(self, r):
+        """
+            Render the tabs row
+
+            @param r: the S3Request
+        """
 
         rheader_tabs = []
 
-        tabs = [t for t in self.tabs if t.active(r)]
+        tabs = tuple(t for t in self.tabs if t.active(r))
 
-        # Check whether there is a tab for this resource method (no component)
-        mtab = r.component is None and \
-               [t.component for t in tabs if t.component == r.method] and \
-               True or False
+        mtab = False
+        if r.component is None:
+            # Check whether there is a tab for the current URL method
+            for t in tabs:
+                if t.component == r.method:
+                    mtab = True
+                    break
 
         record_id = r.id
         if not record_id and r.record:
             record_id = r.record[r.table._id]
 
-        for i in xrange(len(tabs)):
+        for i, tab in enumerate(tabs):
 
-            tab = tabs[i]
-            component = tab.component
-
+            # Determine the query variables for the tab URL
             vars_match = tab.vars_match(r)
             if vars_match:
                 _vars = Storage(r.get_vars)
@@ -1326,20 +1342,21 @@ class S3ComponentTabs(object):
                 if "viewing" in r.get_vars:
                     _vars.viewing = r.get_vars.viewing
 
-            if i == len(tabs) - 1:
-                _class = "tab_last"
-            else:
-                _class = "tab_other"
-
-            here = False
+            # Determine the controller function for the tab URL
             if tab.function is None:
+                # Infer function from current request
                 if "viewing" in _vars:
                     tablename, record_id = _vars.viewing.split(".", 1)
                     function = tablename.split("_", 1)[1]
                 else:
                     function = r.function
             else:
+                # Tab defines controller function
                 function = tab.function
+
+            # Is this the current tab?
+            component = tab.component
+            here = False
             if function == r.name or function == r.function:
                 here = r.method == component or not mtab
             if component:
@@ -1354,9 +1371,16 @@ class S3ComponentTabs(object):
             else:
                 if r.component or not vars_match:
                     here = False
+
+            # HTML class for the tab position
             if here:
                 _class = "tab_here"
+            elif i == len(tabs) - 1:
+                _class = "tab_last"
+            else:
+                _class = "tab_other"
 
+            # Complete the tab URL with args, deal with "viewing"
             if component:
                 if record_id:
                     args = [record_id, component]
@@ -1381,9 +1405,15 @@ class S3ComponentTabs(object):
                 _href = URL(function, args=args, vars=_vars)
                 _id = "rheader_tab_%s" % function
 
-            rheader_tabs.append(SPAN(A(tab.title, _href=_href, _id=_id,),
-                                     _class=_class,))
+            # Render tab
+            rheader_tabs.append(SPAN(A(tab.title,
+                                       _href=_href,
+                                       _id=_id,
+                                       ),
+                                     _class=_class,
+                                     ))
 
+        # Render tab row
         if rheader_tabs:
             rheader_tabs = DIV(rheader_tabs, _class="tabs")
         else:
