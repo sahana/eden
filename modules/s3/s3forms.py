@@ -298,8 +298,6 @@ class S3SQLDefaultForm(S3SQLForm):
         record = None
         labels = None
 
-        download_url = s3.download_url
-
         self.record_id = record_id
 
         if not readonly:
@@ -384,7 +382,7 @@ class S3SQLDefaultForm(S3SQLForm):
                        comments = not readonly,
                        deletable = False,
                        showid = False,
-                       upload = download_url,
+                       upload = s3.download_url,
                        labels = labels,
                        formstyle = formstyle,
                        separator = "",
@@ -924,7 +922,7 @@ class S3SQLCustomForm(S3SQLForm):
                                labels = labels,
                                formstyle = formstyle,
                                table_name = tablename,
-                               upload = "default/download",
+                               upload = s3.download_url,
                                readonly = readonly,
                                separator = "",
                                submit_button = settings.submit_button,
@@ -2413,7 +2411,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         """
 
         T = current.T
-        settings = current.response.s3.crud
+        s3 = current.response.s3
+        settings = s3.crud
 
         columns = []
         rowtype = readonly and "read" or "edit"
@@ -2477,7 +2476,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                   record=data,
                                   showid=False,
                                   formstyle=self._formstyle,
-                                  upload = "default/download",
+                                  upload = s3.download_url,
                                   readonly=readonly,
                                   table_name=subform_name,
                                   submit_button = settings.submit_button)

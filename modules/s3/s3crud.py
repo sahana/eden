@@ -2708,8 +2708,7 @@ class S3CRUD(S3Method):
             # Extract data for embedded form from post_vars
             post_vars = request.post_vars
             form_vars = Storage(table._filter_fields(post_vars))
-            form_vars[table._id.name] = selected
-            
+
             # Pass values through validator to convert them into db-format
             for k in form_vars:
                 value, error = s3_validate(table, k, form_vars[k])
@@ -2719,6 +2718,7 @@ class S3CRUD(S3Method):
             _form = Storage(vars = form_vars, errors = Storage())
             if _form.vars:
                 if selected:
+                    form_vars[table._id.name] = selected
                     # Onvalidation
                     onvalidation = get_config("update_onvalidation") or \
                                    get_config("onvalidation")
@@ -2741,6 +2741,7 @@ class S3CRUD(S3Method):
                                get_config("onaccept")
                     callback(onaccept, _form, tablename=component)
                 else:
+                    form_vars.pop(table._id.name, None)
                     # Onvalidation
                     onvalidation = get_config("create_onvalidation") or \
                                    get_config("onvalidation")
