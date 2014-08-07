@@ -87,6 +87,7 @@
         var t = tableIdReverse('#' + tableid);
         var dt = oDataTable[t];
         var oSetting = dt.dataTableSettings[t];
+        url = url.replace('&apos;', "'").replace('&quot;', '"');
         if (oSetting) {
             var argData = 'id=' + tableid;
             var serverFilterArgs = $('#' + tableid + '_dataTable_filter');

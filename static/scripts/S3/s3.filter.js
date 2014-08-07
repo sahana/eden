@@ -906,7 +906,8 @@ S3.search = {};
                     s = $this.attr('onclick');
                     parts = s.split("','");
                     url = parts[2].split("')")[0];
-                    url = filterURL(url, queries);
+                    url = filterURL(url, queries).replace("'", '&apos;')
+                                                 .replace('"', '&quot;');
                     parts[2] = url + "')";
                     s = parts.join("','");
                     $this.attr('onclick', s);
@@ -1492,7 +1493,8 @@ S3.search = {};
                         s = $this.attr('onclick');
                         parts = s.split("','");
                         url = parts[2].split("')")[0];
-                        url = filterURL(url, queries);
+                        url = filterURL(url, queries).replace("'", '&apos;')
+                                                     .replace('"', '&quot;');
                         parts[2] = url + "')";
                         s = parts.join("','");
                         $this.attr('onclick', s);

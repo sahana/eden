@@ -468,6 +468,9 @@ class S3DataTable(object):
             EXPORT = T("Export in %(format)s format")
 
             # In reverse-order of appearance due to float-right
+            # @todo: DRY + clean this up
+            # @todo: unsafe since URLs can contain quotes
+            # @todo: poor UX with hidden URLs => better render as normal, bookmarkable links
             if "map" in formats and "map" in export_formats:
                 iconList.append(DIV(_class="export_map",
                                     _onclick="S3.dataTables.formatRequest('map','%s','%s')" % (id, formats.map),
