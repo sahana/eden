@@ -127,10 +127,30 @@ class S3Parser(object):
                     )
 
         # Can we identify the Member?
-        hr_id = S3Parsing().lookup_human_resource(message.from_address)
-        if hr_id:
-            data["human_resource_id"] = hr_id
-
+        person_id = S3Parsing().lookup_person(message.from_address)
+        if person_id:
+            # Sender identified => look up HR records
+            atable = s3db.deploy_application
+            htable = s3db.hrm_human_resource
+            left = atable.on(htable.id == atable.human_resource_id)
+            rows = db((htable.person_id == person_id) & \
+                      (htable.deleted != True)).select(htable.id,
+                                                       atable.id,
+                                                       atable.active,
+                                                       orderby=~htable.modified_on,
+                                                       left=left,
+                                                       )
+            hr_id = None
+            for row in rows:
+                if row[atable.id] and row[atable.active]:
+                    # Prefer latest deployable
+                    hr_id = row[htable.id]
+                    break
+                elif not hr_id:
+                    hr_id = row[htable.id]
+            if hr_id:
+                data["human_resource_id"] = hr_id
+                
         table = s3db.deploy_response
         table.insert(**data)
 
