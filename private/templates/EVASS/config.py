@@ -149,7 +149,7 @@ settings.cr.shelter_population_dynamic = True
 # Enable the use of Organisation Branches
 settings.org.branches = True
 # Show branches as tree rather than as table
-#settings.org.branches_tree_view = True
+settings.org.branches_tree_view = True
 # Enable the use of Organisation Groups & what their name is
 #settings.org.groups = "Coalition"
 settings.org.groups = "Network"

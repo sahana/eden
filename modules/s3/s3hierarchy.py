@@ -101,9 +101,14 @@ class S3HierarchyCRUD(S3Method):
                     )
         output["form"] = form
 
-        # View
-        widget_opts = {}
+        # Widget options and scripts
+        widget_opts = {
+            "openLabel": str(current.messages.READ),
+            "openURL": r.url(method="read", id="[id]"),
+        }
         self.include_scripts(widget_id, widget_opts)
+        
+        # View
         current.response.view = self._view(r, "hierarchy.html")
 
         return output
