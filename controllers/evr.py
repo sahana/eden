@@ -48,6 +48,7 @@ def person():
     def prep(r):
 
         fiscal_code = s3db.evr_case.fiscal_code
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         if r.method == "update":
             fiscal_code.requires = None
@@ -58,28 +59,65 @@ def person():
                                 null=""
                                 )
 
-        r.resource.configure(list_fields = ["id",
-                                            "first_name",
-                                            #"middle_name",
-                                            "last_name",
-                                            "gender",
-                                            "date_of_birth",
-                                            (T("Age"), "age"),
-                                            ])
+        report_fields = ["id",
+                         "last_name",
+                         "case.organisation_id",
+                         "gender",
+                         "date_of_birth",
+                         "person_details.nationality",
+                         "person_details.marital_status",
+                         "shelter_registration.shelter_id",
+                         "shelter_registration.check_in_date",
+                         "shelter_registration.check_out_date",
+                         ]
+        if settings.get_cr_shelter_housing_unit_management():
+            report_fields.append("shelter_registration.shelter_unit_id")
+        
+        for level in levels:
+            lfield = "location_id$%s" % level
+            report_fields.append(lfield)
+  
+        report_options = Storage(
+                                 rows=report_fields,
+                                 cols=report_fields,
+                                 fact=report_fields,
+                                 defaults=Storage(
+                                                  rows="shelter_registration.shelter_id",
+                                                  cols="gender",
+#                                                  totals=True,
+                                                  )
+                                 )
+        list_fields = ["id",
+                       "first_name",
+                       #"middle_name",
+                       "last_name",
+                       "gender",
+                       "date_of_birth",
+                       ]
+        if settings.get_evr_link_to_organisation():
+            list_fields.append("case.organisation_id")
+        list_fields.append("shelter_registration.shelter_id")
+        if settings.get_cr_shelter_housing_unit_management():
+            list_fields.append("shelter_registration.shelter_unit_id")
+        list_fields.append("shelter_registration.check_in_date")
+        list_fields.append("shelter_registration.check_out_date")
+                  
+        r.resource.configure(list_fields = list_fields,
+                             report_options = report_options)
 
         if r.interactive and not r.component:
 
             resource = r.resource
 
             # Filter widgets
-            from s3 import S3TextFilter
+            from s3.s3filter import S3OptionsFilter, S3TextFilter, S3LocationFilter, S3DateFilter
             filter_widgets = [
                 S3TextFilter(["first_name",
                               #"middle_name",
                               "last_name",
                               #"local_name",
                               "identity.value",
-                              "case.fiscal_code"
+                              "case.fiscal_code",
                               ],
                               label = T("Name and/or ID"),
                               comment = T("To search for a person, enter any of the "
@@ -87,15 +125,36 @@ def person():
                                           "number of a person, separated by spaces. "
                                           "You may use % as wildcard."),
                               ),
+                S3LocationFilter("address.location_id",
+                                 label = T("Current Residence"),
+                                 levels = levels,
+                                 ),
+                S3DateFilter("date_of_birth",
+                             label = T("Date Of Birth")
+                             ),
+                S3OptionsFilter("person_details.nationality",
+                                label = T("Nationality"),
+                                ),
+                S3OptionsFilter("case.organisation_id",
+                                label = T("Organisation"),
+                                ),
+                S3OptionsFilter("shelter_registration.shelter_id",
+                                label = T("Shelter"),
+                                ),
+                S3OptionsFilter("shelter_registration.registration_status",
+                                label = T("Registration Status"),
+                                ),                            
             ]
 
             # Custom Form for Persons
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
-            crud_form = S3SQLCustomForm("first_name",
+            crud_form = S3SQLCustomForm("case.organisation_id",
+                                        "first_name",
                                         #"middle_name",
                                         "last_name",
                                         "date_of_birth",
-                                        "person_details.place_of_birth",
+                                        "location_id",
+                                        "person_details.place_of_birth",                                    
                                         "case.fiscal_code",
                                         S3SQLInlineComponent(
                                             "identity",
@@ -104,10 +163,10 @@ def person():
                                                       "value",
                                                       ],
                                         ),
-                                        "gender",
-                                        "person_details.marital_status",
                                         "person_details.nationality",
-                                        #"person_details.religion",
+                                        "gender",
+                                        "person_details.marital_status",                                    
+                                        "person_details.religion",
                                         "person_details.occupation",
                                         #"person_details.company",
                                         "comments",

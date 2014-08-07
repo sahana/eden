@@ -41,9 +41,28 @@ settings.ui.filter_formstyle = "foundation_inline"
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 settings.auth.always_notify_approver = False
 
-# Terms of Service to be able to Register on the system
-# uses <template>/views/tos.html
-settings.auth.terms_of_service = True
+# The name of the teams that users are added to when they opt-in to receive alerts
+#settings.auth.opt_in_team_list = ["Updates"]
+# Uncomment this to set the opt in default to True
+#settings.auth.opt_in_default = True
+# Uncomment this to request the Mobile Phone when a user registers
+settings.auth.registration_requests_mobile_phone = True
+# Uncomment this to have the Mobile Phone selection during registration be mandatory
+settings.auth.registration_mobile_phone_mandatory = True
+# Uncomment this to allow Admin to see Organisations in user Admin even if the Registration doesn't request this
+#settings.auth.admin_sees_organisation = True
+# Uncomment to set the default role UUIDs assigned to newly-registered users
+# This is a dictionary of lists, where the key is the realm that the list of roles applies to
+# The key 0 implies not realm restricted
+# The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
+#settings.auth.registration_roles = { 0: ["STAFF", "PROJECT_EDIT"]}
+# Should users be allowed to register themselves?
+#settings.security.self_registration = False
+# Do new users need to verify their email address?
+#settings.auth.registration_requires_verification = True
+# Do new users need to be approved by an administrator prior to being able to login?
+#settings.auth.registration_requires_approval = True
+
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -68,18 +87,6 @@ settings.L10n.thousands_separator = "."
 settings.L10n.default_country_code = +39
 # Make last name in person/user records mandatory
 settings.L10n.mandatory_lastname = True
-# Configure the list of Religions
-settings.L10n.religions = OrderedDict([("unknown", T("Unknown")),
-                                       ("bahai", T("Bahai")),
-                                       ("buddhist", T("Buddhist")),
-                                       ("christian", T("Christian")),
-                                       ("hindu", T("Hindu")),
-                                       ("jewish", T("Jewish")),
-                                       ("muslim", T("Muslim")),
-                                       ("other", T("other"))
-                                       ])
-# Uncomment this to Translate CMS Series Names
-#settings.L10n.translate_cms_series = True
 # Uncomment this to Translate Layer Names
 #settings.L10n.translate_gis_layer = True
 # Uncomment this to Translate Location Names
@@ -100,6 +107,7 @@ settings.gis.geonames_username = "evass"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ["IT"]
+
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Hide unnecessary Toolbar items
@@ -129,6 +137,14 @@ settings.security.policy = 7
 # Shelters
 # Uncomment to use a dynamic population estimation by calculations based on registrations  
 settings.cr.shelter_population_dynamic = True
+# Uncomment to activate the housing units management. 
+settings.cr.shelter_housing_unit_management = True
+
+# -----------------------------------------------------------------------------
+
+# Events
+# Make Event Types Hierarchical
+settings.event.types_hierarchical = True
 
 # -----------------------------------------------------------------------------
 # Evacuees
@@ -143,29 +159,67 @@ settings.cr.shelter_population_dynamic = True
 #                            8: T("Hospital"),
 #                            9: T("Orphanage")
 #                            }
-
+# Uncomment to hide evacuees physical description in Evacuees page
+settings.evr.physical_description = False
+# Uncomment to hide Emergency Contacts in Person Contacts page
+settings.pr.show_emergency_contacts = False
+# Uncomment to link evacuees to Organisations
+settings.evr.link_to_organisation= True
 # -----------------------------------------------------------------------------
 # Organisations
 # Enable the use of Organisation Branches
 settings.org.branches = True
 # Enable the use of Organisation Groups & what their name is
 #settings.org.groups = "Coalition"
-settings.org.groups = "Network"
+# Make Facility Types Hierarchical
+settings.org.facility_types_hierarchical = True
+
+# Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)
+settings.ui.hierarchy_theme = "default"
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
-# Uncomment to change the label for 'Staff'
-#settings.hrm.staff_label = "Contacts"
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
 # Uncomment to allow Staff & Volunteers to be registered without an Organisation
 settings.hrm.org_required = False
-
-
-# -----------------------------------------------------------------------------
-# Projects
-# Uncomment this to use Activities for projects
-settings.project.activities = True
+# Uncomment to allow HR records to be deletable rather than just marking them as obsolete
+settings.hrm.deletable = True
+# Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
+#settings.hrm.filter_certificates = True
+# Uncomment to allow HRs to have multiple Job Titles
+settings.hrm.multiple_job_titles = True
+# Uncomment to have each root Org use a different Job Title Catalog
+#settings.hrm.org_dependent_job_titles = True
+# Uncomment to hide the Staff resource
+#settings.hrm.show_staff = False
+# Uncomment to disable Staff experience
+settings.hrm.staff_experience = False
+# Uncomment to enable Volunteer 'active' field
+# - can also be made a function which is called to calculate the status based on recorded hours
+settings.hrm.vol_active = True
+# Uncomment to define a Tooltip to show when viewing the Volunteer 'active' field
+#settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
+# Uncomment to disable Volunteer experience
+settings.hrm.vol_experience = False
+# Uncomment to show the Organisation name in HR represents
+#settings.hrm.show_organisation = True
+# Uncomment to disable the use of Volunteer Awards
+settings.hrm.use_awards = False
+# Uncomment to disable the use of HR Certificates
+settings.hrm.use_certificates = False
+# Uncomment to enable the use of Staff/Volunteer IDs
+#settings.hrm.use_code = True
+# Uncomment to disable the use of HR Credentials
+#settings.hrm.use_credentials = False
+# Uncomment to disable the use of HR Description
+#settings.hrm.use_description = False
+# Uncomment to disable the use of HR ID
+#settings.hrm.use_id = False
+# Uncomment to disable the use of HR Skills
+settings.hrm.use_skills = False
+# Uncomment to disable the use of HR Trainings
+settings.hrm.use_trainings = False
 
 #*****************************Frontpage settings*************************
 # RSS feeds
@@ -198,16 +252,6 @@ settings.frontpage.rss = [
 #     "url": "http://api2.socialmention.com/search?q=protezionecivile&t=all&f=rss"
 #    }
 ]
-
-# =============================================================================
-def customise_org_organisation_controller(**attr):
-
-    table = current.s3db.org_organisation
-    table.year.label = T("Year Founded")
-    return attr
-
-settings.customise_org_organisation_controller = customise_org_organisation_controller
-
 # -----------------------------------------------------------------------------
 def customise_pr_person_resource(r, tablename):
 
@@ -226,9 +270,8 @@ def customise_pr_person_resource(r, tablename):
         settings.pr.show_emergency_contacts = False
 
         # Last name and date of birth mandatory in EVR module
-        table.last_name.requires = IS_NOT_EMPTY(
-                        error_message = T("Please enter a last name"))
-
+        table.last_name.requires = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
+        
         dob_requires = s3_date("dob",
                                future = 0,
                                past = 1320,
@@ -236,9 +279,29 @@ def customise_pr_person_resource(r, tablename):
         dob_requires.error_message = T("Please enter a date of birth")
         table.date_of_birth.requires = dob_requires
 
-        s3db.pr_person_details.place_of_birth.requires = IS_NOT_EMPTY(
-                        error_message = T("Please enter a place of birth"))
-
+            # Enable Location_id
+        from gluon import DIV
+        from s3.s3widgets import S3LocationSelectorWidget2
+        levels = ("L1","L2","L3",)
+        location_id = table.location_id
+        location_id.readable = location_id.writable = True
+        location_id.label = T("Place of Birth")
+        location_id.widget = S3LocationSelectorWidget2(levels=levels,
+                                                       lines=True,
+                                                       )
+        location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
+            # Enable place of birth
+        place_of_birth = s3db.pr_person_details.place_of_birth
+        place_of_birth.label = "Specify a Different Place of Birth"
+        place_of_birth.comment = DIV(_class="tooltip",
+                                    _title="%s|%s" % (T("Different Place of Birth"),
+                                                      T("Specify a different place of birth (foreign country, village, hamlet)")))
+        place_of_birth.readable = place_of_birth.writable = True
+            
+            # Disable religion selection
+        s3db.pr_person_details.religion.readable = False
+        s3db.pr_person_details.religion.writable = False
+        
     # Disable unneeded physical details
     pdtable = s3db.pr_physical_description
     hide_fields = [
@@ -281,35 +344,19 @@ def customise_pr_person_resource(r, tablename):
     ethnicity.represent = S3Represent(options=ethnicity_opts,
                                       translate=True)
 
-    # Enable place of birth
-    place_of_birth = s3db.pr_person_details.place_of_birth
-    place_of_birth.readable = place_of_birth.writable = True
-
 settings.customise_pr_person_resource = customise_pr_person_resource
 
-# =============================================================================
-# def customise_cr_shelter_resource(r, tablename):
-#     
-#     field_static_population = current.s3db.cr_shelter.population
-#     field_static_population.readable = False
-#     field_static_population.writable = False
-#         
-#     field_available_capacity_day = current.s3db.cr_shelter.available_capacity_day
-#     field_available_capacity_day.readable = True
-#     
-#     field_available_capacity_night = current.s3db.cr_shelter.available_capacity_night
-#     field_available_capacity_night.readable = True
-#     
-#     field_population_day = current.s3db.cr_shelter.population_day
-#     field_population_day.readable = True
-#     
-#     field_population_night = current.s3db.cr_shelter.population_night
-#     field_population_night.readable = True
-#     
-# settings.customise_cr_shelter_resource = customise_cr_shelter_resource
-# =============================================================================
-def customise_pr_group_resource(r, tablename):
+def customise_cr_shelter_resource(r, tablename):
+    
+    s3db = current.s3db
+    s3db.cr_shelter.capacity_day.writable = s3db.cr_shelter.capacity_night.writable = False 
+    s3db.cr_shelter.cr_shelter_environment_id.readable = s3db.cr_shelter.cr_shelter_environment_id.writable = True
+    
+settings.customise_cr_shelter_resource = customise_cr_shelter_resource
 
+def customise_pr_group_resource(r, tablename):
+    
+    messages = current.messages
     field = r.table.group_type
     pr_group_types = {1 : T("Family"),
                       2 : T("Tourist Group"),
@@ -332,6 +379,13 @@ def customise_event_event_resource(r, tablename):
         
 settings.customise_event_event_resource = customise_event_event_resource
 
+def customise_event_incident_resource(r, tablename):
+
+    table = r.table
+    table.exercise.default = True
+    table.event_id.readable = table.event_id.writable = True
+        
+settings.customise_event_incident_resource = customise_event_incident_resource
 # -----------------------------------------------------------------------------
 def customise_project_location_resource(r, tablename):
 
@@ -378,22 +432,11 @@ settings.modules = OrderedDict([
         access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
         module_type = None  # This item is handled separately for the menu
     )),
-    ("tour", Storage(
-        name_nice = T("Guided Tour Functionality"),
-        module_type = None,
-    )),
     ("translate", Storage(
         name_nice = T("Translation Functionality"),
         #description = "Selective translation of strings based on module.",
         module_type = None,
     )),
-    # Uncomment to enable internal support requests
-    #("support", Storage(
-    #        name_nice = T("Support"),
-    #        #description = "Support Requests",
-    #        restricted = True,
-    #        module_type = None  # This item is handled separately for the menu
-    #    )),
     ("gis", Storage(
         name_nice = T("Map"),
         #description = "Situation Awareness & Geospatial Analysis",
@@ -426,18 +469,12 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10,
     )),
-    #("cms", Storage(
-    #  name_nice = T("Content Management"),
-    #  #description = "Content Management System",
-     # restricted = True,
-    #  module_type = 10,
-    #)),
-    #("doc", Storage(
-    #    name_nice = T("Documents"),
-    #    #description = "A library of digital resources, such as photos, documents and reports",
-    #    restricted = True,
-    #    module_type = None,
-    #)),
+    ("doc", Storage(
+        name_nice = T("Documents"),
+        #description = "A library of digital resources, such as photos, documents and reports",
+        restricted = True,
+        module_type = 10,
+    )),
     ("msg", Storage(
         name_nice = T("Messaging"),
         #description = "Sends & Receives Alerts via Email & SMS",
@@ -445,67 +482,12 @@ settings.modules = OrderedDict([
         # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
         module_type = 2,
     )),
-    ("supply", Storage(
-        name_nice = T("Supply Chain Management"),
-        #description = "Used within Inventory Management, Request Management and Asset Management",
-        restricted = True,
-        module_type = None, # Not displayed
-    )),
-    ("inv", Storage(
-        name_nice = T("Warehouses"),
-        #description = "Receiving and Sending Items",
-        restricted = True,
-        module_type = 10
-    )),
-    #("asset", Storage(
-        #name_nice = T("Assets"),
-        ##description = "Recording and Assigning Assets",
-        #restricted = True,
-        #module_type = 5,
-    #)),
-    #("req", Storage(
-    #    name_nice = T("Requests"),
-    #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-    #    restricted = True,
-    #    module_type = 10,
-    #)),
-    ("project", Storage(
-        name_nice = T("Projects"),
-        #description = "Tracking of Projects, Activities and Tasks",
-        restricted = True,
-        module_type = 2
-    )),
     ("cr", Storage(
         name_nice = T("Shelters"),
         #description = "Tracks the location, capacity and breakdown of victims in Shelters",
         restricted = True,
         module_type = 10
     )),
-    ("hms", Storage(
-        name_nice = T("Hospitals"),
-        #description = "Helps to monitor status of hospitals",
-        restricted = True,
-        module_type = 10
-    )),
-    ("irs", Storage(
-        name_nice = T("Incidents"),
-        #description = "Incident Reporting System",
-        restricted = True,
-        module_type = 10
-    )),
-    #("dvi", Storage(
-       #name_nice = T("Disaster Victim Identification"),
-       ##description = "Disaster Victim Identification",
-       #restricted = True,
-       #module_type = 10,
-       ##access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    #)),
-    #("dvr", Storage(
-       #name_nice = T("Disaster Victim Registry"),
-       ##description = "Allow affected individuals & households to register to receive compensation and distributions",
-       #restricted = True,
-       #module_type = 10,
-    #)),
     ("evr", Storage(
          name_nice = T("Evacuees"),
          #description = "Evacuees Registry",
@@ -518,22 +500,4 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10,
     )),
-    ("transport", Storage(
-       name_nice = T("Transport"),
-       restricted = True,
-       module_type = 10,
-    )),
-    #("stats", Storage(
-    #        name_nice = T("Statistics"),
-    #        #description = "Manages statistics",
-    #        restricted = True,
-    #        module_type = 3,
-    #    )),
-    # @ToDo: Rewrite in a modern style
-    #("budget", Storage(
-    #        name_nice = T("Budgeting Module"),
-    #        #description = "Allows a Budget to be drawn up",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
 ])

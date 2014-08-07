@@ -549,6 +549,8 @@ class S3OrganisationModel(S3Model):
                        hrm_human_resource = "organisation_id",
                        # Members
                        member_membership = "organisation_id",
+                       # Evacuees
+                       evr_case = "organisation_id",
                        # Locations served
                        gis_location = {"link": "org_organisation_location",
                                        "joinby": "organisation_id",
