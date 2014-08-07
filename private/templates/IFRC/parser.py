@@ -141,13 +141,16 @@ class S3Parser(object):
                                                        left=left,
                                                        )
             hr_id = None
-            for row in rows:
-                if row[atable.id] and row[atable.active]:
-                    # Prefer latest deployable
-                    hr_id = row[htable.id]
-                    break
-                elif not hr_id:
-                    hr_id = row[htable.id]
+            if len(rows) == 1:
+                # Single profile
+                hr_id = rows[0][htable.id]
+            else:
+                # Multiple profiles => prefer deployable
+                rows = [row for row in rows
+                            if row[atable.id] and row[atable.active]]
+                if len(rows) == 1:
+                    # Single deployable profile
+                    hr_id = rows[0][htable.id]
             if hr_id:
                 data["human_resource_id"] = hr_id
                 
