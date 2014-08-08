@@ -76,6 +76,7 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
 from gluon.dal import Rows
+from gluon.languages import lazyT
 from gluon.storage import Storage
 
 from s3fields import s3_all_meta_field_names
@@ -2342,14 +2343,18 @@ class GIS(object):
                                 _attr = attr_cols[fieldname]
                                 ftype = _attr[0]
                                 if ftype == "integer":
-                                    # Attributes should be numbers not strings
-                                    # NB This also relies on decoding within geojson/export.xsl and S3XML.__element2json()
-                                    try:
-                                        represent = int(represent.replace(",", ""))
-                                    except:
-                                        # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
-                                        #        (although we *do* want the represent in the tooltips!)
-                                        pass
+                                    if isinstance(represent, lazyT):
+                                        # Integer is just a lookup key
+                                        represent = s3_unicode(represent)
+                                    else:
+                                        # Attributes should be numbers not strings
+                                        # NB This also relies on decoding within geojson/export.xsl and S3XML.__element2json()
+                                        try:
+                                            represent = int(represent.replace(",", ""))
+                                        except:
+                                            # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
+                                            #        (although we *do* want the represent in the tooltips!)
+                                            pass
                                 elif ftype == "double":
                                     # Attributes should be numbers not strings
                                     try:
