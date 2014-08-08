@@ -716,6 +716,8 @@ def s3_comments_represent(text, show_link=True):
         Represent Comments Fields
     """
 
+    # Make sure text is multi-byte-aware before truncating it
+    text = s3_unicode(text)
     if len(text) < 80:
         return text
     elif not show_link:
