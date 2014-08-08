@@ -60,7 +60,12 @@ class S3HierarchyCRUD(S3Method):
         """
 
         if r.http == "GET":
-            output = self.tree(r, **attr)
+            if r.representation == "html":
+                output = self.tree(r, **attr)
+            elif r.representation == "json" and "node" in r.get_vars:
+                output = self.node_json(r, **attr)
+            else:
+                r.error(501, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
@@ -84,7 +89,10 @@ class S3HierarchyCRUD(S3Method):
         widget_id = "%s-hierarchy" % tablename
 
         # Render the tree
-        tree = self.render_tree(widget_id, record=r.record)
+        try:
+            tree = self.render_tree(widget_id, record=r.record)
+        except SyntaxError:
+            r.error(405, "No hierarchy configured for %s" % tablename)
 
         # Page title
         if r.record:
@@ -102,9 +110,14 @@ class S3HierarchyCRUD(S3Method):
         output["form"] = form
 
         # Widget options and scripts
+        T = current.T
         widget_opts = {
-            "openLabel": str(current.messages.READ),
+            "widgetID": widget_id,
+            "openLabel": str(T("Open")),
             "openURL": r.url(method="read", id="[id]"),
+            "ajaxURL": r.url(id=None, representation="json"),
+            "editLabel": str(T("Edit")),
+            "editURL": r.url(method="update", id="[id]", representation="popup"),
         }
         self.include_scripts(widget_id, widget_opts)
         
@@ -112,6 +125,37 @@ class S3HierarchyCRUD(S3Method):
         current.response.view = self._view(r, "hierarchy.html")
 
         return output
+
+    # -------------------------------------------------------------------------
+    def node_json(self, r, **attr):
+        """
+            Return a single node as JSON (id, parent and label)
+
+            @param r: the S3Request
+            @param attr: controller attributes
+        """
+
+        resource = self.resource
+        tablename = resource.tablename
+
+        h = S3Hierarchy(tablename = tablename)
+        if not h.config:
+            r.error(405, "No hierarchy configured for %s" % tablename)
+
+        data = {}
+        node_id = r.get_vars["node"]
+        if node_id:
+            try:
+                node_id = long(node_id)
+            except ValueError:
+                pass
+            else:
+                data["node"] = node_id
+                label = h.label(node_id)
+                data["label"] = str(label) if label else None
+                data["parent"] = h.parent(node_id)
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(data, separators = SEPARATORS)
 
     # -------------------------------------------------------------------------
     def render_tree(self, widget_id, record=None):
@@ -127,15 +171,16 @@ class S3HierarchyCRUD(S3Method):
 
         h = S3Hierarchy(tablename = tablename)
         if not h.config:
-            # @todo: redirect to read/update with a warning?
-            raise AttributeError("No hierarchy configured for %s" % tablename)
+            raise SyntaxError()
 
         root = None
         if record:
             try:
                 root = record[h.pkey]
-            except AttributeError:
-                # @todo: proper error response?
+            except AttributeError as e:
+                # Hierarchy misconfigured? Or has r.record been tampered with?
+                msg = "S3Hierarchy: key %s not found in record" % h.pkey
+                e.args = tuple([msg] + list(e.args[1:]))
                 raise
 
         # @todo: apply all resource filters?

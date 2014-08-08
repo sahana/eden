@@ -21,8 +21,11 @@
          * Default options
          */
         options: {
+            widgetID: null,
+            ajaxURL: null,
             openLabel: 'Open',
             openURL: null,
+            editTitle: 'Edit Record',
             editLabel: 'Edit',
             editURL: null,
             deleteLabel: 'Delete',
@@ -119,14 +122,16 @@
                         "ccp": null,
                         "open": {
                             label: self.options.openLabel,
-                            action: function(obj) {
-                                self._openNode(obj);
+                            action: function(node) {
+                                self._openNode(node);
                             },
                             separator_after: true
                         },
                         "edit": {
                             label: self.options.editLabel,
-                            _disabled: true
+                            action: function(node) {
+                                self._editNode(node);
+                            }
                         },
                         "delete": {
                             label: self.options.deleteLabel,
@@ -149,12 +154,12 @@
         /**
          * Open a node
          *
-         * @param {jQuery} obj - the node object (li element)
+         * @param {jQuery} node - the node object (li element)
          */
-        _openNode: function(obj) {
+        _openNode: function(node) {
             
             var openURL = this.options.openURL,
-                id = obj.attr('id');
+                id = node.attr('id');
             if (!openURL || !id) {
                 return;
             }
@@ -163,6 +168,86 @@
                 openURL = openURL.replace('[id]', record_id)
                                  .replace('%5Bid%5D', record_id);
                 window.location.href = openURL;
+            }
+        },
+
+        /**
+         * Refresh a node
+         *
+         * @param {jQuery} node - the node object (li element)
+         */
+        refreshNode: function(node) {
+
+            var ajaxURL = this.options.ajaxURL,
+                id = node.attr('id');
+            if (!ajaxURL || !id) {
+                return;
+            }
+            var record_id = parseInt(id.split('-').pop());
+            if (record_id) {
+                ajaxURL = ajaxURL + '?node=' + record_id;
+                var tree = this.tree;
+                $.getJSONS3(ajaxURL, function (data) {
+                    if (data.label) {
+                        tree.jstree('rename_node', node, data.label);
+                    }
+                });
+            }
+            
+        },
+
+        /**
+         * Edit a node in a popup and refresh the node
+         *
+         * @param {jQuery} node - the node object (li element)
+         */
+        _editNode: function(node) {
+            
+            var editURL = this.options.editURL,
+                id = node.attr('id');
+            if (!editURL || !id) {
+                return;
+            }
+            var record_id = parseInt(id.split('-').pop());
+            if (record_id) {
+
+                var url = editURL.replace('[id]', record_id)
+                                 .replace('%5Bid%5D', record_id)
+                                 .split('?')[0];
+
+                url += '?node=' + id + '&hierarchy=' + this.options.widgetID;
+
+                // Open a jQueryUI Dialog showing a spinner until iframe is loaded
+                var uid = S3.uid();
+                var dialog = $('<iframe id="' + uid + '" src=' + url + ' onload="S3.popup_loaded(\'' + uid + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
+                            .appendTo('body');
+                            
+                dialog.dialog({
+                    // add a close listener to prevent adding multiple divs to the document
+                    close: function(event, ui) {
+                        if (self.parent) {
+                            // There is a parent modal: refresh it to fix layout
+                            var iframe = self.parent.$('iframe.ui-dialog-content');
+                            var width = iframe.width();
+                            iframe.width(0);
+                            window.setTimeout(function() {
+                                iframe.width(width);
+                            }, 300);
+                        }
+                        // Remove div with all data and events
+                        dialog.remove();
+                    },
+                    minHeight: 480,
+                    modal: true,
+                    open: function(event, ui) {
+                        $('.ui-widget-overlay').bind('click', function() {
+                            dialog.dialog('close');
+                        });
+                    },
+                    title: this.options.editTitle,
+                    minWidth: 320,
+                    closeText: ''
+                });
             }
         },
 
