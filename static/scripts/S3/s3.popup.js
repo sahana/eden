@@ -108,6 +108,17 @@ function s3_popup_refresh_main_form() {
         return;
     }
 
+    var node_id = $_GET['node'];
+    if (node_id) {
+        var hierarchy = self.parent.$('#' + $_GET['hierarchy']),
+            node = self.parent.$('#' + node_id);
+        if (hierarchy && node) {
+            hierarchy.hierarchicalcrud('refreshNode', node);
+        }
+        self.parent.S3.popup_remove();
+        return;
+    }
+
     // Modal opened from a form (e.g. S3AddResourceLink)?
     // => update the respective form field (=the caller)
 
