@@ -834,6 +834,25 @@ S3.search = {};
     };
 
     /**
+     * Update export format URLs in a datatable
+     *
+     * @param {jQuery} dt - the datatable
+     * @param {object} queries - the filter queries
+     */
+    var updateFormatURLs = function(dt, queries) {
+
+        $('#' + dt[0].id).closest('.dt-wrapper')
+                         .find('.dt-export')
+                         .each(function() {
+            var $this = $(this);
+            var url = $this.data('url');
+            if (url) {
+                $this.data('url', filterURL(url, queries));
+            }
+        });
+    };
+
+    /**
      * updatePendingTargets: update all targets which were hidden during
      *                       last filter-submit, reload page if required
      */
@@ -894,24 +913,7 @@ S3.search = {};
                 var dt = t.dataTable();
                 // Refresh Data
                 dt.fnReloadAjax(target_data['ajaxurl']);
-                // Update Export Formats
-                // @todo: poor UX with onclick-activated links (can't be bookmarked),
-                //        make real links, move update into fnDrawCallback
-                //        (see also s3data.py in this regard)
-                var $this,
-                    s,
-                    parts;
-                $('#' + dt[0].id + '_list_formats div').each(function() {
-                    $this = $(this);
-                    s = $this.attr('onclick');
-                    parts = s.split("','");
-                    url = parts[2].split("')")[0];
-                    url = filterURL(url, queries).replace("'", '&apos;')
-                                                 .replace('"', '&quot;');
-                    parts[2] = url + "')";
-                    s = parts.join("','");
-                    $this.attr('onclick', s);
-                });
+                updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                     $(this).val(target_data['ajaxurl']);
                 });
@@ -1481,24 +1483,7 @@ S3.search = {};
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable();
                     dt.fnReloadAjax(dt_ajaxurl[target_id]);
-                    // Update Export Formats
-                    // @todo: poor UX with onclick-activated links (can't be bookmarked),
-                    //        make real links, move update into fnDrawCallback
-                    //        (see also s3data.py in this regard)
-                    var $this,
-                        s,
-                        parts;
-                    $('#' + dt[0].id + '_list_formats div').each(function() {
-                        $this = $(this);
-                        s = $this.attr('onclick');
-                        parts = s.split("','");
-                        url = parts[2].split("')")[0];
-                        url = filterURL(url, queries).replace("'", '&apos;')
-                                                     .replace('"', '&quot;');
-                        parts[2] = url + "')";
-                        s = parts.join("','");
-                        $this.attr('onclick', s);
-                    });
+                    updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                         $(this).val(dt_ajaxurl[target_id]);
                     });
