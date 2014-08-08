@@ -82,43 +82,6 @@
         return rurlvars.length ? tquery[0] + '?' + rurlvars.join('&') : tquery[0];
     };
 
-    /* Function used by Export buttons */
-    var formatRequest = function(representation, tableid, url) {
-        var t = tableIdReverse('#' + tableid);
-        var dt = oDataTable[t];
-        var oSetting = dt.dataTableSettings[t];
-        url = url.replace('&apos;', "'").replace('&quot;', '"');
-        if (oSetting) {
-            var argData = 'id=' + tableid;
-            var serverFilterArgs = $('#' + tableid + '_dataTable_filter');
-            if (serverFilterArgs.val() !== '') {
-                argData += '&sFilter=' + serverFilterArgs.val();
-            }
-            argData += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];
-            aoColumns = oSetting.aoColumns;
-            var i, len;
-            for (i=0, len=aoColumns.length; i < len; i++) {
-                if (!aoColumns[i].bSortable) {
-                    argData += '&bSortable_' + i + '=false';
-                }
-            }
-            var aaSort = (oSetting.aaSortingFixed !== null) ?
-                         oSetting.aaSortingFixed.concat(oSetting.aaSorting) :
-                         oSetting.aaSorting.slice();
-            argData += '&iSortingCols=' + aaSort.length;
-            for (i=0, len=aaSort.length; i < len; i++) {
-                argData += '&iSortCol_' + i + '=' + aaSort[i][0];
-                argData += '&sSortDir_' + i + '=' + aaSort[i][1];
-            }
-            url = appendUrlQuery(url, representation, argData);
-        } else {
-            url = appendUrlQuery(url, representation, '');
-        }
-        window.open(url);
-    }
-    // Pass to global scope to be accessible onclick HTML
-    S3.dataTables.formatRequest = formatRequest;
-
     /* Function to return the class name of the tag from the class name prefix that is passed in. */
     var getElementClass = function(tagObj, prefix) {
         // Calculate the sublevel which can be used for the next new group
@@ -1225,6 +1188,46 @@
         // Delay in milliseconds to prevent too many AJAX calls
         dt.fnSetFilteringDelay(450);
 
+        // Export formats click-handler
+        dt.closest('.dt-wrapper').find('.dt-export')
+                                 .off('click.datatable')
+                                 .on('click.datatable', function() {
+
+            var tableid = dt.attr('id');
+              
+            var oSetting = dt.dataTableSettings[t],
+                url = $(this).data('url'),
+                extension = $(this).data('extension');
+                
+            if (oSetting) {
+                var arguments = 'id=' + tableid,
+                    serverFilterArgs = $('#' + tableid + '_dataTable_filter');
+                if (serverFilterArgs.val() !== '') {
+                    arguments += '&sFilter=' + serverFilterArgs.val();
+                }
+                arguments += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];
+                aoColumns = oSetting.aoColumns;
+                var i, len;
+                for (i=0, len=aoColumns.length; i < len; i++) {
+                    if (!aoColumns[i].bSortable) {
+                        arguments += '&bSortable_' + i + '=false';
+                    }
+                }
+                var aaSort = oSetting.aaSortingFixed !== null ?
+                             oSetting.aaSortingFixed.concat(oSetting.aaSorting) :
+                             oSetting.aaSorting.slice();
+                arguments += '&iSortingCols=' + aaSort.length;
+                for (i=0, len=aaSort.length; i < len; i++) {
+                    arguments += '&iSortCol_' + i + '=' + aaSort[i][0];
+                    arguments += '&sSortDir_' + i + '=' + aaSort[i][1];
+                }
+                url = appendUrlQuery(url, extension, arguments);
+            } else {
+                url = appendUrlQuery(url, extension, '');
+            }
+            window.open(url);
+        });
+
         // Does not handle horizontal overflow properly:
         //new FixedHeader(dt);
 
@@ -1263,90 +1266,6 @@
 $(document).ready(function() {
     // Initialise all dataTables on the page
     S3.dataTables.initAll();
-
-    // Add Events to any Map Buttons present
-    // S3Search Results
-    var dt_mapButton = $('#gis_datatables_map-btn');
-    if (dt_mapButton) {
-        dt_mapButton.on('click', function() {
-            // Find the map
-            var map_id = dt_mapButton.attr('map');
-            if (undefined == map_id) {
-                map_id = 'default_map';
-            }
-            var map = S3.gis.maps[map_id];
-            // Load the search results layer
-            var layers = map.layers;
-            var layer, j, jlen, strategies, strategy;
-            for (var i=0, len=layers.length; i < len; i++) {
-                layer = layers[i];
-                if (layer.s3_layer_id == 'search_results') {
-                    // Set a new event to restore clustering when the layer is loaded
-                    layer.events.on({
-                        'loadend': S3.gis.search_layer_loadend
-                    });
-                    // Disable Clustering to get correct bounds
-                    strategies = layer.strategies;
-                    for (j=0, jlen=strategies.length; j < jlen; j++) {
-                        strategy = strategies[j];
-                        if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                            strategy.deactivate();
-                        }
-                    }
-                    layer.setVisibility(true);
-                }
-            };
-            if (map.s3.polygonButton) {
-                // Disable the polygon control
-                map.s3.polygonButton.disable();
-            }
-            map.s3.mapWin.show();
-            // Disable the crosshair on the Map Selector
-            $('.olMapViewport').removeClass('crosshair');
-            // Set the Tab to show as active
-            dt_mapButton.parent()
-                        .addClass('tab_here');
-            // Deactivate the list Tab
-            $('#gis_datatables_list_tab').parent()
-                                         .removeClass('tab_here')
-                                         .addClass('tab_other');
-            // Set to revert if Map closed
-            $('div.x-tool-close').click(function(evt) {
-                // Set the Tab to show as inactive
-                dt_mapButton.parent()
-                            .removeClass('tab_here')
-                            .addClass('tab_other');
-                // Activate the list Tab
-                $('#gis_datatables_list_tab').parent()
-                                             .removeClass('tab_other')
-                                             .addClass('tab_here');
-            });
-            // @ToDo: Close Map Window & revert if Tab clicked
-        });
-    }
-
-    // S3Search Widget
-    var search_mapButton = $('#gis_search_map-btn');
-    if (search_mapButton) {
-        search_mapButton.on('click', function(evt) {
-            // Prevent button submitting the form
-            evt.preventDefault();
-            // Find the map
-            var map_id = search_mapButton.attr('map');
-            if (undefined == map_id) {
-                map_id = 'default_map';
-            }
-            var map = S3.gis.maps[map_id];
-            // Enable the polygon control
-            map.s3.polygonButton.enable();
-            // @ToDo: Set appropriate Bounds
-            // Default to current gis_config
-            // If there is an Options widget for Lx, then see if that is set & use this
-            map.s3.mapWin.show();
-            // Enable the crosshair on the Map Selector
-            $('.olMapViewport').addClass('crosshair');
-        });
-    }
 });
 
 // END ========================================================================
