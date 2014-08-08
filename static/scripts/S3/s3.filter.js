@@ -841,8 +841,9 @@ S3.search = {};
      */
     var updateFormatURLs = function(dt, queries) {
 
-        $('#' + dt[0].id).closest('.dt-wrapper').find('.dt-export').each(function() {
-//         $('#' + dt[0].id + '_list_formats div').each(function() {
+        $('#' + dt[0].id).closest('.dt-wrapper')
+                         .find('.dt-export')
+                         .each(function() {
             var $this = $(this);
             var url = $this.data('url');
             if (url) {
