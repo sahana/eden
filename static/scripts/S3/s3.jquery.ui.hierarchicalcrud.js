@@ -112,7 +112,7 @@
                     theme: theme
                 },
                 'ui': {
-                    select_limit: 1,
+                    select_limit: 1
                 },
                 'contextmenu': {
                     items: {
@@ -141,7 +141,7 @@
                         "add": {
                             label: self.options.addLabel,
                             _disabled: true
-                        },
+                        }
                     },
                     select_node: true
                 },
