@@ -243,6 +243,28 @@ def customise_project_project_controller(**attr):
                             field = "theme_id",
                         ),
                         "human_resource_id",
+                        # Files
+                        S3SQLInlineComponent(
+                            "document",
+                            name = "file",
+                            label = T("Files"),
+                            fields = [(T("Type"),"name"), "file"],
+                            filterby = dict(field = "file",
+                                            options = "",
+                                            invert = True,
+                                            )
+                        ),
+                        # Links
+                        S3SQLInlineComponent(
+                            "document",
+                            name = "url",
+                            label = T("Links"),
+                            fields = [(T("Type"),"name"), "url"],
+                            filterby = dict(field = "url",
+                                            options = None,
+                                            invert = True,
+                                            )
+                        ),
                         "comments",
                     )
 
