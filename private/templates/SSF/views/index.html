@@ -32,14 +32,14 @@
             </div>
             {{else:}}
             <div class='span2'>
-              <a type='button' class='btn btn-lg btn-primary s3_modal' href='/{{=appname}}/default/user/profile'>
+              <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/pr/person/{{=auth.user.id}}'>
                 <i class="icon-user icon-white"></i> Profile
               </a>
             </div>
             {{pass}}
           </div>
           <div class='span2'>
-            <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/project/task'>
+            <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/project/task?~.status__belongs=2,3,4,11'>
               <i class="icon-pencil icon-white"></i> Work on a Task
             </a>
           </div>
