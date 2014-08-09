@@ -110,7 +110,7 @@ class S3CRUD(S3Method):
             output = self.update(r, **attr)
             
         # Standard list view: list-type and hide-filter set by controller
-        # (default: list_type="datatable", hide_filter=True)
+        # (default: list_type="datatable", hide_filter=None)
         elif method == "list":
             output = self.select(r, **attr)
 
@@ -1022,9 +1022,9 @@ class S3CRUD(S3Method):
             show_filter_form = False
             if filter_widgets and not hide_filter and \
                representation not in ("aadata", "dl"):
+                show_filter_form = True
                 # Apply filter defaults (before rendering the data!)
                 from s3filter import S3FilterForm
-                show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
             
             # Data
