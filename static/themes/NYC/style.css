@@ -84,6 +84,9 @@ body.iframe #list-btn-add {
 }
 
 /* Style */
+.fullpage {
+    background: #eee;
+}
 .fullpage .col1 {
     width: 100%;
     left: 0;
