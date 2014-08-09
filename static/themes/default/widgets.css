@@ -270,6 +270,9 @@ textarea.richtext {
     font-weight: bold;
 }
 
+.controls {
+    white-space: pre;
+}
 .dt-export-options {
     float: right;
     padding-top: 5px;
@@ -740,6 +743,7 @@ button.close {
 #rheader td {
     text-align: left;
     padding: 1px 5px 1px 5px;
+    white-space: pre;
 }
 #rheader th {
     font-weight: bold;
@@ -1117,6 +1121,9 @@ li input + a {
 .comment-text {
     padding: 0 0 0 20px;
     float: left;
+}
+.comment-text div {
+    white-space: pre;
 }
 .comment-header {
     margin: 0 0 10px 0;
