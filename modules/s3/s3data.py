@@ -51,7 +51,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 
-from s3utils import s3_flatlist, s3_has_foreign_key, s3_orderby_fields, s3_truncate, s3_unicode, S3MarkupStripper, s3_represent_value
+from s3utils import s3_flatlist, s3_has_foreign_key, s3_orderby_fields, s3_truncate, s3_unicode, S3MarkupStripper, s3_represent_value, s3_set_extension
 from s3validators import IS_NUMBER
 
 DEBUG = False
@@ -673,12 +673,13 @@ class S3DataTable(object):
         config.pagination = attr.get("dt_pagination", "true")
         config.paginationType = attr.get("dt_pagination_type", "full_numbers")
         config.bFilter = attr.get("dt_bFilter", "true")
-        config.ajaxUrl = attr.get("dt_ajax_url", URL(c=request.controller,
-                                                     f=request.function,
-                                                     extension="aadata",
-                                                     args=request.args,
-                                                     vars=request.get_vars,
-                                                     ))
+        url = URL(c=request.controller,
+                  f=request.function,
+                  args=request.args,
+                  vars=request.get_vars,
+                 )
+        _ajaxUrl = s3_set_extension( url, "aadata")           
+        config.ajaxUrl = attr.get("dt_ajax_url", _ajaxUrl)
         config.rowStyles = attr.get("dt_styles", [])
 
 
