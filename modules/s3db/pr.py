@@ -4803,20 +4803,26 @@ def pr_contacts(r, **attr):
     # Contacts
     ctable = s3db.pr_contact
     query = (ctable.pe_id == person.pe_id)
-
-    contacts = db(query).select(ctable.id,
-                                ctable.contact_description,
-                                ctable.value,
-                                ctable.contact_method,
-                                orderby=ctable.contact_method)
+    resource = s3db.resource("pr_contact")
+    resource.add_filter(query)
+    fields = ["id",
+              "contact_description",
+              "value",
+              "contact_method",
+              ]
+    contacts = resource.select(fields)["rows"]
 
     contact_groups = {}
-    for key, group in groupby(contacts, lambda c: c.contact_method):
+    for key, group in groupby(contacts, lambda c: c["pr_contact.contact_method"]):
         contact_groups[key] = list(group)
 
     contacts_wrapper = DIV(H2(T("Contacts")))
 
-    if has_permission("create", ctable):
+    person_update_permission = has_permission("update",
+                                              "pr_person",
+                                              record_id = person.id)
+
+    if person_update_permission and has_permission("create", ctable):
         add_btn = DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
                       DIV(_id="contact-add_throbber",
                           _class="throbber hide"),
@@ -4835,7 +4841,11 @@ def pr_contacts(r, **attr):
                 "TWITTER": 7,
                 "FACEBOOK": 8,
                 "FAX": 9,
-                "OTHER": 10
+                "OTHER": 10,
+                "IRC": 11,
+                "GITHUB": 12,
+                "LINKEDIN": 13,
+                "BLOG": 14,
                 }
         return keys[key[0]]
     items.sort(key=mysort)
@@ -4855,13 +4865,13 @@ def pr_contacts(r, **attr):
     for contact_type, details in items:
         contacts_wrapper.append(H3(opts[contact_type]))
         for detail in details:
-            id = detail.id
-            value = detail.value
-            description = detail.contact_description or ""
+            id = detail["pr_contact.id"]
+            value = detail["pr_contact.value"]
+            description = detail["pr_contact.contact_description"] or ""
             if description:
                 description = "%s, " % description
-
             (edit_btn, delete_btn) = action_buttons(ctable, id)
+
             contacts_wrapper.append(
                 P(
                   SPAN(description, value),
@@ -4879,15 +4889,19 @@ def pr_contacts(r, **attr):
         etable = s3db.pr_contact_emergency
         query = (etable.pe_id == person.pe_id) & \
                 (etable.deleted == False)
+        resource = s3db.resource("pr_contact_emergency")
+        resource.add_filter(query)
+        fields = ["id",
+                  "name",
+                  "relationship",
+                  "phone",
+                  ]
 
-        emergency = db(query).select(etable.id,
-                                     etable.name,
-                                     etable.relationship,
-                                     etable.phone)
+        emergency = resource.select(fields)["rows"]
 
         emergency_wrapper = DIV(H2(T("Emergency Contacts")))
 
-        if has_permission("create", etable):
+        if person_update_permission and has_permission("create", etable):
             add_btn = DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
                           DIV(_id="emergency-add_throbber",
                               _class="throbber hide"),
@@ -4895,17 +4909,17 @@ def pr_contacts(r, **attr):
             emergency_wrapper.append(add_btn)
 
         for contact in emergency:
-            name = contact.name or ""
+            name = contact["pr_contact_emergency.name"] or ""
             if name:
                 name = "%s, " % name
-            relationship = contact.relationship or ""
+            relationship = contact["pr_contact_emergency.relationship"] or ""
             if relationship:
                 relationship = "%s, " % relationship
             id = contact.id
             (edit_btn, delete_btn) = action_buttons(etable, id)
             emergency_wrapper.append(
                 P(
-                  SPAN("%s%s%s" % (name, relationship, contact.phone)),
+                  SPAN("%s%s%s" % (name, relationship, contact["pr_contact_emergency.phone"])),
                   edit_btn,
                   delete_btn,
                   _id="emergency-%s" % id,

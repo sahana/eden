@@ -131,7 +131,11 @@ class S3Msg(object):
                              #"XMPP":       "XMPP",
                              #"WEB":        T("Website"),
                              "WORK_PHONE":  T("Work phone"),
-                             "OTHER":       T("other")
+                             "IRC":         T("IRC handle"),
+                             "GITHUB":      T("Github Repo"),
+                             "LINKEDIN":    T("LinkedIn Profile"),
+                             "BLOG":        T("Blog"),
+                             "OTHER":       T("Other")
                              }
 
         # Those contact options to which we can send notifications

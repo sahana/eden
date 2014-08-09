@@ -9,6 +9,7 @@ except:
 
 from gluon import current, URL
 from gluon.storage import Storage
+from gluon.validators import IS_IN_SET
 
 T = current.T
 settings = current.deployment_settings
@@ -148,6 +149,9 @@ settings.project.hazards = True
 settings.project.themes = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
+
+# Uncomment this to use emergency contacts in pr
+settings.pr.show_emergency_contacts = False
 
 # -----------------------------------------------------------------------------
 def customise_project_project_controller(**attr):
@@ -375,6 +379,170 @@ def customise_delphi_solution_controller(**attr):
 settings.customise_delphi_solution_controller = customise_delphi_solution_controller
 
 # -----------------------------------------------------------------------------
+def customise_pr_person_controller(**attr):
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    # Custom Prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        s3db = current.s3db
+        tablename = "pr_person"
+
+        if r.interactive:
+            # Set the list fields
+            list_fields = ["first_name",
+                           "middle_name",
+                           "last_name",
+                           "human_resource.organisation_id",
+                           "address.location_id"
+                           ]
+
+            # Set the CRUD Strings
+            s3.crud_strings[tablename] = Storage(
+                label_create = T("Create a Contributor"),
+                title_display = T("Contributor Details"),
+                title_list = T("Contributors"),
+                title_update = T("Edit Contributor Details"),
+                label_list_button = T("List Contributors"),
+                label_delete_button = T("Delete Contributor"),
+                msg_record_created = T("Contributor added"),
+                msg_record_modified = T("Contributor details updated"),
+                msg_record_deleted = T("Contributor deleted"),
+                msg_list_empty = T("No Contributors currently registered")
+            )
+
+            # Custom Form (Read/Create/Update)
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
+            crud_form = S3SQLCustomForm(
+                "first_name",
+                "middle_name",
+                "last_name",
+                S3SQLInlineComponent("contact",
+                    label = T("Email"),
+                    multiple = False,
+                    fields = [("", "value")],
+                    filterby = dict(field = "contact_method",
+                                    options = "EMAIL"),
+                    ),
+                "gender",
+                S3SQLInlineComponent("note",
+                    name = "bio",
+                    label = T("Bio Paragraph"),
+                    multiple = False,
+                    fields = [("", "note_text")],
+                    ),
+                S3SQLInlineComponent(
+                    "image",
+                    name = "image",
+                    label = T("Photo"),
+                    multiple = False,
+                    fields = [("", "image")],
+                    filterby = dict(field = "profile",
+                                    options=[True]
+                                    ),
+                    ),
+                S3SQLInlineComponent(
+                    "human_resource",
+                    name = "hrm_human_resource",
+                    label = "",
+                    multiple = False,
+                    fields = ["", "organisation_id", "job_title_id"],
+                    ),
+                S3SQLInlineComponent(
+                        "address",
+                        label = T("Home Location"),
+                        fields = [("", "location_id")],
+                        render_list = True
+                    ),
+                )
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           list_fields = list_fields
+                           )
+        return True
+    s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            # Change the tabs in the rheader
+            tabs = [(T("Basic Details"), None),
+                    ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("read", "pr_contact"):
+                tabs.append((T("Contact Details"), "contacts"))
+            output["rheader"] = s3db.pr_rheader(r, tabs=tabs)
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.customise_pr_person_controller = customise_pr_person_controller
+
+# -----------------------------------------------------------------------------
+def customise_pr_contact_controller(**attr):
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    # Custom Prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            # Change the contact methods appearing in adding contact info
+            MOBILE = current.deployment_settings.get_ui_label_mobile_phone()
+            contact_methods = {"SKYPE":       T("Skype"),
+                               "SMS":         MOBILE,
+                               "IRC":         T("IRC handle"),
+                               "GITHUB":      T("Github Repo"),
+                               "LINKEDIN":    T("LinkedIn Profile"),
+                               "BLOG":        T("Blog"),
+                               }
+            s3db.pr_contact.contact_method.requires = IS_IN_SET(contact_methods,
+                                                                zero=None)
+
+            from s3.s3forms import S3SQLCustomForm
+
+            crud_form = S3SQLCustomForm(
+                    "contact_method",
+                    "value",
+                )
+            s3db.configure("pr_contact",
+                           crud_form = crud_form,
+                           )
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.customise_pr_contact_controller = customise_pr_contact_controller
+
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
@@ -417,11 +585,10 @@ settings.modules = OrderedDict([
             module_type = 6,     # 6th item in the menu
         )),
     ("pr", Storage(
-            name_nice = T("Person Registry"),
-            #description = T("Central point to record details on People"),
+            name_nice = T("Contributors"),
+            description = T("Contributors to Sahana"),
             restricted = True,
-            access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-            module_type = 10
+            module_type = 2
         )),
     ("org", Storage(
             name_nice = T("Organizations"),
@@ -434,7 +601,8 @@ settings.modules = OrderedDict([
             name_nice = T("Volunteers"),
             #description = T("Human Resource Management"),
             restricted = True,
-            module_type = 2,
+            access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
+            module_type = 10,
         )),
     ("doc", Storage(
             name_nice = T("Documents"),
