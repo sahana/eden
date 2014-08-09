@@ -144,88 +144,6 @@
     <!-- ****************************************************************** -->
     <xsl:template match="cap:info">
         <resource name="cap_info">
-<<<<<<< HEAD
-            <data field="language">
-                <xsl:value-of select="cap:language" />
-            </data>
-            <data field="category">
-                <xsl:attribute name="value">
-                    <xsl:text>[</xsl:text>
-                    <xsl:for-each select="cap:category">
-                        <xsl:text>&quot;</xsl:text>
-                        <xsl:value-of select="."/>
-                        <xsl:text>&quot;</xsl:text>
-                        <xsl:if test="position()!=last()">
-                            <xsl:text>,</xsl:text>
-                        </xsl:if>
-                    </xsl:for-each>
-                    <xsl:text>]</xsl:text>
-                </xsl:attribute>
-            </data>
-            <data field="event">
-                <xsl:value-of select="cap:event" />
-            </data>
-            <data field="response_type">
-                <xsl:value-of select="cap:response_type" />
-            </data>
-            <!-- @todo: priority -->
-            <data field="priority">
-                <xsl:value-of select="cap:priority" />
-            </data>
-            <data field="urgency">
-                <xsl:value-of select="cap:urgency" />
-            </data>
-            <data field="severity">
-                <xsl:value-of select="cap:severity" />
-            </data>
-            <data field="certainty">
-                <xsl:value-of select="cap:certainty" />
-            </data>
-            <data field="audience">
-                <xsl:value-of select="cap:audience" />
-            </data>
-            <data field="event_code">
-                <xsl:attribute name="value">
-                    <xsl:text>[</xsl:text>
-                        <xsl:apply-templates select="cap:eventCode" />
-                    <xsl:text>]</xsl:text>
-                </xsl:attribute>
-            </data>
-            <data field="effective">
-                <xsl:value-of select="cap:effective" />
-            </data>
-            <data field="onset">
-                <xsl:value-of select="cap:onset" />
-            </data>
-            <data field="expires">
-                <xsl:value-of select="cap:expires" />
-            </data>
-            <data field="sender_name">
-                <xsl:value-of select="cap:senderName" />
-            </data>
-            <data field="headline">
-                <xsl:value-of select="cap:headline" />
-            </data>
-            <data field="description">
-                <xsl:value-of select="cap:description" />
-            </data>
-            <data field="instruction">
-                <xsl:value-of select="cap:instruction" />
-            </data>
-            <data field="web">
-                <xsl:value-of select="cap:web" />
-            </data>
-            <data field="contact">
-                <xsl:value-of select="cap:contact" />
-            </data>
-            <data field="parameter">
-                <xsl:attribute name="value">
-                    <xsl:text>[</xsl:text>
-                        <xsl:apply-templates select="cap:parameter" />
-                    <xsl:text>]</xsl:text>
-                </xsl:attribute>
-            </data>
-=======
             <xsl:if test="cap:language!=''">
                 <data field="language">
                     <xsl:value-of select="cap:language" />
@@ -373,7 +291,6 @@
                     </xsl:attribute>
                 </data>
             </xsl:if>
->>>>>>> a24b441a9b3e0b07e1b58698e49eafb23597292a
 
             <xsl:apply-templates select="cap:resource" />
             <xsl:apply-templates select="cap:area" />

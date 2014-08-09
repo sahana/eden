@@ -1140,15 +1140,22 @@ def cap_rheader(r):
                     else:
                         error = ""
                         export_btn = A(DIV(_class="export_cap_large"),
-                                       _href=URL(c="cap", f="alert", args=["%s.cap" % record_id]),
+                                       _href=URL(c="cap", f="alert",
+                                                 args=["%s.cap" % record_id]
+                                                 ),
                                        _target="_blank",
                                        )
-                        publish_btn = A(DIV("Publish Alert",
-                                         _class="action-btn",
-                                         _id="publish",
-                                         _value=record_id),
-                                         _href=r.url(method="publish", id=record_id),
-                                        )
+                        if auth.s3_has_permission("PUBLISH"):
+                            publish_btn = A(DIV("Publish Alert",
+                                             _class="action-btn",
+                                             _id="publish",
+                                             _value=record_id),
+                                             _href=r.url(method="publish",
+                                                         id=record_id
+                                                         ),
+                                            )
+                        else:
+                            publish_btn = ""
 
                     table = s3db.cap_area
                     query = (table.alert_id == record_id)
@@ -1733,7 +1740,7 @@ class CAPPublish(S3Method):
             @param attr: controller options for this request
         """
 
-        if r.representation == "html" and r.record!=None:
+        if r.representation == "html" and r.record!=None and auth.s3_has_permission("PUBLISH"):
 
             T = current.T
             response = current.response
@@ -1745,8 +1752,10 @@ class CAPPublish(S3Method):
                     TABLE(
                         TR(TD(DIV(B("%s:" % T("Broker")),
                                   SPAN(" *", _class="req"))),
-                           TD(SELECT(settings.get_cap_publishing_brokers().keys(), _name="channel",
-                                     _id="channel", _value="",
+                           TD(SELECT(settings.get_cap_publishing_brokers().keys(),
+                                     _name="channel",
+                                     _id="channel",
+                                     _value="",
                                      requires=IS_IN_SET(settings.get_cap_publishing_brokers()))),
                            TD(),
                            ),
@@ -1764,17 +1773,21 @@ class CAPPublish(S3Method):
             if form.accepts(r.vars, current.session):
                 form_vars = form.vars
                 channel = form_vars.get("channel", None)
-                if channel == "Pubsubhubbub":
-                    alert_url = r.url(method="read", representation="cap", host=True)
-                    current.s3task.async("publish_pubsubhubbub",
-                                         [alert_url]
-                                         )
-                    response.flash = T("Alert Published!")
-                elif not channel:
-                    response.error = T("Channel is required")
-                    return output
+                if channel is not None:
+                    if channel in settings.get_cap_publishing_brokers().keys():
+                        alert_url = r.url(method="read",
+                                          representation="cap",
+                                          host=True,
+                                          )
+                        current.s3task.async("cap_publish_alert",
+                                             [channel, alert_url]
+                                             )
+                        response.flash = T("Alert queued for publishing!")
+                    else:
+                        response.error = T("Improper Channel")
+                        return output
                 else:
-                    response.error = T("Sorry unsupported or unexpected channel.")
+                    response.error = T("Channel is required")
                     return output
             return output
 

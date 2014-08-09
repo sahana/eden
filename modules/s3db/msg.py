@@ -43,6 +43,7 @@ __all__ = ("S3ChannelModel",
            "S3TwitterSearchModel",
            "S3XFormsModel",
            "S3BaseStationModel",
+           "S3AlertModel",
            )
 
 from gluon import *
@@ -1336,6 +1337,61 @@ class S3RSSModel(S3ChannelModel):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3AlertModel(S3Model):
+    """
+        CAP: Common ALerting Protocol
+
+        Alerts can be sent via different brokers
+        - Pubsubhubbub
+        - Alert-hub
+    """
+
+    names = ("msg_alert",)
+
+    def model(self):
+
+        T = current.T
+
+        define_table = self.define_table
+        set_method = self.set_method
+        super_link = self.super_link
+        
+        # ---------------------------------------------------------------------
+        # CAP Alert: InBox & Outbox
+        #
+        tablename = "msg_alert"
+        self.define_table(tablename,
+                          # Instance
+                          self.super_link("message_id", "msg_message"),
+                          self.msg_channel_id(),
+                          s3_datetime(default="now"),
+                          Field("alert_url",
+                                ),
+                          Field("from_address",
+                                #label = T("Sender"),
+                                ),
+                          Field("to_broker",
+                                label = T("Channel Name"),
+                                ),
+                          Field("channel_url",
+                                label = T("Channel Url"),
+                                ),
+                          Field("success_status",
+                                label = T("Success Status"),
+                                ),
+                          Field("inbound", "boolean",
+                                default = False,
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       super_entity = "msg_message",
+                       )
+
+        # ---------------------------------------------------------------------
+        return dict()
 
 # =============================================================================
 class S3SMSModel(S3Model):

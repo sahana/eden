@@ -1338,20 +1338,58 @@ class S3Msg(object):
             graph.put_object(user_id, "feed", message=text)
 
     #------------------------------------------------------------------------------
-    def post_to_pubsubhubbub(self, alert_url):
-        """
-            Publish a feed to pubsubhubbub
-        """
-
-        import requests
-        settings = current.deployment_settings
-        hub_url = settings.get_cap_publishing_brokers()["Pubsubhubbub"]
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        params = {"hub.mode" : "publish", "hub.url" : alert_url}
-        status = requests.post(url=hub_url, headers=headers, params=params)
-        return status.status_code
-
+    def post_to_broker(self, channel, alert_url):
+        
+            db = current.db
+            s3db = current.s3db
+            table = s3db.msg_alert
+            otable = s3db.msg_outbox
+            settings = current.deployment_settings
+            
+            brokers = settings.get_cap_publishing_brokers()
+            hub_url = brokers[channel]
+            
+            def log_alert(channel, alert_url, status):
+                _id = table.insert(alert_url=alert_url,
+                                   to_address=channel,
+                                   )
+                record = db(table.id == _id).select(table.id,
+                                                    limitby=(0, 1)
+                                                    ).first()
+                s3db.update_super(table, record)
+                message_id = record.message_id
+    
+                # Log in msg_outbox
+                otable.insert(message_id = message_id,
+                              address = hub_url,
+                              status = status,
+                              contact_method = "CAPALERT",
+                              )
+            
+            def publish_alert(alert_url, params=None, headers=None):
+                import requests
+                status = requests.post(url=hub_url, headers=headers, params=params)
+                log_alert(channel, alert_url, status.status_code)
+                    
+            if channel and alert_url:
+                if channel == "Pubsubhubbub":
+                    """
+                    Publish a feed to pubsubhubbub
+                    """
+                    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+                    params = {"hub.mode" : "publish", "hub.url" : alert_url}
+                    publish_alert(alert_url, params=params, headers=headers)
+                elif channel == "Alerthub":
+                    """
+                    Publish a feed to pubsubhubbub
+                    """
+                    params = {"hub.mode" : "publish", "hub.url" : alert_url}
+                    publish_alert(alert_url, params=params)
+            else:
+                current.log.error("Incorrect parameters")
+    
     # -------------------------------------------------------------------------
+    
     def poll(self, tablename, channel_id):
         """
             Poll a Channel for New Messages
@@ -1919,7 +1957,7 @@ class S3Msg(object):
                 if parser:
                     pinsert(message_id = exists.message_id,
                             channel_id = channel_id)
-                    
+
             else:
                 _id = minsert(channel_id = channel_id,
                               title = entry.title,
@@ -2523,7 +2561,7 @@ class S3Compose(S3CRUD):
             else:
                 # @ToDo A new widget (tree?) required to handle multiple persons and groups
                 pe_field.widget = S3PentityAutocompleteWidget()
-
+                
             pe_field.comment = DIV(_class="tooltip",
                                    _title="%s|%s" % \
                 (T("Recipients"),
