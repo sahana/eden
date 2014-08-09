@@ -23,3 +23,55 @@ Should Show Error
     Page Should Contain Element  ${ERROR}  Error message not shown
     ${msg len} =  Get Length  ${message}
     Run Keyword if  ${msg len} >= 1  Element Should Contain  ${CONFIRMATION}  @{message}[0]
+
+Run On Templates
+    [Documentation]  Run if the current template is in the argument
+    ...            USAGE: To apply it at a suite level, add it to start testing.
+    ...             To apply it at at a test level, add it at begining of the test
+    [Arguments]  @{Template List}
+    Should Contain  ${Template List}  ${TEMPLATE}  The test does not run on the current template
+
+Do Not Run on Templates
+    [Documentation]  Do not run if the current template is in the argument
+    ...             USAGE : Similar to Run on Templates
+    [Arguments]  @{Template List}
+    Should Not Contain  ${Template List}  ${TEMPLATE}  The test does not run on the current template
+
+Catch Error If Available Else Take Screenshot
+    [Documentation]  Run on failure mechanism of EdenTest
+    ${output}=  Check For Ticket And Catch Exception
+    Run Keyword If  ${output}==0  Capture Page Screenshot
+
+Check for ticket and catch exception
+    [Documentation]  Looks for tickets and if found, returns the traceback
+    [Arguments]  @{Failed URL}
+    ${passed}=  Run Keyword and Return Status  Page Should Contain  Ticket issued:
+    # If Ticket Issued not found, return
+    Run Keyword Unless  ${passed}  Return From Keyword  ${0}
+    ${Ticket URL}=  Get Element Attribute  tag=a@href
+    Go To  ${Ticket URL}
+    Login To Admin Interface If Not Logged In
+    # This complicated xpath has been generated using Chrome Developer Tools ;)
+    ${Exception Name}=  Get Text  xpath=//div[@id="main_inner"]/div/h4
+    ${Traceback}=  Get Table Cell  xpath=//*[@id="main_inner"]/div/div[2]/table  1  2
+    ${Ticket URL}=  Get Location
+
+    @{With Failed URL}=  Set Variable  Failed URL: ${Failed URL} \n Ticket URL: ${Ticket URL} \n\t
+    ...  Exception:${Exception Name} \n ${Traceback} \n----\n
+
+    ${Without Failed URL}=  Set Variable  Ticket URL: ${Ticket URL} \n\t
+    ...  Exception:${Exception Name} \n ${Traceback} \n----\n
+
+    ${passed}=  Run Keyword and Return Status  Should Not Be Empty  ${Failed URL}
+    Run Keyword If  ${passed}  Log  @{With Failed URL}[0] @{With Failed URL}[1]  WARN
+    Run Keyword Unless  ${passed}  Log  @{Without Failed URL}[0] @{Without Failed URL}[1]  WARN
+
+    Log  ${Traceback}  INFO
+    [Return]  ${1}
+
+Login To Admin Interface If Not Logged In
+    [Documentation]  Login to the admin interface to access the ticket
+    ${passed}=  Run Keyword and Return Status  Page Should Contain  Administrator Password:
+    Run Keyword Unless  ${passed}  Return From Keyword
+    Input Text  password  ${WEB2PY PASSWD}
+    Click Button  Login

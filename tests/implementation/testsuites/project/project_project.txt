@@ -1,8 +1,6 @@
 *** Settings ***
 Documentation     Test cases for project module
 Resource          ../../resources/main.txt
-Suite Setup       Start Testing
-Suite Teardown      End Testing
 
 *** Variables ***
 ${PROJECT URL}      http://${BASEURL}/project/project
