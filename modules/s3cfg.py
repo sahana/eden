@@ -1832,7 +1832,7 @@ class S3Config(Storage):
             Enable the use of tab "Housing Unit" and enable the housing unit 
             selection during evacuees registration.
         """
-        return self.cr.get("shelter_housing_unit_management",False)
+        return self.cr.get("shelter_housing_unit_management", False)
     
     # -------------------------------------------------------------------------
     # Deployments

@@ -27,21 +27,20 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3EVRCaseModel",
+__all__ = ("S3EVRCaseModel",
            "evr_rheader",
            "evr_AddGroupMembers",
-           ]
+           )
 
 from gluon import *
-from gluon.storage import Storage
-from gluon.tools import callback
 from ..s3 import *
-from s3layouts import S3AddResourceLink
 
 # =============================================================================
 class S3EVRCaseModel(S3Model):
 
-    names = ["evr_case"]
+    names = ("evr_case",
+             "evr_medical_details",
+             )
 
     def model(self):
 
@@ -50,9 +49,7 @@ class S3EVRCaseModel(S3Model):
 
         define_table = self.define_table
         person_id = self.pr_person_id
-        group_id = self.pr_group_id
-        organisation_id = self.org_organisation_id
-                
+
         # ---------------------------------------------------------------------
         # Case Data
         #
@@ -67,18 +64,19 @@ class S3EVRCaseModel(S3Model):
         
         tablename = "evr_case"
         define_table(tablename,
-                     person_id(ondelete="CASCADE"),
-                     organisation_id(empty = not settings.get_hrm_org_required(),
-                                     label = organisation_label,
-                                     requires = self.org_organisation_requires(required=True),
-                                     comment = DIV(_class="tooltip",
-                                                   _title="%s|%s" % (T("Designed Organisation"),
-                                                                     T("Organisation designed to take care of evacuee"))),
-                                     widget = org_widget,
-                                     readable = enable_evr_organisation,
-                                     writable = enable_evr_organisation, 
-                                     ),
-                     Field("fiscal_code", "string", length = 16,
+                     person_id(ondelete = "CASCADE"),
+                     self.org_organisation_id(
+                        empty = not settings.get_hrm_org_required(),
+                        label = organisation_label,
+                        requires = self.org_organisation_requires(required=True),
+                        comment = DIV(_class="tooltip",
+                                      _title="%s|%s" % (T("Designed Organisation"),
+                                                        T("Organisation designed to take care of evacuee"))),
+                        widget = org_widget,
+                        readable = enable_evr_organisation,
+                        writable = enable_evr_organisation, 
+                        ),
+                     Field("fiscal_code", "string", length=16,
                            label = T("Fiscal Code"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Fiscal Code"),

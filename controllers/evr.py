@@ -84,7 +84,7 @@ def person():
                                  defaults=Storage(
                                                   rows="shelter_registration.shelter_id",
                                                   cols="gender",
-#                                                  totals=True,
+                                                  #totals=True,
                                                   )
                                  )
         list_fields = ["id",
@@ -110,7 +110,7 @@ def person():
             resource = r.resource
 
             # Filter widgets
-            from s3.s3filter import S3OptionsFilter, S3TextFilter, S3LocationFilter, S3DateFilter
+            from s3 import S3OptionsFilter, S3TextFilter, S3LocationFilter, S3DateFilter
             filter_widgets = [
                 S3TextFilter(["first_name",
                               #"middle_name",
