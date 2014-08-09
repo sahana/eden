@@ -45,7 +45,7 @@ settings.base.guided_tour = True
 # These settings should be changed _after_ the 1st (admin) user is
 # registered in order to secure the deployment
 # Should users be allowed to register themselves?
-#settings.security.self_registration = False
+settings.security.self_registration = False
 # Do new users need to verify their email address?
 #settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?

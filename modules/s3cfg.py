@@ -1826,7 +1826,14 @@ class S3Config(Storage):
             "population_night".
         """
         return self.cr.get("shelter_population_dynamic", False)
-
+    
+    def get_cr_shelter_housing_unit_management(self):
+        """
+            Enable the use of tab "Housing Unit" and enable the housing unit 
+            selection during evacuees registration.
+        """
+        return self.cr.get("shelter_housing_unit_management",False)
+    
     # -------------------------------------------------------------------------
     # Deployments
     #
@@ -1870,6 +1877,19 @@ class S3Config(Storage):
                                             8 :T("Hospital"),
                                             9 :T("Orphanage")
                                             })
+    
+    def get_evr_show_physical_description(self):
+        """
+            Show Evacuees physical description
+        """
+        return self.evr.get("physical_description", True)
+    
+    def get_evr_link_to_organisation(self):
+        """
+            Link evacuees to Organisations.  
+        """
+        return self.evr.get("link_to_organisation", False)
+
 
     # -------------------------------------------------------------------------
     # Hospital Registry

@@ -49,51 +49,194 @@ class S3MainMenu(default.S3MainMenu):
         return [
             homepage(name="EVASS"),
             homepage("gis"),
-#           homepage("evr")(
-#                 MM("Persons", f="person"),
-#                 MM("Groups", f="group")
-#             ),
-#             homepage("cr"),
+            homepage("org"),
             homepage("msg"),
-#            homepage("project")
-#            homepage("stats"),
-#            homepage("event"),
-#            homepage("irs"),
-#            homepage("vol"),
-#            homepage("hrm"),
-            #MM("more", link=False)(
-            #),
+
        ]
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
-    #"""
-        #Custom Controller Menus
+    
+    """
+        Custom Controller Menus
 
-        #The options menu (left-hand options menu) is individual for each
-        #controller, so each controller has its own options menu function
-        #in this class.
+        The options menu (left-hand options menu) is individual for each
+        controller, so each controller has its own options menu function
+        in this class.
 
-        #Each of these option menu functions can be customised separately,
-        #by simply overriding (re-defining) the default function. The
-        #options menu function must return an instance of the item layout.
+        Each of these option menu functions can be customised separately,
+        by simply overriding (re-defining) the default function. The
+        options menu function must return an instance of the item layout.
 
-        #The standard menu uses the M item layout class, but you can of
-        #course also use any other layout class which you define in
-        #layouts.py (can also be mixed).
+        The standard menu uses the M item layout class, but you can of
+        course also use any other layout class which you define in
+        layouts.py (can also be mixed).
 
-        #Make sure additional helper functions in this class don't match
-        #any current or future controller prefix (e.g. by using an
-        #underscore prefix).
-    #"""
-
+        Make sure additional helper functions in this class don't match
+        any current or future controller prefix (e.g. by using an
+        underscore prefix).
+    """
     # -------------------------------------------------------------------------
+    def hrm(self):
+        """ Staff """
+        
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
+
+        # Custom conditions for the check-hook, as lambdas in order
+        # to have them checked only immediately before rendering:
+        manager_mode = lambda i: s3.hrm.mode is None
+        personal_mode = lambda i: s3.hrm.mode is not None
+        is_org_admin = lambda i: s3.hrm.orgs and True or \
+                                 ADMIN in s3.roles
+        settings = current.deployment_settings
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
+        vol_enabled = lambda i: settings.has_module("vol")
+
+        return M(c="hrm")(
+                    M(settings.get_hrm_staff_label(), f="staff", m="summary",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                        M("Search by Skills", f="competency"),
+                        M("Import", f="person", m="import",
+                          vars={"group":"staff"}, p="create"),
+                    ),
+                    M("Staff & Volunteers (Combined)",
+                      c="hrm", f="human_resource", m="summary",
+                      check=[manager_mode, vol_enabled]),
+                    M(teams, f="group",
+                      check=[manager_mode, use_teams])(
+                        M("Create", m="create"),
+                        M("Search Members", f="group_membership"),
+                        M("Import", f="group_membership", m="import"),
+                    ),
+                    M("Department Catalog", f="department",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                    ),
+                    M("Job Title Catalog", f="job_title",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                    ),
+                    M("Skill Catalog", f="skill",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                        #M("Skill Provisions", f="skill_provision"),
+                    ),
+                    M("Reports", f="staff", m="report",
+                      check=manager_mode)(
+                        M("Staff Report", m="report"),
+                    ),
+                    M("Personal Profile", f="person",
+                      check=personal_mode, vars=dict(mode="personal")),
+                    # This provides the link to switch to the manager mode:
+                    M("Staff Management", f="index",
+                      check=[personal_mode, is_org_admin]),
+                    # This provides the link to switch to the personal mode:
+                    M("Personal Profile", f="person",
+                      check=manager_mode, vars=dict(mode="personal"))
+                )
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def vol():
+        """ Volunteer Management """
+
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
+
+        # Custom conditions for the check-hook, as lambdas in order
+        # to have them checked only immediately before rendering:
+        manager_mode = lambda i: s3.hrm.mode is None
+        personal_mode = lambda i: s3.hrm.mode is not None
+        is_org_admin = lambda i: s3.hrm.orgs and True or \
+                                 ADMIN in s3.roles
+
+        settings = current.deployment_settings
+        show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
+        show_tasks = lambda i: settings.has_module("project") and \
+                               settings.get_project_mode_task()
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
+        show_staff = lambda i: settings.get_hrm_show_staff()
+
+        return M(c="vol")(
+                    M("Volunteers", f="volunteer", m="summary",
+                      check=[manager_mode])(
+                        M("Create", m="create"),
+                        M("Search by skills", f="competency"),
+                        M("Import", f="person", m="import",
+                          vars={"group":"volunteer"}, p="create"),
+                    ),
+                    M("Staff & Volunteers (Combined)",
+                      c="vol", f="human_resource", m="summary",
+                      check=[manager_mode, show_staff]),
+                    M(teams, f="group",
+                      check=[manager_mode, use_teams])(
+                        M("Create", m="create"),
+                        M("Search Members", f="group_membership"),
+                        M("Import", f="group_membership", m="import"),
+                    ),
+                    M("Department Catalog", f="department",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                    ),
+                    M("Job Title Catalog", f="job_title",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                    ),
+                    M("Volunteer Role Catalog", f="job_title",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                    ),
+                    M("Skill Catalog", f="skill",
+                      check=manager_mode)(
+                        M("Create", m="create"),
+                        #M("Skill Provisions", f="skill_provision"),
+                    ),
+                    M("Programs", f="programme",
+                      check=[manager_mode, show_programmes])(
+                        M("Create", m="create"),
+                        M("Import Hours", f="programme_hours", m="import"),
+                    ),
+                    M("Reports", f="volunteer", m="report",
+                      check=manager_mode)(
+                        M("Volunteer Report", m="report"),
+                        M("Hours by Role Report", f="programme_hours", m="report",
+                          vars=Storage(rows="job_title_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
+                        M("Hours by Program Report", f="programme_hours", m="report",
+                          vars=Storage(rows="programme_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
+                    ),
+                    M("My Profile", f="person",
+                      check=personal_mode, vars=dict(mode="personal")),
+                    M("My Tasks", f="task",
+                      check=[personal_mode, show_tasks],
+                      vars=dict(mode="personal",
+                                mine=1)),
+                    # This provides the link to switch to the manager mode:
+                    M("Volunteer Management", f="index",
+                      check=[personal_mode, is_org_admin]),
+                    # This provides the link to switch to the personal mode:
+                    M("Personal Profile", f="person",
+                      check=manager_mode, vars=dict(mode="personal"))
+                )
+
+        
+#    -------------------------------------------------------------------------
     def evr(self):
         """ EVR / Evacuees Registry """
-
+ 
         return M(c="evr")(
                     M("Persons", f="person")(
                         M("New", m="create"),
+                        M("Reports",m="report"),
                         M("Import", m="import")
                     ),
                     M("Groups", f="group")(
