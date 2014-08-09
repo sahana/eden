@@ -818,6 +818,19 @@ def task_milestone():
     return s3_rest_controller()
 
 # =============================================================================
+def task_tag():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options" or r.representation != "s3json":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
 def milestone():
     """ RESTful CRUD controller """
 
@@ -826,6 +839,12 @@ def milestone():
         field.default = get_vars.project_id
         field.writable = False
         field.comment = None
+
+    return s3_rest_controller()
+
+# =============================================================================
+def tag():
+    """ RESTful CRUD controller """
 
     return s3_rest_controller()
 

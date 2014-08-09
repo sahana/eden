@@ -4051,6 +4051,7 @@ class S3ProjectTaskModel(S3Model):
     """
 
     names = ("project_milestone",
+             "project_tag",
              "project_task",
              "project_task_id",
              "project_time",
@@ -4058,6 +4059,7 @@ class S3ProjectTaskModel(S3Model):
              "project_task_project",
              "project_task_activity",
              "project_task_milestone",
+             "project_task_tag",
              "project_task_represent_w_project",
              "project_task_active_statuses",
              )
@@ -4137,6 +4139,47 @@ class S3ProjectTaskModel(S3Model):
                   deduplicate = self.project_milestone_duplicate,
                   orderby = "project_milestone.date",
                   )
+
+        # ---------------------------------------------------------------------
+        # Project Tags
+        #
+        tablename = "project_tag"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Tag"),
+                           ),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_TAG = T("Create Tag")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_TAG,
+            title_display = T("Tag Details"),
+            title_list = T("Tags"),
+            title_update = T("Edit Tag"),
+            title_upload = T("Import Tags"),
+            label_list_button = T("List Tags"),
+            msg_record_created = T("Tag added"),
+            msg_record_modified = T("Tag updated"),
+            msg_record_deleted = T("Tag deleted"),
+            msg_list_empty = T("No tags currently defined"))
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+
+        tag_id = S3ReusableField("tag_id", "reference %s" % tablename,
+                                 label = T("Tag"),
+                                 ondelete = "RESTRICT",
+                                 represent = represent,
+                                 requires = IS_EMPTY_OR(
+                                              IS_ONE_OF(db, "project_tag.id",
+                                                        represent)),
+                                 sortby = "name",
+                                 comment = S3AddResourceLink(c="project",
+                                                             f="tag",
+                                                             title=ADD_TAG,
+                                                             tooltip=T("A project tag helps to assosiate keywords with projects/tasks.")),
+                                 )
 
         # ---------------------------------------------------------------------
         # Tasks
@@ -4331,6 +4374,15 @@ class S3ProjectTaskModel(S3Model):
                 jquery_ready_append('''$.filterOptionsS3(%s)''' % \
                                     json.dumps(options, separators=SEPARATORS))
 
+        if settings.get_project_task_tag():
+            lappend("task_tag.tag_id")
+            fappend(S3OptionsFilter("task_tag.tag_id",
+                                    ))
+            cappend(S3SQLInlineComponent("task_tag",
+                                         label = T("Tags"),
+                                         fields = [("", "tag_id")],
+                                         ))
+
         crud_fields.extend(("name",
                             "description",
                             "source",
@@ -4524,6 +4576,16 @@ class S3ProjectTaskModel(S3Model):
                                             },
                        # Format for S3SQLInlineComponent
                        project_task_milestone = "task_id",
+                       # Tags
+                       project_tag = {"link": "project_task_tag",
+                                      "joinby": "task_id",
+                                      "key": "tag_id",
+                                      "actuate": "embed",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                      },
+                       # Format for S3SQLInlineComponent
+                       project_task_tag = "task_id",
                        # Job titles
                        hrm_job_title = {"link": "project_task_job_title",
                                         "joinby": "task_id",
@@ -4598,6 +4660,19 @@ class S3ProjectTaskModel(S3Model):
                      milestone_id(empty = False,
                                   ondelete = "CASCADE",
                                   ),
+                     *s3_meta_fields())
+        # ---------------------------------------------------------------------
+        # Link task <-> tags
+        #
+        # Tasks <> Tags
+        tablename = "project_task_tag"
+        define_table(tablename,
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     tag_id(empty = False,
+                            ondelete = "CASCADE",
+                            ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

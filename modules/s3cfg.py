@@ -2540,6 +2540,12 @@ class S3Config(Storage):
         """
         return self.project.get("milestones", False)
 
+    def get_project_task_tag(self):
+        """
+            Use Tags in Tasks
+        """
+        return self.project.get("task_tag", False)
+
     def get_project_projects(self):
         """
             Link Activities & Tasks to Projects
