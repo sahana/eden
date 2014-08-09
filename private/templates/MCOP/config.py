@@ -56,7 +56,7 @@ settings.auth.show_link = False
 
 # -----------------------------------------------------------------------------
 # Security Policy
-settings.security.policy = 5 # Apply Controller, Function and Table ACLs
+settings.security.policy = 7 # Apply Controller, Function and Table ACLs
 settings.security.map = True
 
 # -----------------------------------------------------------------------------
@@ -400,10 +400,6 @@ def customise_event_incident_controller(**attr):
                             _class="action-btn",
                             url=URL(c="event", f="incident",
                                     args=["[id]", "profile"])),
-                       dict(label=str(T("Edit")),
-                            _class="action-btn",
-                            url=URL(c="event", f="incident",
-                                    args=["[id]", "update"]))
                        ]
             s3.actions = actions
 
@@ -562,10 +558,20 @@ def customise_event_incident_resource(r, tablename):
                         (r.application, record_id),
                      marker = marker,
                      )
-
+        if current.auth.s3_has_permission("update", table, record_id=record_id):
+            edit_btn = A(I(_class="icon icon-edit"),
+                         _href=URL(c="event", f="incident",
+                                   args=[record_id, "update.popup"],
+                                   vars={"refresh": "datalist"}),
+                         _class="s3_modal",
+                         _title=s3.crud_strings["event_incident"].title_update,
+                         )
+        else:
+            edit_btn = ""
         s3db.configure("event_incident",
                        profile_title = title,
-                       profile_header = DIV(H2(title),
+                       profile_header = DIV(edit_btn,
+                                            H2(title),
                                             _class="profile-header",
                                             ),
                        profile_layers = [layer],

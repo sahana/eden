@@ -18,7 +18,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["SSF", "demo/users"]
+settings.base.prepopulate = ["SSF", "demo/users","SSF/Test"]
 
 # Theme
 settings.base.theme = "SSF"
@@ -27,7 +27,7 @@ settings.ui.formstyle = "bootstrap"
 
 # Should users be allowed to register themselves?
 settings.security.self_registration = True
-settings.auth.registration_requires_verification = True
+settings.auth.registration_requires_verification = False
 settings.auth.registration_requires_approval = False
 
 # The name of the teams that users are added to when they opt-in to receive alerts
@@ -513,6 +513,53 @@ def customise_project_project_controller(**attr):
 settings.customise_project_project_controller = customise_project_project_controller
 
 # -----------------------------------------------------------------------------
+def customise_delphi_problem_controller(**attr):
+    db = current.db
+    s3db = current.s3db
+    s3 = current.response.s3
+    tablename = "delphi_problem"
+
+    s3.crud_strings[tablename] = Storage(
+        label_create = T("Create Goal"),
+        title_display = T("Goal Details"),
+        title_list = T("Goals"),
+        title_update = T("Edit Goal"),
+        title_report = T("Goal Report"),
+        title_upload = T("Import Goals"),
+        label_list_button = T("List Goals"),
+        label_delete_button = T("Delete Goal"),
+        msg_record_created = T("Goal added"),
+        msg_record_modified = T("Goal updated"),
+        msg_record_deleted = T("Goal deleted"),
+        msg_list_empty = T("No Goals currently registered")
+    )
+    return attr
+settings.customise_delphi_problem_controller = customise_delphi_problem_controller
+
+# -----------------------------------------------------------------------------
+def customise_delphi_solution_controller(**attr):
+    db = current.db
+    s3db = current.s3db
+    s3 = current.response.s3
+    tablename = "delphi_solution"
+
+    s3.crud_strings[tablename] = Storage(
+        label_create = T("Create Initiative"),
+        title_display = T("Initiative Details"),
+        title_list = T("Initiatives"),
+        title_update = T("Edit Initiative"),
+        title_report = T("Initiative Report"),
+        title_upload = T("Import Initiatives"),
+        label_list_button = T("List Initiatives"),
+        label_delete_button = T("Delete Initiative"),
+        msg_record_created = T("Initiative added"),
+        msg_record_modified = T("Initiative updated"),
+        msg_record_deleted = T("Initiative deleted"),
+        msg_list_empty = T("No Initiatives currently registered")
+    )
+    return attr
+settings.customise_delphi_solution_controller = customise_delphi_solution_controller
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
@@ -703,12 +750,12 @@ settings.modules = OrderedDict([
     #    restricted = True,
     #    module_type = 10,
     #)),
-    #("delphi", Storage(
-    #        name_nice = T("Delphi Decision Maker"),
-    #        description = T("Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list."),
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
+    ("delphi", Storage(
+            name_nice = T("Delphi Decision Maker"),
+            description = T("Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list."),
+            restricted = False,
+            module_type = 10,
+        )),
     #("dvi", Storage(
     #       name_nice = T("Disaster Victim Identification"),
     #       description = T("Disaster Victim Identification"),

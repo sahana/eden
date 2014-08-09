@@ -84,7 +84,7 @@ class index(S3CustomController):
 function LoadFeeds(){
  var feeds=[
   {title:'Tasks',
-   url:\'''', settings.base.public_url, '''/''', request.application, '''/project/task.rss?task.status=2,3,4,11'
+   url:\'''', settings.get_base_public_url(), '''/''', request.application, '''/project/task.rss?task.status=2,3,4,11'
   },
   {title:'Tickets',
    url:'http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&max=50&daysback=90&format=rss'
