@@ -9,6 +9,7 @@ except:
 
 from gluon import current, URL
 from gluon.storage import Storage
+from gluon.validators import IS_IN_SET
 
 T = current.T
 settings = current.deployment_settings
@@ -18,7 +19,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ("SSF", "demo/users", "SSF/Test")
+settings.base.prepopulate = ("SSF", "demo/users")
 
 # Theme
 settings.base.theme = "SSF"
@@ -149,6 +150,9 @@ settings.project.themes = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 
+# Uncomment this to use emergency contacts in pr
+settings.pr.show_emergency_contacts = False
+
 # -----------------------------------------------------------------------------
 def customise_project_project_controller(**attr):
 
@@ -167,56 +171,60 @@ def customise_project_project_controller(**attr):
                 return False
 
         if r.interactive:
-            is_deployment = False
+            if r.component:
+                pass
+            else:
+                is_deployment = False
 
-            stable = s3db.project_sector_project
-            otable = s3db.org_sector
+                stable = s3db.project_sector_project
+                otable = s3db.org_sector
 
-            # Viewing details of project_project record
-            if r.id:
-                # Check if current record is Deployment
-                query = (stable.project_id == r.id) & \
-                        (otable.id == stable.sector_id)
-                rows = db(query).select(otable.name)
-                for row in rows:
-                    if row.name == "Deployment":
-                        is_deployment = True
+                # Viewing details of project_project record
+                if r.id:
+                    # Check if current record is Deployment
+                    query = (stable.project_id == r.id) & \
+                            (otable.id == stable.sector_id)
+                    rows = db(query).select(otable.name)
+                    for row in rows:
+                        if row.name == "Deployment":
+                            is_deployment = True
 
-            request_sector = r.get_vars.get("sector.name")
+                request_sector = r.get_vars.get("sector.name")
 
-            # Viewing Projects/Deployments Page
-            if request_sector and "Deployment" in request_sector:
-                is_deployment = True
+                # Viewing Projects/Deployments Page
+                if request_sector and "Deployment" in request_sector:
+                    is_deployment = True
 
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
-            if is_deployment:
-                s3db[tablename].name.label = T("Deployment Name")
-                s3.crud_strings[tablename] = Storage(
-                    label_create = T("Create Deployment"),
-                    title_display = T("Deployment Details"),
-                    title_list = T("Deployments"),
-                    title_update = T("Edit Deployment"),
-                    title_report = T("Deployment Report"),
-                    title_upload = T("Import Deployments"),
-                    label_list_button = T("List Deployments"),
-                    label_delete_button = T("Delete Deployment"),
-                    msg_record_created = T("Deployment added"),
-                    msg_record_modified = T("Deployment updated"),
-                    msg_record_deleted = T("Deployment deleted"),
-                    msg_list_empty = T("No Deployments currently registered")
-                )
+                if is_deployment:
+                    s3db[tablename].name.label = T("Deployment Name")
+                    s3.crud_strings[tablename] = Storage(
+                        label_create = T("Create Deployment"),
+                        title_display = T("Deployment Details"),
+                        title_list = T("Deployments"),
+                        title_update = T("Edit Deployment"),
+                        title_report = T("Deployment Report"),
+                        title_upload = T("Import Deployments"),
+                        label_list_button = T("List Deployments"),
+                        label_delete_button = T("Delete Deployment"),
+                        msg_record_created = T("Deployment added"),
+                        msg_record_modified = T("Deployment updated"),
+                        msg_record_deleted = T("Deployment deleted"),
+                        msg_list_empty = T("No Deployments currently registered")
+                    )
 
-                # Bring back to the Deployments page if record deleted
-                var = {"sector.name": "None,Deployment"}
-                delete_next = URL(c="project", f="project", vars=var)
+                    # Bring back to the Deployments page if record deleted
+                    delete_next = URL(c="project", f="project",
+                                      vars={"sector.name": "None,Deployment"})
 
-                # Get sector_id for Deployment
-                query = (otable.name == "Deployment")
-                row = db(query).select(otable.id, limitby=(0, 1)).first()
+                    # Get sector_id for Deployment
+                    row = db(otable.name == "Deployment").select(otable.id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
 
-                # Modify the CRUD form
-                crud_form = S3SQLCustomForm(
+                    # Modify the CRUD form
+                    crud_form = S3SQLCustomForm(
                         "organisation_id",
                         "name",
                         "sector_project.sector_id",
@@ -248,7 +256,7 @@ def customise_project_project_controller(**attr):
                             "document",
                             name = "file",
                             label = T("Files"),
-                            fields = [(T("Type"),"name"), "file"],
+                            fields = [(T("Type"), "name"), "file"],
                             filterby = dict(field = "file",
                                             options = "",
                                             invert = True,
@@ -259,61 +267,66 @@ def customise_project_project_controller(**attr):
                             "document",
                             name = "url",
                             label = T("Links"),
-                            fields = [(T("Type"),"name"), "url"],
+                            fields = [(T("Type"), "name"), "url"],
                             filterby = dict(field = "url",
                                             options = None,
                                             invert = True,
                                             )
                         ),
                         "comments",
-                    )
+                        )
 
-                location_id = s3db.project_location.location_id
-                # Limit to just Countries
-                location_id.requires = s3db.gis_country_requires
-                # Use dropdown, not AC
-                location_id.widget = None
+                    location_id = s3db.project_location.location_id
+                    # Limit to just Countries
+                    location_id.requires = s3db.gis_country_requires
+                    # Use dropdown, not AC
+                    location_id.widget = None
 
-            else:
-                # Bring back to the Projects page if record deleted
-                var = {"sector.name": "None,Project"}
-                delete_next = URL(c="project", f="project", vars=var)
+                else:
+                    # Bring back to the Projects page if record deleted
+                    delete_next = URL(c="project", f="project",
+                                      vars={"sector.name": "None,Project"})
 
-                # Get sector_id for Project
-                query = (otable.name == "Project")
-                row = db(query).select(otable.id, limitby=(0, 1)).first()
+                    # Get sector_id for Project
+                    row = db(otable.name == "Project").select(otable.id,
+                                                              limitby=(0, 1)
+                                                              ).first()
 
-                # Modify the CRUD form
-                crud_form = S3SQLCustomForm("organisation_id",
-                                            "name",
-                                            "sector_project.sector_id",
-                                            "description",
-                                            "status_id",
-                                            "start_date",
-                                            "end_date",
-                                            "calendar",
-                                            "human_resource_id",
-                                            "comments",
-                                            )
+                    # Modify the CRUD form
+                    crud_form = S3SQLCustomForm("organisation_id",
+                                                "name",
+                                                "sector_project.sector_id",
+                                                "description",
+                                                "status_id",
+                                                "start_date",
+                                                "end_date",
+                                                "calendar",
+                                                "human_resource_id",
+                                                "comments",
+                                                )
 
-            # Set the default sector
-            try:
-                stable.sector_id.default = row.id
-            except:
-                current.log.error("Pre-Populate",
-                                  "Sectors not prepopulated")
+                # Set the default sector
+                try:
+                    stable.sector_id.default = row.id
+                except:
+                    current.log.error("Pre-Populate",
+                                      "Sectors not prepopulated")
 
-            # Remove Add Sector button
-            stable.sector_id.comment = None
+                # Remove Add Sector button
+                stable.sector_id.comment = None
 
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           delete_next = delete_next,
-                           )
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               delete_next = delete_next,
+                               )
 
         return True
 
     s3.prep = custom_prep
+
+    args = current.request.args
+    if len(args) > 1 and args[1] == "task":
+        attr["hide_filter"] = False
 
     return attr
 
@@ -366,6 +379,170 @@ def customise_delphi_solution_controller(**attr):
 settings.customise_delphi_solution_controller = customise_delphi_solution_controller
 
 # -----------------------------------------------------------------------------
+def customise_pr_person_controller(**attr):
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    # Custom Prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        s3db = current.s3db
+        tablename = "pr_person"
+
+        if r.interactive:
+            # Set the list fields
+            list_fields = ["first_name",
+                           "middle_name",
+                           "last_name",
+                           "human_resource.organisation_id",
+                           "address.location_id"
+                           ]
+
+            # Set the CRUD Strings
+            s3.crud_strings[tablename] = Storage(
+                label_create = T("Create a Contributor"),
+                title_display = T("Contributor Details"),
+                title_list = T("Contributors"),
+                title_update = T("Edit Contributor Details"),
+                label_list_button = T("List Contributors"),
+                label_delete_button = T("Delete Contributor"),
+                msg_record_created = T("Contributor added"),
+                msg_record_modified = T("Contributor details updated"),
+                msg_record_deleted = T("Contributor deleted"),
+                msg_list_empty = T("No Contributors currently registered")
+            )
+
+            # Custom Form (Read/Create/Update)
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
+            crud_form = S3SQLCustomForm(
+                "first_name",
+                "middle_name",
+                "last_name",
+                S3SQLInlineComponent("contact",
+                    label = T("Email"),
+                    multiple = False,
+                    fields = [("", "value")],
+                    filterby = dict(field = "contact_method",
+                                    options = "EMAIL"),
+                    ),
+                "gender",
+                S3SQLInlineComponent("note",
+                    name = "bio",
+                    label = T("Bio Paragraph"),
+                    multiple = False,
+                    fields = [("", "note_text")],
+                    ),
+                S3SQLInlineComponent(
+                    "image",
+                    name = "image",
+                    label = T("Photo"),
+                    multiple = False,
+                    fields = [("", "image")],
+                    filterby = dict(field = "profile",
+                                    options=[True]
+                                    ),
+                    ),
+                S3SQLInlineComponent(
+                    "human_resource",
+                    name = "hrm_human_resource",
+                    label = "",
+                    multiple = False,
+                    fields = ["", "organisation_id", "job_title_id"],
+                    ),
+                S3SQLInlineComponent(
+                        "address",
+                        label = T("Home Location"),
+                        fields = [("", "location_id")],
+                        render_list = True
+                    ),
+                )
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           list_fields = list_fields
+                           )
+        return True
+    s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            # Change the tabs in the rheader
+            tabs = [(T("Basic Details"), None),
+                    ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("read", "pr_contact"):
+                tabs.append((T("Contact Details"), "contacts"))
+            output["rheader"] = s3db.pr_rheader(r, tabs=tabs)
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.customise_pr_person_controller = customise_pr_person_controller
+
+# -----------------------------------------------------------------------------
+def customise_pr_contact_controller(**attr):
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    # Custom Prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            # Change the contact methods appearing in adding contact info
+            MOBILE = current.deployment_settings.get_ui_label_mobile_phone()
+            contact_methods = {"SKYPE":       T("Skype"),
+                               "SMS":         MOBILE,
+                               "IRC":         T("IRC handle"),
+                               "GITHUB":      T("Github Repo"),
+                               "LINKEDIN":    T("LinkedIn Profile"),
+                               "BLOG":        T("Blog"),
+                               }
+            s3db.pr_contact.contact_method.requires = IS_IN_SET(contact_methods,
+                                                                zero=None)
+
+            from s3.s3forms import S3SQLCustomForm
+
+            crud_form = S3SQLCustomForm(
+                    "contact_method",
+                    "value",
+                )
+            s3db.configure("pr_contact",
+                           crud_form = crud_form,
+                           )
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.customise_pr_contact_controller = customise_pr_contact_controller
+
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
@@ -408,11 +585,10 @@ settings.modules = OrderedDict([
             module_type = 6,     # 6th item in the menu
         )),
     ("pr", Storage(
-            name_nice = T("Person Registry"),
-            #description = T("Central point to record details on People"),
+            name_nice = T("Contributors"),
+            description = T("Contributors to Sahana"),
             restricted = True,
-            access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-            module_type = 10
+            module_type = 2
         )),
     ("org", Storage(
             name_nice = T("Organizations"),
@@ -425,7 +601,8 @@ settings.modules = OrderedDict([
             name_nice = T("Volunteers"),
             #description = T("Human Resource Management"),
             restricted = True,
-            module_type = 2,
+            access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
+            module_type = 10,
         )),
     ("doc", Storage(
             name_nice = T("Documents"),

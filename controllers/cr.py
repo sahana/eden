@@ -111,24 +111,6 @@ def shelter():
                         msg_list_empty = T("No people currently registered in this shelter")
                     )
 
-                    # Show a non blocking warning in case the people in the shelter are more than its capacity
-                    if not r.method:
-                        record = db(table.id == r.id).select(table.capacity_day,
-                                                             table.population_day,
-                                                             table.capacity_night,
-                                                             table.population_night,
-                                                             limitby=(0, 1)
-                                                             ).first()
-                        cap_day = record.capacity_day
-                        pop_day = record.population_day
-                        if (cap_day is not None) and (pop_day > cap_day):
-                            response.warning = T("Warning: this shelter is full for daytime")
-
-                        cap_night = record.capacity_night
-                        pop_night = record.population_night
-                        if (cap_night is not None) and (pop_night > cap_night):
-                            response.warning = T("Warning: this shelter is full for the night")
-
                 elif r.component.name == "shelter_allocation":
                     s3.crud_strings.cr_shelter_allocation = Storage(
                         label_create = T("Allocate Group"),

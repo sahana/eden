@@ -69,10 +69,8 @@
    </button>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-     <li><a href='/{{=appname}}/default/index'>
-      <img id='logo' src='/{{=appname}}/static/themes/{{=theme}}/img/logo.png' alt=''/>
-     </a></li>
-     <li><a href='/{{=appname}}/hrm/staff'> <i class='icon-news'></i> {{=T("Contributors")}}</a></li>
+     <li><a class='home' href='/{{=appname}}/default/index'><img src='/{{=appname}}/static/img/sahanalarge_14.png' alt='Sahana'/></a></li>
+     <li><a href='/{{=appname}}/pr/person'> <i class='icon-news'></i> {{=T("Contributors")}}</a></li>
      <li><a href='/{{=appname}}/project/project?sector.name=None,Deployment'><i class='icon-check'></i> {{=T("Deployments")}}</a></li>
      <li><a href='/{{=appname}}/project/project?sector.name=None,Project'><i class='icon-project'></i> {{=T("Projects")}}</a></li>
      <li><a href='/{{=appname}}/project/task'><i class='icon-pencil'></i> {{=T("Tasks")}}</a></li>
@@ -87,6 +85,7 @@
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        <li class='divider'></li>
        {{pass}}
+       <li><a href='/{{=appname}}/pr/person/{{=auth.user.id}}'><i class='icon-edit'></i> Edit Profile</a></li>
        <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
        <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>

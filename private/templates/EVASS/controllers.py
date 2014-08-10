@@ -90,18 +90,12 @@ $('#login-btn').click(function(){
         else:
             output["event_list"] = self.event_list()
             output["shelter_list"] = self.shelter_list()
-            output["organizations_btn"] = self.organizations_btn()
             output["events_btn"] = self.events_btn()
-            output["projects_btn"] = self.projects_btn()
-            output["incident_reports_btn"] = self.incident_reports_btn()
             output["pr_btn"] = self.pr_btn()
             output["staff_btn"] = self.staff_btn()
             output["volunteers_btn"] = self.volunteers_btn()
             output["evacuees_btn"] = self.evacuees_btn()
-            output["warehouses_btn"] = self.warehouses_btn()
-            output["transports_btn"] = self.transports_btn()
             output["shelters_btn"] = self.shelters_btn()
-            output["hospitals_btn"] = self.hospitals_btn()
 
         output["self_registration"] = self_registration
         output["registered"] = registered
@@ -213,37 +207,17 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
             return ""
 
     # -------------------------------------------------------------------------
-    def organizations_btn(self):
-        return LI(A("Organizations",
-                    _href=URL(c="org", f="organisation"),
-                    _class="button button-home")
-                  )
-
-    # -------------------------------------------------------------------------
     def events_btn(self):
-        return LI(A("Events",
+        T = current.T
+        return LI(A(T("Events"),
                     _href=URL(c="event", f="event"),
                     _class="button button-home")
                   )
 
-# -------------------------------------------------------------------------
-    def projects_btn(self):
-        return LI(A("Projects",
-                    _href=URL(c="project", f="project"),
-                    _class="button button-home")
-                  )
-
-    # -------------------------------------------------------------------------
-    def incident_reports_btn(self):
-        return LI(A("Incident Reports",
-                    _href=URL(c="irs", f="ireport"),
-                    _class="button button-home",
-                    _id="incident-report-btn")
-                  )
-
     # -------------------------------------------------------------------------
     def pr_btn(self):
-        return LI(A("Person Registry",
+        T = current.T
+        return LI(A(T("Person Registry"),
                     _href=URL(c="pr", f="index"),
                     _class="button button-home",
                     _id="incident-report-btn")
@@ -251,50 +225,34 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         
     # -------------------------------------------------------------------------
     def staff_btn(self):
-        return LI(A("Staff",
+        T = current.T
+        return LI(A(T("Staff"),
                     _href=URL(c="hrm", f="staff", args=["summary"]),
                     _class="button button-home")
                   )
 
     # -------------------------------------------------------------------------
     def volunteers_btn(self):
-        return LI(A("Volunteers",
+        T = current.T
+        return LI(A(T("Volunteers"),
                     _href=URL(c="vol", f="volunteer"),
                     _class="button button-home")
                   )
 
     # -------------------------------------------------------------------------
     def evacuees_btn(self):
-        return LI(A("Evacuees",
+        T = current.T
+        return LI(A(T("Evacuees"),
                     _href=URL(c="evr", f="person"),
-                    _class="button button-home")
-                  )
-
-    # -------------------------------------------------------------------------
-    def warehouses_btn(self):
-        return LI(A("Warehouse",
-                    _href=URL(c="inv", f="warehouse"),
                     _class="button button-home")
                   )
         
     # -------------------------------------------------------------------------
-    def transports_btn(self):
-        return LI(A("Transports",
-                    _href=URL(c="transport", f="airport"),
-                    _class="button button-home")
-                  )
-
-    # -------------------------------------------------------------------------
     def shelters_btn(self):
-        return LI(A("Shelters",
+        T = current.T
+        return LI(A(T("Shelters"),
                     _href=URL(c="cr", f="shelter"),
                     _class="button button-home")
                   )
-
-    # -------------------------------------------------------------------------
-    def hospitals_btn(self):
-        return LI(A("Hospitals",
-                    _href=URL(c="hms", f="hospital"),
-                    _class="button button-home")
-                  )
+        
 # END =========================================================================

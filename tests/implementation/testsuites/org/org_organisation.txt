@@ -1,8 +1,6 @@
 *** Settings ***
 Documentation     Test cases for org module
 Resource          ../../resources/main.txt
-Suite Setup       Start Testing
-Suite Teardown      End Testing
 
 *** Variables ***
 ${ORGANIZATION URL}     http://${BASEURL}/org/organisation
